@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.woodland.butterfly - asleep. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- grape light -> grape -->
+    <linearGradient id="butterfly_asleep_wing" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#CDB6EC"/>
+      <stop offset="1" stop-color="#9464C9"/>
+    </linearGradient>
+    <!-- navy light -> navy -->
+    <linearGradient id="butterfly_asleep_head" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#4F5F80"/>
+      <stop offset="1" stop-color="#2F3E58"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="229" rx="64" ry="10.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="character">
+    <g id="wings">
+      <path d="M122.5 128 C110.4 76 86.2 54 74.1 72 C65.3 88 71.9 128 88.4 150 C101.6 166 115.9 160 122.5 146 Z" fill="url(#butterfly_asleep_wing)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M133.5 128 C145.6 76 169.8 54 181.9 72 C190.7 88 184.1 128 167.6 150 C154.4 166 140.1 160 133.5 146 Z" fill="url(#butterfly_asleep_wing)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M122.5 150 C110.4 156 93.9 168 91.7 192 C90.6 212 104.9 218 114.8 204 C121.4 194 123.6 176 123.6 160 Z" fill="url(#butterfly_asleep_wing)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M133.5 150 C145.6 156 162.1 168 164.3 192 C165.4 212 151.1 218 141.2 204 C134.6 194 132.4 176 132.4 160 Z" fill="url(#butterfly_asleep_wing)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="92.8" cy="98" r="12" fill="#FFC234" stroke="#4B372F" stroke-width="2"/>
+      <circle cx="163.2" cy="98" r="12" fill="#FFC234" stroke="#4B372F" stroke-width="2"/>
+      <circle cx="103.8" cy="192" r="8" fill="#FFC234" stroke="#4B372F" stroke-width="2"/>
+      <circle cx="152.2" cy="192" r="8" fill="#FFC234" stroke="#4B372F" stroke-width="2"/>
+    </g>
+    <g id="body">
+      <path d="M128 120 C140 120 142 150 140 180 C138 204 132 212 128 212 C124 212 118 204 116 180 C114 150 116 120 128 120 Z" fill="#3B4A66" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="head">
+      <path d="M112 66 C104 48 92 40 82 44" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M144 66 C152 48 164 40 174 44" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="82" cy="44" r="6" fill="#4F5F80" stroke="#4B372F" stroke-width="2.5"/>
+      <circle cx="174" cy="44" r="6" fill="#4F5F80" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="128" cy="98" rx="44" ry="38" fill="url(#butterfly_asleep_head)" stroke="#4B372F" stroke-width="3.5"/>
+      <path d="M97.3 83 C96 80.6 98.7 76.4 103.5 73.7 C108.3 70.9 113.3 70.6 114.7 73 C116 75.4 113.3 79.6 108.5 82.3 C103.7 85.1 98.7 85.4 97.3 83 Z" fill="#FFFFFF" opacity="0.45"/>
+      <path d="M101 98 Q110 106 119 98" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M137 98 Q146 106 155 98" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="96" cy="116" rx="7" ry="4" fill="#FDA4AF" opacity="0.6"/>
+      <ellipse cx="160" cy="116" rx="7" ry="4" fill="#FDA4AF" opacity="0.6"/>
+      <path d="M120 118 Q128 126 136 118" fill="none" stroke="#FFD9CF" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g id="fx">
+    <path d="M196 46 L208.0 46 L196 58.0 L208.0 58.0" fill="none" stroke="#6E7FB0" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" opacity="0.7"/>
+    <path d="M218 24 L227.0 24 L218 33.0 L227.0 33.0" fill="none" stroke="#6E7FB0" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.5"/>
+  </g>
+</svg>

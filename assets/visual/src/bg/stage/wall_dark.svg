@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- stage: dark backdrop wall with a soft spotlight; opaque base.
+       Scene layer stage_wall_dark; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- plum light -> plum/navy (mix 30%) -->
+    <linearGradient id="stage_wall_dark_grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6A4C7C"/>
+      <stop offset="1" stop-color="#3F3052"/>
+    </linearGradient>
+    <radialGradient id="stage_wall_dark_spot" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFE7A6" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#FFE7A6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g id="wall">
+    <rect width="1024" height="600" fill="url(#stage_wall_dark_grad)"/>
+    <ellipse cx="512" cy="330" rx="400" ry="280" fill="url(#stage_wall_dark_spot)"/>
+    <path d="M64 -8 L64 608 M192 -8 L192 608 M320 -8 L320 608 M448 -8 L448 608 M576 -8 L576 608 M704 -8 L704 608 M832 -8 L832 608 M960 -8 L960 608 " stroke="#5E4370" stroke-width="3"/>
+    <g fill="#FBBF24" opacity="0.55"><path d="M250 141 L252.5 146.5 L258.6 147.2 L254.1 151.3 L255.3 157.3 L250 154.3 L244.7 157.3 L245.9 151.3 L241.4 147.2 L247.5 146.5 Z"/><path d="M300 224 L301.7 227.7 L305.7 228.1 L302.7 230.9 L303.5 234.9 L300 232.9 L296.5 234.9 L297.3 230.9 L294.3 228.1 L298.3 227.7 Z"/><path d="M774 141 L776.5 146.5 L782.6 147.2 L778.1 151.3 L779.3 157.3 L774 154.3 L768.7 157.3 L769.9 151.3 L765.4 147.2 L771.5 146.5 Z"/><path d="M724 224 L725.7 227.7 L729.7 228.1 L726.7 230.9 L727.5 234.9 L724 232.9 L720.5 234.9 L721.3 230.9 L718.3 228.1 L722.3 227.7 Z"/><path d="M512 123 L514 127.3 L518.7 127.8 L515.2 131 L516.1 135.7 L512 133.4 L507.9 135.7 L508.8 131 L505.3 127.8 L510 127.3 Z"/></g>
+  </g>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.firework frame 3: drooping sparks fade -->
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round" opacity="0.75">
+    <path d="M64 13 Q64.9 17.1 69 18 Q64.9 18.9 64 23 Q63.1 18.9 59 18 Q63.1 17.1 64 13 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M91 20.2 Q91.9 24.3 96 25.2 Q91.9 26.1 91 30.2 Q90.1 26.1 86 25.2 Q90.1 24.3 91 20.2 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M110.8 40 Q111.7 44.1 115.8 45 Q111.7 45.9 110.8 50 Q109.9 45.9 105.8 45 Q109.9 44.1 110.8 40 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M118 67 Q118.9 71.1 123 72 Q118.9 72.9 118 77 Q117.1 72.9 113 72 Q117.1 71.1 118 67 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M110.8 94 Q111.7 98.1 115.8 99 Q111.7 99.9 110.8 104 Q109.9 99.9 105.8 99 Q109.9 98.1 110.8 94 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M91 113.8 Q91.9 117.9 96 118.8 Q91.9 119.7 91 123.8 Q90.1 119.7 86 118.8 Q90.1 117.9 91 113.8 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M64 121 Q64.9 125.1 69 126 Q64.9 126.9 64 131 Q63.1 126.9 59 126 Q63.1 125.1 64 121 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M37 113.8 Q37.9 117.9 42 118.8 Q37.9 119.7 37 123.8 Q36.1 119.7 32 118.8 Q36.1 117.9 37 113.8 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M17.2 94 Q18.1 98.1 22.2 99 Q18.1 99.9 17.2 104 Q16.3 99.9 12.2 99 Q16.3 98.1 17.2 94 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M10 67 Q10.9 71.1 15 72 Q10.9 72.9 10 77 Q9.1 72.9 5 72 Q9.1 71.1 10 67 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M17.2 40 Q18.1 44.1 22.2 45 Q18.1 45.9 17.2 50 Q16.3 45.9 12.2 45 Q16.3 44.1 17.2 40 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M37 20.2 Q37.9 24.3 42 25.2 Q37.9 26.1 37 30.2 Q36.1 26.1 32 25.2 Q36.1 24.3 37 20.2 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <circle cx="75.4" cy="31.5" r="2.5" fill="#FDE68A" stroke="#4B372F" stroke-width="1.8"/>
+    <circle cx="95.1" cy="42.9" r="2.5" fill="#FDE68A" stroke="#4B372F" stroke-width="1.8"/>
+    <circle cx="106.5" cy="62.6" r="2.5" fill="#FDE68A" stroke="#4B372F" stroke-width="1.8"/>
+    <circle cx="106.5" cy="85.4" r="2.5" fill="#FDE68A" stroke="#4B372F" stroke-width="1.8"/>
+    <circle cx="95.1" cy="105.1" r="2.5" fill="#FDE68A" stroke="#4B372F" stroke-width="1.8"/>
+    <circle cx="75.4" cy="116.5" r="2.5" fill="#FDE68A" stroke="#4B372F" stroke-width="1.8"/>
+    <circle cx="52.6" cy="116.5" r="2.5" fill="#FDE68A" stroke="#4B372F" stroke-width="1.8"/>
+    <circle cx="32.9" cy="105.1" r="2.5" fill="#FDE68A" stroke="#4B372F" stroke-width="1.8"/>
+    <circle cx="21.5" cy="85.4" r="2.5" fill="#FDE68A" stroke="#4B372F" stroke-width="1.8"/>
+    <circle cx="21.5" cy="62.6" r="2.5" fill="#FDE68A" stroke="#4B372F" stroke-width="1.8"/>
+    <circle cx="32.9" cy="42.9" r="2.5" fill="#FDE68A" stroke="#4B372F" stroke-width="1.8"/>
+    <circle cx="52.6" cy="31.5" r="2.5" fill="#FDE68A" stroke="#4B372F" stroke-width="1.8"/>
+  </g>
+</svg>

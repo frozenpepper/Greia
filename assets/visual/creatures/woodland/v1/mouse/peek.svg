@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.woodland.mouse - peek. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- sand/charcoal light mix (taupe mouse) -->
+    <linearGradient id="mouse_peek_fur" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#E6DACD"/>
+      <stop offset="1" stop-color="#B9A592"/>
+    </linearGradient>
+    <clipPath id="mouse_peek_clip"><rect x="0" y="0" width="256" height="200"/></clipPath>
+  </defs>
+  <g id="hidden_below_edge" clip-path="url(#mouse_peek_clip)">
+    <g id="character" transform="translate(0 46)">
+      <g id="body">
+        <path d="M128 136 C154 136 168 158 170 184 C172 206 158 216 128 216 C98 216 84 206 86 184 C88 158 102 136 128 136 Z" fill="url(#mouse_peek_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <ellipse cx="128" cy="190" rx="20" ry="20" fill="#FFF8EF"/>
+      </g>
+      <g id="feet">
+        <ellipse cx="108" cy="214" rx="12" ry="6.5" fill="#F2B8B4" stroke="#4B372F" stroke-width="2.5"/>
+        <ellipse cx="148" cy="214" rx="12" ry="6.5" fill="#F2B8B4" stroke="#4B372F" stroke-width="2.5"/>
+      </g>
+      <g id="ears">
+        <ellipse cx="76" cy="72" rx="34" ry="32" fill="url(#mouse_peek_fur)" stroke="#4B372F" stroke-width="3.5"/>
+        <ellipse cx="180" cy="72" rx="34" ry="32" fill="url(#mouse_peek_fur)" stroke="#4B372F" stroke-width="3.5"/>
+        <ellipse cx="78" cy="74" rx="22" ry="20" fill="#F7C1BE"/>
+        <ellipse cx="178" cy="74" rx="22" ry="20" fill="#F7C1BE"/>
+      </g>
+      <g id="head">
+        <path d="M128 70 C160 70 178 92 178 118 C178 144 156 160 128 160 C100 160 78 144 78 118 C78 92 96 70 128 70 Z" fill="url(#mouse_peek_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M90.5 93.5 C89.1 91.1 92.2 86.7 97.5 83.7 C102.8 80.6 108.1 80.1 109.5 82.5 C110.9 84.9 107.8 89.3 102.5 92.3 C97.2 95.4 91.9 95.9 90.5 93.5 Z" fill="#FFFFFF" opacity="0.7"/>
+        <ellipse cx="128" cy="130" rx="6" ry="4.5" fill="#E98F98" stroke="#4B372F" stroke-width="2"/>
+        <ellipse cx="96" cy="136" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+        <ellipse cx="160" cy="136" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+        <ellipse cx="110" cy="114" rx="8.0" ry="10.5" fill="#342C35"/>
+        <ellipse cx="146" cy="114" rx="8.0" ry="10.5" fill="#342C35"/>
+        <ellipse cx="113" cy="110" rx="2.7" ry="3.1" fill="#FFFFFF"/>
+        <ellipse cx="149" cy="110" rx="2.7" ry="3.1" fill="#FFFFFF"/>
+        <circle cx="108.0" cy="118" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+        <circle cx="144.0" cy="118" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+        <ellipse cx="128" cy="142" rx="4.5" ry="5" fill="#8A3B2E" stroke="#4B372F" stroke-width="2"/>
+        <path d="M106 132 L86 128" fill="none" stroke="#4B372F" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M150 132 L170 128" fill="none" stroke="#4B372F" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M106 138 L86 142" fill="none" stroke="#4B372F" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M150 138 L170 142" fill="none" stroke="#4B372F" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+    </g>
+  </g>
+  <g id="paws_on_edge">
+    <ellipse cx="96" cy="198" rx="14" ry="9" fill="#F2B8B4" stroke="#4B372F" stroke-width="2.5"/>
+    <ellipse cx="160" cy="198" rx="14" ry="9" fill="#F2B8B4" stroke="#4B372F" stroke-width="2.5"/>
+  </g>
+</svg>

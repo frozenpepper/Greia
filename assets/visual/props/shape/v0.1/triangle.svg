@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.shape.triangle — flat triangle shape token. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- token light -> token -->
+    <linearGradient id="shape_triangle_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDA85"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="shape">
+    <path d="M128 20 C134 20 138 24 141 29 L237 214 C242 224 236 232 226 232 L30 232 C20 232 14 224 19 214 L115 29 C118 24 122 20 128 20 Z" fill="url(#shape_triangle_fill)" stroke="#4B372F" stroke-width="6" stroke-linejoin="round"/>
+    <ellipse cx="104" cy="92" rx="16" ry="9" fill="#FFFFFF" opacity="0.8" transform="rotate(-35 104 92)"/>
+  </g>
+</svg>

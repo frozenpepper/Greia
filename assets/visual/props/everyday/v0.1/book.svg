@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.everyday.book — closed storybook. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="everyday_book_cover" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#80B2E4"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="82" ry="13.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="book">
+    <rect x="74" y="44" width="134" height="186" rx="8" fill="#FFFBEB" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M196 58 L196 216 M186 58 L186 216" fill="none" stroke="#EEDDBA" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="50" y="34" width="140" height="190" rx="10" fill="url(#everyday_book_cover)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="50" y="34" width="24" height="190" rx="10" fill="#4A7AAE" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="92" y="70" width="80" height="44" rx="8" fill="#FFFBEB" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M132 136 L141 156 L162 158 L146 172 L151 193 L132 182 L113 193 L118 172 L102 158 L123 156 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M160 22 L160 52 L170 44 L180 52 L180 22 Z" fill="#F46F61" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+  </g>
+</svg>

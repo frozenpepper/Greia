@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.shooting_star (single): gold star with a tapered tail streaking down-left -->
+  <defs>
+    <!-- cream -> gold light -->
+    <linearGradient id="shooting_star_tail" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFBEB"/>
+      <stop offset="1" stop-color="#FDE68A"/>
+    </linearGradient>
+    <!-- gold light -> gold -->
+    <linearGradient id="shooting_star_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDE68A"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+  </defs>
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M14 116 L84 34 Q90 30 94 36 Q96 42 92 46 Z" fill="url(#shooting_star_tail)" stroke="#8A5A12" stroke-width="2.5"/>
+    <path d="M30 102 L78 46" fill="none" stroke="#FFFBEB" stroke-width="2.5"/>
+    <path d="M96.6 14.5 L100.2 28.6 L113.9 33.7 L101.5 41.5 L100.9 56.1 L89.7 46.8 L75.7 50.7 L81.1 37.1 L72.9 25 L87.5 26 Z" fill="url(#shooting_star_fill)" stroke="#8A5A12" stroke-width="3"/>
+    <path d="M36 64 Q37.1 68.9 42 70 Q37.1 71.1 36 76 Q34.9 71.1 30 70 Q34.9 68.9 36 64 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M64 93 Q64.9 97.1 69 98 Q64.9 98.9 64 103 Q63.1 98.9 59 98 Q63.1 97.1 64 93 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+  </g>
+</svg>

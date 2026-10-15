@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- bg.wallpaper.candy: candy-land variant of the meadow kit geometry. Flattened wallpaper; opaque.
+       Scene layer wallpaper_candy; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- rose -> lavender (candy sky) -->
+    <linearGradient id="wallpaper_candy_sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F5D6DF"/>
+      <stop offset="1" stop-color="#E8DDF7"/>
+    </linearGradient>
+    <!-- rose light -> raspberry light (candy hills) -->
+    <linearGradient id="wallpaper_candy_hill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F9C2CF"/>
+      <stop offset="1" stop-color="#F29AB4"/>
+    </linearGradient>
+    <!-- mint light -> mint (frosting ground) -->
+    <linearGradient id="wallpaper_candy_mint" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E4F6DD"/>
+      <stop offset="1" stop-color="#BFE6B4"/>
+    </linearGradient>
+  </defs>
+  <g id="sky">
+    <rect width="1024" height="600" fill="url(#wallpaper_candy_sky)"/>
+    <g transform="translate(80 70)"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#FFFBEB" stroke="#E3B9C9" stroke-width="2.5" stroke-linejoin="round"/></g><g transform="translate(600 40) scale(0.75)"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#FFFBEB" stroke="#E3B9C9" stroke-width="3.3" stroke-linejoin="round"/></g><g transform="translate(780 160) scale(0.6)" opacity="0.9"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#FFFBEB" stroke="#E3B9C9" stroke-width="4.2" stroke-linejoin="round"/></g>
+  </g>
+  <g id="far">
+    <path d="M0 300 C60 268 130 260 200 278 C260 246 340 244 410 276 C470 258 540 256 610 278 C680 250 770 246 840 272 C910 256 980 258 1024 276 L1024 440 L0 440 Z" fill="url(#wallpaper_candy_hill)"/>
+    <path d="M0 300 C60 268 130 260 200 278 C260 246 340 244 410 276 C470 258 540 256 610 278 C680 250 770 246 840 272 C910 256 980 258 1024 276" fill="none" stroke="#FFFBEB" stroke-width="8" stroke-linecap="round" stroke-dasharray="1 22"/>
+  </g>
+  <g id="mid">
+    <path d="M-8 352 C90 326 190 324 280 344 C370 330 470 334 560 352 C650 332 760 326 860 344 C930 334 990 336 1032 346 L1032 470 L-8 470 Z" fill="#C9B5EC" stroke="#8C77B5" stroke-width="2" stroke-linejoin="round"/>
+    <g transform="translate(70 350) scale(0.8)"><ellipse cx="0" cy="0" rx="30" ry="5" fill="#6A5147" opacity="0.14"/><path d="M-4 0 L-4 -70 L4 -70 L4 0 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/><circle cx="0" cy="-96" r="32" fill="#F46F61" stroke="#4B372F" stroke-width="3"/><path d="M0 -96 C10 -96 14 -108 4 -114 C-10 -120 -24 -108 -20 -92 C-16 -76 6 -70 20 -82" fill="none" stroke="#FFFBEB" stroke-width="6" stroke-linecap="round"/></g><g transform="translate(960 346) scale(0.85)"><ellipse cx="0" cy="0" rx="30" ry="5" fill="#6A5147" opacity="0.14"/><path d="M-4 0 L-4 -70 L4 -70 L4 0 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/><circle cx="0" cy="-96" r="32" fill="#44B8AE" stroke="#4B372F" stroke-width="3"/><path d="M0 -96 C10 -96 14 -108 4 -114 C-10 -120 -24 -108 -20 -92 C-16 -76 6 -70 20 -82" fill="none" stroke="#FFFBEB" stroke-width="6" stroke-linecap="round"/></g>
+  </g>
+  <g id="ground">
+    <path d="M-8 404 C120 388 250 386 380 398 C470 406 560 408 650 398 C770 384 900 386 1032 400 L1032 608 L-8 608 Z" fill="url(#wallpaper_candy_mint)" stroke="#6FA06A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M14 402 C120 390 240 389 360 399 M664 398 C780 386 900 387 1010 399" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+    <g fill="#F46F61" stroke="#4B372F" stroke-width="1.8"><rect x="180" y="450" width="12" height="5" rx="2.5" fill="#FFC234" transform="rotate(30 186 452)"/><rect x="260" y="500" width="12" height="5" rx="2.5" fill="#4A91D8" transform="rotate(-20 266 502)"/><rect x="760" y="470" width="12" height="5" rx="2.5" fill="#9464C9" transform="rotate(50 766 472)"/><rect x="840" y="520" width="12" height="5" rx="2.5" fill="#F46F61" transform="rotate(-40 846 522)"/><rect x="420" y="560" width="12" height="5" rx="2.5" fill="#59B86A" transform="rotate(15 426 562)"/><rect x="640" y="540" width="12" height="5" rx="2.5" fill="#FFC234" transform="rotate(-60 646 542)"/></g>
+    <g transform="translate(120 530)"><ellipse cx="0" cy="0" rx="30" ry="5" fill="#6A5147" opacity="0.14"/><path d="M-4 0 L-4 -70 L4 -70 L4 0 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/><circle cx="0" cy="-96" r="32" fill="#9464C9" stroke="#4B372F" stroke-width="3"/><path d="M0 -96 C10 -96 14 -108 4 -114 C-10 -120 -24 -108 -20 -92 C-16 -76 6 -70 20 -82" fill="none" stroke="#F5D6DF" stroke-width="6" stroke-linecap="round"/></g><g transform="translate(930 540) scale(1.1)"><ellipse cx="0" cy="0" rx="30" ry="5" fill="#6A5147" opacity="0.14"/><path d="M-4 0 L-4 -70 L4 -70 L4 0 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/><circle cx="0" cy="-96" r="32" fill="#F39A38" stroke="#4B372F" stroke-width="3"/><path d="M0 -96 C10 -96 14 -108 4 -114 C-10 -120 -24 -108 -20 -92 C-16 -76 6 -70 20 -82" fill="none" stroke="#FFF1C2" stroke-width="6" stroke-linecap="round"/></g>
+    <path d="M178 560 C174 520 226 520 222 560 Z" fill="#59B86A" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/><path d="M188 542 C190 536 196 533 202 533" fill="none" stroke="#A6D98F" stroke-width="4" stroke-linecap="round"/><path d="M218 572 C214 532 266 532 262 572 Z" fill="#F46F61" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/><path d="M228 554 C230 548 236 545 242 545" fill="none" stroke="#F9A79E" stroke-width="4" stroke-linecap="round"/><path d="M808 570 C804 530 856 530 852 570 Z" fill="#4A91D8" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/><path d="M818 552 C820 546 826 543 832 543" fill="none" stroke="#9CC4EC" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>

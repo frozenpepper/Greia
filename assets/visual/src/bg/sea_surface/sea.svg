@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- sea_surface: open sea from horizon y 334 down, opaque below.
+       Scene layer sea_surface_sea; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- ocean light (mix 40% white) -> ocean -->
+    <linearGradient id="sea_surface_sea_water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#92BDE8"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="sea">
+    <path d="M-8 334 L1032 334 L1032 608 L-8 608 Z" fill="url(#sea_surface_sea_water)"/>
+    <path d="M-8 334 L1032 334" fill="none" stroke="#5E86B8" stroke-width="2.5"/>
+    <path d="M-8 342 C200 338 400 346 600 340 C800 336 900 344 1032 340" fill="none" stroke="#C6DDF2" stroke-width="4" stroke-linecap="round"/>
+    <g fill="none" stroke="#D9EAF7" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"><path d="M150 370 C162 364 174 364 186 370 C198 364 210 364 222 370"/><path d="M420 392 C432 386 444 386 456 392 C468 386 480 386 492 392"/><path d="M720 372 C732 366 744 366 756 372 C768 366 780 366 792 372"/><path d="M260 440 C272 434 284 434 296 440 C308 434 320 434 332 440"/><path d="M560 470 C572 464 584 464 596 470 C608 464 620 464 632 470"/><path d="M860 430 C872 424 884 424 896 430 C908 424 920 424 932 430"/><path d="M100 520 C112 514 124 514 136 520 C148 514 160 514 172 520"/><path d="M400 560 C412 554 424 554 436 560 C448 554 460 554 472 560"/><path d="M700 540 C712 534 724 534 736 540 C748 534 760 534 772 540"/><path d="M930 580 C942 574 954 574 966 580 C978 574 990 574 1002 580"/></g>
+    <g fill="#FFFBEB"><path d="M820 352 C820.9 357.8 822.2 359.1 828 360 C822.2 360.9 820.9 362.2 820 368 C819.1 362.2 817.8 360.9 812 360 C817.8 359.1 819.1 357.8 820 352 Z"/><path d="M880 386 C880.7 390.3 881.7 391.3 886 392 C881.7 392.7 880.7 393.7 880 398 C879.3 393.7 878.3 392.7 874 392 C878.3 391.3 879.3 390.3 880 386 Z"/><path d="M760 395 C760.6 398.6 761.4 399.4 765 400 C761.4 400.6 760.6 401.4 760 405 C759.4 401.4 758.6 400.6 755 400 C758.6 399.4 759.4 398.6 760 395 Z"/></g>
+  </g>
+</svg>

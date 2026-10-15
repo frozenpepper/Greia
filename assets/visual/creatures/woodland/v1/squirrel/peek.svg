@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.woodland.squirrel - peek. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- chestnut light -> chestnut (cocoa/orange mix) -->
+    <linearGradient id="squirrel_peek_fur" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#D49B70"/>
+      <stop offset="1" stop-color="#A8653F"/>
+    </linearGradient>
+    <clipPath id="squirrel_peek_clip"><rect x="0" y="0" width="256" height="200"/></clipPath>
+  </defs>
+  <g id="hidden_below_edge" clip-path="url(#squirrel_peek_clip)">
+    <g id="character" transform="translate(0 62)">
+      <g id="tail">
+        <path d="M150 202 C198 206 226 170 218 128 C212 98 228 70 204 50 C184 36 156 46 160 70 C164 88 188 94 188 116 C188 142 172 162 150 172 Z" fill="url(#squirrel_peek_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M176 66 C190 60 204 72 202 92" fill="none" stroke="#F2D2B4" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+      <g id="body">
+        <path d="M128 120 C156 120 172 146 174 176 C176 204 162 216 128 216 C94 216 80 204 82 176 C84 146 100 120 128 120 Z" fill="url(#squirrel_peek_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <ellipse cx="128" cy="182" rx="24" ry="28" fill="#FFFBEB"/>
+      </g>
+      <g id="feet">
+        <ellipse cx="106" cy="214" rx="13" ry="7" fill="#E9C39E" stroke="#4B372F" stroke-width="2.5"/>
+        <ellipse cx="150" cy="214" rx="13" ry="7" fill="#E9C39E" stroke="#4B372F" stroke-width="2.5"/>
+      </g>
+      <g id="ears">
+        <path d="M88 76 L82 40 L86 44 L90 32 L94 42 L108 62 Z" fill="url(#squirrel_peek_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M168 76 L174 40 L170 44 L166 32 L162 42 L148 62 Z" fill="url(#squirrel_peek_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+      <g id="head">
+        <path d="M128 52 C160 52 180 74 180 102 C180 130 158 146 128 146 C98 146 76 130 76 102 C76 74 96 52 128 52 Z" fill="url(#squirrel_peek_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M87.6 76 C86 73.1 89.3 68.1 95 64.8 C100.7 61.5 106.7 61.1 108.4 64 C110 66.9 106.7 71.9 101 75.2 C95.3 78.5 89.3 78.9 87.6 76 Z" fill="#FFFFFF" opacity="0.7"/>
+        <ellipse cx="128" cy="120" rx="21" ry="15" fill="#FFFBEB"/>
+        <path d="M122 109 Q128 105 134 109 Q131 114 128 115 Q125 114 122 109 Z" fill="#594047" stroke="#4B372F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <ellipse cx="90" cy="118" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+        <ellipse cx="166" cy="118" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+        <ellipse cx="108" cy="98" rx="9.0" ry="11.5" fill="#342C35"/>
+        <ellipse cx="148" cy="98" rx="9.0" ry="11.5" fill="#342C35"/>
+        <ellipse cx="111" cy="94" rx="3.1" ry="3.4" fill="#FFFFFF"/>
+        <ellipse cx="151" cy="94" rx="3.1" ry="3.4" fill="#FFFFFF"/>
+        <circle cx="106.0" cy="102" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+        <circle cx="146.0" cy="102" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+        <ellipse cx="128" cy="122" rx="4.5" ry="5" fill="#8A3B2E" stroke="#4B372F" stroke-width="2"/>
+        <path d="M124 122 L124 128 L132 128 L132 122" fill="#FFFFFF" stroke="#4B372F" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+    </g>
+  </g>
+  <g id="paws_on_edge">
+    <ellipse cx="96" cy="198" rx="14" ry="9" fill="#E9C39E" stroke="#4B372F" stroke-width="2.5"/>
+    <ellipse cx="160" cy="198" rx="14" ry="9" fill="#E9C39E" stroke="#4B372F" stroke-width="2.5"/>
+  </g>
+</svg>

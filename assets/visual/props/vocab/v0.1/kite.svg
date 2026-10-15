@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.kite — diamond kite with a bow tail. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <g id="kite">
+    <path d="M128 192 C110 206 128 220 100 228 C80 234 60 222 36 230" fill="none" stroke="#4B372F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M116 212 l-20 -14 l0 28 Z M116 212 l20 -14 l0 28 Z" fill="#4A91D8" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M74 226 l-20 -14 l0 28 Z M74 226 l20 -14 l0 28 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M128 22 L198 98 L128 192 Z" fill="#FFC234"/>
+    <path d="M128 22 L58 98 L128 192 Z" fill="#F46F61"/>
+    <path d="M58 98 L198 98 L128 192 Z" fill="#E3695C" opacity="0.35"/>
+    <path d="M128 22 L198 98 L128 192 L58 98 Z" fill="none" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M128 22 L128 192 M58 98 L198 98" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

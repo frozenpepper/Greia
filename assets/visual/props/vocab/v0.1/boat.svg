@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.boat — sailing boat on a wave. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- coral light -> coral -->
+    <linearGradient id="vocab_boat_hull" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="boat">
+    <path d="M128 40 L128 176" fill="none" stroke="#B45309" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M136 46 L136 156 L212 156 C204 116 180 74 136 46 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M120 66 L120 156 L58 156 C66 122 88 88 120 66 Z" fill="#FFC234" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M128 40 L128 22 L154 30 Z" fill="#F46F61" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M34 164 L222 164 C214 196 190 212 160 212 L96 212 C66 212 42 196 34 164 Z" fill="url(#vocab_boat_hull)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <circle cx="100" cy="184" r="8" fill="#CFEAF7" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="128" cy="184" r="8" fill="#CFEAF7" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="156" cy="184" r="8" fill="#CFEAF7" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M20 214 C40 202 60 202 80 214 C100 226 120 226 140 214 C160 202 180 202 200 214 C214 222 226 224 236 220 L236 236 L20 236 Z" fill="#9BC2EA" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+  </g>
+</svg>

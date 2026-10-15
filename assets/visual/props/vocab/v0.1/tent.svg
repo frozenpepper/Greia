@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.tent — orange camping tent. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange light -> orange -->
+    <linearGradient id="vocab_tent_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BD7E"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="106" ry="17.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="tent">
+    <path d="M128 56 L128 22" fill="none" stroke="#B45309" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M130 24 L162 34 L130 44 Z" fill="#F46F61" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M20 232 L128 52 L236 232 Z" fill="url(#vocab_tent_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M128 96 L84 232 L172 232 Z" fill="#563A64" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M128 96 L172 232 L196 232 C176 184 150 140 128 96 Z" fill="#FAD7AF" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M108 80 L44 196" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  </g>
+</svg>

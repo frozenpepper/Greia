@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- night_sky: far hills with tiny lit village at the edges.
+       Scene layer night_sky_far; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <g id="far">
+    <path d="M0 300 C60 268 130 260 200 278 C260 246 340 244 410 276 C470 258 540 256 610 278 C680 250 770 246 840 272 C910 256 980 258 1024 276 L1024 440 L0 440 Z" fill="#5D5C93"/>
+    <path d="M0 326 C80 304 170 300 250 316 C330 300 420 298 500 318 C590 300 690 298 780 316 C860 302 950 304 1024 318 L1024 440 L0 440 Z" fill="#4E5D8A"/>
+    <g id="village"><g transform="translate(118 300)"><path d="M-16 0 L-16 -22 L16 -22 L16 0 Z" fill="#6A6A9E"/><path d="M-21 -20 L0 -38 L21 -20 Z" fill="#4C4980"/><rect x="-7" y="-16" width="10" height="9" rx="2" fill="#FFC234"/></g><g transform="translate(150 304) scale(0.8)"><path d="M-16 0 L-16 -22 L16 -22 L16 0 Z" fill="#6A6A9E"/><path d="M-21 -20 L0 -38 L21 -20 Z" fill="#4C4980"/><rect x="-7" y="-16" width="10" height="9" rx="2" fill="#FFC234"/></g><g transform="translate(86 306) scale(0.75)"><path d="M-16 0 L-16 -22 L16 -22 L16 0 Z" fill="#6A6A9E"/><path d="M-21 -20 L0 -38 L21 -20 Z" fill="#4C4980"/><rect x="-7" y="-16" width="10" height="9" rx="2" fill="#FFC234"/></g><g transform="translate(902 300)"><path d="M-16 0 L-16 -22 L16 -22 L16 0 Z" fill="#6A6A9E"/><path d="M-21 -20 L0 -38 L21 -20 Z" fill="#4C4980"/><rect x="-7" y="-16" width="10" height="9" rx="2" fill="#FFC234"/></g><g transform="translate(936 306) scale(0.8)"><path d="M-16 0 L-16 -22 L16 -22 L16 0 Z" fill="#6A6A9E"/><path d="M-21 -20 L0 -38 L21 -20 Z" fill="#4C4980"/><rect x="-7" y="-16" width="10" height="9" rx="2" fill="#FFC234"/></g></g>
+  </g>
+</svg>

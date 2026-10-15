@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.nature.mushroom — red mushroom with white spots. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- coral light -> coral -->
+    <linearGradient id="nature_mushroom_cap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F79A90"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+    <!-- white -> sand -->
+    <linearGradient id="nature_mushroom_stem" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EEDDBA"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="66" ry="11.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="mushroom">
+    <path d="M92 150 C92 190 84 214 86 222 C88 230 98 232 128 232 C158 232 168 230 170 222 C172 214 164 190 164 150 Z" fill="url(#nature_mushroom_stem)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M20 146 C20 82 70 38 128 38 C186 38 236 82 236 146 C236 160 218 164 128 164 C38 164 20 160 20 146 Z" fill="url(#nature_mushroom_cap)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="66" rx="18" ry="13" fill="#FFFBEB" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="76" cy="106" rx="15" ry="12" fill="#FFFBEB" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="180" cy="106" rx="15" ry="12" fill="#FFFBEB" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="126" rx="12" ry="9" fill="#FFFBEB" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="46" cy="140" rx="9" ry="7" fill="#FFFBEB" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="210" cy="140" rx="9" ry="7" fill="#FFFBEB" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M64 72 C76 58 92 50 104 46" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  </g>
+</svg>

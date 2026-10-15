@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.marine.anglerfish - default. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- plum light steps -->
+    <linearGradient id="anglerfish_default_body" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#8E73A6"/>
+      <stop offset="1" stop-color="#5E4472"/>
+    </linearGradient>
+    <radialGradient id="anglerfish_default_glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFE08A" stop-opacity="0.9"/><stop offset="1" stop-color="#FFE08A" stop-opacity="0"/></radialGradient>
+  </defs>
+  <g id="character">
+    <g id="lure">
+      <circle cx="214" cy="54" r="30" fill="url(#anglerfish_default_glow)"/>
+      <path d="M150 72 C160 40 190 30 210 46" fill="none" stroke="#4B372F" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M150 72 C160 40 190 30 210 46" fill="none" stroke="#8E73A6" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="214" cy="54" rx="11" ry="11" fill="#FFD45C" stroke="#4B372F" stroke-width="2.5"/>
+      <circle cx="210" cy="50" r="3.5" fill="#FFFFFF"/>
+    </g>
+    <g id="fins">
+      <path d="M58 140 C40 120 26 116 20 124 C24 138 24 150 20 162 C28 168 42 160 58 140 Z" fill="#7A5F92" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M96 76 C100 60 116 54 126 62 L118 80 Z" fill="#7A5F92" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <path d="M56 140 C56 96 90 66 132 66 C176 66 208 98 208 140 C208 184 176 212 132 212 C90 212 56 184 56 140 Z" fill="url(#anglerfish_default_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M77.4 104.6 C74.8 101 79.3 93.4 87.3 87.5 C95.3 81.7 104 79.8 106.6 83.4 C109.2 87 104.7 94.6 96.7 100.5 C88.7 106.3 80 108.2 77.4 104.6 Z" fill="#FFFFFF" opacity="0.45"/>
+      <path d="M110 182 C120 192 140 194 152 186" fill="none" stroke="#A88FBE" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="mouth">
+      <path d="M138 150 C156 172 186 176 206 150 C200 182 180 196 160 194 C146 192 138 172 138 150 Z" fill="#8A3B2E" stroke="#4B372F" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M156 160 Q160 172 165 163 Z" fill="#FFF5DD" stroke="#4B372F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M182 162 Q186 174 191 160 Z" fill="#FFF5DD" stroke="#4B372F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="face">
+      <ellipse cx="166" cy="116" rx="11" ry="13" fill="#342C35"/>
+      <ellipse cx="169.3" cy="111.5" rx="4.0" ry="4.2" fill="#FFFFFF"/>
+      <circle cx="162.7" cy="121.2" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+      <ellipse cx="130" cy="136" rx="8" ry="5" fill="#FDA4AF" opacity="0.4"/>
+    </g>
+  </g>
+  <g id="fx">
+    <circle cx="36" cy="80" r="7" fill="#E6F6FD" stroke="#4F86A8" stroke-width="2" opacity="0.9"/><ellipse cx="33.5" cy="77.5" rx="2.0" ry="1.4" fill="#FFFFFF"/>
+    <circle cx="28" cy="58" r="5" fill="#E6F6FD" stroke="#4F86A8" stroke-width="2" opacity="0.9"/><ellipse cx="26.2" cy="56.2" rx="1.4" ry="1.0" fill="#FFFFFF"/>
+  </g>
+</svg>

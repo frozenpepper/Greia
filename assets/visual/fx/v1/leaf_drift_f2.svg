@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.leaf_drift frame 2: leaves fall and turn (loop with frame 1) -->
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <g transform="rotate(5 23 44)">
+      <path d="M23 29 Q35 41 23 59 Q11 41 23 29 Z" fill="#F39A38" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M23 35 L23 62.8" fill="none" stroke="#4B372F" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <g transform="rotate(75 99 40)">
+      <path d="M99 26 Q110.2 37.2 99 54 Q87.8 37.2 99 26 Z" fill="#FFC234" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M99 31.6 L99 57.5" fill="none" stroke="#4B372F" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <g transform="rotate(45 57 86)">
+      <path d="M57 70 Q69.8 82.8 57 102 Q44.2 82.8 57 70 Z" fill="#CF6356" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M57 76.4 L57 106" fill="none" stroke="#4B372F" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <g transform="rotate(-15 109 114)">
+      <path d="M109 100 Q120.2 111.2 109 128 Q97.8 111.2 109 100 Z" fill="#59B86A" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M109 105.6 L109 131.5" fill="none" stroke="#4B372F" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <g transform="rotate(105 19 114)">
+      <path d="M19 101 Q29.4 111.4 19 127 Q8.6 111.4 19 101 Z" fill="#F39A38" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M19 106.2 L19 130.2" fill="none" stroke="#4B372F" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

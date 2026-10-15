@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.everyday.sock — striped sock. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- coral light -> coral -->
+    <linearGradient id="everyday_sock_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F79388"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="132" cy="232" rx="96" ry="16.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="sock">
+    <path d="M84 28 L164 28 L164 150 C164 160 168 166 176 170 L208 184 C232 196 232 230 204 230 L120 230 C92 230 76 214 80 188 L84 150 Z" fill="url(#everyday_sock_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="84" y="70" width="80" height="16" fill="#FFC234"/>
+    <rect x="84" y="112" width="80" height="16" fill="#FFC234"/>
+    <rect x="80" y="20" width="88" height="32" rx="10" fill="#FFFBEB" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M196 180 L208 184 C232 196 232 230 204 230 L180 230 C190 214 194 196 196 180 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M80 194 C96 200 112 196 120 184 C120 210 104 228 120 230 C92 230 76 214 80 194 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M84 28 L164 28 L164 150 C164 160 168 166 176 170 L208 184 C232 196 232 230 204 230 L120 230 C92 230 76 214 80 188 L84 150 Z" fill="none" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="80" y="20" width="88" height="32" rx="10" fill="#FFFBEB" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+</svg>

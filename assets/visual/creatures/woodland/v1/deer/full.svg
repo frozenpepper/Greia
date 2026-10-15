@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.woodland.deer - full. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- caramel light -> caramel (fawn) -->
+    <linearGradient id="deer_open_fur" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#E6BA90"/>
+      <stop offset="1" stop-color="#C4875A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="229" rx="60" ry="10.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="character">
+    <g id="tail">
+      <path d="M168 196 C182 186 190 192 186 204 C182 210 174 210 168 206 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <path d="M128 126 C158 126 176 152 178 182 C180 206 166 216 128 216 C90 216 76 206 78 182 C80 152 98 126 128 126 Z" fill="url(#deer_open_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="128" cy="186" rx="22" ry="24" fill="#FFFBEB"/>
+      <circle cx="94" cy="172" r="5" fill="#FFF3E0"/>
+      <circle cx="164" cy="168" r="5" fill="#FFF3E0"/>
+      <circle cx="100" cy="196" r="4" fill="#FFF3E0"/>
+      <circle cx="158" cy="194" r="4" fill="#FFF3E0"/>
+    </g>
+    <g id="feet">
+      <path d="M98 216 C96 204 116 202 116 216 Z" fill="#6E4E3A" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M140 216 C140 202 160 204 158 216 Z" fill="#6E4E3A" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="ears">
+      <path d="M86 86 C62 70 36 70 28 84 C40 100 66 104 90 100 Z" fill="url(#deer_open_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M170 86 C194 70 220 70 228 84 C216 100 190 104 166 100 Z" fill="url(#deer_open_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M80 88 C62 80 46 80 40 86 C50 94 66 96 82 96 Z" fill="#F7C1BE"/>
+      <path d="M176 88 C194 80 210 80 216 86 C206 94 190 96 174 96 Z" fill="#F7C1BE"/>
+    </g>
+    <g id="head">
+      <path d="M128 50 C162 50 182 74 182 104 C182 132 160 150 128 150 C96 150 74 132 74 104 C74 74 94 50 128 50 Z" fill="url(#deer_open_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M87.6 74 C86 71.1 89.3 66.1 95 62.8 C100.7 59.5 106.7 59.1 108.4 62 C110 64.9 106.7 69.9 101 73.2 C95.3 76.5 89.3 76.9 87.6 74 Z" fill="#FFFFFF" opacity="0.7"/>
+      <ellipse cx="128" cy="124" rx="22" ry="17" fill="#FFFBEB"/>
+      <circle cx="120" cy="66" r="4" fill="#FFF3E0"/>
+      <circle cx="136" cy="62" r="3.5" fill="#FFF3E0"/>
+      <path d="M119 113 Q128 107 137 113 Q134 121 128 122 Q122 121 119 113 Z" fill="#594047" stroke="#4B372F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="88" cy="122" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="168" cy="122" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="106" cy="100" rx="8.5" ry="11" fill="#342C35"/>
+      <ellipse cx="150" cy="100" rx="8.5" ry="11" fill="#342C35"/>
+      <ellipse cx="109" cy="96" rx="2.9" ry="3.3" fill="#FFFFFF"/>
+      <ellipse cx="153" cy="96" rx="2.9" ry="3.3" fill="#FFFFFF"/>
+      <circle cx="104.0" cy="104" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+      <circle cx="148.0" cy="104" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+      <path d="M118 128 Q123.0 135 128 129 Q133.0 135 138 128" fill="none" stroke="#72513F" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

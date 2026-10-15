@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.marine.angelfish - default. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="angelfish_default_body" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FFE08F"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+    <!-- turquoise light -> turquoise -->
+    <linearGradient id="angelfish_default_fin" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#9FDCD6"/>
+      <stop offset="1" stop-color="#44B8AE"/>
+    </linearGradient>
+    <clipPath id="angelfish_default_clip"><path d="M66 128 C94 84 140 66 176 84 C204 98 216 116 218 128 C216 140 204 158 176 172 C140 190 94 172 66 128 Z"/></clipPath>
+  </defs>
+  <g id="character">
+    <g id="fins">
+      <path d="M146 76 C128 50 104 28 74 18 C88 46 88 80 94 106 Z" fill="url(#angelfish_default_fin)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M146 180 C128 206 104 228 74 238 C88 210 88 176 94 150 Z" fill="url(#angelfish_default_fin)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M74 128 C58 110 44 102 34 106 C38 120 38 136 34 150 C44 154 58 146 74 128 Z" fill="url(#angelfish_default_fin)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <path d="M66 128 C94 84 140 66 176 84 C204 98 216 116 218 128 C216 140 204 158 176 172 C140 190 94 172 66 128 Z" fill="url(#angelfish_default_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <g clip-path="url(#angelfish_default_clip)"><path d="M150 60 C140 100 140 156 150 196 L166 196 C158 156 158 100 166 60 Z" fill="#44B8AE"/><path d="M104 60 C94 100 94 156 104 196 L120 196 C112 156 112 100 120 60 Z" fill="#44B8AE"/></g>
+      <path d="M66 128 C94 84 140 66 176 84 C204 98 216 116 218 128 C216 140 204 158 176 172 C140 190 94 172 66 128 Z" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M113 97.5 C111.8 94.4 117.6 89.4 125.9 86.4 C134.3 83.3 141.9 83.4 143 86.5 C144.2 89.6 138.4 94.6 130.1 97.6 C121.7 100.7 114.1 100.6 113 97.5 Z" fill="#FFFFFF" opacity="0.7"/>
+    </g>
+    <g id="fin_front">
+      <path d="M150 140 C162 138 172 148 166 160 C156 160 150 152 150 140 Z" fill="#9FDCD6" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="face">
+      <ellipse cx="190" cy="116" rx="8.5" ry="10.5" fill="#342C35"/>
+      <ellipse cx="192.6" cy="112.3" rx="3.1" ry="3.4" fill="#FFFFFF"/>
+      <circle cx="187.4" cy="120.2" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+      <ellipse cx="194" cy="138" rx="7" ry="4.5" fill="#FDA4AF" opacity="0.5"/>
+      <path d="M206 134 Q212 139 218 131" fill="none" stroke="#72513F" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

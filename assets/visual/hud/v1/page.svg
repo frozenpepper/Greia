@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- icon.hud.page: a page of writing; cream paper, folded corner, ink lines -->
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M24 9 L59 9 L77 27 L77 82 Q77 87 72 87 L24 87 Q19 87 19 82 L19 14 Q19 9 24 9 Z" fill="#FFFBEB" stroke-width="4.5"/>
+    <path d="M59 9 L59 27 L77 27 Z" fill="#EEDDBA" stroke-width="3.5"/>
+    <path d="M28 44 L64 44 M28 57 L64 57 M28 70 L52 70" fill="none" stroke-width="4"/>
+    <path d="M25 18 L25 32" stroke="#FFFFFF" stroke-width="3" opacity="0.9" fill="none"/>
+  </g>
+</svg>

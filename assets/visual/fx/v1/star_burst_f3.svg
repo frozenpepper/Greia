@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.star_burst frame 3: small stars at the edge, fading -->
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round" opacity="0.7">
+    <path d="M66.4 3.4 L66.9 8 L71 10.2 L66.8 12.2 L65.9 16.7 L62.8 13.3 L58.2 13.9 L60.5 9.9 L58.5 5.7 L63 6.6 Z" fill="#FBBF24" stroke="#8A5A12" stroke-width="2.5"/>
+    <path d="M113.2 30.4 L113.7 35 L117.8 37.2 L113.5 39.2 L112.7 43.7 L109.6 40.3 L105 40.9 L107.3 36.9 L105.2 32.7 L109.8 33.6 Z" fill="#FBBF24" stroke="#8A5A12" stroke-width="2.5"/>
+    <path d="M113.2 84.4 L113.7 89 L117.8 91.2 L113.5 93.2 L112.7 97.7 L109.6 94.3 L105 94.9 L107.3 90.9 L105.2 86.7 L109.8 87.6 Z" fill="#FBBF24" stroke="#8A5A12" stroke-width="2.5"/>
+    <path d="M66.4 111.4 L66.9 116 L71 118.2 L66.8 120.2 L65.9 124.7 L62.8 121.3 L58.2 121.9 L60.5 117.9 L58.5 113.7 L63 114.6 Z" fill="#FBBF24" stroke="#8A5A12" stroke-width="2.5"/>
+    <path d="M19.6 84.4 L20.1 89 L24.2 91.2 L20 93.2 L19.2 97.7 L16 94.3 L11.4 94.9 L13.7 90.9 L11.7 86.7 L16.3 87.6 Z" fill="#FBBF24" stroke="#8A5A12" stroke-width="2.5"/>
+    <path d="M19.6 30.4 L20.1 35 L24.2 37.2 L20 39.2 L19.2 43.7 L16 40.3 L11.4 40.9 L13.7 36.9 L11.7 32.7 L16.3 33.6 Z" fill="#FBBF24" stroke="#8A5A12" stroke-width="2.5"/>
+  </g>
+</svg>

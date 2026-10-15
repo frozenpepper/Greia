@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.pet.puppy - sleepy. Non-cast pet, flat Greia vector. -->
+  <defs>
+    <!-- sand light -> sand shade (cream puppy, cocoa-brown ears) -->
+    <linearGradient id="puppy_sleepy_fur" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FFF7E6"/>
+      <stop offset="1" stop-color="#EBD3AE"/>
+    </linearGradient>
+    <!-- accent light -> accent -->
+    <linearGradient id="puppy_sleepy_acc" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#C48E66"/>
+      <stop offset="1" stop-color="#9A6445"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="229" rx="62" ry="10.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="character" transform="translate(128 216) scale(1.04 0.95) translate(-128 -216)">
+    <g id="tail">
+      <path d="M175.8 195.5 C195.7 200 214.1 190.7 225.5 175 C230.5 168.5 238 173.9 232.5 181.4 C218.6 202.6 194.9 211.7 174.1 206.8 Z" fill="url(#puppy_sleepy_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <ellipse cx="86" cy="198" rx="20" ry="17" fill="url(#puppy_sleepy_fur)" stroke="#4B372F" stroke-width="3.5"/>
+      <ellipse cx="170" cy="198" rx="20" ry="17" fill="url(#puppy_sleepy_fur)" stroke="#4B372F" stroke-width="3.5"/>
+      <ellipse cx="80" cy="214" rx="12" ry="7" fill="#FFF7E6" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="176" cy="214" rx="12" ry="7" fill="#FFF7E6" stroke="#4B372F" stroke-width="2.5"/>
+      <path d="M128 128 C160 128 180 158 182 188 C184 208 172 216 150 216 L106 216 C84 216 72 208 74 188 C76 158 96 128 128 128 Z" fill="url(#puppy_sleepy_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="128" cy="174" rx="26" ry="30" fill="#FFFBEB"/>
+    </g>
+    <g id="paws">
+      <ellipse cx="110" cy="212" rx="14" ry="8.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="146" cy="212" rx="14" ry="8.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+    <g id="head" transform="rotate(8 128 150)">
+      <path d="M128 42 C171 42 194 68 194 100 C194 134 166 154 128 154 C90 154 62 134 62 100 C62 68 85 42 128 42 Z" fill="url(#puppy_sleepy_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M84.1 73.4 C82.1 70.1 85.7 64.2 92.3 60.1 C98.8 56 105.8 55.3 107.9 58.6 C109.9 61.9 106.3 67.8 99.7 71.9 C93.2 76 86.2 76.7 84.1 73.4 Z" fill="#FFFFFF" opacity="0.7"/>
+      <path d="M161.6 101.9 Q159 107.4 151.3 107.8 Q143.6 108.2 141.9 102 Q140.2 95.9 135.7 90 Q131.1 84.2 138.6 81.5 Q146 78.8 152.1 79.5 Q158.1 80.2 166 82.5 Q173.8 84.8 168.9 90.7 Q164.1 96.5 161.6 101.9 Z" fill="url(#puppy_sleepy_acc)"/>
+      <ellipse cx="128" cy="125" rx="25" ry="18" fill="#FFFBEB"/>
+      <ellipse cx="86" cy="120" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="170" cy="120" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <path d="M95.5 98 A8.5 12 0 0 0 112.5 98 Z" fill="#342C35"/>
+      <circle cx="106" cy="102" r="2" fill="#FFFFFF" opacity="0.85"/>
+      <path d="M93.5 98 Q104 95 114.5 98" fill="none" stroke="#342C35" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M143.5 98 A8.5 12 0 0 0 160.5 98 Z" fill="#342C35"/>
+      <circle cx="154" cy="102" r="2" fill="#FFFFFF" opacity="0.85"/>
+      <path d="M141.5 98 Q152 95 162.5 98" fill="none" stroke="#342C35" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M116 110 Q128 102 140 110 Q136 120 128 123 Q120 120 116 110 Z" fill="#594047" stroke="#4B372F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="122" cy="109" rx="4" ry="2.2" fill="#FFFFFF" opacity="0.6"/>
+      <path d="M121 128 Q128 124 135 128 Q137 143 128 144 Q119 143 121 128 Z" fill="#8A3B2E" stroke="#4B372F" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="128" cy="139" rx="5" ry="3.5" fill="#F28B8B"/>
+      <path d="M85.4 56.8 C60.7 55 46.4 77.8 52.6 107.2 C58.1 132.6 72.7 146.3 84.8 140.1 C96.8 132.9 100.3 106.9 97 64.9 Z" fill="url(#puppy_sleepy_acc)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M170.6 56.8 C195.3 55 209.6 77.8 203.4 107.2 C197.9 132.6 183.3 146.3 171.2 140.1 C159.2 132.9 155.7 106.9 159 64.9 Z" fill="url(#puppy_sleepy_acc)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g id="fx">
+    <path d="M198 40 L210.0 40 L198 52.0 L210.0 52.0" fill="none" stroke="#6E7FB0" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" opacity="0.7"/>
+    <path d="M220 20 L229.0 20 L220 29.0 L229.0 29.0" fill="none" stroke="#6E7FB0" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.5"/>
+  </g>
+</svg>

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.woodland.duck - asleep. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- sunshine light -> sunshine (duckling) -->
+    <linearGradient id="duck_asleep_down" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FFE28F"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="229" rx="64" ry="10.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="character" transform="translate(128 216) scale(1.05 0.93) translate(-128 -216)">
+    <g id="feet">
+      <path d="M92 214 L104 200 L116 214 Z" fill="#F59E0B" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M140 214 L152 200 L164 214 Z" fill="#F59E0B" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="wings">
+      <path d="M66 136 C50 148 48 172 62 186 C70 172 74 154 70 138 Z" fill="#F6B42C" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M190 136 C206 148 208 172 194 186 C186 172 182 154 186 138 Z" fill="#F6B42C" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <path d="M128 66 C172 66 198 100 198 144 C198 186 168 210 128 210 C88 210 58 186 58 144 C58 100 84 66 128 66 Z" fill="url(#duck_asleep_down)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M118 70 C114 54 124 44 130 56 C134 44 146 50 138 68" fill="url(#duck_asleep_down)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M82.1 99.4 C80.1 96.1 83.7 90.2 90.3 86.1 C96.8 82 103.8 81.3 105.9 84.6 C107.9 87.9 104.3 93.8 97.7 97.9 C91.2 102 84.2 102.7 82.1 99.4 Z" fill="#FFFFFF" opacity="0.7"/>
+    </g>
+    <g id="face">
+      <ellipse cx="86" cy="132" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="170" cy="132" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <path d="M94 110 Q104 118 114 110" fill="none" stroke="#342C35" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M142 110 Q152 118 162 110" fill="none" stroke="#342C35" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M98 132 C98 120 158 120 158 132 C158 146 140 150 128 150 C116 150 98 146 98 132 Z" fill="#F39A38" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M104 134 Q128 140 152 134" fill="none" stroke="#B8651E" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g id="fx">
+    <path d="M196 46 L208.0 46 L196 58.0 L208.0 58.0" fill="none" stroke="#6E7FB0" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" opacity="0.7"/>
+    <path d="M218 24 L227.0 24 L218 33.0 L227.0 33.0" fill="none" stroke="#6E7FB0" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.5"/>
+  </g>
+</svg>

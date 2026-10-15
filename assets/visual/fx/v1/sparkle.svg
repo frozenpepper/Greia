@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.sparkle frame 1 (default): one big and two small four-point gold sparkles -->
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M64 28 Q70.1 55.9 98 62 Q70.1 68.1 64 96 Q57.9 68.1 30 62 Q57.9 55.9 64 28 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M30 19 Q32 28 41 30 Q32 32 30 41 Q28 32 19 30 Q28 28 30 19 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M98 85 Q100.3 95.7 111 98 Q100.3 100.3 98 111 Q95.7 100.3 85 98 Q95.7 95.7 98 85 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M52 46 Q55 40 60 38" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.9"/>
+  </g>
+</svg>

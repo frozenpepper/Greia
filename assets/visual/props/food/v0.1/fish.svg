@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.food.fish — little orange fish. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange light -> orange -->
+    <linearGradient id="food_fish_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C288"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="132" cy="232" rx="82" ry="13.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="fish">
+    <path d="M112 112 C118 84 146 78 164 96 L156 116 Z" fill="#CE8436" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M180 156 L222 124 C230 118 238 124 236 132 L228 168 L236 204 C238 212 230 218 222 212 L180 180 Z" fill="#CE8436" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M38 168 C54 122 116 104 160 124 C176 132 188 144 194 168 C188 192 176 204 160 212 C116 232 54 214 38 168 Z" fill="url(#food_fish_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M124 128 C134 148 134 188 124 208" fill="none" stroke="#CE8436" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="82" cy="158" r="13" fill="#FFFFFF" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="85" cy="159" r="7" fill="#342C35"/>
+    <circle cx="82" cy="155" r="2.6" fill="#FFFFFF"/>
+    <path d="M52 182 C58 190 68 192 76 188" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M66 138 C80 128 98 124 114 124" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.75"/>
+  </g>
+</svg>

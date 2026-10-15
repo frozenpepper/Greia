@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- meadow_day: far hazy hills (transparent above y 244).
+       Scene layer meadow_day_far; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- sky light -> sky haze (far hills) -->
+    <linearGradient id="meadow_day_far_haze" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C9DDF0"/>
+      <stop offset="1" stop-color="#DDEBF2"/>
+    </linearGradient>
+  </defs>
+  <g id="far">
+    <path d="M0 300 C60 268 130 260 200 278 C260 246 340 244 410 276 C470 258 540 256 610 278 C680 250 770 246 840 272 C910 256 980 258 1024 276 L1024 440 L0 440 Z" fill="url(#meadow_day_far_haze)"/>
+    <path d="M0 326 C80 304 170 300 250 316 C330 300 420 298 500 318 C590 300 690 298 780 316 C860 302 950 304 1024 318 L1024 440 L0 440 Z" fill="#C6E0CF"/>
+    <g fill="#B2D3BC">
+      <circle cx="96" cy="316" r="9"/><circle cx="110" cy="312" r="11"/><circle cx="124" cy="317" r="8"/>
+      <circle cx="904" cy="312" r="10"/><circle cx="918" cy="308" r="12"/><circle cx="932" cy="314" r="9"/>
+      <circle cx="452" cy="314" r="7"/><circle cx="463" cy="311" r="8"/>
+    </g>
+  </g>
+</svg>

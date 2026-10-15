@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" width="512" height="256">
+  <!-- Greia prop: prop.blocks.arch_sunshine — sunshine toy block, arch. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="blocks_arch_sunshine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFD77B"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="block">
+    <path d="M6 250 L6 20 Q6 6 20 6 L492 6 Q506 6 506 20 L506 250 L382 250 A126 126 0 0 0 130 250 Z" fill="url(#blocks_arch_sunshine)" stroke="#4B372F" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M30 90 C70 84 100 96 130 90 M382 90 C420 84 450 96 482 90 M150 60 C250 50 330 70 400 58" fill="none" stroke="#DBA633" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+    <path d="M24 24 L488 24" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+  </g>
+</svg>

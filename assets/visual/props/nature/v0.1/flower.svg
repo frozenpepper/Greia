@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.nature.flower — pink flower on a stem. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- raspberry light -->
+    <linearGradient id="nature_flower_petal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EDB3C7"/>
+      <stop offset="1" stop-color="#D85683"/>
+    </linearGradient>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="nature_flower_leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="50" ry="8.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="flower">
+    <path d="M128 120 L128 232" fill="none" stroke="#4B372F" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128 120 L128 232" fill="none" stroke="#59B86A" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M126 196 C100 170 70 172 56 186 C76 206 104 208 126 196 Z" fill="url(#nature_flower_leaf)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M130 174 C156 148 186 150 200 164 C180 184 152 186 130 174 Z" fill="url(#nature_flower_leaf)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="128.0" cy="40.0" rx="30" ry="24" fill="url(#nature_flower_petal)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round" transform="rotate(-90 128.0 40.0)"/>
+    <ellipse cx="166.1" cy="62.0" rx="30" ry="24" fill="url(#nature_flower_petal)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round" transform="rotate(-30 166.1 62.0)"/>
+    <ellipse cx="166.1" cy="106.0" rx="30" ry="24" fill="url(#nature_flower_petal)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round" transform="rotate(30 166.1 106.0)"/>
+    <ellipse cx="128.0" cy="128.0" rx="30" ry="24" fill="url(#nature_flower_petal)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round" transform="rotate(90 128.0 128.0)"/>
+    <ellipse cx="89.9" cy="106.0" rx="30" ry="24" fill="url(#nature_flower_petal)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round" transform="rotate(150 89.9 106.0)"/>
+    <ellipse cx="89.9" cy="62.0" rx="30" ry="24" fill="url(#nature_flower_petal)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round" transform="rotate(210 89.9 62.0)"/>
+    <circle cx="128" cy="84" r="26" fill="#FFC234" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="120" cy="76" rx="7" ry="4" fill="#FFFFFF" opacity="0.75" transform="rotate(-30 120 76)"/>
+  </g>
+</svg>

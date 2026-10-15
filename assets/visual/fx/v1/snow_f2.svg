@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.snow frame 2: flakes drift down and sway (loop with frame 1) -->
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="10" cy="28" r="5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/>
+    <circle cx="58" cy="22" r="4" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/>
+    <circle cx="92" cy="34" r="6" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/>
+    <circle cx="34" cy="62" r="4" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/>
+    <circle cx="70" cy="58" r="5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/>
+    <circle cx="120" cy="72" r="4" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/>
+    <circle cx="10" cy="100" r="6" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/>
+    <circle cx="60" cy="96" r="4" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/>
+    <circle cx="92" cy="108" r="5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/>
+    <circle cx="42" cy="8" r="4" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/>
+  </g>
+</svg>

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.pet.kitten - neutral. Non-cast pet, flat Greia vector. -->
+  <defs>
+    <!-- charcoal light steps (soft grey tabby kitten) -->
+    <linearGradient id="kitten_neutral_fur" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#EEF1F6"/>
+      <stop offset="1" stop-color="#B4BECE"/>
+    </linearGradient>
+    <!-- accent light -> accent -->
+    <linearGradient id="kitten_neutral_acc" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#9AA6BA"/>
+      <stop offset="1" stop-color="#7F8CA3"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="229" rx="62" ry="10.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="character">
+    <g id="tail">
+      <path d="M174 206 C206 206 220 182 212 158 C207 142 216 132 226 138" fill="none" stroke="#4B372F" stroke-width="21" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M174 206 C206 206 220 182 212 158 C207 142 216 132 226 138" fill="none" stroke="#A3AEC0" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <ellipse cx="86" cy="198" rx="20" ry="17" fill="url(#kitten_neutral_fur)" stroke="#4B372F" stroke-width="3.5"/>
+      <ellipse cx="170" cy="198" rx="20" ry="17" fill="url(#kitten_neutral_fur)" stroke="#4B372F" stroke-width="3.5"/>
+      <ellipse cx="80" cy="214" rx="12" ry="7" fill="#EEF1F6" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="176" cy="214" rx="12" ry="7" fill="#EEF1F6" stroke="#4B372F" stroke-width="2.5"/>
+      <path d="M128 128 C160 128 180 158 182 188 C184 208 172 216 150 216 L106 216 C84 216 72 208 74 188 C76 158 96 128 128 128 Z" fill="url(#kitten_neutral_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="128" cy="174" rx="26" ry="30" fill="#FFFFFF"/>
+    </g>
+    <g id="paws">
+      <ellipse cx="110" cy="212" rx="14" ry="8.5" fill="#FFFFFF" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="146" cy="212" rx="14" ry="8.5" fill="#FFFFFF" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+    <g id="head">
+      <path d="M70 86 C64 66 64 44 72 30 C88 34 104 46 114 58 Z" fill="url(#kitten_neutral_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M186 86 C192 66 192 44 184 30 C168 34 152 46 142 58 Z" fill="url(#kitten_neutral_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M77 72 C74 60 74 48 78 40 C88 44 96 50 102 57 Z" fill="#FBB5BF"/>
+      <path d="M179 72 C182 60 182 48 178 40 C168 44 160 50 154 57 Z" fill="#FBB5BF"/>
+      <path d="M128 48 C168 48 190 72 190 104 C190 120 186 130 193 140 C178 148 160 156 128 156 C96 156 78 148 63 140 C70 130 66 120 66 104 C66 72 88 48 128 48 Z" fill="url(#kitten_neutral_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M84.1 73.4 C82.1 70.1 85.7 64.2 92.3 60.1 C98.8 56 105.8 55.3 107.9 58.6 C109.9 61.9 106.3 67.8 99.7 71.9 C93.2 76 86.2 76.7 84.1 73.4 Z" fill="#FFFFFF" opacity="0.7"/>
+      <path d="M128 52 L128 68" fill="none" stroke="#7F8CA3" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M113 55 L116 66" fill="none" stroke="#7F8CA3" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M143 55 L140 66" fill="none" stroke="#7F8CA3" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="128" cy="125" rx="25" ry="18" fill="#FFFFFF"/>
+      <ellipse cx="86" cy="120" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="170" cy="120" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="104" cy="96" rx="8.5" ry="12" fill="#342C35"/>
+      <ellipse cx="152" cy="96" rx="8.5" ry="12" fill="#342C35"/>
+      <ellipse cx="107" cy="92" rx="2.9" ry="3.6" fill="#FFFFFF"/>
+      <ellipse cx="155" cy="92" rx="2.9" ry="3.6" fill="#FFFFFF"/>
+      <circle cx="102.0" cy="100" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+      <circle cx="150.0" cy="100" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+      <path d="M121 113 Q128 109 135 113 Q132 120 128 121 Q124 120 121 113 Z" fill="#F28B9B" stroke="#4B372F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M100 122 L80 117" fill="none" stroke="#7F8CA3" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M156 122 L176 117" fill="none" stroke="#7F8CA3" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M100 129 L79 131" fill="none" stroke="#7F8CA3" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M156 129 L177 131" fill="none" stroke="#7F8CA3" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M128 121 L128 126 M117 125 Q122 132 128 126 Q134 132 139 125" fill="none" stroke="#72513F" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

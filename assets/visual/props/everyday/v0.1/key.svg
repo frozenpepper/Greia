@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.everyday.key — golden key. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- cast gold light -> gold -->
+    <linearGradient id="everyday_key_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FEF08A"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="132" cy="232" rx="96" ry="16.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="key" transform="rotate(-28 128 172) scale(1.08) translate(0 -34)">
+    <path d="M100 160 L214 160 C222 160 226 164 226 172 L226 182 L214 182 L214 206 L194 206 L194 182 L178 182 L178 198 L160 198 L160 182 L100 182 Z" fill="url(#everyday_key_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <circle cx="72" cy="170" r="48" fill="url(#everyday_key_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <circle cx="62" cy="170" r="18" fill="#F7EBCB" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M48 138 C58 130 70 128 82 130" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+    <path d="M112 166 L180 166" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  </g>
+</svg>

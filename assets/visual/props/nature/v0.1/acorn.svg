@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.nature.acorn — acorn with cap. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange light -> orange shade -->
+    <linearGradient id="nature_acorn_nut" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BD7E"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="56" ry="9.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="acorn">
+    <path d="M62 112 C62 176 96 222 128 232 C160 222 194 176 194 112 Z" fill="url(#nature_acorn_nut)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M84 132 C88 170 104 198 120 212" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+    <path d="M128 50 C128 36 134 26 144 20" fill="none" stroke="#4B372F" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128 50 C128 36 134 26 144 20" fill="none" stroke="#78350F" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M44 112 C44 70 82 48 128 48 C174 48 212 70 212 112 C212 124 196 128 128 128 C60 128 44 124 44 112 Z" fill="#B45309" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M70 74 L104 122 M100 58 L140 122 M136 54 L176 120 M172 66 L198 104 M62 98 L84 124 M78 66 L58 92" fill="none" stroke="#92400E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

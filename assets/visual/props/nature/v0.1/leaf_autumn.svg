@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.nature.leaf_autumn — orange maple leaf. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange light -> coral -->
+    <linearGradient id="nature_leaf_autumn_body" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#F7B874"/>
+      <stop offset="1" stop-color="#E66B5D"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="70" ry="11.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="leaf_autumn">
+    <path d="M128 200 L128 232" fill="none" stroke="#4B372F" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128 200 L128 232" fill="none" stroke="#B45309" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128 18 L146 70 L184 52 L174 100 L226 92 L200 132 L234 154 L184 162 L192 196 L140 172 L134 214 L122 214 L116 172 L64 196 L72 162 L22 154 L56 132 L30 92 L82 100 L72 52 L110 70 Z" fill="url(#nature_leaf_autumn_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M128 204 L128 46 M128 150 L74 116 M128 150 L182 116 M128 170 L60 162 M128 170 L196 162" fill="none" stroke="#C17C35" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

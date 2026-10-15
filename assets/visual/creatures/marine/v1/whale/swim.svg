@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" width="512" height="256">
+  <!-- Greia creature.marine.whale - default. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- ocean light steps (blue whale) -->
+    <linearGradient id="whale_default_body" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#A6C9EC"/>
+      <stop offset="1" stop-color="#6A9FD8"/>
+    </linearGradient>
+    <clipPath id="whale_default_clip"><path d="M70 150 C110 112 170 88 260 82 C360 76 446 102 472 148 C490 184 470 220 420 230 C340 244 220 234 150 212 C112 200 88 182 70 150 Z"/></clipPath>
+  </defs>
+  <g id="character">
+    <g id="fins_back">
+      <path d="M94 164 C72 144 52 112 28 100 C32 124 42 144 58 158 C38 162 24 176 16 196 C44 198 70 186 98 172 Z" fill="url(#whale_default_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M246 86 C254 72 266 66 280 66 C276 74 276 80 280 84 Z" fill="url(#whale_default_body)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <path d="M70 150 C110 112 170 88 260 82 C360 76 446 102 472 148 C490 184 470 220 420 230 C340 244 220 234 150 212 C112 200 88 182 70 150 Z" fill="url(#whale_default_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <g clip-path="url(#whale_default_clip)"><path d="M180 220 C260 196 380 186 480 170 L480 250 L180 250 Z" fill="#E3F0FA"/><path d="M290 214 C340 204 400 198 452 186 M300 226 C350 216 404 210 448 200" fill="none" stroke="#9DC0E2" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></g>
+      <path d="M70 150 C110 112 170 88 260 82 C360 76 446 102 472 148 C490 184 470 220 420 230 C340 244 220 234 150 212 C112 200 88 182 70 150 Z" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M250.1 97.4 C250.3 93 272.8 90.6 300.4 92 C328 93.5 350.2 98.2 349.9 102.6 C349.7 107 327.2 109.4 299.6 108 C272 106.5 249.8 101.8 250.1 97.4 Z" fill="#FFFFFF" opacity="0.6"/>
+    </g>
+    <g id="fin_front">
+      <path d="M300 206 C300 232 282 246 252 250 C260 234 274 218 286 204 Z" fill="#7FAFDF" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="face">
+      <ellipse cx="404" cy="146" rx="11" ry="13" fill="#342C35"/>
+      <ellipse cx="407.3" cy="141.4" rx="4.0" ry="4.2" fill="#FFFFFF"/>
+      <circle cx="400.7" cy="151.2" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+      <ellipse cx="412" cy="170" rx="10" ry="5.5" fill="#FDA4AF" opacity="0.55"/>
+      <path d="M436 186 Q456 190 474 172" fill="none" stroke="#72513F" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

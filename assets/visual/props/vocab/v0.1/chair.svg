@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.chair — wooden chair with a cushion. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- Leo brown light -->
+    <linearGradient id="vocab_chair_wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E6A75D"/>
+      <stop offset="1" stop-color="#D97706"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="84" ry="14.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="chair">
+    <rect x="58" y="30" width="22" height="202" rx="9" fill="url(#vocab_chair_wood)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="172" y="140" width="22" height="92" rx="9" fill="url(#vocab_chair_wood)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="84" y="152" width="20" height="80" rx="8" fill="#AE6412" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="74" y="50" width="50" height="18" rx="7" fill="url(#vocab_chair_wood)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="74" y="90" width="50" height="18" rx="7" fill="url(#vocab_chair_wood)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="50" y="132" width="156" height="24" rx="10" fill="url(#vocab_chair_wood)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M66 132 C66 112 196 112 200 132 Z" fill="#F46F61" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+  </g>
+</svg>

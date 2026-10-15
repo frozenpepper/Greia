@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.marine.jellyfish - happy. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- lavender -> grape light -->
+    <linearGradient id="jellyfish_happy_bell" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#F6F0FD"/>
+      <stop offset="1" stop-color="#C9B0EE"/>
+    </linearGradient>
+  </defs>
+  <g id="character">
+    <g id="tentacles">
+      <path d="M88 124 C76 146.2 88.9 164.8 77.2 185.1 C68.5 199.8 76.3 213.3 70.3 224.5" fill="none" stroke="#4B372F" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M88 124 C76 146.2 88.9 164.8 77.2 185.1 C68.5 199.8 76.3 213.3 70.3 224.5" fill="none" stroke="#F7B3C7" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M168 124 C171.7 149 153.2 162 157.2 185.1 C160.4 201.9 148.4 211.9 150.3 224.5" fill="none" stroke="#4B372F" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M168 124 C171.7 149 153.2 162 157.2 185.1 C160.4 201.9 148.4 211.9 150.3 224.5" fill="none" stroke="#F7B3C7" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M114 128 C106 156 124 170 114 196 C108 212 118 222 114 232" fill="none" stroke="#4B372F" stroke-width="17" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M114 128 C106 156 124 170 114 196 C108 212 118 222 114 232" fill="none" stroke="#A6E1DA" stroke-width="11.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M142 128 C150 156 132 170 142 196 C148 212 138 222 142 232" fill="none" stroke="#4B372F" stroke-width="17" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M142 128 C150 156 132 170 142 196 C148 212 138 222 142 232" fill="none" stroke="#A6E1DA" stroke-width="11.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="bell">
+      <path d="M56 122 C56 74 90 40 128 40 C166 40 200 74 200 122 C192 130 184 120 174 127 C166 133 158 124 148 130 C140 135 134 126 128 130 C122 134 116 126 108 130 C98 134 90 124 82 127 C72 131 64 120 56 122 Z" fill="url(#jellyfish_happy_bell)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M78.7 74.9 C76.3 71.3 80.2 64.3 87.5 59.4 C94.9 54.4 102.8 53.4 105.3 57.1 C107.7 60.7 103.8 67.7 96.5 72.6 C89.1 77.6 81.2 78.6 78.7 74.9 Z" fill="#FFFFFF" opacity="0.85"/>
+      <circle cx="150" cy="56" r="5" fill="#FFFFFF" opacity="0.8"/>
+      <circle cx="168" cy="72" r="3.5" fill="#FFFFFF" opacity="0.8"/>
+    </g>
+    <g id="face">
+      <ellipse cx="88" cy="106" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="168" cy="106" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+      <path d="M99 96 Q108 83 117 96" fill="none" stroke="#342C35" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M139 96 Q148 83 157 96" fill="none" stroke="#342C35" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M116 108 Q128.0 111.0 140 108 Q130.0 123.0 116 108 Z" fill="#8A3B2E" stroke="#4B372F" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M122.0 114.8 Q128.0 111.5 135.0 114.6 Q130.0 118.5 122.0 114.8 Z" fill="#F28B8B"/>
+    </g>
+  </g>
+  <g id="fx">
+    <path d="M34 60 Q35.7 68.3 44 70 Q35.7 71.7 34 80 Q32.3 71.7 24 70 Q32.3 68.3 34 60 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="222" cy="60" r="6.3" fill="#E6F6FD" stroke="#4F86A8" stroke-width="2" opacity="0.9"/><ellipse cx="219.8" cy="57.8" rx="1.8" ry="1.3" fill="#FFFFFF"/>
+  </g>
+</svg>

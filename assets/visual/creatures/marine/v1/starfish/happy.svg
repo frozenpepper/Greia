@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.marine.starfish - happy. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- sunshine light -> orange -->
+    <linearGradient id="starfish_happy_body" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FFD27E"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="228" rx="72" ry="12.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="character">
+    <g id="body">
+      <path d="M96.1 102.9 L103.4 50 Q113.5 33 127.9 46.5 L149.6 95.4 L202.2 86 Q221.5 90.4 213.1 108.4 L173.3 144 L198.4 191 Q200.2 210.8 180.6 208.4 L134.4 181.6 L97.4 220.1 Q79.2 227.8 75.5 208.3 L86.7 156.1 L38.6 132.9 Q25.6 118 42.9 108.4 L96.1 102.9 Z" fill="url(#starfish_happy_body)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M105 72 C105 65.4 108.1 60 112 60 C115.9 60 119 65.4 119 72 C119 78.6 115.9 84 112 84 C108.1 84 105 78.6 105 72 Z" fill="#FFFFFF" opacity="0.6"/>
+      <circle cx="118.3" cy="66.7" r="5" fill="#FFF1CF"/>
+      <circle cx="190.9" cy="105.3" r="5" fill="#FFF1CF"/>
+      <circle cx="176.6" cy="186.4" r="5" fill="#FFF1CF"/>
+      <circle cx="95.1" cy="197.8" r="5" fill="#FFF1CF"/>
+      <circle cx="59.1" cy="123.8" r="5" fill="#FFF1CF"/>
+    </g>
+    <g id="face">
+      <ellipse cx="102" cy="150" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="154" cy="150" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+      <path d="M103.5 136 Q112 123 120.5 136" fill="none" stroke="#342C35" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M135.5 136 Q144 123 152.5 136" fill="none" stroke="#342C35" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M116 150 Q128.0 153.0 140 150 Q130.0 166.0 116 150 Z" fill="#8A3B2E" stroke="#4B372F" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M122.0 157.4 Q128.0 153.8 135.0 157.2 Q130.0 161.4 122.0 157.4 Z" fill="#F28B8B"/>
+    </g>
+  </g>
+  <g id="fx">
+    <path d="M36 42 Q37.7 50.3 46 52 Q37.7 53.7 36 62 Q34.3 53.7 26 52 Q34.3 50.3 36 42 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M222 37 Q223.5 44.5 231 46 Q223.5 47.5 222 55 Q220.5 47.5 213 46 Q220.5 44.5 222 37 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.food.carrot — orange carrot with green top. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange light -> orange -->
+    <linearGradient id="food_carrot_body" x1="0" y1="0" x2="1" y2="0.6">
+      <stop offset="0" stop-color="#F8C288"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="food_carrot_leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="124" cy="232" rx="76" ry="12.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="carrot">
+    <path d="M164 78 C150 52 148 34 156 18 C170 34 176 54 174 74 Z" fill="url(#food_carrot_leaf)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M172 82 C182 56 198 42 222 38 C218 60 202 76 180 88 Z" fill="url(#food_carrot_leaf)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M160 84 C142 66 124 58 104 58 C112 76 130 88 154 92 Z" fill="url(#food_carrot_leaf)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M150 74 C178 74 198 96 194 122 C186 160 118 210 72 228 C60 232 52 224 58 214 C80 176 110 112 128 86 C134 78 142 74 150 74 Z" fill="url(#food_carrot_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M126 110 L146 118" fill="none" stroke="#CE8436" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M164 132 L184 138" fill="none" stroke="#CE8436" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M106 150 L126 160" fill="none" stroke="#CE8436" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M138 168 L156 172" fill="none" stroke="#CE8436" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M90 192 L106 198" fill="none" stroke="#CE8436" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M140 92 C126 110 108 144 92 176" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.75"/>
+  </g>
+</svg>

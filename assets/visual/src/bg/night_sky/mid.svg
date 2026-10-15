@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- night_sky: moonlit mid hill.
+       Scene layer night_sky_mid; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <g id="mid">
+    <path d="M-8 352 C90 326 190 324 280 344 C370 330 470 334 560 352 C650 332 760 326 860 344 C930 334 990 336 1032 346 L1032 470 L-8 470 Z" fill="#3E6468" stroke="#2E4F55" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M40 346 C110 332 190 331 250 340" fill="none" stroke="#6F8FA6" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+    <path d="M610 344 C680 331 760 329 830 338" fill="none" stroke="#6F8FA6" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+    <g id="mid_trees"><g transform="translate(318 344)"><path d="M0 0 L0 -14" fill="none" stroke="#2E4F55" stroke-width="3" stroke-linecap="round"/><path d="M-12 -12 C-20 -14 -19 -28 -10 -29 C-11 -40 4 -44 9 -36 C17 -41 27 -32 22 -24 C29 -20 25 -10 17 -12 C10 -7 -5 -7 -12 -12 Z" fill="#3F6E6A" stroke="#2E4F55" stroke-width="2" stroke-linejoin="round"/></g><g transform="translate(708 340)"><path d="M0 0 L0 -14" fill="none" stroke="#2E4F55" stroke-width="3" stroke-linecap="round"/><path d="M-12 -12 C-20 -14 -19 -28 -10 -29 C-11 -40 4 -44 9 -36 C17 -41 27 -32 22 -24 C29 -20 25 -10 17 -12 C10 -7 -5 -7 -12 -12 Z" fill="#467772" stroke="#2E4F55" stroke-width="2" stroke-linejoin="round"/></g><g transform="translate(60 346) scale(1.2)"><path d="M0 0 L0 -14" fill="none" stroke="#2E4F55" stroke-width="3" stroke-linecap="round"/><path d="M-12 -12 C-20 -14 -19 -28 -10 -29 C-11 -40 4 -44 9 -36 C17 -41 27 -32 22 -24 C29 -20 25 -10 17 -12 C10 -7 -5 -7 -12 -12 Z" fill="#3F6E6A" stroke="#2E4F55" stroke-width="2" stroke-linejoin="round"/></g><g transform="translate(968 344) scale(1.15)"><path d="M0 0 L0 -14" fill="none" stroke="#2E4F55" stroke-width="3" stroke-linecap="round"/><path d="M-12 -12 C-20 -14 -19 -28 -10 -29 C-11 -40 4 -44 9 -36 C17 -41 27 -32 22 -24 C29 -20 25 -10 17 -12 C10 -7 -5 -7 -12 -12 Z" fill="#467772" stroke="#2E4F55" stroke-width="2" stroke-linejoin="round"/></g></g>
+  </g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- sky_clouds: big puffy clouds framing the corners; transparent centre.
+       Scene layer sky_clouds_foreground; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <g id="foreground">
+    <g transform="translate(-60 640) scale(1.15)"><path d="M18 0 C-4 0 -8 -30 14 -38 C10 -70 46 -88 72 -72 C84 -104 136 -110 154 -78 C174 -96 214 -88 218 -58 C246 -60 262 -30 246 -12 C252 -4 248 0 240 0 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="2.6" stroke-linejoin="round"/><path d="M30 -46 C34 -62 50 -70 66 -64" fill="none" stroke="#FFFFFF" stroke-width="6.1" stroke-linecap="round" opacity="0.8"/></g><g transform="translate(1100 650) scale(-1.2 1.2)"><path d="M18 0 C-4 0 -8 -30 14 -38 C10 -70 46 -88 72 -72 C84 -104 136 -110 154 -78 C174 -96 214 -88 218 -58 C246 -60 262 -30 246 -12 C252 -4 248 0 240 0 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="2.5" stroke-linejoin="round"/><path d="M30 -46 C34 -62 50 -70 66 -64" fill="none" stroke="#FFFFFF" stroke-width="5.8" stroke-linecap="round" opacity="0.8"/></g>
+    <g transform="translate(950 40) scale(0.7)" opacity="0.95"><path d="M18 0 C-4 0 -8 -30 14 -38 C10 -70 46 -88 72 -72 C84 -104 136 -110 154 -78 C174 -96 214 -88 218 -58 C246 -60 262 -30 246 -12 C252 -4 248 0 240 0 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="4.3" stroke-linejoin="round"/><path d="M30 -46 C34 -62 50 -70 66 -64" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" opacity="0.8"/></g>
+  </g>
+</svg>

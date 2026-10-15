@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.confetti frame 1 (default, burst peak): 14 confetti pieces in Greia accent tokens, ink contour -->
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="84.5" y="48.5" width="9" height="16" rx="2" fill="#F46F61" stroke="#4B372F" stroke-width="2" transform="rotate(117.2 89 56.5)"/>
+    <rect x="90.8" y="59.7" width="9" height="16" rx="2" fill="#FFC234" stroke="#4B372F" stroke-width="2" transform="rotate(65.8 95.3 67.7)"/>
+    <circle cx="87.7" cy="79.8" r="5.5" fill="#59B86A" stroke="#4B372F" stroke-width="2"/>
+    <rect x="65.2" y="72.7" width="9" height="16" rx="2" fill="#4A91D8" stroke="#4B372F" stroke-width="2" transform="rotate(16.3 69.7 80.7)"/>
+    <rect x="51.9" y="87.8" width="9" height="16" rx="2" fill="#9464C9" stroke="#4B372F" stroke-width="2" transform="rotate(22.3 56.4 95.8)"/>
+    <circle cx="45.2" cy="87" r="5.5" fill="#44B8AE" stroke="#4B372F" stroke-width="2"/>
+    <rect x="32.2" y="62.3" width="9" height="16" rx="2" fill="#D85683" stroke="#4B372F" stroke-width="2" transform="rotate(175.7 36.7 70.3)"/>
+    <rect x="20.8" y="56.2" width="9" height="16" rx="2" fill="#F46F61" stroke="#4B372F" stroke-width="2" transform="rotate(52.1 25.3 64.2)"/>
+    <circle cx="40.9" cy="50.2" r="5.5" fill="#FFC234" stroke="#4B372F" stroke-width="2"/>
+    <rect x="45.8" y="28.3" width="9" height="16" rx="2" fill="#59B86A" stroke="#4B372F" stroke-width="2" transform="rotate(104.7 50.3 36.3)"/>
+    <rect x="54.3" y="21" width="9" height="16" rx="2" fill="#4A91D8" stroke="#4B372F" stroke-width="2" transform="rotate(98.6 58.8 29)"/>
+    <circle cx="65.7" cy="34.9" r="5.5" fill="#9464C9" stroke="#4B372F" stroke-width="2"/>
+    <rect x="80" y="27.4" width="9" height="16" rx="2" fill="#44B8AE" stroke="#4B372F" stroke-width="2" transform="rotate(56.5 84.5 35.4)"/>
+    <rect x="87.9" y="37.4" width="9" height="16" rx="2" fill="#D85683" stroke="#4B372F" stroke-width="2" transform="rotate(54 92.4 45.4)"/>
+  </g>
+</svg>

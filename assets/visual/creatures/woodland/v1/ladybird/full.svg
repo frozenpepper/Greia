@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.woodland.ladybird - full. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- coral light -> coral shade (ladybird) -->
+    <linearGradient id="ladybird_open_shell" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#F59A8E"/>
+      <stop offset="1" stop-color="#E3574A"/>
+    </linearGradient>
+    <!-- navy light -> navy -->
+    <linearGradient id="ladybird_open_head" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#4F5F80"/>
+      <stop offset="1" stop-color="#2F3E58"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="229" rx="60" ry="10.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="character">
+    <g id="legs">
+      <path d="M66 150 C52 150 42 158 38 170" fill="none" stroke="#4B372F" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M190 150 C204 150 214 158 218 170" fill="none" stroke="#4B372F" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M64 172 C50 176 42 186 40 198" fill="none" stroke="#4B372F" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M192 172 C206 176 214 186 216 198" fill="none" stroke="#4B372F" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M74 192 C62 200 56 208 54 216" fill="none" stroke="#4B372F" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M182 192 C194 200 200 208 202 216" fill="none" stroke="#4B372F" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="shell">
+      <path d="M128 104 C178 104 208 136 208 166 C208 198 176 214 128 214 C80 214 48 198 48 166 C48 136 78 104 128 104 Z" fill="url(#ladybird_open_shell)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M128 116 L128 212" fill="none" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="92" cy="150" r="11" fill="#2F3E58"/>
+      <circle cx="164" cy="150" r="11" fill="#2F3E58"/>
+      <circle cx="80" cy="186" r="9" fill="#2F3E58"/>
+      <circle cx="176" cy="186" r="9" fill="#2F3E58"/>
+      <circle cx="108" cy="194" r="8" fill="#2F3E58"/>
+      <circle cx="148" cy="194" r="8" fill="#2F3E58"/>
+      <path d="M66.4 143.8 C64.5 141.1 68.2 135.3 74.6 131 C81.1 126.7 87.8 125.4 89.6 128.2 C91.5 130.9 87.8 136.7 81.4 141 C74.9 145.3 68.2 146.6 66.4 143.8 Z" fill="#FFFFFF" opacity="0.7"/>
+    </g>
+    <g id="head">
+      <path d="M112 66 C104 48 92 40 82 44" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M144 66 C152 48 164 40 174 44" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="82" cy="44" r="6" fill="#4F5F80" stroke="#4B372F" stroke-width="2.5"/>
+      <circle cx="174" cy="44" r="6" fill="#4F5F80" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="128" cy="98" rx="44" ry="38" fill="url(#ladybird_open_head)" stroke="#4B372F" stroke-width="3.5"/>
+      <path d="M97.3 83 C96 80.6 98.7 76.4 103.5 73.7 C108.3 70.9 113.3 70.6 114.7 73 C116 75.4 113.3 79.6 108.5 82.3 C103.7 85.1 98.7 85.4 97.3 83 Z" fill="#FFFFFF" opacity="0.45"/>
+      <ellipse cx="110" cy="96" rx="12" ry="13" fill="#FFFFFF" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="111" cy="98" rx="7" ry="8.5" fill="#342C35"/>
+      <ellipse cx="113" cy="94" rx="2.4" ry="2.6" fill="#FFFFFF"/>
+      <ellipse cx="146" cy="96" rx="12" ry="13" fill="#FFFFFF" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="147" cy="98" rx="7" ry="8.5" fill="#342C35"/>
+      <ellipse cx="149" cy="94" rx="2.4" ry="2.6" fill="#FFFFFF"/>
+      <ellipse cx="96" cy="116" rx="7" ry="4" fill="#FDA4AF" opacity="0.6"/>
+      <ellipse cx="160" cy="116" rx="7" ry="4" fill="#FDA4AF" opacity="0.6"/>
+      <path d="M120 118 Q128 126 136 118" fill="none" stroke="#FFD9CF" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

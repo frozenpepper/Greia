@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- icon.hud.eraser: tilted block eraser with rub marks; rose tip, ocean sleeve, ink contour -->
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M10 74 L18 80 M20 86 L30 86" fill="none" stroke-width="4"/>
+    <g transform="rotate(-35 50 48)">
+      <rect x="12" y="32" width="74" height="32" rx="9" fill="#E89AB5" stroke-width="4.5"/>
+      <path d="M42 32 L77 32 Q86 32 86 41 L86 55 Q86 64 77 64 L42 64 Z" fill="#4A91D8" stroke-width="4.5"/>
+      <path d="M20 39 L32 39" stroke="#FFFFFF" stroke-width="3" opacity="0.9" fill="none"/>
+    </g>
+  </g>
+</svg>

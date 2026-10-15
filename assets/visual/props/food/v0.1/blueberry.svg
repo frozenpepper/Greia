@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.food.blueberry — three blueberries with a leaf. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- ocean light -> ocean shade -->
+    <linearGradient id="food_blueberry_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6EA7E0"/>
+      <stop offset="1" stop-color="#4A76A5"/>
+    </linearGradient>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="food_blueberry_leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="88" ry="14.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="blueberries">
+    <path d="M150 84 C160 52 194 40 220 46 C214 74 184 92 150 84 Z" fill="url(#food_blueberry_leaf)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M156 82 C176 70 194 58 212 50" fill="none" stroke="#51714A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="84" cy="150" r="46" fill="url(#food_blueberry_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M84 118 l5 7 l9 -1 l-5 8 l5 8 l-9 -1 l-5 7 l-5 -7 l-9 1 l5 -8 l-5 -8 l9 1 Z" fill="#4A6382" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <ellipse cx="63.3" cy="145.4" rx="7.4" ry="13.8" fill="#FFFFFF" opacity="0.7" transform="rotate(20 63.3 145.4)"/>
+    <circle cx="170" cy="150" r="44" fill="url(#food_blueberry_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M170 120 l5 7 l9 -1 l-5 8 l5 8 l-9 -1 l-5 7 l-5 -7 l-9 1 l5 -8 l-5 -8 l9 1 Z" fill="#4A6382" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <ellipse cx="150.2" cy="145.6" rx="7.0" ry="13.2" fill="#FFFFFF" opacity="0.7" transform="rotate(20 150.2 145.6)"/>
+    <circle cx="128" cy="186" r="46" fill="url(#food_blueberry_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M128 154 l5 7 l9 -1 l-5 8 l5 8 l-9 -1 l-5 7 l-5 -7 l-9 1 l5 -8 l-5 -8 l9 1 Z" fill="#4A6382" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <ellipse cx="107.3" cy="181.4" rx="7.4" ry="13.8" fill="#FFFFFF" opacity="0.7" transform="rotate(20 107.3 181.4)"/>
+  </g>
+</svg>

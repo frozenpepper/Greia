@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.nature.cloud — puffy white cloud. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- white -> sky -->
+    <linearGradient id="nature_cloud_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#CFEAF7"/>
+    </linearGradient>
+  </defs>
+  <g id="cloud">
+    <path d="M58 190 C24 190 16 146 46 136 C40 100 76 80 104 96 C112 62 166 56 180 92 C210 84 238 108 226 138 C250 148 244 190 214 190 Z" fill="url(#nature_cloud_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M58 134 C62 118 74 108 88 106" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+  </g>
+</svg>

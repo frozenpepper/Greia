@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.everyday.shell — scallop seashell. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- peach light -> coral light -->
+    <linearGradient id="everyday_shell_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBE8D7"/>
+      <stop offset="1" stop-color="#F9B0A8"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="82" ry="13.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="shell">
+    <path d="M104 206 L84 214 C80 226 92 232 104 230 L152 230 C164 232 176 226 172 214 L152 206 Z" fill="#F79A90" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M128 216 L44 136 C38 100 60 58 100 50 C112 46 120 46 128 52 C136 46 144 46 156 50 C196 58 218 100 212 136 Z" fill="url(#everyday_shell_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M128 212 L198.5 88.3 M128 212 L166.9 63.0 M128 212 L128.0 54.0 M128 212 L89.1 63.0 M128 212 L57.5 88.3 " fill="none" stroke="#E3695C" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M70 96 C80 76 94 64 108 60" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+  </g>
+</svg>

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- indoor_room: playroom wall (bunting, child drawing, toy shelf); opaque.
+       Scene layer indoor_room_wall_playroom; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- sky light -> sky -->
+    <linearGradient id="indoor_room_wall_playroom_grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E2F2FA"/>
+      <stop offset="1" stop-color="#CFEAF7"/>
+    </linearGradient>
+  </defs>
+  <g id="wall">
+    <rect width="1024" height="600" fill="url(#indoor_room_wall_playroom_grad)"/>
+    <path d="M-8 330 L1032 330 L1032 608 L-8 608 Z" fill="#FFE7A6"/>
+    <path d="M-8 330 L1032 330" stroke="#FFFBEB" stroke-width="6" stroke-linecap="round"/>
+    <path d="M-8 336 L1032 336" stroke="#4B372F" stroke-width="2" opacity="0.25"/>
+    <g stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"><path d="M11.1 21.6 L47.1 21.6 L29.1 55.6 Z" fill="#F46F61"/><path d="M85.4 27.9 L121.4 27.9 L103.4 61.9 Z" fill="#FFC234"/><path d="M159.7 33.3 L195.7 33.3 L177.7 67.3 Z" fill="#59B86A"/><path d="M234 37.5 L270 37.5 L252 71.5 Z" fill="#4A91D8"/><path d="M308.3 40.7 L344.3 40.7 L326.3 74.7 Z" fill="#9464C9"/><path d="M382.6 42.8 L418.6 42.8 L400.6 76.8 Z" fill="#F46F61"/><path d="M456.9 43.9 L492.9 43.9 L474.9 77.9 Z" fill="#FFC234"/><path d="M531.1 43.9 L567.1 43.9 L549.1 77.9 Z" fill="#59B86A"/><path d="M605.4 42.8 L641.4 42.8 L623.4 76.8 Z" fill="#4A91D8"/><path d="M679.7 40.7 L715.7 40.7 L697.7 74.7 Z" fill="#9464C9"/><path d="M754 37.5 L790 37.5 L772 71.5 Z" fill="#F46F61"/><path d="M828.3 33.3 L864.3 33.3 L846.3 67.3 Z" fill="#FFC234"/><path d="M902.6 27.9 L938.6 27.9 L920.6 61.9 Z" fill="#59B86A"/><path d="M976.9 21.6 L1012.9 21.6 L994.9 55.6 Z" fill="#4A91D8"/></g><path d="M-8 18 Q512.0 70 1032 18" fill="none" stroke="#4B372F" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="56" y="118" width="120" height="110" rx="6" fill="#FFFBEB" stroke="#4B372F" stroke-width="3" transform="rotate(-4 116 173)"/>
+    <g transform="rotate(-4 116 173)"><circle cx="96" cy="140" r="14" fill="#FFC234" stroke="#E9A93B" stroke-width="2.5"/><path d="M80 210 L80 182 L104 162 L128 182 L128 210 Z" fill="#F46F61" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/><path d="M70 212 L160 212" stroke="#59B86A" stroke-width="5" stroke-linecap="round"/><path d="M140 212 L140 186 M132 194 C136 182 146 182 148 194" fill="none" stroke="#59B86A" stroke-width="3" stroke-linecap="round"/></g>
+    <circle cx="116" cy="122" r="5" fill="#F46F61" stroke="#4B372F" stroke-width="2"/>
+    <ellipse cx="920.0" cy="228" rx="81.0" ry="5" fill="#6A5147" opacity="0.12"/><rect x="830" y="206" width="180" height="14" rx="5" fill="#C98E58" stroke="#4B372F" stroke-width="3"/><path d="M848 220 L856 236 M992 220 L984 236" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/><ellipse cx="920.0" cy="292" rx="81.0" ry="5" fill="#6A5147" opacity="0.12"/><rect x="830" y="270" width="180" height="14" rx="5" fill="#C98E58" stroke="#4B372F" stroke-width="3"/><path d="M848 284 L856 300 M992 284 L984 300" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/><g stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"><rect x="846" y="170" width="36" height="36" rx="5" fill="#F46F61"/><rect x="884" y="170" width="36" height="36" rx="5" fill="#4A91D8"/><rect x="865" y="134" width="36" height="36" rx="5" fill="#FFC234"/><circle cx="964" cy="186" r="20" fill="#59B86A"/></g><path d="M948 180 C952 172 958 168 966 168" stroke="#A6D98F" stroke-width="4" stroke-linecap="round" fill="none"/><g stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"><path d="M856 270 L880 236 L904 270 Z" fill="#9464C9"/><rect x="916" y="242" width="64" height="28" rx="6" fill="#F39A38"/></g>
+  </g>
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.star_burst frame 2: star shrinks, six small stars fly out -->
+  <defs>
+    <!-- gold light -> gold -->
+    <linearGradient id="star_burst_f2_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDE68A"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+  </defs>
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M64 5 L66.6 10.4 L72.6 11.2 L68.3 15.4 L69.3 21.3 L64 18.5 L58.7 21.3 L59.7 15.4 L55.4 11.2 L61.4 10.4 Z" fill="#FBBF24" stroke="#8A5A12" stroke-width="2.5"/>
+    <path d="M107.3 30 L109.9 35.4 L115.9 36.2 L111.6 40.4 L112.6 46.3 L107.3 43.5 L102 46.3 L103 40.4 L98.7 36.2 L104.7 35.4 Z" fill="#FBBF24" stroke="#8A5A12" stroke-width="2.5"/>
+    <path d="M107.3 80 L109.9 85.4 L115.9 86.2 L111.6 90.4 L112.6 96.3 L107.3 93.5 L102 96.3 L103 90.4 L98.7 86.2 L104.7 85.4 Z" fill="#FBBF24" stroke="#8A5A12" stroke-width="2.5"/>
+    <path d="M64 105 L66.6 110.4 L72.6 111.2 L68.3 115.4 L69.3 121.3 L64 118.5 L58.7 121.3 L59.7 115.4 L55.4 111.2 L61.4 110.4 Z" fill="#FBBF24" stroke="#8A5A12" stroke-width="2.5"/>
+    <path d="M20.7 80 L23.3 85.4 L29.3 86.2 L25 90.4 L26 96.3 L20.7 93.5 L15.4 96.3 L16.4 90.4 L12.1 86.2 L18.1 85.4 Z" fill="#FBBF24" stroke="#8A5A12" stroke-width="2.5"/>
+    <path d="M20.7 30 L23.3 35.4 L29.3 36.2 L25 40.4 L26 46.3 L20.7 43.5 L15.4 46.3 L16.4 40.4 L12.1 36.2 L18.1 35.4 Z" fill="#FBBF24" stroke="#8A5A12" stroke-width="2.5"/>
+    <path d="M64 46 L69.9 57.9 L83 59.8 L73.5 69.1 L75.8 82.2 L64 76 L52.2 82.2 L54.5 69.1 L45 59.8 L58.1 57.9 Z" fill="url(#star_burst_f2_fill)" stroke="#8A5A12" stroke-width="2.8"/>
+  </g>
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.nest — bird nest with three eggs. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- Leo brown light -->
+    <linearGradient id="vocab_nest_twig" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E29944"/>
+      <stop offset="1" stop-color="#D97706"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="100" ry="16.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="nest">
+    <ellipse cx="128" cy="146" rx="100" ry="28" fill="#78350F" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="92" cy="136" rx="24" ry="30" fill="#AECEED" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="84" cy="126" rx="5" ry="8" fill="#FFFFFF" opacity="0.8"/>
+    <ellipse cx="164" cy="136" rx="24" ry="30" fill="#AECEED" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="156" cy="126" rx="5" ry="8" fill="#FFFFFF" opacity="0.8"/>
+    <ellipse cx="128" cy="124" rx="24" ry="30" fill="#AECEED" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="120" cy="114" rx="5" ry="8" fill="#FFFFFF" opacity="0.8"/>
+    <path d="M26 146 C40 158 80 166 128 166 C176 166 216 158 230 146 C226 200 184 232 128 232 C72 232 30 200 26 146 Z" fill="url(#vocab_nest_twig)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M44 172 C90 186 160 188 212 170 M58 198 C100 210 156 210 198 196 M40 160 C80 178 120 170 150 186 M210 160 C180 180 140 176 112 194" fill="none" stroke="#92400E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

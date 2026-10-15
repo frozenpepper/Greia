@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.everyday.leaf — green leaf. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="everyday_leaf_body" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#93D19E"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="124" cy="232" rx="90" ry="15.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="leaf">
+    <path d="M60 214 L42 230" fill="none" stroke="#4B372F" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M60 214 L42 230" fill="none" stroke="#51714A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M60 214 C34 150 60 70 140 44 C172 34 204 34 226 38 C230 80 214 140 180 176 C146 212 100 226 60 214 Z" fill="url(#everyday_leaf_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M60 214 C100 160 150 100 214 50" fill="none" stroke="#51714A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M100 160 L92 108 M126 128 L124 78 M154 98 L160 62 M110 148 L168 158 M138 116 L196 120 M168 82 L210 86" fill="none" stroke="#51714A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M74 150 C80 112 100 82 124 66" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+  </g>
+</svg>

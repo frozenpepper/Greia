@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.blocks.cylinder_sunshine — sunshine toy block, cylinder. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="blocks_cylinder_sunshine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFD77B"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="block">
+    <path d="M56 32 L56 228 A72 22 0 0 0 200 228 L200 32 Z" fill="url(#blocks_cylinder_sunshine)" stroke="#4B372F" stroke-width="6" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="32" rx="72" ry="22" fill="#FFE4A4" stroke="#4B372F" stroke-width="6"/>
+    <path d="M90 110 C120 104 150 118 184 108 M90 170 C120 164 150 178 184 168" fill="none" stroke="#DBA633" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+    <path d="M74 64 L74 214" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+  </g>
+</svg>

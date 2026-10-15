@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- woodland_pond: opaque sky base.
+       Scene layer woodland_pond_sky; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- sky shade -> sky light -->
+    <linearGradient id="woodland_pond_sky_grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#AED4EF"/>
+      <stop offset="1" stop-color="#E6F1EE"/>
+    </linearGradient>
+    <radialGradient id="woodland_pond_sky_sun_glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFE7A6" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#FFE7A6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g id="sky">
+    <rect width="1024" height="600" fill="url(#woodland_pond_sky_grad)"/>
+    <circle cx="900" cy="96" r="76" fill="url(#woodland_pond_sky_sun_glow)"/>
+    <circle cx="900" cy="96" r="38" fill="#FFD35C" stroke="#E9A93B" stroke-width="3"/>
+    <g transform="translate(80 70)"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="2.5" stroke-linejoin="round"/></g><g transform="translate(560 40) scale(0.75)"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="3.3" stroke-linejoin="round"/></g><g transform="translate(720 160) scale(0.55)" opacity="0.9"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="4.5" stroke-linejoin="round"/></g>
+  </g>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.dust_puff frame 3: small puffs drift off and fade -->
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round" opacity="0.7">
+    <circle cx="64" cy="60" r="11.5" fill="#4B372F"/>
+    <circle cx="64" cy="60" r="9" fill="#EEDDBA"/>
+    <circle cx="24" cy="80" r="9.5" fill="#4B372F"/>
+    <circle cx="24" cy="80" r="7" fill="#EEDDBA"/>
+    <circle cx="104" cy="80" r="9.5" fill="#4B372F"/>
+    <circle cx="104" cy="80" r="7" fill="#EEDDBA"/>
+    <circle cx="44" cy="96" r="7.5" fill="#4B372F"/>
+    <circle cx="44" cy="96" r="5" fill="#EEDDBA"/>
+    <circle cx="84" cy="96" r="7.5" fill="#4B372F"/>
+    <circle cx="84" cy="96" r="5" fill="#EEDDBA"/>
+  </g>
+</svg>

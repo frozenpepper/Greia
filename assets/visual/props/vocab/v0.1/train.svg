@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.train — red steam train. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- coral light -> coral -->
+    <linearGradient id="vocab_train_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="vocab_train_cab" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#92BDE8"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="100" ry="16.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="train">
+    <circle cx="84" cy="50" r="14" fill="#FFFBEB" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="104" cy="34" r="18" fill="#FFFBEB" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M62 78 L90 78 L86 124 L66 124 Z" fill="#6E7175" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="146" y="70" width="82" height="128" rx="10" fill="url(#vocab_train_cab)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="136" y="56" width="102" height="22" rx="9" fill="#4A76A5" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="162" y="90" width="50" height="42" rx="9" fill="#CFEAF7" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="36" y="118" width="122" height="78" rx="18" fill="url(#vocab_train_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="96" y="118" width="12" height="78" fill="#FFC234" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M36 178 L16 210 L44 210 Z" fill="#FFC234" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="28" y="190" width="206" height="16" rx="7" fill="#253B59" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="72" cy="206" r="24" fill="#4B372F"/>
+    <circle cx="72" cy="206" r="11.5" fill="#EEDDBA" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="128" cy="206" r="24" fill="#4B372F"/>
+    <circle cx="128" cy="206" r="11.5" fill="#EEDDBA" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="192" cy="204" r="28" fill="#4B372F"/>
+    <circle cx="192" cy="204" r="13.4" fill="#EEDDBA" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M50 136 L82 136" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+  </g>
+</svg>

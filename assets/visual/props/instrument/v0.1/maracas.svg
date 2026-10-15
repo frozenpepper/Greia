@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.instrument.maracas — pair of maracas. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- coral light -> coral -->
+    <linearGradient id="instrument_maracas_a" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F79A90"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+    <!-- turquoise light -> turquoise -->
+    <linearGradient id="instrument_maracas_b" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7CCDC6"/>
+      <stop offset="1" stop-color="#44B8AE"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="92" ry="15.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="maracas">
+    <g transform="translate(166 82) rotate(22)">
+    <path d="M0 30 L0 120" fill="none" stroke="#4B372F" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M0 30 L0 120" fill="none" stroke="#D97706" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+      <ellipse cx="0" cy="0" rx="44" ry="56" fill="url(#instrument_maracas_b)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M-42 -8 C-20 4 20 4 42 -8 M-40 16 C-18 28 18 28 40 16" fill="none" stroke="#FFFBEB" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="-18" cy="-30" r="6" fill="#FFFBEB"/>
+      <circle cx="0" cy="-30" r="6" fill="#FFFBEB"/>
+      <circle cx="18" cy="-30" r="6" fill="#FFFBEB"/>
+      <ellipse cx="-20" cy="-28" rx="7" ry="12" fill="#FFFFFF" opacity="0.6" transform="rotate(25 -20 -28)"/>
+    </g>
+    <g transform="translate(90 92) rotate(-22)">
+    <path d="M0 30 L0 120" fill="none" stroke="#4B372F" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M0 30 L0 120" fill="none" stroke="#D97706" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+      <ellipse cx="0" cy="0" rx="44" ry="56" fill="url(#instrument_maracas_a)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M-42 -8 C-20 4 20 4 42 -8 M-40 16 C-18 28 18 28 40 16" fill="none" stroke="#FFFBEB" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="-18" cy="-30" r="6" fill="#FFFBEB"/>
+      <circle cx="0" cy="-30" r="6" fill="#FFFBEB"/>
+      <circle cx="18" cy="-30" r="6" fill="#FFFBEB"/>
+      <ellipse cx="-20" cy="-28" rx="7" ry="12" fill="#FFFFFF" opacity="0.6" transform="rotate(25 -20 -28)"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.blocks.triangle_ocean — ocean toy block, triangle. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="blocks_triangle_ocean" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="block">
+    <path d="M128 8 C134 8 138 12 141 17 L247 232 C252 242 246 250 236 250 L20 250 C10 250 4 242 9 232 L115 17 C118 12 122 8 128 8 Z" fill="url(#blocks_triangle_ocean)" stroke="#4B372F" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M70 190 C110 182 150 198 190 188" fill="none" stroke="#4A7FB6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+    <path d="M118 34 L46 182" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+  </g>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.nature.raindrop — blue raindrop. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="nature_raindrop_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="raindrop">
+    <path d="M128 18 C150 64 196 112 196 166 C196 208 166 236 128 236 C90 236 60 208 60 166 C60 112 106 64 128 18 Z" fill="url(#nature_raindrop_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="98" cy="160" rx="10" ry="26" fill="#FFFFFF" opacity="0.8" transform="rotate(15 98 160)"/>
+  </g>
+</svg>

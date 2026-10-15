@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.moon — smiling crescent moon. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="vocab_moon_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDD8F"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="moon">
+    <path d="M150 30 C96 40 58 88 58 140 C58 196 104 232 160 228 C190 226 212 212 224 194 C206 202 186 204 168 200 C124 190 98 154 100 112 C102 78 120 50 150 30 Z" fill="url(#vocab_moon_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M74 136 Q84 144 94 136" fill="none" stroke="#342C35" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="88" cy="160" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.6"/>
+    <path d="M84 178 Q96 188 110 182" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="92" cy="72" rx="8" ry="18" fill="#FFFFFF" opacity="0.75" transform="rotate(30 92 72)"/>
+  </g>
+</svg>

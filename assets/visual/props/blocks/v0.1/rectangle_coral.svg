@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" width="512" height="256">
+  <!-- Greia prop: prop.blocks.rectangle_coral — coral toy block, rectangle. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- coral light -> coral -->
+    <linearGradient id="blocks_rectangle_coral" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A198"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="block">
+    <path d="M20 6 L492 6 Q506 6 506 20 L506 236 Q506 250 492 250 L20 250 Q6 250 6 236 L6 20 Q6 6 20 6 Z" fill="url(#blocks_rectangle_coral)" stroke="#4B372F" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M40 96 C160 84 300 108 470 92 M40 170 C180 160 320 184 470 166" fill="none" stroke="#D26457" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+    <path d="M24 24 L488 24" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+  </g>
+</svg>

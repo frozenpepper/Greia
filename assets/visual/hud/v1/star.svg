@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- icon.hud.star: rounded five-point star; gold light -> gold, ink contour -->
+  <defs>
+    <!-- gold light -> gold -->
+    <linearGradient id="hud_star_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDE68A"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+  </defs>
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M48 9.5 L59.6 34.6 L87 37.6 L66.4 56 L72.4 83 L48 69.1 L23.6 83 L29.6 56 L9 37.6 L36.4 34.6 Z" fill="url(#hud_star_fill)" stroke-width="4.5"/>
+    <path d="M44 27 L40 36" stroke="#FFFFFF" stroke-width="3.5" opacity="0.85" fill="none"/>
+  </g>
+</svg>

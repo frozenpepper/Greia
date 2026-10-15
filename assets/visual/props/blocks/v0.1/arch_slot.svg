@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" width="512" height="256">
+  <!-- Greia prop: prop.blocks.arch_slot — outline slot for arch block. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <g id="slot">
+    <path d="M6 250 L6 20 Q6 6 20 6 L492 6 Q506 6 506 20 L506 250 L382 250 A126 126 0 0 0 130 250 Z" fill="#FFFFFF" opacity="0.28"/>
+    <path d="M6 250 L6 20 Q6 6 20 6 L492 6 Q506 6 506 20 L506 250 L382 250 A126 126 0 0 0 130 250 Z" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linejoin="round" opacity="0.5"/>
+    <path d="M6 250 L6 20 Q6 6 20 6 L492 6 Q506 6 506 20 L506 250 L382 250 A126 126 0 0 0 130 250 Z" fill="none" stroke="#4B372F" stroke-width="6" stroke-dasharray="16 14" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  </g>
+</svg>

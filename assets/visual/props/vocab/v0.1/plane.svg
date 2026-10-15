@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.plane — little propeller plane. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- coral light -> coral -->
+    <linearGradient id="vocab_plane_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="132" cy="232" rx="70" ry="11.7" fill="#6A5147" opacity="0.11"/>
+  </g>
+  <g id="plane">
+    <path d="M188 112 L210 58 C214 50 228 52 226 62 L222 124 Z" fill="#4A91D8" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M50 150 C50 122 80 108 120 108 L196 112 C218 114 232 124 236 140 C232 156 214 164 190 166 L90 168 C66 168 50 164 50 150 Z" fill="url(#vocab_plane_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <circle cx="104" cy="134" r="10" fill="#CFEAF7" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="136" cy="134" r="10" fill="#CFEAF7" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="168" cy="134" r="10" fill="#CFEAF7" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M110 150 L162 150 L132 204 C128 212 116 212 112 204 Z" fill="#4A91D8" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="34" y="132" width="20" height="34" rx="8" fill="#8D8F93" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="28" cy="148" rx="9" ry="48" fill="#EEDDBA" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M76 124 L120 120" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+  </g>
+</svg>

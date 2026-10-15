@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.rain frame 2: drops moved down half a step (loop with frame 1) -->
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M13 25 C15.7 29.9 19.8 33.5 19.8 37.1 C19.8 41.6 6.2 41.6 6.2 37.1 C6.2 33.5 10.3 29.9 13 25 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 13 34)"/>
+    <path d="M55 33 C57.7 38 61.8 41.5 61.8 45.1 C61.8 49.6 48.2 49.6 48.2 45.1 C48.2 41.5 52.3 38 55 33 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 55 42)"/>
+    <path d="M97 21 C99.7 25.9 103.8 29.6 103.8 33.1 C103.8 37.6 90.2 37.6 90.2 33.1 C90.2 29.6 94.3 25.9 97 21 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 97 30)"/>
+    <path d="M33 63 C35.7 68 39.8 71.5 39.8 75.2 C39.8 79.7 26.2 79.7 26.2 75.2 C26.2 71.5 30.3 68 33 63 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 33 72)"/>
+    <path d="M77 69 C79.7 74 83.8 77.5 83.8 81.2 C83.8 85.7 70.2 85.7 70.2 81.2 C70.2 77.5 74.3 74 77 69 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 77 78)"/>
+    <path d="M117 59 C119.7 64 123.8 67.5 123.8 71.2 C123.8 75.7 110.2 75.7 110.2 71.2 C110.2 67.5 114.3 64 117 59 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 117 68)"/>
+    <path d="M9 101 C11.7 106 15.8 109.5 15.8 113.2 C15.8 117.7 2.2 117.7 2.2 113.2 C2.2 109.5 6.3 106 9 101 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 9 110)"/>
+    <path d="M53 109 C55.7 114 59.8 117.5 59.8 121.2 C59.8 125.7 46.2 125.7 46.2 121.2 C46.2 117.5 50.3 114 53 109 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 53 118)"/>
+    <path d="M95 99 C97.7 104 101.8 107.5 101.8 111.2 C101.8 115.7 88.2 115.7 88.2 111.2 C88.2 107.5 92.3 104 95 99 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 95 108)"/>
+  </g>
+</svg>

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.pizza — slice of pizza. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- cast gold light -> sunshine -->
+    <linearGradient id="vocab_pizza_cheese" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FEF08A"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="52" ry="8.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="pizza">
+    <path d="M40 66 C90 50 166 50 216 66 L134 226 C131 232 125 232 122 226 Z" fill="url(#vocab_pizza_cheese)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M42 62 C90 44 166 44 214 62" fill="none" stroke="#4B372F" stroke-width="27" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M42 62 C90 44 166 44 214 62" fill="none" stroke="#F7B874" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="96" cy="98" r="16" fill="#F46F61" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="158" cy="100" r="14" fill="#F46F61" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="126" cy="150" r="15" fill="#F46F61" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="130" cy="196" r="9" fill="#F46F61" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M84 136 C92 124 108 126 108 134 C102 144 90 146 84 136 Z" fill="#59B86A" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+</svg>

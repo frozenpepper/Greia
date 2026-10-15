@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.pet.guinea_pig - hungry. Non-cast pet, flat Greia vector. -->
+  <defs>
+    <!-- orange light -> orange/sand mix (ginger guinea pig) -->
+    <linearGradient id="guinea_pig_hungry_fur" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#F8D3A6"/>
+      <stop offset="1" stop-color="#E6A464"/>
+    </linearGradient>
+    <!-- cocoa patch light -> cocoa patch -->
+    <linearGradient id="guinea_pig_hungry_acc" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#A67C5C"/>
+      <stop offset="1" stop-color="#7C573F"/>
+    </linearGradient>
+    <clipPath id="guinea_pig_hungry_clip"><path d="M128 86 C178 86 210 116 210 160 C210 198 182 214 128 214 C74 214 46 198 46 160 C46 116 78 86 128 86 Z"/></clipPath>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="229" rx="70" ry="11.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="character" transform="translate(128 214) scale(0.95 1.07) translate(-128 -214)">
+    <g id="body">
+      <path d="M128 86 C178 86 210 116 210 160 C210 198 182 214 128 214 C74 214 46 198 46 160 C46 116 78 86 128 86 Z" fill="url(#guinea_pig_hungry_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <g clip-path="url(#guinea_pig_hungry_clip)"><path d="M231.1 142.2 Q218 151.6 204.5 158.7 Q190.9 165.8 175.9 158.7 Q161 151.6 160.9 138.1 Q160.8 124.6 163.3 110.1 Q165.8 95.7 183.2 95.2 Q200.5 94.8 213.6 101 Q226.8 107.2 235.5 120 Q244.2 132.7 231.1 142.2 Z" fill="url(#guinea_pig_hungry_acc)"/><path d="M114 80 C118 108 108 128 104 152 C112 176 144 176 152 152 C148 128 138 108 142 80 Z" fill="#FFFFFF"/><ellipse cx="128" cy="214" rx="58" ry="26" fill="#FFFFFF"/></g>
+      <path d="M128 86 C178 86 210 116 210 160 C210 198 182 214 128 214 C74 214 46 198 46 160 C46 116 78 86 128 86 Z" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M71.9 120.8 C69.6 117.7 73.2 111.2 79.9 106.3 C86.6 101.5 93.9 100.1 96.1 103.2 C98.4 106.3 94.8 112.8 88.1 117.7 C81.4 122.5 74.1 123.9 71.9 120.8 Z" fill="#FFFFFF" opacity="0.7"/>
+      <path d="M114 92 Q116 74 126 86 Q130 70 136 86 Q144 76 144 92" fill="url(#guinea_pig_hungry_fur)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="ears">
+      <path d="M84 94 C70 92 60 102 61 114 C62 126 76 128 87 119 C95 112 96 98 84 94 Z" fill="url(#guinea_pig_hungry_acc)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M172 94 C186 92 196 102 195 114 C194 126 180 128 169 119 C161 112 160 98 172 94 Z" fill="url(#guinea_pig_hungry_fur)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="76.0" cy="112" rx="6" ry="5" fill="#F7B7AE"/>
+      <ellipse cx="180.0" cy="112" rx="6" ry="5" fill="#F7B7AE"/>
+    </g>
+    <g id="feet">
+      <ellipse cx="110" cy="182" rx="10" ry="8" fill="#F7C9C0" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="146" cy="182" rx="10" ry="8" fill="#F7C9C0" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+    <g id="face">
+      <ellipse cx="82" cy="156" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="174" cy="156" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="100" cy="132" rx="9.5" ry="12" fill="#342C35"/>
+      <ellipse cx="156" cy="132" rx="9.5" ry="12" fill="#342C35"/>
+      <ellipse cx="102" cy="126" rx="4.3" ry="4.3" fill="#FFFFFF"/>
+      <ellipse cx="158" cy="126" rx="4.3" ry="4.3" fill="#FFFFFF"/>
+      <circle cx="97" cy="136" r="2.4" fill="#FFFFFF" opacity="0.85"/>
+      <circle cx="153" cy="136" r="2.4" fill="#FFFFFF" opacity="0.85"/>
+      <path d="M121 154 Q128 149 135 154 Q132 160 128 161 Q124 160 121 154 Z" fill="#E98F98" stroke="#4B372F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M120 163 Q128 161 136 163 Q137 177 128 178 Q119 177 120 163 Z" fill="#8A3B2E" stroke="#4B372F" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="128" cy="173" rx="5" ry="3.5" fill="#F28B8B"/>
+    </g>
+  </g>
+  <g id="fx">
+    <path d="M190 120 Q198 130 192 142" fill="none" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.55"/>
+    <path d="M202 112 Q214 128 204 148" fill="none" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.4"/>
+  </g>
+</svg>

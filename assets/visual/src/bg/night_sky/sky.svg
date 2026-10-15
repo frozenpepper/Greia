@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- night_sky: opaque night sky with crescent moon.
+       Scene layer night_sky_sky; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- navy -> navy/grape twilight (mix 35% grape) -->
+    <linearGradient id="night_sky_sky_grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#253B59"/>
+      <stop offset="1" stop-color="#4C4980"/>
+    </linearGradient>
+    <radialGradient id="night_sky_sky_moon_glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFE7A6" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#FFE7A6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g id="sky">
+    <rect width="1024" height="600" fill="url(#night_sky_sky_grad)"/>
+    <circle cx="900" cy="100" r="86" fill="url(#night_sky_sky_moon_glow)"/>
+    <path d="M922 62 A44 44 0 1 0 922 138 A40 40 0 0 1 922 62 Z" fill="#FFF1C2" stroke="#E9C46A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M884 80 C878 92 878 108 884 120" fill="none" stroke="#FFFBEB" stroke-width="5" stroke-linecap="round"/>
+    <g transform="translate(40 210) scale(0.9)" opacity="0.8"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#5E5E92" stroke="#6E6CA2" stroke-width="2.8" stroke-linejoin="round"/></g>
+    <g transform="translate(610 150) scale(0.7)" opacity="0.7"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#5E5E92" stroke="#6E6CA2" stroke-width="3.6" stroke-linejoin="round"/></g>
+  </g>
+</svg>

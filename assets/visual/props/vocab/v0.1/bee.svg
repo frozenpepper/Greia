@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.bee — striped bumble bee. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="vocab_bee_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDA85"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+    <clipPath id="vocab_bee_clip"><ellipse cx="128" cy="160" rx="72" ry="56"/></clipPath>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="60" ry="10.0" fill="#6A5147" opacity="0.11"/>
+  </g>
+  <g id="bee">
+    <ellipse cx="104" cy="88" rx="30" ry="42" fill="#CFEAF7" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round" transform="rotate(-25 104 88)"/>
+    <ellipse cx="156" cy="84" rx="30" ry="44" fill="#CFEAF7" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round" transform="rotate(20 156 84)"/>
+    <path d="M196 160 L226 166 L196 174 Z" fill="#4B372F" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="160" rx="72" ry="56" fill="url(#vocab_bee_body)"/>
+    <g clip-path="url(#vocab_bee_clip)" fill="#4B372F"><rect x="118" y="96" width="22" height="130"/><rect x="160" y="96" width="22" height="130"/></g>
+    <ellipse cx="128" cy="160" rx="72" ry="56" fill="none" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M72 118 C66 96 54 86 42 88" fill="none" stroke="#4B372F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="42" cy="88" r="7" fill="#4B372F"/>
+    <ellipse cx="82" cy="152" rx="7.2" ry="9.4" fill="#342C35"/>
+    <circle cx="79.8" cy="148.7" r="2.9" fill="#FFFFFF"/>
+    <ellipse cx="74" cy="176" rx="10" ry="6" fill="#FDA4AF" opacity="0.6"/>
+    <path d="M70 186 Q80 194 92 186" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="96" cy="128" rx="14" ry="7" fill="#FFFFFF" opacity="0.75" transform="rotate(-30 96 128)"/>
+  </g>
+</svg>

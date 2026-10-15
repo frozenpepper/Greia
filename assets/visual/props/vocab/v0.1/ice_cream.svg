@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.ice_cream — ice-cream cone with two scoops. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange light -->
+    <linearGradient id="vocab_ice_cream_cone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F9CC9C"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="40" ry="6.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="ice_cream">
+    <path d="M80 130 L176 130 L134 228 C132 232 124 232 122 228 Z" fill="url(#vocab_ice_cream_cone)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M96 150 L150 196 M118 136 L162 170 M144 134 L168 150 M160 150 L106 196 M138 134 L94 170 M112 134 L88 150" fill="none" stroke="#D18636" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="128" cy="78" r="44" fill="#EDB3C7" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M74 136 C62 132 60 110 76 104 C80 88 104 82 128 86 C152 82 176 88 180 104 C196 110 194 132 182 136 Z" fill="#B4DFBC" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M96 100 C104 94 112 92 120 92" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+    <path d="M102 62 C108 52 116 46 124 44" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+  </g>
+</svg>

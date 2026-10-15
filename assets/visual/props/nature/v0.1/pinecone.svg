@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.nature.pinecone — brown pinecone. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- Leo brown light -->
+    <linearGradient id="nature_pinecone_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C3753A"/>
+      <stop offset="1" stop-color="#B45309"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="54" ry="9.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="pinecone">
+    <path d="M128 40 L128 20" fill="none" stroke="#4B372F" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128 40 L128 20" fill="none" stroke="#78350F" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128 36 C170 40 190 100 186 150 C182 198 156 230 128 230 C100 230 74 198 70 150 C66 100 86 40 128 36 Z" fill="url(#nature_pinecone_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M96 70 C96 90.8 128 90.8 128 70" fill="#C77E46" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M128 70 C128 90.8 160 90.8 160 70" fill="#C77E46" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M79 100 C79 122.1 113 122.1 113 100" fill="#C77E46" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M111 100 C111 122.1 145 122.1 145 100" fill="#C77E46" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M143 100 C143 122.1 177 122.1 177 100" fill="#C77E46" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M71 132 C71 156.7 109 156.7 109 132" fill="#C77E46" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M109 132 C109 156.7 147 156.7 147 132" fill="#C77E46" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M147 132 C147 156.7 185 156.7 185 132" fill="#C77E46" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M78 166 C78 189.4 114 189.4 114 166" fill="#C77E46" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M110 166 C110 189.4 146 189.4 146 166" fill="#C77E46" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M142 166 C142 189.4 178 189.4 178 166" fill="#C77E46" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M96 196 C96 216.8 128 216.8 128 196" fill="#C77E46" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M128 196 C128 216.8 160 216.8 160 196" fill="#C77E46" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+  </g>
+</svg>

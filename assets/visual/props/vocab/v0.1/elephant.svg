@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.elephant — blue elephant with trunk up. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- ocean light steps -->
+    <linearGradient id="vocab_elephant_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BAD5F0"/>
+      <stop offset="1" stop-color="#9BC2EA"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="132" cy="232" rx="92" ry="15.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="elephant">
+    <path d="M212 150 C226 158 230 170 226 182" fill="none" stroke="#4B372F" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M212 150 C226 158 230 170 226 182" fill="none" stroke="#9BC2EA" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="92" y="178" width="34" height="54" rx="12" fill="url(#vocab_elephant_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="176" y="178" width="34" height="54" rx="12" fill="url(#vocab_elephant_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="150" cy="150" rx="76" ry="56" fill="url(#vocab_elephant_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="118" y="186" width="34" height="46" rx="12" fill="url(#vocab_elephant_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="196" y="186" width="34" height="46" rx="12" fill="url(#vocab_elephant_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M54 144 C32 150 22 128 26 108 C28 96 36 90 42 94" fill="none" stroke="#4B372F" stroke-width="31" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M54 144 C32 150 22 128 26 108 C28 96 36 90 42 94" fill="none" stroke="#9BC2EA" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="78" cy="122" r="50" fill="url(#vocab_elephant_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M104 86 C136 72 160 96 156 128 C152 160 124 168 106 152 C96 140 94 104 104 86 Z" fill="url(#vocab_elephant_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M112 102 C130 96 142 112 140 128 C138 146 124 150 114 142 C108 134 106 112 112 102 Z" fill="#FDA4AF" opacity="0.8"/>
+    <ellipse cx="70" cy="112" rx="7.2" ry="9.4" fill="#342C35"/>
+    <circle cx="67.8" cy="108.7" r="2.9" fill="#FFFFFF"/>
+    <ellipse cx="80" cy="140" rx="10" ry="6" fill="#FDA4AF" opacity="0.6"/>
+    <path d="M56 150 L44 158" fill="none" stroke="#FFFBEB" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="60" cy="96" rx="12" ry="6" fill="#FFFFFF" opacity="0.75" transform="rotate(-35 60 96)"/>
+  </g>
+</svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- woodland_snow: opaque sky base.
+       Scene layer woodland_snow_sky; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- sky/lavender shade -> snow light -->
+    <linearGradient id="woodland_snow_sky_grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B8CCE6"/>
+      <stop offset="1" stop-color="#EEF0F7"/>
+    </linearGradient>
+  </defs>
+  <g id="sky">
+    <rect width="1024" height="600" fill="url(#woodland_snow_sky_grad)"/>
+    <g transform="translate(60 90)"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#F7F9FC" stroke="#B9C8DA" stroke-width="2.5" stroke-linejoin="round"/></g><g transform="translate(640 60) scale(0.8)"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#F7F9FC" stroke="#B9C8DA" stroke-width="3.1" stroke-linejoin="round"/></g>
+    <g fill="#FFFFFF" stroke="#C9D7E8" stroke-width="1.8"><circle cx="90" cy="60" r="4"/><circle cx="220" cy="140" r="3"/><circle cx="330" cy="50" r="3.5"/><circle cx="470" cy="110" r="3"/><circle cx="600" cy="40" r="4"/><circle cx="720" cy="150" r="3"/><circle cx="860" cy="70" r="3.5"/><circle cx="960" cy="160" r="4"/><circle cx="150" cy="220" r="3"/><circle cx="400" cy="230" r="3.5"/><circle cx="650" cy="220" r="3"/><circle cx="900" cy="250" r="3"/></g>
+  </g>
+</svg>

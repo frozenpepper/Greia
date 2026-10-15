@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.pet.puppy - hurt. Non-cast pet, flat Greia vector. -->
+  <defs>
+    <!-- sand light -> sand shade (cream puppy, cocoa-brown ears) -->
+    <linearGradient id="puppy_hurt_fur" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FFF7E6"/>
+      <stop offset="1" stop-color="#EBD3AE"/>
+    </linearGradient>
+    <!-- accent light -> accent -->
+    <linearGradient id="puppy_hurt_acc" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#C48E66"/>
+      <stop offset="1" stop-color="#9A6445"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="229" rx="62" ry="10.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="character">
+    <g id="tail">
+      <path d="M176.3 195.5 C195.6 202.1 214.8 194.7 227.8 180.3 C233.5 174.3 240.3 180.6 234.1 187.4 C218.1 207 193.6 213.6 173.4 206.6 Z" fill="url(#puppy_hurt_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <ellipse cx="86" cy="198" rx="20" ry="17" fill="url(#puppy_hurt_fur)" stroke="#4B372F" stroke-width="3.5"/>
+      <ellipse cx="170" cy="198" rx="20" ry="17" fill="url(#puppy_hurt_fur)" stroke="#4B372F" stroke-width="3.5"/>
+      <ellipse cx="80" cy="214" rx="12" ry="7" fill="#FFF7E6" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="176" cy="214" rx="12" ry="7" fill="#FFF7E6" stroke="#4B372F" stroke-width="2.5"/>
+      <path d="M128 128 C160 128 180 158 182 188 C184 208 172 216 150 216 L106 216 C84 216 72 208 74 188 C76 158 96 128 128 128 Z" fill="url(#puppy_hurt_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="128" cy="174" rx="26" ry="30" fill="#FFFBEB"/>
+    </g>
+    <g id="paws">
+      <ellipse cx="110" cy="212" rx="14" ry="8.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5"/>
+      <path d="M130 150 Q144 172 144 178 Q156 192 168 178 Q166 168 150 148 Z" fill="url(#puppy_hurt_fur)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="156" cy="180" rx="13" ry="10" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="156" cy="184" rx="4.5" ry="3.5" fill="#F46F61"/>
+    </g>
+    <g id="head" transform="rotate(-4 128 150)">
+      <path d="M128 42 C171 42 194 68 194 100 C194 134 166 154 128 154 C90 154 62 134 62 100 C62 68 85 42 128 42 Z" fill="url(#puppy_hurt_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M84.1 73.4 C82.1 70.1 85.7 64.2 92.3 60.1 C98.8 56 105.8 55.3 107.9 58.6 C109.9 61.9 106.3 67.8 99.7 71.9 C93.2 76 86.2 76.7 84.1 73.4 Z" fill="#FFFFFF" opacity="0.7"/>
+      <path d="M161.6 101.9 Q159 107.4 151.3 107.8 Q143.6 108.2 141.9 102 Q140.2 95.9 135.7 90 Q131.1 84.2 138.6 81.5 Q146 78.8 152.1 79.5 Q158.1 80.2 166 82.5 Q173.8 84.8 168.9 90.7 Q164.1 96.5 161.6 101.9 Z" fill="url(#puppy_hurt_acc)"/>
+      <ellipse cx="128" cy="125" rx="25" ry="18" fill="#FFFBEB"/>
+      <ellipse cx="86" cy="120" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="170" cy="120" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="104" cy="98" rx="8.5" ry="11" fill="#342C35"/>
+      <ellipse cx="152" cy="98" rx="8.5" ry="11" fill="#342C35"/>
+      <ellipse cx="107" cy="94" rx="2.9" ry="3.3" fill="#FFFFFF"/>
+      <ellipse cx="155" cy="94" rx="2.9" ry="3.3" fill="#FFFFFF"/>
+      <circle cx="102.0" cy="102" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+      <circle cx="150.0" cy="102" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+      <path d="M95 81 Q103 79 111 73" fill="none" stroke="#342C35" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M161 81 Q153 79 145 73" fill="none" stroke="#342C35" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M96 108 Q102.6 117.9 96 122.3 Q89.4 117.9 96 108 Z" fill="#A9DDF5" stroke="#4F86A8" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M116 110 Q128 102 140 110 Q136 120 128 123 Q120 120 116 110 Z" fill="#594047" stroke="#4B372F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="122" cy="109" rx="4" ry="2.2" fill="#FFFFFF" opacity="0.6"/>
+      <path d="M116 133 Q122 128 128 132 Q134 128 140 133" fill="none" stroke="#72513F" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M85.4 56.8 C60.7 55 46.4 77.8 52.6 107.2 C58.1 132.6 72.7 146.3 84.8 140.1 C96.8 132.9 100.3 106.9 97 64.9 Z" fill="url(#puppy_hurt_acc)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M170.6 56.8 C195.3 55 209.6 77.8 203.4 107.2 C197.9 132.6 183.3 146.3 171.2 140.1 C159.2 132.9 155.7 106.9 159 64.9 Z" fill="url(#puppy_hurt_acc)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g id="fx">
+    <path d="M176 168 L184 161" fill="none" stroke="#D85683" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M180 181 L190 181" fill="none" stroke="#D85683" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+</svg>

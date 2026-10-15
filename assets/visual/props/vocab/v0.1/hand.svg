@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.hand — open hand. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <g id="hand">
+    <path d="M88 132 L80 64" fill="none" stroke="#4B372F" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M114 120 L112 44" fill="none" stroke="#4B372F" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M140 120 L144 46" fill="none" stroke="#4B372F" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M164 130 L176 74" fill="none" stroke="#4B372F" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M80 172 L44 132" fill="none" stroke="#4B372F" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M68 140 C68 120 84 110 128 110 C176 110 188 124 188 150 C188 188 166 212 128 212 C90 212 68 188 68 140 Z" fill="#4B372F" stroke="#4B372F" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M88 132 L80 64" fill="none" stroke="#F8D8BD" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M114 120 L112 44" fill="none" stroke="#F8D8BD" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M140 120 L144 46" fill="none" stroke="#F8D8BD" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M164 130 L176 74" fill="none" stroke="#F8D8BD" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M80 172 L44 132" fill="none" stroke="#F8D8BD" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M68 140 C68 120 84 110 128 110 C176 110 188 124 188 150 C188 188 166 212 128 212 C90 212 68 188 68 140 Z" fill="#F8D8BD"/>
+    <path d="M96 164 C112 176 136 178 152 168" fill="none" stroke="#E3C5AC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M100 76 L102 100 M150 66 L148 90" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+    <path d="M90 200 L166 200 L172 232 L84 232 Z" fill="#4A91D8" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+</svg>

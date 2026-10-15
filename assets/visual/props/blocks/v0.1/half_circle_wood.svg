@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" width="512" height="256">
+  <!-- Greia prop: prop.blocks.half_circle_wood — wood toy block, half circle. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange light steps (natural wood) -->
+    <linearGradient id="blocks_half_circle_wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBD8B3"/>
+      <stop offset="1" stop-color="#F7B874"/>
+    </linearGradient>
+  </defs>
+  <g id="block">
+    <path d="M12 250 A244 244 0 0 1 500 250 Z" fill="url(#blocks_half_circle_wood)" stroke="#4B372F" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M90 200 C180 186 320 210 420 194 M170 120 C230 110 290 128 350 116" fill="none" stroke="#D59E66" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+    <path d="M64 170 C96 96 170 40 256 30" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+  </g>
+</svg>

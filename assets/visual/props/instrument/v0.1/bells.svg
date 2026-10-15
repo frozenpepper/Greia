@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.instrument.bells — jingle bells with a bow. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- cast gold light -> gold -->
+    <linearGradient id="instrument_bells_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FEF08A"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="96" ry="16.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="bells">
+    <path d="M128 76 L84 120 M128 76 L176 128" fill="none" stroke="#F46F61" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="80" cy="166" r="58" fill="url(#instrument_bells_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M26 160 C51.0 170 109.0 170 134 160" fill="none" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/>
+    <path d="M80 178 L80 216" fill="none" stroke="#4B372F" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="80" cy="178" r="7" fill="#4B372F"/>
+    <ellipse cx="53.9" cy="142.8" rx="10.4" ry="5.8" fill="#FFFFFF" opacity="0.85" transform="rotate(-35 53.9 142.8)"/>
+    <circle cx="180" cy="172" r="54" fill="url(#instrument_bells_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M130 166 C153.0 176 207.0 176 230 166" fill="none" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/>
+    <path d="M180 184 L180 218" fill="none" stroke="#4B372F" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="180" cy="184" r="7" fill="#4B372F"/>
+    <ellipse cx="155.7" cy="150.4" rx="9.7" ry="5.4" fill="#FFFFFF" opacity="0.85" transform="rotate(-35 155.7 150.4)"/>
+    <path d="M128 76 C108 50 76 50 78 70 C80 90 112 88 128 76 Z M128 76 C148 50 180 50 178 70 C176 90 144 88 128 76 Z" fill="#F46F61" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <circle cx="128" cy="76" r="11" fill="#CF6356" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+  </g>
+</svg>

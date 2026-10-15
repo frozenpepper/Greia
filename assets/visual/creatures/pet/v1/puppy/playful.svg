@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.pet.puppy - playful. Non-cast pet, flat Greia vector. -->
+  <defs>
+    <!-- sand light -> sand shade (cream puppy, cocoa-brown ears) -->
+    <linearGradient id="puppy_playful_fur" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FFF7E6"/>
+      <stop offset="1" stop-color="#EBD3AE"/>
+    </linearGradient>
+    <!-- accent light -> accent -->
+    <linearGradient id="puppy_playful_acc" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#C48E66"/>
+      <stop offset="1" stop-color="#9A6445"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="132" cy="229" rx="76" ry="12.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="fx_back">
+    <path d="M232 84 Q244 96 242 114" fill="none" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.5"/>
+    <path d="M186 62 Q200 52 216 56" fill="none" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.35"/>
+  </g>
+  <g id="character">
+    <g id="tail">
+      <path d="M201.5 117.6 C208.8 98.5 202.1 79 188.1 65.5 C182.4 59.6 188.8 53 195.4 59.5 C214.5 76.1 220.2 100.9 212.5 120.9 Z" fill="url(#puppy_playful_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <path d="M184 150 C200 146 212 160 212 182 L212 206 C212 214 198 216 190 212 C182 206 180 176 184 150 Z" fill="url(#puppy_playful_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="203" cy="213" rx="13" ry="7.5" fill="#FFF7E6" stroke="#4B372F" stroke-width="2.5"/>
+      <path d="M72 194 C76 170 100 156 132 142 C160 128 184 108 204 116 C224 126 220 160 206 186 C196 204 170 212 140 213 C116 214 96 213 84 210 C74 206 70 200 72 194 Z" fill="url(#puppy_playful_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="112" cy="198" rx="22" ry="12" fill="#FFFBEB"/>
+    </g>
+    <g id="paws">
+      <ellipse cx="64" cy="211" rx="16" ry="8.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="96" cy="213" rx="16" ry="8.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+    <g id="head" transform="translate(-32 42) rotate(-10 128 100)">
+      <path d="M128 42 C171 42 194 68 194 100 C194 134 166 154 128 154 C90 154 62 134 62 100 C62 68 85 42 128 42 Z" fill="url(#puppy_playful_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M84.1 73.4 C82.1 70.1 85.7 64.2 92.3 60.1 C98.8 56 105.8 55.3 107.9 58.6 C109.9 61.9 106.3 67.8 99.7 71.9 C93.2 76 86.2 76.7 84.1 73.4 Z" fill="#FFFFFF" opacity="0.7"/>
+      <path d="M161.6 101.9 Q159 107.4 151.3 107.8 Q143.6 108.2 141.9 102 Q140.2 95.9 135.7 90 Q131.1 84.2 138.6 81.5 Q146 78.8 152.1 79.5 Q158.1 80.2 166 82.5 Q173.8 84.8 168.9 90.7 Q164.1 96.5 161.6 101.9 Z" fill="url(#puppy_playful_acc)"/>
+      <ellipse cx="128" cy="125" rx="25" ry="18" fill="#FFFBEB"/>
+      <ellipse cx="86" cy="120" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="170" cy="120" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="104" cy="96" rx="9.5" ry="12.5" fill="#342C35"/>
+      <ellipse cx="152" cy="96" rx="9.5" ry="12.5" fill="#342C35"/>
+      <ellipse cx="106" cy="90" rx="4.3" ry="4.5" fill="#FFFFFF"/>
+      <ellipse cx="154" cy="90" rx="4.3" ry="4.5" fill="#FFFFFF"/>
+      <circle cx="101" cy="100" r="2.4" fill="#FFFFFF" opacity="0.85"/>
+      <circle cx="149" cy="100" r="2.4" fill="#FFFFFF" opacity="0.85"/>
+      <path d="M116 110 Q128 102 140 110 Q136 120 128 123 Q120 120 116 110 Z" fill="#594047" stroke="#4B372F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="122" cy="109" rx="4" ry="2.2" fill="#FFFFFF" opacity="0.6"/>
+      <path d="M113 126 Q128 129 143 126 Q141 144 128 145 Q115 144 113 126 Z" fill="#8A3B2E" stroke="#4B372F" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M120 137 Q128 133 136 137 Q137 155 128 156 Q119 155 120 137 Z" fill="#F28B8B" stroke="#4B372F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M128 140 L128 149" fill="none" stroke="#D76F6F" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M86 56 C62 50 44 70 45 100 C46 126 58 142 71 138 C84 133 92 108 96 66 Z" fill="url(#puppy_playful_acc)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M170 56 C194 50 212 70 211 100 C210 126 198 142 185 138 C172 133 164 108 160 66 Z" fill="url(#puppy_playful_acc)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g id="fx">
+    <path d="M200 42 Q201.7 50.3 210 52 Q201.7 53.7 200 62 Q198.3 53.7 190 52 Q198.3 50.3 200 42 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+</svg>

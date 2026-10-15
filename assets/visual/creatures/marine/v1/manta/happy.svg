@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.marine.manta - happy. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- ocean light -> ocean/navy -->
+    <linearGradient id="manta_happy_body" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#7FA4D2"/>
+      <stop offset="1" stop-color="#3E6699"/>
+    </linearGradient>
+  </defs>
+  <g id="character" transform="rotate(-6 128 130)">
+    <g id="tail">
+      <path d="M128 170 C130 196 122 220 132 244" fill="none" stroke="#4B372F" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M128 170 C130 196 122 220 132 244" fill="none" stroke="#5A80B4" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="horns">
+      <path d="M104 94 C94 84 92 70 102 64 C108 74 112 84 114 92 Z" fill="#5A80B4" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M152 94 C162 84 164 70 154 64 C148 74 144 84 142 92 Z" fill="#5A80B4" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <path d="M128 88 C152 88 174 100 194 110 C216 120 238 118 250 124 C238 140 214 152 188 160 C170 168 150 178 128 178 C106 178 86 168 68 160 C42 152 18 140 6 124 C18 118 40 120 62 110 C82 100 104 88 128 88 Z" fill="url(#manta_happy_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M58 128 C74 124 88 128 96 136 C86 140 72 140 58 128 Z" fill="#E8F1FA"/>
+      <path d="M198 128 C182 124 168 128 160 136 C170 140 184 140 198 128 Z" fill="#E8F1FA"/>
+      <path d="M85 109.5 C84 106.9 90 102.3 98.3 99.3 C106.6 96.3 114.1 95.9 115 98.5 C116 101.1 110 105.7 101.7 108.7 C93.4 111.7 85.9 112.1 85 109.5 Z" fill="#FFFFFF" opacity="0.55"/>
+    </g>
+    <g id="face">
+      <ellipse cx="100" cy="140" rx="7" ry="4.5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="156" cy="140" rx="7" ry="4.5" fill="#FDA4AF" opacity="0.5"/>
+      <path d="M99.5 124 Q108 111 116.5 124" fill="none" stroke="#342C35" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M139.5 124 Q148 111 156.5 124" fill="none" stroke="#342C35" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M114 136 Q128.0 139.0 142 136 Q130.0 152.0 114 136 Z" fill="#8A3B2E" stroke="#4B372F" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M122.0 143.4 Q128.0 139.8 135.0 143.2 Q130.0 147.4 122.0 143.4 Z" fill="#F28B8B"/>
+    </g>
+  </g>
+  <g id="fx">
+    <path d="M30 60 Q31.7 68.3 40 70 Q31.7 71.7 30 80 Q28.3 71.7 20 70 Q28.3 68.3 30 60 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="226" cy="72" r="6.3" fill="#E6F6FD" stroke="#4F86A8" stroke-width="2" opacity="0.9"/><ellipse cx="223.8" cy="69.8" rx="1.8" ry="1.3" fill="#FFFFFF"/>
+  </g>
+</svg>

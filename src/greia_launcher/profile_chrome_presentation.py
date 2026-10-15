@@ -38,7 +38,7 @@ _SHARED_PROFILE_VISUAL_ERRORS = (
     ValueError,
 )
 
-# Profile avatar IDs that are canonical cast faces (core_icons_v1.toml):
+# Profile avatar IDs that are canonical cast faces (core icon catalogue):
 # the Home greeter is that same character, so the child sees "their" friend.
 _AVATAR_CAST_CHARACTER = {
     "unicorn": "lilli",

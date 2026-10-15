@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.house — little house with red roof. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- peach light -> peach -->
+    <linearGradient id="vocab_house_wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FCECDE"/>
+      <stop offset="1" stop-color="#F8D8BD"/>
+    </linearGradient>
+    <!-- coral light -> coral -->
+    <linearGradient id="vocab_house_roof" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="84" ry="14.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="house">
+    <rect x="160" y="50" width="26" height="56" rx="5" fill="#B45309" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="56" y="112" width="144" height="120" rx="8" fill="url(#vocab_house_wall)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M34 124 L128 42 L222 124 C226 128 222 134 216 134 L40 134 C34 134 30 128 34 124 Z" fill="url(#vocab_house_roof)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M108 232 L108 182 C108 170 116 162 128 162 C140 162 148 170 148 182 L148 232 Z" fill="#4A91D8" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <circle cx="138" cy="200" r="4.5" fill="#FBBF24"/>
+    <rect x="66" y="150" width="32" height="32" rx="6" fill="#CFEAF7" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="158" y="150" width="32" height="32" rx="6" fill="#CFEAF7" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M82 152 L82 180 M68 166 L96 166 M174 152 L174 180 M160 166 L188 166" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M60 116 L120 64" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  </g>
+</svg>

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.woodland.squirrel - asleep. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- chestnut light -> chestnut (cocoa/orange mix) -->
+    <linearGradient id="squirrel_asleep_fur" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#D49B70"/>
+      <stop offset="1" stop-color="#A8653F"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="229" rx="64" ry="10.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="character" transform="translate(128 216) scale(1.05 0.93) translate(-128 -216)">
+    <g id="tail">
+      <path d="M150 202 C198 206 226 170 218 128 C212 98 228 70 204 50 C184 36 156 46 160 70 C164 88 188 94 188 116 C188 142 172 162 150 172 Z" fill="url(#squirrel_asleep_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M176 66 C190 60 204 72 202 92" fill="none" stroke="#F2D2B4" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <path d="M128 120 C156 120 172 146 174 176 C176 204 162 216 128 216 C94 216 80 204 82 176 C84 146 100 120 128 120 Z" fill="url(#squirrel_asleep_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="128" cy="182" rx="24" ry="28" fill="#FFFBEB"/>
+    </g>
+    <g id="feet">
+      <ellipse cx="106" cy="214" rx="13" ry="7" fill="#E9C39E" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="150" cy="214" rx="13" ry="7" fill="#E9C39E" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+    <g id="acorn">
+      <ellipse cx="128" cy="166" rx="13" ry="15" fill="#C98B4E" stroke="#4B372F" stroke-width="2.5"/>
+      <path d="M112 158 C112 146 144 146 144 158 Z" fill="#7C573F" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M128 146 L130 140" fill="none" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="112" cy="164" rx="9" ry="7" fill="#E9C39E" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="144" cy="164" rx="9" ry="7" fill="#E9C39E" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+    <g id="ears">
+      <path d="M88 76 L82 40 L86 44 L90 32 L94 42 L108 62 Z" fill="url(#squirrel_asleep_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M168 76 L174 40 L170 44 L166 32 L162 42 L148 62 Z" fill="url(#squirrel_asleep_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="head">
+      <path d="M128 52 C160 52 180 74 180 102 C180 130 158 146 128 146 C98 146 76 130 76 102 C76 74 96 52 128 52 Z" fill="url(#squirrel_asleep_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M87.6 76 C86 73.1 89.3 68.1 95 64.8 C100.7 61.5 106.7 61.1 108.4 64 C110 66.9 106.7 71.9 101 75.2 C95.3 78.5 89.3 78.9 87.6 76 Z" fill="#FFFFFF" opacity="0.7"/>
+      <ellipse cx="128" cy="120" rx="21" ry="15" fill="#FFFBEB"/>
+      <path d="M122 109 Q128 105 134 109 Q131 114 128 115 Q125 114 122 109 Z" fill="#594047" stroke="#4B372F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="90" cy="118" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="166" cy="118" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+      <path d="M98.0 100 Q108 108 118.0 100" fill="none" stroke="#342C35" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M138.0 100 Q148 108 158.0 100" fill="none" stroke="#342C35" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M123 120 Q128 124 133 120" fill="none" stroke="#72513F" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g id="fx">
+    <path d="M196 46 L208.0 46 L196 58.0 L208.0 58.0" fill="none" stroke="#6E7FB0" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" opacity="0.7"/>
+    <path d="M218 24 L227.0 24 L218 33.0 L227.0 33.0" fill="none" stroke="#6E7FB0" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.5"/>
+  </g>
+</svg>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.everyday.coin — gold coin with a star. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- cast gold light -> gold -->
+    <linearGradient id="everyday_coin_face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FEF08A"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="80" ry="13.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="coin">
+    <ellipse cx="140" cy="140" rx="74" ry="88" fill="#F59E0B" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="124" cy="140" rx="74" ry="88" fill="url(#everyday_coin_face)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="124" cy="140" rx="56" ry="68" fill="none" stroke="#F59E0B" stroke-width="5"/>
+    <path d="M124 98 L135 124 L162 126 L141 143 L148 170 L124 155 L100 170 L107 143 L86 126 L113 124 Z" fill="#F59E0B" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M70 104 C76 86 88 72 100 66" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+  </g>
+</svg>

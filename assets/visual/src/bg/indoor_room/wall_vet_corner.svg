@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- indoor_room: vet corner wall (heart+paw poster, care shelf); opaque.
+       Scene layer indoor_room_wall_vet_corner; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- mint light -> mint -->
+    <linearGradient id="indoor_room_wall_vet_corner_grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E8F7E1"/>
+      <stop offset="1" stop-color="#D9F2D0"/>
+    </linearGradient>
+    <!-- sky shade -> sky light (window view) -->
+    <linearGradient id="indoor_room_wall_vet_corner_view" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#AED4EF"/>
+      <stop offset="1" stop-color="#E6F1EE"/>
+    </linearGradient>
+  </defs>
+  <g id="wall">
+    <rect width="1024" height="600" fill="url(#indoor_room_wall_vet_corner_grad)"/>
+    <path d="M-8 320 L1032 320 L1032 608 L-8 608 Z" fill="#BFE3B5"/>
+    <path d="M-8 320 L1032 320" stroke="#FFFBEB" stroke-width="6" stroke-linecap="round"/>
+    <path d="M-8 326 L1032 326" stroke="#4B372F" stroke-width="2" opacity="0.25"/>
+    <path d="M120.0 48 L70 70 M120.0 48 L170 70" stroke="#4B372F" stroke-width="2" fill="none"/><circle cx="120.0" cy="48" r="3.5" fill="#4B372F"/><rect x="54" y="70" width="132" height="150" rx="10" fill="#C98E58" stroke="#4B372F" stroke-width="3"/><rect x="64" y="80" width="112" height="130" rx="5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/><g transform="translate(120 150) scale(1.6)"><path d="M0 22 C-30 4 -34 -16 -20 -24 C-10 -30 0 -22 0 -14 C0 -22 10 -30 20 -24 C34 -16 30 4 0 22 Z" fill="#F46F61" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/></g><g transform="translate(120 150) scale(0.9)"><g fill="#FFFBEB"><ellipse cx="0" cy="8" rx="14" ry="11"/><ellipse cx="-15" cy="-8" rx="6" ry="7.5"/><ellipse cx="-5" cy="-16" rx="6" ry="7.5"/><ellipse cx="7" cy="-16" rx="6" ry="7.5"/><ellipse cx="17" cy="-7" rx="6" ry="7.5"/></g></g>
+    <ellipse cx="920.0" cy="202" rx="81.0" ry="5" fill="#6A5147" opacity="0.12"/><rect x="830" y="180" width="180" height="14" rx="5" fill="#C98E58" stroke="#4B372F" stroke-width="3"/><path d="M848 194 L856 210 M992 194 L984 210" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/>
+    <g stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"><rect x="850" y="132" width="52" height="48" rx="8" fill="#FFFBEB"/><path d="M870 142 L882 142 L882 150 L890 150 L890 162 L882 162 L882 170 L870 170 L870 162 L862 162 L862 150 L870 150 Z" fill="#F46F61" stroke-width="2"/></g>
+    <rect x="915" y="144" width="30" height="36" rx="9" fill="#9BD4A6" stroke="#4B372F" stroke-width="2.5"/><rect x="913" y="135" width="34" height="11" rx="4" fill="#4A91D8" stroke="#4B372F" stroke-width="2.5"/><path d="M922 152 L922 170" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.7"/><rect x="961" y="134" width="30" height="46" rx="9" fill="#F9A79E" stroke="#4B372F" stroke-width="2.5"/><rect x="959" y="125" width="34" height="11" rx="4" fill="#FFC234" stroke="#4B372F" stroke-width="2.5"/><path d="M968 142 L968 170" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+    <rect x="852" y="242" width="136" height="76" rx="14" fill="#FFF6E3" stroke="#4B372F" stroke-width="3"/><rect x="860" y="250" width="120" height="60" rx="8" fill="url(#indoor_room_wall_vet_corner_view)" stroke="#4B372F" stroke-width="2.5"/><g transform="translate(874 276) scale(0.5)"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="5" stroke-linejoin="round"/></g><path d="M860 288 C896.0 270 944.0 274 980 284 L980 306 C980 310 860 310 860 306 Z" fill="#9BD4A6"/><path d="M920.0 250 L920.0 310 M860 280.0 L980 280.0" stroke="#FFF6E3" stroke-width="7"/><path d="M920.0 250 L920.0 310 M860 280.0 L980 280.0" stroke="#4B372F" stroke-width="1.8" opacity="0.35"/><rect x="844" y="316" width="152" height="12" rx="6" fill="#FFF6E3" stroke="#4B372F" stroke-width="3"/>
+  </g>
+</svg>

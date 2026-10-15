@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- icon.hud.go: go: green forward arrow with speed lines; leaf light -> leaf, ink contour -->
+  <defs>
+    <!-- leaf light (mix 35% white) -> leaf -->
+    <linearGradient id="hud_go_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#93D19E"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M8 36 L18 36 M6 60 L18 60" fill="none" stroke-width="5"/>
+    <path d="M30 35 L52 35 L52 17 Q52 11 57 15 L88 44 Q93 48 88 52 L57 81 Q52 85 52 79 L52 61 L30 61 Q25 61 25 56 L25 40 Q25 35 30 35 Z" fill="url(#hud_go_fill)" stroke-width="4.5"/>
+    <path d="M32 41 L46 41" stroke="#FFFFFF" stroke-width="3" opacity="0.9" fill="none"/>
+  </g>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.instrument.trumpet — golden trumpet. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- cast gold light -> gold -->
+    <linearGradient id="instrument_trumpet_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FEF08A"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="100" ry="16.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="trumpet">
+    <path d="M70 150 C50 150 50 190 70 190 L176 190 C196 190 196 150 176 150" fill="none" stroke="#4B372F" stroke-width="21" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M70 150 C50 150 50 190 70 190 L176 190 C196 190 196 150 176 150" fill="none" stroke="#F59E0B" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="90" y="92" width="18" height="46" rx="4" fill="#F59E0B" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="85" y="80" width="28" height="14" rx="6" fill="#FFFBEB" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="118" y="92" width="18" height="46" rx="4" fill="#F59E0B" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="113" y="80" width="28" height="14" rx="6" fill="#FFFBEB" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="146" y="92" width="18" height="46" rx="4" fill="#F59E0B" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="141" y="80" width="28" height="14" rx="6" fill="#FFFBEB" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M30 150 L170 150" fill="none" stroke="#4B372F" stroke-width="25" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M30 150 L170 150" fill="none" stroke="#FBBF24" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M20 136 L36 140 L36 160 L20 164 Z" fill="#D1D2D4" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M162 140 C190 136 210 112 222 94 C238 110 240 190 222 206 C210 188 190 164 162 160 Z" fill="url(#instrument_trumpet_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="226" cy="150" rx="12" ry="54" fill="#F59E0B" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M60 146 L150 146" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+  </g>
+</svg>

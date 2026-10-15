@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.woodland.butterfly - peek. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- grape light -> grape -->
+    <linearGradient id="butterfly_peek_wing" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#CDB6EC"/>
+      <stop offset="1" stop-color="#9464C9"/>
+    </linearGradient>
+    <!-- navy light -> navy -->
+    <linearGradient id="butterfly_peek_head" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#4F5F80"/>
+      <stop offset="1" stop-color="#2F3E58"/>
+    </linearGradient>
+    <clipPath id="butterfly_peek_clip"><rect x="0" y="0" width="256" height="200"/></clipPath>
+  </defs>
+  <g id="hidden_below_edge" clip-path="url(#butterfly_peek_clip)">
+    <g id="character" transform="translate(0 66)">
+      <g id="wings">
+        <path d="M118 128 C96 76 52 54 30 72 C14 88 26 128 56 150 C80 166 106 160 118 146 Z" fill="url(#butterfly_peek_wing)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M138 128 C160 76 204 54 226 72 C242 88 230 128 200 150 C176 166 150 160 138 146 Z" fill="url(#butterfly_peek_wing)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M118 150 C96 156 66 168 62 192 C60 212 86 218 104 204 C116 194 120 176 120 160 Z" fill="url(#butterfly_peek_wing)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M138 150 C160 156 190 168 194 192 C196 212 170 218 152 204 C140 194 136 176 136 160 Z" fill="url(#butterfly_peek_wing)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="64.0" cy="98" r="12" fill="#FFC234" stroke="#4B372F" stroke-width="2"/>
+        <circle cx="192.0" cy="98" r="12" fill="#FFC234" stroke="#4B372F" stroke-width="2"/>
+        <circle cx="84.0" cy="192" r="8" fill="#FFC234" stroke="#4B372F" stroke-width="2"/>
+        <circle cx="172.0" cy="192" r="8" fill="#FFC234" stroke="#4B372F" stroke-width="2"/>
+      </g>
+      <g id="body">
+        <path d="M128 120 C140 120 142 150 140 180 C138 204 132 212 128 212 C124 212 118 204 116 180 C114 150 116 120 128 120 Z" fill="#3B4A66" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+      <g id="head">
+        <path d="M112 66 C104 48 92 40 82 44" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M144 66 C152 48 164 40 174 44" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="82" cy="44" r="6" fill="#4F5F80" stroke="#4B372F" stroke-width="2.5"/>
+        <circle cx="174" cy="44" r="6" fill="#4F5F80" stroke="#4B372F" stroke-width="2.5"/>
+        <ellipse cx="128" cy="98" rx="44" ry="38" fill="url(#butterfly_peek_head)" stroke="#4B372F" stroke-width="3.5"/>
+        <path d="M97.3 83 C96 80.6 98.7 76.4 103.5 73.7 C108.3 70.9 113.3 70.6 114.7 73 C116 75.4 113.3 79.6 108.5 82.3 C103.7 85.1 98.7 85.4 97.3 83 Z" fill="#FFFFFF" opacity="0.45"/>
+        <ellipse cx="110" cy="96" rx="12" ry="13" fill="#FFFFFF" stroke="#4B372F" stroke-width="2.5"/>
+        <ellipse cx="111" cy="98" rx="7" ry="8.5" fill="#342C35"/>
+        <ellipse cx="113" cy="94" rx="2.4" ry="2.6" fill="#FFFFFF"/>
+        <ellipse cx="146" cy="96" rx="12" ry="13" fill="#FFFFFF" stroke="#4B372F" stroke-width="2.5"/>
+        <ellipse cx="147" cy="98" rx="7" ry="8.5" fill="#342C35"/>
+        <ellipse cx="149" cy="94" rx="2.4" ry="2.6" fill="#FFFFFF"/>
+        <ellipse cx="96" cy="116" rx="7" ry="4" fill="#FDA4AF" opacity="0.6"/>
+        <ellipse cx="160" cy="116" rx="7" ry="4" fill="#FDA4AF" opacity="0.6"/>
+        <ellipse cx="128" cy="120" rx="4.5" ry="4" fill="#FFD9CF" stroke="#4B372F" stroke-width="2"/>
+      </g>
+    </g>
+  </g>
+</svg>

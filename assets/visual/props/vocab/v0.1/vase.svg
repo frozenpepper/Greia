@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.vase — turquoise vase. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- turquoise light -> turquoise -->
+    <linearGradient id="vocab_vase_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#85D1CA"/>
+      <stop offset="1" stop-color="#44B8AE"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="66" ry="11.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="vase">
+    <path d="M98 36 L158 36 L150 66 C196 92 210 140 192 188 C182 214 160 232 128 232 C96 232 74 214 64 188 C46 140 60 92 106 66 Z" fill="url(#vocab_vase_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="92" y="28" width="72" height="16" rx="7" fill="#7CCDC6" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M62 140 L80 124 L98 140 L116 124 L134 140 L152 124 L170 140 L188 124 L196 140" fill="none" stroke="#FFFBEB" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="100" cy="182" r="7" fill="#FFC234" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="128" cy="182" r="7" fill="#FFC234" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="156" cy="182" r="7" fill="#FFC234" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M84 100 C76 112 72 126 72 140" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  </g>
+</svg>

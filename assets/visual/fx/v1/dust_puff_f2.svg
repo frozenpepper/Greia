@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.dust_puff frame 2: puffs split and rise -->
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="58" cy="76" r="16.5" fill="#4B372F"/>
+    <circle cx="72" cy="82" r="14.5" fill="#4B372F"/>
+    <circle cx="58" cy="76" r="14" fill="#EEDDBA"/>
+    <circle cx="72" cy="82" r="12" fill="#EEDDBA"/>
+    <circle cx="30" cy="90" r="13.5" fill="#4B372F"/>
+    <circle cx="20" cy="98" r="9.5" fill="#4B372F"/>
+    <circle cx="30" cy="90" r="11" fill="#EEDDBA"/>
+    <circle cx="20" cy="98" r="7" fill="#EEDDBA"/>
+    <circle cx="98" cy="90" r="13.5" fill="#4B372F"/>
+    <circle cx="108" cy="98" r="9.5" fill="#4B372F"/>
+    <circle cx="98" cy="90" r="11" fill="#EEDDBA"/>
+    <circle cx="108" cy="98" r="7" fill="#EEDDBA"/>
+  </g>
+</svg>

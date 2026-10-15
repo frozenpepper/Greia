@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.map — folded treasure map. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sand light -> sand -->
+    <linearGradient id="vocab_map_paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F6EEDC"/>
+      <stop offset="1" stop-color="#EEDDBA"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="100" ry="16.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="map">
+    <path d="M28 76 L92 60 L164 76 L228 60 L228 216 L164 232 L92 216 L28 232 Z" fill="url(#vocab_map_paper)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M92 60 L164 76 L164 232 L92 216 Z" fill="#DAC9A9"/>
+    <path d="M92 60 L92 216 M164 76 L164 232" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M56 184 C80 150 110 176 128 140 C144 110 170 130 190 110" fill="none" stroke="#F46F61" stroke-width="5" stroke-dasharray="2 12" stroke-linecap="round"/>
+    <path d="M180 96 L206 122 M206 96 L180 122" fill="none" stroke="#F46F61" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M44 214 L60 182 L76 214 Z" fill="#59B86A" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M178 196 C190 186 208 186 216 198" fill="none" stroke="#4A91D8" stroke-width="5" stroke-linecap="round"/>
+  </g>
+</svg>

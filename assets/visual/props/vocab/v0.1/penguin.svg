@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.penguin — little penguin. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- navy light -> navy -->
+    <linearGradient id="vocab_penguin_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#66768B"/>
+      <stop offset="1" stop-color="#253B59"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="64" ry="10.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="penguin">
+    <path d="M84 222 L76 234 L112 234 L108 222 Z M172 222 L180 234 L144 234 L148 222 Z" fill="#F39A38" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M66 120 C40 140 34 168 40 186 C56 180 70 162 74 140 Z" fill="url(#vocab_penguin_body)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M190 120 C216 140 222 168 216 186 C200 180 186 162 182 140 Z" fill="url(#vocab_penguin_body)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M128 30 C176 30 194 80 194 140 C194 196 166 228 128 228 C90 228 62 196 62 140 C62 80 80 30 128 30 Z" fill="url(#vocab_penguin_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M128 80 C112 64 82 74 82 110 C82 132 86 150 88 160 C90 200 106 218 128 218 C150 218 166 200 168 160 C170 150 174 132 174 110 C174 74 144 64 128 80 Z" fill="#FFFBEB"/>
+    <ellipse cx="108" cy="100" rx="6.5" ry="8.5" fill="#342C35"/>
+    <circle cx="106.0" cy="97.0" r="2.6" fill="#FFFFFF"/>
+    <ellipse cx="148" cy="100" rx="6.5" ry="8.5" fill="#342C35"/>
+    <circle cx="146.0" cy="97.0" r="2.6" fill="#FFFFFF"/>
+    <ellipse cx="94" cy="120" rx="10" ry="6" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="162" cy="120" rx="10" ry="6" fill="#FDA4AF" opacity="0.55"/>
+    <path d="M114 116 L142 116 L128 134 Z" fill="#F39A38" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="90" cy="58" rx="12" ry="6" fill="#FFFFFF" opacity="0.5" transform="rotate(-35 90 58)"/>
+  </g>
+</svg>

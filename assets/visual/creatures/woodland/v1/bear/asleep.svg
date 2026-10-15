@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.woodland.bear - asleep. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- cocoa light steps (brown bear) -->
+    <linearGradient id="bear_asleep_fur" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#C29470"/>
+      <stop offset="1" stop-color="#93633F"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="229" rx="64" ry="10.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="character" transform="translate(128 216) scale(1.05 0.93) translate(-128 -216)">
+    <g id="body">
+      <ellipse cx="84" cy="198" rx="20" ry="17" fill="url(#bear_asleep_fur)" stroke="#4B372F" stroke-width="3.5"/>
+      <ellipse cx="172" cy="198" rx="20" ry="17" fill="url(#bear_asleep_fur)" stroke="#4B372F" stroke-width="3.5"/>
+      <path d="M128 126 C162 126 184 156 186 188 C188 208 174 216 150 216 L106 216 C82 216 68 208 70 188 C72 156 94 126 128 126 Z" fill="url(#bear_asleep_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="128" cy="180" rx="30" ry="30" fill="#F3DFC6"/>
+    </g>
+    <g id="feet">
+      <ellipse cx="100" cy="210" rx="15" ry="9" fill="#F3DFC6" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="100" cy="211" rx="6" ry="4" fill="#E9A6A0"/>
+      <ellipse cx="156" cy="210" rx="15" ry="9" fill="#F3DFC6" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="156" cy="211" rx="6" ry="4" fill="#E9A6A0"/>
+    </g>
+    <g id="ears">
+      <ellipse cx="78" cy="62" rx="20" ry="19" fill="url(#bear_asleep_fur)" stroke="#4B372F" stroke-width="3.5"/>
+      <ellipse cx="178" cy="62" rx="20" ry="19" fill="url(#bear_asleep_fur)" stroke="#4B372F" stroke-width="3.5"/>
+      <ellipse cx="78" cy="63" rx="10" ry="9" fill="#F3DFC6"/>
+      <ellipse cx="178" cy="63" rx="10" ry="9" fill="#F3DFC6"/>
+    </g>
+    <g id="head">
+      <path d="M128 44 C170 44 194 70 194 102 C194 134 166 154 128 154 C90 154 62 134 62 102 C62 70 86 44 128 44 Z" fill="url(#bear_asleep_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M82.1 71.4 C80.1 68.1 83.7 62.2 90.3 58.1 C96.8 54 103.8 53.3 105.9 56.6 C107.9 59.9 104.3 65.8 97.7 69.9 C91.2 74 84.2 74.7 82.1 71.4 Z" fill="#FFFFFF" opacity="0.7"/>
+      <ellipse cx="128" cy="122" rx="28" ry="21" fill="#F3DFC6"/>
+      <path d="M116 110 Q128 103 140 110 Q136 119 128 121 Q120 119 116 110 Z" fill="#594047" stroke="#4B372F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="123" cy="109" rx="3.5" ry="2" fill="#FFFFFF" opacity="0.6"/>
+      <ellipse cx="86" cy="120" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="170" cy="120" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+      <path d="M94.0 98 Q104 106 114.0 98" fill="none" stroke="#342C35" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M142.0 98 Q152 106 162.0 98" fill="none" stroke="#342C35" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M123 128 Q128 132 133 128" fill="none" stroke="#72513F" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g id="fx">
+    <path d="M196 46 L208.0 46 L196 58.0 L208.0 58.0" fill="none" stroke="#6E7FB0" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" opacity="0.7"/>
+    <path d="M218 24 L227.0 24 L218 33.0 L227.0 33.0" fill="none" stroke="#6E7FB0" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.5"/>
+  </g>
+</svg>

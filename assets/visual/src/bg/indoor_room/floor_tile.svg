@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- indoor_room: checker tile floor + skirting from y 432; transparent above.
+       Scene layer indoor_room_floor_tile; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <g id="floor">
+    <path d="M-8 432 L1032 432 L1032 608 L-8 608 Z" fill="#FFF6E3"/>
+    <path d="M-8 450 h64 v54 h-64 Z M120 450 h64 v54 h-64 Z M248 450 h64 v54 h-64 Z M376 450 h64 v54 h-64 Z M504 450 h64 v54 h-64 Z M632 450 h64 v54 h-64 Z M760 450 h64 v54 h-64 Z M888 450 h64 v54 h-64 Z M1016 450 h64 v54 h-64 Z M56 504 h64 v54 h-64 Z M184 504 h64 v54 h-64 Z M312 504 h64 v54 h-64 Z M440 504 h64 v54 h-64 Z M568 504 h64 v54 h-64 Z M696 504 h64 v54 h-64 Z M824 504 h64 v54 h-64 Z M952 504 h64 v54 h-64 Z M-8 558 h64 v54 h-64 Z M120 558 h64 v54 h-64 Z M248 558 h64 v54 h-64 Z M376 558 h64 v54 h-64 Z M504 558 h64 v54 h-64 Z M632 558 h64 v54 h-64 Z M760 558 h64 v54 h-64 Z M888 558 h64 v54 h-64 Z M1016 558 h64 v54 h-64 Z" fill="#BFE3EC"/>
+    <path d="M-8 450 L1032 450" stroke="#9FCBD8" stroke-width="2"/>
+    <path d="M-8 432 L1032 432 L1032 450 L-8 450 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <ellipse cx="512" cy="454" rx="560" ry="6" fill="#6A5147" opacity="0.12"/>
+  </g>
+</svg>

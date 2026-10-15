@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.leaf_drift frame 1 (default): autumn leaves drifting (tileable 128) -->
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <g transform="rotate(-30 28 30)">
+      <path d="M28 15 Q40 27 28 45 Q16 27 28 15 Z" fill="#F39A38" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M28 21 L28 48.8" fill="none" stroke="#4B372F" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <g transform="rotate(40 94 26)">
+      <path d="M94 12 Q105.2 23.2 94 40 Q82.8 23.2 94 12 Z" fill="#FFC234" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M94 17.6 L94 43.5" fill="none" stroke="#4B372F" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <g transform="rotate(10 62 72)">
+      <path d="M62 56 Q74.8 68.8 62 88 Q49.2 68.8 62 56 Z" fill="#CF6356" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M62 62.4 L62 92" fill="none" stroke="#4B372F" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <g transform="rotate(-50 104 100)">
+      <path d="M104 86 Q115.2 97.2 104 114 Q92.8 97.2 104 86 Z" fill="#59B86A" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M104 91.6 L104 117.5" fill="none" stroke="#4B372F" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <g transform="rotate(70 24 102)">
+      <path d="M24 89 Q34.4 99.4 24 115 Q13.6 99.4 24 89 Z" fill="#F39A38" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M24 94.2 L24 118.2" fill="none" stroke="#4B372F" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

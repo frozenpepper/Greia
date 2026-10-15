@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.shape.square — flat square shape token. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- token light -> token -->
+    <linearGradient id="shape_square_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#92BDE8"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="shape">
+    <path d="M38 24 L218 24 Q232 24 232 38 L232 218 Q232 232 218 232 L38 232 Q24 232 24 218 L24 38 Q24 24 38 24 Z" fill="url(#shape_square_fill)" stroke="#4B372F" stroke-width="6" stroke-linejoin="round"/>
+    <ellipse cx="64" cy="62" rx="16" ry="9" fill="#FFFFFF" opacity="0.8" transform="rotate(-35 64 62)"/>
+  </g>
+</svg>

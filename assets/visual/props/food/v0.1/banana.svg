@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.food.banana — curved yellow banana. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="food_banana_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDA85"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="132" cy="232" rx="90" ry="15.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="banana">
+    <path d="M50 118 C40 170 82 222 148 226 C184 228 212 214 226 194 C204 190 174 188 150 182 C108 170 84 144 78 112 Z" fill="url(#food_banana_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M80 122 C90 152 112 172 156 184" fill="none" stroke="#D7A333" stroke-width="5" stroke-linecap="round"/>
+    <path d="M52 116 C50 102 50 88 54 76 L70 74 C70 88 72 100 74 112 Z" fill="#D97706" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M222 190 L232 194 C230 200 226 204 220 206 L214 200 Z" fill="#92400E" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M60 136 C64 160 76 180 92 194" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+  </g>
+</svg>

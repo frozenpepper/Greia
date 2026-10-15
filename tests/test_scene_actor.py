@@ -177,6 +177,11 @@ class SceneActorTests(unittest.TestCase):
             "pose_cheer",
             "pose_point",
             "pose_think",
+            "sad",
+            "angry",
+            "silly",
+            "pose_wave",
+            "pose_play",
         }
         for cid in expected_chars:
             self.assertIn(cid, visuals, f"Missing character visual {cid}")

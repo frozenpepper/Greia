@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- woodland_snow: far treeline haze.
+       Scene layer woodland_snow_far; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <g id="far">
+    <g fill="#C4D3E4" stroke-linejoin="round"><path d="M0.1999999999999993 330 L20 264.0 L39.8 330 Z"/><path d="M28.599999999999998 326 L52 248.0 L75.4 326 Z"/><path d="M70.0 332 L88 272.0 L106.0 332 Z"/><path d="M98.4 324 L120 252.0 L141.6 324 Z"/><path d="M139.8 330 L156 276.0 L172.2 330 Z"/><path d="M182.0 328 L200 268.0 L218.0 328 Z"/><path d="M782.0 328 L800 268.0 L818.0 328 Z"/><path d="M818.4 324 L840 252.0 L861.6 324 Z"/><path d="M859.8 330 L876 276.0 L892.2 330 Z"/><path d="M888.6 322 L912 244.0 L935.4 322 Z"/><path d="M932.0 328 L950 268.0 L968.0 328 Z"/><path d="M968.4 324 L990 252.0 L1011.6 324 Z"/><path d="M1002.0 330 L1020 270.0 L1038.0 330 Z"/><path d="M367.4 332 L380 290.0 L392.6 332 Z"/><path d="M393.6 330 L408 282.0 L422.4 330 Z"/><path d="M616.5 332 L630 287.0 L643.5 332 Z"/><path d="M640.7 330 L656 279.0 L671.3 330 Z"/></g>
+    <path d="M-8 330 C120 316 260 318 380 330 C500 340 640 338 760 328 C880 318 960 320 1032 328 L1032 440 L-8 440 Z" fill="#DCE6F2"/>
+  </g>
+</svg>

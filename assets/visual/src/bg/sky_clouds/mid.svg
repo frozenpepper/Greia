@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- sky_clouds: drifting mid clouds, mostly at the sides.
+       Scene layer sky_clouds_mid; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <g id="mid">
+    <g transform="translate(-20 300) scale(0.75)"><path d="M18 0 C-4 0 -8 -30 14 -38 C10 -70 46 -88 72 -72 C84 -104 136 -110 154 -78 C174 -96 214 -88 218 -58 C246 -60 262 -30 246 -12 C252 -4 248 0 240 0 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="4" stroke-linejoin="round"/><path d="M30 -46 C34 -62 50 -70 66 -64" fill="none" stroke="#FFFFFF" stroke-width="9.3" stroke-linecap="round" opacity="0.8"/></g><g transform="translate(860 250) scale(0.65)"><path d="M18 0 C-4 0 -8 -30 14 -38 C10 -70 46 -88 72 -72 C84 -104 136 -110 154 -78 C174 -96 214 -88 218 -58 C246 -60 262 -30 246 -12 C252 -4 248 0 240 0 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="4.6" stroke-linejoin="round"/><path d="M30 -46 C34 -62 50 -70 66 -64" fill="none" stroke="#FFFFFF" stroke-width="10.8" stroke-linecap="round" opacity="0.8"/></g>
+    <g transform="translate(380 150) scale(0.6)"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="4.2" stroke-linejoin="round"/></g><g transform="translate(120 120) scale(0.7)" opacity="0.9"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="3.6" stroke-linejoin="round"/></g><g transform="translate(700 70) scale(0.55)" opacity="0.9"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="4.5" stroke-linejoin="round"/></g>
+  </g>
+</svg>

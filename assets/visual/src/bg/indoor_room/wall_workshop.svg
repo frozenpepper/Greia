@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- indoor_room: workshop wall (plank boards, window, tool pegboard); opaque.
+       Scene layer indoor_room_wall_workshop; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- sand light -> sand -->
+    <linearGradient id="indoor_room_wall_workshop_grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4E8CF"/>
+      <stop offset="1" stop-color="#EEDDBA"/>
+    </linearGradient>
+    <!-- sky shade -> sky light (window view) -->
+    <linearGradient id="indoor_room_wall_workshop_view" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#AED4EF"/>
+      <stop offset="1" stop-color="#E6F1EE"/>
+    </linearGradient>
+  </defs>
+  <g id="wall">
+    <rect width="1024" height="600" fill="url(#indoor_room_wall_workshop_grad)"/>
+    <path d="M64 -8 L64 608 M160 -8 L160 608 M256 -8 L256 608 M352 -8 L352 608 M448 -8 L448 608 M544 -8 L544 608 M640 -8 L640 608 M736 -8 L736 608 M832 -8 L832 608 M928 -8 L928 608 " stroke="#D9C59C" stroke-width="3"/>
+    <rect x="38" y="82" width="156" height="146" rx="14" fill="#FFF6E3" stroke="#4B372F" stroke-width="3"/><rect x="46" y="90" width="140" height="130" rx="8" fill="url(#indoor_room_wall_workshop_view)" stroke="#4B372F" stroke-width="2.5"/><g transform="translate(60 116) scale(0.5)"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="5" stroke-linejoin="round"/></g><path d="M46 198 C88.0 180 144.0 184 186 194 L186 216 C186 220 46 220 46 216 Z" fill="#9BD4A6"/><path d="M116.0 90 L116.0 220 M46 155.0 L186 155.0" stroke="#FFF6E3" stroke-width="7"/><path d="M116.0 90 L116.0 220 M46 155.0 L186 155.0" stroke="#4B372F" stroke-width="1.8" opacity="0.35"/><rect x="30" y="226" width="172" height="12" rx="6" fill="#FFF6E3" stroke="#4B372F" stroke-width="3"/>
+    <rect x="826" y="80" width="186" height="216" rx="12" fill="#C98E58" stroke="#4B372F" stroke-width="3"/>
+    <g fill="#A8733F"><circle cx="842" cy="96" r="3"/><circle cx="842" cy="120" r="3"/><circle cx="842" cy="144" r="3"/><circle cx="842" cy="168" r="3"/><circle cx="842" cy="192" r="3"/><circle cx="842" cy="216" r="3"/><circle cx="842" cy="240" r="3"/><circle cx="842" cy="264" r="3"/><circle cx="842" cy="288" r="3"/><circle cx="866" cy="96" r="3"/><circle cx="866" cy="120" r="3"/><circle cx="866" cy="144" r="3"/><circle cx="866" cy="168" r="3"/><circle cx="866" cy="192" r="3"/><circle cx="866" cy="216" r="3"/><circle cx="866" cy="240" r="3"/><circle cx="866" cy="264" r="3"/><circle cx="866" cy="288" r="3"/><circle cx="890" cy="96" r="3"/><circle cx="890" cy="120" r="3"/><circle cx="890" cy="144" r="3"/><circle cx="890" cy="168" r="3"/><circle cx="890" cy="192" r="3"/><circle cx="890" cy="216" r="3"/><circle cx="890" cy="240" r="3"/><circle cx="890" cy="264" r="3"/><circle cx="890" cy="288" r="3"/><circle cx="914" cy="96" r="3"/><circle cx="914" cy="120" r="3"/><circle cx="914" cy="144" r="3"/><circle cx="914" cy="168" r="3"/><circle cx="914" cy="192" r="3"/><circle cx="914" cy="216" r="3"/><circle cx="914" cy="240" r="3"/><circle cx="914" cy="264" r="3"/><circle cx="914" cy="288" r="3"/><circle cx="938" cy="96" r="3"/><circle cx="938" cy="120" r="3"/><circle cx="938" cy="144" r="3"/><circle cx="938" cy="168" r="3"/><circle cx="938" cy="192" r="3"/><circle cx="938" cy="216" r="3"/><circle cx="938" cy="240" r="3"/><circle cx="938" cy="264" r="3"/><circle cx="938" cy="288" r="3"/><circle cx="962" cy="96" r="3"/><circle cx="962" cy="120" r="3"/><circle cx="962" cy="144" r="3"/><circle cx="962" cy="168" r="3"/><circle cx="962" cy="192" r="3"/><circle cx="962" cy="216" r="3"/><circle cx="962" cy="240" r="3"/><circle cx="962" cy="264" r="3"/><circle cx="962" cy="288" r="3"/><circle cx="986" cy="96" r="3"/><circle cx="986" cy="120" r="3"/><circle cx="986" cy="144" r="3"/><circle cx="986" cy="168" r="3"/><circle cx="986" cy="192" r="3"/><circle cx="986" cy="216" r="3"/><circle cx="986" cy="240" r="3"/><circle cx="986" cy="264" r="3"/><circle cx="986" cy="288" r="3"/></g>
+    <g stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"><rect x="866" y="140" width="10" height="70" rx="4" fill="#C98E58"/><rect x="848" y="120" width="46" height="22" rx="5" fill="#8FA9C2"/><path d="M926 120 C914 120 912 136 920 142 L924 210 C924 216 934 216 934 210 L938 142 C946 136 944 120 932 120 L932 132 L926 132 Z" fill="#8FA9C2"/><path d="M960 120 L984 120 L984 150 L960 180 Z" fill="#FFF6E3"/><rect x="954" y="176" width="22" height="34" rx="6" fill="#F46F61"/><path d="M850 236 L880 236 L880 262 C880 270 850 270 850 262 Z" fill="#FFC234"/><rect x="900" y="232" width="80" height="12" rx="6" fill="#59B86A"/></g>
+  </g>
+</svg>

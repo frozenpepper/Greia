@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- stage: wooden boards with apron and footlights from y 452; transparent above.
+       Scene layer stage_boards; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- wood light -> wood -->
+    <linearGradient id="stage_boards_grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D9A46A"/>
+      <stop offset="1" stop-color="#B57A49"/>
+    </linearGradient>
+  </defs>
+  <g id="boards">
+    <path d="M-8 452 L1032 452 L1032 556 L-8 556 Z" fill="url(#stage_boards_grad)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M-8 490 L1032 490 M-8 524 L1032 524 M200 458 L200 490 M560 458 L560 490 M880 458 L880 490 M90 490 L90 524 M420 490 L420 524 M740 490 L740 524 M260 524 L260 556 M620 524 L620 556 M960 524 L960 556 " stroke="#8C5A33" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M40 470 C200 464 360 464 500 470" fill="none" stroke="#EBC08E" stroke-width="4" stroke-linecap="round"/>
+    <path d="M-8 556 L1032 556 L1032 608 L-8 608 Z" fill="#7A3A45" stroke="#4B372F" stroke-width="3"/>
+    <path d="M-8 562 L1032 562" stroke="#FFC234" stroke-width="5"/>
+    <g fill="#FFE08A" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"><path d="M82 572 C82 556 110 556 110 572 Z"/><path d="M186 572 C186 556 214 556 214 572 Z"/><path d="M290 572 C290 556 318 556 318 572 Z"/><path d="M394 572 C394 556 422 556 422 572 Z"/><path d="M498 572 C498 556 526 556 526 572 Z"/><path d="M602 572 C602 556 630 556 630 572 Z"/><path d="M706 572 C706 556 734 556 734 572 Z"/><path d="M810 572 C810 556 838 556 838 572 Z"/><path d="M914 572 C914 556 942 556 942 572 Z"/></g>
+  </g>
+</svg>

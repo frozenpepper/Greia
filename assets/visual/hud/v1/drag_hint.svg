@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- icon.hud.drag_hint: drag: pointing hand with motion lines; peach hand, ink contour -->
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M8 42 L20 42 M6 56 L18 56 M10 70 L20 70" fill="none" stroke-width="4.5"/>
+    <path d="M50 18 Q50 9 57 9 Q64 9 64 18 L64 44 Q72 42 75 47 Q82 46 84 53 L84 70 Q84 88 66 88 L55 88 Q45 88 40 79 L31 64 Q28 57 34 55 Q39 54 44 60 L50 66 Z" fill="#F8D8BD" stroke-width="4.5"/>
+    <path d="M64 44 L64 56 M75 47 L75 58" fill="none" stroke-width="3"/>
+    <path d="M54 16 L54 30" stroke="#FFFFFF" stroke-width="3" opacity="0.9" fill="none"/>
+  </g>
+</svg>

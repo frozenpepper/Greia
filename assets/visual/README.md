@@ -85,6 +85,23 @@ Candidate shared masters for panels, cards/states, buttons/states, tabs, badges,
 
 Water/Pond includes independent 1024×600 / 800×600 layered references. The individual review corrected weak dock/lily-pad treatments and the target pass strengthened water/reed depth before recording the candidate review.
 
+### Shared art library v1 (2026-10-15)
+
+Registered in `assets/catalog/shared_visuals_v1_source.toml` (catalogue 0.6.0); SVG source beside each family, 1:1 PNG renditions under `assets/visual/runtime/v1/`. **SOURCE + DESKTOP VISUAL REVIEW only**; no Shell/Activity consumes these yet.
+
+| Family | Source | Runtime PNGs | IDs |
+| --- | --- | --- | --- |
+| Biome scene layers and wallpapers (1024x600; sky/far/mid/ground/foreground, room walls/floors, stage) | `src/bg/**` | `runtime/v1/bg/**` | `bg.<biome>.<layer>` |
+| Props: food, everyday, nature, instrument, shape, blocks, vocabulary nouns | `props/<family>/v0.1/` | `runtime/v1/props/<family>/` | `prop.<family>.<name>` |
+| Creatures: pets, marine, woodland (neutral + state variants) | `creatures/<role>/v1/` | `runtime/v1/creatures/<role>/` | `creature.<role>.<name>` (kind `character`, role `pet`/`marine`/`woodland`) |
+| Cast extras: sad, angry, silly, pose_wave, pose_play for the six mascots | beside the canonical masters | `runtime/v1/characters/` | variants of `character.<id>` |
+| HUD glyphs | `hud/v1/` | `runtime/v1/hud/` | `icon.hud.<name>` (control-kit glyphs keep `ui/controls/v1`; `icon.hud.broom` is an alias of `icon.hud.clear`) |
+| FX frames | `fx/v1/` | `runtime/v1/fx/` | `fx.<name>` (`default` = peak frame, `frame_2`/`frame_3` continue) |
+
+One drawing per animal: `prop.vocab.{cat,dog,bear,frog,mouse,butterfly,snail,turtle,whale,octopus,crab}` are catalogue aliases that declare the same source/output as the matching `creature.*` default (the builder permits identical source/output/size across IDs and renders once). Do not add a second drawing for an animal that already has a creature.
+
+`tests/test_shared_visual_library.py` asserts every declared rendition exists with its declared size and that no unregistered PNG ships.
+
 Key authority/evidence files per environment pack normally include:
 
 ```text

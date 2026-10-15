@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.sparkle frame 2 (twinkle): main sparkle smaller, small sparkles swap size -->
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M64 38 Q68.3 57.7 88 62 Q68.3 66.3 64 86 Q59.7 66.3 40 62 Q59.7 57.7 64 38 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M30 15 Q32.7 27.3 45 30 Q32.7 32.7 30 45 Q27.3 32.7 15 30 Q27.3 27.3 30 15 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M98 89 Q99.6 96.4 107 98 Q99.6 99.6 98 107 Q96.4 99.6 89 98 Q96.4 96.4 98 89 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M102 23 Q103.3 28.7 109 30 Q103.3 31.3 102 37 Q100.7 31.3 95 30 Q100.7 28.7 102 23 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+  </g>
+</svg>

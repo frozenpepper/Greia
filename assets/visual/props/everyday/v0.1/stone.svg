@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.everyday.stone — smooth grey pebble. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- charcoal light steps -->
+    <linearGradient id="everyday_stone_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D1D2D4"/>
+      <stop offset="1" stop-color="#989A9C"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="100" ry="16.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="stone">
+    <path d="M28 186 C24 140 66 104 128 104 C196 104 232 140 228 184 C226 216 190 230 128 230 C66 230 30 216 28 186 Z" fill="url(#everyday_stone_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M140 216 C180 214 206 204 212 186" fill="none" stroke="#898686" stroke-width="6" stroke-linecap="round"/>
+    <ellipse cx="78" cy="136" rx="24" ry="10" fill="#FFFFFF" opacity="0.7" transform="rotate(-15 78 136)"/>
+  </g>
+</svg>

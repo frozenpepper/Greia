@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.everyday.cup — turquoise mug. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- turquoise light -> turquoise -->
+    <linearGradient id="everyday_cup_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#85D1CA"/>
+      <stop offset="1" stop-color="#44B8AE"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="124" cy="232" rx="84" ry="14.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="cup">
+    <path d="M176 114 C222 110 230 176 180 190" fill="none" stroke="#4B372F" stroke-width="30" stroke-linecap="round"/>
+    <path d="M176 114 C222 110 230 176 180 190" fill="none" stroke="#44B8AE" stroke-width="20" stroke-linecap="round"/>
+    <path d="M44 76 L188 76 L180 206 C179 220 168 230 154 230 L78 230 C64 230 53 220 52 206 Z" fill="url(#everyday_cup_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="116" cy="76" rx="72" ry="16" fill="#469188" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M116 130 C116 118 138 116 138 132 C138 148 116 160 116 168 C116 160 94 148 94 132 C94 116 116 118 116 130 Z" fill="#F46F61" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M68 106 L72 196" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  </g>
+</svg>

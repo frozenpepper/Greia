@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.rain frame 1 (default): tileable 128 px raindrops -->
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M16 5 C18.7 9.9 22.8 13.6 22.8 17.1 C22.8 21.6 9.2 21.6 9.2 17.1 C9.2 13.6 13.3 9.9 16 5 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 16 14)"/>
+    <path d="M58 13 C60.7 17.9 64.8 21.6 64.8 25.1 C64.8 29.6 51.2 29.6 51.2 25.1 C51.2 21.6 55.3 17.9 58 13 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 58 22)"/>
+    <path d="M100 1 C102.7 6 106.8 9.6 106.8 13.2 C106.8 17.6 93.2 17.6 93.2 13.2 C93.2 9.6 97.3 6 100 1 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 100 10)"/>
+    <path d="M36 43 C38.7 48 42.8 51.5 42.8 55.1 C42.8 59.6 29.2 59.6 29.2 55.1 C29.2 51.5 33.3 48 36 43 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 36 52)"/>
+    <path d="M80 49 C82.7 54 86.8 57.5 86.8 61.1 C86.8 65.7 73.2 65.7 73.2 61.1 C73.2 57.5 77.3 54 80 49 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 80 58)"/>
+    <path d="M120 39 C122.7 44 126.8 47.5 126.8 51.1 C126.8 55.6 113.2 55.6 113.2 51.1 C113.2 47.5 117.3 44 120 39 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 120 48)"/>
+    <path d="M12 81 C14.7 86 18.8 89.5 18.8 93.2 C18.8 97.7 5.2 97.7 5.2 93.2 C5.2 89.5 9.3 86 12 81 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 12 90)"/>
+    <path d="M56 89 C58.7 94 62.8 97.5 62.8 101.2 C62.8 105.7 49.2 105.7 49.2 101.2 C49.2 97.5 53.3 94 56 89 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 56 98)"/>
+    <path d="M98 79 C100.7 84 104.8 87.5 104.8 91.2 C104.8 95.7 91.2 95.7 91.2 91.2 C91.2 87.5 95.3 84 98 79 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="2" transform="rotate(15 98 88)"/>
+  </g>
+</svg>

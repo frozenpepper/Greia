@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.shape.diamond_slot — outline slot for diamond. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <g id="slot">
+    <path d="M128 14 C134 14 138 17 142 22 L228 116 C234 123 234 133 228 140 L142 234 C138 239 134 242 128 242 C122 242 118 239 114 234 L28 140 C22 133 22 123 28 116 L114 22 C118 17 122 14 128 14 Z" fill="#FFFFFF" opacity="0.28"/>
+    <path d="M128 14 C134 14 138 17 142 22 L228 116 C234 123 234 133 228 140 L142 234 C138 239 134 242 128 242 C122 242 118 239 114 234 L28 140 C22 133 22 123 28 116 L114 22 C118 17 122 14 128 14 Z" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linejoin="round" opacity="0.5"/>
+    <path d="M128 14 C134 14 138 17 142 22 L228 116 C234 123 234 133 228 140 L142 234 C138 239 134 242 128 242 C122 242 118 239 114 234 L28 140 C22 133 22 123 28 116 L114 22 C118 17 122 14 128 14 Z" fill="none" stroke="#4B372F" stroke-width="6" stroke-dasharray="16 14" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  </g>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- icon.hud.pause: two rounded pause bars; cream fill, ink contour -->
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="20" y="16" width="20" height="64" rx="8" fill="#FFFBEB" stroke-width="4.5"/>
+    <rect x="56" y="16" width="20" height="64" rx="8" fill="#FFFBEB" stroke-width="4.5"/>
+    <path d="M28 26 L28 40 M64 26 L64 40" stroke="#FFFFFF" stroke-width="3" opacity="0.9" fill="none"/>
+  </g>
+</svg>

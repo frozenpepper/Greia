@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.check_pop frame 2: settled disc, rays gone -->
+  <defs>
+    <!-- leaf light (mix 35% white) -> leaf -->
+    <linearGradient id="check_pop_f2_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#93D19E"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="64" cy="64" r="34" fill="url(#check_pop_f2_fill)" stroke="#4B372F" stroke-width="3.5"/>
+    <path d="M38 66 L48 56 L58 66 L82 41 L92 51 L58 86 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="3.5"/>
+    <path d="M42 45 Q47 38 55 35" fill="none" stroke="#FFFFFF" stroke-width="3.5" opacity="0.85"/>
+  </g>
+</svg>

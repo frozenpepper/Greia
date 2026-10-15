@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- indoor_room: wooden plank floor + skirting from y 432; transparent above.
+       Scene layer indoor_room_floor_wood; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- orange/sand light -> wood (orange mix ink 25%) -->
+    <linearGradient id="indoor_room_floor_wood_grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E2B07A"/>
+      <stop offset="1" stop-color="#C98E58"/>
+    </linearGradient>
+  </defs>
+  <g id="floor">
+    <path d="M-8 432 L1032 432 L1032 608 L-8 608 Z" fill="url(#indoor_room_floor_wood_grad)"/>
+    <path d="M-8 486 L1032 486 M-8 536 L1032 536 M-8 586 L1032 586 M180 450 L180 486 M520 450 L520 486 M860 450 L860 486 M60 486 L60 536 M380 486 L380 536 M720 486 L720 536 M240 536 L240 586 M600 536 L600 586 M940 536 L940 586 M120 586 L120 608 M460 586 L460 608 M800 586 L800 608 " stroke="#A8733F" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M60 470 C140 466 220 466 300 470 M620 520 C700 516 780 516 860 520" stroke="#F0CC9E" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <path d="M-8 432 L1032 432 L1032 450 L-8 450 Z" fill="#FFF6E3" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <ellipse cx="512" cy="454" rx="560" ry="6" fill="#6A5147" opacity="0.12"/>
+  </g>
+</svg>

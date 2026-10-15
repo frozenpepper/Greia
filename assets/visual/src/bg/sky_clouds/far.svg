@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- sky_clouds: distant sea of clouds along the bottom.
+       Scene layer sky_clouds_far; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <g id="far">
+    <path d="M-8 470 C30 440 80 440 110 460 C140 430 200 430 230 458 C270 434 330 436 360 462 C400 440 460 440 490 464 C530 444 590 444 620 466 C660 440 720 440 750 462 C790 436 850 436 880 460 C910 440 970 440 1032 466 L1032 608 L-8 608 Z" fill="#F3F6FA" stroke="#C9D6E4" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M-8 520 C120 506 260 504 400 514 C540 524 680 522 820 510 C920 504 980 506 1032 512 L1032 608 L-8 608 Z" fill="#E6EDF6"/>
+    <g transform="translate(220 320) scale(0.5)" opacity="0.8"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#F6F9FC" stroke="#CCD9E6" stroke-width="5" stroke-linejoin="round"/></g><g transform="translate(640 300) scale(0.45)" opacity="0.8"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#F6F9FC" stroke="#CCD9E6" stroke-width="5.6" stroke-linejoin="round"/></g>
+  </g>
+</svg>

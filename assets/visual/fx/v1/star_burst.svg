@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.star_burst frame 1 (default): gold star with a ring of six sparkles -->
+  <defs>
+    <!-- gold light -> gold -->
+    <linearGradient id="star_burst_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDE68A"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+  </defs>
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M64 9 Q65.6 16.4 73 18 Q65.6 19.6 64 27 Q62.4 19.6 55 18 Q62.4 16.4 64 9 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M103.8 32 Q105.5 39.4 112.8 41 Q105.5 42.6 103.8 50 Q102.2 42.6 94.8 41 Q102.2 39.4 103.8 32 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M103.8 78 Q105.5 85.4 112.8 87 Q105.5 88.6 103.8 96 Q102.2 88.6 94.8 87 Q102.2 85.4 103.8 78 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M64 101 Q65.6 108.4 73 110 Q65.6 111.6 64 119 Q62.4 111.6 55 110 Q62.4 108.4 64 101 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M24.2 78 Q25.8 85.4 33.2 87 Q25.8 88.6 24.2 96 Q22.5 88.6 15.2 87 Q22.5 85.4 24.2 78 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M24.2 32 Q25.8 39.4 33.2 41 Q25.8 42.6 24.2 50 Q22.5 42.6 15.2 41 Q22.5 39.4 24.2 32 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M64 34 L73.4 53.1 L94.4 56.1 L79.2 70.9 L82.8 91.9 L64 82 L45.2 91.9 L48.8 70.9 L33.6 56.1 L54.6 53.1 Z" fill="url(#star_burst_fill)" stroke="#8A5A12" stroke-width="3"/>
+    <path d="M58 46 L53 57" fill="none" stroke="#FFFFFF" stroke-width="3.5" opacity="0.85"/>
+  </g>
+</svg>

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.woodland.mouse - asleep. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- sand/charcoal light mix (taupe mouse) -->
+    <linearGradient id="mouse_asleep_fur" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#E6DACD"/>
+      <stop offset="1" stop-color="#B9A592"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="229" rx="64" ry="10.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="character" transform="translate(128 216) scale(1.05 0.93) translate(-128 -216)">
+    <g id="tail">
+      <path d="M160 208 C196 214 214 196 206 176 C200 162 214 152 224 160" fill="none" stroke="#4B372F" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M160 208 C196 214 214 196 206 176 C200 162 214 152 224 160" fill="none" stroke="#F2B8B4" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <path d="M128 136 C154 136 168 158 170 184 C172 206 158 216 128 216 C98 216 84 206 86 184 C88 158 102 136 128 136 Z" fill="url(#mouse_asleep_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="128" cy="190" rx="20" ry="20" fill="#FFF8EF"/>
+    </g>
+    <g id="feet">
+      <ellipse cx="108" cy="214" rx="12" ry="6.5" fill="#F2B8B4" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="148" cy="214" rx="12" ry="6.5" fill="#F2B8B4" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+    <g id="ears">
+      <ellipse cx="76" cy="72" rx="34" ry="32" fill="url(#mouse_asleep_fur)" stroke="#4B372F" stroke-width="3.5"/>
+      <ellipse cx="180" cy="72" rx="34" ry="32" fill="url(#mouse_asleep_fur)" stroke="#4B372F" stroke-width="3.5"/>
+      <ellipse cx="78" cy="74" rx="22" ry="20" fill="#F7C1BE"/>
+      <ellipse cx="178" cy="74" rx="22" ry="20" fill="#F7C1BE"/>
+    </g>
+    <g id="head">
+      <path d="M128 70 C160 70 178 92 178 118 C178 144 156 160 128 160 C100 160 78 144 78 118 C78 92 96 70 128 70 Z" fill="url(#mouse_asleep_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M90.5 93.5 C89.1 91.1 92.2 86.7 97.5 83.7 C102.8 80.6 108.1 80.1 109.5 82.5 C110.9 84.9 107.8 89.3 102.5 92.3 C97.2 95.4 91.9 95.9 90.5 93.5 Z" fill="#FFFFFF" opacity="0.7"/>
+      <ellipse cx="128" cy="130" rx="6" ry="4.5" fill="#E98F98" stroke="#4B372F" stroke-width="2"/>
+      <ellipse cx="96" cy="136" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="160" cy="136" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+      <path d="M101.0 116 Q110 124 119.0 116" fill="none" stroke="#342C35" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M137.0 116 Q146 124 155.0 116" fill="none" stroke="#342C35" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M123 140 Q128 144 133 140" fill="none" stroke="#72513F" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M106 132 L86 128" fill="none" stroke="#4B372F" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M150 132 L170 128" fill="none" stroke="#4B372F" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M106 138 L86 142" fill="none" stroke="#4B372F" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M150 138 L170 142" fill="none" stroke="#4B372F" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g id="fx">
+    <path d="M196 46 L208.0 46 L196 58.0 L208.0 58.0" fill="none" stroke="#6E7FB0" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" opacity="0.7"/>
+    <path d="M218 24 L227.0 24 L218 33.0 L227.0 33.0" fill="none" stroke="#6E7FB0" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.5"/>
+  </g>
+</svg>

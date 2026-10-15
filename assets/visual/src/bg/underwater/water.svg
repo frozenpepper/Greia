@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- underwater: opaque water column with soft light rays.
+       Scene layer underwater_water; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- aqua/turquoise light -> ocean deep (mix 35% navy) -->
+    <linearGradient id="underwater_water_grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8AD3CB"/>
+      <stop offset="1" stop-color="#3D73AC"/>
+    </linearGradient>
+  </defs>
+  <g id="water">
+    <rect width="1024" height="600" fill="url(#underwater_water_grad)"/>
+    <g fill="#FFFFFF" opacity="0.1"><path d="M180 -10 L240 -10 L330 520 L120 520 Z"/><path d="M420 -10 L470 -10 L600 520 L420 520 Z"/><path d="M640 -10 L700 -10 L900 520 L700 520 Z"/><path d="M860 -10 L900 -10 L1080 520 L960 520 Z"/></g>
+    <path d="M-8 18 C60 6 120 30 190 18 C260 6 320 30 390 18 C460 6 520 30 590 18 C660 6 720 30 790 18 C860 6 920 30 1032 16 L1032 -8 L-8 -8 Z" fill="#B7E6E0"/>
+    <path d="M40 34 C80 26 110 30 140 36 M300 32 C340 24 370 28 400 34 M600 34 C640 26 670 30 700 36 M860 32 C900 24 930 28 960 34" fill="none" stroke="#D6F2EE" stroke-width="4" stroke-linecap="round"/>
+    <g fill="#E8F7FA" fill-opacity="0.35" stroke="#FFFFFF" stroke-width="2" opacity="0.6"><circle cx="250" cy="160" r="6"/><circle cx="262" cy="132" r="4"/><circle cx="780" cy="240" r="7"/><circle cx="770" cy="206" r="4"/><circle cx="520" cy="90" r="4"/></g><g fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"><path d="M247 159.4 A3.3 3.3 0 0 1 249.4 157"/><path d="M776.5 239.3 A3.9 3.9 0 0 1 779.3 236.5"/></g>
+  </g>
+</svg>

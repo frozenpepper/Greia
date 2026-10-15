@@ -106,7 +106,10 @@ def load_source_spec(
         raise VisualRenditionError("source spec must define at least one visual")
 
     ids: set[str] = set()
-    outputs: set[Path] = set()
+    # output path -> (source, width, height). Two IDs may name the *same*
+    # rendition (an alias such as a vocabulary noun pointing at the creature
+    # drawing); any other output collision is an authoring error.
+    outputs: dict[Path, tuple[Path, int, int]] = {}
     visuals: list[VisualSpec] = []
     for raw_visual in raw_visuals:
         if not isinstance(raw_visual, dict):
@@ -148,13 +151,13 @@ def load_source_spec(
                 raise VisualRenditionError(
                     f"visual runtime rendition must be PNG: {output_relative}"
                 )
-            if output in outputs:
+            width = _dimension(raw_variant, "width")
+            height = _dimension(raw_variant, "height")
+            if output in outputs and outputs[output] != (source, width, height):
                 raise VisualRenditionError(
                     f"duplicate visual output path: {output_relative}"
                 )
-            outputs.add(output)
-            width = _dimension(raw_variant, "width")
-            height = _dimension(raw_variant, "height")
+            outputs[output] = (source, width, height)
             variants.append(
                 VariantSpec(
                     name=name,
@@ -184,8 +187,12 @@ def load_source_spec(
 
 
 def render_all(visuals: tuple[VisualSpec, ...], rasterizer: Path) -> None:
+    rendered: set[Path] = set()
     for visual in visuals:
         for variant in visual.variants:
+            if variant.output in rendered:
+                continue  # alias of an already rendered rendition
+            rendered.add(variant.output)
             variant.output.parent.mkdir(parents=True, exist_ok=True)
             temporary = _temporary_sibling(variant.output)
             temporary.unlink(missing_ok=True)

@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Tito pose_wave: canonical v0.1 paths verbatim; one appendage raised high about its root on the viewer's left (clear of the tail) with two motion arcs, slight lean, canonical eyes and canonical open smile. Greeting / Activity intro. -->
+  <defs>
+    <linearGradient id="titoBody" x1="0%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#FB923C"/>
+      <stop offset="50%" stop-color="#EA580C"/>
+      <stop offset="100%" stop-color="#C2410C"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Ground Contact Shadow -->
+  <g id="shadow">
+    <ellipse cx="128" cy="228" rx="58" ry="9" fill="#6A5147" opacity="0.14"/>
+  </g>
+
+  <g id="character" transform="rotate(-3 128 215)">
+    <!-- Tail behind -->
+    <g id="tail">
+      <path d="M179 146 C218 123 229 151 207 179 C195 194 180 196 168 188 C185 180 189 164 179 146 Z" fill="#EA580C" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M201 160 C214 151 220 158 211 171 C205 180 197 183 189 181 C198 175 202 169 201 160 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/>
+    </g>
+
+    <!-- Ears -->
+    <g id="ears">
+      <path d="M88 82 L76 42 L110 72 Z" fill="#EA580C" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M148 72 L181 42 L168 82 Z" fill="#EA580C" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M88 68 L82 51 L101 68 Z" fill="#FCA5A5"/>
+      <path d="M155 68 L175 51 L168 69 Z" fill="#FCA5A5"/>
+    </g>
+
+    <!-- Body -->
+    <g id="body">
+      <path d="M128 67 C169 67 195 94 196 132 C197 164 179 193 153 204 C134 212 110 209 94 202 C67 190 55 165 59 135 C64 96 89 67 128 67 Z" fill="url(#titoBody)" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <!-- Cream Muzzle / Chest -->
+    <g id="muzzle">
+      <path d="M94 119 C104 104 118 104 128 115 C138 104 153 104 163 119 C171 134 164 158 151 168 C144 174 136 176 128 176 C118 176 109 173 102 167 C88 155 86 134 94 119 Z" fill="#FFFBEB"/>
+    </g>
+
+    <!-- Paws -->
+    <g id="paws">
+      <ellipse cx="101" cy="207" rx="14" ry="8.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" transform="translate(-50 -95) rotate(62 101 207)"/>
+      <ellipse cx="153" cy="207" rx="14" ry="8.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+
+    <!-- Face Features -->
+    <g id="face">
+      <!-- Cheeks -->
+      <g id="cheeks">
+        <ellipse cx="91" cy="151" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+        <ellipse cx="165" cy="151" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      </g>
+
+      <!-- Eyes -->
+      <g id="eyes">
+        <ellipse cx="108" cy="132" rx="8.5" ry="12" fill="#3C2D33"/>
+        <ellipse cx="148" cy="132" rx="8.5" ry="12" fill="#3C2D33"/>
+        <ellipse cx="111" cy="128" rx="2.8" ry="3.6" fill="#FFFFFF"/>
+        <ellipse cx="151" cy="128" rx="2.8" ry="3.6" fill="#FFFFFF"/>
+        <circle cx="106" cy="136" r="1.5" fill="#FFFFFF" opacity="0.8"/>
+        <circle cx="146" cy="136" r="1.5" fill="#FFFFFF" opacity="0.8"/>
+      </g>
+
+      <!-- Nose & Mouth -->
+      <g id="mouth">
+        <path d="M119 147 Q128 141 137 147 Q134 155 128 158 Q122 155 119 147Z" fill="#594047" stroke="#4B372F" stroke-width="2"/>
+        <path d="M112 160 Q128 180 144 160 Z" fill="#BE123C"/>
+        <path d="M118 168 Q128 176 138 168" fill="#FB7185"/>
+      </g>
+    </g>
+
+    <!-- Forehead Stripe -->
+    <g id="forehead_stripe">
+      <path d="M128 82 C119 91 116 102 118 114 C124 107 129 103 136 101 C135 93 133 87 128 82 Z" fill="#C2410C" opacity="0.75"/>
+    </g>
+  </g>
+  <g id="fx" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M35 98 Q27 112 35 126" fill="none" stroke-width="6.5"/>
+    <path d="M35 98 Q27 112 35 126" fill="none" stroke="#FDE68A" stroke-width="2.8"/>
+    <path d="M25 90 Q13 112 25 134" fill="none" stroke-width="6.5"/>
+    <path d="M25 90 Q13 112 25 134" fill="none" stroke="#FDE68A" stroke-width="2.8"/>
+  </g>
+</svg>

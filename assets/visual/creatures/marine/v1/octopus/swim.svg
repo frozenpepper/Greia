@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.marine.octopus - default. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- raspberry light steps (coral-pink octopus) -->
+    <linearGradient id="octopus_default_body" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#F8B3C2"/>
+      <stop offset="1" stop-color="#E8708C"/>
+    </linearGradient>
+  </defs>
+  <g id="character">
+    <g id="arms">
+      <path d="M82 152 C66 176 46 186 36 178 C28 170 36 160 46 166" fill="none" stroke="#4B372F" stroke-width="25" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M104 160 C98 190 82 208 68 204 C58 200 62 188 72 192" fill="none" stroke="#4B372F" stroke-width="25" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M128 162 C128 192 120 212 128 224 C134 232 144 226 138 218" fill="none" stroke="#4B372F" stroke-width="25" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M152 160 C158 190 174 208 188 204 C198 200 194 188 184 192" fill="none" stroke="#4B372F" stroke-width="25" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M174 152 C190 176 210 186 220 178 C228 170 220 160 210 166" fill="none" stroke="#4B372F" stroke-width="25" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M82 152 C66 176 46 186 36 178 C28 170 36 160 46 166" fill="none" stroke="#EC879F" stroke-width="18.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M104 160 C98 190 82 208 68 204 C58 200 62 188 72 192" fill="none" stroke="#EC879F" stroke-width="18.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M128 162 C128 192 120 212 128 224 C134 232 144 226 138 218" fill="none" stroke="#EC879F" stroke-width="18.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M152 160 C158 190 174 208 188 204 C198 200 194 188 184 192" fill="none" stroke="#EC879F" stroke-width="18.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M174 152 C190 176 210 186 220 178 C228 170 220 160 210 166" fill="none" stroke="#EC879F" stroke-width="18.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="54" cy="176" rx="3.5" ry="3" fill="#FDE1E8"/>
+      <ellipse cx="82" cy="198" rx="3.5" ry="3" fill="#FDE1E8"/>
+      <ellipse cx="174" cy="198" rx="3.5" ry="3" fill="#FDE1E8"/>
+      <ellipse cx="202" cy="176" rx="3.5" ry="3" fill="#FDE1E8"/>
+    </g>
+    <g id="head">
+      <path d="M128 36 C178 36 206 72 206 114 C206 150 180 170 128 170 C76 170 50 150 50 114 C50 72 78 36 128 36 Z" fill="url(#octopus_default_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M78.7 74.9 C76.3 71.3 80.2 64.3 87.5 59.4 C94.9 54.4 102.8 53.4 105.3 57.1 C107.7 60.7 103.8 67.7 96.5 72.6 C89.1 77.6 81.2 78.6 78.7 74.9 Z" fill="#FFFFFF" opacity="0.7"/>
+      <circle cx="160" cy="58" r="7" fill="#FBCFDA"/>
+      <circle cx="180" cy="78" r="5" fill="#FBCFDA"/>
+      <circle cx="76" cy="96" r="4.5" fill="#FBCFDA"/>
+    </g>
+    <g id="face">
+      <ellipse cx="84" cy="132" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="172" cy="132" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="106" cy="112" rx="10" ry="13" fill="#342C35"/>
+      <ellipse cx="150" cy="112" rx="10" ry="13" fill="#342C35"/>
+      <ellipse cx="109" cy="108" rx="3.4" ry="3.9" fill="#FFFFFF"/>
+      <ellipse cx="153" cy="108" rx="3.4" ry="3.9" fill="#FFFFFF"/>
+      <circle cx="104.0" cy="116" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+      <circle cx="148.0" cy="116" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+      <path d="M116 140 Q128 150 140 140" fill="none" stroke="#72513F" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

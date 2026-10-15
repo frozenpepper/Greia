@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.everyday.spoon — silver spoon. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- charcoal light steps -->
+    <linearGradient id="everyday_spoon_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D1D2D4"/>
+      <stop offset="1" stop-color="#989A9C"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="100" ry="16.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="spoon">
+    <path d="M112 168 L234 208" fill="none" stroke="#4B372F" stroke-width="31" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M112 168 L234 208" fill="none" stroke="#989A9C" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="72" cy="164" rx="62" ry="42" fill="url(#everyday_spoon_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round" transform="rotate(16 72 164)"/>
+    <ellipse cx="72" cy="164" rx="46" ry="28" fill="#989A9C" opacity="0.6" transform="rotate(16 72 164)"/>
+    <ellipse cx="56" cy="150" rx="14" ry="6" fill="#FFFFFF" opacity="0.9" transform="rotate(16 56 150)"/>
+  </g>
+</svg>

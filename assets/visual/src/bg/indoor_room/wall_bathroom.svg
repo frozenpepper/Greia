@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- indoor_room: bathroom wall (mirror, tiles, towel); opaque.
+       Scene layer indoor_room_wall_bathroom; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- aqua light -> aqua -->
+    <linearGradient id="indoor_room_wall_bathroom_grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E4F5F1"/>
+      <stop offset="1" stop-color="#CFEDE7"/>
+    </linearGradient>
+  </defs>
+  <g id="wall">
+    <rect width="1024" height="600" fill="url(#indoor_room_wall_bathroom_grad)"/>
+    <path d="M-8 226 L1032 226 L1032 608 L-8 608 Z" fill="#EAF7F4"/>
+    <path d="M30 226 L30 432 M82 226 L82 432 M134 226 L134 432 M186 226 L186 432 M238 226 L238 432 M290 226 L290 432 M342 226 L342 432 M394 226 L394 432 M446 226 L446 432 M498 226 L498 432 M550 226 L550 432 M602 226 L602 432 M654 226 L654 432 M706 226 L706 432 M758 226 L758 432 M810 226 L810 432 M862 226 L862 432 M914 226 L914 432 M966 226 L966 432 M1018 226 L1018 432 M-8 278 L1032 278 M-8 330 L1032 330 M-8 382 L1032 382 " stroke="#B3E0D8" stroke-width="2.5"/>
+    <path d="M-8 226 L1032 226" stroke="#44B8AE" stroke-width="8"/><path d="M-8 231 L1032 231" stroke="#4B372F" stroke-width="2" opacity="0.25"/>
+    <ellipse cx="120" cy="150" rx="70" ry="86" fill="#FFF6E3" stroke="#4B372F" stroke-width="3"/>
+    <ellipse cx="120" cy="150" rx="56" ry="72" fill="#DDF0F7" stroke="#4B372F" stroke-width="2.5"/>
+    <path d="M90 110 L112 92 M88 134 L128 100" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
+    <rect x="850" y="180" width="160" height="12" rx="6" fill="#C1B3C5" stroke="#4B372F" stroke-width="3"/>
+    <path d="M872 186 L872 300 C872 308 878 312 886 312 L940 312 C948 312 952 308 952 300 L952 186 Z" fill="#F46F61" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M872 270 L952 270 M872 284 L952 284" stroke="#FFFBEB" stroke-width="5"/>
+    <g fill="#FFFFFF" fill-opacity="0.5" stroke="#9FD3E6" stroke-width="2.5"><circle cx="260" cy="80" r="12"/><circle cx="290" cy="50" r="8"/><circle cx="780" cy="110" r="10"/><circle cx="804" cy="80" r="6"/></g>
+  </g>
+</svg>

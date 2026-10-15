@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.everyday.sponge — yellow sponge with green scrub. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="everyday_sponge_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDA85"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="100" ry="16.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="sponge">
+    <path d="M28 128 L64 96 L230 96 L230 194 L196 228 L28 228 Z" fill="#DBA633" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="28" y="128" width="168" height="100" rx="12" fill="url(#everyday_sponge_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M28 128 L64 96 L230 96 L196 128 Z" fill="#59B86A" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M196 128 L230 96 L230 116 L196 148 Z" fill="#56985B" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="28" y="128" width="168" height="20" fill="#59B86A" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="60" cy="172" rx="9" ry="7.2" fill="#DBA633"/>
+    <ellipse cx="100" cy="188" rx="7" ry="5.6" fill="#DBA633"/>
+    <ellipse cx="140" cy="168" rx="10" ry="8.0" fill="#DBA633"/>
+    <ellipse cx="172" cy="200" rx="7" ry="5.6" fill="#DBA633"/>
+    <ellipse cx="62" cy="208" rx="6" ry="4.8" fill="#DBA633"/>
+    <ellipse cx="120" cy="212" rx="6" ry="4.8" fill="#DBA633"/>
+    <ellipse cx="176" cy="166" rx="6" ry="4.8" fill="#DBA633"/>
+  </g>
+</svg>

@@ -12,7 +12,10 @@ ROOT = Path(__file__).resolve().parents[1]
 CAST_DIR = ROOT / "assets" / "visual" / "characters" / "canonical" / "v0.1"
 SOURCE_SPEC = ROOT / "assets" / "catalog" / "shared_visuals_v1_source.toml"
 CAST = ("lilli", "leo", "flash", "dani", "tito", "momo")
-POSES = ("pose_cheer", "pose_point", "pose_think")
+POSES = ("pose_cheer", "pose_point", "pose_think", "pose_wave", "pose_play")
+EXPRESSIONS = ("sad", "angry", "silly")
+# Every registered cast drawing that must follow the recipe and keep the silhouette.
+VARIANTS = POSES + EXPRESSIONS
 RETIRED_FOLDERS = (
     "authoring_candidates",
     "authoring_kit",
@@ -52,7 +55,11 @@ class CanonicalCastPoseTests(unittest.TestCase):
         for character in data["characters"]:
             name = character["id"].removeprefix("character.")
             self.assertEqual(set(character["poses"]), set(POSES), name)
-            for relative in character["poses"].values():
+            self.assertEqual(set(character["expressions"]), set(EXPRESSIONS), name)
+            for relative in (
+                *character["poses"].values(),
+                *character["expressions"].values(),
+            ):
                 self.assertTrue((CAST_DIR / relative).is_file(), relative)
 
     def test_cast_catalogue_provenance_does_not_cite_retired_folders(self) -> None:
@@ -62,7 +69,7 @@ class CanonicalCastPoseTests(unittest.TestCase):
 
     def test_pose_sources_follow_svg_recipe(self) -> None:
         for name in CAST:
-            for pose in POSES:
+            for pose in VARIANTS:
                 path = CAST_DIR / name / f"{pose}.svg"
                 svg = path.read_text(encoding="utf-8")
                 self.assertIsNone(FORBIDDEN.search(svg), path.name)
@@ -77,7 +84,7 @@ class CanonicalCastPoseTests(unittest.TestCase):
             neutral = (CAST_DIR / name / "neutral.svg").read_text(encoding="utf-8")
             body = _shapes(_group(neutral, _SILHOUETTE_GROUPS[name]))
             self.assertTrue(body)
-            for pose in POSES:
+            for pose in VARIANTS:
                 svg = (CAST_DIR / name / f"{pose}.svg").read_text(encoding="utf-8")
                 for shape in body:
                     self.assertIn(shape, svg, f"{name}/{pose} redrew its silhouette")
@@ -87,7 +94,7 @@ class CanonicalCastPoseTests(unittest.TestCase):
         visuals = {visual["id"]: visual for visual in data["visuals"]}
         for name in CAST:
             variants = {v["name"]: v for v in visuals[f"character.{name}"]["variants"]}
-            for pose in POSES:
+            for pose in VARIANTS:
                 variant = variants[pose]
                 self.assertEqual(
                     variant["source"],

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.cake — birthday cake with candles. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange light -->
+    <linearGradient id="vocab_cake_sponge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FAD2A5"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+    <!-- raspberry light -->
+    <linearGradient id="vocab_cake_icing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EFBBCD"/>
+      <stop offset="1" stop-color="#D85683"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="100" ry="16.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="cake">
+    <rect x="81" y="62" width="14" height="48" rx="5" fill="#4A91D8" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M88 30 C98 42 98 52 88 56 C78 52 78 42 88 30 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="121" y="62" width="14" height="48" rx="5" fill="#59B86A" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M128 30 C138 42 138 52 128 56 C118 52 118 42 128 30 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="161" y="62" width="14" height="48" rx="5" fill="#F46F61" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M168 30 C178 42 178 52 168 56 C158 52 158 42 168 30 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="218" rx="110" ry="14" fill="#FFFBEB" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M40 116 L216 116 L216 202 C216 212 200 218 128 218 C56 218 40 212 40 202 Z" fill="url(#vocab_cake_sponge)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M40 116 C40 98 216 98 216 116 L216 140 C206 160 196 140 188 150 C180 170 166 146 156 154 C146 170 132 148 122 156 C112 170 98 146 88 154 C78 168 66 144 56 152 C48 162 40 150 40 140 Z" fill="url(#vocab_cake_icing)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M60 186 C100 194 156 194 196 186" fill="none" stroke="#D85683" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  </g>
+</svg>

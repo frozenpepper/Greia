@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.shape.heart — flat heart shape token. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- token light -> token -->
+    <linearGradient id="shape_heart_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E89AB5"/>
+      <stop offset="1" stop-color="#D85683"/>
+    </linearGradient>
+  </defs>
+  <g id="shape">
+    <path d="M128 228 C96 204 22 164 22 102 C22 62 52 36 88 36 C106 36 120 46 128 60 C136 46 150 36 168 36 C204 36 234 62 234 102 C234 164 160 204 128 228 Z" fill="url(#shape_heart_fill)" stroke="#4B372F" stroke-width="6" stroke-linejoin="round"/>
+    <ellipse cx="72" cy="88" rx="16" ry="9" fill="#FFFFFF" opacity="0.8" transform="rotate(-35 72 88)"/>
+  </g>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- indoor_room: kitchen wall (window, tiled backsplash, jar shelf); opaque, pair with a floor layer.
+       Scene layer indoor_room_wall_kitchen; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- peach light -> peach -->
+    <linearGradient id="indoor_room_wall_kitchen_grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBE8D6"/>
+      <stop offset="1" stop-color="#F8D8BD"/>
+    </linearGradient>
+    <!-- sky shade -> sky light (window view) -->
+    <linearGradient id="indoor_room_wall_kitchen_view" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#AED4EF"/>
+      <stop offset="1" stop-color="#E6F1EE"/>
+    </linearGradient>
+  </defs>
+  <g id="wall">
+    <rect width="1024" height="600" fill="url(#indoor_room_wall_kitchen_grad)"/>
+    <path d="M-8 286 L1032 286 L1032 608 L-8 608 Z" fill="#CFEDE7"/>
+    <path d="M40 286 L40 432 M88 286 L88 432 M136 286 L136 432 M184 286 L184 432 M232 286 L232 432 M280 286 L280 432 M328 286 L328 432 M376 286 L376 432 M424 286 L424 432 M472 286 L472 432 M520 286 L520 432 M568 286 L568 432 M616 286 L616 432 M664 286 L664 432 M712 286 L712 432 M760 286 L760 432 M808 286 L808 432 M856 286 L856 432 M904 286 L904 432 M952 286 L952 432 M1000 286 L1000 432 M-8 334 L1032 334 M-8 382 L1032 382 " stroke="#A5D8CE" stroke-width="2.5"/>
+    <path d="M-8 286 L1032 286" stroke="#FFF6E3" stroke-width="8"/><path d="M-8 291 L1032 291" stroke="#4B372F" stroke-width="2" opacity="0.25"/>
+    <rect x="28" y="72" width="166" height="166" rx="14" fill="#FFF6E3" stroke="#4B372F" stroke-width="3"/><rect x="36" y="80" width="150" height="150" rx="8" fill="url(#indoor_room_wall_kitchen_view)" stroke="#4B372F" stroke-width="2.5"/><g transform="translate(50 106) scale(0.5)"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="5" stroke-linejoin="round"/></g><path d="M36 208 C81.0 190 141.0 194 186 204 L186 226 C186 230 36 230 36 226 Z" fill="#9BD4A6"/><path d="M111.0 80 L111.0 230 M36 155.0 L186 155.0" stroke="#FFF6E3" stroke-width="7"/><path d="M111.0 80 L111.0 230 M36 155.0 L186 155.0" stroke="#4B372F" stroke-width="1.8" opacity="0.35"/><rect x="20" y="236" width="182" height="12" rx="6" fill="#FFF6E3" stroke="#4B372F" stroke-width="3"/><path d="M14 58 L62 58 C66 140.0 50 185.0 40 240 L10 240 C18 170.0 10 125.0 14 58 Z" fill="#F46F61" stroke="#96493F" stroke-width="3" stroke-linejoin="round"/><path d="M208 58 L160 58 C156 140.0 172 185.0 182 240 L212 240 C204 170.0 212 125.0 208 58 Z" fill="#F46F61" stroke="#96493F" stroke-width="3" stroke-linejoin="round"/><rect x="2" y="48" width="218" height="12" rx="6" fill="#B57A49" stroke="#4B372F" stroke-width="3"/>
+    <ellipse cx="917.0" cy="218" rx="76.5" ry="5" fill="#6A5147" opacity="0.12"/><rect x="832" y="196" width="170" height="14" rx="5" fill="#C98E58" stroke="#4B372F" stroke-width="3"/><path d="M850 210 L858 226 M984 210 L976 226" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/><rect x="853" y="156" width="30" height="40" rx="9" fill="#FFE08A" stroke="#4B372F" stroke-width="2.5"/><rect x="851" y="147" width="34" height="11" rx="4" fill="#F46F61" stroke="#4B372F" stroke-width="2.5"/><path d="M860 164 L860 186" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.7"/><rect x="901" y="146" width="30" height="50" rx="9" fill="#F9A79E" stroke="#4B372F" stroke-width="2.5"/><rect x="899" y="137" width="34" height="11" rx="4" fill="#59B86A" stroke="#4B372F" stroke-width="2.5"/><path d="M908 154 L908 186" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.7"/><rect x="949" y="162" width="30" height="34" rx="9" fill="#C5A6E6" stroke="#4B372F" stroke-width="2.5"/><rect x="947" y="153" width="34" height="11" rx="4" fill="#4A91D8" stroke="#4B372F" stroke-width="2.5"/><path d="M956 170 L956 186" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+    <g stroke="#4B372F" stroke-width="3" stroke-linejoin="round"><circle cx="920" cy="94" r="40" fill="#FFFBEB"/><path d="M920 70 L920 94 L938 104" fill="none" stroke-linecap="round"/></g>
+    <circle cx="920" cy="94" r="4" fill="#4B372F"/>
+  </g>
+</svg>

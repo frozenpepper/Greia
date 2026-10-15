@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.dust_puff frame 1 (default): sandy ground puff cluster, one merged ink outline -->
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="64" cy="88" r="22.5" fill="#4B372F"/>
+    <circle cx="40" cy="96" r="16.5" fill="#4B372F"/>
+    <circle cx="88" cy="96" r="16.5" fill="#4B372F"/>
+    <circle cx="24" cy="104" r="10.5" fill="#4B372F"/>
+    <circle cx="104" cy="104" r="10.5" fill="#4B372F"/>
+    <circle cx="64" cy="102" r="16.5" fill="#4B372F"/>
+    <circle cx="64" cy="88" r="20" fill="#EEDDBA"/>
+    <circle cx="40" cy="96" r="14" fill="#EEDDBA"/>
+    <circle cx="88" cy="96" r="14" fill="#EEDDBA"/>
+    <circle cx="24" cy="104" r="8" fill="#EEDDBA"/>
+    <circle cx="104" cy="104" r="8" fill="#EEDDBA"/>
+    <circle cx="64" cy="102" r="14" fill="#EEDDBA"/>
+    <path d="M52 80 Q56 72 64 71" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.85"/>
+  </g>
+</svg>

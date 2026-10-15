@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.bubble_pop frame 1 (default): bubble skin breaks into arcs with pop rays and droplets -->
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M85.2 42.8 A30 30 0 0 1 94 62.4" fill="none" stroke="#4B372F" stroke-width="9"/>
+    <path d="M85.2 42.8 A30 30 0 0 1 94 62.4" fill="none" stroke="#CFEAF7" stroke-width="4.5"/>
+    <path d="M90.7 77.6 A30 30 0 0 1 74.8 92" fill="none" stroke="#4B372F" stroke-width="9"/>
+    <path d="M90.7 77.6 A30 30 0 0 1 74.8 92" fill="none" stroke="#CFEAF7" stroke-width="4.5"/>
+    <path d="M59.3 93.6 A30 30 0 0 1 40.7 82.9" fill="none" stroke="#4B372F" stroke-width="9"/>
+    <path d="M59.3 93.6 A30 30 0 0 1 40.7 82.9" fill="none" stroke="#CFEAF7" stroke-width="4.5"/>
+    <path d="M34.4 68.7 A30 30 0 0 1 38.8 47.7" fill="none" stroke="#4B372F" stroke-width="9"/>
+    <path d="M34.4 68.7 A30 30 0 0 1 38.8 47.7" fill="none" stroke="#CFEAF7" stroke-width="4.5"/>
+    <path d="M50.4 37.3 A30 30 0 0 1 71.8 35" fill="none" stroke="#4B372F" stroke-width="9"/>
+    <path d="M50.4 37.3 A30 30 0 0 1 71.8 35" fill="none" stroke="#CFEAF7" stroke-width="4.5"/>
+    <path d="M102.8 80.1 L113.9 84.7" fill="none" stroke="#4B372F" stroke-width="6"/>
+    <path d="M102.8 80.1 L113.9 84.7" fill="none" stroke="#89B8E6" stroke-width="2.8"/>
+    <path d="M80.1 102.8 L84.7 113.9" fill="none" stroke="#4B372F" stroke-width="6"/>
+    <path d="M80.1 102.8 L84.7 113.9" fill="none" stroke="#89B8E6" stroke-width="2.8"/>
+    <path d="M47.9 102.8 L43.3 113.9" fill="none" stroke="#4B372F" stroke-width="6"/>
+    <path d="M47.9 102.8 L43.3 113.9" fill="none" stroke="#89B8E6" stroke-width="2.8"/>
+    <path d="M25.2 80.1 L14.1 84.7" fill="none" stroke="#4B372F" stroke-width="6"/>
+    <path d="M25.2 80.1 L14.1 84.7" fill="none" stroke="#89B8E6" stroke-width="2.8"/>
+    <path d="M25.2 47.9 L14.1 43.3" fill="none" stroke="#4B372F" stroke-width="6"/>
+    <path d="M25.2 47.9 L14.1 43.3" fill="none" stroke="#89B8E6" stroke-width="2.8"/>
+    <path d="M47.9 25.2 L43.3 14.1" fill="none" stroke="#4B372F" stroke-width="6"/>
+    <path d="M47.9 25.2 L43.3 14.1" fill="none" stroke="#89B8E6" stroke-width="2.8"/>
+    <path d="M80.1 25.2 L84.7 14.1" fill="none" stroke="#4B372F" stroke-width="6"/>
+    <path d="M80.1 25.2 L84.7 14.1" fill="none" stroke="#89B8E6" stroke-width="2.8"/>
+    <path d="M102.8 47.9 L113.9 43.3" fill="none" stroke="#4B372F" stroke-width="6"/>
+    <path d="M102.8 47.9 L113.9 43.3" fill="none" stroke="#89B8E6" stroke-width="2.8"/>
+    <circle cx="97.2" cy="30.8" r="5.5" fill="#CFEAF7" stroke="#4B372F" stroke-width="2.2"/>
+    <circle cx="97.2" cy="97.2" r="5.5" fill="#CFEAF7" stroke="#4B372F" stroke-width="2.2"/>
+    <circle cx="30.8" cy="97.2" r="5.5" fill="#CFEAF7" stroke="#4B372F" stroke-width="2.2"/>
+    <circle cx="30.8" cy="30.8" r="5.5" fill="#CFEAF7" stroke="#4B372F" stroke-width="2.2"/>
+  </g>
+</svg>

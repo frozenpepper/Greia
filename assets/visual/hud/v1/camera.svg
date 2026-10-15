@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- icon.hud.camera: camera; cream body, ocean lens, ink contour -->
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M30 28 L34 16 Q35 12 39 12 L57 12 Q61 12 62 16 L66 28 Z" fill="#FFFBEB" stroke-width="4.5"/>
+    <rect x="7" y="25" width="82" height="58" rx="12" fill="#FFFBEB" stroke-width="4.5"/>
+    <circle cx="48" cy="54" r="21" fill="#4A91D8" stroke-width="4.5"/>
+    <circle cx="48" cy="54" r="9" fill="#253B59" stroke-width="3"/>
+    <circle cx="76" cy="38" r="4" fill="#FFC234" stroke-width="2.5"/>
+    <path d="M14 34 L24 34" stroke="#FFFFFF" stroke-width="3" opacity="0.9" fill="none"/>
+    <path d="M38 46 Q40 41 45 39" stroke="#FFFFFF" stroke-width="3" opacity="0.9" fill="none"/>
+  </g>
+</svg>

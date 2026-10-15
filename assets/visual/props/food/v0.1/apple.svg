@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.food.apple — red apple with leaf. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- coral light -> coral -->
+    <linearGradient id="food_apple_body" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="food_apple_leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="80" ry="13.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="apple">
+    <path d="M128 92 C126 76 128 60 138 46" fill="none" stroke="#4B372F" stroke-width="13" stroke-linecap="round"/>
+    <path d="M128 92 C126 76 128 60 138 46" fill="none" stroke="#92400E" stroke-width="6" stroke-linecap="round"/>
+    <path d="M128 88 C112 74 84 70 64 84 C38 102 36 144 48 176 C60 210 86 232 108 232 C118 232 122 226 128 226 C134 226 138 232 148 232 C170 232 196 210 208 176 C220 144 218 102 192 84 C172 70 144 74 128 88 Z" fill="url(#food_apple_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M182 196 C196 182 204 164 206 146" fill="none" stroke="#CF6356" stroke-width="7" stroke-linecap="round"/>
+    <ellipse cx="80" cy="126" rx="12" ry="24" fill="#FFFFFF" opacity="0.8" transform="rotate(25 80 126)"/>
+    <path d="M136 68 C148 42 178 34 200 42 C192 68 162 82 136 68 Z" fill="url(#food_apple_leaf)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M142 66 C158 58 174 50 192 44" fill="none" stroke="#51714A" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

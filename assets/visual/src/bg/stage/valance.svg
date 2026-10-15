@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- stage: scalloped top valance with gold trim; transparent below.
+       Scene layer stage_valance; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <g id="valance">
+    <path d="M-40 -8 L1080 -8 L1080 70 A40 40 0 0 1 1000 70 A40 40 0 0 1 920 70 A40 40 0 0 1 840 70 A40 40 0 0 1 760 70 A40 40 0 0 1 680 70 A40 40 0 0 1 600 70 A40 40 0 0 1 520 70 A40 40 0 0 1 440 70 A40 40 0 0 1 360 70 A40 40 0 0 1 280 70 A40 40 0 0 1 200 70 A40 40 0 0 1 120 70 A40 40 0 0 1 40 70 A40 40 0 0 1 -40 70 L-40 70 Z" fill="#D9566A" stroke="#7A3A45" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M1080 70 A40 40 0 0 1 1000 70 A40 40 0 0 1 920 70 A40 40 0 0 1 840 70 A40 40 0 0 1 760 70 A40 40 0 0 1 680 70 A40 40 0 0 1 600 70 A40 40 0 0 1 520 70 A40 40 0 0 1 440 70 A40 40 0 0 1 360 70 A40 40 0 0 1 280 70 A40 40 0 0 1 200 70 A40 40 0 0 1 120 70 A40 40 0 0 1 40 70 A40 40 0 0 1 -40 70 " fill="none" stroke="#FFC234" stroke-width="6" stroke-linecap="round"/>
+    <path d="M-8 22 L1032 22" stroke="#FFC234" stroke-width="6"/><path d="M-8 30 L1032 30" stroke="#7A3A45" stroke-width="2" opacity="0.5"/>
+    <g fill="#F59E0B" stroke="#4B372F" stroke-width="2" stroke-linejoin="round"><path d="M0 108 L-7 130 L7 130 Z"/><path d="M80 108 L73 130 L87 130 Z"/><path d="M160 108 L153 130 L167 130 Z"/><path d="M240 108 L233 130 L247 130 Z"/><path d="M320 108 L313 130 L327 130 Z"/><path d="M400 108 L393 130 L407 130 Z"/><path d="M480 108 L473 130 L487 130 Z"/><path d="M560 108 L553 130 L567 130 Z"/><path d="M640 108 L633 130 L647 130 Z"/><path d="M720 108 L713 130 L727 130 Z"/><path d="M800 108 L793 130 L807 130 Z"/><path d="M880 108 L873 130 L887 130 Z"/><path d="M960 108 L953 130 L967 130 Z"/></g>
+  </g>
+</svg>

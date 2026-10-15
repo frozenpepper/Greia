@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.pet.guinea_pig - happy. Non-cast pet, flat Greia vector. -->
+  <defs>
+    <!-- orange light -> orange/sand mix (ginger guinea pig) -->
+    <linearGradient id="guinea_pig_happy_fur" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#F8D3A6"/>
+      <stop offset="1" stop-color="#E6A464"/>
+    </linearGradient>
+    <!-- cocoa patch light -> cocoa patch -->
+    <linearGradient id="guinea_pig_happy_acc" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#A67C5C"/>
+      <stop offset="1" stop-color="#7C573F"/>
+    </linearGradient>
+    <clipPath id="guinea_pig_happy_clip"><path d="M128 86 C178 86 210 116 210 160 C210 198 182 214 128 214 C74 214 46 198 46 160 C46 116 78 86 128 86 Z"/></clipPath>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="231" rx="50" ry="8.3" fill="#6A5147" opacity="0.11"/>
+  </g>
+  <g id="fx_back">
+    <path d="M92 230 Q100 222 108 230" fill="none" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.4"/>
+    <path d="M148 230 Q156 222 164 230" fill="none" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.4"/>
+  </g>
+  <g id="character" transform="translate(0 -18) rotate(-5 128 150)">
+    <g id="body">
+      <path d="M128 86 C178 86 210 116 210 160 C210 198 182 214 128 214 C74 214 46 198 46 160 C46 116 78 86 128 86 Z" fill="url(#guinea_pig_happy_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <g clip-path="url(#guinea_pig_happy_clip)"><path d="M231.1 142.2 Q218 151.6 204.5 158.7 Q190.9 165.8 175.9 158.7 Q161 151.6 160.9 138.1 Q160.8 124.6 163.3 110.1 Q165.8 95.7 183.2 95.2 Q200.5 94.8 213.6 101 Q226.8 107.2 235.5 120 Q244.2 132.7 231.1 142.2 Z" fill="url(#guinea_pig_happy_acc)"/><path d="M114 80 C118 108 108 128 104 152 C112 176 144 176 152 152 C148 128 138 108 142 80 Z" fill="#FFFFFF"/><ellipse cx="128" cy="214" rx="58" ry="26" fill="#FFFFFF"/></g>
+      <path d="M128 86 C178 86 210 116 210 160 C210 198 182 214 128 214 C74 214 46 198 46 160 C46 116 78 86 128 86 Z" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M71.9 120.8 C69.6 117.7 73.2 111.2 79.9 106.3 C86.6 101.5 93.9 100.1 96.1 103.2 C98.4 106.3 94.8 112.8 88.1 117.7 C81.4 122.5 74.1 123.9 71.9 120.8 Z" fill="#FFFFFF" opacity="0.7"/>
+      <path d="M114 92 Q116 74 126 86 Q130 70 136 86 Q144 76 144 92" fill="url(#guinea_pig_happy_fur)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="ears">
+      <path d="M84 94 C70 92 60 102 61 114 C62 126 76 128 87 119 C95 112 96 98 84 94 Z" fill="url(#guinea_pig_happy_acc)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M172 94 C186 92 196 102 195 114 C194 126 180 128 169 119 C161 112 160 98 172 94 Z" fill="url(#guinea_pig_happy_fur)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="76.0" cy="112" rx="6" ry="5" fill="#F7B7AE"/>
+      <ellipse cx="180.0" cy="112" rx="6" ry="5" fill="#F7B7AE"/>
+    </g>
+    <g id="feet">
+      <ellipse cx="106" cy="212" rx="11" ry="6.5" fill="#F7C9C0" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="150" cy="212" rx="11" ry="6.5" fill="#F7C9C0" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+    <g id="face">
+      <ellipse cx="82" cy="160" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="174" cy="160" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <path d="M91 142 Q100 129 109 142" fill="none" stroke="#342C35" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M147 142 Q156 129 165 142" fill="none" stroke="#342C35" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M121 158 Q128 153 135 158 Q132 164 128 165 Q124 164 121 158 Z" fill="#E98F98" stroke="#4B372F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M115 166 Q128 169 141 166 Q139 182 128 183 Q117 182 115 166 Z" fill="#8A3B2E" stroke="#4B372F" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M121 176 Q128 172 135 176 Q132 182 128 182 Q124 182 121 176 Z" fill="#F28B8B"/>
+      <path d="M123 166.5 L123 171 L133 171 L133 166.5" fill="#FFFFFF" stroke="#4B372F" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g id="fx">
+    <path d="M36 83.0 C32.0 80.0 25.0 75.0 25.0 70.0 C25.0 65.0 30.0 63.0 33.0 63.0 C35.0 63.0 36 65.0 36 67.0 C36 65.0 37.0 63.0 39.0 63.0 C42.0 63.0 47.0 65.0 47.0 70.0 C47.0 75.0 40.0 80.0 36 83.0 Z" fill="#F46F61" stroke="#4B372F" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M220 71.2 C216.8 68.8 211.2 64.8 211.2 60.8 C211.2 56.8 215.2 55.2 217.6 55.2 C219.2 55.2 220 56.8 220 58.4 C220 56.8 220.8 55.2 222.4 55.2 C224.8 55.2 228.8 56.8 228.8 60.8 C228.8 64.8 223.2 68.8 220 71.2 Z" fill="#F46F61" stroke="#4B372F" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M222 123 Q223.5 130.5 231 132 Q223.5 133.5 222 141 Q220.5 133.5 213 132 Q220.5 130.5 222 123 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- underwater: distant reef silhouettes, low contrast.
+       Scene layer underwater_far; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <g id="far">
+    <path d="M-8 430 C20 410 40 380 70 384 C90 360 130 362 140 390 C170 380 200 398 220 410 C300 402 380 408 460 418 C560 404 660 402 760 412 C800 396 830 372 864 380 C884 356 924 360 932 386 C960 376 1000 390 1032 404 L1032 520 L-8 520 Z" fill="#5A93BC"/>
+    <g fill="none" stroke="#5A93BC" stroke-width="9" stroke-linecap="round">
+      <path d="M300 420 C292 390 308 366 300 336"/><path d="M318 420 C326 396 312 374 320 352"/>
+      <path d="M690 416 C682 386 698 362 690 330"/><path d="M708 416 C716 392 702 370 710 350"/>
+    </g>
+    <path d="M-8 470 C100 456 220 452 340 460 C460 468 580 466 700 456 C820 446 940 452 1032 462 L1032 520 L-8 520 Z" fill="#6AA6C4"/>
+  </g>
+</svg>

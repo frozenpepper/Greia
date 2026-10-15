@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.marine.turtle - default. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="turtle_default_shell" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#9BD3A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+    <!-- mint -> leaf light (turtle skin) -->
+    <linearGradient id="turtle_default_skin" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#E3F3C9"/>
+      <stop offset="1" stop-color="#B5DB92"/>
+    </linearGradient>
+  </defs>
+  <g id="character">
+    <g id="back_limbs">
+      <path d="M164 96 C182 74 204 62 224 62 C218 80 198 96 178 106 Z" fill="url(#turtle_default_skin)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M70 116 C58 108 42 108 32 114 C40 124 56 128 70 126 Z" fill="url(#turtle_default_skin)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="front_limbs">
+      <path d="M74 150 C62 166 48 178 32 180 C34 166 48 152 66 144 Z" fill="url(#turtle_default_skin)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M178 150 C198 160 216 178 218 198 C200 200 180 186 164 162 Z" fill="url(#turtle_default_skin)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="head">
+      <path d="M190 118 C190 98 206 88 222 88 C242 88 252 104 250 120 C248 138 234 148 218 148 C202 148 190 136 190 118 Z" fill="url(#turtle_default_skin)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M204.6 101.4 C203.7 98.8 207.1 95.2 212.3 93.3 C217.5 91.4 222.5 92 223.4 94.6 C224.3 97.2 220.9 100.8 215.7 102.7 C210.5 104.6 205.5 104 204.6 101.4 Z" fill="#FFFFFF" opacity="0.7"/>
+      <ellipse cx="226" cy="112" rx="7.5" ry="9.5" fill="#342C35"/>
+      <ellipse cx="228.2" cy="108.7" rx="2.7" ry="3.0" fill="#FFFFFF"/>
+      <circle cx="223.8" cy="115.8" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+      <ellipse cx="222" cy="130" rx="6.5" ry="4" fill="#FDA4AF" opacity="0.55"/>
+      <path d="M234 130 Q242 134 249 125" fill="none" stroke="#72513F" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="shell">
+      <path d="M50 142 C80 162 176 162 206 142 C204 156 194 166 128 168 C62 166 52 156 50 142 Z" fill="#EEDDBA" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M54 136 C54 94 90 66 128 66 C170 66 202 94 202 136 C202 150 186 156 128 156 C70 156 54 150 54 136 Z" fill="url(#turtle_default_shell)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M110 86 L146 86 L160 110 L146 134 L110 134 L96 110 Z" fill="#9BD3A6" stroke="#3F6E3A" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M66 128 C66 106 76 90 92 82 L84 110 L94 134 L70 138 Z" fill="#9BD3A6" stroke="#3F6E3A" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M190 128 C190 106 180 90 164 82 L172 110 L162 134 L186 138 Z" fill="#9BD3A6" stroke="#3F6E3A" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M85.2 85.7 C84.1 83.2 88.9 78.6 96 75.4 C103 72.3 109.7 71.8 110.8 74.3 C111.9 76.8 107.1 81.4 100 84.6 C93 87.7 86.3 88.2 85.2 85.7 Z" fill="#FFFFFF" opacity="0.7"/>
+    </g>
+  </g>
+</svg>

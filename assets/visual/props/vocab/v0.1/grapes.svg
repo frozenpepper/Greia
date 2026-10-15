@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.grapes — bunch of purple grapes. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- grape light -> grape -->
+    <linearGradient id="vocab_grapes_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B99ADC"/>
+      <stop offset="1" stop-color="#9464C9"/>
+    </linearGradient>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="vocab_grapes_leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="66" ry="11.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="grapes">
+    <path d="M128 96 C128 74 134 60 146 50" fill="none" stroke="#4B372F" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128 96 C128 74 134 60 146 50" fill="none" stroke="#92400E" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M120 82 C100 56 66 54 50 66 C64 92 96 98 120 82 Z" fill="url(#vocab_grapes_leaf)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <circle cx="76" cy="112" r="27" fill="url(#vocab_grapes_body)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="67" cy="103" rx="5" ry="7" fill="#FFFFFF" opacity="0.7" transform="rotate(35 67 103)"/>
+    <circle cx="128" cy="108" r="27" fill="url(#vocab_grapes_body)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="119" cy="99" rx="5" ry="7" fill="#FFFFFF" opacity="0.7" transform="rotate(35 119 99)"/>
+    <circle cx="180" cy="112" r="27" fill="url(#vocab_grapes_body)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="171" cy="103" rx="5" ry="7" fill="#FFFFFF" opacity="0.7" transform="rotate(35 171 103)"/>
+    <circle cx="102" cy="156" r="27" fill="url(#vocab_grapes_body)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="93" cy="147" rx="5" ry="7" fill="#FFFFFF" opacity="0.7" transform="rotate(35 93 147)"/>
+    <circle cx="154" cy="156" r="27" fill="url(#vocab_grapes_body)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="145" cy="147" rx="5" ry="7" fill="#FFFFFF" opacity="0.7" transform="rotate(35 145 147)"/>
+    <circle cx="128" cy="202" r="27" fill="url(#vocab_grapes_body)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="119" cy="193" rx="5" ry="7" fill="#FFFFFF" opacity="0.7" transform="rotate(35 119 193)"/>
+  </g>
+</svg>

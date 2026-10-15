@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.crown — golden crown with gems. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- cast gold light -> gold -->
+    <linearGradient id="vocab_crown_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FEF08A"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="92" ry="15.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="crown">
+    <path d="M46 192 L34 84 L88 132 L128 58 L168 132 L222 84 L210 192 Z" fill="url(#vocab_crown_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <circle cx="34" cy="80" r="11" fill="#F59E0B" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="128" cy="52" r="11" fill="#F59E0B" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="222" cy="80" r="11" fill="#F59E0B" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="40" y="180" width="176" height="48" rx="10" fill="#F59E0B" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <circle cx="80" cy="204" r="11" fill="#4A91D8" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="128" cy="204" r="14" fill="#F46F61" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="176" cy="204" r="11" fill="#59B86A" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M60 104 L66 170" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+  </g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- icon.hud.redo: U-turn arrow forward to the right; cream band, ink contour -->
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M 62 30 L 42 30 Q 16 30 16 55 Q 16 80 42 80 L 56 80" fill="none" stroke-width="17"/>
+    <path d="M 62 30 L 42 30 Q 16 30 16 55 Q 16 80 42 80 L 56 80" fill="none" stroke="#FFFBEB" stroke-width="8"/>
+    <path d="M 84 30 L 62 12 Q 58 9 58 14 L 58 46 Q 58 51 62 48 Z" fill="#FFFBEB" stroke-width="4.5"/>
+    <path d="M62 18 L66 21" stroke="#FFFFFF" stroke-width="3" opacity="0.9" fill="none"/>
+  </g>
+</svg>

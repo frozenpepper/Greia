@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.everyday.ball — beach ball. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <clipPath id="everyday_ball_clip"><circle cx="128" cy="138" r="90"/></clipPath>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="80" ry="13.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="ball">
+    <circle cx="128" cy="138" r="90" fill="#FFFBEB"/>
+    <g clip-path="url(#everyday_ball_clip)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round">
+      <path d="M128 48 C70 70 42 130 50 230 L0 230 L0 40 Z" fill="#F46F61"/>
+      <path d="M128 48 C110 100 100 170 128 230 L190 230 C170 170 160 100 128 48 Z" fill="#FFC234"/>
+      <path d="M128 48 C186 70 214 130 206 230 L256 230 L256 40 Z" fill="#4A91D8"/>
+    </g>
+    <circle cx="128" cy="138" r="90" fill="none" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="56" rx="16" ry="9" fill="#FFFFFF" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="78" cy="100" rx="18" ry="9" fill="#FFFFFF" opacity="0.7" transform="rotate(-45 78 100)"/>
+  </g>
+</svg>

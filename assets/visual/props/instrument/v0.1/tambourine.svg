@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.instrument.tambourine — tambourine with ribbons. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- raspberry light -> raspberry -->
+    <linearGradient id="instrument_tambourine_rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E489A8"/>
+      <stop offset="1" stop-color="#D85683"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="80" ry="13.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="tambourine">
+    <circle cx="128" cy="124" r="102" fill="url(#instrument_tambourine_rim)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <g transform="rotate(0 128 124)"><rect x="112" y="18" width="32" height="24" rx="6" fill="#A74B66" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/><ellipse cx="128" cy="30" rx="13" ry="8" fill="#D1D2D4" stroke="#4B372F" stroke-width="3"/></g>
+    <g transform="rotate(60 128 124)"><rect x="112" y="18" width="32" height="24" rx="6" fill="#A74B66" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/><ellipse cx="128" cy="30" rx="13" ry="8" fill="#D1D2D4" stroke="#4B372F" stroke-width="3"/></g>
+    <g transform="rotate(120 128 124)"><rect x="112" y="18" width="32" height="24" rx="6" fill="#A74B66" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/><ellipse cx="128" cy="30" rx="13" ry="8" fill="#D1D2D4" stroke="#4B372F" stroke-width="3"/></g>
+    <g transform="rotate(180 128 124)"><rect x="112" y="18" width="32" height="24" rx="6" fill="#A74B66" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/><ellipse cx="128" cy="30" rx="13" ry="8" fill="#D1D2D4" stroke="#4B372F" stroke-width="3"/></g>
+    <g transform="rotate(240 128 124)"><rect x="112" y="18" width="32" height="24" rx="6" fill="#A74B66" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/><ellipse cx="128" cy="30" rx="13" ry="8" fill="#D1D2D4" stroke="#4B372F" stroke-width="3"/></g>
+    <g transform="rotate(300 128 124)"><rect x="112" y="18" width="32" height="24" rx="6" fill="#A74B66" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/><ellipse cx="128" cy="30" rx="13" ry="8" fill="#D1D2D4" stroke="#4B372F" stroke-width="3"/></g>
+    <circle cx="128" cy="124" r="66" fill="#FFFBEB" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M110 112 C110 98 128 96 128 110 C128 96 146 98 146 112 C146 128 128 138 128 144 C128 138 110 128 110 112 Z" fill="#F46F61" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="92" cy="92" rx="14" ry="7" fill="#FFFFFF" opacity="0.8" transform="rotate(-40 92 92)"/>
+  </g>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- icon.hud.mic: microphone on a stand; cream head, ink contour -->
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M22 42 Q22 68 48 68 Q74 68 74 42" fill="none" stroke-width="5.5"/>
+    <path d="M48 68 L48 82 M32 84 L64 84" fill="none" stroke-width="6"/>
+    <rect x="33" y="8" width="30" height="48" rx="15" fill="#FFFBEB" stroke-width="4.5"/>
+    <path d="M40 26 L56 26 M40 37 L56 37" fill="none" stroke-width="3.5"/>
+    <path d="M40 15 L40 19" stroke="#FFFFFF" stroke-width="3" opacity="0.9" fill="none"/>
+  </g>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.blocks.square_wood — wood toy block, square. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange light steps (natural wood) -->
+    <linearGradient id="blocks_square_wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBD8B3"/>
+      <stop offset="1" stop-color="#F7B874"/>
+    </linearGradient>
+  </defs>
+  <g id="block">
+    <path d="M20 6 L236 6 Q250 6 250 20 L250 236 Q250 250 236 250 L20 250 Q6 250 6 236 L6 20 Q6 6 20 6 Z" fill="url(#blocks_square_wood)" stroke="#4B372F" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M40 90 C90 80 150 100 216 88 M40 170 C100 160 150 182 216 166" fill="none" stroke="#D59E66" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+    <path d="M24 24 L232 24" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+  </g>
+</svg>

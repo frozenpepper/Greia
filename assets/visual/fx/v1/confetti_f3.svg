@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.confetti frame 3: pieces drift down and fade -->
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round" opacity="0.75">
+    <rect x="96.2" y="70.6" width="8.1" height="14.4" rx="2" fill="#F46F61" stroke="#4B372F" stroke-width="2" transform="rotate(227.2 100.2 77.8)"/>
+    <rect x="105.3" y="86.8" width="8.1" height="14.4" rx="2" fill="#FFC234" stroke="#4B372F" stroke-width="2" transform="rotate(175.8 109.3 94)"/>
+    <circle cx="98.3" cy="111.5" r="5" fill="#59B86A" stroke="#4B372F" stroke-width="2"/>
+    <rect x="68.3" y="105.7" width="8.1" height="14.4" rx="2" fill="#4A91D8" stroke="#4B372F" stroke-width="2" transform="rotate(126.3 72.3 112.9)"/>
+    <rect x="49" y="110.8" width="8.1" height="14.4" rx="2" fill="#9464C9" stroke="#4B372F" stroke-width="2" transform="rotate(132.3 53 118)"/>
+    <circle cx="36.7" cy="118" r="5" fill="#44B8AE" stroke="#4B372F" stroke-width="2"/>
+    <rect x="20.4" y="90.6" width="8.1" height="14.4" rx="2" fill="#D85683" stroke="#4B372F" stroke-width="2" transform="rotate(285.7 24.4 97.8)"/>
+    <rect x="6" y="81.8" width="8.1" height="14.4" rx="2" fill="#F46F61" stroke="#4B372F" stroke-width="2" transform="rotate(162.1 10 89)"/>
+    <circle cx="30.5" cy="68.7" r="5" fill="#FFC234" stroke="#4B372F" stroke-width="2"/>
+    <rect x="40.1" y="41.4" width="8.1" height="14.4" rx="2" fill="#59B86A" stroke="#4B372F" stroke-width="2" transform="rotate(214.7 44.2 48.6)"/>
+    <rect x="52.5" y="30.8" width="8.1" height="14.4" rx="2" fill="#4A91D8" stroke="#4B372F" stroke-width="2" transform="rotate(208.6 56.5 38)"/>
+    <circle cx="66.4" cy="46.5" r="5" fill="#9464C9" stroke="#4B372F" stroke-width="2"/>
+    <rect x="89.7" y="40" width="8.1" height="14.4" rx="2" fill="#44B8AE" stroke="#4B372F" stroke-width="2" transform="rotate(166.5 93.7 47.2)"/>
+    <rect x="101.1" y="54.5" width="8.1" height="14.4" rx="2" fill="#D85683" stroke="#4B372F" stroke-width="2" transform="rotate(164 105.1 61.7)"/>
+  </g>
+</svg>

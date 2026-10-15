@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.hen — white hen with red comb. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- artwork cream -> sand -->
+    <linearGradient id="vocab_hen_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EEDDBA"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="80" ry="13.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="hen">
+    <path d="M112 206 L112 230 M100 230 L124 230 M150 206 L150 230 M138 230 L162 230" fill="none" stroke="#F39A38" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M196 92 L226 70 L222 110 L236 126 L200 140 Z" fill="url(#vocab_hen_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M80 70 C80 46 120 42 124 70 C124 100 120 110 140 120 C170 112 206 112 210 150 C214 196 170 214 124 214 C74 214 50 186 56 150 C60 122 80 108 80 70 Z" fill="url(#vocab_hen_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M84 52 C80 36 90 28 98 36 C100 24 112 22 114 36 C122 30 130 38 124 52 Z" fill="#F46F61" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M78 76 L54 84 L78 92 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M82 94 C76 104 78 114 86 114 C92 114 92 104 88 94 Z" fill="#F46F61" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <ellipse cx="98" cy="72" rx="6.5" ry="8.5" fill="#342C35"/>
+    <circle cx="96.0" cy="69.0" r="2.6" fill="#FFFFFF"/>
+    <path d="M114 152 C130 136 168 136 180 152 C176 178 140 186 114 152 Z" fill="#EEDDBA" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M132 160 C144 166 156 166 166 160" fill="none" stroke="#CAB89B" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

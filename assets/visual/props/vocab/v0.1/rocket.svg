@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.rocket — rocket blasting off. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- white -> sand -->
+    <linearGradient id="vocab_rocket_body" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EEDDBA"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="52" ry="8.7" fill="#6A5147" opacity="0.11"/>
+  </g>
+  <g id="rocket">
+    <path d="M104 182 C102 204 116 220 128 234 C140 220 154 204 152 182 Z" fill="#F39A38" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M116 184 C116 198 122 208 128 216 C134 208 140 198 140 184 Z" fill="#FFC234"/>
+    <path d="M90 126 L50 172 L54 200 L92 176 Z M166 126 L206 172 L202 200 L164 176 Z" fill="#F46F61" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="98" y="164" width="60" height="22" rx="7" fill="#8D8F93" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M128 22 C164 50 176 98 172 168 L84 168 C80 98 92 50 128 22 Z" fill="url(#vocab_rocket_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M128 22 C146 36 158 56 164 76 L92 76 C98 56 110 36 128 22 Z" fill="#F46F61" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <circle cx="128" cy="116" r="22" fill="#CFEAF7" stroke="#4A91D8" stroke-width="7"/>
+    <circle cx="128" cy="116" r="26" fill="none" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M120 106 L126 102" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

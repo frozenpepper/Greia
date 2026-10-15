@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" width="512" height="256">
+  <!-- Greia creature.marine.shark - default. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- charcoal light steps (friendly grey shark) -->
+    <linearGradient id="shark_default_body" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#C7D3E1"/>
+      <stop offset="1" stop-color="#8EA3BC"/>
+    </linearGradient>
+    <clipPath id="shark_default_clip"><path d="M76 140 C116 104 192 86 280 86 C360 86 428 106 460 136 C476 150 470 166 452 172 C412 184 352 194 280 194 C192 194 122 178 88 158 Z"/></clipPath>
+  </defs>
+  <g id="character">
+    <g id="fins_back">
+      <path d="M96 148 C80 120 66 90 52 66 C76 80 100 104 116 132 Z" fill="url(#shark_default_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M96 150 C80 166 70 184 64 204 C84 194 102 178 114 160 Z" fill="url(#shark_default_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M238 90 C246 66 258 46 276 36 C278 56 284 74 300 88 Z" fill="url(#shark_default_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <path d="M76 140 C116 104 192 86 280 86 C360 86 428 106 460 136 C476 150 470 166 452 172 C412 184 352 194 280 194 C192 194 122 178 88 158 Z" fill="url(#shark_default_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <g clip-path="url(#shark_default_clip)"><path d="M160 196 C240 160 360 152 470 146 L470 200 L160 200 Z" fill="#F3F6FA"/></g>
+      <path d="M76 140 C116 104 192 86 280 86 C360 86 428 106 460 136 C476 150 470 166 452 172 C412 184 352 194 280 194 C192 194 122 178 88 158 Z" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M226 103.5 C225.9 99.7 245.5 95.9 269.8 95 C294 94.2 313.8 96.6 314 100.5 C314.1 104.3 294.5 108.1 270.2 109 C246 109.8 226.2 107.4 226 103.5 Z" fill="#FFFFFF" opacity="0.65"/>
+      <path d="M346 122 Q342 132 346 142 M358 120 Q354 130 358 140 M370 120 Q366 128 370 138" fill="none" stroke="#6F84A0" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="fin_front">
+      <path d="M290 176 C300 196 296 214 280 228 C270 212 270 194 278 178 Z" fill="#A9BACD" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="face">
+      <ellipse cx="402" cy="122" rx="10.5" ry="12.5" fill="#342C35"/>
+      <ellipse cx="405.1" cy="117.6" rx="3.8" ry="4.0" fill="#FFFFFF"/>
+      <circle cx="398.9" cy="127.0" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+      <ellipse cx="410" cy="146" rx="8" ry="4.5" fill="#FDA4AF" opacity="0.6"/>
+      <path d="M408 154 Q432 170 460 152 Q450 166 432 168 Q416 166 408 154 Z" fill="#8A3B2E" stroke="#4B372F" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M422 160 L425 165 L429 161 M440 161 L444 165 L447 159" fill="#FFFFFF" stroke="#4B372F" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

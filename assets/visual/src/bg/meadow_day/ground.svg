@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- meadow_day: meadow ground plane, top edge y 386-408, opaque below.
+       Scene layer meadow_day_ground; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- leaf light (mix 40% white) -> leaf -->
+    <linearGradient id="meadow_day_ground_grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="ground">
+    <path d="M-8 404 C120 388 250 386 380 398 C470 406 560 408 650 398 C770 384 900 386 1032 400 L1032 608 L-8 608 Z" fill="url(#meadow_day_ground_grass)" stroke="#51714A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M14 402 C120 390 240 389 360 399" fill="none" stroke="#C8EBC4" stroke-width="5" stroke-linecap="round"/>
+    <path d="M664 398 C780 386 900 387 1010 399" fill="none" stroke="#C8EBC4" stroke-width="5" stroke-linecap="round"/>
+    <g fill="none" stroke="#4E9A5C" stroke-width="3" stroke-linecap="round" opacity="0.5"><path d="M180 470 C200 464 222 464 240 470"/><path d="M460 492 C480 486 502 486 520 492"/><path d="M760 466 C780 460 802 460 820 466"/><path d="M330 540 C350 534 372 534 390 540"/><path d="M620 556 C640 550 662 550 680 556"/><path d="M110 590 C130 584 152 584 170 590"/><path d="M860 584 C880 578 902 578 920 584"/><path d="M540 446 C560 440 582 440 600 446"/></g>
+    <g id="flowers"><g><path d="M150 432 L150 416" stroke="#51714A" stroke-width="2.5" stroke-linecap="round"/><g fill="#F5A3C0" stroke="#4B372F" stroke-width="1.8"><circle cx="145" cy="419" r="4.5"/><circle cx="155" cy="419" r="4.5"/><circle cx="150" cy="414" r="4.5"/><circle cx="150" cy="424" r="4.5"/></g><circle cx="150" cy="419" r="2.6" fill="#FFC234"/></g><g><path d="M186 440 L186 424" stroke="#51714A" stroke-width="2.5" stroke-linecap="round"/><g fill="#FFFBEB" stroke="#4B372F" stroke-width="1.8"><circle cx="181" cy="427" r="4.5"/><circle cx="191" cy="427" r="4.5"/><circle cx="186" cy="422" r="4.5"/><circle cx="186" cy="432" r="4.5"/></g><circle cx="186" cy="427" r="2.6" fill="#FFC234"/></g><g><path d="M860 430 L860 414" stroke="#51714A" stroke-width="2.5" stroke-linecap="round"/><g fill="#BFA2DF" stroke="#4B372F" stroke-width="1.8"><circle cx="855" cy="417" r="4.5"/><circle cx="865" cy="417" r="4.5"/><circle cx="860" cy="412" r="4.5"/><circle cx="860" cy="422" r="4.5"/></g><circle cx="860" cy="417" r="2.6" fill="#FFC234"/></g><g><path d="M896 440 L896 424" stroke="#51714A" stroke-width="2.5" stroke-linecap="round"/><g fill="#F5A3C0" stroke="#4B372F" stroke-width="1.8"><circle cx="891" cy="427" r="4.5"/><circle cx="901" cy="427" r="4.5"/><circle cx="896" cy="422" r="4.5"/><circle cx="896" cy="432" r="4.5"/></g><circle cx="896" cy="427" r="2.6" fill="#FFC234"/></g><g><path d="M96 520 L96 504" stroke="#51714A" stroke-width="2.5" stroke-linecap="round"/><g fill="#FFFBEB" stroke="#4B372F" stroke-width="1.8"><circle cx="91" cy="507" r="4.5"/><circle cx="101" cy="507" r="4.5"/><circle cx="96" cy="502" r="4.5"/><circle cx="96" cy="512" r="4.5"/></g><circle cx="96" cy="507" r="2.6" fill="#FFC234"/></g><g><path d="M930 528 L930 512" stroke="#51714A" stroke-width="2.5" stroke-linecap="round"/><g fill="#FFFBEB" stroke="#4B372F" stroke-width="1.8"><circle cx="925" cy="515" r="4.5"/><circle cx="935" cy="515" r="4.5"/><circle cx="930" cy="510" r="4.5"/><circle cx="930" cy="520" r="4.5"/></g><circle cx="930" cy="515" r="2.6" fill="#FFC234"/></g></g>
+  </g>
+</svg>

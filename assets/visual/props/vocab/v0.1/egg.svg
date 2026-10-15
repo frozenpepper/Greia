@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.egg — egg. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- white -> sand -->
+    <linearGradient id="vocab_egg_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EEDDBA"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="66" ry="11.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="egg">
+    <path d="M128 30 C176 30 206 120 206 160 C206 204 172 232 128 232 C84 232 50 204 50 160 C50 120 80 30 128 30 Z" fill="url(#vocab_egg_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="96" cy="98" rx="12" ry="26" fill="#FFFFFF" opacity="0.9" transform="rotate(25 96 98)"/>
+  </g>
+</svg>

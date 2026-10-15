@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- icon.hud.rotate: turn: curved arrow over a tilted tile; sunshine tile, cream arrow, ink contour -->
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M16 58 Q14 22 46 18 Q64 16 74 28" fill="none" stroke-width="15"/>
+    <path d="M16 58 Q14 22 46 18 Q64 16 74 28" fill="none" stroke="#FFFBEB" stroke-width="7"/>
+    <rect x="34" y="46" width="36" height="36" rx="7" fill="#FFC234" stroke-width="4.5" transform="rotate(14 52 64)"/>
+    <path d="M64 26 L88 20 Q92 19 91 23 L84 46 Q83 50 80 47 Z" fill="#FFFBEB" stroke-width="4.5"/>
+    <path d="M42 56 L54 58" stroke="#FFFFFF" stroke-width="3" opacity="0.9" fill="none"/>
+  </g>
+</svg>

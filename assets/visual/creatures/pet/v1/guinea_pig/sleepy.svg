@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.pet.guinea_pig - sleepy. Non-cast pet, flat Greia vector. -->
+  <defs>
+    <!-- orange light -> orange/sand mix (ginger guinea pig) -->
+    <linearGradient id="guinea_pig_sleepy_fur" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#F8D3A6"/>
+      <stop offset="1" stop-color="#E6A464"/>
+    </linearGradient>
+    <!-- cocoa patch light -> cocoa patch -->
+    <linearGradient id="guinea_pig_sleepy_acc" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#A67C5C"/>
+      <stop offset="1" stop-color="#7C573F"/>
+    </linearGradient>
+    <clipPath id="guinea_pig_sleepy_clip"><path d="M128 86 C178 86 210 116 210 160 C210 198 182 214 128 214 C74 214 46 198 46 160 C46 116 78 86 128 86 Z"/></clipPath>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="229" rx="70" ry="11.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="character" transform="translate(128 214) scale(1.06 0.88) translate(-128 -214)">
+    <g id="body">
+      <path d="M128 86 C178 86 210 116 210 160 C210 198 182 214 128 214 C74 214 46 198 46 160 C46 116 78 86 128 86 Z" fill="url(#guinea_pig_sleepy_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <g clip-path="url(#guinea_pig_sleepy_clip)"><path d="M231.1 142.2 Q218 151.6 204.5 158.7 Q190.9 165.8 175.9 158.7 Q161 151.6 160.9 138.1 Q160.8 124.6 163.3 110.1 Q165.8 95.7 183.2 95.2 Q200.5 94.8 213.6 101 Q226.8 107.2 235.5 120 Q244.2 132.7 231.1 142.2 Z" fill="url(#guinea_pig_sleepy_acc)"/><path d="M114 80 C118 108 108 128 104 152 C112 176 144 176 152 152 C148 128 138 108 142 80 Z" fill="#FFFFFF"/><ellipse cx="128" cy="214" rx="58" ry="26" fill="#FFFFFF"/></g>
+      <path d="M128 86 C178 86 210 116 210 160 C210 198 182 214 128 214 C74 214 46 198 46 160 C46 116 78 86 128 86 Z" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M71.9 120.8 C69.6 117.7 73.2 111.2 79.9 106.3 C86.6 101.5 93.9 100.1 96.1 103.2 C98.4 106.3 94.8 112.8 88.1 117.7 C81.4 122.5 74.1 123.9 71.9 120.8 Z" fill="#FFFFFF" opacity="0.7"/>
+      <path d="M114 92 Q116 74 126 86 Q130 70 136 86 Q144 76 144 92" fill="url(#guinea_pig_sleepy_fur)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="ears">
+      <path d="M82.7 95.1 C68.6 96.6 61.3 108.7 65.2 120.1 C69.1 131.5 83.1 130.1 91.6 118.7 C97.7 110 95.3 96.1 82.7 95.1 Z" fill="url(#guinea_pig_sleepy_acc)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M173.3 95.1 C187.4 96.6 194.7 108.7 190.8 120.1 C186.9 131.5 172.9 130.1 164.4 118.7 C158.3 110 160.7 96.1 173.3 95.1 Z" fill="url(#guinea_pig_sleepy_fur)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="81.6" cy="112" rx="6" ry="5" fill="#F7B7AE"/>
+      <ellipse cx="174.4" cy="112" rx="6" ry="5" fill="#F7B7AE"/>
+    </g>
+    <g id="feet">
+      <ellipse cx="106" cy="212" rx="11" ry="6.5" fill="#F7C9C0" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="150" cy="212" rx="11" ry="6.5" fill="#F7C9C0" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+    <g id="face">
+      <ellipse cx="82" cy="160" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="174" cy="160" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <path d="M92 140 A8 11 0 0 0 108 140 Z" fill="#342C35"/>
+      <circle cx="102" cy="144" r="2" fill="#FFFFFF" opacity="0.85"/>
+      <path d="M90 140 Q100 137 110 140" fill="none" stroke="#342C35" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M148 140 A8 11 0 0 0 164 140 Z" fill="#342C35"/>
+      <circle cx="158" cy="144" r="2" fill="#FFFFFF" opacity="0.85"/>
+      <path d="M146 140 Q156 137 166 140" fill="none" stroke="#342C35" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M121 158 Q128 153 135 158 Q132 164 128 165 Q124 164 121 158 Z" fill="#E98F98" stroke="#4B372F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M122 167 Q128 165 134 167 Q135 179 128 180 Q121 179 122 167 Z" fill="#8A3B2E" stroke="#4B372F" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g id="fx">
+    <path d="M196 56 L208.0 56 L196 68.0 L208.0 68.0" fill="none" stroke="#6E7FB0" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" opacity="0.7"/>
+    <path d="M218 34 L227.0 34 L218 43.0 L227.0 43.0" fill="none" stroke="#6E7FB0" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.5"/>
+  </g>
+</svg>

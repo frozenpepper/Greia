@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.goat — white goat with horns and beard. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- artwork cream -> sand -->
+    <linearGradient id="vocab_goat_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EEDDBA"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="72" ry="12.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="goat">
+    <path d="M100 66 C88 40 66 34 52 46" fill="none" stroke="#4B372F" stroke-width="21" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M100 66 C88 40 66 34 52 46" fill="none" stroke="#D97706" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M156 66 C168 40 190 34 204 46" fill="none" stroke="#4B372F" stroke-width="21" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M156 66 C168 40 190 34 204 46" fill="none" stroke="#D97706" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M84 232 C74 196 88 162 128 162 C168 162 182 196 172 232 Z" fill="url(#vocab_goat_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M92 92 C70 88 44 96 34 110 C50 120 74 118 92 108 Z" fill="url(#vocab_goat_body)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M164 92 C186 88 212 96 222 110 C206 120 182 118 164 108 Z" fill="url(#vocab_goat_body)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M112 166 L128 196 L144 166 Z" fill="#EEDDBA" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M84 92 C84 64 104 54 128 54 C152 54 172 64 172 92 C172 130 156 168 128 168 C100 168 84 130 84 92 Z" fill="url(#vocab_goat_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="146" rx="26" ry="18" fill="#F8D8BD" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="108" cy="104" rx="6.5" ry="8.5" fill="#342C35"/>
+    <circle cx="106.0" cy="101.0" r="2.6" fill="#FFFFFF"/>
+    <ellipse cx="148" cy="104" rx="6.5" ry="8.5" fill="#342C35"/>
+    <circle cx="146.0" cy="101.0" r="2.6" fill="#FFFFFF"/>
+    <ellipse cx="120" cy="142" rx="3.5" ry="5" fill="#342C35"/>
+    <ellipse cx="136" cy="142" rx="3.5" ry="5" fill="#342C35"/>
+    <path d="M120 156 Q128 162 136 156" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

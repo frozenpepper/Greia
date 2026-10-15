@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- stage: right curtain (mirror of left); transparent elsewhere.
+       Scene layer stage_curtain_right; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <g id="curtain_right" transform="translate(1024 0) scale(-1 1)"><path d="M-8 -8 L214 -8 C206 120 180 250 124 352 C146 420 158 500 176 608 L-8 608 Z" fill="#E66272" stroke="#7A3A45" stroke-width="3.5" stroke-linejoin="round"/><path d="M60 -8 C58 120 50 230 40 340 M120 -8 C116 110 104 220 88 330 M168 -8 C160 100 146 200 120 300 M60 380 C64 450 70 530 74 608 M110 380 C116 460 124 530 128 608" fill="none" stroke="#C45869" stroke-width="7" stroke-linecap="round"/><path d="M24 -8 C24 120 22 240 18 360" fill="none" stroke="#F29AA5" stroke-width="7" stroke-linecap="round"/><path d="M-8 340 C40 356 90 362 140 350" fill="none" stroke="#4B372F" stroke-width="12" stroke-linecap="round"/><path d="M-8 340 C40 356 90 362 140 350" fill="none" stroke="#FFC234" stroke-width="7" stroke-linecap="round"/><circle cx="140" cy="350" r="11" fill="#FFC234" stroke="#4B372F" stroke-width="3"/><path d="M134 360 L130 392 L150 392 L146 360 Z" fill="#F59E0B" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/></g>
+</svg>

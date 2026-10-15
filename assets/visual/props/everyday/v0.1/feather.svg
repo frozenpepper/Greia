@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.everyday.feather — soft pink feather. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- raspberry light -> raspberry -->
+    <linearGradient id="everyday_feather_body" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#EAA2BB"/>
+      <stop offset="1" stop-color="#D85683"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="80" ry="13.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="feather">
+    <path d="M58 216 C40 160 60 100 110 62 C146 34 190 24 222 26 C226 62 212 112 178 150 L160 140 L166 162 C136 192 98 212 58 216 Z" fill="url(#everyday_feather_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M40 234 L60 214 C100 160 150 96 214 36" fill="none" stroke="#4B372F" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M40 234 L60 214 C100 160 150 96 214 36" fill="none" stroke="#F3CCDA" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M100 140 C90 122 92 104 100 92 M134 110 C126 94 128 76 136 64" fill="none" stroke="#BC5072" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

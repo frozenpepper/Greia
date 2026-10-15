@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.woodland.beetle - peek. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- ocean light -> ocean shade (beetle) -->
+    <linearGradient id="beetle_peek_shell" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#8DBBE8"/>
+      <stop offset="1" stop-color="#3F7FC4"/>
+    </linearGradient>
+    <!-- navy light -> navy -->
+    <linearGradient id="beetle_peek_head" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#4F5F80"/>
+      <stop offset="1" stop-color="#2F3E58"/>
+    </linearGradient>
+    <clipPath id="beetle_peek_clip"><rect x="0" y="0" width="256" height="200"/></clipPath>
+  </defs>
+  <g id="hidden_below_edge" clip-path="url(#beetle_peek_clip)">
+    <g id="character" transform="translate(0 66)">
+      <g id="legs">
+        <path d="M66 150 C52 150 42 158 38 170" fill="none" stroke="#4B372F" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M190 150 C204 150 214 158 218 170" fill="none" stroke="#4B372F" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M64 172 C50 176 42 186 40 198" fill="none" stroke="#4B372F" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M192 172 C206 176 214 186 216 198" fill="none" stroke="#4B372F" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M74 192 C62 200 56 208 54 216" fill="none" stroke="#4B372F" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M182 192 C194 200 200 208 202 216" fill="none" stroke="#4B372F" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+      <g id="shell">
+        <path d="M128 100 C176 100 206 136 206 170 C206 200 176 216 128 216 C80 216 50 200 50 170 C50 136 80 100 128 100 Z" fill="url(#beetle_peek_shell)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M128 112 L128 214" fill="none" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M74 150 C84 134 100 124 116 122" fill="none" stroke="#C7E0F5" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" opacity="0.85"/>
+        <path d="M140 122 C156 124 172 134 182 150" fill="none" stroke="#C7E0F5" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" opacity="0.5"/>
+      </g>
+      <g id="head">
+        <path d="M128 66 C122 50 126 34 138 28 C136 40 138 52 142 62 Z" fill="#4F5F80" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M112 66 C104 48 92 40 82 44" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M144 66 C152 48 164 40 174 44" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="82" cy="44" r="6" fill="#4F5F80" stroke="#4B372F" stroke-width="2.5"/>
+        <circle cx="174" cy="44" r="6" fill="#4F5F80" stroke="#4B372F" stroke-width="2.5"/>
+        <ellipse cx="128" cy="98" rx="44" ry="38" fill="url(#beetle_peek_head)" stroke="#4B372F" stroke-width="3.5"/>
+        <path d="M97.3 83 C96 80.6 98.7 76.4 103.5 73.7 C108.3 70.9 113.3 70.6 114.7 73 C116 75.4 113.3 79.6 108.5 82.3 C103.7 85.1 98.7 85.4 97.3 83 Z" fill="#FFFFFF" opacity="0.45"/>
+        <ellipse cx="110" cy="96" rx="12" ry="13" fill="#FFFFFF" stroke="#4B372F" stroke-width="2.5"/>
+        <ellipse cx="111" cy="98" rx="7" ry="8.5" fill="#342C35"/>
+        <ellipse cx="113" cy="94" rx="2.4" ry="2.6" fill="#FFFFFF"/>
+        <ellipse cx="146" cy="96" rx="12" ry="13" fill="#FFFFFF" stroke="#4B372F" stroke-width="2.5"/>
+        <ellipse cx="147" cy="98" rx="7" ry="8.5" fill="#342C35"/>
+        <ellipse cx="149" cy="94" rx="2.4" ry="2.6" fill="#FFFFFF"/>
+        <ellipse cx="96" cy="116" rx="7" ry="4" fill="#FDA4AF" opacity="0.6"/>
+        <ellipse cx="160" cy="116" rx="7" ry="4" fill="#FDA4AF" opacity="0.6"/>
+        <ellipse cx="128" cy="120" rx="4.5" ry="4" fill="#FFD9CF" stroke="#4B372F" stroke-width="2"/>
+      </g>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.heart_pop frame 3: small hearts high up, fading -->
+  <defs>
+    <!-- coral light (mix 35% white) -> coral -->
+    <linearGradient id="heart_pop_f3_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A198"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round" opacity="0.7">
+    <path d="M64 47.1 C55.2 41.4 51.7 36.3 52.3 31.6 C52.9 27.2 56.7 24.6 60.2 25.3 C62.1 25.6 63.4 26.8 64 28.7 C64.6 26.8 65.9 25.6 67.8 25.3 C71.3 24.6 75.1 27.2 75.7 31.6 C76.3 36.3 72.8 41.4 64 47.1 Z" fill="url(#heart_pop_f3_fill)" stroke="#4B372F" stroke-width="2.5"/>
+    <path d="M32 24.4 C26.8 21.1 24.8 18.2 25.2 15.4 C25.6 12.8 27.8 11.4 29.8 11.7 C30.9 11.9 31.6 12.7 32 13.8 C32.4 12.7 33.1 11.9 34.2 11.7 C36.2 11.4 38.4 12.8 38.8 15.4 C39.2 18.2 37.2 21.1 32 24.4 Z" fill="url(#heart_pop_f3_fill)" stroke="#4B372F" stroke-width="2.5"/>
+    <path d="M98 22.9 C92.5 19.4 90.3 16.2 90.7 13.2 C91.1 10.5 93.5 8.9 95.6 9.3 C96.8 9.5 97.6 10.3 98 11.5 C98.4 10.3 99.2 9.5 100.4 9.3 C102.5 8.9 104.9 10.5 105.3 13.2 C105.7 16.2 103.5 19.4 98 22.9 Z" fill="url(#heart_pop_f3_fill)" stroke="#4B372F" stroke-width="2.5"/>
+  </g>
+</svg>

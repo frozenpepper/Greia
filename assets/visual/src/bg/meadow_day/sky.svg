@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- meadow_day: opaque sky base (sun, clouds).
+       Scene layer meadow_day_sky; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- sky shade (mix 25% ocean) -> sky light (mix 40% cream) -->
+    <linearGradient id="meadow_day_sky_grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#AED4EF"/>
+      <stop offset="1" stop-color="#E6F1EE"/>
+    </linearGradient>
+    <radialGradient id="meadow_day_sky_sun_glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFE7A6" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#FFE7A6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g id="sky">
+    <rect width="1024" height="600" fill="url(#meadow_day_sky_grad)"/>
+    <circle cx="930" cy="98" r="78" fill="url(#meadow_day_sky_sun_glow)"/>
+    <circle cx="930" cy="98" r="40" fill="#FFD35C" stroke="#E9A93B" stroke-width="3"/>
+    <path d="M906 86 C912 76 922 71 932 71" fill="none" stroke="#FFF1C2" stroke-width="6" stroke-linecap="round"/>
+    <g transform="translate(70 60)"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="2.5" stroke-linejoin="round"/></g>
+    <g transform="translate(560 34) scale(0.75)"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="3.3" stroke-linejoin="round"/></g>
+    <g transform="translate(744 150) scale(0.6)" opacity="0.9"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="4.2" stroke-linejoin="round"/></g>
+    <g transform="translate(300 170) scale(0.55)" opacity="0.8"><path d="M10 36 C4 22 21 11 35 19 C41 2 69 0 78 16 C91 8 111 16 108 31 C120 34 119 50 105 50 L19 50 C4 50 0 40 10 36 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="4.5" stroke-linejoin="round"/></g>
+  </g>
+</svg>

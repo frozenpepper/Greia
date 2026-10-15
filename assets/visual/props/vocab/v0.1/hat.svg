@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.hat — purple top hat. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- grape light -> grape -->
+    <linearGradient id="vocab_hat_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B99ADC"/>
+      <stop offset="1" stop-color="#9464C9"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="100" ry="16.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="hat">
+    <ellipse cx="128" cy="206" rx="104" ry="24" fill="url(#vocab_hat_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M68 50 C68 40 188 40 188 50 L180 204 C180 216 76 216 76 204 Z" fill="url(#vocab_hat_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M73 150 C100 158 156 158 183 150 L181 186 C156 194 100 194 75 186 Z" fill="#F46F61" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="48" rx="60" ry="10" fill="#CFB9E7" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M90 66 L92 136" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+  </g>
+</svg>

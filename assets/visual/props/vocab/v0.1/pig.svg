@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.pig — pink piglet. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- blush light -> blush -->
+    <linearGradient id="vocab_pig_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FECDD3"/>
+      <stop offset="1" stop-color="#FDA4AF"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="80" ry="13.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="pig">
+    <rect x="76" y="196" width="26" height="36" rx="10" fill="#E2949C" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="154" y="196" width="26" height="36" rx="10" fill="#E2949C" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M206 172 C222 166 222 150 210 152 C200 154 206 168 218 164" fill="none" stroke="#E2949C" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="184" rx="82" ry="42" fill="url(#vocab_pig_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M68 74 L56 30 L104 50 Z" fill="#E2949C" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M188 74 L200 30 L152 50 Z" fill="#E2949C" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <circle cx="128" cy="112" r="66" fill="url(#vocab_pig_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="100" cy="96" rx="6.5" ry="8.5" fill="#342C35"/>
+    <circle cx="98.0" cy="93.0" r="2.6" fill="#FFFFFF"/>
+    <ellipse cx="156" cy="96" rx="6.5" ry="8.5" fill="#342C35"/>
+    <circle cx="154.0" cy="93.0" r="2.6" fill="#FFFFFF"/>
+    <ellipse cx="128" cy="132" rx="30" ry="21" fill="#E2949C" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="118" cy="132" rx="5" ry="8" fill="#9B6869"/>
+    <ellipse cx="138" cy="132" rx="5" ry="8" fill="#9B6869"/>
+    <path d="M114 160 Q128 168 142 160" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="90" cy="78" rx="14" ry="7" fill="#FFFFFF" opacity="0.75" transform="rotate(-35 90 78)"/>
+  </g>
+</svg>

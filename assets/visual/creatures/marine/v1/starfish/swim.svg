@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.marine.starfish - default. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- sunshine light -> orange -->
+    <linearGradient id="starfish_default_body" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FFD27E"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="228" rx="72" ry="12.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="character">
+    <g id="body">
+      <path d="M101.0 98.8 L115.6 47.4 Q128.0 32.0 140.4 47.4 L155.0 98.8 L208.4 96.8 Q226.9 103.9 216.1 120.5 L171.7 150.2 L190.1 200.3 Q189.1 220.1 170.0 215.0 L128.0 182.0 L86.0 215.0 Q66.9 220.1 65.9 200.3 L84.3 150.2 L39.9 120.5 Q29.1 103.9 47.6 96.8 L101.0 98.8 Z" fill="url(#starfish_default_body)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M105 72 C105 65.4 108.1 60 112 60 C115.9 60 119 65.4 119 72 C119 78.6 115.9 84 112 84 C108.1 84 105 78.6 105 72 Z" fill="#FFFFFF" opacity="0.6"/>
+      <circle cx="128.0" cy="66.0" r="5" fill="#FFF1CF"/>
+      <circle cx="194.6" cy="114.4" r="5" fill="#FFF1CF"/>
+      <circle cx="169.1" cy="192.6" r="5" fill="#FFF1CF"/>
+      <circle cx="86.9" cy="192.6" r="5" fill="#FFF1CF"/>
+      <circle cx="61.4" cy="114.4" r="5" fill="#FFF1CF"/>
+    </g>
+    <g id="face">
+      <ellipse cx="102" cy="150" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="154" cy="150" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+      <ellipse cx="112" cy="132" rx="7.5" ry="10" fill="#342C35"/>
+      <ellipse cx="144" cy="132" rx="7.5" ry="10" fill="#342C35"/>
+      <ellipse cx="115" cy="128" rx="2.6" ry="3.0" fill="#FFFFFF"/>
+      <ellipse cx="147" cy="128" rx="2.6" ry="3.0" fill="#FFFFFF"/>
+      <circle cx="110.0" cy="136" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+      <circle cx="142.0" cy="136" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+      <path d="M118 152 Q128 160 138 152" fill="none" stroke="#72513F" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

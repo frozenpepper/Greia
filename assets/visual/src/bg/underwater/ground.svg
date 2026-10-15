@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- underwater: sandy sea floor, top edge y 468-492, opaque below.
+       Scene layer underwater_ground; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- sand light -> sand/orange (mix 20%) -->
+    <linearGradient id="underwater_ground_sand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F6E8C8"/>
+      <stop offset="1" stop-color="#E9C994"/>
+    </linearGradient>
+  </defs>
+  <g id="ground">
+    <path d="M-8 486 C100 470 200 468 300 478 C420 490 540 492 660 480 C780 468 900 470 1032 482 L1032 608 L-8 608 Z" fill="url(#underwater_ground_sand)" stroke="#948272" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M20 482 C120 472 220 471 300 478" fill="none" stroke="#FFF6E3" stroke-width="5" stroke-linecap="round"/>
+    <path d="M700 478 C800 469 900 470 1000 478" fill="none" stroke="#FFF6E3" stroke-width="5" stroke-linecap="round"/>
+    <g fill="none" stroke="#D9B47E" stroke-width="3" stroke-linecap="round"><path d="M200 530 C224 523 248 523 270 530"/><path d="M470 552 C494 545 518 545 540 552"/><path d="M760 528 C784 521 808 521 830 528"/><path d="M340 586 C364 579 388 579 410 586"/><path d="M620 590 C644 583 668 583 690 590"/><path d="M880 574 C904 567 928 567 950 574"/><path d="M60 572 C84 565 108 565 130 572"/></g>
+    <g fill="#C1B3C5" stroke="#6E5E6A" stroke-width="2"><ellipse cx="250" cy="508" rx="6" ry="3.6"/><ellipse cx="264" cy="512" rx="4" ry="2.4"/><ellipse cx="820" cy="512" rx="6" ry="3.6"/><ellipse cx="836" cy="516" rx="4" ry="2.4"/><ellipse cx="560" cy="506" rx="4" ry="2.4"/></g>
+    <g transform="translate(170 560)"><path d="M-16 0 C-20 -12 -10 -24 0 -24 C10 -24 20 -12 16 0 Z" fill="#F8D8BD" stroke="#946F5B" stroke-width="2.5" stroke-linejoin="round"/><path d="M0 -2 L0 -20 M-8 -2 L-6 -18 M8 -2 L6 -18" fill="none" stroke="#E9B48F" stroke-width="2" stroke-linecap="round"/></g><g transform="translate(900 560)"><path d="M0 -20 L5.9 -8.1 L19 -6.2 L9.5 3.1 L11.8 16.2 L0 10 L-11.8 16.2 L-9.5 3.1 L-19 -6.2 L-5.9 -8.1 Z" fill="#F39A38" stroke="#8C5A2E" stroke-width="2.5" stroke-linejoin="round"/><g fill="#FBD08F"><circle cx="0" cy="-8" r="1.8"/><circle cx="-7" cy="-1" r="1.8"/><circle cx="7" cy="-1" r="1.8"/></g></g><g transform="translate(940 520) scale(0.8)"><path d="M-16 0 C-20 -12 -10 -24 0 -24 C10 -24 20 -12 16 0 Z" fill="#F8D8BD" stroke="#946F5B" stroke-width="2.5" stroke-linejoin="round"/><path d="M0 -2 L0 -20 M-8 -2 L-6 -18 M8 -2 L6 -18" fill="none" stroke="#E9B48F" stroke-width="2" stroke-linecap="round"/></g><g transform="translate(76 520) scale(0.8)"><path d="M0 -20 L5.9 -8.1 L19 -6.2 L9.5 3.1 L11.8 16.2 L0 10 L-11.8 16.2 L-9.5 3.1 L-19 -6.2 L-5.9 -8.1 Z" fill="#F39A38" stroke="#8C5A2E" stroke-width="2.5" stroke-linejoin="round"/><g fill="#FBD08F"><circle cx="0" cy="-8" r="1.8"/><circle cx="-7" cy="-1" r="1.8"/><circle cx="7" cy="-1" r="1.8"/></g></g>
+  </g>
+</svg>

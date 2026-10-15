@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.everyday.duck — yellow rubber duck. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="everyday_duck_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDA85"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="96" ry="16.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="duck">
+    <path d="M30 150 C30 130 60 124 86 132 C100 136 116 140 140 136 C176 130 200 110 214 90 C230 110 236 160 220 190 C206 216 170 230 120 230 C66 230 30 200 30 150 Z" fill="url(#everyday_duck_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <circle cx="86" cy="90" r="50" fill="url(#everyday_duck_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M38 96 C22 96 12 104 14 112 C20 122 38 120 50 114 Z" fill="#F39A38" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="76" cy="80" rx="7.2" ry="9.4" fill="#342C35"/>
+    <circle cx="73.8" cy="76.7" r="2.9" fill="#FFFFFF"/>
+    <ellipse cx="96" cy="104" rx="10" ry="6" fill="#FDA4AF" opacity="0.6"/>
+    <path d="M118 168 C140 150 176 152 190 168 C180 194 140 196 118 168 Z" fill="#E9B133" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="70" cy="60" rx="12" ry="6" fill="#FFFFFF" opacity="0.75" transform="rotate(-30 70 60)"/>
+  </g>
+</svg>

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.woodland.snail - asleep. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- orange light -> orange -->
+    <linearGradient id="snail_asleep_shell" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FBC07F"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+    <!-- peach light -> peach -->
+    <linearGradient id="snail_asleep_body" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FBEAD6"/>
+      <stop offset="1" stop-color="#EFC79C"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="229" rx="64" ry="10.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="character" transform="translate(128 216) scale(1.05 0.93) translate(-128 -216)">
+    <g id="stalks">
+      <path d="M72 126 L66 112" fill="none" stroke="#4B372F" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M90 124 L94 110" fill="none" stroke="#4B372F" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M72 126 L66 112" fill="none" stroke="#EFC79C" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M90 124 L94 110" fill="none" stroke="#EFC79C" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="foot">
+      <path d="M58 214 C42 214 38 200 42 184 C46 158 52 128 76 120 C98 114 112 130 112 150 L112 188 L206 194 C220 196 226 206 218 214 Z" fill="url(#snail_asleep_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M60.9 144.1 C58.7 142.4 59.3 138.2 62.2 134.8 C65 131.4 69 130.1 71.1 131.9 C73.3 133.6 72.7 137.8 69.8 141.2 C67 144.6 63 145.9 60.9 144.1 Z" fill="#FFFFFF" opacity="0.7"/>
+      <ellipse cx="66" cy="158" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.5"/>
+      <path d="M63 144 Q70 152 77 144" fill="none" stroke="#342C35" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M84 162 Q90 166 96 162" fill="none" stroke="#72513F" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="eyes">
+    </g>
+    <g id="shell">
+      <ellipse cx="160" cy="138" rx="56" ry="54" fill="url(#snail_asleep_shell)" stroke="#4B372F" stroke-width="3.5"/>
+      <path d="M160 138 C160 128 174 128 176 140 C178 156 156 162 146 150 C134 136 146 112 166 112 C190 112 202 136 194 158 C186 180 152 188 132 172" fill="none" stroke="#B8651E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M119.3 113 C116.8 110 119.6 103.6 125.5 98.6 C131.4 93.7 138.2 92 140.7 95 C143.2 98 140.4 104.4 134.5 109.4 C128.6 114.3 121.8 116 119.3 113 Z" fill="#FFFFFF" opacity="0.7"/>
+    </g>
+  </g>
+  <g id="fx">
+    <path d="M196 46 L208.0 46 L196 58.0 L208.0 58.0" fill="none" stroke="#6E7FB0" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" opacity="0.7"/>
+    <path d="M218 24 L227.0 24 L218 33.0 L227.0 33.0" fill="none" stroke="#6E7FB0" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.5"/>
+  </g>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.shape.star — flat star shape token. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- cast gold light -> gold -->
+    <linearGradient id="shape_star_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDD97C"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+  </defs>
+  <g id="shape">
+    <path d="M128.0 18.0 L159.7 92.3 L240.2 99.5 L179.4 152.7 L197.4 231.5 L128.0 190.0 L58.6 231.5 L76.6 152.7 L15.8 99.5 L96.3 92.3 Z" fill="url(#shape_star_fill)" stroke="#4B372F" stroke-width="6" stroke-linejoin="round"/>
+    <ellipse cx="102" cy="94" rx="16" ry="9" fill="#FFFFFF" opacity="0.8" transform="rotate(-35 102 94)"/>
+  </g>
+</svg>

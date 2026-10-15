@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- woodland_autumn: far treeline haze.
+       Scene layer woodland_autumn_far; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <g id="far">
+    <g fill="#E9BE93"><circle cx="-10" cy="318" r="30"/><circle cx="34" cy="300" r="34"/><circle cx="80" cy="312" r="28"/><circle cx="124" cy="296" r="32"/><circle cx="170" cy="314" r="26"/><circle cx="214" cy="304" r="30"/><circle cx="260" cy="318" r="24"/><circle cx="760" cy="318" r="24"/><circle cx="804" cy="302" r="30"/><circle cx="848" cy="314" r="26"/><circle cx="892" cy="296" r="32"/><circle cx="936" cy="310" r="28"/><circle cx="980" cy="298" r="34"/><circle cx="1030" cy="316" r="30"/><circle cx="330" cy="330" r="20"/><circle cx="372" cy="324" r="22"/><circle cx="414" cy="332" r="18"/><circle cx="610" cy="330" r="18"/><circle cx="650" cy="324" r="22"/><circle cx="692" cy="330" r="20"/></g>
+    <path d="M-8 330 C120 316 260 318 380 330 C500 340 640 338 760 328 C880 318 960 320 1032 328 L1032 440 L-8 440 Z" fill="#E6CFAA"/>
+  </g>
+</svg>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.bloom (single): a flower bursting open with two leaves and sparkles -->
+  <defs>
+    <!-- coral light (mix 35% white) -> coral -->
+    <linearGradient id="bloom_petal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A198"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M64 96 Q54 112 34 112 Q42 96 64 96 Z" fill="#59B86A" stroke="#4B372F" stroke-width="2.5"/>
+    <path d="M64 96 Q74 112 94 112 Q86 96 64 96 Z" fill="#59B86A" stroke="#4B372F" stroke-width="2.5"/>
+    <ellipse cx="64" cy="42" rx="13" ry="20" fill="url(#bloom_petal)" stroke="#4B372F" stroke-width="2.5" transform="rotate(0 64 64)"/>
+    <ellipse cx="64" cy="42" rx="13" ry="20" fill="url(#bloom_petal)" stroke="#4B372F" stroke-width="2.5" transform="rotate(60 64 64)"/>
+    <ellipse cx="64" cy="42" rx="13" ry="20" fill="url(#bloom_petal)" stroke="#4B372F" stroke-width="2.5" transform="rotate(120 64 64)"/>
+    <ellipse cx="64" cy="42" rx="13" ry="20" fill="url(#bloom_petal)" stroke="#4B372F" stroke-width="2.5" transform="rotate(180 64 64)"/>
+    <ellipse cx="64" cy="42" rx="13" ry="20" fill="url(#bloom_petal)" stroke="#4B372F" stroke-width="2.5" transform="rotate(240 64 64)"/>
+    <ellipse cx="64" cy="42" rx="13" ry="20" fill="url(#bloom_petal)" stroke="#4B372F" stroke-width="2.5" transform="rotate(300 64 64)"/>
+    <circle cx="64" cy="64" r="14" fill="#FFC234" stroke="#4B372F" stroke-width="2.5"/>
+    <path d="M57 58 Q59 54 63 53" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.9"/>
+    <path d="M18 15 Q19.6 22.4 27 24 Q19.6 25.6 18 33 Q16.4 25.6 9 24 Q16.4 22.4 18 15 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M110 14 Q111.4 20.6 118 22 Q111.4 23.4 110 30 Q108.6 23.4 102 22 Q108.6 20.6 110 14 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+    <path d="M112 86 Q113.1 90.9 118 92 Q113.1 93.1 112 98 Q110.9 93.1 106 92 Q110.9 90.9 112 86 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2"/>
+  </g>
+</svg>

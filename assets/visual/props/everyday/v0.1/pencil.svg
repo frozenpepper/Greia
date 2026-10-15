@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.everyday.pencil — yellow pencil. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="everyday_pencil_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFD77B"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="100" ry="16.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="pencil" transform="rotate(-30 128 150) translate(4 6)">
+    <path d="M44 124 L192 124 L192 176 L44 176 Z" fill="url(#everyday_pencil_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M48 141 L188 141 M48 159 L188 159" fill="none" stroke="#D29F33" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M192 124 L244 150 L192 176 Z" fill="#F9CC9C" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M226 141 L244 150 L226 159 Z" fill="#30343A" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="28" y="122" width="24" height="56" fill="#D1D2D4" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M28 122 L16 122 C8 122 4 130 4 150 C4 170 8 178 16 178 L28 178 Z" fill="#FDA4AF" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+</svg>

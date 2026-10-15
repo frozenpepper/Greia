@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.umbrella — open pink umbrella. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- raspberry light -> raspberry -->
+    <linearGradient id="vocab_umbrella_canopy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E489A8"/>
+      <stop offset="1" stop-color="#D85683"/>
+    </linearGradient>
+  </defs>
+  <g id="umbrella">
+    <path d="M128 130 L128 202 C128 226 98 226 98 206" fill="none" stroke="#4B372F" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128 130 L128 202 C128 226 98 226 98 206" fill="none" stroke="#B45309" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M28 132 C28 72 76 36 128 36 C180 36 228 72 228 132 A25 18 0 0 0 178 132 A25 18 0 0 0 128 132 A25 18 0 0 0 78 132 A25 18 0 0 0 28 132 Z" fill="url(#vocab_umbrella_canopy)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M128 36 C108 64 102 98 103 132 A25 18 0 0 0 153 132 C154 98 148 64 128 36 Z" fill="#ECAAC1" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="128" cy="28" r="8" fill="#FBBF24" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M56 92 C66 70 84 56 100 50" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  </g>
+</svg>

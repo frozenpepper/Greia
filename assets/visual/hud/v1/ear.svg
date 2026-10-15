@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- icon.hud.ear: listen carefully: an ear with sound coming in; peach ear, coral-light inner, ink contour -->
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M10 40 Q16 48 10 56 M18 32 Q28 48 18 64" fill="none" stroke-width="4.5"/>
+    <path d="M54 8 C76 8 89 24 87 44 C85 59 74 62 70 75 C67 86 53 90 44 82 C38 76 40 69 45 65 C35 57 30 47 30 36 C30 20 40 9 54 8 Z" fill="#F8D8BD" stroke-width="4.5"/>
+    <path d="M44 38 C45 27 61 23 68 33 C74 43 66 50 60 54 C55 58 52 54 52 48 C52 42 44 44 44 38 Z" fill="#F8A198" stroke-width="3.5"/>
+    <path d="M37 30 Q40 20 48 17" stroke="#FFFFFF" stroke-width="3" opacity="0.9" fill="none"/>
+  </g>
+</svg>

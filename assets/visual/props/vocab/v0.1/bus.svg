@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.bus — yellow bus. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="vocab_bus_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDD8F"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="104" ry="17.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="bus">
+    <rect x="18" y="62" width="220" height="140" rx="24" fill="url(#vocab_bus_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="78" y="80" width="40" height="44" rx="8" fill="#CFEAF7" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="128" y="80" width="40" height="44" rx="8" fill="#CFEAF7" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="178" y="80" width="40" height="44" rx="8" fill="#CFEAF7" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="30" y="80" width="36" height="104" rx="8" fill="#CFEAF7" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M66 148 L236 148" stroke="#F46F61" stroke-width="10"/>
+    <path d="M66 143 L236 143 M66 153 L236 153" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="236" cy="176" rx="7" ry="10" fill="#FFFBEB" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="70" cy="204" r="28" fill="#4B372F"/>
+    <circle cx="70" cy="204" r="13.4" fill="#EEDDBA" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="190" cy="204" r="28" fill="#4B372F"/>
+    <circle cx="190" cy="204" r="13.4" fill="#EEDDBA" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+  </g>
+</svg>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.pear — green pear. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- leaf light steps -->
+    <linearGradient id="vocab_pear_body" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#B4DFBC"/>
+      <stop offset="1" stop-color="#7AC688"/>
+    </linearGradient>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="vocab_pear_leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="72" ry="12.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="pear">
+    <path d="M128 56 C128 42 132 32 140 24" fill="none" stroke="#4B372F" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128 56 C128 42 132 32 140 24" fill="none" stroke="#92400E" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M150 44 C162 22 192 18 210 26 C202 48 176 58 150 44 Z" fill="url(#vocab_pear_leaf)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M128 50 C148 50 154 68 158 90 C162 114 198 128 206 172 C212 212 178 232 128 232 C78 232 44 212 50 172 C58 128 94 114 98 90 C102 68 108 50 128 50 Z" fill="url(#vocab_pear_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="84" cy="160" rx="12" ry="24" fill="#FFFFFF" opacity="0.75" transform="rotate(20 84 160)"/>
+  </g>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.shape.oval_slot — outline slot for oval. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <g id="slot">
+    <path d="M128 44 C190 44 236 82 236 128 C236 174 190 212 128 212 C66 212 20 174 20 128 C20 82 66 44 128 44 Z" fill="#FFFFFF" opacity="0.28"/>
+    <path d="M128 44 C190 44 236 82 236 128 C236 174 190 212 128 212 C66 212 20 174 20 128 C20 82 66 44 128 44 Z" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linejoin="round" opacity="0.5"/>
+    <path d="M128 44 C190 44 236 82 236 128 C236 174 190 212 128 212 C66 212 20 174 20 128 C20 82 66 44 128 44 Z" fill="none" stroke="#4B372F" stroke-width="6" stroke-dasharray="16 14" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  </g>
+</svg>

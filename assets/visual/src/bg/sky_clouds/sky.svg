@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- sky_clouds: opaque high-altitude sky with sun.
+       Scene layer sky_clouds_sky; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md.
+       Interaction-critical area x112-912 kept calm. -->
+  <defs>
+    <!-- sky shade (mix 35% ocean) -> sky light (mix 40% rose) -->
+    <linearGradient id="sky_clouds_sky_grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9CCBEE"/>
+      <stop offset="1" stop-color="#E9E6F0"/>
+    </linearGradient>
+    <radialGradient id="sky_clouds_sky_sun_glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFE7A6" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#FFE7A6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g id="sky">
+    <rect width="1024" height="600" fill="url(#sky_clouds_sky_grad)"/>
+    <circle cx="912" cy="96" r="80" fill="url(#sky_clouds_sky_sun_glow)"/>
+    <circle cx="912" cy="96" r="40" fill="#FFD35C" stroke="#E9A93B" stroke-width="3"/>
+    <path d="M888 84 C894 74 904 69 914 69" fill="none" stroke="#FFF1C2" stroke-width="6" stroke-linecap="round"/>
+  </g>
+</svg>

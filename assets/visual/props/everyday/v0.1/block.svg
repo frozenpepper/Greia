@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.everyday.block — wooden toy cube. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange light steps (natural wood) -->
+    <linearGradient id="everyday_block_front" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F9D1A5"/>
+      <stop offset="1" stop-color="#F7BD7E"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="96" ry="16.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="block">
+    <path d="M54 92 L94 52 L214 52 L174 92 Z" fill="#FBDBB8" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M174 92 L214 52 L214 172 L174 212 Z" fill="#D8A570" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="54" y="92" width="120" height="120" rx="6" fill="url(#everyday_block_front)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M70 126 C100 120 130 132 160 124 M70 168 C96 160 128 176 160 166" fill="none" stroke="#DDA972" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M66 104 L120 104" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  </g>
+</svg>

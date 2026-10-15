@@ -1,6 +1,6 @@
 catalog_id = "greia.shared-visuals.v1"
-catalog_version = "0.5.0"
-source_sha256 = "59a3fc50996c8062f7fdeab88ebf28e97865da2391259dbe7fec0164878c630f"
+catalog_version = "0.6.0"
+source_sha256 = "c1ce9068970c09eb6b3730c8d67705eac3e1c6559664f7e9331e7800e40b1388"
 generated_note = "Build-time PNG renditions from explicit reviewed SVG masters; runtime must not discover or rasterize SVG source."
 
 [[visuals]]
@@ -20,12 +20,500 @@ role = "light_overlay"
 default = "visual/runtime/v1/forest_meadow/sunlight_rays.png"
 
 [[visuals]]
+id = "bg.indoor_room.floor_carpet"
+kind = "environment"
+role = "room_floor"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/indoor_room/floor_carpet.png"
+
+[[visuals]]
+id = "bg.indoor_room.floor_tile"
+kind = "environment"
+role = "room_floor"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/indoor_room/floor_tile.png"
+
+[[visuals]]
+id = "bg.indoor_room.floor_wood"
+kind = "environment"
+role = "room_floor"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/indoor_room/floor_wood.png"
+
+[[visuals]]
+id = "bg.indoor_room.wall_bakery"
+kind = "environment"
+role = "room_wall"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/indoor_room/wall_bakery.png"
+
+[[visuals]]
+id = "bg.indoor_room.wall_bathroom"
+kind = "environment"
+role = "room_wall"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/indoor_room/wall_bathroom.png"
+
+[[visuals]]
+id = "bg.indoor_room.wall_bedroom"
+kind = "environment"
+role = "room_wall"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/indoor_room/wall_bedroom.png"
+
+[[visuals]]
+id = "bg.indoor_room.wall_kitchen"
+kind = "environment"
+role = "room_wall"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/indoor_room/wall_kitchen.png"
+
+[[visuals]]
+id = "bg.indoor_room.wall_playroom"
+kind = "environment"
+role = "room_wall"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/indoor_room/wall_playroom.png"
+
+[[visuals]]
+id = "bg.indoor_room.wall_vet_corner"
+kind = "environment"
+role = "room_wall"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/indoor_room/wall_vet_corner.png"
+
+[[visuals]]
+id = "bg.indoor_room.wall_workshop"
+kind = "environment"
+role = "room_wall"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/indoor_room/wall_workshop.png"
+
+[[visuals]]
+id = "bg.meadow_day.far"
+kind = "environment"
+role = "scene_far"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/meadow_day/far.png"
+
+[[visuals]]
+id = "bg.meadow_day.foreground"
+kind = "environment"
+role = "scene_foreground"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/meadow_day/foreground.png"
+
+[[visuals]]
+id = "bg.meadow_day.ground"
+kind = "environment"
+role = "scene_ground"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/meadow_day/ground.png"
+
+[[visuals]]
 id = "bg.meadow_day.home"
 kind = "environment"
 role = "shell_backdrop"
 
 [visuals.variants]
 default = "visual/runtime/v1/meadow_day/home_landscape.png"
+
+[[visuals]]
+id = "bg.meadow_day.mid"
+kind = "environment"
+role = "scene_mid"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/meadow_day/mid.png"
+
+[[visuals]]
+id = "bg.meadow_day.sky"
+kind = "environment"
+role = "scene_sky"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/meadow_day/sky.png"
+
+[[visuals]]
+id = "bg.night_sky.far"
+kind = "environment"
+role = "scene_far"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/night_sky/far.png"
+
+[[visuals]]
+id = "bg.night_sky.ground"
+kind = "environment"
+role = "scene_ground"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/night_sky/ground.png"
+
+[[visuals]]
+id = "bg.night_sky.mid"
+kind = "environment"
+role = "scene_mid"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/night_sky/mid.png"
+
+[[visuals]]
+id = "bg.night_sky.sky"
+kind = "environment"
+role = "scene_sky"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/night_sky/sky.png"
+
+[[visuals]]
+id = "bg.night_sky.stars"
+kind = "environment"
+role = "scene_overlay"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/night_sky/stars.png"
+
+[[visuals]]
+id = "bg.sea_surface.far"
+kind = "environment"
+role = "scene_far"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/sea_surface/far.png"
+
+[[visuals]]
+id = "bg.sea_surface.foreground"
+kind = "environment"
+role = "scene_foreground"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/sea_surface/foreground.png"
+
+[[visuals]]
+id = "bg.sea_surface.sea"
+kind = "environment"
+role = "scene_ground"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/sea_surface/sea.png"
+
+[[visuals]]
+id = "bg.sea_surface.sky"
+kind = "environment"
+role = "scene_sky"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/sea_surface/sky.png"
+
+[[visuals]]
+id = "bg.sky_clouds.far"
+kind = "environment"
+role = "scene_far"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/sky_clouds/far.png"
+
+[[visuals]]
+id = "bg.sky_clouds.foreground"
+kind = "environment"
+role = "scene_foreground"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/sky_clouds/foreground.png"
+
+[[visuals]]
+id = "bg.sky_clouds.mid"
+kind = "environment"
+role = "scene_mid"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/sky_clouds/mid.png"
+
+[[visuals]]
+id = "bg.sky_clouds.sky"
+kind = "environment"
+role = "scene_sky"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/sky_clouds/sky.png"
+
+[[visuals]]
+id = "bg.stage.boards"
+kind = "environment"
+role = "stage_floor"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/stage/boards.png"
+
+[[visuals]]
+id = "bg.stage.curtain_left"
+kind = "environment"
+role = "stage_curtain"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/stage/curtain_left.png"
+
+[[visuals]]
+id = "bg.stage.curtain_right"
+kind = "environment"
+role = "stage_curtain"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/stage/curtain_right.png"
+
+[[visuals]]
+id = "bg.stage.valance"
+kind = "environment"
+role = "stage_valance"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/stage/valance.png"
+
+[[visuals]]
+id = "bg.stage.wall_dark"
+kind = "environment"
+role = "stage_wall"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/stage/wall_dark.png"
+
+[[visuals]]
+id = "bg.underwater.far"
+kind = "environment"
+role = "scene_far"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/underwater/far.png"
+
+[[visuals]]
+id = "bg.underwater.foreground"
+kind = "environment"
+role = "scene_foreground"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/underwater/foreground.png"
+
+[[visuals]]
+id = "bg.underwater.ground"
+kind = "environment"
+role = "scene_ground"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/underwater/ground.png"
+
+[[visuals]]
+id = "bg.underwater.mid"
+kind = "environment"
+role = "scene_mid"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/underwater/mid.png"
+
+[[visuals]]
+id = "bg.underwater.water"
+kind = "environment"
+role = "scene_sky"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/underwater/water.png"
+
+[[visuals]]
+id = "bg.wallpaper.candy"
+kind = "environment"
+role = "wallpaper"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/wallpaper/candy.png"
+
+[[visuals]]
+id = "bg.wallpaper.castle"
+kind = "environment"
+role = "wallpaper"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/wallpaper/castle.png"
+
+[[visuals]]
+id = "bg.wallpaper.forest"
+kind = "environment"
+role = "wallpaper"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/wallpaper/forest.png"
+
+[[visuals]]
+id = "bg.wallpaper.meadow"
+kind = "environment"
+role = "wallpaper"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/wallpaper/meadow.png"
+
+[[visuals]]
+id = "bg.wallpaper.ocean"
+kind = "environment"
+role = "wallpaper"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/wallpaper/ocean.png"
+
+[[visuals]]
+id = "bg.wallpaper.rainbow"
+kind = "environment"
+role = "wallpaper"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/wallpaper/rainbow.png"
+
+[[visuals]]
+id = "bg.wallpaper.snow"
+kind = "environment"
+role = "wallpaper"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/wallpaper/snow.png"
+
+[[visuals]]
+id = "bg.wallpaper.space"
+kind = "environment"
+role = "wallpaper"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/wallpaper/space.png"
+
+[[visuals]]
+id = "bg.woodland_autumn.far"
+kind = "environment"
+role = "scene_far"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/woodland_autumn/far.png"
+
+[[visuals]]
+id = "bg.woodland_autumn.foreground"
+kind = "environment"
+role = "scene_foreground"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/woodland_autumn/foreground.png"
+
+[[visuals]]
+id = "bg.woodland_autumn.ground"
+kind = "environment"
+role = "scene_ground"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/woodland_autumn/ground.png"
+
+[[visuals]]
+id = "bg.woodland_autumn.mid"
+kind = "environment"
+role = "scene_mid"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/woodland_autumn/mid.png"
+
+[[visuals]]
+id = "bg.woodland_autumn.sky"
+kind = "environment"
+role = "scene_sky"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/woodland_autumn/sky.png"
+
+[[visuals]]
+id = "bg.woodland_pond.far"
+kind = "environment"
+role = "scene_far"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/woodland_pond/far.png"
+
+[[visuals]]
+id = "bg.woodland_pond.foreground"
+kind = "environment"
+role = "scene_foreground"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/woodland_pond/foreground.png"
+
+[[visuals]]
+id = "bg.woodland_pond.ground"
+kind = "environment"
+role = "scene_ground"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/woodland_pond/ground.png"
+
+[[visuals]]
+id = "bg.woodland_pond.mid"
+kind = "environment"
+role = "scene_mid"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/woodland_pond/mid.png"
+
+[[visuals]]
+id = "bg.woodland_pond.sky"
+kind = "environment"
+role = "scene_sky"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/woodland_pond/sky.png"
+
+[[visuals]]
+id = "bg.woodland_snow.far"
+kind = "environment"
+role = "scene_far"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/woodland_snow/far.png"
+
+[[visuals]]
+id = "bg.woodland_snow.foreground"
+kind = "environment"
+role = "scene_foreground"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/woodland_snow/foreground.png"
+
+[[visuals]]
+id = "bg.woodland_snow.ground"
+kind = "environment"
+role = "scene_ground"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/woodland_snow/ground.png"
+
+[[visuals]]
+id = "bg.woodland_snow.mid"
+kind = "environment"
+role = "scene_mid"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/woodland_snow/mid.png"
+
+[[visuals]]
+id = "bg.woodland_snow.sky"
+kind = "environment"
+role = "scene_sky"
+
+[visuals.variants]
+default = "visual/runtime/v1/bg/woodland_snow/sky.png"
 
 [[visuals]]
 id = "bush.flowering.01"
@@ -57,12 +545,17 @@ kind = "character"
 role = "shared_mascot"
 
 [visuals.variants]
+angry = "visual/runtime/v1/characters/dani_angry.png"
 blink = "visual/runtime/v1/characters/dani_blink.png"
 default = "visual/runtime/v1/characters/dani_neutral.png"
 happy = "visual/runtime/v1/characters/dani_happy.png"
 pose_cheer = "visual/runtime/v1/characters/dani_pose_cheer.png"
+pose_play = "visual/runtime/v1/characters/dani_pose_play.png"
 pose_point = "visual/runtime/v1/characters/dani_pose_point.png"
 pose_think = "visual/runtime/v1/characters/dani_pose_think.png"
+pose_wave = "visual/runtime/v1/characters/dani_pose_wave.png"
+sad = "visual/runtime/v1/characters/dani_sad.png"
+silly = "visual/runtime/v1/characters/dani_silly.png"
 sleepy = "visual/runtime/v1/characters/dani_sleepy.png"
 surprised = "visual/runtime/v1/characters/dani_surprised.png"
 
@@ -72,12 +565,17 @@ kind = "character"
 role = "shared_mascot"
 
 [visuals.variants]
+angry = "visual/runtime/v1/characters/flash_angry.png"
 blink = "visual/runtime/v1/characters/flash_blink.png"
 default = "visual/runtime/v1/characters/flash_neutral.png"
 happy = "visual/runtime/v1/characters/flash_happy.png"
 pose_cheer = "visual/runtime/v1/characters/flash_pose_cheer.png"
+pose_play = "visual/runtime/v1/characters/flash_pose_play.png"
 pose_point = "visual/runtime/v1/characters/flash_pose_point.png"
 pose_think = "visual/runtime/v1/characters/flash_pose_think.png"
+pose_wave = "visual/runtime/v1/characters/flash_pose_wave.png"
+sad = "visual/runtime/v1/characters/flash_sad.png"
+silly = "visual/runtime/v1/characters/flash_silly.png"
 sleepy = "visual/runtime/v1/characters/flash_sleepy.png"
 surprised = "visual/runtime/v1/characters/flash_surprised.png"
 
@@ -87,12 +585,17 @@ kind = "character"
 role = "shared_mascot"
 
 [visuals.variants]
+angry = "visual/runtime/v1/characters/leo_angry.png"
 blink = "visual/runtime/v1/characters/leo_blink.png"
 default = "visual/runtime/v1/characters/leo_neutral.png"
 happy = "visual/runtime/v1/characters/leo_happy.png"
 pose_cheer = "visual/runtime/v1/characters/leo_pose_cheer.png"
+pose_play = "visual/runtime/v1/characters/leo_pose_play.png"
 pose_point = "visual/runtime/v1/characters/leo_pose_point.png"
 pose_think = "visual/runtime/v1/characters/leo_pose_think.png"
+pose_wave = "visual/runtime/v1/characters/leo_pose_wave.png"
+sad = "visual/runtime/v1/characters/leo_sad.png"
+silly = "visual/runtime/v1/characters/leo_silly.png"
 sleepy = "visual/runtime/v1/characters/leo_sleepy.png"
 surprised = "visual/runtime/v1/characters/leo_surprised.png"
 
@@ -102,12 +605,17 @@ kind = "character"
 role = "shared_mascot"
 
 [visuals.variants]
+angry = "visual/runtime/v1/characters/lilli_angry.png"
 blink = "visual/runtime/v1/characters/lilli_blink.png"
 default = "visual/runtime/v1/characters/lilli_neutral.png"
 happy = "visual/runtime/v1/characters/lilli_happy.png"
 pose_cheer = "visual/runtime/v1/characters/lilli_pose_cheer.png"
+pose_play = "visual/runtime/v1/characters/lilli_pose_play.png"
 pose_point = "visual/runtime/v1/characters/lilli_pose_point.png"
 pose_think = "visual/runtime/v1/characters/lilli_pose_think.png"
+pose_wave = "visual/runtime/v1/characters/lilli_pose_wave.png"
+sad = "visual/runtime/v1/characters/lilli_sad.png"
+silly = "visual/runtime/v1/characters/lilli_silly.png"
 sleepy = "visual/runtime/v1/characters/lilli_sleepy.png"
 surprised = "visual/runtime/v1/characters/lilli_surprised.png"
 
@@ -117,12 +625,17 @@ kind = "character"
 role = "shared_mascot"
 
 [visuals.variants]
+angry = "visual/runtime/v1/characters/momo_angry.png"
 blink = "visual/runtime/v1/characters/momo_blink.png"
 default = "visual/runtime/v1/characters/momo_neutral.png"
 happy = "visual/runtime/v1/characters/momo_happy.png"
 pose_cheer = "visual/runtime/v1/characters/momo_pose_cheer.png"
+pose_play = "visual/runtime/v1/characters/momo_pose_play.png"
 pose_point = "visual/runtime/v1/characters/momo_pose_point.png"
 pose_think = "visual/runtime/v1/characters/momo_pose_think.png"
+pose_wave = "visual/runtime/v1/characters/momo_pose_wave.png"
+sad = "visual/runtime/v1/characters/momo_sad.png"
+silly = "visual/runtime/v1/characters/momo_silly.png"
 sleepy = "visual/runtime/v1/characters/momo_sleepy.png"
 surprised = "visual/runtime/v1/characters/momo_surprised.png"
 
@@ -132,12 +645,17 @@ kind = "character"
 role = "shared_mascot"
 
 [visuals.variants]
+angry = "visual/runtime/v1/characters/tito_angry.png"
 blink = "visual/runtime/v1/characters/tito_blink.png"
 default = "visual/runtime/v1/characters/tito_neutral.png"
 happy = "visual/runtime/v1/characters/tito_happy.png"
 pose_cheer = "visual/runtime/v1/characters/tito_pose_cheer.png"
+pose_play = "visual/runtime/v1/characters/tito_pose_play.png"
 pose_point = "visual/runtime/v1/characters/tito_pose_point.png"
 pose_think = "visual/runtime/v1/characters/tito_pose_think.png"
+pose_wave = "visual/runtime/v1/characters/tito_pose_wave.png"
+sad = "visual/runtime/v1/characters/tito_sad.png"
+silly = "visual/runtime/v1/characters/tito_silly.png"
 sleepy = "visual/runtime/v1/characters/tito_sleepy.png"
 surprised = "visual/runtime/v1/characters/tito_surprised.png"
 
@@ -158,12 +676,469 @@ role = "far_background"
 default = "visual/runtime/v1/forest_meadow/cloud_small.png"
 
 [[visuals]]
+id = "creature.marine.angelfish"
+kind = "character"
+role = "marine"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/angelfish_swim.png"
+happy = "visual/runtime/v1/creatures/marine/angelfish_happy.png"
+
+[[visuals]]
+id = "creature.marine.anglerfish"
+kind = "character"
+role = "marine"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/anglerfish_swim.png"
+happy = "visual/runtime/v1/creatures/marine/anglerfish_happy.png"
+
+[[visuals]]
+id = "creature.marine.clownfish"
+kind = "character"
+role = "marine"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/clownfish_swim.png"
+happy = "visual/runtime/v1/creatures/marine/clownfish_happy.png"
+
+[[visuals]]
+id = "creature.marine.crab"
+kind = "character"
+role = "marine"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/crab_swim.png"
+happy = "visual/runtime/v1/creatures/marine/crab_happy.png"
+
+[[visuals]]
+id = "creature.marine.dolphin"
+kind = "character"
+role = "marine"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/dolphin_swim.png"
+happy = "visual/runtime/v1/creatures/marine/dolphin_happy.png"
+
+[[visuals]]
+id = "creature.marine.jellyfish"
+kind = "character"
+role = "marine"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/jellyfish_swim.png"
+happy = "visual/runtime/v1/creatures/marine/jellyfish_happy.png"
+
+[[visuals]]
+id = "creature.marine.manta"
+kind = "character"
+role = "marine"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/manta_swim.png"
+happy = "visual/runtime/v1/creatures/marine/manta_happy.png"
+
+[[visuals]]
+id = "creature.marine.octopus"
+kind = "character"
+role = "marine"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/octopus_swim.png"
+happy = "visual/runtime/v1/creatures/marine/octopus_happy.png"
+
+[[visuals]]
+id = "creature.marine.orca_adult"
+kind = "character"
+role = "marine"
+
+[visuals.variants]
+asleep = "visual/runtime/v1/creatures/marine/orca_adult_asleep.png"
+default = "visual/runtime/v1/creatures/marine/orca_adult_swim.png"
+happy = "visual/runtime/v1/creatures/marine/orca_adult_happy.png"
+
+[[visuals]]
+id = "creature.marine.orca_calf"
+kind = "character"
+role = "marine"
+
+[visuals.variants]
+asleep = "visual/runtime/v1/creatures/marine/orca_calf_asleep.png"
+default = "visual/runtime/v1/creatures/marine/orca_calf_swim.png"
+happy = "visual/runtime/v1/creatures/marine/orca_calf_happy.png"
+
+[[visuals]]
+id = "creature.marine.seahorse"
+kind = "character"
+role = "marine"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/seahorse_swim.png"
+happy = "visual/runtime/v1/creatures/marine/seahorse_happy.png"
+
+[[visuals]]
+id = "creature.marine.shark"
+kind = "character"
+role = "marine"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/shark_swim.png"
+happy = "visual/runtime/v1/creatures/marine/shark_happy.png"
+
+[[visuals]]
+id = "creature.marine.starfish"
+kind = "character"
+role = "marine"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/starfish_swim.png"
+happy = "visual/runtime/v1/creatures/marine/starfish_happy.png"
+
+[[visuals]]
+id = "creature.marine.turtle"
+kind = "character"
+role = "marine"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/turtle_swim.png"
+happy = "visual/runtime/v1/creatures/marine/turtle_happy.png"
+
+[[visuals]]
+id = "creature.marine.whale"
+kind = "character"
+role = "marine"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/whale_swim.png"
+happy = "visual/runtime/v1/creatures/marine/whale_happy.png"
+
+[[visuals]]
+id = "creature.pet.guinea_pig"
+kind = "character"
+role = "pet"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/pet/guinea_pig_neutral.png"
+dirty = "visual/runtime/v1/creatures/pet/guinea_pig_dirty.png"
+happy = "visual/runtime/v1/creatures/pet/guinea_pig_happy.png"
+hungry = "visual/runtime/v1/creatures/pet/guinea_pig_hungry.png"
+hurt = "visual/runtime/v1/creatures/pet/guinea_pig_hurt.png"
+playful = "visual/runtime/v1/creatures/pet/guinea_pig_playful.png"
+sleepy = "visual/runtime/v1/creatures/pet/guinea_pig_sleepy.png"
+
+[[visuals]]
+id = "creature.pet.kitten"
+kind = "character"
+role = "pet"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/pet/kitten_neutral.png"
+dirty = "visual/runtime/v1/creatures/pet/kitten_dirty.png"
+happy = "visual/runtime/v1/creatures/pet/kitten_happy.png"
+hungry = "visual/runtime/v1/creatures/pet/kitten_hungry.png"
+hurt = "visual/runtime/v1/creatures/pet/kitten_hurt.png"
+playful = "visual/runtime/v1/creatures/pet/kitten_playful.png"
+sleepy = "visual/runtime/v1/creatures/pet/kitten_sleepy.png"
+
+[[visuals]]
+id = "creature.pet.puppy"
+kind = "character"
+role = "pet"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/pet/puppy_neutral.png"
+dirty = "visual/runtime/v1/creatures/pet/puppy_dirty.png"
+happy = "visual/runtime/v1/creatures/pet/puppy_happy.png"
+hungry = "visual/runtime/v1/creatures/pet/puppy_hungry.png"
+hurt = "visual/runtime/v1/creatures/pet/puppy_hurt.png"
+playful = "visual/runtime/v1/creatures/pet/puppy_playful.png"
+sleepy = "visual/runtime/v1/creatures/pet/puppy_sleepy.png"
+
+[[visuals]]
+id = "creature.woodland.bear"
+kind = "character"
+role = "woodland"
+
+[visuals.variants]
+asleep = "visual/runtime/v1/creatures/woodland/bear_asleep.png"
+default = "visual/runtime/v1/creatures/woodland/bear_full.png"
+peek = "visual/runtime/v1/creatures/woodland/bear_peek.png"
+
+[[visuals]]
+id = "creature.woodland.beetle"
+kind = "character"
+role = "woodland"
+
+[visuals.variants]
+asleep = "visual/runtime/v1/creatures/woodland/beetle_asleep.png"
+default = "visual/runtime/v1/creatures/woodland/beetle_full.png"
+peek = "visual/runtime/v1/creatures/woodland/beetle_peek.png"
+
+[[visuals]]
+id = "creature.woodland.butterfly"
+kind = "character"
+role = "woodland"
+
+[visuals.variants]
+asleep = "visual/runtime/v1/creatures/woodland/butterfly_asleep.png"
+default = "visual/runtime/v1/creatures/woodland/butterfly_full.png"
+peek = "visual/runtime/v1/creatures/woodland/butterfly_peek.png"
+
+[[visuals]]
+id = "creature.woodland.deer"
+kind = "character"
+role = "woodland"
+
+[visuals.variants]
+asleep = "visual/runtime/v1/creatures/woodland/deer_asleep.png"
+default = "visual/runtime/v1/creatures/woodland/deer_full.png"
+peek = "visual/runtime/v1/creatures/woodland/deer_peek.png"
+
+[[visuals]]
+id = "creature.woodland.duck"
+kind = "character"
+role = "woodland"
+
+[visuals.variants]
+asleep = "visual/runtime/v1/creatures/woodland/duck_asleep.png"
+default = "visual/runtime/v1/creatures/woodland/duck_full.png"
+peek = "visual/runtime/v1/creatures/woodland/duck_peek.png"
+
+[[visuals]]
+id = "creature.woodland.firefly"
+kind = "character"
+role = "woodland"
+
+[visuals.variants]
+asleep = "visual/runtime/v1/creatures/woodland/firefly_asleep.png"
+default = "visual/runtime/v1/creatures/woodland/firefly_full.png"
+peek = "visual/runtime/v1/creatures/woodland/firefly_peek.png"
+
+[[visuals]]
+id = "creature.woodland.frog"
+kind = "character"
+role = "woodland"
+
+[visuals.variants]
+asleep = "visual/runtime/v1/creatures/woodland/frog_asleep.png"
+default = "visual/runtime/v1/creatures/woodland/frog_full.png"
+peek = "visual/runtime/v1/creatures/woodland/frog_peek.png"
+
+[[visuals]]
+id = "creature.woodland.hedgehog"
+kind = "character"
+role = "woodland"
+
+[visuals.variants]
+asleep = "visual/runtime/v1/creatures/woodland/hedgehog_asleep.png"
+default = "visual/runtime/v1/creatures/woodland/hedgehog_full.png"
+peek = "visual/runtime/v1/creatures/woodland/hedgehog_peek.png"
+
+[[visuals]]
+id = "creature.woodland.ladybird"
+kind = "character"
+role = "woodland"
+
+[visuals.variants]
+asleep = "visual/runtime/v1/creatures/woodland/ladybird_asleep.png"
+default = "visual/runtime/v1/creatures/woodland/ladybird_full.png"
+peek = "visual/runtime/v1/creatures/woodland/ladybird_peek.png"
+
+[[visuals]]
+id = "creature.woodland.mouse"
+kind = "character"
+role = "woodland"
+
+[visuals.variants]
+asleep = "visual/runtime/v1/creatures/woodland/mouse_asleep.png"
+default = "visual/runtime/v1/creatures/woodland/mouse_full.png"
+peek = "visual/runtime/v1/creatures/woodland/mouse_peek.png"
+
+[[visuals]]
+id = "creature.woodland.snail"
+kind = "character"
+role = "woodland"
+
+[visuals.variants]
+asleep = "visual/runtime/v1/creatures/woodland/snail_asleep.png"
+default = "visual/runtime/v1/creatures/woodland/snail_full.png"
+peek = "visual/runtime/v1/creatures/woodland/snail_peek.png"
+
+[[visuals]]
+id = "creature.woodland.squirrel"
+kind = "character"
+role = "woodland"
+
+[visuals.variants]
+asleep = "visual/runtime/v1/creatures/woodland/squirrel_asleep.png"
+default = "visual/runtime/v1/creatures/woodland/squirrel_full.png"
+peek = "visual/runtime/v1/creatures/woodland/squirrel_peek.png"
+
+[[visuals]]
 id = "fern.cluster.01"
 kind = "prop"
 role = "foreground_framing"
 
 [visuals.variants]
 default = "visual/runtime/v1/forest_meadow/fern_cluster.png"
+
+[[visuals]]
+id = "fx.beat_ring"
+kind = "fx"
+role = "feedback_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/beat_ring.png"
+frame_2 = "visual/runtime/v1/fx/beat_ring_f2.png"
+
+[[visuals]]
+id = "fx.bloom"
+kind = "fx"
+role = "feedback_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/bloom.png"
+
+[[visuals]]
+id = "fx.bubble_pop"
+kind = "fx"
+role = "feedback_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/bubble_pop.png"
+frame_2 = "visual/runtime/v1/fx/bubble_pop_f2.png"
+frame_3 = "visual/runtime/v1/fx/bubble_pop_f3.png"
+
+[[visuals]]
+id = "fx.check_pop"
+kind = "fx"
+role = "feedback_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/check_pop.png"
+frame_2 = "visual/runtime/v1/fx/check_pop_f2.png"
+
+[[visuals]]
+id = "fx.confetti"
+kind = "fx"
+role = "feedback_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/confetti.png"
+frame_2 = "visual/runtime/v1/fx/confetti_f2.png"
+frame_3 = "visual/runtime/v1/fx/confetti_f3.png"
+
+[[visuals]]
+id = "fx.dust_puff"
+kind = "fx"
+role = "feedback_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/dust_puff.png"
+frame_2 = "visual/runtime/v1/fx/dust_puff_f2.png"
+frame_3 = "visual/runtime/v1/fx/dust_puff_f3.png"
+
+[[visuals]]
+id = "fx.firework"
+kind = "fx"
+role = "feedback_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/firework.png"
+frame_2 = "visual/runtime/v1/fx/firework_f2.png"
+frame_3 = "visual/runtime/v1/fx/firework_f3.png"
+
+[[visuals]]
+id = "fx.heart_pop"
+kind = "fx"
+role = "feedback_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/heart_pop.png"
+frame_2 = "visual/runtime/v1/fx/heart_pop_f2.png"
+frame_3 = "visual/runtime/v1/fx/heart_pop_f3.png"
+
+[[visuals]]
+id = "fx.leaf_drift"
+kind = "fx"
+role = "weather_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/leaf_drift.png"
+frame_2 = "visual/runtime/v1/fx/leaf_drift_f2.png"
+
+[[visuals]]
+id = "fx.note_burst"
+kind = "fx"
+role = "feedback_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/note_burst.png"
+
+[[visuals]]
+id = "fx.rain"
+kind = "fx"
+role = "weather_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/rain.png"
+frame_2 = "visual/runtime/v1/fx/rain_f2.png"
+
+[[visuals]]
+id = "fx.ripple"
+kind = "fx"
+role = "feedback_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/ripple.png"
+frame_2 = "visual/runtime/v1/fx/ripple_f2.png"
+frame_3 = "visual/runtime/v1/fx/ripple_f3.png"
+
+[[visuals]]
+id = "fx.shooting_star"
+kind = "fx"
+role = "feedback_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/shooting_star.png"
+
+[[visuals]]
+id = "fx.snow"
+kind = "fx"
+role = "weather_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/snow.png"
+frame_2 = "visual/runtime/v1/fx/snow_f2.png"
+
+[[visuals]]
+id = "fx.sparkle"
+kind = "fx"
+role = "feedback_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/sparkle.png"
+frame_2 = "visual/runtime/v1/fx/sparkle_f2.png"
+
+[[visuals]]
+id = "fx.splash"
+kind = "fx"
+role = "feedback_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/splash.png"
+frame_2 = "visual/runtime/v1/fx/splash_f2.png"
+frame_3 = "visual/runtime/v1/fx/splash_f3.png"
+
+[[visuals]]
+id = "fx.star_burst"
+kind = "fx"
+role = "feedback_fx"
+
+[visuals.variants]
+default = "visual/runtime/v1/fx/star_burst.png"
+frame_2 = "visual/runtime/v1/fx/star_burst_f2.png"
+frame_3 = "visual/runtime/v1/fx/star_burst_f3.png"
 
 [[visuals]]
 id = "ground.grass_edge.01"
@@ -182,12 +1157,68 @@ role = "far_background"
 default = "visual/runtime/v1/forest_meadow/distant_hills.png"
 
 [[visuals]]
+id = "icon.hud.arrow_down"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/arrow_down.png"
+
+[[visuals]]
+id = "icon.hud.arrow_left"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/arrow_left.png"
+
+[[visuals]]
+id = "icon.hud.arrow_right"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/arrow_right.png"
+
+[[visuals]]
+id = "icon.hud.arrow_up"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/arrow_up.png"
+
+[[visuals]]
+id = "icon.hud.basket"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/basket.png"
+
+[[visuals]]
 id = "icon.hud.bell"
 kind = "ui"
 role = "hud_glyph"
 
 [visuals.variants]
 default = "visual/runtime/v1/ui/controls/hud_bell.png"
+
+[[visuals]]
+id = "icon.hud.button_a"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/button_a.png"
+
+[[visuals]]
+id = "icon.hud.camera"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/camera.png"
 
 [[visuals]]
 id = "icon.hud.check"
@@ -206,12 +1237,148 @@ role = "hud_glyph"
 default = "visual/runtime/v1/ui/controls/hud_clear.png"
 
 [[visuals]]
+id = "icon.hud.drag_hint"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/drag_hint.png"
+
+[[visuals]]
+id = "icon.hud.ear"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/ear.png"
+
+[[visuals]]
+id = "icon.hud.eraser"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/eraser.png"
+
+[[visuals]]
+id = "icon.hud.go"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/go.png"
+
+[[visuals]]
+id = "icon.hud.heart"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/heart.png"
+
+[[visuals]]
+id = "icon.hud.hint"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/hint.png"
+
+[[visuals]]
+id = "icon.hud.import"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/import.png"
+
+[[visuals]]
+id = "icon.hud.key_space"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/key_space.png"
+
+[[visuals]]
 id = "icon.hud.listen"
 kind = "ui"
 role = "hud_glyph"
 
 [visuals.variants]
 default = "visual/runtime/v1/ui/controls/hud_listen.png"
+
+[[visuals]]
+id = "icon.hud.mailbox"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/mailbox.png"
+
+[[visuals]]
+id = "icon.hud.mic"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/mic.png"
+
+[[visuals]]
+id = "icon.hud.mic_off"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/mic_off.png"
+
+[[visuals]]
+id = "icon.hud.new"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/new.png"
+
+[[visuals]]
+id = "icon.hud.page"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/page.png"
+
+[[visuals]]
+id = "icon.hud.pause"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/pause.png"
+
+[[visuals]]
+id = "icon.hud.play"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/play.png"
+
+[[visuals]]
+id = "icon.hud.rec"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/rec.png"
+
+[[visuals]]
+id = "icon.hud.redo"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/redo.png"
 
 [[visuals]]
 id = "icon.hud.replay"
@@ -222,6 +1389,62 @@ role = "hud_glyph"
 default = "visual/runtime/v1/ui/controls/hud_replay.png"
 
 [[visuals]]
+id = "icon.hud.rotate"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/rotate.png"
+
+[[visuals]]
+id = "icon.hud.save"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/save.png"
+
+[[visuals]]
+id = "icon.hud.send"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/send.png"
+
+[[visuals]]
+id = "icon.hud.share"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/share.png"
+
+[[visuals]]
+id = "icon.hud.star"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/star.png"
+
+[[visuals]]
+id = "icon.hud.stop"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/stop.png"
+
+[[visuals]]
+id = "icon.hud.trash"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/trash.png"
+
+[[visuals]]
 id = "icon.hud.trophy"
 kind = "ui"
 role = "hud_glyph"
@@ -230,12 +1453,938 @@ role = "hud_glyph"
 default = "visual/runtime/v1/ui/controls/hud_trophy.png"
 
 [[visuals]]
+id = "icon.hud.undo"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/hud/undo.png"
+
+[[visuals]]
 id = "log.fallen.01"
 kind = "prop"
 role = "playfield"
 
 [visuals.variants]
 default = "visual/runtime/v1/forest_meadow/fallen_log.png"
+
+[[visuals]]
+id = "prop.blocks.arch"
+kind = "prop"
+role = "construction_block"
+
+[visuals.variants]
+coral = "visual/runtime/v1/props/blocks/arch_coral.png"
+default = "visual/runtime/v1/props/blocks/arch_wood.png"
+leaf = "visual/runtime/v1/props/blocks/arch_leaf.png"
+ocean = "visual/runtime/v1/props/blocks/arch_ocean.png"
+slot = "visual/runtime/v1/props/blocks/arch_slot.png"
+sunshine = "visual/runtime/v1/props/blocks/arch_sunshine.png"
+
+[[visuals]]
+id = "prop.blocks.cylinder"
+kind = "prop"
+role = "construction_block"
+
+[visuals.variants]
+coral = "visual/runtime/v1/props/blocks/cylinder_coral.png"
+default = "visual/runtime/v1/props/blocks/cylinder_wood.png"
+leaf = "visual/runtime/v1/props/blocks/cylinder_leaf.png"
+ocean = "visual/runtime/v1/props/blocks/cylinder_ocean.png"
+slot = "visual/runtime/v1/props/blocks/cylinder_slot.png"
+sunshine = "visual/runtime/v1/props/blocks/cylinder_sunshine.png"
+
+[[visuals]]
+id = "prop.blocks.half_circle"
+kind = "prop"
+role = "construction_block"
+
+[visuals.variants]
+coral = "visual/runtime/v1/props/blocks/half_circle_coral.png"
+default = "visual/runtime/v1/props/blocks/half_circle_wood.png"
+leaf = "visual/runtime/v1/props/blocks/half_circle_leaf.png"
+ocean = "visual/runtime/v1/props/blocks/half_circle_ocean.png"
+slot = "visual/runtime/v1/props/blocks/half_circle_slot.png"
+sunshine = "visual/runtime/v1/props/blocks/half_circle_sunshine.png"
+
+[[visuals]]
+id = "prop.blocks.rectangle"
+kind = "prop"
+role = "construction_block"
+
+[visuals.variants]
+coral = "visual/runtime/v1/props/blocks/rectangle_coral.png"
+default = "visual/runtime/v1/props/blocks/rectangle_wood.png"
+leaf = "visual/runtime/v1/props/blocks/rectangle_leaf.png"
+ocean = "visual/runtime/v1/props/blocks/rectangle_ocean.png"
+slot = "visual/runtime/v1/props/blocks/rectangle_slot.png"
+sunshine = "visual/runtime/v1/props/blocks/rectangle_sunshine.png"
+
+[[visuals]]
+id = "prop.blocks.square"
+kind = "prop"
+role = "construction_block"
+
+[visuals.variants]
+coral = "visual/runtime/v1/props/blocks/square_coral.png"
+default = "visual/runtime/v1/props/blocks/square_wood.png"
+leaf = "visual/runtime/v1/props/blocks/square_leaf.png"
+ocean = "visual/runtime/v1/props/blocks/square_ocean.png"
+slot = "visual/runtime/v1/props/blocks/square_slot.png"
+sunshine = "visual/runtime/v1/props/blocks/square_sunshine.png"
+
+[[visuals]]
+id = "prop.blocks.triangle"
+kind = "prop"
+role = "construction_block"
+
+[visuals.variants]
+coral = "visual/runtime/v1/props/blocks/triangle_coral.png"
+default = "visual/runtime/v1/props/blocks/triangle_wood.png"
+leaf = "visual/runtime/v1/props/blocks/triangle_leaf.png"
+ocean = "visual/runtime/v1/props/blocks/triangle_ocean.png"
+slot = "visual/runtime/v1/props/blocks/triangle_slot.png"
+sunshine = "visual/runtime/v1/props/blocks/triangle_sunshine.png"
+
+[[visuals]]
+id = "prop.everyday.ball"
+kind = "prop"
+role = "everyday_object"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/everyday/ball.png"
+
+[[visuals]]
+id = "prop.everyday.block"
+kind = "prop"
+role = "everyday_object"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/everyday/block.png"
+
+[[visuals]]
+id = "prop.everyday.book"
+kind = "prop"
+role = "everyday_object"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/everyday/book.png"
+
+[[visuals]]
+id = "prop.everyday.button"
+kind = "prop"
+role = "everyday_object"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/everyday/button.png"
+
+[[visuals]]
+id = "prop.everyday.coin"
+kind = "prop"
+role = "everyday_object"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/everyday/coin.png"
+
+[[visuals]]
+id = "prop.everyday.cup"
+kind = "prop"
+role = "everyday_object"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/everyday/cup.png"
+
+[[visuals]]
+id = "prop.everyday.duck"
+kind = "prop"
+role = "everyday_object"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/everyday/duck.png"
+
+[[visuals]]
+id = "prop.everyday.feather"
+kind = "prop"
+role = "everyday_object"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/everyday/feather.png"
+
+[[visuals]]
+id = "prop.everyday.key"
+kind = "prop"
+role = "everyday_object"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/everyday/key.png"
+
+[[visuals]]
+id = "prop.everyday.leaf"
+kind = "prop"
+role = "everyday_object"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/everyday/leaf.png"
+
+[[visuals]]
+id = "prop.everyday.pencil"
+kind = "prop"
+role = "everyday_object"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/everyday/pencil.png"
+
+[[visuals]]
+id = "prop.everyday.shell"
+kind = "prop"
+role = "everyday_object"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/everyday/shell.png"
+
+[[visuals]]
+id = "prop.everyday.sock"
+kind = "prop"
+role = "everyday_object"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/everyday/sock.png"
+
+[[visuals]]
+id = "prop.everyday.sponge"
+kind = "prop"
+role = "everyday_object"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/everyday/sponge.png"
+
+[[visuals]]
+id = "prop.everyday.spoon"
+kind = "prop"
+role = "everyday_object"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/everyday/spoon.png"
+
+[[visuals]]
+id = "prop.everyday.stone"
+kind = "prop"
+role = "everyday_object"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/everyday/stone.png"
+
+[[visuals]]
+id = "prop.food.apple"
+kind = "prop"
+role = "food"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/food/apple.png"
+
+[[visuals]]
+id = "prop.food.banana"
+kind = "prop"
+role = "food"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/food/banana.png"
+
+[[visuals]]
+id = "prop.food.blueberry"
+kind = "prop"
+role = "food"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/food/blueberry.png"
+
+[[visuals]]
+id = "prop.food.carrot"
+kind = "prop"
+role = "food"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/food/carrot.png"
+
+[[visuals]]
+id = "prop.food.cherry"
+kind = "prop"
+role = "food"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/food/cherry.png"
+
+[[visuals]]
+id = "prop.food.chocolate"
+kind = "prop"
+role = "food"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/food/chocolate.png"
+
+[[visuals]]
+id = "prop.food.cookie"
+kind = "prop"
+role = "food"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/food/cookie.png"
+
+[[visuals]]
+id = "prop.food.cupcake"
+kind = "prop"
+role = "food"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/food/cupcake.png"
+
+[[visuals]]
+id = "prop.food.fish"
+kind = "prop"
+role = "food"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/food/fish.png"
+
+[[visuals]]
+id = "prop.food.milk"
+kind = "prop"
+role = "food"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/food/milk.png"
+
+[[visuals]]
+id = "prop.food.seed"
+kind = "prop"
+role = "food"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/food/seed.png"
+
+[[visuals]]
+id = "prop.food.strawberry"
+kind = "prop"
+role = "food"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/food/strawberry.png"
+
+[[visuals]]
+id = "prop.instrument.bells"
+kind = "prop"
+role = "instrument"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/instrument/bells.png"
+
+[[visuals]]
+id = "prop.instrument.drum"
+kind = "prop"
+role = "instrument"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/instrument/drum.png"
+
+[[visuals]]
+id = "prop.instrument.keyboard"
+kind = "prop"
+role = "instrument"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/instrument/keyboard.png"
+
+[[visuals]]
+id = "prop.instrument.maracas"
+kind = "prop"
+role = "instrument"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/instrument/maracas.png"
+
+[[visuals]]
+id = "prop.instrument.tambourine"
+kind = "prop"
+role = "instrument"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/instrument/tambourine.png"
+
+[[visuals]]
+id = "prop.instrument.trumpet"
+kind = "prop"
+role = "instrument"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/instrument/trumpet.png"
+
+[[visuals]]
+id = "prop.nature.acorn"
+kind = "prop"
+role = "nature"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/nature/acorn.png"
+
+[[visuals]]
+id = "prop.nature.cloud"
+kind = "prop"
+role = "nature"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/nature/cloud.png"
+
+[[visuals]]
+id = "prop.nature.flower"
+kind = "prop"
+role = "nature"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/nature/flower.png"
+
+[[visuals]]
+id = "prop.nature.leaf_autumn"
+kind = "prop"
+role = "nature"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/nature/leaf_autumn.png"
+
+[[visuals]]
+id = "prop.nature.mushroom"
+kind = "prop"
+role = "nature"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/nature/mushroom.png"
+
+[[visuals]]
+id = "prop.nature.pinecone"
+kind = "prop"
+role = "nature"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/nature/pinecone.png"
+
+[[visuals]]
+id = "prop.nature.rainbow"
+kind = "prop"
+role = "nature"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/nature/rainbow.png"
+
+[[visuals]]
+id = "prop.nature.raindrop"
+kind = "prop"
+role = "nature"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/nature/raindrop.png"
+
+[[visuals]]
+id = "prop.nature.snowflake"
+kind = "prop"
+role = "nature"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/nature/snowflake.png"
+
+[[visuals]]
+id = "prop.nature.sun"
+kind = "prop"
+role = "nature"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/nature/sun.png"
+
+[[visuals]]
+id = "prop.shape.circle"
+kind = "prop"
+role = "shape_token"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/shape/circle.png"
+slot = "visual/runtime/v1/props/shape/circle_slot.png"
+
+[[visuals]]
+id = "prop.shape.diamond"
+kind = "prop"
+role = "shape_token"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/shape/diamond.png"
+slot = "visual/runtime/v1/props/shape/diamond_slot.png"
+
+[[visuals]]
+id = "prop.shape.heart"
+kind = "prop"
+role = "shape_token"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/shape/heart.png"
+slot = "visual/runtime/v1/props/shape/heart_slot.png"
+
+[[visuals]]
+id = "prop.shape.oval"
+kind = "prop"
+role = "shape_token"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/shape/oval.png"
+slot = "visual/runtime/v1/props/shape/oval_slot.png"
+
+[[visuals]]
+id = "prop.shape.rectangle"
+kind = "prop"
+role = "shape_token"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/shape/rectangle.png"
+slot = "visual/runtime/v1/props/shape/rectangle_slot.png"
+
+[[visuals]]
+id = "prop.shape.square"
+kind = "prop"
+role = "shape_token"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/shape/square.png"
+slot = "visual/runtime/v1/props/shape/square_slot.png"
+
+[[visuals]]
+id = "prop.shape.star"
+kind = "prop"
+role = "shape_token"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/shape/star.png"
+slot = "visual/runtime/v1/props/shape/star_slot.png"
+
+[[visuals]]
+id = "prop.shape.triangle"
+kind = "prop"
+role = "shape_token"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/shape/triangle.png"
+slot = "visual/runtime/v1/props/shape/triangle_slot.png"
+
+[[visuals]]
+id = "prop.vocab.bear"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/woodland/bear_full.png"
+
+[[visuals]]
+id = "prop.vocab.bee"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/bee.png"
+
+[[visuals]]
+id = "prop.vocab.bicycle"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/bicycle.png"
+
+[[visuals]]
+id = "prop.vocab.boat"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/boat.png"
+
+[[visuals]]
+id = "prop.vocab.bread"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/bread.png"
+
+[[visuals]]
+id = "prop.vocab.bus"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/bus.png"
+
+[[visuals]]
+id = "prop.vocab.butterfly"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/woodland/butterfly_full.png"
+
+[[visuals]]
+id = "prop.vocab.cake"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/cake.png"
+
+[[visuals]]
+id = "prop.vocab.car"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/car.png"
+
+[[visuals]]
+id = "prop.vocab.cat"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/pet/kitten_neutral.png"
+
+[[visuals]]
+id = "prop.vocab.chair"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/chair.png"
+
+[[visuals]]
+id = "prop.vocab.crab"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/crab_swim.png"
+
+[[visuals]]
+id = "prop.vocab.crown"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/crown.png"
+
+[[visuals]]
+id = "prop.vocab.dog"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/pet/puppy_neutral.png"
+
+[[visuals]]
+id = "prop.vocab.door"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/door.png"
+
+[[visuals]]
+id = "prop.vocab.egg"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/egg.png"
+
+[[visuals]]
+id = "prop.vocab.elephant"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/elephant.png"
+
+[[visuals]]
+id = "prop.vocab.frog"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/woodland/frog_full.png"
+
+[[visuals]]
+id = "prop.vocab.goat"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/goat.png"
+
+[[visuals]]
+id = "prop.vocab.grapes"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/grapes.png"
+
+[[visuals]]
+id = "prop.vocab.hand"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/hand.png"
+
+[[visuals]]
+id = "prop.vocab.hat"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/hat.png"
+
+[[visuals]]
+id = "prop.vocab.hen"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/hen.png"
+
+[[visuals]]
+id = "prop.vocab.house"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/house.png"
+
+[[visuals]]
+id = "prop.vocab.ice_cream"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/ice_cream.png"
+
+[[visuals]]
+id = "prop.vocab.kite"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/kite.png"
+
+[[visuals]]
+id = "prop.vocab.lamp"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/lamp.png"
+
+[[visuals]]
+id = "prop.vocab.lion"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/lion.png"
+
+[[visuals]]
+id = "prop.vocab.log"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/log.png"
+
+[[visuals]]
+id = "prop.vocab.map"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/map.png"
+
+[[visuals]]
+id = "prop.vocab.moon"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/moon.png"
+
+[[visuals]]
+id = "prop.vocab.mouse"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/woodland/mouse_full.png"
+
+[[visuals]]
+id = "prop.vocab.nest"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/nest.png"
+
+[[visuals]]
+id = "prop.vocab.octopus"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/octopus_swim.png"
+
+[[visuals]]
+id = "prop.vocab.pan"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/pan.png"
+
+[[visuals]]
+id = "prop.vocab.pear"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/pear.png"
+
+[[visuals]]
+id = "prop.vocab.penguin"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/penguin.png"
+
+[[visuals]]
+id = "prop.vocab.pig"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/pig.png"
+
+[[visuals]]
+id = "prop.vocab.pizza"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/pizza.png"
+
+[[visuals]]
+id = "prop.vocab.plane"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/plane.png"
+
+[[visuals]]
+id = "prop.vocab.rocket"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/rocket.png"
+
+[[visuals]]
+id = "prop.vocab.snail"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/woodland/snail_full.png"
+
+[[visuals]]
+id = "prop.vocab.snake"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/snake.png"
+
+[[visuals]]
+id = "prop.vocab.star"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/star.png"
+
+[[visuals]]
+id = "prop.vocab.tent"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/tent.png"
+
+[[visuals]]
+id = "prop.vocab.top"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/top.png"
+
+[[visuals]]
+id = "prop.vocab.train"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/train.png"
+
+[[visuals]]
+id = "prop.vocab.turtle"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/turtle_swim.png"
+
+[[visuals]]
+id = "prop.vocab.umbrella"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/umbrella.png"
+
+[[visuals]]
+id = "prop.vocab.vase"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/vase.png"
+
+[[visuals]]
+id = "prop.vocab.whale"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/creatures/marine/whale_swim.png"
+
+[[visuals]]
+id = "prop.vocab.yarn"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/yarn.png"
 
 [[visuals]]
 id = "rock.cluster.large.01"

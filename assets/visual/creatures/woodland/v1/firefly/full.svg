@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.woodland.firefly - full. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- plum light steps (firefly) -->
+    <linearGradient id="firefly_open_head" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#7C6A80"/>
+      <stop offset="1" stop-color="#4F3F55"/>
+    </linearGradient>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="firefly_open_tail" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FFF1B0"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+    <radialGradient id="firefly_open_glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFE08A" stop-opacity="0.85"/><stop offset="1" stop-color="#FFE08A" stop-opacity="0"/></radialGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="229" rx="40" ry="6.7" fill="#6A5147" opacity="0.1"/>
+  </g>
+  <g id="character">
+    <g id="glow">
+      <circle cx="128" cy="178" r="50" fill="url(#firefly_open_glow)"/>
+    </g>
+    <g id="wings">
+      <path d="M114 120 C84 92 46 96 42 120 C40 142 78 152 112 140 Z" fill="#E6F4FB" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M142 120 C172 92 210 96 214 120 C216 142 178 152 144 140 Z" fill="#E6F4FB" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M100 124 C84 114 66 114 58 122" fill="none" stroke="#B7D7EA" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <ellipse cx="128" cy="178" rx="30" ry="30" fill="url(#firefly_open_tail)" stroke="#4B372F" stroke-width="3.5"/>
+      <path d="M100 168 Q128 176 156 168" fill="none" stroke="#E3A21A" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="128" cy="142" rx="26" ry="16" fill="#6B5A70" stroke="#4B372F" stroke-width="3"/>
+    </g>
+    <g id="head">
+      <path d="M112 66 C104 48 92 40 82 44" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M144 66 C152 48 164 40 174 44" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="82" cy="44" r="6" fill="#4F5F80" stroke="#4B372F" stroke-width="2.5"/>
+      <circle cx="174" cy="44" r="6" fill="#4F5F80" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="128" cy="98" rx="44" ry="38" fill="url(#firefly_open_head)" stroke="#4B372F" stroke-width="3.5"/>
+      <path d="M97.3 83 C96 80.6 98.7 76.4 103.5 73.7 C108.3 70.9 113.3 70.6 114.7 73 C116 75.4 113.3 79.6 108.5 82.3 C103.7 85.1 98.7 85.4 97.3 83 Z" fill="#FFFFFF" opacity="0.45"/>
+      <ellipse cx="110" cy="96" rx="12" ry="13" fill="#FFFFFF" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="111" cy="98" rx="7" ry="8.5" fill="#342C35"/>
+      <ellipse cx="113" cy="94" rx="2.4" ry="2.6" fill="#FFFFFF"/>
+      <ellipse cx="146" cy="96" rx="12" ry="13" fill="#FFFFFF" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="147" cy="98" rx="7" ry="8.5" fill="#342C35"/>
+      <ellipse cx="149" cy="94" rx="2.4" ry="2.6" fill="#FFFFFF"/>
+      <ellipse cx="96" cy="116" rx="7" ry="4" fill="#FDA4AF" opacity="0.6"/>
+      <ellipse cx="160" cy="116" rx="7" ry="4" fill="#FDA4AF" opacity="0.6"/>
+      <path d="M120 118 Q128 126 136 118" fill="none" stroke="#FFD9CF" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creature.marine.seahorse - default. Non-cast creature, flat Greia vector. -->
+  <defs>
+    <!-- sunshine light -> sunshine/orange -->
+    <linearGradient id="seahorse_default_body" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FFE29A"/>
+      <stop offset="1" stop-color="#F6B13C"/>
+    </linearGradient>
+  </defs>
+  <g id="character">
+    <g id="tail">
+      <path d="M134 190 C132 212 114 226 98 220 C84 214 88 196 102 196 C112 196 116 206 108 212" fill="none" stroke="#4B372F" stroke-width="23" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M134 190 C132 212 114 226 98 220 C84 214 88 196 102 196 C112 196 116 206 108 212" fill="none" stroke="#F8C35C" stroke-width="16.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="fin">
+      <path d="M116 124 C96 118 84 134 90 152 C100 154 112 148 120 140 Z" fill="#FFF1C7" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M100 132 L114 134 M96 142 L114 140" fill="none" stroke="#C98A2B" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <path d="M142 52 L146 34 L156 46 L164 32 L170 48 Z" fill="url(#seahorse_default_body)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M134 60 C146 42 178 40 192 60 C195 65 197 70 197 74 L224 76 C234 77 234 93 224 94 L195 96 C188 104 178 112 176 124 C174 150 178 172 160 190 C148 202 128 200 120 190 C106 172 116 150 116 130 C116 110 104 96 108 80 C112 70 122 64 134 60 Z" fill="url(#seahorse_default_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M129.6 76 C128.2 73.6 131.8 69 137.5 65.7 C143.2 62.4 149 61.6 150.4 64 C151.8 66.4 148.2 71 142.5 74.3 C136.8 77.6 131 78.4 129.6 76 Z" fill="#FFFFFF" opacity="0.7"/>
+      <path d="M164 130 Q174 132 176 126 M160 146 Q172 150 176 144 M156 162 Q166 168 172 162" fill="none" stroke="#D99A35" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="face">
+      <ellipse cx="172" cy="70" rx="8" ry="10" fill="#342C35"/>
+      <ellipse cx="174.4" cy="66.5" rx="2.9" ry="3.2" fill="#FFFFFF"/>
+      <circle cx="169.6" cy="74.0" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+      <ellipse cx="176" cy="90" rx="6.5" ry="4" fill="#FDA4AF" opacity="0.55"/>
+      <circle cx="227" cy="85" r="3" fill="#8A3B2E"/>
+    </g>
+  </g>
+</svg>

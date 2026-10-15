@@ -112,6 +112,55 @@ open(output, "wb").write(data)
         self.assertEqual(output.read_bytes(), b"previous-good-output")
         self.assertFalse(any(output.parent.glob(".*.tmp-*")))
 
+    def _spec_with_second_visual(self, assets: Path, source_spec: Path, **second: str) -> None:
+        other = assets / "visual" / "source" / "other.svg"
+        other.write_text("<svg/>", encoding="utf-8")
+        entry = {
+            "source": "visual/source/panel.svg",
+            "output": "visual/runtime/panel.png",
+            "width": "64",
+            "height": "32",
+        }
+        entry.update(second)
+        with source_spec.open("a", encoding="utf-8") as handle:
+            handle.write(
+                f"""
+[[visuals]]
+id = "ui.panel.alias"
+kind = "ui"
+role = "panel"
+
+[[visuals.variants]]
+name = "default"
+source = "{entry['source']}"
+output = "{entry['output']}"
+width = {entry['width']}
+height = {entry['height']}
+"""
+            )
+
+    def test_alias_may_share_an_identical_rendition(self) -> None:
+        temporary, assets, source_spec, _visuals = self.make_spec()
+        self.addCleanup(temporary.cleanup)
+        self._spec_with_second_visual(assets, source_spec)
+
+        _metadata, visuals = builder.load_source_spec(source_spec, assets)
+        rasterizer = self.make_rasterizer(Path(temporary.name))
+        builder.render_all(visuals, rasterizer)
+
+        self.assertEqual([v.asset_id for v in visuals], ["ui.panel", "ui.panel.alias"])
+        self.assertTrue((assets / "visual" / "runtime" / "panel.png").is_file())
+
+    def test_conflicting_shared_output_is_rejected(self) -> None:
+        temporary, assets, source_spec, _visuals = self.make_spec()
+        self.addCleanup(temporary.cleanup)
+        for override in ({"source": "visual/source/other.svg"}, {"width": "65"}):
+            self._spec_with_second_visual(assets, source_spec, **override)
+            with self.assertRaisesRegex(builder.VisualRenditionError, "duplicate visual output"):
+                builder.load_source_spec(source_spec, assets)
+            text = source_spec.read_text(encoding="utf-8")
+            source_spec.write_text(text[: text.index("[[visuals]]\nid = \"ui.panel.alias\"")], encoding="utf-8")
+
     def test_runtime_catalog_is_atomic_and_contains_source_digest(self) -> None:
         temporary, assets, source_spec, visuals = self.make_spec()
         self.addCleanup(temporary.cleanup)

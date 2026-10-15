@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.bread — round loaf of bread. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange light -> orange -->
+    <linearGradient id="vocab_bread_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C792"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="96" ry="16.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="bread">
+    <path d="M26 186 C22 128 70 92 128 92 C186 92 234 128 230 186 C228 214 208 228 182 228 L74 228 C48 228 28 214 26 186 Z" fill="url(#vocab_bread_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M74 112 C82 132 82 150 76 168 M128 100 C136 122 136 144 130 164 M182 112 C190 132 190 150 184 168" fill="none" stroke="#FBE1C3" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M48 204 C80 214 176 214 208 204" fill="none" stroke="#D18636" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

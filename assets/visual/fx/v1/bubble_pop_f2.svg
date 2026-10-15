@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- fx.bubble_pop frame 2: droplets spread -->
+  <g id="fx" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M110.2 83.1 L117.6 86.2" fill="none" stroke="#4B372F" stroke-width="6"/>
+    <path d="M110.2 83.1 L117.6 86.2" fill="none" stroke="#89B8E6" stroke-width="2.8"/>
+    <path d="M83.1 110.2 L86.2 117.6" fill="none" stroke="#4B372F" stroke-width="6"/>
+    <path d="M83.1 110.2 L86.2 117.6" fill="none" stroke="#89B8E6" stroke-width="2.8"/>
+    <path d="M44.9 110.2 L41.8 117.6" fill="none" stroke="#4B372F" stroke-width="6"/>
+    <path d="M44.9 110.2 L41.8 117.6" fill="none" stroke="#89B8E6" stroke-width="2.8"/>
+    <path d="M17.8 83.1 L10.4 86.2" fill="none" stroke="#4B372F" stroke-width="6"/>
+    <path d="M17.8 83.1 L10.4 86.2" fill="none" stroke="#89B8E6" stroke-width="2.8"/>
+    <path d="M17.8 44.9 L10.4 41.8" fill="none" stroke="#4B372F" stroke-width="6"/>
+    <path d="M17.8 44.9 L10.4 41.8" fill="none" stroke="#89B8E6" stroke-width="2.8"/>
+    <path d="M44.9 17.8 L41.8 10.4" fill="none" stroke="#4B372F" stroke-width="6"/>
+    <path d="M44.9 17.8 L41.8 10.4" fill="none" stroke="#89B8E6" stroke-width="2.8"/>
+    <path d="M83.1 17.8 L86.2 10.4" fill="none" stroke="#4B372F" stroke-width="6"/>
+    <path d="M83.1 17.8 L86.2 10.4" fill="none" stroke="#89B8E6" stroke-width="2.8"/>
+    <path d="M110.2 44.9 L117.6 41.8" fill="none" stroke="#4B372F" stroke-width="6"/>
+    <path d="M110.2 44.9 L117.6 41.8" fill="none" stroke="#89B8E6" stroke-width="2.8"/>
+    <circle cx="83" cy="31.1" r="6" fill="#CFEAF7" stroke="#4B372F" stroke-width="2.2"/>
+    <circle cx="102" cy="64" r="6" fill="#CFEAF7" stroke="#4B372F" stroke-width="2.2"/>
+    <circle cx="83" cy="96.9" r="6" fill="#CFEAF7" stroke="#4B372F" stroke-width="2.2"/>
+    <circle cx="45" cy="96.9" r="6" fill="#CFEAF7" stroke="#4B372F" stroke-width="2.2"/>
+    <circle cx="26" cy="64" r="6" fill="#CFEAF7" stroke="#4B372F" stroke-width="2.2"/>
+    <circle cx="45" cy="31.1" r="6" fill="#CFEAF7" stroke="#4B372F" stroke-width="2.2"/>
+  </g>
+</svg>

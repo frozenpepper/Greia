@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.lamp — glowing table lamp. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="vocab_lamp_shade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE09A"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="62" ry="10.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="lamp">
+    <rect x="118" y="126" width="20" height="86" rx="6" fill="#B45309" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="76" y="204" width="104" height="28" rx="12" fill="#F46F61" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M84 40 L172 40 L204 132 L52 132 Z" fill="url(#vocab_lamp_shade)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M72 116 L92 54" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+  </g>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.bicycle — red bicycle. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="106" ry="17.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="bicycle">
+    <circle cx="60" cy="186" r="44" fill="none" stroke="#4B372F" stroke-width="11"/>
+    <circle cx="60" cy="186" r="36" fill="none" stroke="#EEDDBA" stroke-width="3"/>
+    <circle cx="60" cy="186" r="7" fill="#EEDDBA" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="196" cy="186" r="44" fill="none" stroke="#4B372F" stroke-width="11"/>
+    <circle cx="196" cy="186" r="36" fill="none" stroke="#EEDDBA" stroke-width="3"/>
+    <circle cx="196" cy="186" r="7" fill="#EEDDBA" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M60 186 L118 186 L96 116 L172 116 L196 186 M118 186 L172 116 M60 186 L96 116" fill="none" stroke="#4B372F" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M60 186 L118 186 L96 116 L172 116 L196 186 M118 186 L172 116 M60 186 L96 116" fill="none" stroke="#F46F61" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M90 106 L96 116" fill="none" stroke="#4B372F" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M90 106 L96 116" fill="none" stroke="#4B372F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M72 100 C76 92 108 92 112 100 C108 108 76 108 72 100 Z" fill="#30343A" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M172 116 L166 84 L188 78" fill="none" stroke="#4B372F" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M172 116 L166 84 L188 78" fill="none" stroke="#838589" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="118" cy="186" r="12" fill="#FBBF24" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+  </g>
+</svg>
