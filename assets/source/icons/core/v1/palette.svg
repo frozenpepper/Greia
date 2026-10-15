@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia core icon: paint palette (Create / drawing). Flat Greia vector. -->
+  <defs>
+    <!-- orange light step -> orange light (mix 40% white) -->
+    <linearGradient id="palette_wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBE1BE"/>
+      <stop offset="1" stop-color="#F8C288"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="231" rx="74" ry="11.4" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="palette">
+    <path d="M34 136 C26 84 80 46 138 48 C196 50 236 88 232 132 C230 156 210 162 192 154 C176 147 160 156 163 174 C166 196 150 214 118 214 C70 214 40 178 34 136 Z M197 110 A14 12 0 1 0 169 110 A14 12 0 1 0 197 110 Z" fill="url(#palette_wood)" fill-rule="evenodd" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M58 104 C70 82 92 70 116 66" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.7"/>
+  </g>
+  <g id="paint" stroke="#4B372F" stroke-width="4">
+    <circle cx="72" cy="136" r="17" fill="#F46F61"/>
+    <circle cx="96" cy="96" r="17" fill="#FFC234"/>
+    <circle cx="142" cy="80" r="17" fill="#4A91D8"/>
+    <circle cx="100" cy="176" r="17" fill="#59B86A"/>
+  </g>
+  <g id="brush" transform="rotate(40 168 140)">
+    <rect x="158" y="40" width="20" height="96" rx="10" fill="#9464C9" stroke="#4B372F" stroke-width="4.5"/>
+    <rect x="155" y="128" width="26" height="22" rx="5" fill="#FFC234" stroke="#4B372F" stroke-width="4.5"/>
+    <path d="M156 148 C150 170 158 194 168 206 C178 194 186 170 180 148 Z" fill="#F46F61" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+  </g>
+</svg>

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia core icon: beamed notes with a star (music). Flat Greia vector. -->
+  <defs>
+    <!-- grape light -> grape -->
+    <linearGradient id="music_note" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#BFA2DF"/>
+      <stop offset="1" stop-color="#9464C9"/>
+    </linearGradient>
+  </defs>
+  <g id="notes_outline" fill="#4B372F">
+    <ellipse cx="72" cy="184" rx="30" ry="22" transform="rotate(-20 72 184)" stroke="#4B372F" stroke-width="10" stroke-linejoin="round"/>
+    <ellipse cx="160" cy="162" rx="30" ry="22" transform="rotate(-20 160 162)" stroke="#4B372F" stroke-width="10" stroke-linejoin="round"/>
+    <rect x="88" y="74" width="14" height="114" rx="4" stroke="#4B372F" stroke-width="10" stroke-linejoin="round"/>
+    <rect x="176" y="52" width="14" height="114" rx="4" stroke="#4B372F" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M88 74 L190 48 L190 78 L88 104 Z" stroke="#4B372F" stroke-width="10" stroke-linejoin="round"/>
+  </g>
+  <g id="notes" fill="url(#music_note)">
+    <ellipse cx="72" cy="184" rx="30" ry="22" transform="rotate(-20 72 184)"/>
+    <ellipse cx="160" cy="162" rx="30" ry="22" transform="rotate(-20 160 162)"/>
+    <rect x="88" y="74" width="14" height="114" rx="4"/>
+    <rect x="176" y="52" width="14" height="114" rx="4"/>
+    <path d="M88 74 L190 48 L190 78 L88 104 Z"/>
+  </g>
+  <g id="highlight" fill="#FFFFFF" opacity="0.75">
+    <ellipse cx="60" cy="176" rx="9" ry="5" transform="rotate(-20 60 176)"/>
+    <ellipse cx="148" cy="154" rx="9" ry="5" transform="rotate(-20 148 154)"/>
+  </g>
+  <g id="star">
+    <path d="M211.9 118.5 L218.2 140.2 L239.7 147.3 L221 160 L220.9 182.6 L203 168.7 L181.5 175.6 L189.2 154.4 L176 136 L198.5 136.7 Z" fill="#FFC234" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+  </g>
+  <g id="sparkle">
+    <path d="M44 40 Q46 54 60 57 Q46 60 44 74 Q42 60 28 57 Q42 54 44 40 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+  </g>
+</svg>

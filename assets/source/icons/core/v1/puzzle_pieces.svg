@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia core icon: two jigsaw pieces (Play). Flat Greia vector. -->
+  <defs>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="puzzle_a" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#92BDE8"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="puzzle_b" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDA85"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="96" cy="228" rx="72" ry="11.1" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="piece_ocean">
+    <path d="M30 104 L68 104 C72 104 72 98 69 94 C63 84 70 75 80 75 C90 75 97 84 91 94 C88 98 88 104 92 104 L130 104 L130 142 C130 146 136 146 140 143 C150 137 159 144 159 154 C159 164 150 171 140 165 C136 162 130 162 130 166 L130 204 L30 204 L30 104 Z" fill="url(#puzzle_a)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="56" cy="128" rx="9" ry="6" fill="#FFFFFF" opacity="0.75"/>
+  </g>
+  <g id="piece_sunshine">
+    <path d="M136.7 46.7 L227.3 62.7 L211.3 153.3 L176.9 147.2 C173.3 146.6 174.2 141.1 177.6 138 C184.6 129.9 179.7 120.6 170.6 119 C161.6 117.4 153.8 124.5 157.6 134.5 C159.7 138.6 158.8 144 155.1 143.4 L120.7 137.3 L126.8 102.9 C127.4 99.3 132.9 100.2 136 103.6 C144.1 110.6 153.4 105.7 155 96.6 C156.6 87.6 149.5 79.8 139.5 83.6 C135.4 85.7 130 84.8 130.6 81.1 L136.7 46.7 Z" fill="url(#puzzle_b)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="156" cy="76" rx="9" ry="6" fill="#FFFFFF" opacity="0.8" transform="rotate(10 156 76)"/>
+  </g>
+</svg>

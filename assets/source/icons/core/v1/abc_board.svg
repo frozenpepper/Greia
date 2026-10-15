@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia core icon: chalkboard with ABC (words). Letters are the pedagogical object, drawn as paths. -->
+  <g id="shadow">
+    <ellipse cx="128" cy="229" rx="88" ry="13.5" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="legs" stroke-linecap="round">
+    <path d="M70 170 L54 222" stroke="#4B372F" stroke-width="18"/>
+    <path d="M70 170 L54 222" stroke="#CE8436" stroke-width="9"/>
+    <path d="M186 170 L202 222" stroke="#4B372F" stroke-width="18"/>
+    <path d="M186 170 L202 222" stroke="#CE8436" stroke-width="9"/>
+  </g>
+  <g id="board">
+    <rect x="20" y="40" width="216" height="146" rx="18" fill="#F39A38" stroke="#4B372F" stroke-width="5"/>
+    <rect x="36" y="56" width="184" height="114" rx="8" fill="#51714A" stroke="#4B372F" stroke-width="4"/>
+    <path d="M48 70 L92 70" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.3"/>
+  </g>
+  <g id="letters" fill="none" stroke="#FFFBEB" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M58 150 L80 80 L102 150 M67 126 L93 126"/>
+    <path d="M120 80 L120 150 M120 80 C152 78 152 113 120 114 M120 114 C158 113 158 152 120 150"/>
+    <path d="M200 90 C188 76 160 80 160 115 C160 150 188 154 202 140"/>
+  </g>
+</svg>

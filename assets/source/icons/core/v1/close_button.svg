@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia core icon: round close button. Flat Greia vector. -->
+  <defs>
+    <!-- coral light -> coral -->
+    <linearGradient id="close_disc" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="button">
+    <circle cx="128" cy="128" r="106" fill="url(#close_disc)" stroke="#4B372F" stroke-width="6"/>
+    <ellipse cx="80" cy="70" rx="24" ry="12" fill="#FFFFFF" opacity="0.5" transform="rotate(-35 80 70)"/>
+  </g>
+  <g id="cross" fill="none" stroke-linecap="round">
+    <path d="M88 88 L168 168 M168 88 L88 168" stroke="#4B372F" stroke-width="38"/>
+    <path d="M88 88 L168 168 M168 88 L88 168" stroke="#FFFBEB" stroke-width="26"/>
+  </g>
+</svg>

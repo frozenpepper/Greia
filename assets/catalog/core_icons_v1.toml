@@ -1,5 +1,34 @@
+# Greia core semantic icons v1.
+#
+# IDs, file names and 64/128/256 RGBA PNG sizes are a stable contract:
+# saved profiles store avatar IDs and Collections store icon IDs.
+#
+# Two provenances coexist while the 2026-10-15 redraw is in progress
+# (docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md, P0 #4):
+#
+# 1. Entries with `source_svg` are flat Greia vector icons authored under
+#    docs/design/GREIA_SVG_AUTHORING_RULES.md (core semantic icon: 256 viewBox,
+#    transparent, no tile). The SVG master lives at assets/<source_svg>
+#    (assets/source/** is excluded from target images). The avatar IDs
+#    unicorn/robot/owl/green_monster are the canonical cast Lilli/Dani/Leo/Momo
+#    (happy state copied verbatim from assets/visual/characters/canonical/v0.1).
+#    Rebuild the PNGs from the repository root with exactly:
+#
+#      for f in assets/source/icons/core/v1/*.svg; do n=$(basename "$f" .svg); \
+#        for s in 64 128 256; do \
+#          rsvg-convert -w $s -h $s "$f" -o "assets/icons/core/v1/$s/$n.png"; \
+#        done; done
+#
+#    (rsvg-convert >= 2.40: Debian librsvg2-bin; the 2026-10-15 renders used
+#    2.40.20.) Review at 256/64/48 on cream and navy per rules section 12/13.
+#
+# 2. Entries without `source_svg` are still extracted from the archival glossy
+#    sheet (source_sha256 below, `make assets` / tools/extract_core_icons.py).
+#    WARNING: `make assets` rewrites this whole catalogue and every PNG from that
+#    sheet and would revert the redrawn icons; do not run it until the
+#    extraction path is retired.
 catalog_id = "greia.core-icons.v1"
-catalog_version = "1.0.0"
+catalog_version = "1.1.0"
 source_sha256 = "026f09eddb72a0befb43beb1bc2ad912009c923feedcba86dc82e0302900b3c8"
 source_note = "Extracted from the first approved project-generated icon sheet; later regenerated sheets are non-canonical experiments."
 
@@ -10,6 +39,7 @@ alt_key = "asset.book"
 path_64 = "icons/core/v1/64/book.png"
 path_128 = "icons/core/v1/128/book.png"
 path_256 = "icons/core/v1/256/book.png"
+source_svg = "source/icons/core/v1/book.svg"
 
 [[icons]]
 id = "robot"
@@ -18,6 +48,7 @@ alt_key = "asset.robot"
 path_64 = "icons/core/v1/64/robot.png"
 path_128 = "icons/core/v1/128/robot.png"
 path_256 = "icons/core/v1/256/robot.png"
+source_svg = "source/icons/core/v1/robot.svg"
 
 [[icons]]
 id = "unicorn"
@@ -26,6 +57,7 @@ alt_key = "asset.unicorn"
 path_64 = "icons/core/v1/64/unicorn.png"
 path_128 = "icons/core/v1/128/unicorn.png"
 path_256 = "icons/core/v1/256/unicorn.png"
+source_svg = "source/icons/core/v1/unicorn.svg"
 
 [[icons]]
 id = "globe"
@@ -42,6 +74,7 @@ alt_key = "asset.backpack"
 path_64 = "icons/core/v1/64/backpack.png"
 path_128 = "icons/core/v1/128/backpack.png"
 path_256 = "icons/core/v1/256/backpack.png"
+source_svg = "source/icons/core/v1/backpack.svg"
 
 [[icons]]
 id = "palette"
@@ -50,6 +83,7 @@ alt_key = "asset.palette"
 path_64 = "icons/core/v1/64/palette.png"
 path_128 = "icons/core/v1/128/palette.png"
 path_256 = "icons/core/v1/256/palette.png"
+source_svg = "source/icons/core/v1/palette.svg"
 
 [[icons]]
 id = "abc_board"
@@ -58,6 +92,7 @@ alt_key = "asset.abc_board"
 path_64 = "icons/core/v1/64/abc_board.png"
 path_128 = "icons/core/v1/128/abc_board.png"
 path_256 = "icons/core/v1/256/abc_board.png"
+source_svg = "source/icons/core/v1/abc_board.svg"
 
 [[icons]]
 id = "music_star"
@@ -66,6 +101,7 @@ alt_key = "asset.music_star"
 path_64 = "icons/core/v1/64/music_star.png"
 path_128 = "icons/core/v1/128/music_star.png"
 path_256 = "icons/core/v1/256/music_star.png"
+source_svg = "source/icons/core/v1/music_star.svg"
 
 [[icons]]
 id = "potions"
@@ -90,6 +126,7 @@ alt_key = "asset.coins"
 path_64 = "icons/core/v1/64/coins.png"
 path_128 = "icons/core/v1/128/coins.png"
 path_256 = "icons/core/v1/256/coins.png"
+source_svg = "source/icons/core/v1/coins.svg"
 
 [[icons]]
 id = "star_trophy"
@@ -114,6 +151,7 @@ alt_key = "asset.magnifier"
 path_64 = "icons/core/v1/64/magnifier.png"
 path_128 = "icons/core/v1/128/magnifier.png"
 path_256 = "icons/core/v1/256/magnifier.png"
+source_svg = "source/icons/core/v1/magnifier.svg"
 
 [[icons]]
 id = "puzzle_pieces"
@@ -122,6 +160,7 @@ alt_key = "asset.puzzle_pieces"
 path_64 = "icons/core/v1/64/puzzle_pieces.png"
 path_128 = "icons/core/v1/128/puzzle_pieces.png"
 path_256 = "icons/core/v1/256/puzzle_pieces.png"
+source_svg = "source/icons/core/v1/puzzle_pieces.svg"
 
 [[icons]]
 id = "car"
@@ -138,6 +177,7 @@ alt_key = "asset.garden"
 path_64 = "icons/core/v1/64/garden.png"
 path_128 = "icons/core/v1/128/garden.png"
 path_256 = "icons/core/v1/256/garden.png"
+source_svg = "source/icons/core/v1/garden.svg"
 
 [[icons]]
 id = "coin_bag"
@@ -154,6 +194,7 @@ alt_key = "asset.owl"
 path_64 = "icons/core/v1/64/owl.png"
 path_128 = "icons/core/v1/128/owl.png"
 path_256 = "icons/core/v1/256/owl.png"
+source_svg = "source/icons/core/v1/owl.svg"
 
 [[icons]]
 id = "dinosaur"
@@ -178,6 +219,7 @@ alt_key = "asset.rainbow"
 path_64 = "icons/core/v1/64/rainbow.png"
 path_128 = "icons/core/v1/128/rainbow.png"
 path_256 = "icons/core/v1/256/rainbow.png"
+source_svg = "source/icons/core/v1/rainbow.svg"
 
 [[icons]]
 id = "abc_blocks"
@@ -194,6 +236,7 @@ alt_key = "asset.block_puzzle"
 path_64 = "icons/core/v1/64/block_puzzle.png"
 path_128 = "icons/core/v1/128/block_puzzle.png"
 path_256 = "icons/core/v1/256/block_puzzle.png"
+source_svg = "source/icons/core/v1/block_puzzle.svg"
 
 [[icons]]
 id = "medal"
@@ -226,6 +269,7 @@ alt_key = "asset.green_monster"
 path_64 = "icons/core/v1/64/green_monster.png"
 path_128 = "icons/core/v1/128/green_monster.png"
 path_256 = "icons/core/v1/256/green_monster.png"
+source_svg = "source/icons/core/v1/green_monster.svg"
 
 [[icons]]
 id = "heart"
@@ -234,6 +278,7 @@ alt_key = "asset.heart"
 path_64 = "icons/core/v1/64/heart.png"
 path_128 = "icons/core/v1/128/heart.png"
 path_256 = "icons/core/v1/256/heart.png"
+source_svg = "source/icons/core/v1/heart.svg"
 
 [[icons]]
 id = "notebook"
@@ -242,6 +287,7 @@ alt_key = "asset.notebook"
 path_64 = "icons/core/v1/64/notebook.png"
 path_128 = "icons/core/v1/128/notebook.png"
 path_256 = "icons/core/v1/256/notebook.png"
+source_svg = "source/icons/core/v1/notebook.svg"
 
 [[icons]]
 id = "train_blocks"
@@ -250,6 +296,7 @@ alt_key = "asset.train_blocks"
 path_64 = "icons/core/v1/64/train_blocks.png"
 path_128 = "icons/core/v1/128/train_blocks.png"
 path_256 = "icons/core/v1/256/train_blocks.png"
+source_svg = "source/icons/core/v1/train_blocks.svg"
 
 [[icons]]
 id = "pouch"
@@ -266,6 +313,7 @@ alt_key = "asset.lightning"
 path_64 = "icons/core/v1/64/lightning.png"
 path_128 = "icons/core/v1/128/lightning.png"
 path_256 = "icons/core/v1/256/lightning.png"
+source_svg = "source/icons/core/v1/lightning.svg"
 
 [[icons]]
 id = "small_heart"
@@ -282,6 +330,7 @@ alt_key = "asset.yellow_star"
 path_64 = "icons/core/v1/64/yellow_star.png"
 path_128 = "icons/core/v1/128/yellow_star.png"
 path_256 = "icons/core/v1/256/yellow_star.png"
+source_svg = "source/icons/core/v1/yellow_star.svg"
 
 [[icons]]
 id = "pink_star"
@@ -298,6 +347,7 @@ alt_key = "asset.check"
 path_64 = "icons/core/v1/64/check.png"
 path_128 = "icons/core/v1/128/check.png"
 path_256 = "icons/core/v1/256/check.png"
+source_svg = "source/icons/core/v1/check.svg"
 
 [[icons]]
 id = "x_mark"
@@ -306,6 +356,7 @@ alt_key = "asset.x_mark"
 path_64 = "icons/core/v1/64/x_mark.png"
 path_128 = "icons/core/v1/128/x_mark.png"
 path_256 = "icons/core/v1/256/x_mark.png"
+source_svg = "source/icons/core/v1/x_mark.svg"
 
 [[icons]]
 id = "close_button"
@@ -314,3 +365,4 @@ alt_key = "asset.close_button"
 path_64 = "icons/core/v1/64/close_button.png"
 path_128 = "icons/core/v1/128/close_button.png"
 path_256 = "icons/core/v1/256/close_button.png"
+source_svg = "source/icons/core/v1/close_button.svg"

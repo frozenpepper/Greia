@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia core icon: magnifying glass (Explore). Flat Greia vector. -->
+  <defs>
+    <!-- sky light -> ocean light -->
+    <linearGradient id="magnifier_glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E6F4FB"/>
+      <stop offset="1" stop-color="#92BDE8"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="140" cy="230" rx="74" ry="11.4" fill="#6A5147" opacity="0.12"/>
+  </g>
+  <g id="handle" stroke-linecap="round">
+    <path d="M160 160 L212 212" stroke="#4B372F" stroke-width="40"/>
+    <path d="M160 160 L212 212" stroke="#F46F61" stroke-width="30"/>
+    <path d="M178 168 L206 196" stroke="#F8A9A0" stroke-width="7"/>
+    <path d="M150 150 L166 166" stroke="#4B372F" stroke-width="44" stroke-linecap="butt"/>
+    <path d="M151 151 L165 165" stroke="#FFC234" stroke-width="34" stroke-linecap="butt"/>
+  </g>
+  <g id="lens">
+    <circle cx="104" cy="104" r="76" fill="#4B372F"/>
+    <circle cx="104" cy="104" r="71" fill="#FFC234"/>
+    <circle cx="104" cy="104" r="55" fill="url(#magnifier_glass)" stroke="#4B372F" stroke-width="4.5"/>
+    <path d="M70 92 C74 74 88 62 106 60" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" opacity="0.9"/>
+  </g>
+  <g id="leaf_seen">
+    <path d="M90 136 C88 112 104 96 132 92 C134 118 118 136 90 136 Z" fill="#59B86A" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M94 132 C104 120 114 110 126 100" fill="none" stroke="#9BD4A6" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

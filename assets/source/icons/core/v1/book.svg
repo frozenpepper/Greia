@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia core icon: open storybook (Learn / stories). Flat Greia vector. -->
+  <defs>
+    <!-- artwork cream -> cream -->
+    <linearGradient id="book_page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFBEB"/>
+      <stop offset="1" stop-color="#F7EBCB"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="226" rx="82" ry="12.6" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="cover">
+    <path d="M22 86 C60 72 100 74 128 90 C156 74 196 72 234 86 L234 206 C196 194 158 196 128 212 C98 196 60 194 22 206 Z" fill="#D85683" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+  <g id="pages" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round">
+    <path d="M34 76 C70 62 106 64 128 84 L128 198 C106 182 70 180 34 192 Z" fill="url(#book_page)"/>
+    <path d="M222 76 C186 62 150 64 128 84 L128 198 C150 182 186 180 222 192 Z" fill="url(#book_page)"/>
+  </g>
+  <g id="lines" fill="none" stroke="#D1C3A9" stroke-width="5" stroke-linecap="round">
+    <path d="M52 104 C72 96 92 96 110 106"/>
+    <path d="M52 128 C72 120 92 120 110 130"/>
+    <path d="M52 152 C68 146 82 146 96 152"/>
+    <path d="M146 106 C164 96 184 96 204 104"/>
+    <path d="M146 130 C164 120 184 120 204 128"/>
+  </g>
+  <g id="highlight">
+    <path d="M44 90 C60 82 78 80 94 80" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+  </g>
+  <g id="sparkle">
+    <path d="M196 20 Q199 36 214 39 Q199 42 196 58 Q193 42 178 39 Q193 36 196 20 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+  </g>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia core icon: reward star. Flat Greia vector. -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="star_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDA85"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="star">
+    <path d="M128 32 L160.9 94.7 L230.7 106.6 L181.3 157.3 L191.5 227.4 L128 196 L64.5 227.4 L74.7 157.3 L25.3 106.6 L95.1 94.7 Z" fill="url(#star_fill)" stroke="#4B372F" stroke-width="6" stroke-linejoin="round"/>
+    <ellipse cx="98" cy="110" rx="16" ry="10" fill="#FFFFFF" opacity="0.8" transform="rotate(-30 98 110)"/>
+  </g>
+</svg>

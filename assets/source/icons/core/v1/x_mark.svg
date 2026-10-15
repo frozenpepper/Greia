@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia core icon: cross mark (no / wrong). Flat Greia vector. -->
+  <g id="cross" fill="none" stroke-linecap="round">
+    <path d="M62 62 L194 194 M194 62 L62 194" stroke="#4B372F" stroke-width="66"/>
+    <path d="M62 62 L194 194 M194 62 L62 194" stroke="#F46F61" stroke-width="55"/>
+    <path d="M58 72 L80 94" stroke="#F8A9A0" stroke-width="12"/>
+  </g>
+</svg>

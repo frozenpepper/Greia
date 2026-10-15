@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia core icon: rainbow with clouds (making / profile header). Flat Greia vector. -->
+  <g id="rainbow" fill="none">
+    <path d="M60 166 A68 68 0 0 1 196 166" stroke="#4B372F" stroke-width="74"/>
+    <path d="M36 166 A92 92 0 0 1 220 166" stroke="#F46F61" stroke-width="16"/>
+    <path d="M52 166 A76 76 0 0 1 204 166" stroke="#FFC234" stroke-width="16"/>
+    <path d="M68 166 A60 60 0 0 1 188 166" stroke="#59B86A" stroke-width="16"/>
+    <path d="M84 166 A44 44 0 0 1 172 166" stroke="#4A91D8" stroke-width="16"/>
+    <path d="M52 136 C60 112 78 92 100 82" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g id="clouds">
+    <g fill="#4B372F">
+      <circle cx="44" cy="172" r="18" stroke="#4B372F" stroke-width="10"/>
+      <circle cx="62" cy="160" r="24" stroke="#4B372F" stroke-width="10"/>
+      <circle cx="80" cy="174" r="17" stroke="#4B372F" stroke-width="10"/>
+      <rect x="24" y="170" width="74" height="22" rx="11" stroke="#4B372F" stroke-width="10"/>
+    </g>
+    <g fill="#FFFBEB">
+      <circle cx="44" cy="172" r="18"/>
+      <circle cx="62" cy="160" r="24"/>
+      <circle cx="80" cy="174" r="17"/>
+      <rect x="24" y="170" width="74" height="22" rx="11"/>
+    </g>
+    <g fill="#4B372F">
+      <circle cx="180" cy="172" r="18" stroke="#4B372F" stroke-width="10"/>
+      <circle cx="198" cy="160" r="24" stroke="#4B372F" stroke-width="10"/>
+      <circle cx="216" cy="174" r="17" stroke="#4B372F" stroke-width="10"/>
+      <rect x="160" y="170" width="74" height="22" rx="11" stroke="#4B372F" stroke-width="10"/>
+    </g>
+    <g fill="#FFFBEB">
+      <circle cx="180" cy="172" r="18"/>
+      <circle cx="198" cy="160" r="24"/>
+      <circle cx="216" cy="174" r="17"/>
+      <rect x="160" y="170" width="74" height="22" rx="11"/>
+    </g>
+  </g>
+</svg>

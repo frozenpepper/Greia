@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia core icon: toy block train (building). Flat Greia vector. -->
+  <defs>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="train_boiler" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#92BDE8"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+    <!-- coral light -> coral -->
+    <linearGradient id="train_cab" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="228" rx="96" ry="14.8" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="chimney">
+    <rect x="58" y="70" width="30" height="50" rx="5" fill="#FFC234" stroke="#4B372F" stroke-width="4.5"/>
+    <rect x="50" y="58" width="46" height="18" rx="7" fill="#FFC234" stroke="#4B372F" stroke-width="4.5"/>
+  </g>
+  <g id="boiler">
+    <rect x="30" y="112" width="112" height="64" rx="16" fill="url(#train_boiler)" stroke="#4B372F" stroke-width="5"/>
+    <path d="M44 126 L96 126" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.7"/>
+  </g>
+  <g id="cab">
+    <rect x="132" y="66" width="86" height="110" rx="14" fill="url(#train_cab)" stroke="#4B372F" stroke-width="5"/>
+    <rect x="148" y="84" width="54" height="40" rx="10" fill="#CFEAF7" stroke="#4B372F" stroke-width="4"/>
+    <rect x="124" y="48" width="102" height="24" rx="10" fill="#9464C9" stroke="#4B372F" stroke-width="4.5"/>
+  </g>
+  <g id="base">
+    <rect x="22" y="166" width="208" height="24" rx="10" fill="#59B86A" stroke="#4B372F" stroke-width="4.5"/>
+  </g>
+  <g id="wheels" stroke="#4B372F">
+    <circle cx="66" cy="198" r="22" fill="#FFC234" stroke-width="5"/>
+    <circle cx="126" cy="198" r="22" fill="#FFC234" stroke-width="5"/>
+    <circle cx="186" cy="198" r="22" fill="#FFC234" stroke-width="5"/>
+    <circle cx="66" cy="198" r="7" fill="#4B372F" stroke-width="0"/>
+    <circle cx="126" cy="198" r="7" fill="#4B372F" stroke-width="0"/>
+    <circle cx="186" cy="198" r="7" fill="#4B372F" stroke-width="0"/>
+  </g>
+</svg>

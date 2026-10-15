@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia core icon: stacked gold coins (numbers / counting). Flat Greia vector. -->
+  <defs>
+    <!-- gold light -> gold -->
+    <linearGradient id="coins_face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDD97C"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="124" cy="226" rx="92" ry="14.2" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="stack">
+    <path d="M26 186 L26 206 A56 17 0 0 0 138 206 L138 186 Z" fill="#F59E0B" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="82" cy="186" rx="56" ry="17" fill="#FBBF24" stroke="#4B372F" stroke-width="4.5"/>
+    <path d="M26 162 L26 182 A56 17 0 0 0 138 182 L138 162 Z" fill="#F59E0B" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="82" cy="162" rx="56" ry="17" fill="#FBBF24" stroke="#4B372F" stroke-width="4.5"/>
+    <path d="M26 138 L26 158 A56 17 0 0 0 138 158 L138 138 Z" fill="#F59E0B" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="82" cy="138" rx="56" ry="17" fill="#FBBF24" stroke="#4B372F" stroke-width="4.5"/>
+    <path d="M26 114 L26 134 A56 17 0 0 0 138 134 L138 114 Z" fill="#F59E0B" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="82" cy="114" rx="56" ry="17" fill="#FBBF24" stroke="#4B372F" stroke-width="4.5"/>
+    <ellipse cx="66" cy="110" rx="14" ry="5" fill="#FFFFFF" opacity="0.7"/>
+  </g>
+  <g id="big_coin">
+    <circle cx="176" cy="160" r="58" fill="#F59E0B" stroke="#4B372F" stroke-width="5"/>
+    <circle cx="168" cy="156" r="56" fill="url(#coins_face)" stroke="#4B372F" stroke-width="5"/>
+    <circle cx="168" cy="156" r="40" fill="none" stroke="#F59E0B" stroke-width="5"/>
+    <path d="M168 136 L175.1 150.3 L190.8 152.6 L179.4 163.7 L182.1 179.4 L168 172 L153.9 179.4 L156.6 163.7 L145.2 152.6 L160.9 150.3 Z" fill="#F59E0B" stroke="#98651F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M128 132 C134 118 146 108 160 104" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+  </g>
+</svg>
