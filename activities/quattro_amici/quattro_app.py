@@ -13,11 +13,7 @@ from pathlib import Path
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, emit_activity_event, mark_activity_ready
-from greia_platform.localization import (
-    ActivityLocaleSupport,
-    LocalizedResources,
-    resolve_activity_locale,
-)
+from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.typography import GreiaTypography
 
@@ -391,16 +387,10 @@ def build_app(
     canvas = PygameReferenceCanvas(screen)
     typography = GreiaTypography()
 
-    # Locale and localized resources
-    support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-    context = resolve_activity_locale(locale, support)
-    if context is None:
-        context = resolve_activity_locale("it", support)
-    assert context is not None
-    resources = LocalizedResources(root, context)
-
-    # Audio manager
-    audio = QuattroAudio(locale=locale)
+    # UI and spoken character voices must use the SAME effective Activity
+    # language. A staged-but-unsupported profile locale falls back once here.
+    resources = activity_resources(root, requested_locale=locale)
+    audio = QuattroAudio(locale=resources.context.selected.language)
 
     # Storybook renderer
     renderer = QuattroRenderer(
