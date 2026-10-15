@@ -43,8 +43,8 @@ def main() -> int:
     locale, resources = _locale_and_resources()
     typography = GreiaTypography()
     canvas = PygameReferenceCanvas(screen)
-    art = RhymeArt(REFERENCE_WIDTH, REFERENCE_HEIGHT, typography)
-    renderer = RhymeRenderer(art, typography, resources)
+    art = RhymeArt(REFERENCE_WIDTH, REFERENCE_HEIGHT)
+    renderer = RhymeRenderer(art)
     progress = GreiaRhymeProgress()
     saved = progress.load()
     rng = random.Random()
@@ -73,6 +73,9 @@ def main() -> int:
     try:
         return app.run()
     finally:
+        speech_queue.clear()
+        app.kit.clear()
+        art.clear()
         typography.clear()
         pygame.quit()
 

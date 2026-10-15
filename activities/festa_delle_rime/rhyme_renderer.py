@@ -1,209 +1,240 @@
-"""High-polish presentation renderer for Festa delle Rime."""
+"""Festival scene presentation for Festa delle Rime.
+
+Draw order: cached night-square backdrop + garland string → festival lanterns
+(dark, or lit with the rhyme found) → big target lantern (word picture, or the
+listening ear for odd-one-out) → Leo → speaking/hint glows → kit controls →
+FX (sparkle, flight to the garland, star burst, finale fireworks).
+
+All surfaces are pre-scaled through ``RhymeArt``; per-frame work is blits and
+a few integer offsets. Nothing here renders text: the game is pictorial and
+spoken.
+"""
 
 from __future__ import annotations
 
-from typing import Final
+from dataclasses import dataclass
+import math
+from typing import Final, Sequence
 
 import pygame
 
-from greia_platform.localization import LocalizationError, LocalizedResources
-from greia_platform.system_chrome import ActivitySystemChromeLayout
-from greia_platform.typography import FontRole, GreiaTypography
-
 if __package__:
     from .rhyme_art import RhymeArt
-    from .rhyme_content import RhymeMode
-    from .rhyme_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, RhymeChallenge, RhymeSession
+    from .rhyme_content import RhymeItem, RhymeMode
+    from .rhyme_controls import (
+        LEO_HEIGHT,
+        LEO_MIDBOTTOM,
+        PICTURE_SIZE,
+        TARGET_PICTURE,
+        FestivalLayout,
+    )
+    from .rhyme_model import RhymeChallenge
 else:
     from rhyme_art import RhymeArt
-    from rhyme_content import RhymeMode
-    from rhyme_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, RhymeChallenge, RhymeSession
+    from rhyme_content import RhymeItem, RhymeMode
+    from rhyme_controls import (
+        LEO_HEIGHT,
+        LEO_MIDBOTTOM,
+        PICTURE_SIZE,
+        TARGET_PICTURE,
+        FestivalLayout,
+    )
+    from rhyme_model import RhymeChallenge
 
 
-# The Listen pill starts clear of the trusted Home/Back region, which the
-# platform reserves in full (both slots) so layout never jumps with context.
-_PROTECTED_CHROME: Final = ActivitySystemChromeLayout.for_surface(
-    REFERENCE_WIDTH, REFERENCE_HEIGHT
-).protected_region
-REPLAY_RECT: Final[pygame.Rect] = pygame.Rect(_PROTECTED_CHROME.right + 18, 24, 180, 48)
-TARGET_RECT: Final[pygame.Rect] = pygame.Rect(442, 85, 140, 150)
+INK: Final = (75, 55, 47)
+FLIGHT_SIZE: Final = 64
+SPEAKING_LIFT: Final = 10
+SLOT_PICTURE_RATIO: Final = 0.46
+# Lantern body centre in the 256-unit lantern master (y 138 of 256).
+LANTERN_BODY_Y: Final = 138 / 256
+
+
+@dataclass(frozen=True, slots=True)
+class SceneState:
+    """Everything the renderer needs for one frame (built by the app)."""
+
+    challenge: RhymeChallenge | None
+    found: Sequence[RhymeItem]
+    speaking: str | None = None
+    hint_target: str | None = None
+    pulse_phase: int = 0
+    shake: tuple[str, int] | None = None
+    sparkle_at: tuple[tuple[int, int], float] | None = None
+    flight: tuple[RhymeItem, tuple[int, int], tuple[int, int], float] | None = None
+    burst_slot: tuple[int, float] | None = None
+    fireworks: float | None = None
+    leo_pointing: bool = False
 
 
 class RhymeRenderer:
-    """Render the festival lanterns, prompt bar, replay button, and Leo mascot."""
+    """Render the festival square; geometry comes from ``FestivalLayout``."""
 
-    def __init__(
-        self,
-        art: RhymeArt,
-        typography: GreiaTypography,
-        resources: LocalizedResources,
-    ) -> None:
+    def __init__(self, art: RhymeArt) -> None:
         self._art = art
-        self._typography = typography
-        self._resources = resources
+        self.cast = None  # CastFeedback, injected by the app (shares the kit art cache)
+        self._garland: pygame.Surface | None = None
+        self._garland_key: tuple | None = None
+        self._point = art.cast_pose("leo", "pose_point", LEO_HEIGHT)
 
-        try:
-            caption = resources.text("button.replay").strip()
-        except LocalizationError:
-            caption = ""  # Neutral fallback: speaker pictogram only.
-        self._replay_label = typography.render(
-            f"🔊 {caption}" if caption else "🔊",
-            FontRole.TITLE,
-            20,
-            (255, 255, 255),
-        )
+    @property
+    def art(self) -> RhymeArt:
+        return self._art
 
+    # -- caches -----------------------------------------------------------------
+    def _garland_layer(self, geometry: FestivalLayout) -> pygame.Surface:
+        """Backdrop + garland string + target cord, rebuilt only on relayout."""
+
+        key = (geometry.garland_left, geometry.garland_right, geometry.garland_top, geometry.target.topleft)
+        if self._garland is not None and self._garland_key == key:
+            return self._garland
+        surface = self._art.background.copy()
+        points = [
+            (x, geometry.string_y(x))
+            for x in range(geometry.garland_left - 18, geometry.garland_right + 19, 12)
+        ]
+        pygame.draw.lines(surface, INK, False, points, 4)
+        cord_x = geometry.target.centerx
+        pygame.draw.line(surface, INK, (cord_x, geometry.string_y(cord_x)), (cord_x, geometry.target.top + 8), 4)
+        self._garland = surface
+        self._garland_key = key
+        return surface
+
+    # -- frame ----------------------------------------------------------------------
     def draw_scene(
         self,
         target: pygame.Surface,
-        session: RhymeSession,
+        geometry: FestivalLayout,
+        state: SceneState,
         *,
-        wobble_x: int = 0,
-        highlight_index: int | None = None,
-        hovered_choice_idx: int | None = None,
-        hovered_replay: bool = False,
-        hovered_target: bool = False,
+        draw_controls,
     ) -> None:
-        target.blit(self._art.background, (0, 0))
-        self._draw_leo(target)
+        target.blit(self._garland_layer(geometry), (0, 0))
+        self._draw_garland(target, geometry, state)
+        self._draw_target(target, geometry, state)
+        self._draw_leo(target, state)
+        self._draw_choice_glows(target, state)
+        draw_controls(target, _control_offsets(state))
+        self._draw_fx(target, geometry, state)
 
-        current = session.current_challenge
-        if current is None:
+    def _draw_garland(self, target: pygame.Surface, geometry: FestivalLayout, state: SceneState) -> None:
+        lit_count = len(state.found)
+        for index, slot in enumerate(geometry.slots):
+            lit = index < lit_count
+            lantern = self._art.lantern(lit, slot.width)
+            if lantern is None:
+                continue
+            if lit:
+                glow = self._art.glow(int(slot.width * 1.5))
+                target.blit(glow, glow.get_rect(center=(slot.centerx, slot.top + int(slot.height * LANTERN_BODY_Y))))
+            target.blit(lantern, slot.topleft)
+            if lit:
+                picture = self._art.picture(state.found[index], int(slot.width * SLOT_PICTURE_RATIO))
+                if picture is not None:
+                    center = (slot.centerx, slot.top + int(slot.height * LANTERN_BODY_Y))
+                    target.blit(picture, picture.get_rect(center=center))
+
+    def _draw_target(self, target: pygame.Surface, geometry: FestivalLayout, state: SceneState) -> None:
+        rect = geometry.target
+        body_center = (rect.centerx, rect.top + int(rect.height * LANTERN_BODY_Y))
+        glowing = state.speaking == "target" or (state.hint_target == "target" and state.pulse_phase % 2 == 0)
+        glow = self._art.glow(int(rect.width * (1.32 if glowing else 1.12)))
+        target.blit(glow, glow.get_rect(center=body_center))
+        lantern = self._art.lantern(True, rect.width)
+        if lantern is not None:
+            target.blit(lantern, rect.topleft)
+        challenge = state.challenge
+        if challenge is None:
             return
+        if challenge.mode is RhymeMode.RHYME_ODD or challenge.target_item is None:
+            picture = self._art.ear(int(TARGET_PICTURE * 0.9))
+        else:
+            picture = self._art.picture(challenge.target_item, TARGET_PICTURE)
+        if picture is not None:
+            lift = -4 if state.speaking == "target" else 0
+            target.blit(picture, picture.get_rect(center=(body_center[0], body_center[1] + lift)))
 
-        # 1. Target Lantern (for match and alliteration)
-        if current.target_item is not None:
-            self._art.draw_lantern(
-                target,
-                TARGET_RECT,
-                current.target_item,
-                color_idx=0,
-                is_lit=True,
-                is_highlighted=True,
-                is_hovered=hovered_target,
-            )
+    def _draw_leo(self, target: pygame.Surface, state: SceneState) -> None:
+        cast = self.cast
+        if state.leo_pointing and self._point is not None and (cast is None or not cast.animating):
+            target.blit(self._point, self._point.get_rect(midbottom=LEO_MIDBOTTOM))
+            return
+        if cast is not None:
+            cast.draw(target, LEO_MIDBOTTOM)
 
-        # 2. Prompt Text
-        self._draw_prompt(target, current)
-
-        # 3. Choice Lanterns
-        self._draw_choices(
-            target,
-            current,
-            wobble_x=wobble_x,
-            highlight_index=highlight_index,
-            hovered_choice_idx=hovered_choice_idx,
-        )
-
-        # 4. Top Controls
-        self._draw_top_bar(target, session, is_replay_hovered=hovered_replay)
-
-    def choice_rect_at(self, challenge: RhymeChallenge, index: int) -> pygame.Rect:
+    def _draw_choice_glows(self, target: pygame.Surface, state: SceneState) -> None:
+        challenge = state.challenge
+        if challenge is None:
+            return
         count = len(challenge.choices)
-        w, h = 154, 184
-        y = 310
-        if count == 2:
-            cx = 360 if index == 0 else 664
-        else:
-            spacing = 240
-            cx = 272 + index * spacing
-        return pygame.Rect(cx - w // 2, y, w, h)
+        for index in range(count):
+            tag = f"choice.{index}"
+            speaking = state.speaking == tag
+            hinted = state.hint_target == tag
+            if not speaking and not hinted:
+                continue
+            big = speaking or state.pulse_phase % 2 == 0
+            rect = FestivalLayout.choice_rect(count, index).move(0, -SPEAKING_LIFT if speaking else 0)
+            glow = self._art.glow(int(rect.width * (1.62 if big else 1.4)))
+            target.blit(glow, glow.get_rect(center=rect.center))
 
-    def choice_at(self, point: tuple[int, int], challenge: RhymeChallenge) -> int | None:
-        for idx in range(len(challenge.choices)):
-            rect = self.choice_rect_at(challenge, idx)
-            if rect.inflate(20, 20).collidepoint(point):
-                return idx
-        return None
+    def _draw_fx(self, target: pygame.Surface, geometry: FestivalLayout, state: SceneState) -> None:
+        if state.sparkle_at is not None:
+            (x, y), t = state.sparkle_at
+            size = int(PICTURE_SIZE * (0.9 + 0.5 * min(1.0, t)))
+            sparkle = self._art.fx("fx.sparkle", _bucket(size))
+            if sparkle is not None:
+                target.blit(sparkle, sparkle.get_rect(center=(x, y - int(18 * t))))
+        if state.flight is not None:
+            item, start, end, t = state.flight
+            t = max(0.0, min(1.0, t))
+            ease = 1 - (1 - t) ** 2
+            control = ((start[0] + end[0]) / 2, min(start[1], end[1]) - 120)
+            x = (1 - ease) ** 2 * start[0] + 2 * (1 - ease) * ease * control[0] + ease ** 2 * end[0]
+            y = (1 - ease) ** 2 * start[1] + 2 * (1 - ease) * ease * control[1] + ease ** 2 * end[1]
+            picture = self._art.picture(item, FLIGHT_SIZE)
+            if picture is not None:
+                target.blit(picture, picture.get_rect(center=(int(x), int(y))))
+        if state.burst_slot is not None:
+            index, t = state.burst_slot
+            if 0 <= index < len(geometry.slots):
+                slot = geometry.slots[index]
+                burst = self._art.fx("fx.star_burst", _bucket(int(slot.width * (1.3 + 0.6 * min(1.0, t)))))
+                if burst is not None:
+                    center = (slot.centerx, slot.top + int(slot.height * LANTERN_BODY_Y))
+                    target.blit(burst, burst.get_rect(center=center))
+        if state.fireworks is not None:
+            self._draw_fireworks(target, state.fireworks)
 
-    def replay_contains(self, point: tuple[int, int]) -> bool:
-        return REPLAY_RECT.collidepoint(point)
+    def _draw_fireworks(self, target: pygame.Surface, elapsed: float) -> None:
+        # Three staggered bursts over the square, each cycling the three frames.
+        spots = ((300, 190, 0.0), (760, 150, 0.35), (520, 120, 0.7), (880, 260, 1.0), (240, 300, 1.25))
+        for x, y, delay in spots:
+            local = elapsed - delay
+            if local < 0 or local >= 0.9:
+                continue
+            frame = ("default", "frame_2", "frame_3")[min(2, int(local / 0.3))]
+            image = self._art.fx("fx.firework", 176, variant=frame)
+            if image is not None:
+                target.blit(image, image.get_rect(center=(x, y)))
 
-    def target_contains(self, point: tuple[int, int]) -> bool:
-        return TARGET_RECT.collidepoint(point)
 
-    def _draw_choices(
-        self,
-        target: pygame.Surface,
-        challenge: RhymeChallenge,
-        *,
-        wobble_x: int = 0,
-        highlight_index: int | None = None,
-        hovered_choice_idx: int | None = None,
-    ) -> None:
-        for idx, item in enumerate(challenge.choices):
-            rect = self.choice_rect_at(challenge, idx)
-            is_hovered = (idx == hovered_choice_idx)
-            draw_rect = rect.move(0, -6) if is_hovered else (rect.move(wobble_x, 0) if wobble_x != 0 else rect)
-            is_highlighted = (highlight_index == idx)
-            self._art.draw_lantern(
-                target,
-                draw_rect,
-                item,
-                color_idx=idx + 1,
-                is_lit=True,
-                is_highlighted=is_highlighted,
-                is_hovered=is_hovered,
-            )
+def _control_offsets(state: SceneState) -> dict[str, tuple[int, int]]:
+    """Per-control draw offsets: the spoken picture lifts, a wrong pick shakes."""
 
-    def _draw_prompt(self, target: pygame.Surface, challenge: RhymeChallenge) -> None:
-        if challenge.mode == RhymeMode.RHYME_MATCH:
-            text = "🎵 ➡️ ❓"
-        elif challenge.mode == RhymeMode.RHYME_ODD:
-            text = "❌ ❓"
-        else:
-            text = "🔊 ➡️ ❓"
+    offsets: dict[str, tuple[int, int]] = {}
+    if state.speaking is not None and state.speaking.startswith("choice."):
+        offsets[state.speaking] = (0, -SPEAKING_LIFT)
+    if state.shake is not None:
+        control_id, dx = state.shake
+        offsets[control_id] = (dx, 0)
+    return offsets
 
-        y = 250 if challenge.target_item is not None else 180
-        surf = self._typography.render(text, FontRole.DISPLAY, 36, (254, 240, 138))
-        p_x = REFERENCE_WIDTH // 2 - surf.get_width() // 2
-        banner = pygame.Rect(p_x - 24, y - 6, surf.get_width() + 48, surf.get_height() + 12)
-        pygame.draw.rect(target, (15, 23, 42, 220), banner, border_radius=20)
-        pygame.draw.rect(target, (217, 119, 6), banner, width=3, border_radius=20)
-        target.blit(surf, (p_x, y))
 
-    def _draw_top_bar(
-        self,
-        target: pygame.Surface,
-        session: RhymeSession,
-        *,
-        is_replay_hovered: bool = False,
-    ) -> None:
-        # Replay button with 3D bevel and hover lift
-        r_draw = REPLAY_RECT.move(0, -4) if is_replay_hovered else REPLAY_RECT
-        pygame.draw.rect(target, (10, 15, 25), REPLAY_RECT.move(0, 6), border_radius=22)
+def _bucket(size: int) -> int:
+    """Quantise animated FX sizes so only a few scaled copies are ever cached."""
 
-        btn_col = (2, 132, 199) if is_replay_hovered else (3, 105, 161)
-        border_col = (56, 189, 248) if is_replay_hovered else (255, 255, 255)
+    return max(16, int(math.ceil(size / 24.0) * 24))
 
-        pygame.draw.rect(target, btn_col, r_draw, border_radius=22)
-        pygame.draw.rect(target, border_col, r_draw, width=3, border_radius=22)
 
-        # Highlight
-        hl = r_draw.inflate(-16, -r_draw.height + 8).move(0, -r_draw.height // 2 + 8)
-        pygame.draw.rect(target, (186, 230, 253, 100), hl, border_radius=4)
-
-        speaker_icon = self._replay_label
-        target.blit(
-            speaker_icon,
-            (
-                r_draw.centerx - speaker_icon.get_width() // 2,
-                r_draw.centery - speaker_icon.get_height() // 2,
-            ),
-        )
-
-        # Progress badge
-        badge_rect = pygame.Rect(870, 24, 130, 44)
-        pygame.draw.rect(target, (15, 23, 42, 200), badge_rect, border_radius=22)
-        pygame.draw.rect(target, (254, 240, 138), badge_rect, width=2, border_radius=22)
-
-        txt = f"{session.challenge_index + 1} / 8"
-        txt_surf = self._typography.render(txt, FontRole.TITLE, 22, (254, 240, 138))
-        target.blit(
-            txt_surf,
-            (badge_rect.centerx - txt_surf.get_width() // 2, badge_rect.centery - txt_surf.get_height() // 2),
-        )
-
-    def _draw_leo(self, target: pygame.Surface) -> None:
-        if self._art.leo is not None:
-            target.blit(self._art.leo, (30, 385))
+__all__ = ["RhymeRenderer", "SceneState"]

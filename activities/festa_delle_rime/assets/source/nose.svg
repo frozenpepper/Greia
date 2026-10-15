@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Festa delle Rime picture "nose" (IT rhyme naso/vaso): friendly cartoon nose. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- peach light (mix 40% white) -> peach -->
+    <linearGradient id="festa_nose_skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBE8D7"/>
+      <stop offset="1" stop-color="#F8D8BD"/>
+    </linearGradient>
+  </defs>
+  <g id="nose">
+    <path d="M100 76 C100 56 156 56 156 76 L158 114 C182 120 204 142 204 170 C204 196 182 212 158 206 C150 222 106 222 98 206 C74 212 52 196 52 170 C52 142 74 120 102 112 Z" fill="url(#festa_nose_skin)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M100 150 C88 160 86 178 96 192 M156 150 C168 160 170 178 160 192" fill="none" stroke="#C9A98F" stroke-width="3.5" stroke-linecap="round"/>
+    <ellipse cx="110" cy="196" rx="11" ry="7" fill="#72513F"/>
+    <ellipse cx="146" cy="196" rx="11" ry="7" fill="#72513F"/>
+    <circle cx="74" cy="176" r="13" fill="#FDA4AF" opacity="0.5"/>
+    <circle cx="182" cy="176" r="13" fill="#FDA4AF" opacity="0.5"/>
+    <ellipse cx="112" cy="150" rx="10" ry="13" fill="#FFFFFF" opacity="0.7"/>
+    <path d="M116 80 L114 112" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+  </g>
+</svg>
