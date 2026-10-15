@@ -8,6 +8,8 @@ from typing import Final
 
 import pygame
 
+from greia_platform.localization import LocalizedResources
+
 if __package__:
     from .alfabeto_model import get_letter_catalogue
 else:
@@ -22,7 +24,10 @@ AUDIO_DIR = Path(__file__).resolve().parent / "assets" / "audio"
 class AlfabetoAudio:
     """Cheerful, gentle musical and spoken audio feedback for letter exploration."""
 
-    def __init__(self, locale: str = "it") -> None:
+    def __init__(
+        self, locale: str = "it", resources: LocalizedResources | None = None
+    ) -> None:
+        self._resources = resources
         self.locale = locale.split("-")[0]
         self._sounds: dict[str, pygame.mixer.Sound] = {}
         self._spoken_sounds: dict[str, pygame.mixer.Sound] = {}
@@ -90,16 +95,34 @@ class AlfabetoAudio:
         self.play_spoken("well_done")
 
     def _load_spoken_assets(self) -> None:
-        loc_dir = AUDIO_DIR / self.locale
-        # Never substitute Italian letter names or phonemes for another
-        # teaching language. Missing approved speech stays unavailable.
-        if not loc_dir.is_dir():
-            return
-
-        for wav_path in loc_dir.glob("*.wav"):
+        # Keep the existing filenames and preload the short child-directed
+        # voice clips, but let the platform select the language and fallback.
+        selected_dir = AUDIO_DIR / self.locale
+        english_dir = AUDIO_DIR / "en"
+        filenames = {
+            path.name
+            for directory in (selected_dir, english_dir)
+            if directory.is_dir()
+            for path in directory.glob("*.wav")
+        }
+        for filename in sorted(filenames):
+            stem = Path(filename).stem
+            if self._resources is not None:
+                # Older clips already use names like letter_A and letter_Ñ.
+                # The filename is the one-time compatibility alias.
+                cue_id = "spoken." + stem.replace("Ñ", "n_tilde").lower()
+                sound_path = self._resources.audio_path(
+                    cue_id, filename=filename
+                )
+            else:
+                sound_path = selected_dir / filename
+                if not sound_path.is_file():
+                    sound_path = english_dir / filename
+            if sound_path is None or not sound_path.is_file():
+                continue
             try:
-                self._spoken_sounds[wav_path.stem] = pygame.mixer.Sound(str(wav_path))
-            except pygame.error:
+                self._spoken_sounds[stem] = pygame.mixer.Sound(str(sound_path))
+            except (pygame.error, OSError):
                 pass
 
     def _build_sounds(self) -> None:
