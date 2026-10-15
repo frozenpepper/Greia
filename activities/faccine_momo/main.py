@@ -8,12 +8,13 @@ import pygame
 
 try:
     from greia_platform.activity_api import get_profile_locale
-    from greia_platform.localization import ActivityLocaleSupport, resolve_activity_locale
+    from greia_platform.localization import ActivityLocaleSupport, activity_resources, resolve_activity_locale
 except ImportError:
     # Standalone dev fallback
     get_profile_locale = lambda: "it"
     ActivityLocaleSupport = None
     resolve_activity_locale = None
+    activity_resources = None
 
 if __package__:
     from .momo_app import MomoActivity
@@ -54,7 +55,11 @@ def main() -> int:
     locale = _resolve_locale()
 
     model = MomoModel()
-    audio = MomoAudio(package_root, locale=locale)
+    resources = (
+        activity_resources(package_root, requested_locale=locale)
+        if activity_resources is not None else None
+    )
+    audio = MomoAudio(package_root, locale=locale, resources=resources)
     renderer = MomoRenderer()
 
     app = MomoActivity(
