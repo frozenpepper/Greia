@@ -1,5 +1,5 @@
 catalog_id = "greia.shared-visuals.v1"
-catalog_version = "0.6.0"
+catalog_version = "0.7.0"
 status = "candidate-runtime-rendition-source"
 runtime_consumed = false
 notes = "Explicit build-time selection of reviewed SVG masters for raster runtime renditions. This file is not directory discovery."
@@ -5195,3 +5195,833 @@ output = "visual/runtime/v1/fx/star_burst_f3.png"
 width = 128
 height = 128
 
+# art-vocab2 (catalogue 0.7.0): 62 new prop.vocab.* nouns. Recipe/evidence/mapping notes from the review snippet follow.
+# Sources: assets/visual/props/vocab/v0.1/<noun>.svg ; runtime: assets/visual/runtime/v1/props/vocab/<noun>.png
+#   (rendered with /opt/local/bin/rsvg-convert --width 256 --height 256, RGBA, all <= 30 KB).
+# Evidence: SOURCE + DESKTOP VISUAL REVIEW (contact sheet ~/.cache/greia-art-review/art-vocab2.png). Not yet consumed.
+# Recipe: same as the existing prop.vocab.* set (256 canvas, ink #4B372F contour 5/4.5, <=2-stop gradients,
+#   one highlight, baked contact shadow cy 232 except web/balloon(airborne-ish)/island/ship/nose). Lint §9 clean, budgets §11 met.
+# One picture per noun; no owl/fox/rabbit/robot/unicorn/monster look-alikes.
+#
+# NEW DRAWINGS (50) — EN / IT / ES / FR:
+#   prop.vocab.wolf        wolf / lupo / lobo / loup
+#   prop.vocab.llama       llama / lama / llama / lama
+#   prop.vocab.sheep       sheep / pecora / oveja / mouton
+#   prop.vocab.monkey      monkey / scimmia / mono / singe
+#   prop.vocab.seal        seal / foca / foca / phoque
+#   prop.vocab.cow         cow / mucca / vaca / vache
+#   prop.vocab.horse       horse / cavallo / caballo / cheval
+#   prop.vocab.donkey      donkey / asino / burro / âne
+#   prop.vocab.ant         ant / formica / hormiga / fourmi
+#   prop.vocab.dinosaur    dinosaur / dinosauro / dinosaurio / dinosaure
+#   prop.vocab.tomato      tomato / pomodoro / tomate / tomate
+#   prop.vocab.potato      potato / patata / patata / pomme de terre
+#   prop.vocab.cheese      cheese / formaggio / queso / fromage
+#   prop.vocab.kiwi        kiwi / kiwi / kiwi / kiwi
+#   prop.vocab.cucumber    cucumber / cetriolo / pepino / concombre
+#   prop.vocab.radish      radish / ravanello / rábano / radis
+#   prop.vocab.watermelon  watermelon / anguria / sandía / pastèque
+#   prop.vocab.orange      orange / arancia / naranja / orange
+#   prop.vocab.jam         jam / marmellata / mermelada / confiture
+#   prop.vocab.pumpkin     pumpkin / zucca / calabaza / citrouille
+#   prop.vocab.wall        wall / muro / muro / mur
+#   prop.vocab.thread      thread / filo / hilo / fil
+#   prop.vocab.lighthouse  lighthouse / faro / faro / phare
+#   prop.vocab.motorbike   motorbike / moto / moto / moto
+#   prop.vocab.pine        pine / pino / pino / sapin
+#   prop.vocab.net         net / rete / red / filet
+#   prop.vocab.dice        dice / dado / dado / dé
+#   prop.vocab.table       table / tavolo / mesa / table
+#   prop.vocab.bed         bed / letto / cama / lit
+#   prop.vocab.glass       glass / bicchiere / vaso / verre
+#   prop.vocab.tv          tv / tv / televisione / tele / télé
+#   prop.vocab.fire        fire / fuoco / fuego / feu
+#   prop.vocab.bag         bag / borsa / bolso / sac
+#   prop.vocab.shoe        shoe / scarpa / zapato / chaussure
+#   prop.vocab.bottle      bottle / bottiglia / botella / bouteille
+#   prop.vocab.dress       dress / vestito / vestido / robe
+#   prop.vocab.globe       globe / mappamondo / globo terráqueo / globe
+#   prop.vocab.soap        soap / sapone / jabón / savon
+#   prop.vocab.box         box / scatola / caja / boîte
+#   prop.vocab.web         web / ragnatela / telaraña / toile
+#   prop.vocab.balloon     balloon / palloncino / globo / ballon
+#   prop.vocab.tree        tree / albero / árbol / arbre
+#   prop.vocab.clock       clock / sveglia / orologio / reloj / réveil
+#   prop.vocab.candle      candle / candela / vela / bougie
+#   prop.vocab.bone        bone / osso / hueso / os
+#   prop.vocab.guitar      guitar / chitarra / guitarra / guitare
+#   prop.vocab.ladder      ladder / scala / escalera / échelle
+#   prop.vocab.tooth       tooth / dente / diente / dent
+#   prop.vocab.bucket      bucket / secchio / cubo / seau
+#   prop.vocab.hammer      hammer / martello / martillo / marteau
+#
+# PROMOTED (12) — activity-private pictures already marked "shared-library candidate" (or duplicated across Activities),
+# copied VERBATIM into the vocab family (only gradient ids re-prefixed vocab_<noun>_*). Main-agent decision: once these
+# IDs are registered, the Activity copies can switch to the shared ID and the private files can be retired.
+#   prop.vocab.giraffe  giraffe / giraffa / jirafa / girafe   <- activities/alfabeto_leo/assets/source/giraffe.svg
+#   prop.vocab.island   island / isola / isla / île   <- activities/alfabeto_leo/assets/source/island.svg
+#   prop.vocab.igloo    igloo / igloo / iglú / igloo   <- activities/alfabeto_leo/assets/source/igloo.svg
+#   prop.vocab.ship     ship / nave / barco / navire   <- activities/alfabeto_leo/assets/source/ship.svg
+#   prop.vocab.volcano  volcano / vulcano / volcán / volcan   <- activities/alfabeto_leo/assets/source/volcano.svg
+#   prop.vocab.zebra    zebra / zebra / cebra / zèbre   <- activities/alfabeto_leo/assets/source/zebra.svg (sillabe_magiche has an identical copy)
+#   prop.vocab.tiger    tiger / tigre / tigre / tigre   <- activities/sillabe_magiche/assets/source/tiger.svg
+#   prop.vocab.lemon    lemon / limone / limón / citron   <- activities/sillabe_magiche/assets/source/lemon.svg
+#   prop.vocab.panda    panda / panda / panda / panda   <- activities/sillabe_magiche/assets/source/panda.svg
+#   prop.vocab.rose     rose / rosa / rosa / rose   <- activities/officina_dei_suoni/assets/source/rose.svg
+#   prop.vocab.fan      fan / ventaglio / abanico / éventail   <- activities/officina_dei_suoni/assets/source/fan.svg (festa_delle_rime has the same drawing)
+#   prop.vocab.nose     nose / naso / nariz / nez   <- activities/festa_delle_rime/assets/source/nose.svg
+#
+# Language notes for consumers (map nouns to IDs; do not draw duplicates):
+#   ES "vaso" = drinking glass -> prop.vocab.glass (NOT prop.vocab.vase). ES "globo" = balloon -> prop.vocab.balloon
+#   (globe = "globo terráqueo"). ES "vela" = candle -> prop.vocab.candle; IT "vela" (sail) stays pending (prop.vocab.boat
+#   already is a sailboat). IT "lama" -> prop.vocab.llama (child sense; "lama" also = blade). IT "pino" / ES "pino" /
+#   FR "sapin" / EN "pine" -> prop.vocab.pine. ES "mesa" / IT "tavolo" -> table; ES "cama" -> bed; ES "burro" = donkey.
+#   EN "mug" -> prop.everyday.cup; EN "bug" -> creature.woodland.beetle/ladybird; EN "pen" not drawn (prop.everyday.pencil
+#   would be confused). FR "oreille" -> icon.hud.ear exists.
+# Still pending after this pass (not drawn, by rule or ambiguity): GUFO/OWL (Leo), RABBIT/LAPIN (Flash), ROBOT (Dani),
+#   RENARD (Tito), FATA/FÉE, BABY/BÉBÉ, PAPI, MAMAN, VELA(sail), BOCA, TAPIS, QUERCIA, VENTO, QUEEN, JARDIN, QUICHE, USINE,
+#   QUATRE, WAGON, ÑANDÚ, TORO, CUNA, CARTERO, CAMINO, RUTA, COLOR, PEUR, FORÊT, PAPER, WATER, MUSIC, SUNNY.
+
+[[visuals]]
+id = "prop.vocab.wolf"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/wolf.svg"
+output = "visual/runtime/v1/props/vocab/wolf.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.llama"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/llama.svg"
+output = "visual/runtime/v1/props/vocab/llama.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.sheep"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/sheep.svg"
+output = "visual/runtime/v1/props/vocab/sheep.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.monkey"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/monkey.svg"
+output = "visual/runtime/v1/props/vocab/monkey.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.seal"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/seal.svg"
+output = "visual/runtime/v1/props/vocab/seal.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.cow"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/cow.svg"
+output = "visual/runtime/v1/props/vocab/cow.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.horse"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/horse.svg"
+output = "visual/runtime/v1/props/vocab/horse.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.donkey"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/donkey.svg"
+output = "visual/runtime/v1/props/vocab/donkey.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.ant"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/ant.svg"
+output = "visual/runtime/v1/props/vocab/ant.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.dinosaur"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/dinosaur.svg"
+output = "visual/runtime/v1/props/vocab/dinosaur.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.tomato"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/tomato.svg"
+output = "visual/runtime/v1/props/vocab/tomato.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.potato"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/potato.svg"
+output = "visual/runtime/v1/props/vocab/potato.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.cheese"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/cheese.svg"
+output = "visual/runtime/v1/props/vocab/cheese.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.kiwi"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/kiwi.svg"
+output = "visual/runtime/v1/props/vocab/kiwi.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.cucumber"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/cucumber.svg"
+output = "visual/runtime/v1/props/vocab/cucumber.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.radish"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/radish.svg"
+output = "visual/runtime/v1/props/vocab/radish.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.watermelon"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/watermelon.svg"
+output = "visual/runtime/v1/props/vocab/watermelon.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.orange"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/orange.svg"
+output = "visual/runtime/v1/props/vocab/orange.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.jam"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/jam.svg"
+output = "visual/runtime/v1/props/vocab/jam.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.pumpkin"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/pumpkin.svg"
+output = "visual/runtime/v1/props/vocab/pumpkin.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.wall"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/wall.svg"
+output = "visual/runtime/v1/props/vocab/wall.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.thread"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/thread.svg"
+output = "visual/runtime/v1/props/vocab/thread.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.lighthouse"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/lighthouse.svg"
+output = "visual/runtime/v1/props/vocab/lighthouse.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.motorbike"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/motorbike.svg"
+output = "visual/runtime/v1/props/vocab/motorbike.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.pine"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/pine.svg"
+output = "visual/runtime/v1/props/vocab/pine.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.net"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/net.svg"
+output = "visual/runtime/v1/props/vocab/net.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.dice"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/dice.svg"
+output = "visual/runtime/v1/props/vocab/dice.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.table"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/table.svg"
+output = "visual/runtime/v1/props/vocab/table.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.bed"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/bed.svg"
+output = "visual/runtime/v1/props/vocab/bed.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.glass"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/glass.svg"
+output = "visual/runtime/v1/props/vocab/glass.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.tv"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/tv.svg"
+output = "visual/runtime/v1/props/vocab/tv.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.fire"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/fire.svg"
+output = "visual/runtime/v1/props/vocab/fire.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.bag"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/bag.svg"
+output = "visual/runtime/v1/props/vocab/bag.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.shoe"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/shoe.svg"
+output = "visual/runtime/v1/props/vocab/shoe.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.bottle"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/bottle.svg"
+output = "visual/runtime/v1/props/vocab/bottle.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.dress"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/dress.svg"
+output = "visual/runtime/v1/props/vocab/dress.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.globe"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/globe.svg"
+output = "visual/runtime/v1/props/vocab/globe.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.soap"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/soap.svg"
+output = "visual/runtime/v1/props/vocab/soap.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.box"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/box.svg"
+output = "visual/runtime/v1/props/vocab/box.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.web"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/web.svg"
+output = "visual/runtime/v1/props/vocab/web.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.balloon"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/balloon.svg"
+output = "visual/runtime/v1/props/vocab/balloon.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.tree"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/tree.svg"
+output = "visual/runtime/v1/props/vocab/tree.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.clock"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/clock.svg"
+output = "visual/runtime/v1/props/vocab/clock.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.candle"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/candle.svg"
+output = "visual/runtime/v1/props/vocab/candle.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.bone"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/bone.svg"
+output = "visual/runtime/v1/props/vocab/bone.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.guitar"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/guitar.svg"
+output = "visual/runtime/v1/props/vocab/guitar.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.ladder"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/ladder.svg"
+output = "visual/runtime/v1/props/vocab/ladder.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.tooth"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/tooth.svg"
+output = "visual/runtime/v1/props/vocab/tooth.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.bucket"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/bucket.svg"
+output = "visual/runtime/v1/props/vocab/bucket.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.hammer"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/hammer.svg"
+output = "visual/runtime/v1/props/vocab/hammer.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.giraffe"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/giraffe.svg"
+output = "visual/runtime/v1/props/vocab/giraffe.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.island"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/island.svg"
+output = "visual/runtime/v1/props/vocab/island.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.igloo"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/igloo.svg"
+output = "visual/runtime/v1/props/vocab/igloo.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.ship"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/ship.svg"
+output = "visual/runtime/v1/props/vocab/ship.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.volcano"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/volcano.svg"
+output = "visual/runtime/v1/props/vocab/volcano.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.zebra"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/zebra.svg"
+output = "visual/runtime/v1/props/vocab/zebra.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.tiger"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/tiger.svg"
+output = "visual/runtime/v1/props/vocab/tiger.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.lemon"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/lemon.svg"
+output = "visual/runtime/v1/props/vocab/lemon.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.panda"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/panda.svg"
+output = "visual/runtime/v1/props/vocab/panda.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.rose"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/rose.svg"
+output = "visual/runtime/v1/props/vocab/rose.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.fan"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/fan.svg"
+output = "visual/runtime/v1/props/vocab/fan.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "prop.vocab.nose"
+kind = "prop"
+role = "vocabulary"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/props/vocab/v0.1/nose.svg"
+output = "visual/runtime/v1/props/vocab/nose.png"
+width = 256
+height = 256

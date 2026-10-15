@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.fire — campfire with flames and crossed logs. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sunshine -> coral -->
+    <linearGradient id="vocab_fire_outer" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFC234"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="vocab_fire_inner" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF3C4"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="96" ry="16.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="fire">
+    <path d="M128 34 C142 62 176 78 182 122 C188 160 164 190 128 190 C92 190 68 160 74 122 C78 96 96 88 98 64 C110 76 112 92 112 100 C122 84 126 60 128 34 Z" fill="url(#vocab_fire_outer)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M128 92 C138 112 158 124 158 150 C158 170 146 184 128 184 C110 184 98 170 98 150 C98 132 112 126 116 110 C122 120 124 128 124 134 C130 122 130 106 128 92 Z" fill="url(#vocab_fire_inner)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M40 220 L210 172" fill="none" stroke="#4B372F" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M40 220 L210 172" fill="none" stroke="#C27F45" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M46 172 L216 220" fill="none" stroke="#4B372F" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M46 172 L216 220" fill="none" stroke="#E6A75D" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="216" cy="220" rx="8" ry="8" fill="#FAD2A5" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="46" cy="172" rx="8" ry="8" fill="#FAD2A5" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+  </g>
+</svg>

@@ -87,7 +87,7 @@ Water/Pond includes independent 1024×600 / 800×600 layered references. The ind
 
 ### Shared art library v1 (2026-10-15)
 
-Registered in `assets/catalog/shared_visuals_v1_source.toml` (catalogue 0.6.0); SVG source beside each family, 1:1 PNG renditions under `assets/visual/runtime/v1/`. **SOURCE + DESKTOP VISUAL REVIEW only**; no Shell/Activity consumes these yet.
+Registered in `assets/catalog/shared_visuals_v1_source.toml` (catalogue 0.7.0); SVG source beside each family, 1:1 PNG renditions under `assets/visual/runtime/v1/`. **SOURCE + DESKTOP VISUAL REVIEW only**; no Shell/Activity consumes these yet.
 
 | Family | Source | Runtime PNGs | IDs |
 | --- | --- | --- | --- |
@@ -99,6 +99,8 @@ Registered in `assets/catalog/shared_visuals_v1_source.toml` (catalogue 0.6.0); 
 | FX frames | `fx/v1/` | `runtime/v1/fx/` | `fx.<name>` (`default` = peak frame, `frame_2`/`frame_3` continue) |
 
 One drawing per animal: `prop.vocab.{cat,dog,bear,frog,mouse,butterfly,snail,turtle,whale,octopus,crab}` are catalogue aliases that declare the same source/output as the matching `creature.*` default (the builder permits identical source/output/size across IDs and renders once). Do not add a second drawing for an animal that already has a creature.
+
+Vocabulary nouns: `prop.vocab.*` holds 103 distinct drawings (catalogue 0.7.0 added 62: 50 new plus 12 promoted from Activity-private art). Language mapping notes (for example ES `vaso` = `prop.vocab.glass`, ES `globo` = `prop.vocab.balloon`) are kept as comments at the end of `shared_visuals_v1_source.toml`.
 
 `tests/test_shared_visual_library.py` asserts every declared rendition exists with its declared size and that no unregistered PNG ships.
 

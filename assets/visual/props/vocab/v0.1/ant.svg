@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.ant — red-brown ant, side view. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- coral shade light -> coral shade 40% ink -->
+    <linearGradient id="vocab_ant_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D9806C"/>
+      <stop offset="1" stop-color="#AD5442"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="136" cy="232" rx="84" ry="14.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="ant">
+    <path d="M104 150 C92 172 76 186 62 220" fill="none" stroke="#4B372F" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M104 150 C92 172 76 186 62 220" fill="none" stroke="#AD5442" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M112 154 C112 180 106 200 104 224" fill="none" stroke="#4B372F" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M112 154 C112 180 106 200 104 224" fill="none" stroke="#AD5442" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M120 150 C138 172 150 196 156 222" fill="none" stroke="#4B372F" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M120 150 C138 172 150 196 156 222" fill="none" stroke="#AD5442" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M56 108 C46 82 30 66 18 62" fill="none" stroke="#4B372F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="18" cy="60" r="7" fill="#AD5442" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M70 104 C70 78 62 58 52 46" fill="none" stroke="#4B372F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="52" cy="44" r="7" fill="#AD5442" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="178" cy="138" rx="54" ry="40" fill="url(#vocab_ant_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="114" cy="142" rx="22" ry="18" fill="url(#vocab_ant_body)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <circle cx="66" cy="128" r="30" fill="url(#vocab_ant_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="58" cy="122" rx="7.5" ry="9.5" fill="#342C35"/>
+    <circle cx="55.5" cy="118.5" r="3" fill="#FFFFFF"/>
+    <path d="M42 140 Q50 148 60 144" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="76" cy="140" rx="7" ry="4.5" fill="#FDA4AF" opacity="0.6"/>
+    <ellipse cx="160" cy="116" rx="18" ry="8" fill="#FFFFFF" opacity="0.75" transform="rotate(-15 160 116)"/>
+  </g>
+</svg>

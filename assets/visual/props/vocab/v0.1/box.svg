@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.box — open cardboard box. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sand -> orange sand shade -->
+    <linearGradient id="vocab_box_front" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E2B888"/>
+      <stop offset="1" stop-color="#C9935A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="92" ry="15.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="box">
+    <path d="M42 104 L18 72 L104 64 L118 96 Z" fill="#D9A86E" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M214 104 L238 72 L152 64 L138 96 Z" fill="#D9A86E" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M60 96 L196 96 L214 104 L42 104 Z" fill="#8C6239" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M42 104 L214 104 L208 222 C208 228 204 230 198 230 L58 230 C52 230 48 228 48 222 Z" fill="url(#vocab_box_front)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M42 104 L76 140 L180 140 L214 104" fill="#EBC79A" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M100 176 L156 176" fill="none" stroke="#A8743F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="70" cy="168" rx="6" ry="22" fill="#FFFFFF" opacity="0.5"/>
+  </g>
+</svg>

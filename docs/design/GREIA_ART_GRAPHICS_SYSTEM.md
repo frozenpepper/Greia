@@ -294,7 +294,7 @@ Light/shadow overlays should remain independently removable where reuse benefits
 
 # 8. Current reusable source library
 
-**Current runtime source: the shared art library v1 (2026-10-15, catalogue 0.6.0).** New Activity and Shell visuals consume it by semantic ID; the source-tree summary is `assets/visual/README.md` ("Shared art library v1") and the selection is `assets/catalog/shared_visuals_v1_source.toml`.
+**Current runtime source: the shared art library v1 (2026-10-15, catalogue 0.7.0).** New Activity and Shell visuals consume it by semantic ID; the source-tree summary is `assets/visual/README.md` ("Shared art library v1") and the selection is `assets/catalog/shared_visuals_v1_source.toml`.
 
 | Family | ID pattern | Contents |
 |---|---|---|

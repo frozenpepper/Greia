@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.tree — round leafy tree with red fruit. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="vocab_tree_crown" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+    <!-- wood -> wood shade -->
+    <linearGradient id="vocab_tree_trunk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C98F5A"/>
+      <stop offset="1" stop-color="#A8693D"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="50" ry="8.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="tree">
+    <path d="M110 230 L114 150 L142 150 L146 230 Z" fill="url(#vocab_tree_trunk)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M114 176 L96 160 M142 170 L160 154" fill="none" stroke="#4B372F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128.0 26.0 A29.4 29.4 0 0 1 175.6 37.7 A29.4 29.4 0 0 1 208.0 69.3 A29.4 29.4 0 0 1 215.1 110.5 A29.4 29.4 0 0 1 194.5 148.5 A29.4 29.4 0 0 1 152.8 171.0 A29.4 29.4 0 0 1 103.2 171.0 A29.4 29.4 0 0 1 61.5 148.5 A29.4 29.4 0 0 1 40.9 110.5 A29.4 29.4 0 0 1 48.0 69.3 A29.4 29.4 0 0 1 80.4 37.7 A29.4 29.4 0 0 1 128.0 26.0 Z" fill="url(#vocab_tree_crown)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <circle cx="96" cy="112" r="7" fill="#F46F61" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="152" cy="82" r="7" fill="#F46F61" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="166" cy="126" r="7" fill="#F46F61" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="118" cy="64" r="7" fill="#F46F61" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="84" cy="68" rx="16" ry="8" fill="#FFFFFF" opacity="0.6" transform="rotate(-30 84 68)"/>
+  </g>
+</svg>

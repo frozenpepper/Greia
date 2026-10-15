@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.rose — promoted verbatim from activities/officina_dei_suoni/assets/source/rose.svg (art unchanged; gradient ids re-prefixed). Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- coral light (mix 40% white) -> coral -->
+    <linearGradient id="vocab_rose_petal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="vocab_rose_leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="234" rx="44" ry="7.5" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="stem">
+    <path d="M128 128 C126 164 132 196 128 232" fill="none" stroke="#4B372F" stroke-width="16" stroke-linecap="round"/>
+    <path d="M128 128 C126 164 132 196 128 232" fill="none" stroke="#59B86A" stroke-width="8" stroke-linecap="round"/>
+    <path d="M122 168 L108 162 L121 156 Z" fill="#59B86A" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M134 202 L148 196 L135 190 Z" fill="#59B86A" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M128 182 C108 164 80 166 66 180 C86 198 110 198 128 182 Z" fill="url(#vocab_rose_leaf)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M130 150 C150 132 178 134 192 148 C172 166 148 166 130 150 Z" fill="url(#vocab_rose_leaf)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M110 118 L128 108 L146 118 L140 136 L116 136 Z" fill="#59B86A" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+  </g>
+  <g id="bloom">
+    <path d="M78 70 C70 100 92 128 128 130 C164 128 186 100 178 70 C160 84 96 84 78 70 Z" fill="url(#vocab_rose_petal)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M84 62 C92 30 164 30 172 62 C168 82 88 82 84 62 Z" fill="#CF6356" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M100 60 C104 44 152 44 156 60 C152 72 106 72 100 60 Z" fill="url(#vocab_rose_petal)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M114 58 C118 48 140 48 142 58 C138 64 120 64 114 58" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/>
+    <path d="M128 130 C112 116 104 98 106 80" fill="none" stroke="#CF6356" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M128 130 C146 116 154 98 152 80" fill="none" stroke="#CF6356" stroke-width="3.5" stroke-linecap="round"/>
+    <ellipse cx="94" cy="92" rx="6" ry="11" fill="#FFFFFF" opacity="0.6" transform="rotate(20 94 92)"/>
+  </g>
+</svg>

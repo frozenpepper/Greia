@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.sheep — fluffy cream sheep with a taupe face. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- white -> cream shade -->
+    <linearGradient id="vocab_sheep_wool" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F1E7D8"/>
+    </linearGradient>
+    <!-- ink light 60% -> ink light 50% -->
+    <linearGradient id="vocab_sheep_face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C2B8B4"/>
+      <stop offset="1" stop-color="#A59B97"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="80" ry="13.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="sheep">
+    <rect x="90" y="196" width="20" height="38" rx="8" fill="#A59B97" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="146" y="196" width="20" height="38" rx="8" fill="#A59B97" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M128.0 94.0 A23.4 23.4 0 0 1 165.3 100.1 A23.4 23.4 0 0 1 195.2 117.3 A23.4 23.4 0 0 1 211.8 142.2 A23.4 23.4 0 0 1 211.8 169.8 A23.4 23.4 0 0 1 195.2 194.7 A23.4 23.4 0 0 1 165.3 211.9 A23.4 23.4 0 0 1 128.0 218.0 A23.4 23.4 0 0 1 90.7 211.9 A23.4 23.4 0 0 1 60.8 194.7 A23.4 23.4 0 0 1 44.2 169.8 A23.4 23.4 0 0 1 44.2 142.2 A23.4 23.4 0 0 1 60.8 117.3 A23.4 23.4 0 0 1 90.7 100.1 A23.4 23.4 0 0 1 128.0 94.0 Z" fill="url(#vocab_sheep_wool)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M58 104 C40 104 32 116 38 122 C46 128 62 122 70 114 Z" fill="#A59B97" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M198 104 C216 104 224 116 218 122 C210 128 194 122 186 114 Z" fill="#A59B97" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M128 66 C156 66 172 88 172 116 C172 146 152 162 128 162 C104 162 84 146 84 116 C84 88 100 66 128 66 Z" fill="url(#vocab_sheep_face)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M128.0 48.0 A17.8 17.8 0 0 1 154.6 54.8 A17.8 17.8 0 0 1 161.1 70.0 A17.8 17.8 0 0 1 142.8 82.2 A17.8 17.8 0 0 1 113.2 82.2 A17.8 17.8 0 0 1 94.9 70.0 A17.8 17.8 0 0 1 101.4 54.8 A17.8 17.8 0 0 1 128.0 48.0 Z" fill="url(#vocab_sheep_wool)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="110" cy="110" rx="6.5" ry="8.5" fill="#342C35"/>
+    <circle cx="108.0" cy="107.0" r="2.6" fill="#FFFFFF"/>
+    <ellipse cx="146" cy="110" rx="6.5" ry="8.5" fill="#342C35"/>
+    <circle cx="144.0" cy="107.0" r="2.6" fill="#FFFFFF"/>
+    <ellipse cx="128" cy="136" rx="8" ry="5.5" fill="#786463"/>
+    <path d="M120 146 Q128 152 136 146" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="100" cy="130" rx="8" ry="5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="156" cy="130" rx="8" ry="5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="78" cy="128" rx="10" ry="18" fill="#FFFFFF" opacity="0.75" transform="rotate(25 78 128)"/>
+  </g>
+</svg>

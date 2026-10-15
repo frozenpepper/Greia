@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.hammer — hammer with a wooden handle. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- cool grey light -> cool grey -->
+    <linearGradient id="vocab_hammer_head" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C8CDD3"/>
+      <stop offset="1" stop-color="#9AA2AC"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="150" cy="232" rx="66" ry="11.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="hammer">
+    <rect x="112" y="84" width="32" height="150" rx="12" fill="#E6A75D" stroke="#4B372F" stroke-width="5" stroke-linejoin="round" transform="rotate(-24 128 128)"/>
+    <rect x="112" y="196" width="32" height="38" rx="12" fill="#F46F61" stroke="#4B372F" stroke-width="5" stroke-linejoin="round" transform="rotate(-24 128 128)"/>
+    <rect x="52" y="38" width="152" height="54" rx="14" fill="url(#vocab_hammer_head)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round" transform="rotate(-24 128 128)"/>
+    <rect x="52" y="38" width="22" height="54" rx="8" fill="#9AA2AC" stroke="#4B372F" stroke-width="4" stroke-linejoin="round" transform="rotate(-24 128 128)"/>
+    <ellipse cx="118" cy="52" rx="30" ry="5" fill="#FFFFFF" opacity="0.75" transform="rotate(-24 128 128)"/>
+  </g>
+</svg>

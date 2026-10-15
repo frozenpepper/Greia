@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.island — promoted verbatim from activities/alfabeto_leo/assets/source/island.svg (art unchanged; gradient ids re-prefixed). Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sand light -> sand -->
+    <linearGradient id="vocab_island_sand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7EEDB"/>
+      <stop offset="1" stop-color="#EEDDBA"/>
+    </linearGradient>
+  </defs>
+  <g id="island">
+    <path d="M14 206 C30 194 50 194 66 204 C82 214 100 214 116 204 C132 194 152 194 168 204 C184 214 204 214 220 204 C228 199 236 198 242 200 L242 228 C242 234 236 238 230 238 L26 238 C20 238 14 234 14 228 Z" fill="#9BC2EA" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M40 206 C52 170 92 158 128 158 C164 158 204 170 216 206 C190 214 160 216 128 216 C96 216 66 214 40 206 Z" fill="url(#vocab_island_sand)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M118 176 C112 138 116 104 136 72" fill="none" stroke="#4B372F" stroke-width="18" stroke-linecap="round"/>
+    <path d="M118 176 C112 138 116 104 136 72" fill="none" stroke="#B87735" stroke-width="9" stroke-linecap="round"/>
+    <path d="M114 152 L124 148 M113 130 L123 128 M117 108 L127 108 M124 88 L134 90" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/>
+    <path d="M136 72 C116 52 82 52 62 70 C86 66 110 70 136 72 Z" fill="#59B86A" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M136 72 C128 48 104 30 80 30 C104 42 120 56 136 72 Z" fill="#59B86A" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M136 72 C148 46 176 34 200 40 C178 46 156 58 136 72 Z" fill="#59B86A" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M136 72 C164 62 196 70 210 94 C188 82 162 78 136 72 Z" fill="#59B86A" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M136 72 C130 90 112 106 92 110 C110 96 124 84 136 72 Z" fill="#59B86A" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <circle cx="128" cy="82" r="8" fill="#A76D34" stroke="#4B372F" stroke-width="3.5"/>
+    <circle cx="144" cy="82" r="8" fill="#A76D34" stroke="#4B372F" stroke-width="3.5"/>
+    <path d="M70 196 C82 182 100 174 118 172" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.8"/>
+    <path d="M186 184 C190 178 198 178 202 184 C198 190 190 190 186 184 Z" fill="#F46F61" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+</svg>

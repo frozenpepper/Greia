@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.dice — white dice with dots. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- white -> cream -->
+    <linearGradient id="vocab_dice_top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F7EFE0"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="76" ry="12.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="dice">
+    <path d="M52 90 L128 58 L204 90 L128 124 Z" fill="url(#vocab_dice_top)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M52 90 L128 124 L128 222 L58 190 C54 188 52 184 52 180 Z" fill="#F7EBD9" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M204 90 L128 124 L128 222 L198 190 C202 188 204 184 204 180 Z" fill="#E8D9C2" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="90" rx="11" ry="6.5" fill="#F46F61"/>
+    <ellipse cx="76" cy="126" rx="7" ry="9" fill="#4B372F" transform="rotate(-24 76 126)"/>
+    <ellipse cx="104" cy="186" rx="7" ry="9" fill="#4B372F" transform="rotate(-24 104 186)"/>
+    <ellipse cx="90" cy="156" rx="7" ry="9" fill="#4B372F" transform="rotate(-24 90 156)"/>
+    <ellipse cx="150" cy="126" rx="7" ry="9" fill="#4B372F" transform="rotate(24 150 126)"/>
+    <ellipse cx="180" cy="112" rx="7" ry="9" fill="#4B372F" transform="rotate(24 180 112)"/>
+    <ellipse cx="150" cy="186" rx="7" ry="9" fill="#4B372F" transform="rotate(24 150 186)"/>
+    <ellipse cx="180" cy="172" rx="7" ry="9" fill="#4B372F" transform="rotate(24 180 172)"/>
+    <ellipse cx="150" cy="156" rx="7" ry="9" fill="#4B372F" transform="rotate(24 150 156)"/>
+    <ellipse cx="180" cy="142" rx="7" ry="9" fill="#4B372F" transform="rotate(24 180 142)"/>
+    <ellipse cx="96" cy="82" rx="12" ry="4" fill="#FFFFFF" opacity="0.8" transform="rotate(-22 96 82)"/>
+  </g>
+</svg>

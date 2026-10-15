@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.balloon — red balloon on a string. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- coral light -> coral shade -->
+    <linearGradient id="vocab_balloon_skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#EE5E5E"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="246" rx="34" ry="5.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="balloon">
+    <path d="M128 170 C120 190 140 204 128 220 C118 232 130 240 136 244" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128 22 C170 22 196 54 196 94 C196 136 160 166 128 166 C96 166 60 136 60 94 C60 54 86 22 128 22 Z" fill="url(#vocab_balloon_skin)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M118 176 L138 176 L132 164 L124 164 Z" fill="#EE5E5E" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="98" cy="66" rx="12" ry="22" fill="#FFFFFF" opacity="0.8" transform="rotate(25 98 66)"/>
+  </g>
+</svg>

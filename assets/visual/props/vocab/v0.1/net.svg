@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.net — hand net with a wooden handle. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange sand light -> wood -->
+    <linearGradient id="vocab_net_handle" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F2C894"/>
+      <stop offset="1" stop-color="#E6A75D"/>
+    </linearGradient>
+    <clipPath id="vocab_net_bag"><path d="M60 92 C56 140 76 196 112 210 C138 220 158 190 168 150 C176 120 180 100 176 94 Z"/></clipPath>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="80" ry="13.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="net">
+    <path d="M176 106 L236 236" fill="none" stroke="#4B372F" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M176 106 L236 236" fill="none" stroke="#E6A75D" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M60 92 C56 140 76 196 112 210 C138 220 158 190 168 150 C176 120 180 100 176 94" fill="#F4F9FD" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M80 80 L44 230 M40 80 L90 230 M100 80 L64 230 M60 80 L110 230 M120 80 L84 230 M80 80 L130 230 M140 80 L104 230 M100 80 L150 230 M160 80 L124 230 M120 80 L170 230" fill="none" stroke="#8F8784" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#vocab_net_bag)"/>
+    <path d="M60 92 C56 140 76 196 112 210 C138 220 158 190 168 150 C176 120 180 100 176 94" fill="none" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="118" cy="92" rx="60" ry="22" fill="none" stroke="#4B372F" stroke-width="9" stroke-linejoin="round"/>
+    <ellipse cx="118" cy="92" rx="60" ry="22" fill="none" stroke="#4A91D8" stroke-width="4" stroke-linejoin="round"/>
+  </g>
+</svg>

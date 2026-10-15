@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.bone — white bone. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- white -> cream shade -->
+    <linearGradient id="vocab_bone_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F1E7D8"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="226" rx="70" ry="11.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="bone">
+    <path d="M66 96 C50 76 64 52 84 60 C92 44 118 50 112 74 L160 152 C182 140 204 158 190 176 C206 186 196 214 172 206 C170 222 140 222 144 194 L96 116 C72 128 50 110 66 96 Z" fill="url(#vocab_bone_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="92" cy="74" rx="10" ry="5" fill="#FFFFFF" opacity="0.8" transform="rotate(-40 92 74)"/>
+  </g>
+</svg>

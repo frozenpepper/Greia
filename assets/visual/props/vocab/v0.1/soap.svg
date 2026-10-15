@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.soap — pink soap bar with bubbles. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- rose -> raspberry light -->
+    <linearGradient id="vocab_soap_bar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F9C2D2"/>
+      <stop offset="1" stop-color="#EE8DB0"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="90" ry="15.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="soap">
+    <path d="M44 158 C44 132 64 120 90 120 L170 120 C196 120 214 132 214 158 L214 186 C214 206 196 216 170 216 L90 216 C64 216 44 206 44 186 Z" fill="url(#vocab_soap_bar)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M58 148 C58 138 70 134 90 134 L168 134 C190 134 200 140 200 150" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M88 160 C104 172 152 172 168 160" fill="none" stroke="#D8678F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="90" cy="84" r="22" fill="#EAF6FC" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="82.3" cy="76.3" r="6.2" fill="#FFFFFF"/>
+    <circle cx="140" cy="64" r="16" fill="#EAF6FC" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="134.4" cy="58.4" r="4.5" fill="#FFFFFF"/>
+    <circle cx="180" cy="92" r="26" fill="#EAF6FC" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="170.9" cy="82.9" r="7.3" fill="#FFFFFF"/>
+    <circle cx="64" cy="40" r="10" fill="#EAF6FC" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="60.5" cy="36.5" r="2.8" fill="#FFFFFF"/>
+    <circle cx="212" cy="46" r="12" fill="#EAF6FC" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="207.8" cy="41.8" r="3.4" fill="#FFFFFF"/>
+  </g>
+</svg>

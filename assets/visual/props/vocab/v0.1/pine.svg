@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.pine — green pine tree. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- leaf light -> leaf shade -->
+    <linearGradient id="vocab_pine_needles" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7CC484"/>
+      <stop offset="1" stop-color="#3F8A4E"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="70" ry="11.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="pine">
+    <rect x="114" y="184" width="28" height="46" rx="6" fill="#B07339" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M128 20 L172 82 L156 82 L196 136 L176 136 L216 192 L40 192 L80 136 L60 136 L100 82 L84 82 Z" fill="url(#vocab_pine_needles)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M92 112 L164 112 M76 164 L180 164" fill="none" stroke="#2F6E3D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="110" cy="70" rx="5" ry="18" fill="#FFFFFF" opacity="0.55" transform="rotate(30 110 70)"/>
+  </g>
+</svg>

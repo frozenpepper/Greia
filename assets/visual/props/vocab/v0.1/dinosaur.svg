@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.dinosaur — friendly green stegosaurus with orange plates. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="vocab_dinosaur_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9ED8A8"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+    <!-- orange light -> orange -->
+    <linearGradient id="vocab_dinosaur_plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BC7A"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="134" cy="232" rx="96" ry="16.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="dinosaur">
+    <path d="M85.7 137.1 Q54.7 126.8 51.7 132.0 Q48.7 137.2 73.1 158.9 Z" fill="url(#vocab_dinosaur_plate)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M109.0 116.6 Q79.5 94.0 74.7 97.7 Q70.0 101.4 84.8 135.6 Z" fill="url(#vocab_dinosaur_plate)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M136.9 108.3 Q116.0 74.8 110.2 76.4 Q104.5 78.1 104.6 117.6 Z" fill="url(#vocab_dinosaur_plate)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M164.0 112.2 Q157.3 73.3 151.3 72.6 Q145.3 72.0 130.6 108.7 Z" fill="url(#vocab_dinosaur_plate)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M186.5 126.1 Q195.1 89.9 189.8 87.1 Q184.5 84.3 159.3 111.7 Z" fill="url(#vocab_dinosaur_plate)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M201.7 146.8 Q222.0 121.2 218.1 116.6 Q214.3 112.0 185.5 127.5 Z" fill="url(#vocab_dinosaur_plate)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="76" y="180" width="24" height="48" rx="10" fill="#59B86A" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="102" y="180" width="24" height="48" rx="10" fill="#59B86A" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="148" y="180" width="24" height="48" rx="10" fill="#59B86A" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="174" y="180" width="24" height="48" rx="10" fill="#59B86A" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M222 178 L232 154 L242 182 Z" fill="url(#vocab_dinosaur_plate)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M196 170 C220 170 238 174 250 186 C236 196 214 196 194 194 Z" fill="url(#vocab_dinosaur_body)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M70 186 C66 142 100 112 140 112 C180 112 210 140 210 178 C210 196 188 206 140 206 C100 206 72 202 70 186 Z" fill="url(#vocab_dinosaur_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M78 160 C70 146 52 138 40 140 C22 142 12 156 16 170 C20 184 40 190 56 186 C66 184 74 180 80 176 Z" fill="url(#vocab_dinosaur_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M96 190 C116 198 164 198 190 188" fill="none" stroke="#3F8A4E" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="44" cy="154" rx="6.5" ry="8.5" fill="#342C35"/>
+    <circle cx="42.0" cy="151.0" r="2.6" fill="#FFFFFF"/>
+    <path d="M22 172 Q34 180 48 174" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="58" cy="170" rx="7" ry="4.5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="118" cy="136" rx="20" ry="8" fill="#FFFFFF" opacity="0.75" transform="rotate(-20 118 136)"/>
+  </g>
+</svg>

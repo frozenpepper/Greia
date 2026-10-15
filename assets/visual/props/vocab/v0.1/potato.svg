@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.potato — golden-brown potato. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sand -> orange sand shade -->
+    <linearGradient id="vocab_potato_skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EFD3A6"/>
+      <stop offset="1" stop-color="#D3A465"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="82" ry="13.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="potato">
+    <path d="M60 120 C62 92 92 74 126 78 C156 82 166 70 192 82 C220 96 228 128 220 158 C212 190 186 212 146 214 C108 216 90 204 66 192 C44 180 36 152 60 120 Z" fill="url(#vocab_potato_skin)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M86 118 Q92 113 98 118" fill="none" stroke="#8C6239" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M144 112 Q150 107 156 112" fill="none" stroke="#8C6239" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M180 150 Q186 145 192 150" fill="none" stroke="#8C6239" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M112 176 Q118 171 124 176" fill="none" stroke="#8C6239" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M68 162 Q74 157 80 162" fill="none" stroke="#8C6239" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="128" cy="140" r="3" fill="#B8874E"/>
+    <circle cx="170" cy="186" r="3" fill="#B8874E"/>
+    <circle cx="100" cy="146" r="3" fill="#B8874E"/>
+    <circle cx="200" cy="116" r="3" fill="#B8874E"/>
+    <ellipse cx="96" cy="98" rx="16" ry="7" fill="#FFFFFF" opacity="0.75" transform="rotate(-15 96 98)"/>
+  </g>
+</svg>

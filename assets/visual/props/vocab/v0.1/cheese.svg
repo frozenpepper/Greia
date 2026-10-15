@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.cheese — yellow cheese wedge with holes. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sunshine light 50% -> sunshine light 25% -->
+    <linearGradient id="vocab_cheese_top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE7A6"/>
+      <stop offset="1" stop-color="#FFD466"/>
+    </linearGradient>
+    <!-- sunshine -> sunshine shade -->
+    <linearGradient id="vocab_cheese_front" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFCE5C"/>
+      <stop offset="1" stop-color="#F2AE24"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="90" ry="15.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="cheese">
+    <path d="M36 146 L222 120 L222 192 L36 214 Z" fill="url(#vocab_cheese_front)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M36 146 L162 62 C190 74 210 96 222 120 Z" fill="url(#vocab_cheese_top)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="76" cy="178" rx="14" ry="11" fill="#DC9A1E"/>
+    <ellipse cx="130" cy="166" rx="10" ry="8" fill="#DC9A1E"/>
+    <ellipse cx="176" cy="176" rx="16" ry="12" fill="#DC9A1E"/>
+    <ellipse cx="118" cy="200" rx="7" ry="5" fill="#DC9A1E"/>
+    <ellipse cx="200" cy="148" rx="6" ry="5" fill="#DC9A1E"/>
+    <ellipse cx="150" cy="108" rx="12" ry="6" fill="#F6C24A"/>
+    <ellipse cx="108" cy="118" rx="8" ry="4" fill="#F6C24A"/>
+    <ellipse cx="150" cy="82" rx="14" ry="5" fill="#FFFFFF" opacity="0.7" transform="rotate(34 150 82)"/>
+  </g>
+</svg>

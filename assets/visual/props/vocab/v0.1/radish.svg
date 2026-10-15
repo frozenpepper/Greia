@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.radish — pink-red radish with green leaves. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- raspberry light -> raspberry -->
+    <linearGradient id="vocab_radish_bulb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EE8DB0"/>
+      <stop offset="1" stop-color="#D85683"/>
+    </linearGradient>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="vocab_radish_leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="52" ry="8.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="radish">
+    <path d="M128 108 C112 80 82 52 70 30 C96 32 122 58 132 98 Z" fill="url(#vocab_radish_leaf)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M128 108 C144 80 172 50 192 34 C192 62 162 92 136 108 Z" fill="url(#vocab_radish_leaf)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M126 104 C120 74 120 44 128 22 C140 46 138 78 132 104 Z" fill="url(#vocab_radish_leaf)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M128 98 C176 98 198 132 192 166 C188 184 172 196 150 202 C142 214 136 226 128 236 C120 226 114 214 106 202 C84 196 68 184 64 166 C58 132 80 98 128 98 Z" fill="url(#vocab_radish_bulb)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M106 202 C114 196 142 196 150 202 C142 214 136 226 128 236 C120 226 114 214 106 202 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="96" cy="132" rx="11" ry="20" fill="#FFFFFF" opacity="0.75" transform="rotate(25 96 132)"/>
+  </g>
+</svg>

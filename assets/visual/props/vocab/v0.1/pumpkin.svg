@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.pumpkin — orange pumpkin with a stem and leaf. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange light -> orange shade -->
+    <linearGradient id="vocab_pumpkin_side" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F6B26B"/>
+      <stop offset="1" stop-color="#E2832B"/>
+    </linearGradient>
+    <!-- orange light -> orange -->
+    <linearGradient id="vocab_pumpkin_mid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F9C789"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="100" ry="16.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="pumpkin">
+    <ellipse cx="78" cy="156" rx="52" ry="64" fill="url(#vocab_pumpkin_side)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="178" cy="156" rx="52" ry="64" fill="url(#vocab_pumpkin_side)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="156" rx="50" ry="70" fill="url(#vocab_pumpkin_mid)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M124 90 C120 72 124 56 136 46 L150 54 C140 64 136 76 140 90 Z" fill="#8C6239" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M146 66 C166 46 196 52 204 70 C184 84 162 82 146 66 Z" fill="#7AC688" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M106 72 C96 58 100 44 114 44" fill="none" stroke="#3F8A4E" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="108" cy="124" rx="8" ry="22" fill="#FFFFFF" opacity="0.75" transform="rotate(12 108 124)"/>
+  </g>
+</svg>

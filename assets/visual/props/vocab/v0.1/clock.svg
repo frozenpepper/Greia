@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.clock — turquoise alarm clock. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- turquoise light -> turquoise -->
+    <linearGradient id="vocab_clock_case" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#89D0C9"/>
+      <stop offset="1" stop-color="#44B8AE"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="74" ry="12.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="clock">
+    <path d="M78 196 L60 226 M178 196 L196 226" fill="none" stroke="#4B372F" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M54 74 C40 54 54 30 80 34 C88 36 94 42 96 48 Z" fill="#FFC234" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M202 74 C216 54 202 30 176 34 C168 36 162 42 160 48 Z" fill="#FFC234" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <circle cx="128" cy="136" r="84" fill="url(#vocab_clock_case)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <circle cx="128" cy="136" r="64" fill="#FFFBEB" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M128.0 92.0 L128.0 78.0" fill="none" stroke="#4B372F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M153.0 92.7 L157.0 85.8" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M171.3 111.0 L178.2 107.0" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M172.0 136.0 L186.0 136.0" fill="none" stroke="#4B372F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M171.3 161.0 L178.2 165.0" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M153.0 179.3 L157.0 186.2" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128.0 180.0 L128.0 194.0" fill="none" stroke="#4B372F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M103.0 179.3 L99.0 186.2" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M84.7 161.0 L77.8 165.0" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M84.0 136.0 L70.0 136.0" fill="none" stroke="#4B372F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M84.7 111.0 L77.8 107.0" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M103.0 92.7 L99.0 85.8" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128 136 L128 96 M128 136 L156 150" fill="none" stroke="#4B372F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="128" cy="136" r="6" fill="#F46F61"/>
+    <circle cx="128" cy="46" r="8" fill="#FFC234" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="80" cy="88" rx="12" ry="6" fill="#FFFFFF" opacity="0.7" transform="rotate(-45 80 88)"/>
+  </g>
+</svg>

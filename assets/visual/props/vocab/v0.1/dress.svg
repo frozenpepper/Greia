@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.dress — pink dress with polka dots. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- raspberry light -> raspberry -->
+    <linearGradient id="vocab_dress_cloth" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EE8DB0"/>
+      <stop offset="1" stop-color="#D85683"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="86" ry="14.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="dress">
+    <path d="M92 34 C100 48 156 48 164 34 L168 72 C180 76 186 86 184 98 L160 112 C190 160 214 196 222 222 C190 234 66 234 34 222 C42 196 66 160 96 112 L72 98 C70 86 76 76 88 72 Z" fill="url(#vocab_dress_cloth)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M100 112 L156 112 L152 128 L104 128 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M92 34 L106 34 C110 44 146 44 150 34 L164 34" fill="none"/>
+    <path d="M48 210 C80 218 176 218 208 210" fill="none" stroke="#FFFBEB" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="96" cy="170" r="5.5" fill="#FFFBEB"/>
+    <circle cx="150" cy="168" r="5.5" fill="#FFFBEB"/>
+    <circle cx="124" cy="196" r="5.5" fill="#FFFBEB"/>
+    <circle cx="80" cy="200" r="5.5" fill="#FFFBEB"/>
+    <circle cx="176" cy="198" r="5.5" fill="#FFFBEB"/>
+    <circle cx="124" cy="148" r="5.5" fill="#FFFBEB"/>
+    <ellipse cx="98" cy="72" rx="6" ry="14" fill="#FFFFFF" opacity="0.6" transform="rotate(15 98 72)"/>
+  </g>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.orange — round orange with a green leaf. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange light -> orange -->
+    <linearGradient id="vocab_orange_peel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8BF7E"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="vocab_orange_leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="74" ry="12.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="orange">
+    <circle cx="128" cy="146" r="84" fill="url(#vocab_orange_peel)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <circle cx="96" cy="108" r="2.6" fill="#E0852B"/>
+    <circle cx="150" cy="100" r="2.6" fill="#E0852B"/>
+    <circle cx="178" cy="136" r="2.6" fill="#E0852B"/>
+    <circle cx="88" cy="164" r="2.6" fill="#E0852B"/>
+    <circle cx="130" cy="132" r="2.6" fill="#E0852B"/>
+    <circle cx="164" cy="182" r="2.6" fill="#E0852B"/>
+    <circle cx="112" cy="196" r="2.6" fill="#E0852B"/>
+    <circle cx="196" cy="166" r="2.6" fill="#E0852B"/>
+    <circle cx="128" cy="66" r="6" fill="#7A5A3A" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M134 64 C150 40 182 36 200 46 C190 70 160 76 134 64 Z" fill="url(#vocab_orange_leaf)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M140 62 C156 54 172 50 188 50" fill="none" stroke="#3F8A4E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="88" cy="112" rx="12" ry="22" fill="#FFFFFF" opacity="0.75" transform="rotate(30 88 112)"/>
+  </g>
+</svg>

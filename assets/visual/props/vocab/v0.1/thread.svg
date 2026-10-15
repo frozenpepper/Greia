@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.thread — spool of blue thread with a needle. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="vocab_thread_wind" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9AC3EC"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+    <!-- orange sand light -> wood -->
+    <linearGradient id="vocab_thread_wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F2C894"/>
+      <stop offset="1" stop-color="#E6A75D"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="72" ry="12.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="thread">
+    <path d="M164 196 C196 204 214 218 236 214" fill="none" stroke="#4B372F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M164 196 C196 204 214 218 236 214" fill="none" stroke="#4A91D8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="68" y="186" width="120" height="30" rx="12" fill="url(#vocab_thread_wood)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="84" y="74" width="88" height="116" rx="12" fill="url(#vocab_thread_wind)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M88 90 L168 96" fill="none" stroke="#2F6BA8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M88 104 L168 110" fill="none" stroke="#2F6BA8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M88 118 L168 124" fill="none" stroke="#2F6BA8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M88 132 L168 138" fill="none" stroke="#2F6BA8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M88 146 L168 152" fill="none" stroke="#2F6BA8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M88 160 L168 166" fill="none" stroke="#2F6BA8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M88 174 L168 180" fill="none" stroke="#2F6BA8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="68" y="50" width="120" height="30" rx="12" fill="url(#vocab_thread_wood)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="65" rx="12" ry="6" fill="#9C6A3A"/>
+    <ellipse cx="100" cy="116" rx="5" ry="20" fill="#FFFFFF" opacity="0.6"/>
+    <path d="M196 212 L232 182" fill="none" stroke="#4B372F" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M232 182 L238 176" fill="none" stroke="#4B372F" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="229" cy="185" rx="3" ry="2" fill="#FFFFFF"/>
+  </g>
+</svg>

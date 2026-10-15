@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.candle — lit candle on a holder. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- white -> rose -->
+    <linearGradient id="vocab_candle_wax" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F5D6DF"/>
+    </linearGradient>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="vocab_candle_flame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF3C4"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="78" ry="13.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="candle">
+    <ellipse cx="128" cy="206" rx="72" ry="18" fill="#FFC234" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M60 206 C60 222 196 222 196 206" fill="#F2AE24" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="204" rx="72" ry="18" fill="#FFC234" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="98" y="100" width="60" height="106" rx="10" fill="url(#vocab_candle_wax)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M98 112 C108 124 114 112 118 124 C120 132 126 132 128 122" fill="none"/>
+    <path d="M128 100 L128 86" fill="none" stroke="#4B372F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128 40 C138 56 146 66 146 78 C146 90 138 96 128 96 C118 96 110 90 110 78 C110 66 120 56 128 40 Z" fill="url(#vocab_candle_flame)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M128 66 C132 74 136 78 136 84 C136 90 132 92 128 92 C124 92 120 90 120 84 C120 78 124 74 128 66 Z" fill="#F39A38"/>
+    <ellipse cx="110" cy="150" rx="4" ry="30" fill="#FFFFFF" opacity="0.8"/>
+  </g>
+</svg>

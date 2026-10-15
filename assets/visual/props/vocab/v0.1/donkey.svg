@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.donkey — grey donkey with long ears, side view. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- coat light -> coat (user space so neck and body share one ramp) -->
+    <linearGradient id="vocab_donkey_coat" gradientUnits="userSpaceOnUse" x1="0" y1="40" x2="0" y2="200">
+      <stop offset="0" stop-color="#C8BFBC"/>
+      <stop offset="1" stop-color="#A1948F"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="142" cy="232" rx="86" ry="14.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="donkey">
+    <rect x="86" y="160" width="20" height="66" rx="8" fill="#A1948F" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="85" y="214" width="22" height="16" rx="6" fill="#6B5048" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="108" y="160" width="20" height="66" rx="8" fill="#A1948F" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="107" y="214" width="22" height="16" rx="6" fill="#6B5048" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="160" y="160" width="20" height="66" rx="8" fill="#A1948F" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="159" y="214" width="22" height="16" rx="6" fill="#6B5048" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="182" y="160" width="20" height="66" rx="8" fill="#A1948F" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="181" y="214" width="22" height="16" rx="6" fill="#6B5048" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M206 132 C222 140 226 160 222 182 L214 182 C214 164 210 150 200 140 Z" fill="#6B5048" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="146" cy="142" rx="66" ry="38" fill="url(#vocab_donkey_coat)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M90 150 C80 120 74 92 68 72 L104 60 C110 86 118 110 130 140 Z" fill="url(#vocab_donkey_coat)"/>
+    <path d="M88 128 C80 108 74 90 68 72 M104 60 C110 82 116 100 124 116" fill="none" stroke="#4B372F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M74 46 C66 26 68 8 76 4 C86 10 88 30 86 44 Z" fill="#A1948F" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M70 14 C70 8 74 4 76 4 C80 8 82 12 82 16 Z" fill="#6B5048"/>
+    <path d="M92 42 C94 22 102 6 110 6 C116 14 108 32 100 46 Z" fill="#A1948F" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M104 8 C106 6 110 6 110 6 C112 10 112 14 110 18 Z" fill="#6B5048"/>
+    <path d="M64 46 C80 36 104 44 108 62 C110 76 102 84 90 86 L62 106 C48 116 30 110 30 96 C30 86 42 76 52 68 C54 58 58 50 64 46 Z" fill="url(#vocab_donkey_coat)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M62 106 C48 116 30 110 30 96 C30 88 38 80 46 76 C56 82 64 94 62 106 Z" fill="#F4EEEA" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="40" cy="96" rx="3.6" ry="4.6" fill="#6B5048"/>
+    <path d="M100 50 L106 44 L108 54 L116 52 L114 64 L122 66 L118 78 L126 82 L120 92 L128 98 L122 106 L130 112 L124 120 L116 112 C110 92 106 74 100 50 Z" fill="#6B5048" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <ellipse cx="84" cy="62" rx="6.5" ry="8.5" fill="#342C35"/>
+    <circle cx="82.0" cy="59.0" r="2.6" fill="#FFFFFF"/>
+    <ellipse cx="92" cy="80" rx="8" ry="5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="170" cy="120" rx="18" ry="7" fill="#FFFFFF" opacity="0.75" transform="rotate(-10 170 120)"/>
+  </g>
+</svg>

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.watermelon — watermelon slice with seeds. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- coral light -> coral raspberry -->
+    <linearGradient id="vocab_watermelon_flesh" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FA8E86"/>
+      <stop offset="1" stop-color="#EE5E5E"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="92" ry="15.3" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="watermelon">
+    <path d="M20 106 L236 106 C236 176 188 220 128 220 C68 220 20 176 20 106 Z" fill="#59B86A" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M34 106 L222 106 C222 166 180 204 128 204 C76 204 34 166 34 106 Z" fill="#E6F6D4"/>
+    <path d="M44 106 L212 106 C212 158 176 192 128 192 C80 192 44 158 44 106 Z" fill="url(#vocab_watermelon_flesh)"/>
+    <path d="M20 106 L236 106" fill="none" stroke="#4B372F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="84" cy="128" rx="4.5" ry="7" fill="#4B372F"/>
+    <ellipse cx="128" cy="124" rx="4.5" ry="7" fill="#4B372F"/>
+    <ellipse cx="172" cy="128" rx="4.5" ry="7" fill="#4B372F"/>
+    <ellipse cx="106" cy="158" rx="4.5" ry="7" fill="#4B372F"/>
+    <ellipse cx="150" cy="158" rx="4.5" ry="7" fill="#4B372F"/>
+    <ellipse cx="128" cy="178" rx="4.5" ry="7" fill="#4B372F"/>
+    <ellipse cx="70" cy="118" rx="10" ry="4" fill="#FFFFFF" opacity="0.6"/>
+  </g>
+</svg>

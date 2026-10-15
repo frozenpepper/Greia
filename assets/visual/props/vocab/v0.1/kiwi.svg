@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.kiwi — kiwi fruit, whole and halved. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange-cocoa light -> cocoa brown -->
+    <linearGradient id="vocab_kiwi_skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C9A27A"/>
+      <stop offset="1" stop-color="#9C7650"/>
+    </linearGradient>
+    <!-- leaf/sunshine light -> lime -->
+    <linearGradient id="vocab_kiwi_flesh" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B6E08A"/>
+      <stop offset="1" stop-color="#7FC25A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="90" ry="15.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="kiwi">
+    <ellipse cx="150" cy="120" rx="74" ry="62" fill="url(#vocab_kiwi_skin)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round" transform="rotate(-20 150 120)"/>
+    <path d="M120 76 L116 70 M158 66 L160 60 M196 92 L202 88 M184 150 L190 152" fill="none" stroke="#7A5A3A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="102" cy="162" r="64" fill="#9C7650" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <circle cx="102" cy="162" r="54" fill="url(#vocab_kiwi_flesh)"/>
+    <ellipse cx="102" cy="162" rx="16" ry="12" fill="#F2F6D8" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <ellipse cx="132.0" cy="162.0" rx="3.2" ry="5" fill="#342C35" transform="rotate(90 132.0 162.0)"/>
+    <ellipse cx="128.0" cy="176.0" rx="3.2" ry="5" fill="#342C35" transform="rotate(120 128.0 176.0)"/>
+    <ellipse cx="117.0" cy="186.2" rx="3.2" ry="5" fill="#342C35" transform="rotate(150 117.0 186.2)"/>
+    <ellipse cx="102.0" cy="190.0" rx="3.2" ry="5" fill="#342C35" transform="rotate(180 102.0 190.0)"/>
+    <ellipse cx="87.0" cy="186.2" rx="3.2" ry="5" fill="#342C35" transform="rotate(210 87.0 186.2)"/>
+    <ellipse cx="76.0" cy="176.0" rx="3.2" ry="5" fill="#342C35" transform="rotate(240 76.0 176.0)"/>
+    <ellipse cx="72.0" cy="162.0" rx="3.2" ry="5" fill="#342C35" transform="rotate(270 72.0 162.0)"/>
+    <ellipse cx="76.0" cy="148.0" rx="3.2" ry="5" fill="#342C35" transform="rotate(300 76.0 148.0)"/>
+    <ellipse cx="87.0" cy="137.8" rx="3.2" ry="5" fill="#342C35" transform="rotate(330 87.0 137.8)"/>
+    <ellipse cx="102.0" cy="134.0" rx="3.2" ry="5" fill="#342C35" transform="rotate(360 102.0 134.0)"/>
+    <ellipse cx="117.0" cy="137.8" rx="3.2" ry="5" fill="#342C35" transform="rotate(390 117.0 137.8)"/>
+    <ellipse cx="128.0" cy="148.0" rx="3.2" ry="5" fill="#342C35" transform="rotate(420 128.0 148.0)"/>
+    <ellipse cx="170" cy="86" rx="14" ry="6" fill="#FFFFFF" opacity="0.75" transform="rotate(-30 170 86)"/>
+  </g>
+</svg>

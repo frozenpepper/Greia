@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.cucumber — green cucumber. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- leaf light -> leaf shade 35% ink -->
+    <linearGradient id="vocab_cucumber_skin" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#7CC484"/>
+      <stop offset="1" stop-color="#3F8A4E"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="90" ry="15.0" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="cucumber">
+    <path d="M44 182 C30 168 36 146 56 136 L176 62 C196 50 222 56 228 76 C234 94 222 108 206 118 L86 192 C72 200 54 194 44 182 Z" fill="url(#vocab_cucumber_skin)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M70 166 L186 94" fill="none" stroke="#9BD4A6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M84 182 L200 108" fill="none" stroke="#2F6E3D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="92" cy="140" r="3.2" fill="#D9F2D0"/>
+    <circle cx="124" cy="122" r="3.2" fill="#D9F2D0"/>
+    <circle cx="156" cy="102" r="3.2" fill="#D9F2D0"/>
+    <circle cx="188" cy="84" r="3.2" fill="#D9F2D0"/>
+    <circle cx="104" cy="168" r="3.2" fill="#D9F2D0"/>
+    <circle cx="140" cy="146" r="3.2" fill="#D9F2D0"/>
+    <circle cx="176" cy="124" r="3.2" fill="#D9F2D0"/>
+    <path d="M224 70 C232 62 240 58 246 60" fill="none" stroke="#4B372F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="150" cy="86" rx="20" ry="6" fill="#FFFFFF" opacity="0.75" transform="rotate(-32 150 86)"/>
+  </g>
+</svg>

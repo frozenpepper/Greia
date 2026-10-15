@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.globe — world globe on a stand. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="vocab_globe_sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="52" ry="8.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="globe">
+    <path d="M88 226 L168 226 L160 210 L96 210 Z" fill="#C27F45" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M128 210 L128 194" fill="none" stroke="#4B372F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M62 54 C34 92 36 152 72 182 C102 206 150 210 186 190" fill="none" stroke="#B9B4B0" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M62 54 C34 92 36 152 72 182 C102 206 150 210 186 190" fill="none"/>
+    <circle cx="132" cy="118" r="72" fill="url(#vocab_globe_sea)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M92 78 C108 66 130 72 132 88 C134 104 116 108 112 124 C108 140 96 146 86 136 C76 124 80 92 92 78 Z" fill="#7AC688" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M150 100 C168 92 192 104 196 124 C198 142 184 150 172 146 C162 160 146 170 140 158 C136 142 148 132 144 118 C142 110 144 104 150 100 Z" fill="#7AC688" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M118 168 C130 162 146 168 150 178 C140 186 124 186 116 180 Z" fill="#7AC688" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="62" cy="54" r="6" fill="#B9B4B0" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="160" cy="74" rx="14" ry="6" fill="#FFFFFF" opacity="0.7" transform="rotate(35 160 74)"/>
+  </g>
+</svg>

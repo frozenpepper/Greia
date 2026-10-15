@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.vocab.shoe — blue sneaker. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="vocab_shoe_upper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="106" ry="17.7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="shoe">
+    <path d="M30 196 L30 150 C30 128 46 116 70 116 L96 116 C110 116 116 104 118 92 L136 92 C150 120 176 140 210 148 C228 152 236 164 236 180 L236 196 Z" fill="url(#vocab_shoe_upper)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M24 192 L242 192 C242 210 234 218 220 218 L40 218 C30 218 24 210 24 200 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M28 204 L240 204" fill="none" stroke="#D9C9A8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M120 108 L148 122 M114 122 L152 136 M110 138 L160 150" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M120 108 L148 122 M114 122 L152 136 M110 138 L160 150" fill="none"/>
+    <circle cx="64" cy="156" r="12" fill="#FFFFFF" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M180 154 C200 158 214 164 220 174" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="54" cy="132" rx="14" ry="5" fill="#FFFFFF" opacity="0.7" transform="rotate(-15 54 132)"/>
+  </g>
+</svg>

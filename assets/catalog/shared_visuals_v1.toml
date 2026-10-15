@@ -1,6 +1,6 @@
 catalog_id = "greia.shared-visuals.v1"
-catalog_version = "0.6.0"
-source_sha256 = "c1ce9068970c09eb6b3730c8d67705eac3e1c6559664f7e9331e7800e40b1388"
+catalog_version = "0.7.0"
+source_sha256 = "d75dd89dc779333dc9ab0157303f18673157f8149bfd51866c836fca01074fe9"
 generated_note = "Build-time PNG renditions from explicit reviewed SVG masters; runtime must not discover or rasterize SVG source."
 
 [[visuals]]
@@ -1971,12 +1971,44 @@ default = "visual/runtime/v1/props/shape/triangle.png"
 slot = "visual/runtime/v1/props/shape/triangle_slot.png"
 
 [[visuals]]
+id = "prop.vocab.ant"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/ant.png"
+
+[[visuals]]
+id = "prop.vocab.bag"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/bag.png"
+
+[[visuals]]
+id = "prop.vocab.balloon"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/balloon.png"
+
+[[visuals]]
 id = "prop.vocab.bear"
 kind = "prop"
 role = "vocabulary"
 
 [visuals.variants]
 default = "visual/runtime/v1/creatures/woodland/bear_full.png"
+
+[[visuals]]
+id = "prop.vocab.bed"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/bed.png"
 
 [[visuals]]
 id = "prop.vocab.bee"
@@ -2003,12 +2035,44 @@ role = "vocabulary"
 default = "visual/runtime/v1/props/vocab/boat.png"
 
 [[visuals]]
+id = "prop.vocab.bone"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/bone.png"
+
+[[visuals]]
+id = "prop.vocab.bottle"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/bottle.png"
+
+[[visuals]]
+id = "prop.vocab.box"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/box.png"
+
+[[visuals]]
 id = "prop.vocab.bread"
 kind = "prop"
 role = "vocabulary"
 
 [visuals.variants]
 default = "visual/runtime/v1/props/vocab/bread.png"
+
+[[visuals]]
+id = "prop.vocab.bucket"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/bucket.png"
 
 [[visuals]]
 id = "prop.vocab.bus"
@@ -2035,6 +2099,14 @@ role = "vocabulary"
 default = "visual/runtime/v1/props/vocab/cake.png"
 
 [[visuals]]
+id = "prop.vocab.candle"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/candle.png"
+
+[[visuals]]
 id = "prop.vocab.car"
 kind = "prop"
 role = "vocabulary"
@@ -2059,6 +2131,30 @@ role = "vocabulary"
 default = "visual/runtime/v1/props/vocab/chair.png"
 
 [[visuals]]
+id = "prop.vocab.cheese"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/cheese.png"
+
+[[visuals]]
+id = "prop.vocab.clock"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/clock.png"
+
+[[visuals]]
+id = "prop.vocab.cow"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/cow.png"
+
+[[visuals]]
 id = "prop.vocab.crab"
 kind = "prop"
 role = "vocabulary"
@@ -2075,6 +2171,30 @@ role = "vocabulary"
 default = "visual/runtime/v1/props/vocab/crown.png"
 
 [[visuals]]
+id = "prop.vocab.cucumber"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/cucumber.png"
+
+[[visuals]]
+id = "prop.vocab.dice"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/dice.png"
+
+[[visuals]]
+id = "prop.vocab.dinosaur"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/dinosaur.png"
+
+[[visuals]]
 id = "prop.vocab.dog"
 kind = "prop"
 role = "vocabulary"
@@ -2083,12 +2203,28 @@ role = "vocabulary"
 default = "visual/runtime/v1/creatures/pet/puppy_neutral.png"
 
 [[visuals]]
+id = "prop.vocab.donkey"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/donkey.png"
+
+[[visuals]]
 id = "prop.vocab.door"
 kind = "prop"
 role = "vocabulary"
 
 [visuals.variants]
 default = "visual/runtime/v1/props/vocab/door.png"
+
+[[visuals]]
+id = "prop.vocab.dress"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/dress.png"
 
 [[visuals]]
 id = "prop.vocab.egg"
@@ -2107,12 +2243,52 @@ role = "vocabulary"
 default = "visual/runtime/v1/props/vocab/elephant.png"
 
 [[visuals]]
+id = "prop.vocab.fan"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/fan.png"
+
+[[visuals]]
+id = "prop.vocab.fire"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/fire.png"
+
+[[visuals]]
 id = "prop.vocab.frog"
 kind = "prop"
 role = "vocabulary"
 
 [visuals.variants]
 default = "visual/runtime/v1/creatures/woodland/frog_full.png"
+
+[[visuals]]
+id = "prop.vocab.giraffe"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/giraffe.png"
+
+[[visuals]]
+id = "prop.vocab.glass"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/glass.png"
+
+[[visuals]]
+id = "prop.vocab.globe"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/globe.png"
 
 [[visuals]]
 id = "prop.vocab.goat"
@@ -2129,6 +2305,22 @@ role = "vocabulary"
 
 [visuals.variants]
 default = "visual/runtime/v1/props/vocab/grapes.png"
+
+[[visuals]]
+id = "prop.vocab.guitar"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/guitar.png"
+
+[[visuals]]
+id = "prop.vocab.hammer"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/hammer.png"
 
 [[visuals]]
 id = "prop.vocab.hand"
@@ -2155,6 +2347,14 @@ role = "vocabulary"
 default = "visual/runtime/v1/props/vocab/hen.png"
 
 [[visuals]]
+id = "prop.vocab.horse"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/horse.png"
+
+[[visuals]]
 id = "prop.vocab.house"
 kind = "prop"
 role = "vocabulary"
@@ -2171,12 +2371,52 @@ role = "vocabulary"
 default = "visual/runtime/v1/props/vocab/ice_cream.png"
 
 [[visuals]]
+id = "prop.vocab.igloo"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/igloo.png"
+
+[[visuals]]
+id = "prop.vocab.island"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/island.png"
+
+[[visuals]]
+id = "prop.vocab.jam"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/jam.png"
+
+[[visuals]]
 id = "prop.vocab.kite"
 kind = "prop"
 role = "vocabulary"
 
 [visuals.variants]
 default = "visual/runtime/v1/props/vocab/kite.png"
+
+[[visuals]]
+id = "prop.vocab.kiwi"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/kiwi.png"
+
+[[visuals]]
+id = "prop.vocab.ladder"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/ladder.png"
 
 [[visuals]]
 id = "prop.vocab.lamp"
@@ -2187,12 +2427,36 @@ role = "vocabulary"
 default = "visual/runtime/v1/props/vocab/lamp.png"
 
 [[visuals]]
+id = "prop.vocab.lemon"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/lemon.png"
+
+[[visuals]]
+id = "prop.vocab.lighthouse"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/lighthouse.png"
+
+[[visuals]]
 id = "prop.vocab.lion"
 kind = "prop"
 role = "vocabulary"
 
 [visuals.variants]
 default = "visual/runtime/v1/props/vocab/lion.png"
+
+[[visuals]]
+id = "prop.vocab.llama"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/llama.png"
 
 [[visuals]]
 id = "prop.vocab.log"
@@ -2211,12 +2475,28 @@ role = "vocabulary"
 default = "visual/runtime/v1/props/vocab/map.png"
 
 [[visuals]]
+id = "prop.vocab.monkey"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/monkey.png"
+
+[[visuals]]
 id = "prop.vocab.moon"
 kind = "prop"
 role = "vocabulary"
 
 [visuals.variants]
 default = "visual/runtime/v1/props/vocab/moon.png"
+
+[[visuals]]
+id = "prop.vocab.motorbike"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/motorbike.png"
 
 [[visuals]]
 id = "prop.vocab.mouse"
@@ -2235,6 +2515,22 @@ role = "vocabulary"
 default = "visual/runtime/v1/props/vocab/nest.png"
 
 [[visuals]]
+id = "prop.vocab.net"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/net.png"
+
+[[visuals]]
+id = "prop.vocab.nose"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/nose.png"
+
+[[visuals]]
 id = "prop.vocab.octopus"
 kind = "prop"
 role = "vocabulary"
@@ -2243,12 +2539,28 @@ role = "vocabulary"
 default = "visual/runtime/v1/creatures/marine/octopus_swim.png"
 
 [[visuals]]
+id = "prop.vocab.orange"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/orange.png"
+
+[[visuals]]
 id = "prop.vocab.pan"
 kind = "prop"
 role = "vocabulary"
 
 [visuals.variants]
 default = "visual/runtime/v1/props/vocab/pan.png"
+
+[[visuals]]
+id = "prop.vocab.panda"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/panda.png"
 
 [[visuals]]
 id = "prop.vocab.pear"
@@ -2275,6 +2587,14 @@ role = "vocabulary"
 default = "visual/runtime/v1/props/vocab/pig.png"
 
 [[visuals]]
+id = "prop.vocab.pine"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/pine.png"
+
+[[visuals]]
 id = "prop.vocab.pizza"
 kind = "prop"
 role = "vocabulary"
@@ -2291,12 +2611,76 @@ role = "vocabulary"
 default = "visual/runtime/v1/props/vocab/plane.png"
 
 [[visuals]]
+id = "prop.vocab.potato"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/potato.png"
+
+[[visuals]]
+id = "prop.vocab.pumpkin"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/pumpkin.png"
+
+[[visuals]]
+id = "prop.vocab.radish"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/radish.png"
+
+[[visuals]]
 id = "prop.vocab.rocket"
 kind = "prop"
 role = "vocabulary"
 
 [visuals.variants]
 default = "visual/runtime/v1/props/vocab/rocket.png"
+
+[[visuals]]
+id = "prop.vocab.rose"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/rose.png"
+
+[[visuals]]
+id = "prop.vocab.seal"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/seal.png"
+
+[[visuals]]
+id = "prop.vocab.sheep"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/sheep.png"
+
+[[visuals]]
+id = "prop.vocab.ship"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/ship.png"
+
+[[visuals]]
+id = "prop.vocab.shoe"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/shoe.png"
 
 [[visuals]]
 id = "prop.vocab.snail"
@@ -2315,6 +2699,14 @@ role = "vocabulary"
 default = "visual/runtime/v1/props/vocab/snake.png"
 
 [[visuals]]
+id = "prop.vocab.soap"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/soap.png"
+
+[[visuals]]
 id = "prop.vocab.star"
 kind = "prop"
 role = "vocabulary"
@@ -2323,12 +2715,52 @@ role = "vocabulary"
 default = "visual/runtime/v1/props/vocab/star.png"
 
 [[visuals]]
+id = "prop.vocab.table"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/table.png"
+
+[[visuals]]
 id = "prop.vocab.tent"
 kind = "prop"
 role = "vocabulary"
 
 [visuals.variants]
 default = "visual/runtime/v1/props/vocab/tent.png"
+
+[[visuals]]
+id = "prop.vocab.thread"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/thread.png"
+
+[[visuals]]
+id = "prop.vocab.tiger"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/tiger.png"
+
+[[visuals]]
+id = "prop.vocab.tomato"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/tomato.png"
+
+[[visuals]]
+id = "prop.vocab.tooth"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/tooth.png"
 
 [[visuals]]
 id = "prop.vocab.top"
@@ -2347,12 +2779,28 @@ role = "vocabulary"
 default = "visual/runtime/v1/props/vocab/train.png"
 
 [[visuals]]
+id = "prop.vocab.tree"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/tree.png"
+
+[[visuals]]
 id = "prop.vocab.turtle"
 kind = "prop"
 role = "vocabulary"
 
 [visuals.variants]
 default = "visual/runtime/v1/creatures/marine/turtle_swim.png"
+
+[[visuals]]
+id = "prop.vocab.tv"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/tv.png"
 
 [[visuals]]
 id = "prop.vocab.umbrella"
@@ -2371,6 +2819,38 @@ role = "vocabulary"
 default = "visual/runtime/v1/props/vocab/vase.png"
 
 [[visuals]]
+id = "prop.vocab.volcano"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/volcano.png"
+
+[[visuals]]
+id = "prop.vocab.wall"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/wall.png"
+
+[[visuals]]
+id = "prop.vocab.watermelon"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/watermelon.png"
+
+[[visuals]]
+id = "prop.vocab.web"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/web.png"
+
+[[visuals]]
 id = "prop.vocab.whale"
 kind = "prop"
 role = "vocabulary"
@@ -2379,12 +2859,28 @@ role = "vocabulary"
 default = "visual/runtime/v1/creatures/marine/whale_swim.png"
 
 [[visuals]]
+id = "prop.vocab.wolf"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/wolf.png"
+
+[[visuals]]
 id = "prop.vocab.yarn"
 kind = "prop"
 role = "vocabulary"
 
 [visuals.variants]
 default = "visual/runtime/v1/props/vocab/yarn.png"
+
+[[visuals]]
+id = "prop.vocab.zebra"
+kind = "prop"
+role = "vocabulary"
+
+[visuals.variants]
+default = "visual/runtime/v1/props/vocab/zebra.png"
 
 [[visuals]]
 id = "rock.cluster.large.01"
