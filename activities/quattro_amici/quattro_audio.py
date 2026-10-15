@@ -14,15 +14,7 @@ from typing import Final
 import pygame
 
 from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
-
-SHARED_AUDIO_DIR: Final[Path] = (
-    Path(__file__).resolve().parent.parent.parent
-    / "assets"
-    / "audio"
-    / "characters"
-    / "shared"
-    / "v0.2"
-)
+from greia_platform.localization import shared_character_audio_path
 
 
 class QuattroAudio:
@@ -108,28 +100,18 @@ class QuattroAudio:
         self._sounds["click"] = self._synth_wood_tap(sample_rate, channels, freq=520.0)
 
     def _load_shared_voices(self) -> None:
-        """Load canonical character celebration and ready clips if present."""
-        loc = self.locale if self.locale in ("it", "en") else "it"
-        flash_dir = SHARED_AUDIO_DIR / "flash" / loc
-        leo_dir = SHARED_AUDIO_DIR / "leo" / loc
-
-        # Flash celebrate
-        if flash_dir.is_dir():
-            for f in flash_dir.glob("*celebrate.success*"):
-                try:
-                    self._voice_sounds["flash_celebrate"] = pygame.mixer.Sound(str(f))
-                    break
-                except pygame.error:
-                    pass
-
-        # Leo celebrate
-        if leo_dir.is_dir():
-            for f in leo_dir.glob("*celebrate.success*"):
-                try:
-                    self._voice_sounds["leo_celebrate"] = pygame.mixer.Sound(str(f))
-                    break
-                except pygame.error:
-                    pass
+        """Fetch owner-approved shared character speech through Greia locale."""
+        project_root = Path(__file__).resolve().parents[2]
+        for speaker in ("flash", "leo"):
+            path = shared_character_audio_path(
+                project_root, speaker, "celebrate.success", self.locale
+            )
+            if path is None:
+                continue
+            try:
+                self._voice_sounds[f"{speaker}_celebrate"] = pygame.mixer.Sound(str(path))
+            except (pygame.error, OSError):
+                pass
 
     @staticmethod
     def _synth_whoosh(sample_rate: int, channels: int, duration: float) -> pygame.mixer.Sound:
