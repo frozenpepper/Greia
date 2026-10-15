@@ -281,6 +281,21 @@ filename="existing-stem.wav")` is available. Activity launch language
 comes from the Greia profile/device setting and manifest, **not** an
 Activity-maintained language selector.
 
+For a game that has a finite list of known semantic IDs, request each
+`resources.audio_path("cue.id")` directly. When migrating an **existing**
+SoundManager which eagerly preloads many legacy physical cue filenames,
+use `resources.speech_paths()`: it returns `{stem: Path}` for existing
+WAV/OGG in `assets/audio/<locale>/` and
+`locales/<locale>/audio/`, selected language first and English for gaps.
+The Activity retains responsibility for decoding into Pygame Sound objects.
+Do not add a third local language-path scanner merely to enumerate preloads.
+
+Greia-owned shared character sounds (e.g. Leo/Flash praise) use
+`shared_character_audio_path(project_root, speaker, cue_id, locale)`
+from the same localization module. These canonical voices live in the
+shared character v0.2 library, not each Activity; do not duplicate or
+rerecord them in an Activity package.
+
 For all speech, **including literacy and phonics for now**, choose
 selected-language file if present, otherwise English, otherwise silence.
 Keep procedural sound effects, speech channels, event ordering and
