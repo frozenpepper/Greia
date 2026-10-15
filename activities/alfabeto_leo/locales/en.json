@@ -3,13 +3,13 @@
   "locale": "en",
   "direction": "ltr",
   "strings": {
-    "activity.alfabeto_leo.title": "LEO'S ALPHABET",
-    "activity.title": "LEO'S ALPHABET",
-    "ui.mode_explore_title": "DISCOVER LETTERS!",
-    "ui.mode_guess_title": "FIND THE LETTER!",
-    "ui.switch_to_guess": "FIND! 🔍",
-    "ui.switch_to_explore": "ALPHABET 🔤",
-    "ui.guess_prompt": "WHERE IS $char?"
+    "activity.alfabeto_leo.title": "Leo's Alphabet",
+    "activity.title": "Leo's Alphabet",
+    "ui.mode_explore_title": "Discover letters!",
+    "ui.mode_guess_title": "Find the letter!",
+    "ui.switch_to_guess": "Find! 🔍",
+    "ui.switch_to_explore": "Alphabet 🔤",
+    "ui.guess_prompt": "Where is $char?"
   },
   "audio": {
     "activity.title": {

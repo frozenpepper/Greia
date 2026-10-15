@@ -14,17 +14,12 @@ import pygame
 
 from greia_platform.activity_api import (
     activity_stop_requested,
-    get_profile_locale,
     get_storage,
     get_theme,
     mark_activity_ready,
 )
 from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.localization import (
-    ActivityLocaleSupport,
-    LocalizedResources,
-    resolve_activity_locale,
-)
+from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.pygame_completion import (
     CompletionContent,
@@ -97,11 +92,8 @@ def main() -> int:
         storage = None
 
     package_root = Path(__file__).resolve().parent
-    support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-    profile_lang = get_profile_locale()
-    context = resolve_activity_locale(profile_lang, support)
-    resources = LocalizedResources(package_root, context) if context else None
-    active_locale = context.selected.language if context else "it"
+    resources = activity_resources(package_root)
+    active_locale = resources.context.selected.language
 
     play_again_rect = pygame.Rect(
         REFERENCE_WIDTH // 2 - 120,

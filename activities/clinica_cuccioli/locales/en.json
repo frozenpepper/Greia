@@ -13,16 +13,16 @@
     "tool.sponge": "🧼 Bath",
     "tool.snack": "🥣 Treat",
     "tool.cuddle": "💖 Cuddles",
-    "tool.stethoscope.short": "CHECKUP",
-    "tool.bath.short": "BATH",
-    "tool.bandaid.short": "BANDAGE",
-    "tool.food.short": "TREAT",
-    "tool.cuddle.short": "CUDDLES",
+    "tool.stethoscope.short": "Checkup",
+    "tool.bath.short": "Bath",
+    "tool.bandaid.short": "Bandage",
+    "tool.food.short": "Treat",
+    "tool.cuddle.short": "Cuddles",
     "victory.title": "The puppy is healthy and happy! 🐶💖",
     "victory.subtitle": "You are a wonderful vet doctor!",
-    "victory.all_patients": "PETS ALL BETTER!",
+    "victory.all_patients": "Pets all better!",
     "btn.next_patient": "🐾 Next Patient!",
-    "btn.play_again": "PLAY AGAIN"
+    "btn.play_again": "Play again"
   },
   "audio": {
     "activity.title": {

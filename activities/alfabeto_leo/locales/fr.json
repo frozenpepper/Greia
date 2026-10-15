@@ -3,13 +3,13 @@
   "locale": "fr",
   "direction": "ltr",
   "strings": {
-    "activity.alfabeto_leo.title": "L'ALPHABET DE LEO",
-    "activity.title": "L'ALPHABET DE LEO",
-    "ui.mode_explore_title": "DÉCOUVRE LES LETTRES !",
-    "ui.mode_guess_title": "TROUVE LA LETTRE !",
-    "ui.switch_to_guess": "CHERCHER ! 🔍",
-    "ui.switch_to_explore": "ALPHABET 🔤",
-    "ui.guess_prompt": "OÙ EST $char ?"
+    "activity.alfabeto_leo.title": "L'Alphabet de Leo",
+    "activity.title": "L'Alphabet de Leo",
+    "ui.mode_explore_title": "Découvre les lettres !",
+    "ui.mode_guess_title": "Trouve la lettre !",
+    "ui.switch_to_guess": "Chercher ! 🔍",
+    "ui.switch_to_explore": "Alphabet 🔤",
+    "ui.guess_prompt": "Où est $char ?"
   },
   "audio": {}
 }

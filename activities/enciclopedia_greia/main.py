@@ -6,12 +6,8 @@ from pathlib import Path
 
 import pygame
 
-from greia_platform.activity_api import get_profile_locale, get_theme
-from greia_platform.localization import (
-    ActivityLocaleSupport,
-    LocalizedResources,
-    resolve_activity_locale,
-)
+from greia_platform.activity_api import get_theme
+from greia_platform.localization import LocalizedResources, activity_resources
 
 if __package__:
     from .enciclopedia_app import EncyclopediaApp
@@ -36,12 +32,8 @@ REFERENCE_SIZE = (1024, 600)
 
 
 def _localized_resources(package_root: Path) -> LocalizedResources:
-    support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-    context = resolve_activity_locale(get_profile_locale(), support)
-    if context is None:
-        context = resolve_activity_locale("it", support)
-    assert context is not None
-    return LocalizedResources(package_root, context)
+    """Resolve the profile language from this package's declared locales."""
+    return activity_resources(package_root)
 
 
 def main() -> int:

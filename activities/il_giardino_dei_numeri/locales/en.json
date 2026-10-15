@@ -3,12 +3,12 @@
   "locale": "en",
   "direction": "ltr",
   "strings": {
-    "activity.il_giardino_dei_numeri.title": "THE NUMBER GARDEN",
-    "activity.title": "THE NUMBER GARDEN",
-    "ui.touch_to_count": "TOUCH AND COUNT!",
-    "ui.keep_counting": "COUNT WITH DANI!",
-    "ui.well_done": "GREAT JOB!",
-    "ui.next": "MORE! ▶"
+    "activity.il_giardino_dei_numeri.title": "The Number Garden",
+    "activity.title": "The Number Garden",
+    "ui.touch_to_count": "Touch and count!",
+    "ui.keep_counting": "Count with Dani!",
+    "ui.well_done": "Great job!",
+    "ui.next": "More! ▶"
   },
   "audio": {
     "activity.title": {

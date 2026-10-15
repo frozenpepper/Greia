@@ -299,17 +299,20 @@ class GearsPage(EncyclopediaPage):
         self.context.audio.play(item.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        if not draw_authored_scene(
+        authored = draw_authored_scene(
             surface,
             self.context.visuals,
             "encyclopedia.machines.gears.workbench",
-        ):
+        )
+        if not authored:
             surface.fill((239, 231, 205))
+        # The authored workshop wall is dark: a cream title stays legible on it
+        # (the dark ink title is only for the plain fallback paper).
         draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("gears.title"),
-            self.context.palette.ink,
+            (245, 235, 208) if authored else self.context.palette.ink,
         )
         self._draw_live_gears(surface)
         self._draw_reveals(surface)
@@ -350,6 +353,15 @@ class GearsPage(EncyclopediaPage):
             fallback_color=(101, 171, 211),
         )
 
+    def _button_label(self, key: str, color: tuple[int, int, int]) -> pygame.Surface:
+        """Cached localized button caption, shrunk so capitals fit the 160 px pill."""
+        typography = self.context.typography
+        text = self.localized(key)
+        size = 18
+        while size > 11 and typography.measure(text, FontRole.CONTROL, size).width > 100:
+            size -= 1
+        return typography.render(text, FontRole.CONTROL, size, color)
+
     def _draw_controls(self, surface: pygame.Surface) -> None:
         """Draw intuitive, child-friendly tactile workbench controls."""
         edge_dark = (61, 44, 31)
@@ -377,17 +389,13 @@ class GearsPage(EncyclopediaPage):
                 (btn_play_rect.x + 22, btn_play_rect.centery + 10),
             ]
             pygame.draw.polygon(surface, (50, 150, 65), tri_pts)
-            label = self.context.typography.font(FontRole.CONTROL, 18).render(
-                "GIRA", True, edge_dark
-            )
+            label = self._button_label("gears.button.turn", edge_dark)
         else:
             bx = btn_play_rect.x + 22
             by = btn_play_rect.centery - 9
             pygame.draw.rect(surface, (190, 110, 35), (bx, by, 5, 18), border_radius=2)
             pygame.draw.rect(surface, (190, 110, 35), (bx + 8, by, 5, 18), border_radius=2)
-            label = self.context.typography.font(FontRole.CONTROL, 18).render(
-                "PAUSA", True, edge_dark
-            )
+            label = self._button_label("gears.button.pause", edge_dark)
         surface.blit(label, (btn_play_rect.x + 50, btn_play_rect.centery - label.get_height() // 2))
 
         # Button 2: INVERTI (Reverse direction)
@@ -423,9 +431,7 @@ class GearsPage(EncyclopediaPage):
                 ],
             )
 
-        rev_label = self.context.typography.font(FontRole.CONTROL, 18).render(
-            "INVERTI", True, edge_dark
-        )
+        rev_label = self._button_label("gears.button.reverse", edge_dark)
         surface.blit(rev_label, (btn_rev_rect.x + 50, btn_rev_rect.centery - rev_label.get_height() // 2))
 
     def _draw_live_gears(self, surface: pygame.Surface) -> None:

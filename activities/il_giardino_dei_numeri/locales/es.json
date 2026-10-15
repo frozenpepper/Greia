@@ -3,12 +3,12 @@
   "locale": "es",
   "direction": "ltr",
   "strings": {
-    "activity.il_giardino_dei_numeri.title": "EL JARDÍN DE LOS NÚMEROS",
-    "activity.title": "EL JARDÍN DE LOS NÚMEROS",
-    "ui.touch_to_count": "¡TOCA Y CUENTA!",
-    "ui.keep_counting": "¡CUENTA CON DANI!",
-    "ui.well_done": "¡MUY BIEN!",
-    "ui.next": "¡MÁS! ▶"
+    "activity.il_giardino_dei_numeri.title": "El Jardín de los Números",
+    "activity.title": "El Jardín de los Números",
+    "ui.touch_to_count": "¡Toca y cuenta!",
+    "ui.keep_counting": "¡Cuenta con Dani!",
+    "ui.well_done": "¡Muy bien!",
+    "ui.next": "¡Más! ▶"
   },
   "audio": {}
 }

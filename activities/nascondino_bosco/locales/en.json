@@ -7,15 +7,15 @@
     "activity.nascondino_bosco.title": "Woodland Hide & Seek",
     "hud.found": "Found: {found}/{total}",
     "hud.stars": "★ {stars}",
-    "btn.play_again": "PLAY AGAIN",
-    "victory.title": "FOUND THEM ALL!",
+    "btn.play_again": "Play again",
+    "victory.title": "Found them all!",
     "victory.subtitle": "All the woodland animals are happy!",
-    "animal.fox": "FOX",
-    "animal.bunny": "BUNNY",
-    "animal.owl": "OWL",
-    "animal.hedgehog": "HEDGEHOG",
-    "animal.squirrel": "SQUIRREL",
-    "animal.frog": "FROG"
+    "animal.fox": "Fox",
+    "animal.bunny": "Bunny",
+    "animal.owl": "Owl",
+    "animal.hedgehog": "Hedgehog",
+    "animal.squirrel": "Squirrel",
+    "animal.frog": "Frog"
   },
   "audio": {
     "activity.title": {

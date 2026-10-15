@@ -9,7 +9,6 @@ import pygame
 from greia_platform.activity_api import (
     activity_stop_requested,
     emit_activity_event,
-    get_profile_locale,
     get_storage,
     get_theme,
     mark_activity_ready,
@@ -20,7 +19,7 @@ from greia_platform.pygame_canvas import (
     activity_viewport_for_surface,
 )
 from greia_platform.pygame_completion import CompletionContent, PygameCompletionScreen
-from greia_platform.localization import ActivityLocaleSupport, LocalizedResources, resolve_activity_locale
+from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.typography import GreiaTypography
 
 try:
@@ -84,14 +83,8 @@ class MazeApp:
         self.storage = get_storage()
         self.sounds = LabyrinthAudio()
         self.typography = GreiaTypography()
-        # ES/FR resources are staged; the effective runtime support remains EN/IT
-        # until the shared system-language acceptance gate promotes them.
-        support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-        locale_context = resolve_activity_locale(get_profile_locale(), support)
-        if locale_context is None:
-            locale_context = resolve_activity_locale("it", support)
-        assert locale_context is not None
-        self.resources = LocalizedResources(Path(__file__).resolve().parent, locale_context)
+        # The package's declared UI locales (activity.toml) select the bundle.
+        self.resources = activity_resources(Path(__file__).resolve().parent)
         self._hud_labels_cache: dict[tuple[int, int], MazeHudLabels] = {}
         self.completion = PygameCompletionScreen(
             self.typography,

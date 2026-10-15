@@ -20,6 +20,8 @@
     "button.back": "Back to Studio 🎨",
     "button.delete": "Delete 🗑️",
     "gallery.empty": "No monsters saved yet!",
+    "gallery.default_name": "Monster",
+    "gallery.default_name_long": "Fluffy monster",
     "name_dialog.title": "What is your monster's name?",
     "name_dialog.confirm": "Done ✅",
     "delete_dialog.title": "Do you really want to say goodbye to this monster?",

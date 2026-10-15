@@ -3,12 +3,12 @@
   "locale": "it",
   "direction": "ltr",
   "strings": {
-    "activity.il_giardino_dei_numeri.title": "IL GIARDINO DEI NUMERI",
-    "activity.title": "IL GIARDINO DEI NUMERI",
-    "ui.touch_to_count": "TOCCA E CONTA!",
-    "ui.keep_counting": "CONTA CON DANI!",
-    "ui.well_done": "FANTASTICO!",
-    "ui.next": "ANCORA! ▶"
+    "activity.il_giardino_dei_numeri.title": "Il Giardino dei Numeri",
+    "activity.title": "Il Giardino dei Numeri",
+    "ui.touch_to_count": "Tocca e conta!",
+    "ui.keep_counting": "Conta con Dani!",
+    "ui.well_done": "Fantastico!",
+    "ui.next": "Ancora! ▶"
   },
   "audio": {
     "activity.title": {

@@ -29,6 +29,7 @@ from typing import Any, Optional
 
 import pygame
 
+from greia_platform.system_chrome import ActivitySystemChromeLayout
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
@@ -37,6 +38,15 @@ if __package__:
 else:
     from acquarium_assets import AquariumAssetCache
     from acquarium_content import REFERENCE_HEIGHT, REFERENCE_WIDTH, ToolIndex
+
+
+# The HUD pill starts clear of the trusted Home/Back region, which the
+# platform reserves in full (both slots) so layout never jumps with context.
+_HUD_LEFT = (
+    ActivitySystemChromeLayout.for_surface(REFERENCE_WIDTH, REFERENCE_HEIGHT)
+    .protected_region.right
+    + 8
+)
 
 
 @dataclass
@@ -88,6 +98,8 @@ class AquariumRenderer:
             "day": typography.render(label_text["day"], FontRole.DISPLAY, 16, (255, 255, 255)),
         }
         self.tool_layout = ToolLayout.default()
+        # Creature counter label: one surface per distinct count, bounded.
+        self._count_surfaces: dict[int, pygame.Surface] = {}
 
     # ------------------------------------------------------------------
     # Background
@@ -216,15 +228,26 @@ class AquariumRenderer:
     # ------------------------------------------------------------------
 
     def draw_hud(self, surface: pygame.Surface, creature_count: int) -> None:
-        hud_pill = pygame.Rect(80, 16, 170, 56)
+        hud_pill = pygame.Rect(_HUD_LEFT, 16, 170, 56)
         pygame.draw.rect(surface, (255, 255, 255), hud_pill, border_radius=18)
         pygame.draw.rect(surface, (56, 189, 248), hud_pill, width=3, border_radius=18)
         pygame.draw.circle(surface, (56, 189, 248), (hud_pill.left + 28, hud_pill.centery), 16)
         mini = self._assets.scaled("clownfish.png", 26, 20)
         if mini is not None:
             surface.blit(mini, mini.get_rect(center=(hud_pill.left + 28, hud_pill.centery)))
-        label = self._typography.render(f"{creature_count} / 20", FontRole.DISPLAY, 22, (2, 132, 199))
+        label = self._count_label(creature_count)
         surface.blit(label, (hud_pill.left + 54, hud_pill.centery - label.get_height() // 2))
+
+    def _count_label(self, creature_count: int) -> pygame.Surface:
+        cached = self._count_surfaces.get(creature_count)
+        if cached is None:
+            if len(self._count_surfaces) >= 32:
+                self._count_surfaces.clear()
+            cached = self._typography.render(
+                f"{creature_count} / 20", FontRole.DISPLAY, 22, (2, 132, 199)
+            )
+            self._count_surfaces[creature_count] = cached
+        return cached
 
     def draw_toolbar(
         self,

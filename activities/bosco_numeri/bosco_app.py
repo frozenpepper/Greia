@@ -18,12 +18,30 @@ from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .bosco_audio import BoscoAudio
-    from .bosco_content import STORAGE_KEY
+    from .bosco_content import (
+        CAROUSEL_ARROW_RADIUS,
+        CAROUSEL_BUTTON_SIZE,
+        CAROUSEL_NEXT_X,
+        CAROUSEL_PREV_X,
+        CAROUSEL_SPACING,
+        CAROUSEL_START_X,
+        CAROUSEL_Y,
+        STORAGE_KEY,
+    )
     from .bosco_model import BoscoModel
     from .bosco_renderer import BoscoRenderer
 else:
     from bosco_audio import BoscoAudio
-    from bosco_content import STORAGE_KEY
+    from bosco_content import (
+        CAROUSEL_ARROW_RADIUS,
+        CAROUSEL_BUTTON_SIZE,
+        CAROUSEL_NEXT_X,
+        CAROUSEL_PREV_X,
+        CAROUSEL_SPACING,
+        CAROUSEL_START_X,
+        CAROUSEL_Y,
+        STORAGE_KEY,
+    )
     from bosco_model import BoscoModel
     from bosco_renderer import BoscoRenderer
 
@@ -171,22 +189,22 @@ class BoscoApp:
             return
 
         if self.model.mode == "count":
-            if (rx - 100) ** 2 + (ry - 52) ** 2 <= 28**2:
+            hit_radius = CAROUSEL_ARROW_RADIUS + 4
+            if (rx - CAROUSEL_PREV_X) ** 2 + (ry - CAROUSEL_Y) ** 2 <= hit_radius**2:
                 self.model.prev_number()
                 self.audio.play_tap()
                 return
 
-            if (rx - 825) ** 2 + (ry - 52) ** 2 <= 28**2:
+            if (rx - CAROUSEL_NEXT_X) ** 2 + (ry - CAROUSEL_Y) ** 2 <= hit_radius**2:
                 self.model.next_number()
                 self.audio.play_tap()
                 return
 
-            start_x = 150
-            spacing = 65
+            half = CAROUSEL_BUTTON_SIZE // 2
             for idx in range(10):
                 num = idx + 1
-                bx = start_x + idx * spacing
-                if bx - 26 <= rx <= bx + 26 and 52 - 26 <= ry <= 52 + 26:
+                bx = CAROUSEL_START_X + idx * CAROUSEL_SPACING
+                if bx - half <= rx <= bx + half and CAROUSEL_Y - half <= ry <= CAROUSEL_Y + half:
                     self.model.setup_number(num)
                     self.audio.play_tap()
                     return

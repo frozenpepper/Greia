@@ -20,6 +20,8 @@
     "button.back": "Volver al taller 🎨",
     "button.delete": "Eliminar 🗑️",
     "gallery.empty": "¡Todavía no hay monstruos guardados!",
+    "gallery.default_name": "Monstruito",
+    "gallery.default_name_long": "Monstruito suave",
     "name_dialog.title": "¿Cómo se llama tu monstruo?",
     "name_dialog.confirm": "Listo ✅",
     "delete_dialog.title": "¿Seguro que quieres despedirte de este monstruo?",

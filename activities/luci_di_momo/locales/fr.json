@@ -6,11 +6,11 @@
     "activity.title": "Les lumières de Momo",
     "activity.luci_di_momo.title": "Les lumières de Momo",
     "prompt.choose": "Combien de lumières as-tu vues ?",
-    "prompt.tap_to_play": "TOUCHE POUR JOUER !",
-    "button.listen": "🔊 ÉCOUTER",
+    "prompt.tap_to_play": "Touche pour jouer !",
+    "button.listen": "🔊 Écouter",
     "victory.title": "Le jardin s'illumine !",
     "victory.subtitle": "Tu as réveillé toutes les lucioles de Momo.",
-    "button.play_again": "REJOUER"
+    "button.play_again": "Rejouer"
   },
   "audio": {}
 }

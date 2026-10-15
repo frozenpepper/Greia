@@ -86,6 +86,20 @@ class MagnetPage(EncyclopediaPage):
         self._action_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
         self._flip_button_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
 
+    def _fit_line(
+        self,
+        text: str,
+        role: FontRole,
+        size: int,
+        color: tuple[int, int, int],
+        max_width: int,
+    ) -> pygame.Surface:
+        """Render one cached line, shrinking (to a floor) so capitals fit."""
+        typography = self.context.typography
+        while size > 11 and typography.measure(text, role, size).width > max_width:
+            size -= 1
+        return typography.render(text, role, size, color)
+
     def on_enter(self) -> None:
         self.context.audio.play("encyclopedia.machines.magnet.intro")
         self._announce_selected()
@@ -324,7 +338,7 @@ class MagnetPage(EncyclopediaPage):
                 pygame.draw.polygon(surface, field_color, [(mid_x - 5 + pulse, self._magnet_y + 24), (mid_x + 2 + pulse, self._magnet_y + 28), (mid_x - 5 + pulse, self._magnet_y + 32)])
                 pygame.draw.polygon(surface, field_color, [(mid_x + 5 - pulse, self._magnet_y + 24), (mid_x - 2 - pulse, self._magnet_y + 28), (mid_x + 5 - pulse, self._magnet_y + 32)])
 
-            status_text = "POLI OPPOSTI: SI ATTRAGGONO!" if gap > 2 else "UNITI DALLA FORZA MAGNETICA!"
+            status_text = self.localized("magnet.status.attract" if gap > 2 else "magnet.status.joined")
             status_color = (45, 140, 75)
         else:
             repel_color = (225, 75, 65)
@@ -334,10 +348,10 @@ class MagnetPage(EncyclopediaPage):
                 pygame.draw.arc(surface, repel_color, (mid_x - r_w - wave_pulse, self._magnet_y + 12, r_w * 2, 32), 0.8, 2.3, 3)
                 pygame.draw.arc(surface, repel_color, (mid_x - r_w + wave_pulse, self._magnet_y + 12, r_w * 2, 32), 3.9, 5.4, 3)
 
-            status_text = "POLI UGUALI: SI RESPINGONO!"
+            status_text = self.localized("magnet.status.repel")
             status_color = (205, 55, 45)
 
-        rendered_status = self.context.typography.render(status_text, FontRole.BODY, 16, status_color)
+        rendered_status = self._fit_line(status_text, FontRole.BODY, 16, status_color, 640)
         surface.blit(rendered_status, rendered_status.get_rect(center=(512, 195)))
 
         self._draw_bar_magnet(surface, left_rect, left_label="N", right_label="S", left_color=(225, 70, 60), right_color=(55, 125, 205))
@@ -364,7 +378,13 @@ class MagnetPage(EncyclopediaPage):
         self._flip_button_hit = pygame.Rect(rx - 12, self._magnet_y + self._magnet_h + 24, btn_w, btn_h)
         pygame.draw.rect(surface, (255, 250, 240), self._flip_button_hit, border_radius=10)
         pygame.draw.rect(surface, (140, 115, 90), self._flip_button_hit, width=2, border_radius=10)
-        flip_text = self.context.typography.render("GIRA POLI", FontRole.CONTROL, 14, (70, 55, 45))
+        flip_text = self._fit_line(
+            self.localized("magnet.button.flip"),
+            FontRole.CONTROL,
+            14,
+            (70, 55, 45),
+            self._flip_button_hit.width - 12,
+        )
         surface.blit(flip_text, flip_text.get_rect(center=self._flip_button_hit.center))
 
     def _draw_bar_magnet(
@@ -411,9 +431,9 @@ class MagnetPage(EncyclopediaPage):
         pygame.draw.ellipse(surface, (165, 185, 195), (dish_center[0] - 65, dish_center[1] - 45, 130, 90), 3)
 
         samples = [
-            ("ACCIAIO (Chiodo)", (125, 130, 138), True),
-            ("LEGNO (Blocchetto)", (198, 148, 88), False),
-            ("ALLUMINIO (Moneta)", (190, 195, 202), False),
+            (self.localized("magnet.material.steel"), (125, 130, 138), True),
+            (self.localized("magnet.material.wood"), (198, 148, 88), False),
+            (self.localized("magnet.material.aluminum"), (190, 195, 202), False),
         ]
         name, col, attracted = samples[self._material_index]
 
@@ -427,27 +447,27 @@ class MagnetPage(EncyclopediaPage):
             pygame.draw.line(surface, col, (sample_x - 16, sample_y), (sample_x + 16, sample_y), 5)
             pygame.draw.circle(surface, (80, 85, 90), (sample_x + 16, sample_y), 6)
             pygame.draw.line(surface, (65, 175, 95), (sample_x + 20, sample_y), (560, sample_y), 3)
-            res_text = "ATTIRATO! (Ferro e acciaio sono magnetici)"
+            res_text = self.localized("magnet.result.attracted")
             res_col = (45, 140, 75)
         elif self._material_index == 1:
             sample_x = 410
             sample_y = 270
             pygame.draw.rect(surface, col, (sample_x - 18, sample_y - 12, 36, 24), border_radius=4)
             pygame.draw.rect(surface, (140, 95, 55), (sample_x - 18, sample_y - 12, 36, 24), width=2, border_radius=4)
-            res_text = "NON ATTIRATO (Il legno non reagisce)"
+            res_text = self.localized("magnet.result.wood")
             res_col = (110, 90, 75)
         else:
             sample_x = 410
             sample_y = 270
             pygame.draw.circle(surface, col, (sample_x, sample_y), 16)
             pygame.draw.circle(surface, (145, 150, 158), (sample_x, sample_y), 16, 2)
-            res_text = "NON ATTIRATO (Non tutti i metalli sono magnetici!)"
+            res_text = self.localized("magnet.result.aluminum")
             res_col = (110, 90, 75)
 
-        rendered_name = self.context.typography.render(name, FontRole.DISPLAY, 17, (60, 50, 45))
+        rendered_name = self._fit_line(name, FontRole.DISPLAY, 17, (60, 50, 45), 300)
         surface.blit(rendered_name, rendered_name.get_rect(center=(410, 185)))
 
-        rendered_res = self.context.typography.render(res_text, FontRole.BODY, 15, res_col)
+        rendered_res = self._fit_line(res_text, FontRole.BODY, 15, res_col, 640)
         surface.blit(rendered_res, rendered_res.get_rect(center=(512, 365)))
 
     def _draw_earth_compass_demo(self, surface: pygame.Surface) -> None:
@@ -497,7 +517,7 @@ class MagnetPage(EncyclopediaPage):
         ])
         pygame.draw.circle(surface, (235, 195, 75), (comp_cx, comp_cy), 4)
 
-        comp_lbl = self.context.typography.render("LA BUSSOLA PUNTA A NORD", FontRole.BODY, 15, (60, 50, 45))
+        comp_lbl = self._fit_line(self.localized("magnet.compass"), FontRole.BODY, 15, (60, 50, 45), 640)
         surface.blit(comp_lbl, comp_lbl.get_rect(center=(512, 365)))
 
     @staticmethod

@@ -6,7 +6,9 @@ from typing import Final
 
 import pygame
 
+from greia_platform.child_text import display_text
 from greia_platform.localization import LocalizedResources
+from greia_platform.system_chrome import ActivitySystemChromeLayout
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
@@ -56,7 +58,19 @@ UNDO_BTN_RECT: Final[pygame.Rect] = pygame.Rect(235, 520, 120, 56)
 NAME_BTN_RECT: Final[pygame.Rect] = pygame.Rect(370, 520, 150, 56)
 SAVE_BTN_RECT: Final[pygame.Rect] = pygame.Rect(540, 520, 160, 56)
 GALLERY_BTN_RECT: Final[pygame.Rect] = pygame.Rect(720, 520, 234, 56)
-BACK_TO_STUDIO_RECT: Final[pygame.Rect] = pygame.Rect(70, 24, 250, 52)
+
+# Everything in the top row starts clear of the trusted Home/Back region, which
+# the platform reserves in full (both slots) so layout never jumps with context.
+_TOP_ROW_LEFT: Final[int] = (
+    ActivitySystemChromeLayout.for_surface(REFERENCE_WIDTH, REFERENCE_HEIGHT)
+    .protected_region.right
+    + 8
+)
+BACK_TO_STUDIO_RECT: Final[pygame.Rect] = pygame.Rect(_TOP_ROW_LEFT, 24, 230, 52)
+TAB_START_X: Final[int] = _TOP_ROW_LEFT
+TAB_SPACING: Final[int] = 136
+TAB_WIDTH: Final[int] = 128
+TAB_Y: Final[int] = 20
 
 
 class MonsterRenderer:
@@ -72,6 +86,28 @@ class MonsterRenderer:
         self._typography = typography
         self._resources = resources
         self._thumb_cache: dict[str, pygame.Surface] = {}
+        # Localized default names resolve once; a missing resource shows nothing.
+        self._default_name = self._resolve("gallery.default_name")
+        self._default_name_long = self._resolve("gallery.default_name_long")
+
+    def _fit_render(
+        self,
+        text: str,
+        role: FontRole,
+        size: int,
+        color: tuple[int, int, int],
+        max_width: int,
+    ) -> pygame.Surface:
+        """Render one line, shrinking (to a floor) so capitals never overflow."""
+        while size > 12 and self._typography.measure(text, role, size).width > max_width:
+            size -= 1
+        return self._typography.render(text, role, size, color)
+
+    def _resolve(self, key: str) -> str:
+        try:
+            return self._resources.text(key)
+        except Exception:
+            return ""
 
     def draw_editor(
         self,
@@ -120,11 +156,12 @@ class MonsterRenderer:
         b_border = (56, 189, 248) if (hovered_btn == "back") else (255, 255, 255)
         pygame.draw.rect(target, b_border, b_draw, width=3, border_radius=22)
 
-        b_txt = self._typography.render(
+        b_txt = self._fit_render(
             self._resources.text("button.back"),
             FontRole.TITLE,
             20,
             (255, 255, 255),
+            BACK_TO_STUDIO_RECT.width - 28,
         )
         target.blit(
             b_txt,
@@ -137,7 +174,11 @@ class MonsterRenderer:
         # Gallery Title Badge
         header = f"{self._resources.text('button.gallery')} ({gallery.count}/{MAX_SAVED_PORTRAITS})"
         h_surf = self._typography.render(header, FontRole.TITLE, 24, (254, 240, 138))
-        target.blit(h_surf, (REFERENCE_WIDTH // 2 - h_surf.get_width() // 2, 34))
+        header_x = max(
+            REFERENCE_WIDTH // 2 - h_surf.get_width() // 2,
+            BACK_TO_STUDIO_RECT.right + 16,
+        )
+        target.blit(h_surf, (header_x, 34))
 
         if gallery.count == 0:
             empty_txt = self._typography.render(self._resources.text("gallery.empty"), FontRole.BODY, 24, (148, 163, 184))
@@ -162,7 +203,7 @@ class MonsterRenderer:
             target.blit(thumb, (card_rect.left + 10, card_rect.top + 8))
 
             # Name / Label
-            name_str = recipe.name if recipe.name else "Mostriciattolo"
+            name_str = display_text(recipe.name if recipe.name else self._default_name)
             name_surf = self._typography.render(name_str[:12], FontRole.TITLE, 16, (254, 240, 138))
             target.blit(name_surf, (card_rect.left + 120, card_rect.centery - 10))
 
@@ -193,12 +234,8 @@ class MonsterRenderer:
         hovered_tab: Category | None = None,
     ) -> None:
         categories = list(Category)
-        spacing = 148
-        start_x = 70
-        y = 20
-
         for i, cat in enumerate(categories):
-            tab_rect = pygame.Rect(start_x + i * spacing, y, 138, 56)
+            tab_rect = pygame.Rect(TAB_START_X + i * TAB_SPACING, TAB_Y, TAB_WIDTH, 56)
             is_active = (cat == active_cat)
             is_hovered = (cat == hovered_tab)
 
@@ -243,7 +280,7 @@ class MonsterRenderer:
 
         # Name banner at top of canvas if named
         if recipe.name:
-            n_surf = self._typography.render(recipe.name, FontRole.TITLE, 22, (254, 240, 138))
+            n_surf = self._typography.render(display_text(recipe.name), FontRole.TITLE, 22, (254, 240, 138))
             n_rect = pygame.Rect(PORTRAIT_CANVAS_RECT.centerx - n_surf.get_width() // 2 - 16, PORTRAIT_CANVAS_RECT.top + 14, n_surf.get_width() + 32, 34)
             pygame.draw.rect(target, (30, 41, 59), n_rect, border_radius=14)
             pygame.draw.rect(target, (217, 119, 6), n_rect, width=2, border_radius=14)
@@ -332,7 +369,9 @@ class MonsterRenderer:
             hl = draw_rect.inflate(-16, -draw_rect.height + 8).move(0, -draw_rect.height // 2 + 8)
             pygame.draw.rect(target, (255, 255, 255, 90), hl, border_radius=4)
 
-        txt_surf = self._typography.render(label, FontRole.TITLE, 18, (255, 255, 255))
+        txt_surf = self._fit_render(
+            label, FontRole.TITLE, 18, (255, 255, 255), rect.width - 24
+        )
         target.blit(
             txt_surf,
             (
@@ -362,7 +401,7 @@ class MonsterRenderer:
         self._art.draw_monster(target, m_area, recipe)
 
         # Name
-        name_str = recipe.name if recipe.name else "Morbido Mostriciattolo"
+        name_str = display_text(recipe.name if recipe.name else self._default_name_long)
         n_surf = self._typography.render(name_str, FontRole.TITLE, 24, (254, 240, 138))
         target.blit(n_surf, (modal_rect.centerx - n_surf.get_width() // 2, modal_rect.top + 340))
 
@@ -372,11 +411,8 @@ class MonsterRenderer:
 
     def tab_at(self, point: tuple[int, int]) -> Category | None:
         categories = list(Category)
-        spacing = 148
-        start_x = 70
-        y = 20
         for i, cat in enumerate(categories):
-            tab_rect = pygame.Rect(start_x + i * spacing, y, 138, 56)
+            tab_rect = pygame.Rect(TAB_START_X + i * TAB_SPACING, TAB_Y, TAB_WIDTH, 56)
             if tab_rect.collidepoint(point):
                 return cat
         return None

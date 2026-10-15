@@ -7,15 +7,15 @@
     "activity.nascondino_bosco.title": "Escondite en el bosque",
     "hud.found": "Encontrados: {found}/{total}",
     "hud.stars": "★ {stars}",
-    "btn.play_again": "JUGAR OTRA VEZ",
-    "victory.title": "¡LOS ENCONTRASTE A TODOS!",
+    "btn.play_again": "Jugar otra vez",
+    "victory.title": "¡Los encontraste a todos!",
     "victory.subtitle": "¡Todos los animales del bosque están felices!",
-    "animal.fox": "ZORRO",
-    "animal.bunny": "CONEJO",
-    "animal.owl": "BÚHO",
-    "animal.hedgehog": "ERIZO",
-    "animal.squirrel": "ARDILLA",
-    "animal.frog": "RANA"
+    "animal.fox": "Zorro",
+    "animal.bunny": "Conejo",
+    "animal.owl": "Búho",
+    "animal.hedgehog": "Erizo",
+    "animal.squirrel": "Ardilla",
+    "animal.frog": "Rana"
   },
   "audio": {}
 }

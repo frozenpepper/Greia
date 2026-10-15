@@ -23,17 +23,12 @@ import pygame
 
 from greia_platform.activity_api import (
     activity_stop_requested,
-    get_profile_locale,
     get_storage,
     get_theme,
     mark_activity_ready,
 )
 from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.localization import (
-    ActivityLocaleSupport,
-    LocalizedResources,
-    resolve_activity_locale,
-)
+from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import GreiaTypography
 
@@ -48,16 +43,8 @@ else:
 
 
 def _resolve_locale() -> LocalizedResources:
-    support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-    try:
-        context = resolve_activity_locale(get_profile_locale(), support)
-    except Exception:
-        context = resolve_activity_locale("it", support)
-    if context is None:
-        context = resolve_activity_locale("it", support)
-        if context is None:
-            raise RuntimeError("acquario_magico: locale support is unavailable")
-    return LocalizedResources(Path(__file__).resolve().parent, context)
+    """Resolve the profile language from this package's declared locales."""
+    return activity_resources(Path(__file__).resolve().parent)
 
 
 def main() -> int:

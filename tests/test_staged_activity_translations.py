@@ -216,7 +216,7 @@ class StagedActivityTranslationTests(unittest.TestCase):
         base = ROOT / "activities/enciclopedia_greia"
         en = json.loads((base / "locales/en.json").read_text(encoding="utf-8"))
         it = json.loads((base / "locales/it.json").read_text(encoding="utf-8"))
-        self.assertEqual(len(en["strings"]), 246)
+        self.assertEqual(len(en["strings"]), 260)
         self.assertEqual(len(en["audio"]), 200)
         manifest = tomllib.loads((base / "activity.toml").read_text(encoding="utf-8"))
         self.assertEqual(set(manifest["activity"]["languages"]), {"en", "it"})
@@ -225,7 +225,7 @@ class StagedActivityTranslationTests(unittest.TestCase):
                 staged = json.loads((base / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
                 strings = staged["strings"]
                 self.assertEqual(staged["audio"], {})
-                self.assertEqual(len(strings), 246)
+                self.assertEqual(len(strings), 260)
                 self.assertEqual(set(strings), set(en["strings"]))
                 self.assertEqual(set(strings), set(it["strings"]))
                 self.assertTrue(all(isinstance(value, str) and value.strip() for value in strings.values()))

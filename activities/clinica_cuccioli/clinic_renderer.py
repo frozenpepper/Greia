@@ -8,6 +8,7 @@ import pygame
 
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_completion import CompletionContent, PygameCompletionScreen
+from greia_platform.system_chrome import ActivitySystemChromeLayout
 from greia_platform.typography import FontRole, GreiaTypography
 
 try:
@@ -23,6 +24,13 @@ REFERENCE_HEIGHT: Final = 600
 TABLE_RECT = pygame.Rect(REFERENCE_WIDTH // 2 - 250, 150, 500, 270)
 PLAY_AGAIN_RECT = pygame.Rect(REFERENCE_WIDTH // 2 - 120, REFERENCE_HEIGHT // 2 + 70, 240, 60)
 PALETTE_Y = 480
+# The star pill starts clear of the trusted Home/Back region, which the
+# platform reserves in full (both slots) so layout never jumps with context.
+STAR_PILL_LEFT: Final = (
+    ActivitySystemChromeLayout.for_surface(REFERENCE_WIDTH, REFERENCE_HEIGHT)
+    .protected_region.right
+    + 8
+)
 MAX_PARTICLES = 96
 
 _TOOL_TEXT_KEYS = {
@@ -282,7 +290,7 @@ class ClinicRenderer:
         return rendered
 
     def _draw_star_pill(self, surface: pygame.Surface, total_stars: int) -> None:
-        rect = pygame.Rect(80, 16, 130, 56)
+        rect = pygame.Rect(STAR_PILL_LEFT, 16, 130, 56)
         pygame.draw.rect(surface, (255, 255, 255), rect, border_radius=18)
         pygame.draw.rect(surface, (234, 179, 8), rect, width=3, border_radius=18)
         pygame.draw.circle(surface, (234, 179, 8), (rect.left + 30, rect.centery), 16)

@@ -33,6 +33,7 @@ from greia_platform.pygame_canvas import (
     activity_viewport_for_surface,
 )
 from greia_platform.pygame_completion import CompletionContent, PygameCompletionScreen
+from greia_platform.system_chrome import ActivitySystemChromeLayout
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
@@ -55,6 +56,14 @@ else:
         THEMES,
     )
     from memory_render import compute_grid_layout, draw_card_illustration
+
+# The score pill starts clear of the trusted Home/Back region, which the
+# platform reserves in full (both slots) so layout never jumps with context.
+_STAR_PILL_LEFT = (
+    ActivitySystemChromeLayout.for_surface(REFERENCE_WIDTH, REFERENCE_HEIGHT)
+    .protected_region.right
+    + 8
+)
 
 
 def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
@@ -431,7 +440,7 @@ class MemoryApp:
             pygame.draw.circle(surf, p["color"], (int(p["x"]), int(p["y"])), int(cur_sz))
 
         # Top star pill
-        star_pill = pygame.Rect(80, 14, 150, 52)
+        star_pill = pygame.Rect(_STAR_PILL_LEFT, 14, 150, 52)
         pygame.draw.rect(surf, (255, 255, 255), star_pill, border_radius=18)
         pygame.draw.rect(surf, (180, 83, 9), star_pill, width=3, border_radius=18)
         draw_card_illustration(surf, "star", star_pill.left + 28, star_pill.centery, 34)

@@ -13,16 +13,16 @@
     "tool.sponge": "🧼 Bain",
     "tool.snack": "🥣 Repas",
     "tool.cuddle": "💖 Câlins",
-    "tool.stethoscope.short": "EXAMEN",
-    "tool.bath.short": "BAIN",
-    "tool.bandaid.short": "PANSEMENT",
-    "tool.food.short": "REPAS",
-    "tool.cuddle.short": "CÂLINS",
+    "tool.stethoscope.short": "Examen",
+    "tool.bath.short": "Bain",
+    "tool.bandaid.short": "Pansement",
+    "tool.food.short": "Repas",
+    "tool.cuddle.short": "Câlins",
     "victory.title": "Le chiot est guéri et heureux ! 🐶💖",
     "victory.subtitle": "Tu es un super vétérinaire !",
-    "victory.all_patients": "TOUS GUÉRIS !",
+    "victory.all_patients": "Tous guéris !",
     "btn.next_patient": "🐾 Patient suivant !",
-    "btn.play_again": "REJOUER"
+    "btn.play_again": "Rejouer"
   },
   "audio": {}
 }

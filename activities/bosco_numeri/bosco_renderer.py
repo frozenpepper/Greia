@@ -12,10 +12,28 @@ from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
-    from .bosco_content import NUMBERS_1_TO_10
+    from .bosco_content import (
+        CAROUSEL_ARROW_RADIUS,
+        CAROUSEL_BUTTON_SIZE,
+        CAROUSEL_NEXT_X,
+        CAROUSEL_PREV_X,
+        CAROUSEL_SPACING,
+        CAROUSEL_START_X,
+        CAROUSEL_Y,
+        NUMBERS_1_TO_10,
+    )
     from .bosco_model import BoscoModel, CountableForestItem
 else:
-    from bosco_content import NUMBERS_1_TO_10
+    from bosco_content import (
+        CAROUSEL_ARROW_RADIUS,
+        CAROUSEL_BUTTON_SIZE,
+        CAROUSEL_NEXT_X,
+        CAROUSEL_PREV_X,
+        CAROUSEL_SPACING,
+        CAROUSEL_START_X,
+        CAROUSEL_Y,
+        NUMBERS_1_TO_10,
+    )
     from bosco_model import BoscoModel, CountableForestItem
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -218,21 +236,26 @@ class BoscoRenderer:
 
     def _draw_number_carousel(self, surf: pygame.Surface, model: BoscoModel) -> None:
         """Top bar displaying numbers 1 to 10 with Prev/Next arrows."""
-        # Left chevron arrow button (centered at 100, 52)
-        pygame.draw.circle(surf, (255, 255, 255), (100, 52), 24)
-        pygame.draw.circle(surf, (120, 80, 40), (100, 52), 24, width=3)
-        pygame.draw.polygon(surf, (100, 65, 30), [(106, 40), (90, 52), (106, 64)])
+        y = CAROUSEL_Y
+        radius = CAROUSEL_ARROW_RADIUS
+        half = CAROUSEL_BUTTON_SIZE // 2
+
+        # Left chevron arrow button
+        pygame.draw.circle(surf, (255, 255, 255), (CAROUSEL_PREV_X, y), radius)
+        pygame.draw.circle(surf, (120, 80, 40), (CAROUSEL_PREV_X, y), radius, width=3)
+        pygame.draw.polygon(
+            surf,
+            (100, 65, 30),
+            [(CAROUSEL_PREV_X + 6, y - 12), (CAROUSEL_PREV_X - 10, y), (CAROUSEL_PREV_X + 6, y + 12)],
+        )
 
         # Number pill buttons 1 to 10
-        start_x = 150
-        spacing = 65
         for idx in range(10):
             num = idx + 1
-            btn_x = start_x + idx * spacing
-            btn_y = 52
+            btn_x = CAROUSEL_START_X + idx * CAROUSEL_SPACING
             is_active = num == model.current_number
 
-            rect = pygame.Rect(btn_x - 26, btn_y - 26, 52, 52)
+            rect = pygame.Rect(btn_x - half, y - half, CAROUSEL_BUTTON_SIZE, CAROUSEL_BUTTON_SIZE)
             bg_col = (255, 215, 60) if is_active else (255, 255, 255)
             border_col = (195, 125, 20) if is_active else (180, 180, 180)
             text_col = (90, 50, 10) if is_active else (80, 80, 80)
@@ -243,10 +266,14 @@ class BoscoRenderer:
             txt = self.typography.render(str(num), FontRole.TITLE, 22 if is_active else 18, text_col)
             surf.blit(txt, txt.get_rect(center=rect.center))
 
-        # Right chevron arrow button (centered at 825, 52)
-        pygame.draw.circle(surf, (255, 255, 255), (825, 52), 24)
-        pygame.draw.circle(surf, (120, 80, 40), (825, 52), 24, width=3)
-        pygame.draw.polygon(surf, (100, 65, 30), [(819, 40), (835, 52), (819, 64)])
+        # Right chevron arrow button
+        pygame.draw.circle(surf, (255, 255, 255), (CAROUSEL_NEXT_X, y), radius)
+        pygame.draw.circle(surf, (120, 80, 40), (CAROUSEL_NEXT_X, y), radius, width=3)
+        pygame.draw.polygon(
+            surf,
+            (100, 65, 30),
+            [(CAROUSEL_NEXT_X - 6, y - 12), (CAROUSEL_NEXT_X + 10, y), (CAROUSEL_NEXT_X - 6, y + 12)],
+        )
 
     def _draw_mode_toggle(self, surf: pygame.Surface, model: BoscoModel) -> None:
         """Draw the localized mode-switch control."""

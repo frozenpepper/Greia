@@ -78,6 +78,21 @@ class EncyclopediaPage:
         if not self.page_id:
             raise ValueError("encyclopedia page must declare a stable page_id")
         self.context = context
+        self._localized_cache: dict[str, str] = {}
+
+    def localized(self, key: str) -> str:
+        """Resolve one semantic UI string once per page instance.
+
+        ``LocalizedResources.text`` already applies the child letter-case
+        policy; draw paths use this so a frame never re-resolves a string.
+        """
+        cached = self._localized_cache.get(key)
+        if cached is None:
+            cached = self.context.resources.text(key)
+            if len(self._localized_cache) >= 64:
+                self._localized_cache.clear()
+            self._localized_cache[key] = cached
+        return cached
 
     def on_enter(self) -> None:
         pass

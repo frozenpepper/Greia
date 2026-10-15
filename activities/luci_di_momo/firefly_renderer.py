@@ -45,6 +45,20 @@ class FireflyRenderer:
             value: typography.render(str(value), FontRole.DISPLAY, 58, (120, 53, 15))
             for value in range(1, 6)
         }
+        # Localized captions resolve once; ``LocalizedResources.text`` already
+        # applies the child letter-case policy. A missing resource shows no
+        # fixed-language sentence: the play triangle and speaker stay readable.
+        self._prompt_surface = self._caption("prompt.tap_to_play", 22, (254, 240, 138))
+        self._listen_surface = self._caption("button.listen", 18, (120, 53, 15))
+        self._hud_surfaces: dict[tuple[int, int], pygame.Surface] = {}
+        self._choice_prompt = typography.render("✨ ❓", FontRole.DISPLAY, 36, (254, 240, 138))
+
+    def _caption(self, key: str, size: int, color: tuple[int, int, int]) -> pygame.Surface | None:
+        try:
+            text = self._resources.text(key)
+        except Exception:
+            return None
+        return self._typography.render(text, FontRole.TITLE, size, color)
 
     def start_contains(self, point: tuple[int, int]) -> bool:
         return START_BTN_RECT.collidepoint(point)
@@ -110,9 +124,9 @@ class FireflyRenderer:
         pygame.draw.polygon(target, (255, 255, 255), tri_points)
 
         # Prompt capsule below button
-        is_it = self._resources.context.selected.value.startswith("it")
-        prompt_txt = "TOCCA PER GIOCARE!" if is_it else "TAP TO PLAY!"
-        prompt_surf = self._typography.render(prompt_txt, FontRole.TITLE, 22, (254, 240, 138))
+        prompt_surf = self._prompt_surface
+        if prompt_surf is None:
+            return
         p_x = REFERENCE_WIDTH // 2 - prompt_surf.get_width() // 2
         p_y = 395
         banner_rect = pygame.Rect(p_x - 24, p_y - 6, prompt_surf.get_width() + 48, prompt_surf.get_height() + 12)
@@ -154,8 +168,7 @@ class FireflyRenderer:
         self._draw_hud(target, round_index, total_rounds)
 
         # Visual Prompt Banner: Glowing firefly + Question Mark
-        prompt_str = "✨ ❓"
-        prompt_surf = self._typography.render(prompt_str, FontRole.DISPLAY, 36, (254, 240, 138))
+        prompt_surf = self._choice_prompt
         p_x = REFERENCE_WIDTH // 2 - prompt_surf.get_width() // 2
         p_y = 355
         banner_rect = pygame.Rect(p_x - 24, p_y - 6, prompt_surf.get_width() + 48, prompt_surf.get_height() + 12)
@@ -223,20 +236,25 @@ class FireflyRenderer:
         pygame.draw.rect(target, (254, 240, 138), LISTEN_BTN_RECT, border_radius=25)
         pygame.draw.rect(target, (217, 119, 6), LISTEN_BTN_RECT, width=3, border_radius=25)
 
-        is_it = self._resources.context.selected.value.startswith("it")
-        listen_text = "🔊 ASCOLTA" if is_it else "🔊 LISTEN"
-        l_surf = self._typography.render(listen_text, FontRole.TITLE, 18, (120, 53, 15))
-        target.blit(
-            l_surf,
-            (LISTEN_BTN_RECT.centerx - l_surf.get_width() // 2, LISTEN_BTN_RECT.centery - l_surf.get_height() // 2),
-        )
+        l_surf = self._listen_surface
+        if l_surf is not None:
+            target.blit(
+                l_surf,
+                (LISTEN_BTN_RECT.centerx - l_surf.get_width() // 2, LISTEN_BTN_RECT.centery - l_surf.get_height() // 2),
+            )
 
         badge_rect = pygame.Rect(870, 24, 130, 44)
         pygame.draw.rect(target, (15, 23, 42, 200), badge_rect, border_radius=22)
         pygame.draw.rect(target, (254, 240, 138), badge_rect, width=2, border_radius=22)
 
-        txt = f"{round_index + 1} / {total_rounds}"
-        txt_surf = self._typography.render(txt, FontRole.TITLE, 22, (254, 240, 138))
+        txt_surf = self._hud_surfaces.get((round_index, total_rounds))
+        if txt_surf is None:
+            if len(self._hud_surfaces) >= 32:
+                self._hud_surfaces.clear()
+            txt_surf = self._typography.render(
+                f"{round_index + 1} / {total_rounds}", FontRole.TITLE, 22, (254, 240, 138)
+            )
+            self._hud_surfaces[(round_index, total_rounds)] = txt_surf
         target.blit(
             txt_surf,
             (badge_rect.centerx - txt_surf.get_width() // 2, badge_rect.centery - txt_surf.get_height() // 2),

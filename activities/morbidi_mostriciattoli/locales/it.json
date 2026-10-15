@@ -20,6 +20,8 @@
     "button.back": "Torna allo Studio 🎨",
     "button.delete": "Elimina 🗑️",
     "gallery.empty": "Nessun mostriciattolo ancora!",
+    "gallery.default_name": "Mostriciattolo",
+    "gallery.default_name_long": "Morbido mostriciattolo",
     "name_dialog.title": "Come si chiama il tuo mostriciattolo?",
     "name_dialog.confirm": "Fatto ✅",
     "delete_dialog.title": "Vuoi davvero salutare questo mostriciattolo?",

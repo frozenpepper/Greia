@@ -6,6 +6,7 @@ from typing import Sequence
 import pygame
 
 from greia_platform.localization import LocalizedResources
+from greia_platform.system_chrome import ActivitySystemChromeLayout
 from greia_platform.typography import FontRole, GreiaTypography
 
 try:
@@ -117,6 +118,18 @@ _IMAGE_CACHE: dict[str, pygame.Surface | None] = {}
 _SCALE_CACHE: dict[tuple[str, int, int, bool, int], pygame.Surface | None] = {}
 
 
+# Tito's talking portrait sits clear of the trusted Home/Back region, which the
+# platform reserves in full (both slots) so layout never jumps with context.
+_TITO_AVATAR_RADIUS = 36
+_TITO_LEFT = (
+    ActivitySystemChromeLayout.for_surface(REFERENCE_WIDTH, REFERENCE_HEIGHT)
+    .protected_region.right
+    + 8
+)
+_TITO_CX = _TITO_LEFT + _TITO_AVATAR_RADIUS
+_TITO_BUBBLE_X = _TITO_CX + 44
+
+
 def _load_asset(filename: str) -> pygame.Surface | None:
     if filename not in _IMAGE_CACHE:
         p = ASSETS_DIR / filename
@@ -169,6 +182,8 @@ class OrcaRenderer:
         self._fact_title_font = typography.font(FontRole.TITLE, 14)
         self._fact_body_font = typography.font(FontRole.BODY, 12)
         self._time_counter = 0.0
+        # Rendered label surfaces (tool captions, bell notes, counters), bounded.
+        self._label_surfaces: dict[tuple[int, str, int], pygame.Surface] = {}
 
         # Pre-calculated toolbar buttons (6 large child buttons at bottom)
         btn_w, btn_h = 142, 74
@@ -186,7 +201,7 @@ class OrcaRenderer:
         ]
 
         # Tito Animated Comic Bubble Click Rect
-        self.fact_banner_rect = pygame.Rect(76, 14, 180, 84)
+        self.fact_banner_rect = pygame.Rect(_TITO_LEFT, 14, _TITO_BUBBLE_X + 84 - _TITO_LEFT, 84)
 
         # 4 Floating musical bells on water surface
         bell_spacing = 110
@@ -195,7 +210,7 @@ class OrcaRenderer:
             (pygame.Rect(b_start_x + 0 * bell_spacing, int(WATER_SURFACE_Y - 35), 68, 68), 0, (239, 68, 68), "DO"),
             (pygame.Rect(b_start_x + 1 * bell_spacing, int(WATER_SURFACE_Y - 35), 68, 68), 1, (234, 179, 8), "MI"),
             (pygame.Rect(b_start_x + 2 * bell_spacing, int(WATER_SURFACE_Y - 35), 68, 68), 2, (59, 130, 246), "SOL"),
-            (pygame.Rect(b_start_x + 3 * bell_spacing, int(WATER_SURFACE_Y - 35), 68, 68), 3, (168, 85, 247), "DO⁺"),
+            (pygame.Rect(b_start_x + 3 * bell_spacing, int(WATER_SURFACE_Y - 35), 68, 68), 3, (168, 85, 247), "DO+"),
         ]
 
     def _get_background(self, night_mode: bool) -> pygame.Surface:
@@ -397,6 +412,17 @@ class OrcaRenderer:
                 pygame.draw.ellipse(surface, (250, 204, 21), (tx - rw // 2 + 3, ty - rh // 2 + 3, rw - 6, rh - 6), 4)
                 pygame.draw.ellipse(surface, (56, 189, 248), (tx - rw // 2 + 6, ty - rh // 2 + 6, rw - 12, rh - 12), 4)
 
+    def _label(self, font: pygame.font.Font, text: str) -> pygame.Surface:
+        """Return one white caption surface per (font, text); never re-rendered per frame."""
+        key = (id(font), text, 0)
+        cached = self._label_surfaces.get(key)
+        if cached is None:
+            if len(self._label_surfaces) >= 96:
+                self._label_surfaces.clear()
+            cached = font.render(text, True, (255, 255, 255))
+            self._label_surfaces[key] = cached
+        return cached
+
     def draw_bells(self, surface: pygame.Surface, night_mode: bool) -> None:
         """Render 4 musical sea bells floating on the surface."""
         for rect, idx, col, label in self.bell_rects:
@@ -407,8 +433,19 @@ class OrcaRenderer:
             pygame.draw.circle(surface, col, rect.center, rect.width // 2)
             pygame.draw.circle(surface, (255, 255, 255), rect.center, rect.width // 2, 3)
 
-            note_surf = self._note_font.render(label, True, (255, 255, 255))
-            surface.blit(note_surf, (rect.centerx - note_surf.get_width() // 2, rect.centery - note_surf.get_height() // 2))
+            high_octave = label.endswith("+")
+            note_surf = self._label(self._note_font, label.rstrip("+"))
+            note_y = rect.centery - note_surf.get_height() // 2 + (4 if high_octave else 0)
+            surface.blit(note_surf, (rect.centerx - note_surf.get_width() // 2, note_y))
+            if high_octave:
+                # The upper-octave mark is drawn: the text font has no
+                # superscript-plus glyph and would show a missing-glyph box.
+                tip = (rect.centerx, rect.centery - 18)
+                pygame.draw.polygon(
+                    surface,
+                    (255, 255, 255),
+                    [tip, (tip[0] - 6, tip[1] + 9), (tip[0] + 6, tip[1] + 9)],
+                )
 
     def draw_particles(self, surface: pygame.Surface, particles: list[ParticleEntity]) -> None:
         """Render dynamic particles: water splashes, bubbles, mist hearts, and musical notes."""
@@ -460,7 +497,7 @@ class OrcaRenderer:
 
             # Text label in bottom half
             label_text = self.resources.text(label_key) if label_key else ""
-            lbl_surf = self._tool_font.render(label_text, True, (255, 255, 255))
+            lbl_surf = self._label(self._tool_font, label_text)
             surface.blit(
                 lbl_surf,
                 (rect.centerx - lbl_surf.get_width() // 2, rect.bottom - lbl_surf.get_height() - 6),
@@ -476,12 +513,12 @@ class OrcaRenderer:
 
         # Fish counter
         _draw_vector_fish(surface, badge_x + 28, badge_y + 24, 26, (249, 115, 22))
-        fed_txt = self._badge_font.render(str(pod.total_fed), True, (255, 255, 255))
+        fed_txt = self._label(self._badge_font, str(pod.total_fed))
         surface.blit(fed_txt, (badge_x + 46, badge_y + 24 - fed_txt.get_height() // 2))
 
         # Heart counter
         _draw_vector_heart(surface, badge_x + 118, badge_y + 24, 20, (244, 63, 94))
-        cuddle_txt = self._badge_font.render(str(pod.total_cuddled), True, (255, 255, 255))
+        cuddle_txt = self._label(self._badge_font, str(pod.total_cuddled))
         surface.blit(cuddle_txt, (badge_x + 134, badge_y + 24 - cuddle_txt.get_height() // 2))
 
     def draw_fact_banner(self, surface: pygame.Surface, pod: OrcaPod) -> None:
@@ -491,7 +528,7 @@ class OrcaRenderer:
 
         # Gentle talking bounce animation
         bounce = int(math.sin(self._time_counter * 9.0) * 3.0)
-        avatar_cx = 114
+        avatar_cx = _TITO_CX
         avatar_cy = 48 + bounce
 
         # Warm golden circular glow halo behind Tito
@@ -506,7 +543,7 @@ class OrcaRenderer:
             pygame.draw.circle(surface, (234, 179, 8), (avatar_cx, avatar_cy), 30)
 
         # Cute small comic speech bubble pointing to Tito's mouth
-        bubble_x = 158
+        bubble_x = _TITO_BUBBLE_X
         bubble_y = 26 + bounce
         bubble_w = 84
         bubble_h = 44

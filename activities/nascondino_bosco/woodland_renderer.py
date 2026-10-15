@@ -8,6 +8,7 @@ from typing import Any, Final
 import pygame
 
 from greia_platform.localization import LocalizedResources
+from greia_platform.system_chrome import ActivitySystemChromeLayout
 from greia_platform.typography import FontRole, GreiaTypography
 from greia_platform.ui_preferences import InterfaceSize
 
@@ -29,6 +30,15 @@ except ImportError:
         REFERENCE_WIDTH,
         WoodlandGameState,
     )
+
+
+# The star pill starts clear of the trusted Home/Back region, which the
+# platform reserves in full (both slots) so layout never jumps with context.
+_STAR_PILL_LEFT: Final[int] = (
+    ActivitySystemChromeLayout.for_surface(REFERENCE_WIDTH, REFERENCE_HEIGHT)
+    .protected_region.right
+    + 8
+)
 
 
 def compute_hud_layout(interface_size: str | InterfaceSize = InterfaceSize.NORMAL) -> dict[str, Any]:
@@ -83,7 +93,7 @@ def compute_hud_layout(interface_size: str | InterfaceSize = InterfaceSize.NORMA
         mag_thick = 4
 
     target_card = (REFERENCE_WIDTH // 2 - card_w // 2, card_top, card_w, card_h)
-    star_pill = (80, 16, 130, 56)
+    star_pill = (_STAR_PILL_LEFT, 16, 130, 56)
 
     return {
         "interface_size": interface_size.value,
@@ -207,9 +217,18 @@ class WoodlandRenderer:
         # Localized Animal Name Text
         animal_def = ANIMALS_BY_ID.get(state.target_animal_id)
         name_key = animal_def.name_key if animal_def else f"animal.{state.target_animal_id}"
-        name_str = self.resources.text(name_key).upper()
+        # ``resources.text`` applies the child letter-case policy; long names
+        # (capitals are wide) shrink to the space between portrait and stars.
+        name_str = self.resources.text(name_key)
+        name_room = (
+            target_card.width
+            - layout["text_offset_x"]
+            - layout["star_offset_right"]
+            - layout["star_radius"]
+            - 12
+        )
         name_surf = self._render_cached_text(
-            name_str, FontRole.DISPLAY, layout["font_px"], (180, 83, 9)
+            name_str, FontRole.DISPLAY, layout["font_px"], (180, 83, 9), max_width=name_room
         )
         target_surface.blit(
             name_surf,
@@ -260,11 +279,22 @@ class WoodlandRenderer:
         )
 
     def _render_cached_text(
-        self, text: str, role: FontRole, size: int, color: tuple[int, int, int]
+        self,
+        text: str,
+        role: FontRole,
+        size: int,
+        color: tuple[int, int, int],
+        max_width: int | None = None,
     ) -> pygame.Surface:
-        key = (text, size, color)
+        key = (text, size, color, max_width)
         surf = self._text_cache.get(key)
         if surf is None:
-            surf = self.typography.render(text, role, size, color)
+            fitted = size
+            if max_width is not None:
+                while fitted > 12 and self.typography.measure(text, role, fitted).width > max_width:
+                    fitted -= 1
+            if len(self._text_cache) >= 64:
+                self._text_cache.clear()
+            surf = self.typography.render(text, role, fitted, color)
             self._text_cache[key] = surf
         return surf

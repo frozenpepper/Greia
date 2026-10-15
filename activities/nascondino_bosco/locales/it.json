@@ -7,15 +7,15 @@
     "activity.nascondino_bosco.title": "Nascondino nel Bosco",
     "hud.found": "Trovati: {found}/{total}",
     "hud.stars": "★ {stars}",
-    "btn.play_again": "GIOCA ANCORA",
-    "victory.title": "TROVATI TUTTI!",
+    "btn.play_again": "Gioca ancora",
+    "victory.title": "Trovati tutti!",
     "victory.subtitle": "Tutti gli animaletti sono felici!",
-    "animal.fox": "VOLPE",
-    "animal.bunny": "CONIGLIO",
-    "animal.owl": "GUFO",
-    "animal.hedgehog": "RICCIO",
-    "animal.squirrel": "SCOIATTOLO",
-    "animal.frog": "RANA"
+    "animal.fox": "Volpe",
+    "animal.bunny": "Coniglio",
+    "animal.owl": "Gufo",
+    "animal.hedgehog": "Riccio",
+    "animal.squirrel": "Scoiattolo",
+    "animal.frog": "Rana"
   },
   "audio": {
     "activity.title": {

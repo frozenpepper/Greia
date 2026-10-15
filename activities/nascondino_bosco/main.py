@@ -7,12 +7,7 @@ from typing import Final
 
 import pygame
 
-from greia_platform.activity_api import get_profile_locale
-from greia_platform.localization import (
-    ActivityLocaleSupport,
-    LocalizedResources,
-    resolve_activity_locale,
-)
+from greia_platform.localization import LocalizedResources, activity_resources
 
 try:
     from woodland_app import WoodlandApp
@@ -58,15 +53,8 @@ SPOTS: Final[list[dict[str, object]]] = [
 
 
 def _localized_resources() -> LocalizedResources:
-    support = ActivityLocaleSupport.localized(
-        ("it", "en"),
-        default_ui_locale="it",
-    )
-    context = resolve_activity_locale(get_profile_locale(), support)
-    if context is None:
-        context = resolve_activity_locale("it", support)
-    assert context is not None
-    return LocalizedResources(Path(__file__).resolve().parent, context)
+    """Resolve the profile language from this package's declared locales."""
+    return activity_resources(Path(__file__).resolve().parent)
 
 
 def main() -> int:

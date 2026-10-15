@@ -20,6 +20,8 @@
     "button.back": "Retour à l'atelier 🎨",
     "button.delete": "Supprimer 🗑️",
     "gallery.empty": "Aucun monstre enregistré pour le moment !",
+    "gallery.default_name": "Petit monstre",
+    "gallery.default_name_long": "Petit monstre doux",
     "name_dialog.title": "Comment s'appelle ton monstre ?",
     "name_dialog.confirm": "Terminé ✅",
     "delete_dialog.title": "Veux-tu vraiment dire au revoir à ce monstre ?",
