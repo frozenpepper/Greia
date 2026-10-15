@@ -87,16 +87,15 @@ class TimeAudioBoundaryTests(unittest.TestCase):
     def test_semantic_filename_falls_back_to_english_if_selected_locale_absent(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
-            _bundle = lambda loc: (root / "locales" / f"{loc}.json").write_text(
-                json.dumps({
-                    "schema_version": 1, "locale": loc,
-                    "strings": {}, "audio": {},
-                }),
-                encoding="utf-8",
-            )
             (root / "locales").mkdir()
-            for loc in ("it", "en", "fr"):
-                _bundle(loc)
+            for locale in ("it", "en", "fr"):
+                (root / "locales" / f"{locale}.json").write_text(
+                    json.dumps({
+                        "schema_version": 1, "locale": locale,
+                        "strings": {}, "audio": {},
+                    }),
+                    encoding="utf-8",
+                )
             french_dir = root / "locales" / "fr" / "audio"
             french_dir.mkdir(parents=True)
             english_dir = root / "locales" / "en" / "audio"
