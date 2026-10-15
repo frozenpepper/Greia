@@ -26,7 +26,16 @@
     "fact.fact_pod.title": "Sempre Insieme",
     "fact.fact_pod.body": "I cuccioli di orca restano sempre vicini alla loro mamma e al loro branco per tutta la vita!",
     "fact.fact_fin.title": "La Pinna Dorsale",
-    "fact.fact_fin.body": "La grande pinna sulla schiena dell'orca si chiama pinna dorsale e aiuta a nuotare dritti come frecce nell'acqua!"
+    "fact.fact_fin.body": "La grande pinna sulla schiena dell'orca si chiama pinna dorsale e aiuta a nuotare dritti come frecce nell'acqua!",
+    "mission.find.kiko": "Trova Kiko",
+    "mission.feed.kiko": "Dai la pappa a Kiko",
+    "mission.jump.kiko": "Fai saltare Kiko",
+    "mission.find.luna": "Trova Luna",
+    "mission.feed.luna": "Dai la pappa a Luna",
+    "mission.jump.luna": "Fai saltare Luna",
+    "mission.find.oskar": "Trova Oskar",
+    "mission.feed.oskar": "Dai la pappa a Oskar",
+    "mission.jump.oskar": "Fai saltare Oskar"
   },
   "audio": {
     "activity.title": {

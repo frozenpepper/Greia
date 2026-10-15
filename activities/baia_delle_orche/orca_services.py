@@ -4,7 +4,10 @@ from typing import Any
 
 from greia_platform.activity_api import emit_activity_event, get_storage
 
-STORAGE_KEY = "baia_delle_orche.progress.v1"
+try:
+    from orca_content import STORAGE_KEY
+except ImportError:
+    from .orca_content import STORAGE_KEY
 
 
 class GreiaOrcaProgress:
@@ -17,7 +20,10 @@ class GreiaOrcaProgress:
         storage = get_storage()
         if storage is None:
             return {}
-        data = storage.kv_get(self._key)
+        try:
+            data = storage.kv_get(self._key)
+        except Exception:
+            return {}
         return data if isinstance(data, dict) else {}
 
     def save_progress(self, payload: dict[str, Any]) -> None:
@@ -30,7 +36,7 @@ class GreiaOrcaEvents:
     """Emits verified semantic milestones and achievements to the Greia platform."""
 
     def record_feeding(self, count: int) -> None:
-        """Report only food actually eaten, not pellets merely dropped."""
+        """Report only food actually eaten, not food merely dropped."""
         emit_activity_event("orca.fed", {"count": count})
 
     def record_fed(self, orca_id: str, food_type: str) -> None:
@@ -61,4 +67,11 @@ class GreiaOrcaEvents:
         emit_activity_event(
             "orca.fact_discovered",
             {"fact_id": fact_id},
+        )
+
+    def record_mission_completed(self, kind: str, *, star: bool) -> None:
+        """An optional invitation was completed (presentation star, not an award)."""
+        emit_activity_event(
+            "orca.mission_completed",
+            {"kind": kind, "star": star},
         )

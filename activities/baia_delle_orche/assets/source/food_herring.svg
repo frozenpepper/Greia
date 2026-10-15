@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Baia delle Orche private: herring (orca food). Prop recipe, docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- sky light -> ocean/sky mix (silver herring) -->
+    <linearGradient id="food_herring_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E4F1FA"/>
+      <stop offset="1" stop-color="#9DBCD6"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="214" rx="66" ry="10" fill="#6A5147" opacity="0.11"/>
+  </g>
+  <g id="fins_back">
+    <path d="M190 128 C206 106 222 92 236 88 C232 110 230 124 234 128 C230 134 232 148 236 170 C222 164 206 150 190 128 Z" fill="#7FA6C8" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M112 96 C120 78 140 72 156 80 C146 86 140 94 138 100 Z" fill="#7FA6C8" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+  <g id="body">
+    <path d="M24 130 C40 102 82 88 128 90 C164 92 186 106 198 128 C186 150 164 164 128 166 C82 168 40 156 24 130 Z" fill="url(#food_herring_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M44 116 C76 98 128 94 186 116 C150 108 96 106 44 116 Z" fill="#4A91D8" opacity="0.85"/>
+    <path d="M66 140 C100 150 146 150 180 138" fill="none" stroke="#7FA6C8" stroke-width="2.5" stroke-linecap="round"/>
+    <ellipse cx="96" cy="108" rx="22" ry="5" fill="#FFFFFF" opacity="0.7"/>
+  </g>
+  <g id="face">
+    <circle cx="58" cy="124" r="11" fill="#FFFFFF" stroke="#4B372F" stroke-width="2.5"/>
+    <circle cx="56" cy="125" r="6" fill="#342C35"/>
+    <circle cx="54" cy="122" r="2.2" fill="#FFFFFF"/>
+    <path d="M30 138 Q38 144 46 140" fill="none" stroke="#72513F" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <g id="fin_front">
+    <path d="M110 144 C118 160 130 168 142 166 C134 156 128 148 126 142 Z" fill="#7FA6C8" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
+</svg>

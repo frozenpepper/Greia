@@ -26,7 +26,16 @@
     "fact.fact_pod.title": "Grupos familiares",
     "fact.fact_pod.body": "Las crías de orca suelen permanecer con su madre y su grupo familiar durante muchos años, a veces toda la vida.",
     "fact.fact_fin.title": "La aleta dorsal",
-    "fact.fact_fin.body": "La gran aleta del lomo de una orca se llama aleta dorsal y ayuda a mantener la estabilidad al nadar."
+    "fact.fact_fin.body": "La gran aleta del lomo de una orca se llama aleta dorsal y ayuda a mantener la estabilidad al nadar.",
+    "mission.find.kiko": "Encuentra a Kiko",
+    "mission.feed.kiko": "Da de comer a Kiko",
+    "mission.jump.kiko": "Haz saltar a Kiko",
+    "mission.find.luna": "Encuentra a Luna",
+    "mission.feed.luna": "Da de comer a Luna",
+    "mission.jump.luna": "Haz saltar a Luna",
+    "mission.find.oskar": "Encuentra a Oskar",
+    "mission.feed.oskar": "Da de comer a Oskar",
+    "mission.jump.oskar": "Haz saltar a Oskar"
   },
   "audio": {}
 }

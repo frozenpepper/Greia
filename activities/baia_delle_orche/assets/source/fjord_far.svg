@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- Baia delle Orche private: Arctic fjord horizon (far snowy range, near range, iceberg).
+       Scene layer for bg.sea_surface.* (replaces the tropical far layer); horizon y 290.
+       Recipe docs/design/GREIA_SVG_AUTHORING_RULES.md. Interaction-critical x 112-912 kept low-contrast. -->
+  <defs>
+    <!-- sky light -> sky/navy mix (far range, hazy) -->
+    <linearGradient id="fjord_far_range" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C9DBEA"/>
+      <stop offset="1" stop-color="#A9C1D8"/>
+    </linearGradient>
+    <!-- sky/navy mix -> navy light (near range) -->
+    <linearGradient id="fjord_near_range" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9FB6CE"/>
+      <stop offset="1" stop-color="#7F98B6"/>
+    </linearGradient>
+  </defs>
+  <g id="far">
+    <path d="M-8 290 L-8 200 L96 128 Q110 118 124 128 L214 196 L346 92 Q370 74 394 92 L520 186 L604 140 L706 104 Q730 90 754 104 L878 182 L946 138 Q960 128 974 138 L1032 176 L1032 290 Z" fill="url(#fjord_far_range)" stroke="#8DA6C0" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M96 128 Q110 118 124 128 L150 148 L136 144 L122 154 L108 142 L92 152 L78 140 Z" fill="#F4F8FC" stroke="#8DA6C0" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M346 92 Q370 74 394 92 L426 116 L406 110 L390 124 L372 110 L352 122 L336 110 L320 112 Z" fill="#F4F8FC" stroke="#8DA6C0" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M706 104 Q730 90 754 104 L786 124 L766 120 L750 132 L732 118 L714 130 L700 120 L680 122 Z" fill="#F4F8FC" stroke="#8DA6C0" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M946 138 Q960 128 974 138 L996 152 L980 150 L966 160 L952 150 L934 156 Z" fill="#F4F8FC" stroke="#8DA6C0" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+  <g id="near">
+    <path d="M-8 290 L-8 236 L156 150 Q180 136 204 150 L330 222 L410 250 L516 132 Q540 112 564 132 L690 236 L770 216 L856 146 Q880 130 904 146 L1032 236 L1032 290 Z" fill="url(#fjord_near_range)" stroke="#6F87A3" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M156 150 Q180 136 204 150 L238 170 L218 166 L200 180 L182 164 L160 178 L144 166 L126 168 Z" fill="#FFFFFF" stroke="#6F87A3" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M516 132 Q540 112 564 132 L602 162 L580 156 L562 172 L544 154 L522 170 L506 156 L484 160 Z" fill="#FFFFFF" stroke="#6F87A3" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M856 146 Q880 130 904 146 L940 172 L918 166 L902 180 L884 164 L862 178 L846 164 L826 166 Z" fill="#FFFFFF" stroke="#6F87A3" stroke-width="2.5" stroke-linejoin="round"/>
+    <ellipse cx="530" cy="148" rx="10" ry="4" fill="#FFFFFF" opacity="0.7"/>
+  </g>
+  <g id="iceberg">
+    <path d="M734 291 L752 262 Q758 254 766 258 L784 250 Q792 246 798 254 L822 291 Z" fill="#F4F8FC" stroke="#7FA9C2" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M766 258 L784 250 L776 291 L752 291 Z" fill="#BFE3F2"/>
+    <path d="M118 291 L128 276 Q132 271 137 274 L150 291 Z" fill="#F4F8FC" stroke="#7FA9C2" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+</svg>

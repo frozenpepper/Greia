@@ -36,7 +36,8 @@ def main() -> int:
                 (REFERENCE_WIDTH, REFERENCE_HEIGHT),
                 pygame.RESIZABLE,
             )
-        pygame.mouse.set_visible(False)
+        # The platform pointer stays visible (ACTIVITY_INPUT_STANDARDS).
+        pygame.mouse.set_visible(True)
 
         progress = GreiaOrcaProgress()
         pod = OrcaPod()

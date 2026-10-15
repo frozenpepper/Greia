@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Baia delle Orche private: little squid (orca food). Prop recipe, docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- rose light -> raspberry light (squid mantle) -->
+    <linearGradient id="food_squid_body" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#FAD3DF"/>
+      <stop offset="1" stop-color="#E889A9"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="236" rx="44" ry="7" fill="#6A5147" opacity="0.11"/>
+  </g>
+  <g id="arms">
+    <path d="M100 164 C92 186 82 202 70 214" fill="none" stroke="#4B372F" stroke-width="15" stroke-linecap="round"/>
+    <path d="M100 164 C92 186 82 202 70 214" fill="none" stroke="#E889A9" stroke-width="9" stroke-linecap="round"/>
+    <path d="M118 168 C116 192 112 208 106 222" fill="none" stroke="#4B372F" stroke-width="15" stroke-linecap="round"/>
+    <path d="M118 168 C116 192 112 208 106 222" fill="none" stroke="#E889A9" stroke-width="9" stroke-linecap="round"/>
+    <path d="M138 168 C140 192 144 208 150 222" fill="none" stroke="#4B372F" stroke-width="15" stroke-linecap="round"/>
+    <path d="M138 168 C140 192 144 208 150 222" fill="none" stroke="#E889A9" stroke-width="9" stroke-linecap="round"/>
+    <path d="M156 164 C164 186 174 202 186 214" fill="none" stroke="#4B372F" stroke-width="15" stroke-linecap="round"/>
+    <path d="M156 164 C164 186 174 202 186 214" fill="none" stroke="#E889A9" stroke-width="9" stroke-linecap="round"/>
+  </g>
+  <g id="fins">
+    <path d="M100 58 C80 52 64 60 58 74 C76 78 92 76 104 70 Z" fill="#E889A9" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M156 58 C176 52 192 60 198 74 C180 78 164 76 152 70 Z" fill="#E889A9" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+  <g id="body">
+    <path d="M128 22 C150 34 166 70 168 110 C170 140 160 166 128 170 C96 166 86 140 88 110 C90 70 106 34 128 22 Z" fill="url(#food_squid_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="112" cy="70" rx="7" ry="18" fill="#FFFFFF" opacity="0.7"/>
+    <circle cx="146" cy="96" r="5" fill="#D85683" opacity="0.45"/>
+    <circle cx="140" cy="76" r="3.5" fill="#D85683" opacity="0.45"/>
+  </g>
+  <g id="face">
+    <ellipse cx="112" cy="132" rx="9" ry="10" fill="#342C35"/>
+    <ellipse cx="144" cy="132" rx="9" ry="10" fill="#342C35"/>
+    <circle cx="115" cy="128" r="3" fill="#FFFFFF"/>
+    <circle cx="147" cy="128" r="3" fill="#FFFFFF"/>
+    <ellipse cx="100" cy="150" rx="8" ry="4.5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="156" cy="150" rx="8" ry="4.5" fill="#FDA4AF" opacity="0.55"/>
+    <path d="M120 152 Q128 158 136 152" fill="none" stroke="#72513F" stroke-width="2.6" stroke-linecap="round"/>
+  </g>
+</svg>

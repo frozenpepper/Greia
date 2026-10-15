@@ -2,7 +2,7 @@
 id = "org.greia.baia-delle-orche"
 legacy_ids = []
 title_key = "activity.baia_delle_orche.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
@@ -24,7 +24,8 @@ skills = [
   { id = "nature.marine_life.observation", weight = 3 },
   { id = "socioemotional.empathy.caring", weight = 2 },
   { id = "motor.pointer.target_selection", weight = 2 },
-  { id = "sensory.auditory.rhythm", weight = 2 },
+  { id = "music.pitch.exploration", weight = 1 },
+  { id = "nature.cycles.day_night", weight = 1 },
 ]
 events = [
   { id = "orca.fed", kind = "milestone" },
@@ -32,6 +33,7 @@ events = [
   { id = "orca.acrobatics_performed", kind = "milestone" },
   { id = "orca.song_completed", kind = "milestone" },
   { id = "orca.fact_discovered", kind = "milestone" },
+  { id = "orca.mission_completed", kind = "milestone" },
 ]
 
 [runtime]
@@ -40,11 +42,11 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "pointer"
+profile = "hybrid"
 
 [requirements]
 required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["touch", "keyboard"]
+optional_capabilities = ["touch", "keyboard", "controller"]
 
 [permissions]
 requested = []

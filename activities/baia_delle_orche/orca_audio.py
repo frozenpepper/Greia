@@ -1,7 +1,18 @@
+"""Baia delle Orche — synthesized sea sounds plus Tito's approved voice.
+
+The splash/whistle/purr/bell cues are tiny tones synthesized once at start-up.
+Speech is never generated here: Tito's six orca facts are the Activity's
+owner-approved recordings (``assets/audio/<lang>/tito_fact_*.wav``, resolved by
+``LocalizedResources.audio_path``), and his short praise lines are the shared
+character takes resolved through ``shared_character_audio_path`` (selected
+language, then English, then silence).
+"""
+
 from __future__ import annotations
 
 import io
 import math
+from pathlib import Path
 import random
 import struct
 from typing import Protocol
@@ -9,7 +20,7 @@ import wave
 
 import pygame
 
-from greia_platform.localization import LocalizedResources
+from greia_platform.localization import LocalizedResources, shared_character_audio_path
 
 
 def _synth_wav(samples: list[int], rate: int = 22050) -> bytes:
@@ -27,9 +38,11 @@ def _synth_wav(samples: list[int], rate: int = 22050) -> bytes:
     return buf.getvalue()
 
 
-from pathlib import Path
-
-AUDIO_DIR = Path(__file__).parent / "assets" / "audio"
+PACKAGE_ROOT = Path(__file__).resolve().parent
+AUDIO_DIR = PACKAGE_ROOT / "assets" / "audio"
+# Shared character takes this Activity uses (owner-approved v0.2 library).
+VOICE_SPEAKER = "tito"
+VOICE_CUES = ("celebrate.success", "praise.general")
 
 
 class OrcaAudio(Protocol):
@@ -44,14 +57,24 @@ class OrcaAudio(Protocol):
     def stop_voice(self) -> None:
         ...
 
+    def say(self, cue: str) -> None:
+        ...
+
 
 class PygameOrcaAudio:
     """Synthesizes and caches cute, realistic, non-blocking marine sounds and Tito character voice clips."""
 
-    def __init__(self, resources: LocalizedResources | None = None) -> None:
+    def __init__(
+        self,
+        resources: LocalizedResources | None = None,
+        *,
+        project_root: Path | None = None,
+    ) -> None:
         self._resources = resources
+        self._project_root = project_root if project_root is not None else PACKAGE_ROOT.parents[1]
         self._sounds: dict[str, pygame.mixer.Sound] = {}
         self._voice_cache: dict[tuple[str, str], pygame.mixer.Sound] = {}
+        self._shared_voices: dict[str, pygame.mixer.Sound | None] = {}
         self._voice_channel: pygame.mixer.Channel | None = None
         self._enabled = False
         try:
@@ -59,6 +82,8 @@ class PygameOrcaAudio:
                 pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=512)
             try:
                 pygame.mixer.set_num_channels(8)
+                # Channel 0 is reserved for speech so effects never cut Tito off.
+                pygame.mixer.set_reserved(1)
                 self._voice_channel = pygame.mixer.Channel(0)
             except Exception:
                 self._voice_channel = None
@@ -217,3 +242,30 @@ class PygameOrcaAudio:
                 self._voice_channel.stop()
             except Exception:
                 pass
+
+    def say(self, cue: str) -> None:
+        """Play one approved shared Tito take (silent when unavailable)."""
+
+        if not self._enabled or cue not in VOICE_CUES:
+            return
+        if cue not in self._shared_voices:
+            sound: pygame.mixer.Sound | None = None
+            locale = self._resources.context.selected.value if self._resources is not None else "en"
+            try:
+                path = shared_character_audio_path(self._project_root, VOICE_SPEAKER, cue, locale)
+                if path is not None:
+                    sound = pygame.mixer.Sound(str(path))
+            except Exception:
+                sound = None
+            self._shared_voices[cue] = sound
+        sound = self._shared_voices[cue]
+        if sound is None:
+            return
+        try:
+            if self._voice_channel is not None:
+                self._voice_channel.stop()
+                self._voice_channel.play(sound)
+            else:
+                sound.play()
+        except Exception:
+            pass

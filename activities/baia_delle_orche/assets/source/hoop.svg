@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Baia delle Orche private: floating play hoop for orca jumps. Prop recipe, docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <g id="ring">
+    <ellipse cx="128" cy="128" rx="70" ry="110" fill="none" stroke="#4B372F" stroke-width="27.5"/>
+    <path d="M128 18 A70 110 0 0 1 198 128" fill="none" stroke="#F46F61" stroke-width="20"/>
+    <path d="M198 128 A70 110 0 0 1 128 238" fill="none" stroke="#FFC234" stroke-width="20"/>
+    <path d="M128 238 A70 110 0 0 1 58 128" fill="none" stroke="#4A91D8" stroke-width="20"/>
+    <path d="M58 128 A70 110 0 0 1 128 18" fill="none" stroke="#59B86A" stroke-width="20"/>
+    <path d="M86 52 Q100 34 120 28" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.75"/>
+  </g>
+</svg>

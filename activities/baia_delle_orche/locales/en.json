@@ -26,7 +26,16 @@
     "fact.fact_pod.title": "Family Pods",
     "fact.fact_pod.body": "Orca calves stay close to their mother and their pod for their entire lives!",
     "fact.fact_fin.title": "The Dorsal Fin",
-    "fact.fact_fin.body": "The big fin on an orca's back is called the dorsal fin, and it helps them swim straight like arrows in the water!"
+    "fact.fact_fin.body": "The big fin on an orca's back is called the dorsal fin, and it helps them swim straight like arrows in the water!",
+    "mission.find.kiko": "Find Kiko",
+    "mission.feed.kiko": "Feed Kiko",
+    "mission.jump.kiko": "Make Kiko jump",
+    "mission.find.luna": "Find Luna",
+    "mission.feed.luna": "Feed Luna",
+    "mission.jump.luna": "Make Luna jump",
+    "mission.find.oskar": "Find Oskar",
+    "mission.feed.oskar": "Feed Oskar",
+    "mission.jump.oskar": "Make Oskar jump"
   },
   "audio": {
     "activity.title": {

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 320" width="512" height="320">
+  <!-- Baia delle Orche private: Oskar the elder orca - asleep. Derived from creature.marine.orca_adult: tall upright dorsal fin and grey saddle patch. -->
+  <defs>
+    <!-- navy light -> navy (orca black, tinted) -->
+    <linearGradient id="orca_elder_asleep_body" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#506889"/>
+      <stop offset="1" stop-color="#2C3B55"/>
+    </linearGradient>
+    <clipPath id="orca_elder_asleep_clip"><path d="M78 196 C116 142 190 108 276 106 C362 104 424 128 454 164 C474 188 470 214 448 226 C420 242 380 250 330 252 C250 256 160 240 104 212 Z"/></clipPath>
+  </defs>
+  <g id="character" transform="rotate(3 256 176)">
+    <g id="fins_back">
+      <path d="M114 204 C94 186 68 166 36 162 C42 184 56 200 78 210 C56 220 42 238 38 258 C70 252 96 234 118 216 Z" fill="url(#orca_elder_asleep_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M228 114 L246 12 C248 4 258 3 261 10 L300 110 Z" fill="url(#orca_elder_asleep_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <path d="M78 196 C116 142 190 108 276 106 C362 104 424 128 454 164 C474 188 470 214 448 226 C420 242 380 250 330 252 C250 256 160 240 104 212 Z" fill="url(#orca_elder_asleep_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <g clip-path="url(#orca_elder_asleep_clip)"><path d="M250 252 C300 232 360 226 420 218 C440 214 456 206 470 196 L470 260 L250 260 Z" fill="#F4F8FC"/><path d="M168 236 C196 214 232 214 262 230 C240 238 200 244 168 236 Z" fill="#F4F8FC"/><path d="M160 140 C178 122 208 114 236 116 C224 132 194 142 160 140 Z" fill="#CBD4E1"/></g>
+      <path d="M78 196 C116 142 190 108 276 106 C362 104 424 128 454 164 C474 188 470 214 448 226 C420 242 380 250 330 252 C250 256 160 240 104 212 Z" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="286" cy="130" rx="32" ry="8" fill="#A9B6C9" opacity="0.55"/>
+      <path d="M290.1 133.2 C290.3 129.9 308.4 128.5 330.4 130 C352.5 131.6 370.1 135.5 369.9 138.8 C369.7 142.1 351.6 143.5 329.6 142 C307.5 140.4 289.9 136.5 290.1 133.2 Z" fill="#FFFFFF" opacity="0.25"/>
+    </g>
+    <g id="face">
+      <path d="M358.5 163.2 C357 155.1 369.1 146.1 385.4 143.2 C401.7 140.4 416.1 144.6 417.5 152.8 C419 160.9 406.9 169.9 390.6 172.8 C374.3 175.6 359.9 171.4 358.5 163.2 Z" fill="#F4F8FC"/>
+      <path d="M376 160 Q389 171 402 160" fill="none" stroke="#342C35" stroke-width="4.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="418" cy="196" rx="9" ry="5" fill="#FDA4AF" opacity="0.6"/>
+      <path d="M432 208 Q446 212 458 204" fill="none" stroke="#72513F" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="fin_front">
+      <path d="M318 234 C326 262 318 286 298 298 C284 280 284 256 296 238 Z" fill="url(#orca_elder_asleep_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g id="fx">
+    <circle cx="476" cy="150" r="7" fill="#E6F6FD" stroke="#4F86A8" stroke-width="2" opacity="0.9"/><ellipse cx="473.6" cy="147.6" rx="2.0" ry="1.4" fill="#FFFFFF"/>
+    <circle cx="488" cy="124" r="5" fill="#E6F6FD" stroke="#4F86A8" stroke-width="2" opacity="0.9"/><ellipse cx="486.2" cy="122.2" rx="1.4" ry="1.0" fill="#FFFFFF"/>
+    <path d="M440 92 L453.2 92 L440 105.2 L453.2 105.2" fill="none" stroke="#6E7FB0" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.7"/>
+    <path d="M466 66 L475.6 66 L466 75.6 L475.6 75.6" fill="none" stroke="#6E7FB0" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" opacity="0.5"/>
+  </g>
+</svg>

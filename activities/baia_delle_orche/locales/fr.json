@@ -26,7 +26,16 @@
     "fact.fact_pod.title": "Des groupes familiaux",
     "fact.fact_pod.body": "Les petits orques restent souvent avec leur mère et leur groupe familial pendant de nombreuses années, parfois toute leur vie.",
     "fact.fact_fin.title": "La nageoire dorsale",
-    "fact.fact_fin.body": "La grande nageoire sur le dos d'une orque s'appelle la nageoire dorsale. Elle aide l'animal à rester stable en nageant."
+    "fact.fact_fin.body": "La grande nageoire sur le dos d'une orque s'appelle la nageoire dorsale. Elle aide l'animal à rester stable en nageant.",
+    "mission.find.kiko": "Trouve Kiko",
+    "mission.feed.kiko": "Donne à manger à Kiko",
+    "mission.jump.kiko": "Fais sauter Kiko",
+    "mission.find.luna": "Trouve Luna",
+    "mission.feed.luna": "Donne à manger à Luna",
+    "mission.jump.luna": "Fais sauter Luna",
+    "mission.find.oskar": "Trouve Oskar",
+    "mission.feed.oskar": "Donne à manger à Oskar",
+    "mission.jump.oskar": "Fais sauter Oskar"
   },
   "audio": {}
 }

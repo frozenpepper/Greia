@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- Baia delle Orche private: polar-night aurora ribbons (night sky light source over the fjord).
+       Scene layer drawn between bg.night_sky.* and the fjord range; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- turquoise light -> leaf (aurora glow, light source) -->
+    <linearGradient id="fjord_aurora_glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A6F0DF"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="aurora">
+    <path d="M120 150 C210 70 300 120 390 76 C470 38 530 84 610 60 C680 40 740 64 790 50 L796 90 C744 104 690 82 616 104 C536 128 476 84 396 122 C306 166 216 120 130 196 Z" fill="url(#fjord_aurora_glow)" opacity="0.5"/>
+    <path d="M202 184 C280 128 350 158 426 124 C500 92 560 130 638 108 C690 94 740 108 780 100 L782 124 C740 134 694 118 640 134 C562 156 502 120 428 152 C352 186 282 160 210 212 Z" fill="url(#fjord_aurora_glow)" opacity="0.4"/>
+    <path d="M390 76 C470 38 530 84 610 60 C570 74 530 72 490 64 C450 58 420 66 390 76 Z" fill="#CFF3EE" opacity="0.55"/>
+  </g>
+</svg>
