@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 632 400" width="632" height="400">
+  <defs>
+    <!-- orange light40 → orange shade22 (window frames, beam, sign) -->
+    <linearGradient id="ten_house_wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C288"/>
+      <stop offset="1" stop-color="#CE8436"/>
+    </linearGradient>
+    <!-- navy + 12% white → navy (dark, empty room) -->
+    <linearGradient id="ten_house_night_glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3F536D"/>
+      <stop offset="1" stop-color="#253B59"/>
+    </linearGradient>
+    <!-- sand light40 → sand (walls) -->
+    <linearGradient id="ten_house_wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F5EBD6"/>
+      <stop offset="1" stop-color="#EEDDBA"/>
+    </linearGradient>
+    <!-- coral light40 → coral (roof) -->
+    <linearGradient id="ten_house_roof" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="316" cy="390" rx="292" ry="9" fill="#6A5147" opacity="0.18"/>
+  </g>
+  <g id="chimney">
+    <rect x="498" y="12" width="42" height="90" rx="4" fill="#CF6356" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="490" y="4" width="58" height="16" rx="7" fill="#F8A9A0" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M506 34 H532 M506 50 H520" stroke="#975046" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <g id="walls">
+    <rect x="36" y="126" width="560" height="256" rx="14" fill="url(#ten_house_wall)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="52" y="146" width="6" height="94" rx="3" fill="#FFFFFF" opacity="0.55"/>
+    <rect x="38" y="254" width="556" height="14" fill="url(#ten_house_wood)" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="28" y="372" width="576" height="18" rx="8" fill="#9C918C" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M120 381 H170 M300 381 H360 M470 381 H520" stroke="#C4BCB8" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g id="roof">
+    <path d="M8 138 L190 20 H442 L624 138 Z" fill="url(#ten_house_roof)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M141.4 58 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 M82.8 96 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0 q12 10 24 0" fill="none" stroke="#CF6356" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M196 30 H300" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+    <rect x="0" y="128" width="632" height="16" rx="8" fill="#CF6356" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+  <g id="sign">
+    <rect x="206" y="28" width="220" height="104" rx="20" fill="url(#ten_house_wood)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="216" y="38" width="200" height="84" rx="13" fill="#FFFBEB" stroke="#976433" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+  <g id="sills">
+    <rect x="59" y="238" width="98" height="9" rx="4.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="163" y="238" width="98" height="9" rx="4.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="267" y="238" width="98" height="9" rx="4.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="371" y="238" width="98" height="9" rx="4.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="475" y="238" width="98" height="9" rx="4.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="59" y="368" width="98" height="9" rx="4.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="163" y="368" width="98" height="9" rx="4.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="267" y="368" width="98" height="9" rx="4.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="371" y="368" width="98" height="9" rx="4.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="475" y="368" width="98" height="9" rx="4.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
+  <g id="windows">
+    <g id="room_1" transform="translate(64 150)">
+      <rect x="1.8" y="1.8" width="84.4" height="88.4" rx="14" fill="url(#ten_house_wood)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <rect x="10" y="10" width="68" height="72" rx="8" fill="url(#ten_house_night_glass)" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M22 66 L54 22" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.16"/>
+    </g>
+    <g id="room_2" transform="translate(168 150)">
+      <rect x="1.8" y="1.8" width="84.4" height="88.4" rx="14" fill="url(#ten_house_wood)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <rect x="10" y="10" width="68" height="72" rx="8" fill="url(#ten_house_night_glass)" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M22 66 L54 22" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.16"/>
+    </g>
+    <g id="room_3" transform="translate(272 150)">
+      <rect x="1.8" y="1.8" width="84.4" height="88.4" rx="14" fill="url(#ten_house_wood)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <rect x="10" y="10" width="68" height="72" rx="8" fill="url(#ten_house_night_glass)" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M22 66 L54 22" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.16"/>
+    </g>
+    <g id="room_4" transform="translate(376 150)">
+      <rect x="1.8" y="1.8" width="84.4" height="88.4" rx="14" fill="url(#ten_house_wood)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <rect x="10" y="10" width="68" height="72" rx="8" fill="url(#ten_house_night_glass)" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M22 66 L54 22" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.16"/>
+    </g>
+    <g id="room_5" transform="translate(480 150)">
+      <rect x="1.8" y="1.8" width="84.4" height="88.4" rx="14" fill="url(#ten_house_wood)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <rect x="10" y="10" width="68" height="72" rx="8" fill="url(#ten_house_night_glass)" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M22 66 L54 22" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.16"/>
+    </g>
+    <g id="room_6" transform="translate(64 280)">
+      <rect x="1.8" y="1.8" width="84.4" height="88.4" rx="14" fill="url(#ten_house_wood)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <rect x="10" y="10" width="68" height="72" rx="8" fill="url(#ten_house_night_glass)" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M22 66 L54 22" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.16"/>
+    </g>
+    <g id="room_7" transform="translate(168 280)">
+      <rect x="1.8" y="1.8" width="84.4" height="88.4" rx="14" fill="url(#ten_house_wood)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <rect x="10" y="10" width="68" height="72" rx="8" fill="url(#ten_house_night_glass)" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M22 66 L54 22" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.16"/>
+    </g>
+    <g id="room_8" transform="translate(272 280)">
+      <rect x="1.8" y="1.8" width="84.4" height="88.4" rx="14" fill="url(#ten_house_wood)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <rect x="10" y="10" width="68" height="72" rx="8" fill="url(#ten_house_night_glass)" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M22 66 L54 22" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.16"/>
+    </g>
+    <g id="room_9" transform="translate(376 280)">
+      <rect x="1.8" y="1.8" width="84.4" height="88.4" rx="14" fill="url(#ten_house_wood)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <rect x="10" y="10" width="68" height="72" rx="8" fill="url(#ten_house_night_glass)" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M22 66 L54 22" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.16"/>
+    </g>
+    <g id="room_10" transform="translate(480 280)">
+      <rect x="1.8" y="1.8" width="84.4" height="88.4" rx="14" fill="url(#ten_house_wood)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <rect x="10" y="10" width="68" height="72" rx="8" fill="url(#ten_house_night_glass)" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M22 66 L54 22" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.16"/>
+    </g>
+  </g>
+</svg>

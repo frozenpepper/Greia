@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 92" width="88" height="92">
+  <defs>
+    <!-- orange light40 → orange shade22 (window frames, beam, sign) -->
+    <linearGradient id="ten_house_wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C288"/>
+      <stop offset="1" stop-color="#CE8436"/>
+    </linearGradient>
+    <!-- sunshine light40 → sunshine (a lit room) -->
+    <linearGradient id="ten_house_glass_home" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDA85"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+    <!-- lamp glow (light source) -->
+    <radialGradient id="ten_house_glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g id="window_home">
+    <rect x="1.8" y="1.8" width="84.4" height="88.4" rx="14" fill="url(#ten_house_wood)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="10" y="10" width="68" height="72" rx="8" fill="url(#ten_house_glass_home)" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="44" cy="48" r="30" fill="url(#ten_house_glow)"/>
+    <path d="M11.5 11.5 H23 Q17 25 20 38 Q15 38 11.5 43 Z" fill="#F8A9A0" stroke="#975046" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M76.5 11.5 H65 Q71 25 68 38 Q73 38 76.5 43 Z" fill="#F8A9A0" stroke="#975046" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+</svg>

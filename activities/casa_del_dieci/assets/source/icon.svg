@@ -1,45 +1,61 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#3b82f6"/>
-      <stop offset="100%" stop-color="#1d4ed8"/>
+    <!-- orange light (mix 35% white) → orange: learn Collection tile -->
+    <linearGradient id="ten_house_icon_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BD7E"/>
+      <stop offset="1" stop-color="#F39A38"/>
     </linearGradient>
-    <linearGradient id="roof" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#f43f5e"/>
-      <stop offset="100%" stop-color="#be123c"/>
+    <!-- coral light40 → coral (roof) -->
+    <linearGradient id="ten_house_icon_roof" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
     </linearGradient>
-    <linearGradient id="house" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#fef3c7"/>
-      <stop offset="100%" stop-color="#fde68a"/>
+    <!-- sand light40 → sand (walls) -->
+    <linearGradient id="ten_house_icon_wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F5EBD6"/>
+      <stop offset="1" stop-color="#EEDDBA"/>
     </linearGradient>
+    <!-- firefly glow (light source) -->
+    <radialGradient id="ten_house_icon_glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF6D6" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#FFC234" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <!-- Background rounded card -->
-  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
-  
-  <!-- Roof -->
-  <polygon points="128,36 32,100 224,100" fill="url(#roof)"/>
-  <polygon points="128,48 48,100 208,100" fill="#fb7185" opacity="0.4"/>
-  
-  <!-- House Body -->
-  <rect x="46" y="100" width="164" height="120" rx="12" fill="url(#house)" stroke="#b45309" stroke-width="4"/>
-  
-  <!-- 2x5 Ten-Frame Windows -->
-  <!-- Top Row (5 windows) -->
-  <rect x="58" y="112" width="22" height="34" rx="4" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
-  <rect x="88" y="112" width="22" height="34" rx="4" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
-  <rect x="117" y="112" width="22" height="34" rx="4" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
-  <rect x="146" y="112" width="22" height="34" rx="4" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
-  <rect x="176" y="112" width="22" height="34" rx="4" fill="#475569" stroke="#334155" stroke-width="2"/>
-  
-  <!-- Bottom Row (5 windows) -->
-  <rect x="58" y="160" width="22" height="34" rx="4" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
-  <rect x="88" y="160" width="22" height="34" rx="4" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
-  <rect x="117" y="160" width="22" height="34" rx="4" fill="#475569" stroke="#334155" stroke-width="2"/>
-  <rect x="146" y="160" width="22" height="34" rx="4" fill="#475569" stroke="#334155" stroke-width="2"/>
-  <rect x="176" y="160" width="22" height="34" rx="4" fill="#475569" stroke="#334155" stroke-width="2"/>
-  
-  <!-- Chimney -->
-  <rect x="180" y="44" width="20" height="36" fill="#b91c1c" rx="3"/>
-  <circle cx="190" cy="34" r="5" fill="#e2e8f0" opacity="0.8"/>
-  <circle cx="196" cy="24" r="7" fill="#e2e8f0" opacity="0.6"/>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#ten_house_icon_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="128" cy="214" rx="92" ry="9" fill="#975A2A" opacity="0.18"/>
+  </g>
+  <g id="subject">
+    <rect x="68" y="44" width="22" height="42" rx="3" fill="#CF6356" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="40" y="104" width="176" height="104" rx="10" fill="url(#ten_house_icon_wall)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M28 112 L84 54 H172 L228 112 Z" fill="url(#ten_house_icon_roof)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M96 66 H138" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+    <rect x="22" y="106" width="212" height="13" rx="6.5" fill="#CF6356" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <g id="lit_rooms" fill="#FFC234" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+      <rect x="51" y="128" width="26" height="28" rx="6"/>
+      <rect x="83" y="128" width="26" height="28" rx="6"/>
+      <rect x="115" y="128" width="26" height="28" rx="6"/>
+      <rect x="147" y="128" width="26" height="28" rx="6"/>
+      <rect x="179" y="128" width="26" height="28" rx="6"/>
+      <rect x="51" y="166" width="26" height="28" rx="6"/>
+      <rect x="83" y="166" width="26" height="28" rx="6"/>
+    </g>
+    <g id="dark_rooms" fill="#253B59" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+      <rect x="115" y="166" width="26" height="28" rx="6"/>
+      <rect x="147" y="166" width="26" height="28" rx="6"/>
+      <rect x="179" y="166" width="26" height="28" rx="6"/>
+    </g>
+    <path d="M56 134 H66 M88 134 H98 M120 134 H130 M152 134 H162 M184 134 H194 M56 172 H66 M88 172 H98" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+  </g>
+  <g id="accent">
+    <circle cx="198" cy="50" r="32" fill="url(#ten_house_icon_glow)"/>
+    <ellipse cx="187" cy="40" rx="12" ry="8" fill="#E8F4FA" stroke="#4B372F" stroke-width="3.5" transform="rotate(-25 187 40)"/>
+    <ellipse cx="209" cy="40" rx="12" ry="8" fill="#E8F4FA" stroke="#4B372F" stroke-width="3.5" transform="rotate(25 209 40)"/>
+    <circle cx="198" cy="61" r="12" fill="#FFC234" stroke="#4B372F" stroke-width="4"/>
+    <circle cx="198" cy="45" r="11" fill="#5B4A55" stroke="#4B372F" stroke-width="4"/>
+    <circle cx="194" cy="42" r="2.5" fill="#FFFFFF"/>
+  </g>
 </svg>

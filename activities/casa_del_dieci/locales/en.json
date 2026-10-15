@@ -5,17 +5,9 @@
   "strings": {
     "activity.title": "The Ten House",
     "activity.casa_del_dieci.title": "The Ten House",
-    "prompt.compose_one": "Turn on 1 room in the house!",
-    "prompt.compose": "Turn on $target rooms in the house!",
-    "prompt.add": "How many rooms are lit in all?",
-    "prompt.take_away": "How many rooms stay lit?",
-    "prompt.missing_part": "How many rooms needed to make $target?",
-    "button.confirm": "Confirm",
     "button.play_again": "Play again",
-    "victory.title": "House Completed!",
-    "victory.subtitle": "You solved all the rooms with Dani!",
-    "hud.listen": "Listen",
-    "goal.turn_on": "Turn on $target"
+    "victory.title": "The house is glowing!",
+    "victory.subtitle": "You lit every room with Dani!"
   },
   "audio": {
     "activity.title": {

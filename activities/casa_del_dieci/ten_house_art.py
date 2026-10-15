@@ -1,114 +1,296 @@
-"""Prepared visual resources and warm storybook art for La Casa del Dieci."""
+"""Prepared, bounded art for La Casa del Dieci.
+
+Everything is loaded and scaled once. The opaque backdrop is the shared
+``bg.night_sky`` layers with this package's house (``assets/source/house.svg``
+-> ``assets/runtime/house.png``) composited on top, so a frame starts with one
+blit. Lit-room glass comes from the private window renditions; fireflies,
+FX and Dani's poses come from the shared library; numerals, the roof sign,
+answer-card faces, count badges and the number-bond strip are painted with
+the shared control-kit recipe and cached in small bounded dictionaries.
+Drawing code only blits these surfaces.
+"""
 
 from __future__ import annotations
 
+from enum import StrEnum
+from pathlib import Path
+from typing import Final
+
 import pygame
 
-from greia_platform.activity_api import get_shared_visual_path
+from greia_platform.activity_controls import BodyShape, ControlArt, ControlPainter, mix
+from greia_platform.typography import FontRole
+
+if __package__:
+    from .ten_house_layout import CARD_SIZE, HOUSE_ORIGIN, HOUSE_SIZE, ROOM_SIZE, SIGN_RECT
+    from .ten_house_model import RoomState
+else:
+    from ten_house_layout import CARD_SIZE, HOUSE_ORIGIN, HOUSE_SIZE, ROOM_SIZE, SIGN_RECT
+    from ten_house_model import RoomState
+
+PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent
+RUNTIME_DIR: Final[Path] = PACKAGE_ROOT / "assets" / "runtime"
+
+FIREFLY_ID: Final = "creature.woodland.firefly"
+FIREFLY_SIZES: Final[dict[str, int]] = {"room": 62, "flying": 62, "guest": 84, "sky": 64}
+FX_SIZES: Final[dict[str, int]] = {"sparkle": 116, "star_burst": 150, "heart_pop": 76, "confetti": 260}
+BADGE_SIZE: Final = 50
+BOND_DISC: Final = 84
+CACHE_LIMIT: Final = 24
+
+COCOA: Final = (61, 44, 31)
+CREAM: Final = (255, 251, 235)
+SUNSHINE: Final = (255, 194, 52)
+SUNSHINE_LIGHT: Final = (255, 218, 133)
+TURQUOISE_LIGHT: Final = (143, 212, 206)
+LAVENDER: Final = (232, 221, 247)
+HALO: Final = (255, 226, 138)
+
+
+class Tone(StrEnum):
+    """Colour family of a badge / bond disc; matches the room glass."""
+
+    HOME = "home"
+    GUEST = "guest"
+    AWAY = "away"
+    WHOLE = "whole"
+
+
+_TONE_FILL: Final = {
+    Tone.HOME: SUNSHINE_LIGHT,
+    Tone.GUEST: TURQUOISE_LIGHT,
+    Tone.AWAY: LAVENDER,
+    Tone.WHOLE: CREAM,
+}
 
 
 class TenHouseArt:
-    """Own finite pre-scaled Activity art and the cozy 10-room townhouse."""
+    """Own every prepared surface the renderer blits (bounded, built once)."""
 
-    def __init__(self, width: int, height: int) -> None:
-        self.background = self._build_background(width, height)
-        self.dani = self._load_dani()
+    def __init__(
+        self,
+        painter: ControlPainter,
+        *,
+        art: ControlArt | None = None,
+        runtime_dir: Path = RUNTIME_DIR,
+        size: tuple[int, int] = (1024, 600),
+    ) -> None:
+        self._painter = painter
+        # Content art gets its own bounded cache so it never evicts kit glyphs.
+        self._art = art if art is not None else ControlArt(max_entries=40)
+        self._runtime_dir = runtime_dir
+        self.background = self._compose_background(size)
+        self.windows: dict[RoomState, pygame.Surface | None] = {
+            RoomState.HOME: self._load_private("window_home.png", ROOM_SIZE),
+            RoomState.GUEST: self._load_private("window_guest.png", ROOM_SIZE),
+        }
+        self.fireflies = {name: self._art.image(FIREFLY_ID, px) for name, px in FIREFLY_SIZES.items()}
+        self.halo = self._build_halo()
+        self._fx: dict[str, tuple[pygame.Surface, ...]] = {}
+        self._badges: dict[tuple[int, Tone], pygame.Surface] = {}
+        self._signs: dict[tuple[int | None, bool], pygame.Surface] = {}
+        self._cards: dict[tuple[int, bool], pygame.Surface] = {}
+        self._discs: dict[tuple[int, Tone], pygame.Surface] = {}
+        self._symbols: dict[str, pygame.Surface] = {}
 
-    @staticmethod
-    def _load_dani() -> pygame.Surface | None:
+    # -- cast / creatures ---------------------------------------------------
+
+    def cast_pose(self, character: str, variant: str, height: int) -> pygame.Surface | None:
+        return self._art.image(f"character.{character}", height, variant=variant)
+
+    def firefly(self, role: str) -> pygame.Surface | None:
+        return self.fireflies.get(role)
+
+    # -- FX -----------------------------------------------------------------
+
+    def fx_frames(self, name: str) -> tuple[pygame.Surface, ...]:
+        cached = self._fx.get(name)
+        if cached is not None:
+            return cached
+        size = FX_SIZES.get(name, 128)
+        frames = []
+        for variant in ("default", "frame_2", "frame_3"):
+            image = self._art.image(f"fx.{name}", size, variant=variant)
+            if image is not None:
+                frames.append(image)
+        self._fx[name] = tuple(frames)
+        return self._fx[name]
+
+    # -- numbers ------------------------------------------------------------
+
+    def badge(self, number: int, tone: Tone = Tone.HOME) -> pygame.Surface:
+        """Round numeral token that pops above a room while counting with Dani."""
+
+        key = (number, tone)
+        cached = self._badges.get(key)
+        if cached is None:
+            cached = self._painter.body(BodyShape.ROUND, (BADGE_SIZE, BADGE_SIZE), _fill(tone)).copy()
+            label = self._painter.label(str(number), int(BADGE_SIZE * 0.6), COCOA, role=FontRole.DISPLAY)
+            cached.blit(label, label.get_rect(center=(BADGE_SIZE // 2, BADGE_SIZE // 2 + 1)))
+            _store(self._badges, key, cached)
+        return cached
+
+    def sign_face(self, number: int | None, *, dots: bool) -> pygame.Surface:
+        """Content of the roof sign: the numeral (and its ten-frame at stage 1).
+
+        ``None`` shows the house's firefly emblem: add / take-away challenges
+        have no target to print until the child has answered.
+        """
+
+        key = (number, dots)
+        cached = self._signs.get(key)
+        if cached is not None:
+            return cached
+        width, height = SIGN_RECT.size
+        face = pygame.Surface((width, height), pygame.SRCALPHA)
+        if number is None:
+            emblem = self._art.image(FIREFLY_ID, height - 8)
+            if emblem is not None:
+                face.blit(emblem, emblem.get_rect(center=(width // 2, height // 2)))
+        elif dots:
+            numeral = self._painter.label(str(number), 66, COCOA, role=FontRole.DISPLAY)
+            frame = self._dot_frame(number, 112)
+            gap = 12
+            left = (width - numeral.get_width() - gap - frame.get_width()) // 2
+            face.blit(numeral, numeral.get_rect(midleft=(left, height // 2 + 2)))
+            face.blit(frame, frame.get_rect(midleft=(left + numeral.get_width() + gap, height // 2)))
+        else:
+            numeral = self._painter.label(str(number), 74, COCOA, role=FontRole.DISPLAY)
+            face.blit(numeral, numeral.get_rect(center=(width // 2, height // 2 + 2)))
+        _store(self._signs, key, face)
+        return face
+
+    def card_face(self, number: int, *, frame: bool) -> pygame.Surface:
+        """Answer-card content: a big numeral, with a mini ten-frame at stage 3."""
+
+        key = (number, frame)
+        cached = self._cards.get(key)
+        if cached is not None:
+            return cached
+        width, height = CARD_SIZE
+        face = pygame.Surface((int(width * 0.86), int(height * 0.8)), pygame.SRCALPHA)
+        if frame:
+            numeral = self._painter.label(str(number), int(height * 0.4), COCOA, role=FontRole.DISPLAY)
+            dots = self._dot_frame(number, face.get_width() - 6)
+            top = max(0, (face.get_height() - numeral.get_height() - 6 - dots.get_height()) // 2)
+            face.blit(numeral, numeral.get_rect(midtop=(face.get_width() // 2, top)))
+            face.blit(dots, dots.get_rect(midtop=(face.get_width() // 2, top + numeral.get_height() + 6)))
+        else:
+            numeral = self._painter.label(str(number), int(height * 0.58), COCOA, role=FontRole.DISPLAY)
+            face.blit(numeral, numeral.get_rect(center=(face.get_width() // 2, face.get_height() // 2 + 2)))
+        _store(self._cards, key, face)
+        return face
+
+    def bond_disc(self, number: int, tone: Tone) -> pygame.Surface:
+        """One disc of the number-bond strip, coloured like its rooms."""
+
+        key = (number, tone)
+        cached = self._discs.get(key)
+        if cached is None:
+            cached = self._painter.body(BodyShape.ROUND, (BOND_DISC, BOND_DISC), _fill(tone), lip=0).copy()
+            label = self._painter.label(str(number), int(BOND_DISC * 0.62), COCOA, role=FontRole.DISPLAY)
+            cached.blit(label, label.get_rect(center=(BOND_DISC // 2, BOND_DISC // 2 + 2)))
+            _store(self._discs, key, cached)
+        return cached
+
+    def symbol(self, text: str) -> pygame.Surface:
+        """``+``, ``-`` or ``=`` between bond discs (cream with an ink shadow)."""
+
+        cached = self._symbols.get(text)
+        if cached is None:
+            glyph = self._painter.label(text, 58, CREAM, role=FontRole.DISPLAY)
+            shadow = self._painter.label(text, 58, (37, 59, 89), role=FontRole.DISPLAY)
+            cached = pygame.Surface((glyph.get_width() + 3, glyph.get_height() + 3), pygame.SRCALPHA)
+            cached.blit(shadow, (3, 3))
+            cached.blit(glyph, (0, 0))
+            self._symbols[text] = cached
+        return cached
+
+    def _dot_frame(self, number: int, width: int) -> pygame.Surface:
+        """A 2x5 ten-frame of dots, filled in reading order."""
+
+        gap = max(3, width // 32)
+        dot = (width - 6 * gap) // 5
+        frame = pygame.Surface((width, 2 * dot + 3 * gap), pygame.SRCALPHA)
+        theme = self._painter.theme
+        tray = self._painter.body(
+            BodyShape.PANEL,
+            frame.get_size(),
+            mix(theme.surface, theme.ink, 0.08),
+            contour_width=2,
+            highlight=False,
+        )
+        frame.blit(tray, (0, 0))
+        filled = self._painter.body(BodyShape.ROUND, (dot, dot), SUNSHINE, contour_width=max(2, dot // 10))
+        empty = self._painter.body(
+            BodyShape.ROUND,
+            (dot, dot),
+            mix(theme.surface, theme.ink, 0.04),
+            contour=mix(theme.ink, theme.surface, 0.5),
+            contour_width=2,
+            highlight=False,
+        )
+        for index in range(10):
+            row, column = divmod(index, 5)
+            frame.blit(filled if index < number else empty, (gap + column * (dot + gap), gap + row * (dot + gap)))
+        return frame
+
+    # -- loading --------------------------------------------------------------
+
+    def _build_halo(self) -> pygame.Surface:
+        """Soft glow ring around a room for hints (built once)."""
+
+        width, height = ROOM_SIZE[0] + 24, ROOM_SIZE[1] + 24
+        halo = pygame.Surface((width, height), pygame.SRCALPHA)
+        for inset, alpha in ((0, 70), (4, 120), (8, 190)):
+            pygame.draw.rect(
+                halo,
+                (*HALO, alpha),
+                pygame.Rect(inset, inset, width - 2 * inset, height - 2 * inset),
+                width=4,
+                border_radius=22 - inset,
+            )
+        return halo
+
+    def _load_private(self, name: str, size: tuple[int, int]) -> pygame.Surface | None:
         try:
-            path = get_shared_visual_path("character.dani", variant="happy")
-            image = pygame.image.load(path)
+            image = pygame.image.load(str(self._runtime_dir / name))
             if pygame.display.get_surface() is not None:
                 image = image.convert_alpha()
-            return pygame.transform.scale(image, (170, 170))
-        except (OSError, ValueError, pygame.error, RuntimeError):
+        except (OSError, pygame.error):
             return None
+        if image.get_size() != size:
+            image = pygame.transform.smoothscale(image, size)
+        return image
 
-    @staticmethod
-    def _build_background(width: int, height: int) -> pygame.Surface:
-        surface = pygame.Surface((width, height))
+    def _compose_background(self, size: tuple[int, int]) -> pygame.Surface:
+        """Night-sky layers plus the house, flattened into one opaque surface."""
 
-        # Deep twilight gradient
-        for y in range(height):
-            t = y / height
-            r = int(18 * (1 - t) + 12 * t)
-            g = int(28 * (1 - t) + 45 * t)
-            b = int(58 * (1 - t) + 52 * t)
-            pygame.draw.line(surface, (r, g, b), (0, y), (width, y))
-
-        # Distant rolling hills
-        pygame.draw.ellipse(surface, (15, 45, 38), (-100, 360, 600, 350))
-        pygame.draw.ellipse(surface, (20, 60, 48), (550, 370, 600, 350))
-
-        # Lush lawn
-        pygame.draw.rect(surface, (28, 95, 70), (0, 440, width, height - 440))
-        pygame.draw.rect(surface, (34, 115, 85), (0, 470, width, height - 470))
-
-        # Stone garden pathway
-        for px, py in [(180, 520), (140, 545), (100, 570), (220, 550)]:
-            pygame.draw.ellipse(surface, (71, 85, 105), (px, py, 38, 20))
-            pygame.draw.ellipse(surface, (100, 116, 139), (px + 2, py + 2, 34, 16))
-
-        # Stars & Crescent Moon
-        moon_center = (890, 85)
-        # Moon aura
-        for r in range(45, 25, -3):
-            alpha = int(40 * (1.0 - (r - 25) / 20.0))
-            aura = pygame.Surface((r * 2, r * 2), pygame.SRCALPHA)
-            pygame.draw.circle(aura, (254, 240, 138, alpha), (r, r), r)
-            surface.blit(aura, (moon_center[0] - r, moon_center[1] - r))
-        # Moon
-        pygame.draw.circle(surface, (254, 240, 138), moon_center, 26)
-        pygame.draw.circle(surface, (20, 32, 60), (moon_center[0] - 10, moon_center[1] - 8), 22)
-
-        for sx, sy, sr in [
-            (95, 60, 2), (180, 45, 3), (290, 80, 2), (410, 40, 3),
-            (680, 55, 3), (760, 110, 2), (970, 50, 2), (830, 40, 3),
-        ]:
-            pygame.draw.circle(surface, (255, 255, 255), (sx, sy), sr)
-            pygame.draw.circle(surface, (254, 240, 138, 120), (sx, sy), sr + 2)
-
-        # House drop shadow
-        house_rect = pygame.Rect(205, 95, 614, 315)
-        pygame.draw.rect(surface, (10, 20, 30), house_rect.move(0, 8), border_radius=18)
-
-        # Chimney with smoke
-        pygame.draw.rect(surface, (153, 27, 27), (725, 42, 38, 62), border_radius=6)
-        pygame.draw.rect(surface, (185, 28, 28), (723, 38, 42, 10), border_radius=4)
-        # Brick lines
-        pygame.draw.line(surface, (120, 20, 20), (725, 58), (763, 58), 2)
-        pygame.draw.line(surface, (120, 20, 20), (725, 78), (763, 78), 2)
-        # Smoke puffs
-        for sx, sy, sr in [(744, 26, 7), (752, 14, 9), (764, 4, 11)]:
-            smoke = pygame.Surface((sr * 2, sr * 2), pygame.SRCALPHA)
-            pygame.draw.circle(smoke, (226, 232, 240, 180), (sr, sr), sr)
-            surface.blit(smoke, (sx - sr, sy - sr))
-
-        # Roof
-        pygame.draw.polygon(
-            surface,
-            (180, 20, 40),
-            [(512, 14), (160, 102), (864, 102)],
-        )
-        pygame.draw.polygon(
-            surface,
-            (225, 29, 72),
-            [(512, 22), (175, 98), (849, 98)],
-        )
-        # Roof scalloped tiles highlight
-        pygame.draw.polygon(
-            surface,
-            (251, 113, 133),
-            [(512, 30), (195, 94), (829, 94)],
-        )
-
-        # House timbered facade
-        pygame.draw.rect(surface, (255, 251, 235), house_rect, border_radius=18)
-        pygame.draw.rect(surface, (180, 83, 9), house_rect, width=6, border_radius=18)
-
-        # Wooden timber beam dividing 1st & 2nd floor
-        pygame.draw.rect(surface, (180, 83, 9), (205, 246, 614, 10))
-        pygame.draw.rect(surface, (217, 119, 6), (207, 248, 610, 6))
-
+        surface = pygame.Surface(size)
+        surface.fill((37, 59, 89))
+        # A throwaway loader: the layers are released once the composite exists.
+        loader = ControlArt(max_entries=6)
+        for name in ("sky", "stars", "far", "mid", "ground"):
+            image = loader.image(f"bg.night_sky.{name}", size)
+            if image is not None:
+                surface.blit(image, (0, 0))
+        loader.clear()
+        house = self._load_private("house.png", HOUSE_SIZE)
+        if house is not None:
+            surface.blit(house, HOUSE_ORIGIN)
+        if pygame.display.get_surface() is not None:
+            surface = surface.convert()
         return surface
+
+
+def _fill(tone: Tone) -> tuple[int, int, int]:
+    return _TONE_FILL.get(tone, CREAM)
+
+
+def _store(cache: dict, key, value: pygame.Surface) -> None:
+    if len(cache) >= CACHE_LIMIT:
+        cache.pop(next(iter(cache)))
+    cache[key] = value
+
+
+__all__ = ["BADGE_SIZE", "BOND_DISC", "TenHouseArt", "Tone"]

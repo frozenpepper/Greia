@@ -15,24 +15,18 @@ from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .ten_house_app import TenHouseActivity
-    from .ten_house_art import TenHouseArt
     from .ten_house_audio import TenHouseAudio
-    from .ten_house_model import TenHouseRoundFactory, TenHouseSession, REFERENCE_HEIGHT, REFERENCE_WIDTH
-    from .ten_house_renderer import TenHouseRenderer
+    from .ten_house_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, TenHouseRoundFactory, TenHouseSession
     from .ten_house_services import GreiaTenHouseEvents, GreiaTenHouseProgress
 else:
     from ten_house_app import TenHouseActivity
-    from ten_house_art import TenHouseArt
     from ten_house_audio import TenHouseAudio
-    from ten_house_model import TenHouseRoundFactory, TenHouseSession, REFERENCE_HEIGHT, REFERENCE_WIDTH
-    from ten_house_renderer import TenHouseRenderer
+    from ten_house_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, TenHouseRoundFactory, TenHouseSession
     from ten_house_services import GreiaTenHouseEvents, GreiaTenHouseProgress
 
 
 def _resources() -> LocalizedResources:
-    return activity_resources(
-        Path(__file__).resolve().parent, requested_locale=get_profile_locale()
-    )
+    return activity_resources(Path(__file__).resolve().parent, requested_locale=get_profile_locale())
 
 
 def main() -> int:
@@ -45,35 +39,32 @@ def main() -> int:
     resources = _resources()
     typography = GreiaTypography()
     canvas = PygameReferenceCanvas(screen)
-    art = TenHouseArt(REFERENCE_WIDTH, REFERENCE_HEIGHT)
-    renderer = TenHouseRenderer(art, typography, resources)
     progress = GreiaTenHouseProgress()
     saved = progress.load()
     rng = random.Random()
     factory = TenHouseRoundFactory(rng)
     session = TenHouseSession(factory.build_set(saved.level), level=saved.level, history=saved.history)
-    session_id = f"{int(time.time())}-{rng.randrange(1_000_000):06d}"
-
-    package_root = Path(__file__).resolve().parent
-    locale_lang = resources.context.selected.language if hasattr(resources.context, "selected") else "it"
     app = TenHouseActivity(
         screen=screen,
         canvas=canvas,
         session=session,
         factory=factory,
-        renderer=renderer,
         typography=typography,
         resources=resources,
         progress=progress,
         events=GreiaTenHouseEvents(),
-        audio=TenHouseAudio(package_root, locale=locale_lang, resources=resources),
+        audio=TenHouseAudio(
+            Path(__file__).resolve().parent,
+            locale=resources.context.selected.language,
+            resources=resources,
+            rng=rng,
+        ),
         rng=rng,
-        session_id=session_id,
+        session_id=f"{int(time.time())}-{rng.randrange(1_000_000):06d}",
     )
     try:
         return app.run()
     finally:
-        typography.clear()
         pygame.quit()
 
 
