@@ -65,6 +65,17 @@ def test_activity_title_audio_can_fall_back_to_english(tmp_path: Path) -> None:
     )
 
 
+def test_my_time_legacy_underscore_title_is_resolved_without_json_audio_mapping() -> None:
+    root = Path(__file__).resolve().parents[1] / "activity_incubator" / "tempo_di_greia"
+    manifest = SimpleNamespace(root=root)
+    english = root / "locales/en/audio/activity_title.wav"
+    italian = root / "locales/it/audio/activity_title.wav"
+    assert english.is_file() and italian.is_file()
+    assert activity_title_audio(manifest, "en") == english
+    assert activity_title_audio(manifest, "it") == italian
+    assert activity_title_audio(manifest, "fr") == english
+
+
 def test_collection_title_audio_is_platform_owned_and_safe(tmp_path: Path) -> None:
     clip = tmp_path / "assets/audio/system/launcher-labels/it/create.wav"
     clip.parent.mkdir(parents=True)
