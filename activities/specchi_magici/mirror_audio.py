@@ -10,6 +10,8 @@ from typing import Final
 
 import pygame
 
+from greia_platform.localization import LocalizedResources
+
 if __package__:
     from .mirror_model import ShapeKind
 else:
@@ -22,7 +24,11 @@ _SAMPLE_RATE: Final = 22_050
 class MirrorAudio:
     """Prepare Lilli speech clips, nonverbal feedback tones, and fail soft when unavailable."""
 
-    def __init__(self, package_root: Path | None = None, locale: str = "it") -> None:
+    def __init__(
+        self, package_root: Path | None = None, locale: str = "it",
+        resources: LocalizedResources | None = None,
+    ) -> None:
+        self._resources = resources
         self._locale = locale
         self._package_root = package_root
         self._speech_clips: dict[str, pygame.mixer.Sound] = {}
@@ -53,13 +59,14 @@ class MirrorAudio:
     def _load_speech_clips(self) -> None:
         if self._package_root is None:
             return
-        audio_dir = self._package_root / "assets" / "audio" / self._locale
-        if not audio_dir.exists():
-            return
-        for wav_file in audio_dir.glob("*.wav"):
+        if self._resources is not None:
+            files = self._resources.speech_paths()
+        else:
+            audio_dir = self._package_root / "assets" / "audio" / self._locale
+            files = {path.stem: path for path in audio_dir.glob("*.wav")}
+        for stem, path in files.items():
             try:
-                sound = pygame.mixer.Sound(str(wav_file))
-                self._speech_clips[wav_file.stem] = sound
+                self._speech_clips[stem] = pygame.mixer.Sound(str(path))
             except (pygame.error, OSError):
                 continue
 
