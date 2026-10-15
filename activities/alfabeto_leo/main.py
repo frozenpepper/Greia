@@ -7,7 +7,7 @@ from pathlib import Path
 import pygame
 
 from greia_platform.activity_api import get_profile_locale
-from greia_platform.localization import ActivityLocaleSupport, LocalizedResources, resolve_activity_locale
+from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import GreiaTypography
 
@@ -26,13 +26,10 @@ else:
 
 
 def _locale_and_resources() -> tuple[str, LocalizedResources]:
-    support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-    context = resolve_activity_locale(get_profile_locale(), support)
-    if context is None:
-        context = resolve_activity_locale("it", support)
-    assert context is not None
-    locale = context.selected.value.split("-")[0]
-    return locale, LocalizedResources(Path(__file__).resolve().parent, context)
+    resources = activity_resources(
+        Path(__file__).resolve().parent, requested_locale=get_profile_locale()
+    )
+    return resources.context.selected.language, resources
 
 
 def main() -> int:
