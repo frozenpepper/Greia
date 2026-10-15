@@ -6,15 +6,7 @@ from pathlib import Path
 
 import pygame
 
-try:
-    from greia_platform.activity_api import get_profile_locale
-    from greia_platform.localization import ActivityLocaleSupport, activity_resources, resolve_activity_locale
-except ImportError:
-    # Standalone dev fallback
-    get_profile_locale = lambda: "it"
-    ActivityLocaleSupport = None
-    resolve_activity_locale = None
-    activity_resources = None
+from greia_platform.localization import activity_resources
 
 if __package__:
     from .tree_app import TreeActivity
@@ -28,35 +20,19 @@ else:
     from tree_renderer import TreeRenderer
 
 
-def _resolve_locale() -> str:
-    default_loc = "it"
-    if ActivityLocaleSupport is not None and resolve_activity_locale is not None:
-        try:
-            support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-            context = resolve_activity_locale(get_profile_locale(), support)
-            if context is not None:
-                return context.selected.value.split("-")[0]
-        except Exception:
-            pass
-    return default_loc
-
-
 def main() -> int:
     pygame.init()
     screen = pygame.display.get_surface()
     if screen is None:
         screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
-    pygame.display.set_caption("Il Grande Albero delle Stagioni")
     pygame.mouse.set_visible(True)
 
     package_root = Path(__file__).resolve().parent
-    locale = _resolve_locale()
+    resources = activity_resources(package_root)
+    locale = resources.context.selected.language
+    pygame.display.set_caption(resources.text("activity.title"))
 
     model = TreeModel()
-    resources = (
-        activity_resources(package_root, requested_locale=locale)
-        if activity_resources is not None else None
-    )
     audio = TreeAudio(package_root, locale=locale, resources=resources)
     renderer = TreeRenderer()
 
