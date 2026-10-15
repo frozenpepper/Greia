@@ -16,6 +16,12 @@
 - Skills updated for `speech_paths` and platform-owned shared character voice lookup. Exact rationale/paths live in `SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md` (same plan folder).
 - **Testing:** GitHub source readback and path inventory only. No runnable checkout, Python unit invocation, audio decode/Pygame GUI playback, installer or physical-device acceptance in this session. These are **UNEXECUTED**, not PASS. Existing selector remains EN/IT; ES/FR release decision still open. The 35 narrowly missing voice files remain assigned to the separate local agent recording order.
 
+## 2026-10-15 — Third shared localization slice: My Time silent-audio repair
+
+Connected My Time's **14 already-approved IT/EN instructional recordings** (seven speech cues per language) through the shared `LocalizedResources.audio_path` filename convention. Previous My Time audio loader required explicit JSON `audio` entries which were empty and blocked playback even when `locales/en/audio/*.wav` and `locales/it/audio/*.wav` existed; new adapter uses `filename=cue.replace(".", "_") + ".wav"`. My Time composition now uses `activity_resources`, and launcher title resolver supports both `activity-title.wav` and legacy `activity_title.wav` (two approved My Time files). Pure source tests for actual installed voice files, French→English fallback and launcher titles updated; obsolete Italian-from-English fallback test corrected.
+
+**Verification:** source reviewed, files known present in GitHub; tests have **not yet executed**, no Pygame listening evidence. My Time remains in `activity_incubator/`; ES/FR OS release selection stays EN/IT-only. All owner-approved audio bytes unchanged. Updated `activity_incubator/tempo_di_greia/VOICE_PRODUCTION_BRIEF.md` to remove stale unrecorded claims. Full code plan: `SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md`.
+
 ## 2026-10-15 — Shared Activity localization + prerecorded audio resolver: first implementation
 
 **Owner direction:** simple centralized semantic `text(key)` / `audio_path(key)`; the selected-language audio file wins, otherwise English, otherwise no speech (including phonemes for now). User modifications are allowed; no anti-tamper scheme. All previously committed recordings are personally owner-approved, untouched. This is the active new work slice in [`SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md`](./SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md).
