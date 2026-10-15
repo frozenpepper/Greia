@@ -1,7 +1,7 @@
 # Greia Visual System — Current Resume File
 
 **Status:** current visual-workstream continuation contract  
-**Last reviewed:** 2026-08-30  
+**Last reviewed:** 2026-10-15  
 **Repository:** `frozenpepper/Greia`  
 **Branch:** `main`  
 **Visual-system guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
@@ -13,7 +13,19 @@
 
 ---
 
-# 1. Current focus — Encyclopedia E3 runtime closure
+# 2026-10-15 — Art direction reset (read first)
+
+Decisions (main agent, 2026-10-15; evidence: `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md`):
+
+- `docs/design/GREIA_SVG_AUTHORING_RULES.md` is the ACCEPTED, binding SVG recipe (flat shapes, one cocoa contour, no filters/text/raster, `rsvg-convert` at build time); tile hues per Collection accepted.
+- Opus is the selected SVG authoring model (bake-off winners `icon_marble_run`, `leo_celebrate`, `scene_river_valley`).
+- The glossy-3D core icons, blur-filter environment/UI dialects and Activity-drawn off-model cast art are being replaced; the audit owns inventory, verdicts and backlog. The audit's "safe to remove now" set (generated variants, authoring kit/candidates, core-icon contact sheet, superseded forest/workshop pack candidates) was retired; the image now installs only `assets/visual/runtime/` + catalogues (`build/lib/compose.sh::compose_install_runtime_assets`, contract test `tests/test_build_runtime_assets_contract.py`).
+- Active production waves (in order): (1) cast poses (`pose_cheer`/`pose_point` per canonical character, then on-model Activity/puppet replacements); (2) P0 Activity icons (placeholder and metaphor-duplicate icons); (3) core icons, Home-visible first.
+- The Encyclopedia E3 pack stays ACCEPTED (section 1 below); this reset does not reopen it.
+
+---
+
+# 1. Current focus — Encyclopedia E3 runtime closure (ACCEPTED; context preserved)
 
 The owner rejected the earlier Encyclopedia/E2R pixels, then directly reviewed the primary-agent source repairs to Home, Animals, Lion and Gears.
 

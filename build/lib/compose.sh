@@ -430,6 +430,33 @@ compose_install_greia_content() {
   fi
 }
 
+# Install only the shared-asset subtree the child runtime reads. SVG masters,
+# candidate packs, source sheets and developer previews live in the repository
+# for authoring/build tooling but must never occupy installed C0 space. The
+# allowlist mirrors the runtime readers: fonts, core-icon PNGs + catalogues,
+# boot logo/frames, audio banks, the scene definition and the generated
+# runtime PNG renditions under visual/runtime/. Anything new that the runtime
+# reads must be added here AND to tests/test_build_runtime_assets_contract.py.
+compose_install_runtime_assets() {
+  local rootfs="$1"
+  local project_root="$2"
+  install -d -m 0755 "$rootfs/opt/greia-os/assets"
+  rsync -a --delete \
+    --exclude 'source/' \
+    --exclude '*contact_sheet*' \
+    --include '/audio/***' \
+    --include '/boot/***' \
+    --include '/catalog/' \
+    --include '/catalog/*.toml' \
+    --include '/fonts/***' \
+    --include '/icons/***' \
+    --include '/scenes/***' \
+    --include '/visual/' \
+    --include '/visual/runtime/***' \
+    --exclude '*' \
+    "$project_root/assets/" "$rootfs/opt/greia-os/assets/"
+}
+
 compose_install_target_content() {
   local rootfs="$1"
   local project_root="$2"
@@ -524,11 +551,7 @@ except ActivityValidationError as exc:
     sys.exit(1)
 GREIA_BUILTIN_GATE_EOF
 
-  install -d -m 0755 "$rootfs/opt/greia-os/assets"
-  rsync -a --delete \
-    --exclude 'source/' \
-    --exclude '*contact_sheet*' \
-    "$project_root/assets/" "$rootfs/opt/greia-os/assets/"
+  compose_install_runtime_assets "$rootfs" "$project_root"
 
   install -d -m 0755 "$rootfs/usr/lib/python3/dist-packages"
   printf '%s\n' '/opt/greia-os/src' > "$rootfs/usr/lib/python3/dist-packages/pip_os.pth"

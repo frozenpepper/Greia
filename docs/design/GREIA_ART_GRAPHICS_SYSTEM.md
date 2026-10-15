@@ -35,7 +35,9 @@ Narrower authorities:
 | Fast cross-session continuation | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
 | Project-wide continuation | `HANDOVER.md` |
 | Practical visual-authoring workflow | `skills/greia-visual-authoring/SKILL.md` |
+| **SVG authoring recipe (binding, ACCEPTED 2026-10-15)** — canvas, palette tokens, strokes, shading, forbidden constructs, budgets, review procedure | `docs/design/GREIA_SVG_AUTHORING_RULES.md` |
 | Visual style, palette, typography | `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` |
+| Library audit and redraw backlog (2026-10-15) | `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md` |
 | Art/core-asset requirements | `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` |
 | Character construction grammar | `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md` |
 | Character expressions/motion | `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md` |
@@ -45,6 +47,8 @@ Narrower authorities:
 | Activity Simulator architecture/use | `docs/development/GREIA_ACTIVITY_SIMULATOR.md` |
 
 `AGENTS.md` makes this guide mandatory for substantive visual work.
+
+**Art-direction reset (2026-10-15).** `docs/design/GREIA_SVG_AUTHORING_RULES.md` is the mandatory SVG recipe for every new or redrawn shared or Activity-private vector asset: flat shapes, one cocoa contour, at most two-stop fills, explicit ellipse shadows, no filters/text/raster, rendered to PNG at build time with `rsvg-convert`. The older glossy-3D raster core icons, blur-filter environment/UI packs and Activity-drawn off-model cast art are being replaced under it; the audit linked above owns the inventory, verdicts and redraw backlog. Runtime consumption is unchanged (semantic IDs → committed PNG renditions → bounded Pygame cache), and the target image installs only `assets/visual/runtime/` plus the catalogues, never SVG sources or candidate packs.
 
 ---
 

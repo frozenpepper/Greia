@@ -6,7 +6,7 @@ description: Task router for Greia visual asset creation, reuse, adaptation, sce
 # Greia Visual Authoring — task router
 
 **Status:** living derived contributor router  
-**Reviewed:** 2026-08-24
+**Reviewed:** 2026-10-15
 
 Keep this file small. It tells an agent **what to read for the visual task**; it is not a duplicate art/style/runtime manual.
 
@@ -22,6 +22,19 @@ These apply to substantive Greia visual work:
 6. Do not imitate protected Greia Home/Back/system chrome with Activity artwork.
 7. Meaningful visual work requires inspection of actual rendered pixels. A producer-written `PASS` is not visual acceptance.
 8. If visual work changes Activity runtime code/assets/resources, also follow the Activity authoring router and final Simulator launch gate.
+
+## Authoring or redrawing any SVG (mandatory recipe, 2026-10-15)
+
+`docs/design/GREIA_SVG_AUTHORING_RULES.md` is binding for every new or redrawn vector asset, shared or Activity-private. Practical workflow:
+
+1. Read the rules doc (canvas per kind, palette tokens, strokes, shading, contact shadow, Activity icon tile, forbidden constructs, budgets). Do not invent base hues; do not copy the superseded blur-filter/glossy dialects from older packs, only the canonical cast v0.1 masters and the 2026-10-15 bake-off winners (`icon_marble_run`, `leo_celebrate`, `scene_river_valley`) are reference-quality.
+2. Author with **Opus** (the selected SVG authoring model per the 2026-10-15 bake-off). Cast poses derive from the canonical components; never redraw a cast member from scratch or in Activity code.
+3. Lint with the grep in rules §9 (must print nothing), then check size/path/gradient budgets (§11).
+4. Render with `rsvg-convert` (>= 2.40) at 256/64/48 into the scratch folder (never inside the repo) and inspect pixels at 1:1; check the 48 px legibility list (§12) and a contact sheet next to the neighbours (`python3 tools/visual_family_contact_sheet.py`).
+5. Shared runtime art: register it in `assets/catalog/shared_visuals_v1_source.toml`, run `make visual-assets` then `make visual-assets-check`, commit the PNG renditions with the catalogue. Activity-private art: commit `assets/source/*.svg` beside the `rsvg-convert` PNG.
+6. Record evidence with the correct label and delete the scratch folder. Only `assets/visual/runtime/` + catalogues (not SVG masters) are installed on the image.
+
+Inventory, verdicts and the redraw backlog: `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md`.
 
 Start from the task map below. Do **not** read every visual document by default.
 

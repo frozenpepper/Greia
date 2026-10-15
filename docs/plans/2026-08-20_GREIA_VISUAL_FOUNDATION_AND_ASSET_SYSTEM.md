@@ -289,8 +289,8 @@ Evidence class: **SIMULATOR VISUAL REVIEW**.
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
 | Product discovery authority | `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md` |
-| Runtime visual focus | **Existing V5 runtime/scene/shared UI foundations accepted where recorded; current visible focus is Encyclopedia E3 runtime closure** |
-| Authoring focus | **Encyclopedia E2/E2R direction OWNER APPROVED; E3 six-section source IMPLEMENTED/SOURCE-REVIEWED; exact committed 11-PNG build + real-Simulator family review pending** |
+| Runtime visual focus | **Existing V5 runtime/scene/shared UI foundations accepted where recorded. Encyclopedia E3 runtime pack is ACCEPTED at `03bf76ac`. Current focus (2026-10-15): art-direction reset and library redraw under `docs/design/GREIA_SVG_AUTHORING_RULES.md` (ACCEPTED), per `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md`** |
+| Authoring focus | **Production waves: (1) cast poses `pose_cheer`/`pose_point` for the six canonical characters; (2) P0 Activity icons; (3) core icons (Home-visible first). Opus is the selected SVG authoring model. Encyclopedia E4 remains governed by its own subplan.** |
 | Encyclopedia forensic audit | `docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md` — prior graphics rejected as final product quality |
 | Encyclopedia visual subplan | `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md` |
 | Encyclopedia current source review | `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md` |
@@ -300,7 +300,7 @@ Evidence class: **SIMULATOR VISUAL REVIEW**.
 | Canonical cast | six-character v0.1 runtime family accepted; integrate intentionally rather than tiny corner stamps |
 | Public website | owner promoted the first direction to the official website work in progress at `website/`. The opening now uses the original high-resolution final boot frame over a source-referenced, website-only wide panorama, with authentic 52-frame playback and continuous pointer-responsive fireflies. English Simulator captures, readable Parent enlargement, detailed OS/hardware/agent-authoring/voice/network/education copy, Downloads and individual Activity Library remain. DESIGN SPEC / DESKTOP VISUAL REVIEW only; installer and package releases remain unavailable, with no Greia runtime or Encyclopedia phase change. Historical alternatives remain at `docs/design/website_mocks_2026-09-23/`. |
 | Prior first-party Batch 1 | `treno_numeri`, `labirinto_magico`, `acquario_magico` accepted historical productization evidence |
-| Next exact action | Build/check/commit the exact current 11-PNG Encyclopedia art pack, run focused tests + required verification on the committed SHA, then capture/review Home + all six sections through the Git-bound real Simulator harness. E4 stays blocked. |
+| Next exact action | Produce the cast pose SVGs (rules doc recipe, `rsvg-convert` renditions, contact-sheet review), then P0 Activity icons, then Home-visible core icons; register shared renditions in `shared_visuals_v1_source.toml` and run `make visual-assets` / `make visual-assets-check`. |
 
 ---
 
@@ -849,3 +849,7 @@ unmodified. Tests were authored but NOT RUN.
 Real Greia screenshots at 1024×600/800×480/
 480×320 and child-facing visual approval remain
 OPEN. No duplicate screenshot pipeline was created.
+
+## 2026-10-15 — Art direction reset, SVG rules accepted, library audit, repository weight retired (DESIGN SPEC / SOURCE)
+
+The full-library audit (`docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md`; SOURCE + DESKTOP VISUAL REVIEW only) found off-model cast art inside Activities, placeholder Activity icons, a glossy-3D core-icon outlier, three coexisting vector dialects and about 7.5 MiB of retire-able tracked weight. Main-agent decisions: `docs/design/GREIA_SVG_AUTHORING_RULES.md` is ACCEPTED as the binding recipe (tile hues per Collection accepted); Opus is the selected SVG authoring model (bake-off `icon_marble_run`, `leo_celebrate`, `scene_river_valley`); production waves are cast poses, P0 Activity icons, core icons. Housekeeping executed: retired `assets/source/generated_variants`, `assets/visual/authoring_kit`, `assets/visual/authoring_candidates`, the core-icon contact sheet (now git-ignored) and the superseded `pack_candidates/{forest_meadow,workshop}/2026-08-21` sets (131 files, 7,606,588 bytes); the cast-provenance pack candidates and legacy per-character `blink.svg` stay until the cast catalogue provenance is repointed. `compose_install_runtime_assets` now installs only the runtime asset subtree (no SVG masters or candidate packs). Earlier ledger entries are unchanged; this is not Simulator, VM or physical evidence.

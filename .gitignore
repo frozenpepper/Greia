@@ -17,3 +17,6 @@ Lunacy/
 encyclopedia/pages/**/assets/audio/
 out/
 TBag/
+
+# Regenerated developer preview (make assets); never tracked or installed.
+assets/catalog/core_icons_v1_contact_sheet.png
