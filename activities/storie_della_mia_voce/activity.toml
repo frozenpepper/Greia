@@ -2,7 +2,7 @@
 id = "org.greia.storie-della-mia-voce"
 legacy_ids = []
 title_key = "activity.storie_della_mia_voce.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
@@ -17,17 +17,18 @@ emblems = [
 ]
 
 [education]
-categories = ["language", "narrative_sequencing", "creativity"]
+categories = ["narrative_sequencing", "language", "creativity"]
 difficulty = 2
 recommended_age_min = 4
 recommended_age_max = 7
 skills = [
+  { id = "narrative.sequencing.picture_story", weight = 3 },
   { id = "language.oral_expression.narration", weight = 3 },
-  { id = "narrative.sequencing.scene_to_scene", weight = 3 },
-  { id = "creativity.voice.improvisation", weight = 3 },
-  { id = "audio.recording.turn_taking", weight = 2 },
+  { id = "creativity.voice.storytelling", weight = 2 },
+  { id = "audio.recording.turn_taking", weight = 1 },
 ]
 events = [
+  { id = "story.cards_ordered", kind = "milestone" },
   { id = "voice.recording_started", kind = "milestone" },
   { id = "voice.recording_stopped", kind = "milestone" },
   { id = "voice.recording_replayed", kind = "milestone" },
@@ -45,7 +46,7 @@ profile = "hybrid"
 
 [requirements]
 required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["keyboard", "touch"]
+optional_capabilities = ["keyboard", "touch", "controller"]
 
 [permissions]
 requested = []
