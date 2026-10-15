@@ -1,76 +1,166 @@
-"""Procedural nonverbal audio feedback for Posta di Leo."""
+"""Sound for Leo's Post: tiny prepared cues + the friends' approved voices.
+
+Cues are synthesized once at construction to match the active PCM16 mixer:
+``tick`` (a choice), ``pop`` (a sticker lands), ``flip`` (the card turns),
+``whoosh`` (the postcard flies), ``drop`` (it lands in the mailbox), ``chime``
+(shared to My Creations) and ``swish`` (a card was deleted).
+
+Friend reactions use only owner-approved shared character clips
+(``shared_character_audio_path``: selected language -> English -> silence);
+no speech is generated here. Audio is fail-soft: without a mixer the bank is
+silent and never raises.
+"""
 
 from __future__ import annotations
 
-from array import array
+import io
 import math
-from typing import Final
+from pathlib import Path
+import wave
 
 import pygame
 
+from greia_platform.localization import shared_character_audio_path
+from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
 
-_SAMPLE_RATE: Final = 22_050
+if __package__:
+    from .postcard_content import FRIEND_REACTION_CUE, FRIEND_REACTION_VARIANTS
+else:
+    from postcard_content import FRIEND_REACTION_CUE, FRIEND_REACTION_VARIANTS
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+MAX_VOICES = 6
+
+
+def _wav(samples: list[float], rate: int, channels: int) -> bytes:
+    raw = bytearray()
+    for value in samples:
+        append_mono_pcm16(raw, int(value), channels)
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as handle:
+        handle.setnchannels(channels)
+        handle.setsampwidth(2)
+        handle.setframerate(rate)
+        handle.writeframes(bytes(raw))
+    return buffer.getvalue()
+
+
+def reaction_clip_path(friend_id: str, locale: str, *, project_root: Path = PROJECT_ROOT) -> Path | None:
+    """The friend's approved "Wonderful!"-style clip for ``locale`` (or None)."""
+
+    try:
+        first = shared_character_audio_path(project_root, friend_id, FRIEND_REACTION_CUE, locale)
+    except Exception:
+        return None
+    if first is None:
+        return None
+    # The shared resolver returns take 01; prefer the takes that fit receiving
+    # a postcard ("Wonderful!", "Hooray!") when they exist in the same folder.
+    for variant in FRIEND_REACTION_VARIANTS:
+        candidate = first.with_name(first.name.replace("__01.wav", f"__{variant:02d}.wav"))
+        if candidate.is_file():
+            return candidate
+    return first
 
 
 class PostcardAudio:
-    """Prepare and play nonverbal interface sounds for postcard interactions."""
+    """Bounded bank of prepared cues plus at most six cached friend voices."""
 
-    def __init__(self) -> None:
-        self._clips: dict[str, pygame.mixer.Sound] = {}
-        self._channel: pygame.mixer.Channel | None = None
-
+    def __init__(self, *, locale: str = "en", project_root: Path = PROJECT_ROOT) -> None:
+        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._voices: dict[str, pygame.mixer.Sound | None] = {}
+        self._voice_channel: pygame.mixer.Channel | None = None
+        self._locale = locale
+        self._root = project_root
+        self.played: list[str] = []
         try:
             if not pygame.mixer.get_init():
-                pygame.mixer.init(frequency=_SAMPLE_RATE, size=-16, channels=2, buffer=256)
-            pygame.mixer.set_num_channels(8)
-            self._channel = pygame.mixer.Channel(0)
+                pygame.mixer.init(frequency=22050, size=-16, channels=1, buffer=512)
+            spec = current_pcm16_mixer_spec()
+            if spec is None:
+                return
+            rate, channels = spec
+            for name, samples in self._recipes(rate).items():
+                sound = pygame.mixer.Sound(io.BytesIO(_wav(samples, rate, channels)))
+                sound.set_volume(0.55)
+                self._sounds[name] = sound
+            pygame.mixer.set_num_channels(max(8, pygame.mixer.get_num_channels()))
+            self._voice_channel = pygame.mixer.Channel(7)
+        except Exception:  # noqa: BLE001 - audio must never break the Activity
+            self._sounds.clear()
+            self._voice_channel = None
 
-            self._clips = {
-                "type": self._tone(640.0, 0.03, 0.10),
-                "stamp": self._tone(220.0, 0.08, 0.20),
-                "send": self._fanfare(),
-                "delete": self._tone(300.0, 0.12, 0.15),
-                "select": self._tone(880.0, 0.05, 0.14),
-                "full": self._tone(330.0, 0.16, 0.20),
-            }
-        except (pygame.error, ValueError, OSError):
-            self._clips = {}
+    @staticmethod
+    def _recipes(rate: int) -> dict[str, list[float]]:
+        def tone(seconds: float, voice) -> list[float]:
+            return [voice(i / rate) for i in range(int(rate * seconds))]
 
-    def play(self, cue: str) -> None:
-        sound = self._clips.get(cue)
-        if sound is None or self._channel is None:
+        return {
+            "tick": tone(0.05, lambda t: 7000 * math.sin(2 * math.pi * 880 * t) * math.exp(-60 * t)),
+            "pop": tone(0.12, lambda t: 11000 * math.sin(2 * math.pi * (340 + 900 * t) * t) * math.exp(-28 * t)),
+            "flip": tone(0.14, lambda t: 5000 * math.sin(2 * math.pi * (300 + 1600 * t) * t) * math.sin(math.pi * t / 0.14)),
+            "whoosh": tone(
+                0.42,
+                lambda t: 5200 * math.sin(2 * math.pi * (260 + 900 * t) * t) * math.sin(math.pi * t / 0.42),
+            ),
+            "drop": tone(0.2, lambda t: 9000 * math.sin(2 * math.pi * (520 - 600 * t) * t) * math.exp(-14 * t)),
+            "chime": tone(
+                0.38,
+                lambda t: 9000
+                * (math.sin(2 * math.pi * (784 if t < 0.12 else 1046.5) * t) * 0.8 + 0.2 * math.sin(2 * math.pi * 2093 * t))
+                * math.exp(-7 * t),
+            ),
+            "swish": tone(0.22, lambda t: 6000 * math.sin(2 * math.pi * (620 - 1400 * t) * t) * math.sin(math.pi * t / 0.22)),
+        }
+
+    def play(self, name: str) -> None:
+        self.played.append(name)
+        del self.played[:-16]
+        sound = self._sounds.get(name)
+        if sound is None:
             return
         try:
-            self._channel.play(sound)
+            sound.play()
         except pygame.error:
-            return
+            pass
 
-    @staticmethod
-    def _tone(frequency: float, duration: float, volume: float) -> pygame.mixer.Sound:
-        count = max(1, int(_SAMPLE_RATE * duration))
-        amplitude = max(0, min(32767, int(32767 * volume)))
-        samples = array(
-            "h",
-            (
-                int(
-                    amplitude
-                    * math.sin(math.pi * (i / count))  # Smooth envelope
-                    * math.sin(2.0 * math.pi * frequency * i / _SAMPLE_RATE)
-                )
-                for i in range(count)
-            ),
-        )
-        return pygame.mixer.Sound(buffer=samples.tobytes())
+    def friend_reacts(self, friend_id: str) -> bool:
+        """Play the friend's approved reaction clip; False when silent."""
 
-    @staticmethod
-    def _fanfare() -> pygame.mixer.Sound:
-        notes = [523.25, 659.25, 783.99, 1046.50]  # C5, E5, G5, C6
-        dur = 0.07
-        all_samples = array("h")
-        for freq in notes:
-            count = int(_SAMPLE_RATE * dur)
-            for i in range(count):
-                env = math.sin(math.pi * (i / count))
-                val = int(14000 * env * math.sin(2.0 * math.pi * freq * i / _SAMPLE_RATE))
-                all_samples.append(val)
-        return pygame.mixer.Sound(buffer=all_samples.tobytes())
+        self.played.append(f"voice.{friend_id}")
+        del self.played[:-16]
+        if self._voice_channel is None:
+            return False
+        sound = self._voice(friend_id)
+        if sound is None:
+            return False
+        try:
+            self._voice_channel.play(sound)
+        except pygame.error:
+            return False
+        return True
+
+    def _voice(self, friend_id: str) -> pygame.mixer.Sound | None:
+        if friend_id in self._voices:
+            return self._voices[friend_id]
+        sound: pygame.mixer.Sound | None = None
+        path = reaction_clip_path(friend_id, self._locale, project_root=self._root)
+        if path is not None:
+            try:
+                sound = pygame.mixer.Sound(str(path))
+            except (pygame.error, OSError):
+                sound = None
+        if len(self._voices) >= MAX_VOICES:
+            self._voices.pop(next(iter(self._voices)))
+        self._voices[friend_id] = sound
+        return sound
+
+    def stop(self) -> None:
+        try:
+            if self._voice_channel is not None:
+                self._voice_channel.stop()
+        except pygame.error:
+            pass
+
+
+__all__ = ["PostcardAudio", "reaction_clip_path"]

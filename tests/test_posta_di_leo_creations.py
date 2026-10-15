@@ -1,43 +1,66 @@
-"""Posta di Leo trusted UTF-8 import/publication and storage contracts.
+"""Leo's Post trusted My Creations exchange (UTF-8 text with Writing, PNG fronts).
 
-Execution is intentionally deferred to the accumulated desktop acceptance.
+Headless (dummy SDL) source evidence; no hardware claim.
 """
 from __future__ import annotations
 
 import hashlib
+import os
 import random
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 
+os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+
+import pygame
+
 from greia_platform.creation_client import CreationTransfer
+from greia_platform.localization import ActivityLocaleSupport, LocalizedResources, resolve_activity_locale
+from greia_platform.pygame_canvas import PygameReferenceCanvas
+from greia_platform.pygame_png import encode_surface_png
+from greia_platform.typography import GreiaTypography, grapheme_spans
 
 from activities.posta_di_leo.postcard_app import PostcardActivity
+from activities.posta_di_leo.postcard_audio import PostcardAudio
 from activities.posta_di_leo.postcard_model import (
     MAX_GRAPHEMES,
+    CardFront,
     PostcardDraft,
     PostcardLibrary,
     SavedPostcard,
 )
 from activities.posta_di_leo.postcard_services import GreiaPostcardStorage
-from greia_platform.typography import grapheme_spans
+
+ACTIVITY_ROOT = Path(__file__).resolve().parents[1] / "activities" / "posta_di_leo"
 
 
 class MemoryStorage:
     def __init__(self):
         self.value = None
+        self.kv = {}
         self.files = {}
         self.fail_get = False
         self.fail_set = False
 
-    def kv_get(self, key):
+    def kv_get(self, key, default=None):
         if self.fail_get:
             raise RuntimeError("read failed")
-        return self.value
+        if key == "posta_di_leo.library.v1":
+            return self.value
+        return self.kv.get(key, default)
 
     def kv_set(self, key, value):
         if self.fail_set:
             raise RuntimeError("write failed")
-        self.value = value
+        if key == "posta_di_leo.library.v1":
+            self.value = value
+        else:
+            self.kv[key] = value
+
+    def kv_delete(self, key):
+        return self.kv.pop(key, None) is not None
 
     def file_write_atomic(self, name, payload):
         self.files[name] = bytes(payload)
@@ -60,7 +83,7 @@ class FakeCreations:
 
     def request_selection(self, *, media_types, roles=()):
         self.requests.append((media_types, roles))
-        return "request-text"
+        return "request-1"
 
     def poll_selection(self, request_id):
         return self.reply
@@ -73,12 +96,44 @@ class FakeCreations:
         return {"ok": True}
 
 
-class FakeAudio:
-    def __init__(self):
-        self.played = []
+def _png(size=(320, 200), color=(239, 77, 83)) -> bytes:
+    surface = pygame.Surface(size)
+    surface.fill(color)
+    return encode_surface_png(surface)
 
-    def play(self, sound_id):
-        self.played.append(sound_id)
+
+def _transfer(payload: bytes, media_type: str, role: str, *, sha: str | None = None) -> CreationTransfer:
+    return CreationTransfer(
+        {"media_type": media_type, "role": role, "sha256": sha or hashlib.sha256(payload).hexdigest()},
+        payload,
+    )
+
+
+class PostaCreationTestBase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        pygame.init()
+
+    def make_app(self, draft: PostcardDraft | None = None):
+        backend = MemoryStorage()
+        storage = GreiaPostcardStorage(backend)
+        screen = pygame.display.set_mode((1024, 600))
+        support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
+        now = [10.0]
+        app = PostcardActivity(
+            screen=screen,
+            canvas=PygameReferenceCanvas(screen),
+            typography=GreiaTypography(),
+            resources=LocalizedResources(ACTIVITY_ROOT, resolve_activity_locale("it", support)),
+            storage=storage,
+            events=SimpleNamespace(postcard_created=lambda card: None),
+            audio=PostcardAudio(locale="it"),
+            rng=random.Random(1),
+            creations=FakeCreations(),
+            draft=draft,
+            clock=lambda: now[0],
+        )
+        return app, backend, now
 
 
 class PostaStorageCreationTests(unittest.TestCase):
@@ -100,12 +155,9 @@ class PostaStorageCreationTests(unittest.TestCase):
         self.assertTrue(repo.save(PostcardLibrary([existing])))
         before_files = dict(storage.files)
         before_index = storage.value
-
-        added = self.card("card-101-000002", "Nuova")
         storage.fail_set = True
-        self.assertFalse(repo.save(PostcardLibrary([added, existing])))
+        self.assertFalse(repo.save(PostcardLibrary([self.card("card-101-000002", "Nuova"), existing])))
         storage.fail_set = False
-
         self.assertEqual(storage.value, before_index)
         self.assertEqual(storage.files, before_files)
 
@@ -115,11 +167,9 @@ class PostaStorageCreationTests(unittest.TestCase):
         first = self.card("card-100-000001", "Uno")
         second = self.card("card-101-000002", "Due")
         self.assertTrue(repo.save(PostcardLibrary([second, first])))
-        first_name = repo._text_name(first.card_id)
-        second_name = repo._text_name(second.card_id)
         self.assertTrue(repo.save(PostcardLibrary([second])))
-        self.assertNotIn(first_name, storage.files)
-        self.assertIn(second_name, storage.files)
+        self.assertNotIn(repo._text_name(first.card_id), storage.files)
+        self.assertIn(repo._text_name(second.card_id), storage.files)
 
     def test_unreadable_index_refuses_mutation(self):
         storage = MemoryStorage()
@@ -129,48 +179,16 @@ class PostaStorageCreationTests(unittest.TestCase):
         self.assertEqual(storage.files, {})
 
 
-class PostaCreationFlowTests(unittest.TestCase):
-    def make_app(self):
-        storage_backend = MemoryStorage()
-        storage = GreiaPostcardStorage(storage_backend)
-        draft = PostcardDraft(recipient_id="leo", stamp_id="heart")
-        app = object.__new__(PostcardActivity)
-        app.draft = draft
-        app.library = PostcardLibrary()
-        app.storage = storage
-        app.creations = FakeCreations()
-        app.audio = FakeAudio()
-        app.clock = lambda: 10.0
-        app.shared_request = None
-        app.shared_next_poll = 0.0
-        app.shared_state = ""
-        app.shared_feedback_until = 0.0
-        app._shared_card_ids = set()
-        app._cursor_visible = True
-        app._last_blink = 0.0
-        app.rng = random.Random(1)
-        return app, storage_backend
-
+class PostaTextExchangeTests(PostaCreationTestBase):
     def test_picker_scopes_plain_text_to_document_and_postcard(self):
-        app, _ = self.make_app()
+        app, _, _ = self.make_app()
         app._request_shared_text()
-        self.assertEqual(
-            app.creations.requests,
-            [(("text/plain",), ("document", "postcard"))],
-        )
+        self.assertEqual(app.creations.requests, [(("text/plain",), ("document", "postcard"))])
 
     def test_document_import_compacts_and_grapheme_truncates_into_draft(self):
-        app, _ = self.make_app()
-        text = ("Ciao\n\tLeo   " + "👩🏽‍🔬" * (MAX_GRAPHEMES + 20))
-        payload = text.encode("utf-8")
-        app.creations.transfer = CreationTransfer(
-            {
-                "media_type": "text/plain",
-                "role": "document",
-                "sha256": hashlib.sha256(payload).hexdigest(),
-            },
-            payload,
-        )
+        app, _, _ = self.make_app()
+        text = "Ciao\n\tLeo   " + "👩🏽‍🔬" * (MAX_GRAPHEMES + 20)
+        app.creations.transfer = _transfer(text.encode("utf-8"), "text/plain", "document")
         self.assertTrue(app._accept_shared_text("one-use"))
         self.assertNotIn("\n", app.draft.text)
         self.assertNotIn("\t", app.draft.text)
@@ -178,41 +196,80 @@ class PostaCreationFlowTests(unittest.TestCase):
         self.assertFalse(app.draft.text.endswith("👩🏽‍"))
 
     def test_import_failure_preserves_existing_draft(self):
-        app, _ = self.make_app()
+        app, _, _ = self.make_app()
         app.draft.replace_text("Keep me")
-        payload = b"bad"
-        app.creations.transfer = CreationTransfer(
-            {
-                "media_type": "text/plain",
-                "role": "caption",
-                "sha256": hashlib.sha256(payload).hexdigest(),
-            },
-            payload,
-        )
+        app.creations.transfer = _transfer(b"bad", "text/plain", "caption")
         self.assertFalse(app._accept_shared_text("bad"))
         self.assertEqual(app.draft.text, "Keep me")
 
-    def test_only_saved_postcard_is_published_and_share_is_deduplicated(self):
-        app, storage_backend = self.make_app()
-        card = SavedPostcard(
-            "card-100-000001",
-            100,
-            "leo",
-            "heart",
-            "Messaggio salvato",
-        )
+    def test_picker_round_trip_brings_a_writing_page_into_the_message(self):
+        app, _, now = self.make_app(PostcardDraft(recipient_id="lilli", front=CardFront.scene("rainbow")))
+        app._go_step("message")
+        app._request_shared_text()
+        self.assertEqual(app.shared_state, "pending")
+        app.creations.transfer = _transfer("Una pagina di Writing".encode("utf-8"), "text/plain", "document")
+        app.creations.reply = SimpleNamespace(state="ready", selection_token="tok")
+        now[0] += 0.5
+        app.step_frame()
+        self.assertEqual(app.draft.text, "Una pagina di Writing")
+        self.assertIsNone(app.shared_request)
+
+    def test_saved_postcard_shares_picture_and_text_once(self):
+        app, backend, _ = self.make_app()
+        card = SavedPostcard("card-100-000001", 100, "leo", "heart", "Messaggio salvato", CardFront.scene("castle"))
         app.library = PostcardLibrary([card])
         self.assertTrue(app.storage.save(app.library))
         app._publish_saved_postcard(card)
         app._publish_saved_postcard(card)
-        self.assertEqual(len(app.creations.published), 1)
-        name, media_type, role, _title = app.creations.published[0]
-        self.assertEqual(media_type, "text/plain")
-        self.assertEqual(role, "postcard")
+        published = app.creations.published
+        self.assertEqual([(m, r) for _n, m, r, _t in published], [("image/png", "postcard"), ("text/plain", "postcard")])
+        png_name, text_name = published[0][0], published[1][0]
+        self.assertTrue(backend.files[png_name].startswith(b"\x89PNG"))
+        # Writing imports this exact UTF-8 text (role "postcard").
+        self.assertEqual(backend.files[text_name], card.text.encode("utf-8"))
+
+    def test_picture_only_card_shares_just_the_picture(self):
+        app, _, _ = self.make_app()
+        card = SavedPostcard("card-100-000002", 100, "momo", "heart", "", CardFront.scene("candy"))
+        app.library = PostcardLibrary([card])
+        self.assertTrue(app.storage.save(app.library))
+        app._publish_saved_postcard(card)
+        self.assertEqual([m for _n, m, _r, _t in app.creations.published], ["image/png"])
+
+
+class PostaPictureFrontTests(PostaCreationTestBase):
+    def test_picker_scopes_pictures_to_creative_roles(self):
+        app, _, _ = self.make_app()
+        app._request_shared_picture()
         self.assertEqual(
-            storage_backend.files[name],
-            card.text.encode("utf-8"),
+            app.creations.requests, [(("image/png",), ("drawing", "composition", "picture", "postcard"))]
         )
+
+    def test_painting_drawing_becomes_the_card_front_and_is_sent_with_it(self):
+        app, backend, now = self.make_app(PostcardDraft(recipient_id="flash"))
+        app.creations.transfer = _transfer(_png(), "image/png", "drawing")
+        self.assertTrue(app._accept_shared_picture("tok"))
+        self.assertEqual(app.draft.front, CardFront.picture())
+        self.assertTrue(app.draft.ready)
+        app._on_send()
+        card = app.library.cards[0]
+        stored = backend.files[f"postcards/{card.card_id}.front.png"]
+        self.assertTrue(stored.startswith(b"\x89PNG"))
+        # Reopening the postbox decodes the child's own picture again.
+        app._pictures.clear()
+        self.assertIsNotNone(app._card_picture(card))
+
+    def test_bad_pictures_never_replace_the_front(self):
+        app, _, _ = self.make_app(PostcardDraft(recipient_id="tito", front=CardFront.scene("forest")))
+        for transfer in (
+            _transfer(b"not a png", "image/png", "drawing"),
+            _transfer(_png(), "image/png", "selfie"),
+            _transfer(_png(), "image/png", "drawing", sha="0" * 64),
+            _transfer(_png(), "text/plain", "drawing"),
+        ):
+            app.creations.transfer = transfer
+            self.assertFalse(app._accept_shared_picture("tok"))
+            self.assertEqual(app.draft.front, CardFront.scene("forest"))
 
 
 if __name__ == "__main__":

@@ -1,71 +1,194 @@
-"""Presentation renderer for Posta di Leo."""
+"""Presentation for Leo's Post: composer, flight, delivery, postbox, card view.
+
+The renderer only blits prepared surfaces from :class:`PostcardArt` and the
+kit layer (drawn by the app's ``SurfaceNavigator``); it owns the small moving
+parts — Leo the host (cheer / think / point), the receiving friend, FX bursts,
+hint halos — and the message layout on the back of a card. Child-authored
+text is rendered exactly as typed (no case policy), wrapped on grapheme
+boundaries inside the message lane.
+"""
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass, field
+import math
+import time
 from typing import Final
 
 import pygame
 
-from greia_platform.localization import LocalizationError, LocalizedResources
-from greia_platform.system_chrome import ActivitySystemChromeLayout
+from greia_platform.activity_controls import BodyShape
+from greia_platform.activity_feedback import CastFeedback
 from greia_platform.typography import FontRole, GreiaTypography, grapheme_boundaries
 
 if __package__:
-    from .postcard_art import POSTCARD_BG, POSTCARD_BORDER, PostcardArt
-    from .postcard_content import RECIPIENTS, STAMPS, Recipient, Stamp
-    from .postcard_model import MAX_GRAPHEMES, MAX_SAVED_CARDS, PostcardDraft, PostcardLibrary, SavedPostcard
+    from .postcard_art import INK, PostcardArt, lane_rect
+    from .postcard_content import HOST, MAX_SAVED_CARDS, REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from .postcard_layout import CardViewLayout, ComposerLayout, DeliveredLayout, PostboxLayout, SheetLayout
 else:
-    from postcard_art import POSTCARD_BG, POSTCARD_BORDER, PostcardArt
-    from postcard_content import RECIPIENTS, STAMPS, Recipient, Stamp
-    from postcard_model import MAX_GRAPHEMES, MAX_SAVED_CARDS, PostcardDraft, PostcardLibrary, SavedPostcard
+    from postcard_art import INK, PostcardArt, lane_rect
+    from postcard_content import HOST, MAX_SAVED_CARDS, REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from postcard_layout import CardViewLayout, ComposerLayout, DeliveredLayout, PostboxLayout, SheetLayout
+
+# Historical message-lane bounds (also used by the shared text-consistency
+# test): a message never runs past this width at 32 px, in at most 7 lines.
+MESSAGE_LANE_WIDTH: Final = 330
+MAX_MESSAGE_LINES: Final = 7
+MESSAGE_SIZES: Final = (34, 30, 26, 22)
+TEXT_COLOR: Final = (40, 44, 66)
+CARET: Final = (2, 132, 199)
+
+FOLD_SECONDS: Final = 0.45
+FLY_SECONDS: Final = 0.8
+DROP_SECONDS: Final = 0.5
+SEND_SECONDS: Final = FOLD_SECONDS + FLY_SECONDS + DROP_SECONDS
+FLIP_SECONDS: Final = 0.28
 
 
-REFERENCE_WIDTH: Final = 1024
-REFERENCE_HEIGHT: Final = 600
-
-POSTCARD_RECT: Final[pygame.Rect] = pygame.Rect(80, 110, 864, 395)
-SEND_BTN_RECT: Final[pygame.Rect] = pygame.Rect(80, 525, 200, 52)
-GALLERY_BTN_RECT: Final[pygame.Rect] = pygame.Rect(310, 525, 280, 52)
-CLEAR_BTN_RECT: Final[pygame.Rect] = pygame.Rect(620, 525, 180, 52)
-SHARED_IMPORT_BTN_RECT: Final[pygame.Rect] = pygame.Rect(820, 525, 124, 52)
-SHARED_SHARE_BTN_RECT: Final[pygame.Rect] = pygame.Rect(742, 485, 170, 48)
-# Child-visible controls start clear of the trusted Home/Back region, which
-# the platform reserves in full (both slots) so layout never jumps by context.
-_CHROME_CLEAR_X: Final = ActivitySystemChromeLayout.for_surface(1024, 600).protected_region.right + 18
-BACK_TO_EDITOR_RECT: Final[pygame.Rect] = pygame.Rect(_CHROME_CLEAR_X, 24, 240, 52)
-
-
-# Handwriting lane inside the postcard: width left of the stamp divider.
-MESSAGE_LANE_WIDTH: Final = 480
-MODAL_MESSAGE_LANE_WIDTH: Final = 560
-MAX_MESSAGE_LINES: Final = 5
-
-
-class PostcardRenderer:
-    """Render postcard composer, text editor, stamp picker, and gallery."""
+class CastActor:
+    """A cast friend: cheers and thinks through ``CastFeedback``; also points."""
 
     def __init__(
         self,
+        character: str,
         art: PostcardArt,
-        typography: GreiaTypography,
-        resources: LocalizedResources,
+        clock: Callable[[], float],
+        *,
+        height: int,
+        point_left: bool = False,
+        hold_seconds: float = 1.6,
     ) -> None:
-        self._art = art
+        self.character = character
+        self.height = height
+        self.feedback = CastFeedback(character, height=height, art=art.loader, clock=clock, hold_seconds=hold_seconds)
+        self._clock = clock
+        point = art.cast(character, "pose_point", height)
+        self._point = pygame.transform.flip(point, True, False) if (point is not None and point_left) else point
+        self._point_until = 0.0
+
+    def point(self, seconds: float) -> None:
+        self.feedback.reset()
+        self._point_until = self._clock() + seconds
+
+    def correct(self) -> None:
+        self._point_until = 0.0
+        self.feedback.correct()
+
+    def try_again(self) -> None:
+        self._point_until = 0.0
+        self.feedback.try_again()
+
+    def reset(self) -> None:
+        self._point_until = 0.0
+        self.feedback.reset()
+
+    @property
+    def pointing(self) -> bool:
+        return self._clock() < self._point_until
+
+    @property
+    def animating(self) -> bool:
+        return self.feedback.animating or self.pointing
+
+    def update(self) -> bool:
+        changed = self.feedback.update()
+        if self._point_until and self._clock() >= self._point_until:
+            self._point_until = 0.0
+            changed = True
+        return changed
+
+    def draw(self, target: pygame.Surface, midbottom: tuple[int, int]) -> None:
+        if self.pointing and self._point is not None:
+            target.blit(self._point, self._point.get_rect(midbottom=midbottom))
+            return
+        self.feedback.draw(target, midbottom)
+
+
+class FxBurst:
+    """One short shared-library FX animation (frames scaled once)."""
+
+    DURATION = 0.8
+
+    def __init__(self, frames: tuple[pygame.Surface, ...], center: tuple[int, int], *, clock=time.monotonic) -> None:
+        self._frames = frames
+        self._center = center
+        self._clock = clock
+        self._start = clock()
+
+    @property
+    def done(self) -> bool:
+        return self._clock() - self._start >= self.DURATION
+
+    def draw(self, target: pygame.Surface) -> None:
+        if not self._frames or self.done:
+            return
+        progress = (self._clock() - self._start) / self.DURATION
+        frame = self._frames[min(len(self._frames) - 1, int(progress * len(self._frames) * 2) % len(self._frames))]
+        target.blit(frame, frame.get_rect(center=self._center))
+
+
+@dataclass(slots=True)
+class Motion:
+    """Short-lived presentation state: hint halos, bursts, flip and flight."""
+
+    halos: dict[str, float] = field(default_factory=dict)
+    bursts: list[FxBurst] = field(default_factory=list)
+    flip_frames: tuple[pygame.Surface, ...] = ()
+    flip_start: float = 0.0
+    send_frames: tuple[pygame.Surface, ...] = ()
+    send_start: float = 0.0
+
+    def prune(self, now: float) -> None:
+        self.halos = {key: until for key, until in self.halos.items() if until > now}
+        self.bursts = [burst for burst in self.bursts if not burst.done]
+        if self.flip_frames and now - self.flip_start >= FLIP_SECONDS:
+            self.flip_frames = ()
+
+    def active(self, now: float) -> bool:
+        return bool(self.halos or self.bursts or self.flip_frames or self.send_frames)
+
+    def add_burst(self, burst: FxBurst) -> None:
+        self.bursts = [*self.bursts[-3:], burst]
+
+
+@dataclass(frozen=True, slots=True)
+class MessageView:
+    """Prepared lines of one message at one size (+ caret geometry)."""
+
+    lines: tuple[tuple[pygame.Surface, int], ...]
+    pitch: int
+    size: int
+    spans: tuple[tuple[int, int], ...]
+
+
+class PostcardRenderer:
+    """Draw every screen from prepared art; owns the message layout cache."""
+
+    def __init__(self, art: PostcardArt, typography: GreiaTypography, clock: Callable[[], float] = time.monotonic) -> None:
+        self.art = art
         self._typography = typography
-        self._resources = resources
+        self._clock = clock
         # One-entry wrap cache: the draft changes at most once per keystroke,
         # not once per frame, so re-measuring every frame would be waste.
         self._wrap_key: tuple[str, FontRole, int, int] | None = None
         self._wrap_value: tuple[tuple[int, int], ...] = ()
+        self._message_key: tuple | None = None
+        self._message: MessageView | None = None
+        self._tilted: dict[tuple, pygame.Surface] = {}
+        self._tray_rects: dict[str, pygame.Rect] = {}
+        self._pending_badge: tuple[pygame.Surface, tuple[int, int]] | None = None
+        self._pending_checks: list[pygame.Rect] = []
 
-    def _wrapped_spans(
-        self, text: str, role: FontRole, size: int, max_width: int
-    ) -> tuple[tuple[int, int], ...]:
+    # -- message layout ---------------------------------------------------------
+
+    def _wrapped_spans(self, text: str, role: FontRole, size: int, max_width: int) -> tuple[tuple[int, int], ...]:
         """Split ``text`` into ``(start, end)`` line spans that fit ``max_width``.
 
         Breaks prefer the last space; a word wider than the lane is broken at
         a grapheme boundary so emoji/accent clusters are never split.
         """
+
         key = (text, role, size, max_width)
         if key == self._wrap_key:
             return self._wrap_value
@@ -73,604 +196,385 @@ class PostcardRenderer:
         spans: list[tuple[int, int]] = []
         start = 0
         last_space = -1
-        prev = 0
+        previous = 0
         for bound in bounds[1:]:
-            if self._typography.measure(text[start:bound].rstrip(), role, size).width > max_width and prev > start:
-                end = last_space + 1 if last_space > start else prev
+            if self._typography.measure(text[start:bound].rstrip(), role, size).width > max_width and previous > start:
+                end = last_space + 1 if last_space > start else previous
                 spans.append((start, end))
                 start = end
                 last_space = -1
             if text[bound - 1] == " ":
                 last_space = bound - 1
-            prev = bound
+            previous = bound
         if start < len(text) or not spans:
             spans.append((start, len(text)))
         self._wrap_key = key
         self._wrap_value = tuple(spans)
         return self._wrap_value
 
-    def draw_editor(
-        self,
-        target: pygame.Surface,
-        draft: PostcardDraft,
-        library: PostcardLibrary,
-        *,
-        cursor_visible: bool = True,
-        shared_available: bool = False,
-        shared_state: str = "",
-    ) -> None:
-        target.blit(self._art.background, (0, 0))
+    def message_view(self, text: str, lane: pygame.Rect) -> MessageView:
+        """Largest size whose wrapped lines fit the lane (one-entry cache)."""
 
-        # 1. Top Recipient Bar
-        self._draw_recipient_bar(target, draft.recipient_id)
+        key = (text, lane.size)
+        if key == self._message_key and self._message is not None:
+            return self._message
+        scale = lane.height / 255
+        chosen: MessageView | None = None
+        for base in MESSAGE_SIZES:
+            size = max(12, round(base * scale))
+            pitch = round(size * 1.32)
+            spans = self._wrapped_spans(text, FontRole.DISPLAY, size, lane.width)
+            if len(spans) * pitch <= lane.height or base == MESSAGE_SIZES[-1]:
+                lines = tuple(
+                    (self._typography.render(text[a:b].rstrip(), FontRole.DISPLAY, size, TEXT_COLOR), a)
+                    for a, b in spans[: max(1, lane.height // pitch)]
+                    if text[a:b].strip()
+                )
+                chosen = MessageView(lines, pitch, size, spans)
+                break
+        assert chosen is not None
+        self._message_key = key
+        self._message = chosen
+        return chosen
 
-        # 2. Main Postcard Canvas
-        self._draw_postcard_canvas(target, draft, cursor_visible=cursor_visible)
-
-        # 3. Bottom Toolbar
-        self._draw_editor_toolbar(
-            target,
-            library,
-            shared_available=shared_available,
-            shared_state=shared_state,
-        )
-
-    def draw_gallery(
-        self,
-        target: pygame.Surface,
-        library: PostcardLibrary,
-        *,
-        selected_card_id: str | None = None,
-        confirm_delete: bool = False,
-        shared_available: bool = False,
-        shared_state: str = "",
-    ) -> None:
-        target.blit(self._art.background, (0, 0))
-
-        # Top Return Button
-        pygame.draw.rect(target, (2, 132, 199), BACK_TO_EDITOR_RECT, border_radius=22)
-        pygame.draw.rect(target, (56, 189, 248), BACK_TO_EDITOR_RECT, width=2, border_radius=22)
-        b_txt = self._typography.render(
-            self._resources.text("button.write"),
-            FontRole.TITLE,
-            20,
-            (255, 255, 255),
-        )
-        target.blit(
-            b_txt,
-            (
-                BACK_TO_EDITOR_RECT.centerx - b_txt.get_width() // 2,
-                BACK_TO_EDITOR_RECT.centery - b_txt.get_height() // 2,
-            ),
-        )
-
-        # Header Badge
-        header = f"{self._resources.text('button.saved')} ({library.count}/{MAX_SAVED_CARDS})"
-        h_surf = self._typography.render(header, FontRole.TITLE, 24, (254, 240, 138))
-        target.blit(h_surf, (REFERENCE_WIDTH // 2 + 110 - h_surf.get_width() // 2, 34))
-
-        # Grid of saved cards (4 columns x 3 rows)
-        if library.count == 0:
-            # Pictogram first so a pre-reader understands the empty mailbox.
-            empty_icon = self._typography.render("📭", FontRole.DISPLAY, 72, (148, 163, 184))
-            target.blit(empty_icon, (REFERENCE_WIDTH // 2 - empty_icon.get_width() // 2, 220))
-            try:
-                empty_caption = self._resources.text("gallery.empty")
-            except LocalizationError:
-                empty_caption = ""
-            if empty_caption:
-                empty_txt = self._typography.render(empty_caption, FontRole.BODY, 24, (100, 116, 139))
-                target.blit(empty_txt, (REFERENCE_WIDTH // 2 - empty_txt.get_width() // 2, 320))
+    def draw_message(self, target: pygame.Surface, text: str, lane: pygame.Rect, *, cursor: int | None = None) -> None:
+        if not text:
+            if cursor is not None:
+                size = max(12, round(MESSAGE_SIZES[0] * lane.height / 255))
+                pygame.draw.line(target, CARET, (lane.left + 2, lane.top + 4), (lane.left + 2, lane.top + 4 + size), 3)
             return
+        view = self.message_view(text, lane)
+        index_of_line = {start: row for row, (start, _end) in enumerate(view.spans)}
+        for surface, start in view.lines:
+            row = index_of_line.get(start, 0)
+            target.blit(surface, (lane.left, lane.top + row * view.pitch))
+        if cursor is not None:
+            row = 0
+            for index, (start, end) in enumerate(view.spans):
+                if start <= cursor <= end:
+                    row = index
+            start = view.spans[row][0]
+            before = text[start:cursor]
+            x = self._typography.measure(before, FontRole.DISPLAY, view.size).width if before else 0
+            y = lane.top + row * view.pitch
+            if y + view.size <= lane.bottom + view.pitch:
+                pygame.draw.line(target, CARET, (lane.left + x + 1, y + 2), (lane.left + x + 1, y + view.size + 4), 3)
 
-        for idx, card in enumerate(library.cards):
-            card_rect = self.gallery_card_rect_at(idx)
-            is_selected = (card.card_id == selected_card_id)
-            self._draw_thumbnail_card(target, card_rect, card, is_selected=is_selected)
+    # -- composer -------------------------------------------------------------------
 
-        # Single Card Full Modal / Confirm Delete
-        if selected_card_id is not None:
-            card = library.get(selected_card_id)
-            if card is not None:
-                self._draw_card_modal(
-                    target,
-                    card,
-                    confirm_delete=confirm_delete,
-                    shared_available=shared_available,
-                    shared_state=shared_state,
-                )
-
-    def draw_full_dialog(self, target: pygame.Surface) -> None:
-        """Render polite full-mailbox sheet."""
-        overlay = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA)
-        overlay.fill((15, 23, 42, 200))
-        target.blit(overlay, (0, 0))
-
-        sheet = pygame.Rect(REFERENCE_WIDTH // 2 - 260, REFERENCE_HEIGHT // 2 - 140, 520, 280)
-        pygame.draw.rect(target, (255, 251, 235), sheet, border_radius=28)
-        pygame.draw.rect(target, (217, 119, 6), sheet, width=4, border_radius=28)
-
-        t_surf = self._typography.render(
-            self._resources.text("dialog.full_title"),
-            FontRole.DISPLAY,
-            28,
-            (180, 83, 9),
-        )
-        target.blit(t_surf, (sheet.centerx - t_surf.get_width() // 2, sheet.top + 32))
-
-        lines = self._resources.text("dialog.full_body").split("\n")
-        for i, line in enumerate(lines):
-            b_surf = self._typography.render(
-                line,
-                FontRole.BODY,
-                20,
-                (71, 85, 105),
-            )
-            target.blit(b_surf, (sheet.centerx - b_surf.get_width() // 2, sheet.top + 85 + i * 30))
-
-        ok_rect = pygame.Rect(sheet.centerx - 90, sheet.bottom - 74, 180, 50)
-        pygame.draw.rect(target, (2, 132, 199), ok_rect, border_radius=18)
-        ok_txt = self._typography.render("OK", FontRole.TITLE, 22, (255, 255, 255))
-        target.blit(
-            ok_txt,
-            (ok_rect.centerx - ok_txt.get_width() // 2, ok_rect.centery - ok_txt.get_height() // 2),
-        )
-
-    # --- Interaction hit testing ---
-    def recipient_at(self, point: tuple[int, int]) -> str | None:
-        for idx, r in enumerate(RECIPIENTS):
-            rect = self.recipient_rect_at(idx)
-            if rect.collidepoint(point):
-                return r.recipient_id
-        return None
-
-    def recipient_rect_at(self, index: int) -> pygame.Rect:
-        cx = 180 + index * 130
-        cy = 55
-        return pygame.Rect(cx - 40, cy - 35, 80, 70)
-
-    def stamp_at(self, point: tuple[int, int]) -> str | None:
-        for idx, s in enumerate(STAMPS):
-            rect = self.stamp_rect_at(idx)
-            if rect.collidepoint(point):
-                return s.stamp_id
-        return None
-
-    def stamp_rect_at(self, index: int) -> pygame.Rect:
-        # 6 stamps arranged 3x2 on top-right of postcard
-        col = index % 3
-        row = index // 3
-        x = POSTCARD_RECT.left + 580 + col * 84
-        y = POSTCARD_RECT.top + 28 + row * 84
-        return pygame.Rect(x, y, 72, 72)
-
-    def send_contains(self, point: tuple[int, int]) -> bool:
-        return SEND_BTN_RECT.collidepoint(point)
-
-    def gallery_contains(self, point: tuple[int, int]) -> bool:
-        return GALLERY_BTN_RECT.collidepoint(point)
-
-    def clear_contains(self, point: tuple[int, int]) -> bool:
-        return CLEAR_BTN_RECT.collidepoint(point)
-
-    def shared_import_contains(self, point: tuple[int, int]) -> bool:
-        return SHARED_IMPORT_BTN_RECT.collidepoint(point)
-
-    def share_btn_rect(self) -> pygame.Rect:
-        return SHARED_SHARE_BTN_RECT.copy()
-
-    def back_to_editor_contains(self, point: tuple[int, int]) -> bool:
-        return BACK_TO_EDITOR_RECT.collidepoint(point)
-
-    def gallery_card_rect_at(self, index: int) -> pygame.Rect:
-        col = index % 5
-        row = index // 5
-        w, h = 160, 100
-        x = 92 + col * 175
-        y = 100 + row * 115
-        return pygame.Rect(x, y, w, h)
-
-    def gallery_card_at(self, point: tuple[int, int], count: int) -> int | None:
-        for idx in range(count):
-            rect = self.gallery_card_rect_at(idx)
-            if rect.collidepoint(point):
-                return idx
-        return None
-
-    def delete_btn_rect(self) -> pygame.Rect:
-        return pygame.Rect(REFERENCE_WIDTH // 2 - 190, 485, 170, 48)
-
-    def cancel_btn_rect(self) -> pygame.Rect:
-        return pygame.Rect(REFERENCE_WIDTH // 2 + 20, 485, 170, 48)
-
-    def close_modal_rect(self) -> pygame.Rect:
-        return pygame.Rect(REFERENCE_WIDTH // 2 - 80, 485, 160, 48)
-
-    # --- Internal drawing helpers ---
-    def _draw_recipient_bar(self, target: pygame.Surface, selected_id: str) -> None:
-        for idx, r in enumerate(RECIPIENTS):
-            rect = self.recipient_rect_at(idx)
-            is_selected = (r.recipient_id == selected_id)
-
-            # Avatar background circle
-            if is_selected:
-                pygame.draw.circle(target, (254, 240, 138), (rect.centerx, rect.top + 28), 34)
-                pygame.draw.circle(target, (234, 179, 8), (rect.centerx, rect.top + 28), 32)
+    def draw_composer(
+        self,
+        target: pygame.Surface,
+        layout: ComposerLayout,
+        *,
+        face: pygame.Surface,
+        back: pygame.Surface | None,
+        showing_back: bool,
+        text: str,
+        cursor: int | None,
+        motion: Motion,
+        host: CastActor,
+        drag: tuple[pygame.Surface, tuple[int, int]] | None,
+        done_steps: set[str],
+        postbox_count: int,
+        hide_card: bool = False,
+    ) -> None:
+        target.blit(self.art.background(), (0, 0))
+        tray = layout.tray
+        target.blit(self.art.panel((tray.width, tray.height)), tray.topleft)
+        card = layout.card
+        if not hide_card:
+            target.blit(self.art.shadow(card.size), card.move(0, 6))
+            if motion.flip_frames:
+                progress = (self._clock() - motion.flip_start) / FLIP_SECONDS
+                frame = motion.flip_frames[min(len(motion.flip_frames) - 1, int(progress * len(motion.flip_frames)))]
+                target.blit(frame, frame.get_rect(center=card.center))
+            elif showing_back and back is not None:
+                target.blit(back, card.topleft)
+                self.draw_message(target, text, lane_rect(card), cursor=cursor)
             else:
-                pygame.draw.circle(target, (51, 65, 85), (rect.centerx, rect.top + 28), 30)
+                target.blit(face, card.topleft)
+                if drag is not None:
+                    image, center = drag
+                    target.blit(image, image.get_rect(center=center))
+        host.draw(target, layout.host_midbottom)
+        self._draw_halos(target, motion, layout)
+        # Badges sit on top of kit tiles, so ``draw_composer_overlays`` blits
+        # them after the control layer.
+        mailbox = layout.mailbox
+        self._pending_badge = (
+            (self.art.badge(postbox_count, 40), (mailbox.right - 6, mailbox.top + 6)) if postbox_count else None
+        )
+        self._pending_checks = [
+            layout.steps[index]
+            for index, step in enumerate(("friend", "picture", "stickers", "message"))
+            if step in done_steps
+        ]
 
-            # Avatar image
-            avatar = self._art.get_avatar(r.recipient_id)
-            target.blit(avatar, (rect.centerx - 32, rect.top - 4))
+    def draw_composer_overlays(self, target: pygame.Surface) -> None:
+        """Small badges on top of kit tiles (step done ticks, postbox count)."""
 
-            # Recipient name label
-            name = self._resources.text(r.name_key)
-            color = (254, 240, 138) if is_selected else (203, 213, 225)
-            n_surf = self._typography.render(name, FontRole.BODY, 16, color)
-            target.blit(n_surf, (rect.centerx - n_surf.get_width() // 2, rect.bottom - 12))
+        check = self.art.tick(30)
+        for rect in self._pending_checks:
+            target.blit(check, check.get_rect(center=(rect.right - 6, rect.top + 6)))
+        if self._pending_badge is not None:
+            badge, center = self._pending_badge
+            target.blit(badge, badge.get_rect(center=center))
 
-    def _draw_postcard_canvas(
-        self,
-        target: pygame.Surface,
-        draft: PostcardDraft,
-        *,
-        cursor_visible: bool = True,
-    ) -> None:
-        # Paper card background
-        pygame.draw.rect(target, POSTCARD_BG, POSTCARD_RECT, border_radius=24)
-        pygame.draw.rect(target, POSTCARD_BORDER, POSTCARD_RECT, width=4, border_radius=24)
+    def _draw_halos(self, target: pygame.Surface, motion: Motion, layout: ComposerLayout) -> None:
+        now = self._clock()
+        alpha = round(150 + 105 * math.sin(now * 7.0))
+        for key, until in motion.halos.items():
+            rect = self._halo_rect(key, layout)
+            if rect is None or until <= now:
+                continue
+            halo = self.art.halo(rect.size)
+            halo.set_alpha(alpha)
+            target.blit(halo, halo.get_rect(center=rect.center))
+            halo.set_alpha(None)
 
-        # Central vertical divider line
-        divider_x = POSTCARD_RECT.left + 540
-        pygame.draw.line(
-            target,
-            (203, 213, 225),
-            (divider_x, POSTCARD_RECT.top + 24),
-            (divider_x, POSTCARD_RECT.bottom - 24),
-            3,
+    def _halo_rect(self, key: str, layout: ComposerLayout) -> pygame.Rect | None:
+        if key == "send":
+            return layout.send
+        if key == "card":
+            return layout.card
+        if key == "tray":
+            return layout.tray.inflate(-16, -16)
+        if key.startswith("step."):
+            steps = {"friend": 0, "picture": 1, "stickers": 2, "message": 3}
+            index = steps.get(key.split(".", 1)[1])
+            return layout.steps[index] if index is not None else None
+        if key.startswith("tray:"):
+            return self._tray_rects.get(key[5:])
+        return None
+
+    def remember_tray(self, rects: dict[str, pygame.Rect]) -> None:
+        self._tray_rects = dict(rects)
+
+    def flip_frames(self, start: pygame.Surface, end: pygame.Surface) -> tuple[pygame.Surface, ...]:
+        """A squash-and-turn: start narrows to an edge, end widens back (built once)."""
+
+        width, height = start.get_size()
+        frames = []
+        for scale in (0.7, 0.35, 0.08):
+            frames.append(pygame.transform.smoothscale(start, (max(2, round(width * scale)), height)))
+        for scale in (0.08, 0.35, 0.7, 1.0):
+            frames.append(end if scale == 1.0 else pygame.transform.smoothscale(end, (max(2, round(width * scale)), height)))
+        return tuple(frames)
+
+    # -- sending ---------------------------------------------------------------------
+
+    def send_frames(self, face: pygame.Surface) -> tuple[pygame.Surface, ...]:
+        width, height = face.get_size()
+        return tuple(
+            pygame.transform.smoothscale(face, (max(4, round(width * scale)), max(4, round(height * scale))))
+            for scale in (0.82, 0.62, 0.44, 0.28, 0.16)
         )
 
-        # 1. Left Side: Ruled writing lines and text
-        line_y_start = POSTCARD_RECT.top + 60
-        line_spacing = 60
-        for i in range(5):
-            ly = line_y_start + i * line_spacing
-            pygame.draw.line(
-                target,
-                (241, 245, 249),
-                (POSTCARD_RECT.left + 30, ly),
-                (divider_x - 30, ly),
-                2,
-            )
+    def draw_sending(
+        self,
+        target: pygame.Surface,
+        layout: ComposerLayout,
+        motion: Motion,
+        host: CastActor,
+        postbox_count: int,
+        blank_face: pygame.Surface | None = None,
+    ) -> int:
+        """Fold the card, fly the paper plane into the mailbox; return mailbox lift."""
 
-        # Render draft message text (child-authored: shown exactly as typed),
-        # wrapped onto the ruled lines so it never runs under the stamps.
-        text_rect = pygame.Rect(POSTCARD_RECT.left + 30, POSTCARD_RECT.top + 30, MESSAGE_LANE_WIDTH, 320)
-        if draft.text:
-            spans = self._wrapped_spans(draft.text, FontRole.DISPLAY, 32, MESSAGE_LANE_WIDTH)
-            cursor_line, cursor_x = 0, 0
-            for index, (a, b) in enumerate(spans[:MAX_MESSAGE_LINES]):
-                line = draft.text[a:b].rstrip()
-                ly = line_y_start + index * line_spacing
-                if line:
-                    txt_surf = self._typography.render(line, FontRole.DISPLAY, 32, (30, 41, 59))
-                    target.blit(txt_surf, (text_rect.left, ly - txt_surf.get_height() + 6))
-                if a <= draft.cursor <= b:
-                    cursor_line = index
-                    before = draft.text[a:draft.cursor]
-                    cursor_x = (
-                        self._typography.measure(before, FontRole.DISPLAY, 32).width if before else 0
-                    )
-            if cursor_visible:
-                cy = line_y_start + min(cursor_line, MAX_MESSAGE_LINES - 1) * line_spacing
-                pygame.draw.line(
-                    target,
-                    (2, 132, 199),
-                    (text_rect.left + cursor_x, cy - 38),
-                    (text_rect.left + cursor_x, cy + 4),
-                    3,
-                )
+        elapsed = self._clock() - motion.send_start
+        target.blit(self.art.background(), (0, 0))
+        tray = layout.tray
+        target.blit(self.art.panel((tray.width, tray.height)), tray.topleft)
+        host.draw(target, layout.host_midbottom)
+        card = layout.card
+        mailbox = layout.mailbox
+        lift = 0
+        landed = elapsed >= FOLD_SECONDS + FLY_SECONDS
+        if landed:
+            t = min(1.0, (elapsed - FOLD_SECONDS - FLY_SECONDS) / DROP_SECONDS)
+            lift = -round(math.sin(math.pi * t) * 16)
+        self._draw_mailbox(target, mailbox.move(0, lift), postbox_count if landed else max(0, postbox_count - 1))
+        if elapsed < FOLD_SECONDS and motion.send_frames:
+            frame = motion.send_frames[min(len(motion.send_frames) - 1, int(elapsed / FOLD_SECONDS * len(motion.send_frames)))]
+            target.blit(frame, frame.get_rect(center=card.center))
+        elif blank_face is not None:
+            # The next postcard is already waiting.
+            target.blit(self.art.shadow(card.size), card.move(0, 6))
+            target.blit(blank_face, card.topleft)
+        return lift
+
+    def draw_flight(self, target: pygame.Surface, layout: ComposerLayout, motion: Motion) -> None:
+        """The paper plane, above every control, on its arc into the mailbox."""
+
+        elapsed = self._clock() - motion.send_start
+        card = layout.card
+        mailbox = layout.mailbox
+        if FOLD_SECONDS <= elapsed < FOLD_SECONDS + FLY_SECONDS:
+            t = (elapsed - FOLD_SECONDS) / FLY_SECONDS
+            start = pygame.Vector2(card.center)
+            end = pygame.Vector2(mailbox.center)
+            control = pygame.Vector2((start.x + end.x) / 2, min(start.y, end.y) - 220)
+            point = (1 - t) ** 2 * start + 2 * (1 - t) * t * control + t ** 2 * end
+            # Three prepared sizes (cached by the loader), never a per-frame scale.
+            plane = self.art.loader.image("icon.hud.send", (96, 80, 64)[min(2, int(t * 3))])
+            if plane is not None:
+                target.blit(plane, plane.get_rect(center=(round(point.x), round(point.y))))
+
+    def _draw_mailbox(self, target: pygame.Surface, rect: pygame.Rect, count: int) -> None:
+        """Leo's mailbox while the controls are away (same look as its tile)."""
+
+        painter = self.art.painter
+        body = painter.body(BodyShape.TILE, rect.size, painter.theme.surface, lip=max(2, round(rect.height * 0.07)))
+        target.blit(body, rect.topleft)
+        icon = self.art.loader.image("icon.hud.mailbox", 80)
+        if icon is not None:
+            target.blit(icon, icon.get_rect(center=(rect.centerx, rect.centery - 3)))
+        if count:
+            badge = self.art.badge(count, 40)
+            target.blit(badge, badge.get_rect(center=(rect.right - 6, rect.top + 6)))
+
+    # -- delivered -----------------------------------------------------------------------
+
+    def draw_delivered(
+        self,
+        target: pygame.Surface,
+        layout: DeliveredLayout,
+        *,
+        face: pygame.Surface,
+        face_key: object,
+        friend: CastActor,
+        motion: Motion,
+    ) -> None:
+        target.blit(self.art.delivered_backdrop(), (0, 0))
+        key = (face_key, face.get_size())
+        tilted = self._tilted.get(key)
+        if tilted is None:
+            # Card + its shadow, turned once (never per frame).
+            width, height = face.get_size()
+            board = pygame.Surface((width + 12, height + 14), pygame.SRCALPHA)
+            board.blit(self.art.shadow(face.get_size()), (8, 12))
+            board.blit(face, (0, 0))
+            tilted = pygame.transform.rotozoom(board, 4, 1.0)
+            self._tilted.clear()
+            self._tilted[key] = tilted
+        target.blit(tilted, tilted.get_rect(center=layout.card.center))
+        friend.draw(target, layout.friend_midbottom)
+        for burst in motion.bursts:
+            burst.draw(target)
+
+    # -- postbox ----------------------------------------------------------------------------
+
+    def draw_postbox(
+        self,
+        target: pygame.Surface,
+        layout: PostboxLayout,
+        faces: list[tuple[pygame.Rect, pygame.Surface, str, bool]],
+        *,
+        page: int,
+        page_count: int,
+        focus_slot: int | None,
+        full: bool,
+        empty_icon: pygame.Surface | None,
+    ) -> None:
+        target.blit(self.art.background(), (0, 0))
+        if not faces:
+            area = pygame.Rect(0, 0, 420, 250)
+            area.center = (REFERENCE_WIDTH // 2, (layout.cards[0].top + layout.cards[-1].bottom) // 2)
+            target.blit(self.art.panel(area.size), area.topleft)
+            mailbox = self.art.loader.image("icon.hud.mailbox", 120)
+            host = self.art.cast(HOST, "happy", 170)
+            if host is not None:
+                target.blit(host, host.get_rect(midbottom=(area.centerx - 70, area.bottom - 12)))
+            if mailbox is not None:
+                target.blit(mailbox, mailbox.get_rect(midbottom=(area.centerx + 90, area.bottom - 30)))
+        for slot, (rect, face, friend_id, has_text) in enumerate(faces):
+            if slot == focus_slot:
+                halo = self.art.halo(rect.size)
+                target.blit(halo, halo.get_rect(center=rect.center))
+            target.blit(self.art.shadow(rect.size), rect.move(0, 5))
+            target.blit(face, rect.topleft)
+            portrait = self.art.cast(friend_id, "happy", 74)
+            if portrait is not None:
+                target.blit(portrait, portrait.get_rect(midbottom=(rect.left + 34, rect.bottom + 10)))
+            if has_text:
+                page_icon = self.art.loader.image("icon.hud.page", 34)
+                if page_icon is not None:
+                    target.blit(page_icon, page_icon.get_rect(bottomright=(rect.right - 8, rect.bottom - 6)))
+        self._draw_page_dots(target, layout, page, page_count)
+        if full:
+            meter = self.art.meter((150, 30), MAX_SAVED_CARDS, MAX_SAVED_CARDS)
+            target.blit(meter, meter.get_rect(midleft=(layout.chip.right + 18, layout.chip.centery)))
+
+    def _draw_page_dots(self, target: pygame.Surface, layout: PostboxLayout, page: int, page_count: int) -> None:
+        if page_count <= 1:
+            return
+        dot, gap = 9, 12
+        total = page_count * dot * 2 + (page_count - 1) * gap
+        x = layout.dots_centre[0] - total // 2 + dot
+        theme = self.art.painter.theme
+        for index in range(page_count):
+            current = index == page
+            radius = dot if current else dot - 2
+            pygame.draw.circle(target, INK, (x, layout.dots_centre[1]), radius)
+            pygame.draw.circle(target, theme.accent if current else (236, 224, 200), (x, layout.dots_centre[1]), radius - 2)
+            x += dot * 2 + gap
+
+    # -- one card ------------------------------------------------------------------------------
+
+    def draw_card_view(
+        self,
+        target: pygame.Surface,
+        layout: CardViewLayout,
+        *,
+        face: pygame.Surface,
+        back: pygame.Surface,
+        showing_back: bool,
+        text: str,
+        friend: CastActor,
+        motion: Motion,
+    ) -> None:
+        target.blit(self.art.background(), (0, 0))
+        card = layout.card
+        target.blit(self.art.shadow(card.size), card.move(0, 6))
+        if motion.flip_frames:
+            progress = (self._clock() - motion.flip_start) / FLIP_SECONDS
+            frame = motion.flip_frames[min(len(motion.flip_frames) - 1, int(progress * len(motion.flip_frames)))]
+            target.blit(frame, frame.get_rect(center=card.center))
+        elif showing_back:
+            target.blit(back, card.topleft)
+            self.draw_message(target, text, lane_rect(card))
         else:
-            ph_surf = self._typography.render(
-                self._resources.text("prompt.message"),
-                FontRole.BODY,
-                24,
-                (148, 163, 184),
-            )
-            target.blit(ph_surf, (text_rect.left + 8, line_y_start - ph_surf.get_height() + 6))
-            if cursor_visible:
-                pygame.draw.line(
-                    target,
-                    (2, 132, 199),
-                    (text_rect.left, line_y_start - 38),
-                    (text_rect.left, line_y_start + 4),
-                    3,
-                )
+            target.blit(face, card.topleft)
+        friend.draw(target, layout.friend_midbottom)
+        for burst in motion.bursts:
+            burst.draw(target)
 
-        # 2. Right Side: Stamps and Address
-        for idx, s in enumerate(STAMPS):
-            s_rect = self.stamp_rect_at(idx)
-            is_selected = (s.stamp_id == draft.stamp_id)
-            self._art.draw_stamp(target, s_rect, s, is_selected=is_selected)
+    # -- sheets ------------------------------------------------------------------------------------
 
-        # Address Box
-        addr_y = POSTCARD_RECT.top + 220
-        to_label = f"{self._resources.text('prompt.to')} {self._resources.text(f'recipient.{draft.recipient_id}')}"
-        to_surf = self._typography.render(to_label, FontRole.TITLE, 26, (120, 53, 15))
-        target.blit(to_surf, (divider_x + 30, addr_y))
-
-        # Avatar on address
-        avatar = self._art.get_avatar(draft.recipient_id)
-        target.blit(avatar, (POSTCARD_RECT.right - 90, addr_y - 10))
-
-        # Address lines
-        for i in range(2):
-            aly = addr_y + 60 + i * 40
-            pygame.draw.line(
-                target,
-                (203, 213, 225),
-                (divider_x + 30, aly),
-                (POSTCARD_RECT.right - 30, aly),
-                2,
-            )
-
-    def _draw_editor_toolbar(
+    def draw_sheet(
         self,
         target: pygame.Surface,
-        library: PostcardLibrary,
+        layout: SheetLayout,
+        preview: pygame.Surface,
         *,
-        shared_available: bool,
-        shared_state: str,
+        symbol: pygame.Surface | None,
     ) -> None:
-        # Send Button
-        pygame.draw.rect(target, (22, 163, 74), SEND_BTN_RECT, border_radius=20)
-        pygame.draw.rect(target, (134, 239, 172), SEND_BTN_RECT, width=3, border_radius=20)
-        s_txt = self._typography.render(
-            self._resources.text("button.send"),
-            FontRole.TITLE,
-            22,
-            (255, 255, 255),
-        )
-        target.blit(
-            s_txt,
-            (SEND_BTN_RECT.centerx - s_txt.get_width() // 2, SEND_BTN_RECT.centery - s_txt.get_height() // 2),
-        )
+        target.blit(self.art.dim((REFERENCE_WIDTH, REFERENCE_HEIGHT)), (0, 0))
+        target.blit(self.art.panel(layout.panel.size, alpha=255), layout.panel.topleft)
+        target.blit(preview, preview.get_rect(center=layout.preview.center))
+        if symbol is not None:
+            target.blit(symbol, symbol.get_rect(center=layout.symbol))
 
-        # Gallery Button
-        pygame.draw.rect(target, (2, 132, 199), GALLERY_BTN_RECT, border_radius=20)
-        pygame.draw.rect(target, (56, 189, 248), GALLERY_BTN_RECT, width=2, border_radius=20)
-        g_label = f"{self._resources.text('button.saved')} ({library.count})"
-        g_txt = self._typography.render(g_label, FontRole.TITLE, 20, (255, 255, 255))
-        target.blit(
-            g_txt,
-            (
-                GALLERY_BTN_RECT.centerx - g_txt.get_width() // 2,
-                GALLERY_BTN_RECT.centery - g_txt.get_height() // 2,
-            ),
-        )
 
-        # Clear Button
-        pygame.draw.rect(target, (225, 29, 72), CLEAR_BTN_RECT, border_radius=20)
-        c_txt = self._typography.render(
-            self._resources.text("button.clear"),
-            FontRole.TITLE,
-            18,
-            (255, 255, 255),
-        )
-        target.blit(
-            c_txt,
-            (CLEAR_BTN_RECT.centerx - c_txt.get_width() // 2, CLEAR_BTN_RECT.centery - c_txt.get_height() // 2),
-        )
-
-        if shared_available:
-            state_color = (
-                (16, 185, 129)
-                if shared_state in {"pending", "imported", "saved"}
-                else (220, 38, 38)
-                if shared_state == "error"
-                else (2, 132, 199)
-            )
-            pygame.draw.rect(
-                target,
-                (235, 247, 255),
-                SHARED_IMPORT_BTN_RECT,
-                border_radius=18,
-            )
-            pygame.draw.rect(
-                target,
-                state_color,
-                SHARED_IMPORT_BTN_RECT,
-                width=3,
-                border_radius=18,
-            )
-            cx, cy = SHARED_IMPORT_BTN_RECT.center
-            # Page + downward arrow: bring a saved text creation into draft.
-            pygame.draw.rect(
-                target,
-                (30, 41, 59),
-                (cx - 28, cy - 15, 30, 34),
-                width=3,
-                border_radius=4,
-            )
-            pygame.draw.line(
-                target, state_color, (cx + 18, cy - 15), (cx + 18, cy + 10), 4
-            )
-            pygame.draw.lines(
-                target,
-                state_color,
-                False,
-                [(cx + 9, cy + 2), (cx + 18, cy + 11), (cx + 27, cy + 2)],
-                4,
-            )
-
-    def _draw_thumbnail_card(
-        self,
-        target: pygame.Surface,
-        rect: pygame.Rect,
-        card: SavedPostcard,
-        *,
-        is_selected: bool = False,
-    ) -> None:
-        pygame.draw.rect(target, POSTCARD_BG, rect, border_radius=14)
-        if is_selected:
-            pygame.draw.rect(target, (56, 189, 248), rect, width=4, border_radius=14)
-        else:
-            pygame.draw.rect(target, (217, 119, 6), rect, width=2, border_radius=14)
-
-        # Stamp in miniature
-        stamp_obj = next((s for s in STAMPS if s.stamp_id == card.stamp_id), STAMPS[0])
-        s_mini = pygame.Rect(rect.right - 44, rect.top + 8, 36, 36)
-        self._art.draw_stamp(target, s_mini, stamp_obj)
-
-        # Recipient avatar in miniature
-        avatar = self._art.get_avatar(card.recipient_id)
-        scaled_av = pygame.transform.scale(avatar, (32, 32))
-        target.blit(scaled_av, (rect.left + 10, rect.top + 10))
-
-        # Text preview
-        snippet = card.text if card.text else "💌"
-        t_surf = self._typography.render(snippet[:14], FontRole.BODY, 16, (30, 41, 59))
-        target.blit(t_surf, (rect.left + 10, rect.bottom - 28))
-
-    def _draw_card_modal(
-        self,
-        target: pygame.Surface,
-        card: SavedPostcard,
-        *,
-        confirm_delete: bool = False,
-        shared_available: bool = False,
-        shared_state: str = "",
-    ) -> None:
-        overlay = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA)
-        overlay.fill((15, 23, 42, 210))
-        target.blit(overlay, (0, 0))
-
-        modal_rect = pygame.Rect(REFERENCE_WIDTH // 2 - 320, 100, 640, 360)
-        draft = PostcardDraft(recipient_id=card.recipient_id, stamp_id=card.stamp_id, text=card.text)
-
-        # Draw full card inside modal
-        pygame.draw.rect(target, POSTCARD_BG, modal_rect, border_radius=20)
-        pygame.draw.rect(target, POSTCARD_BORDER, modal_rect, width=4, border_radius=20)
-
-        # Stamp
-        stamp_obj = next((s for s in STAMPS if s.stamp_id == card.stamp_id), STAMPS[0])
-        s_rect = pygame.Rect(modal_rect.right - 90, modal_rect.top + 20, 70, 70)
-        self._art.draw_stamp(target, s_rect, stamp_obj, is_selected=True)
-
-        # Recipient label & avatar
-        to_label = f"{self._resources.text('prompt.to')} {self._resources.text(f'recipient.{card.recipient_id}')}"
-        to_surf = self._typography.render(to_label, FontRole.TITLE, 24, (120, 53, 15))
-        target.blit(to_surf, (modal_rect.left + 30, modal_rect.top + 30))
-
-        avatar = self._art.get_avatar(card.recipient_id)
-        target.blit(avatar, (modal_rect.left + 30 + to_surf.get_width() + 15, modal_rect.top + 16))
-
-        # Message Text
-        # Child-authored text is shown exactly as written; a stamp-only card
-        # simply shows its stamp (no fixed-language placeholder sentence).
-        if card.text:
-            for index, (a, b) in enumerate(
-                self._wrapped_spans(card.text, FontRole.DISPLAY, 30, MODAL_MESSAGE_LANE_WIDTH)[:MAX_MESSAGE_LINES]
-            ):
-                line = card.text[a:b].rstrip()
-                if line:
-                    m_surf = self._typography.render(line, FontRole.DISPLAY, 30, (30, 41, 59))
-                    target.blit(m_surf, (modal_rect.left + 40, modal_rect.top + 130 + index * 42))
-
-        # Modal Controls
-        if confirm_delete:
-            del_rect = self.delete_btn_rect()
-            pygame.draw.rect(target, (225, 29, 72), del_rect, border_radius=18)
-            d_txt = self._typography.render(
-                self._resources.text("button.delete"),
-                FontRole.TITLE,
-                20,
-                (255, 255, 255),
-            )
-            target.blit(
-                d_txt,
-                (del_rect.centerx - d_txt.get_width() // 2, del_rect.centery - d_txt.get_height() // 2),
-            )
-
-            can_rect = self.cancel_btn_rect()
-            pygame.draw.rect(target, (51, 65, 85), can_rect, border_radius=18)
-            c_txt = self._typography.render(
-                self._resources.text("button.cancel"),
-                FontRole.TITLE,
-                20,
-                (255, 255, 255),
-            )
-            target.blit(
-                c_txt,
-                (can_rect.centerx - c_txt.get_width() // 2, can_rect.centery - c_txt.get_height() // 2),
-            )
-        else:
-            del_rect = self.delete_btn_rect()
-            pygame.draw.rect(target, (225, 29, 72), del_rect, border_radius=18)
-            d_txt = self._typography.render(
-                self._resources.text("button.delete"),
-                FontRole.TITLE,
-                20,
-                (255, 255, 255),
-            )
-            target.blit(
-                d_txt,
-                (del_rect.centerx - d_txt.get_width() // 2, del_rect.centery - d_txt.get_height() // 2),
-            )
-
-            if shared_available and card.text.strip():
-                share_rect = self.share_btn_rect()
-                share_color = (
-                    (16, 185, 129)
-                    if shared_state == "saved"
-                    else (220, 38, 38)
-                    if shared_state == "error"
-                    else (2, 132, 199)
-                )
-                pygame.draw.rect(
-                    target, (235, 247, 255), share_rect, border_radius=18
-                )
-                pygame.draw.rect(
-                    target,
-                    share_color,
-                    share_rect,
-                    width=3,
-                    border_radius=18,
-                )
-                cx, cy = share_rect.center
-                pygame.draw.rect(
-                    target,
-                    (30, 41, 59),
-                    (cx - 24, cy - 10, 30, 28),
-                    width=3,
-                    border_radius=4,
-                )
-                pygame.draw.line(
-                    target,
-                    share_color,
-                    (cx + 18, cy + 12),
-                    (cx + 18, cy - 13),
-                    4,
-                )
-                pygame.draw.lines(
-                    target,
-                    share_color,
-                    False,
-                    [
-                        (cx + 9, cy - 5),
-                        (cx + 18, cy - 14),
-                        (cx + 27, cy - 5),
-                    ],
-                    4,
-                )
-
-            close_rect = self.cancel_btn_rect()
-            pygame.draw.rect(target, (2, 132, 199), close_rect, border_radius=18)
-            cl_txt = self._typography.render("CHIUDI", FontRole.TITLE, 20, (255, 255, 255))
-            target.blit(
-                cl_txt,
-                (
-                    close_rect.centerx - cl_txt.get_width() // 2,
-                    close_rect.centery - cl_txt.get_height() // 2,
-                ),
-            )
+__all__ = [
+    "CastActor",
+    "FLIP_SECONDS",
+    "FxBurst",
+    "MAX_MESSAGE_LINES",
+    "MESSAGE_LANE_WIDTH",
+    "MessageView",
+    "Motion",
+    "PostcardRenderer",
+    "SEND_SECONDS",
+]

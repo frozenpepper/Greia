@@ -2,7 +2,7 @@
 id = "org.greia.posta-di-leo"
 legacy_ids = []
 title_key = "activity.posta_di_leo.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
@@ -11,13 +11,17 @@ categories = ["create", "learn"]
 discovery_tags = ["writing", "stories"]
 
 [education]
-categories = ["writing", "print_concepts", "creative_expression"]
+# One experience: make a picture postcard *for someone* (choose a friend,
+# a card front, stickers, an optional short message) and send it; the
+# friend receives it and reacts. Writing is optional, so pre-readers can
+# make and send a picture card; 5+ writers add a message to their audience.
+categories = ["creative_expression", "communication", "writing"]
 difficulty = 2
-recommended_age_min = 5
+recommended_age_min = 4
 skills = [
-  { id = "language.emergent_writing", weight = 3 },
-  { id = "language.print_concepts", weight = 2 },
-  { id = "creativity.visual_composition", weight = 2 },
+  { id = "creativity.visual_composition", weight = 3 },
+  { id = "language.communication.audience", weight = 2 },
+  { id = "language.emergent_writing", weight = 2 },
 ]
 events = [
   { id = "postcard.created", kind = "creation" },
@@ -29,11 +33,11 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "text"
+profile = "hybrid"
 
 [requirements]
-required_capabilities = ["display", "keyboard", "pointer"]
-optional_capabilities = ["touch"]
+required_capabilities = ["display", "pointer"]
+optional_capabilities = ["keyboard", "touch", "controller"]
 
 [permissions]
 requested = []
@@ -42,5 +46,5 @@ requested = []
 schema_version = 1
 
 [creations]
-produces = ["text/plain"]
-consumes = ["text/plain"]
+produces = ["image/png", "text/plain"]
+consumes = ["image/png", "text/plain"]
