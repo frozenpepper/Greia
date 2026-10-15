@@ -481,8 +481,28 @@ class AdaptiveCollectionPlan:
         return bool(self.groups)
 
 
+@dataclass(frozen=True, slots=True)
+class ThemeFolderPlan:
+    """A mixed Collection page: theme folders beside directly shown Activities.
+
+    Every input Activity is in exactly one place: in one folder or in
+    ``direct``. Folders are one level deep (they never contain folders).
+    """
+
+    collection_id: str
+    folders: tuple[AdaptiveActivityGroup, ...]
+    direct: tuple[ActivityManifest, ...]
+
+
 class AdaptiveCollectionPlanner:
-    """Deterministically choose direct Activities or one semantic group layer."""
+    """Deterministically choose direct Activities or one semantic group layer.
+
+    :meth:`plan` is the full-coverage group chooser (every Activity behind a
+    group). :meth:`plan_theme_folders` is the owner-approved mixed page
+    (2026-10-15): only a small platform-owned set of concrete *themes* (for
+    example ``sea``) may become folder tiles, and only with enough members
+    after Parent/age filtering; everything else stays a normal card.
+    """
 
     def __init__(
         self,
@@ -569,6 +589,43 @@ class AdaptiveCollectionPlanner:
             for tag, bucket in nonempty
         )
         return AdaptiveCollectionPlan(collection_id, items, groups)
+
+
+    def plan_theme_folders(
+        self,
+        collection_id: str,
+        activities: Sequence[ActivityManifest],
+        *,
+        folder_theme_ids: Sequence[str],
+        minimum_members: int = 3,
+    ) -> ThemeFolderPlan:
+        """Group Activities sharing a folder theme; leave the rest direct.
+
+        Themes are tried in ``folder_theme_ids`` order and an Activity joins
+        only the first matching folder, so nothing is repeated. A theme forms
+        a folder only with at least ``minimum_members`` Activities and never
+        when it would swallow the whole page (a lone folder is just an extra
+        tap). Input order is preserved inside folders and in ``direct``.
+        """
+
+        _validate_collection_id(collection_id)
+        if minimum_members < 2:
+            raise ActivityDiscoveryError("a theme folder needs at least two members")
+        items = tuple(activities)
+        remaining = list(items)
+        folders: list[AdaptiveActivityGroup] = []
+        for theme in dict.fromkeys(folder_theme_ids):
+            members = tuple(
+                activity
+                for activity in remaining
+                if theme in getattr(activity, "discovery_tags", ())
+            )
+            if len(members) < minimum_members or len(members) >= len(remaining):
+                continue
+            member_ids = {activity.activity_id for activity in members}
+            remaining = [a for a in remaining if a.activity_id not in member_ids]
+            folders.append(AdaptiveActivityGroup(group_id=theme, activities=members))
+        return ThemeFolderPlan(collection_id, tuple(folders), tuple(remaining))
 
 
 def _age_within_declared_range(activity: ActivityManifest, age: int) -> bool:

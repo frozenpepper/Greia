@@ -5,7 +5,7 @@ from typing import Any
 from greia_platform.assets import AssetCatalogueError
 from greia_platform.pygame_visual_assets import VisualSurfaceCacheError
 
-from .catalogue_view import ALL_ACTIVITIES_ID
+from .catalogue_view import ALL_ACTIVITIES_ID, ActivityFolder
 from .main import HitTarget
 from .portal_geometry import portal_icon_center, portal_icon_size
 
@@ -47,7 +47,8 @@ class AdaptiveActivityDiscoveryMixin:
             self._subcollection_id = None
         if self._catalogue.subcollections_for(self._category_id):
             return ()
-        return self._catalogue.collection(self._category_id).items
+        # A mixed page: theme folders (ActivityFolder) first, then Activities.
+        return self._catalogue.page_entries(self._category_id)
 
     def _activate_profile(self, profile: Any, pygame: Any) -> None:
         super()._activate_profile(profile, pygame)
@@ -72,18 +73,73 @@ class AdaptiveActivityDiscoveryMixin:
     def _group_chooser_active(self) -> bool:
         return bool(self._adaptive_groups()) and self._subcollection_id is None
 
+    def _selected_folder(self) -> ActivityFolder | None:
+        """Return the focused page entry when it is a theme folder."""
+
+        if getattr(self, "_subcollection_id", None) is not None:
+            return None
+        if self._group_chooser_active():
+            return None
+        entries = self._presented_activities
+        index = getattr(self, "_selected", 0)
+        if 0 <= index < len(entries) and isinstance(entries[index], ActivityFolder):
+            return entries[index]
+        return None
+
+    def _open_folder_entry(self, folder: ActivityFolder, pygame: Any) -> None:
+        try:
+            self._stop_spoken_labels()  # type: ignore[attr-defined]
+        except Exception:
+            pass
+        self._open_subcollection(folder.folder_id)
+        try:
+            self._spoken_labels.announce_collection(folder.folder_id, self._spoken_locale(), pygame)  # type: ignore[attr-defined]
+        except Exception:
+            pass
+
+    def _close_subcollection(self) -> None:
+        """Leave a group/folder; a folder keeps its tile focused on return."""
+
+        closed = self._subcollection_id
+        self._subcollection_id = None
+        self._subcollection_selected = 0
+        self._selected = 0
+        self._activity_scroll_start = 0
+        if closed is not None:
+            for index, entry in enumerate(self._presented_activities):
+                if isinstance(entry, ActivityFolder) and entry.folder_id == closed:
+                    self._selected = index
+                    break
+        self._cached_activities_key = None
+        try:
+            self._stop_spoken_labels()  # type: ignore[attr-defined]
+        except Exception:
+            pass
+
+    def _launch_selected(self, pygame: Any) -> None:
+        # A folder is navigation, never a launch: open it instead.
+        folder = (
+            self._selected_folder()
+            if getattr(self, "_mode", None) == "activities"
+            and getattr(self, "_catalogue", None) is not None
+            else None
+        )
+        if folder is not None:
+            self._open_folder_entry(folder, pygame)
+            return
+        super()._launch_selected(pygame)
+
     def _handle_key(self, key: int, pygame: Any) -> bool:
         if self._mode == "activities" and self._subcollection_id is not None:
             if key in {pygame.K_BACKSPACE, pygame.K_ESCAPE}:
-                self._subcollection_id = None
-                self._subcollection_selected = 0
-                self._selected = 0
-                self._activity_scroll_start = 0
-                self._cached_activities_key = None
-                try:
-                    self._stop_spoken_labels()  # type: ignore[attr-defined]
-                except Exception:
-                    pass
+                self._close_subcollection()
+                return True
+        if self._mode == "activities" and key in {pygame.K_RETURN, pygame.K_SPACE}:
+            folder = self._selected_folder()
+            if folder is not None:
+                self._last_result = None
+                self._catalogue_error = False
+                self._open_folder_entry(folder, pygame)
                 return True
 
         if self._mode == "activities" and self._group_chooser_active():
@@ -165,16 +221,17 @@ class AdaptiveActivityDiscoveryMixin:
                 target.action == "activity_category_back"
                 and self._subcollection_id is not None
             ):
-                self._subcollection_id = None
-                self._subcollection_selected = 0
-                self._selected = 0
-                self._activity_scroll_start = 0
-                self._cached_activities_key = None
-                try:
-                    self._stop_spoken_labels()  # type: ignore[attr-defined]
-                except Exception:
-                    pass
+                self._close_subcollection()
                 return
+            if target.action == "presented_activity" and self._mode == "activities":
+                entries = self._presented_activities
+                index = int(target.value)
+                if 0 <= index < len(entries) and isinstance(entries[index], ActivityFolder):
+                    self._last_result = None
+                    self._catalogue_error = False
+                    self._selected = index
+                    self._open_folder_entry(entries[index], pygame)
+                    return
         super()._handle_click(position, pygame)
 
     def _open_subcollection(self, group_id: str) -> None:
@@ -200,11 +257,21 @@ class AdaptiveActivityDiscoveryMixin:
     def _subcollection_columns(self, pygame: Any) -> int:
         surface = pygame.display.get_surface()
         width = surface.get_width() if surface is not None else 1024
+        height = surface.get_height() if surface is not None else 600
+        if width >= height and width >= 480:
+            # Landscape (480x320 up to 1280x800): one or two shallow rows of
+            # three keep every group portal large, as on Collection Home.
+            return 3
         return 3 if width >= 820 else 2 if width >= 560 else 1
 
     def _render_subcollection_chooser(
         self, screen: Any, theme: Any, pygame: Any
     ) -> None:
+        # The storybook Collection page (CollectionPageMixin) draws the same
+        # groups/targets as hue portals; this tray chooser is its fallback.
+        storybook = getattr(self, "_render_storybook_subcollection_chooser", None)
+        if storybook is not None and storybook(screen, theme, pygame):
+            return
         width, height = screen.get_size()
         panel_top = max(52, min(62, height // 10))
         draw_panel = getattr(self, "_draw_shared_shell_panel", None)
@@ -351,6 +418,10 @@ class AdaptiveActivityDiscoveryMixin:
         self, screen: Any, theme: Any, pygame: Any
     ) -> None:
         if self._subcollection_id is None:
+            return
+        page_active = getattr(self, "_collection_page_active", None)
+        if page_active is not None and page_active():
+            # The storybook header already names the open group.
             return
         group = self._catalogue.subcollection(
             self._category_id, self._subcollection_id

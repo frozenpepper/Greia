@@ -8,7 +8,7 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["explore"]
-discovery_tags = ["nature"]
+discovery_tags = ["sea", "nature"]
 
 [education]
 categories = ["marine_life", "sensory_calm", "observation"]

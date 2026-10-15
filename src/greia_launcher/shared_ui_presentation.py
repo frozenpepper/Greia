@@ -62,6 +62,37 @@ def draw_caption_pill(screen: Any, pygame: Any, slot: Any, label: Any, *, focuse
     screen.blit(label, label.get_rect(center=pill.center))
 
 
+def draw_title_pill(
+    screen: Any,
+    pygame: Any,
+    slot: Any,
+    label: Any,
+    *,
+    focused: bool,
+    min_height: int,
+) -> Any:
+    """Draw a one- or two-line title on the caption pill, hugging the text.
+
+    The pill is top-aligned in ``slot`` (so a one-line title sits close to its
+    card) and never exceeds the slot. Same tokens as :func:`draw_caption_pill`.
+    Returns the drawn pill rectangle.
+    """
+
+    pad_y = max(3, min_height // 6)
+    pill_h = min(slot.height, max(min_height, label.get_height() + 2 * pad_y))
+    pill_w = min(slot.width, label.get_width() + max(16, min_height))
+    pill = pygame.Rect(0, 0, pill_w, pill_h)
+    pill.midtop = (slot.centerx, slot.top)
+    radius = min(pill.height // 2, min_height // 2)
+    pygame.draw.rect(screen, CAPTION_SHADOW, pill.move(0, 2), border_radius=radius)
+    pygame.draw.rect(
+        screen, CAPTION_FOCUS if focused else CAPTION_CREAM, pill, border_radius=radius
+    )
+    pygame.draw.rect(screen, CAPTION_INK, pill, width=2, border_radius=radius)
+    screen.blit(label, label.get_rect(center=pill.center))
+    return pill
+
+
 class SharedUiCategoryButtonMixin:
     """Render root Activity-category controls with shared button artwork.
 
@@ -459,8 +490,10 @@ class SharedUiActivityCardMixin:
         theme: Any,
         pygame: Any,
     ) -> None:
+        from .catalogue_view import ActivityFolder
+
         visual_cache = getattr(self, "_visual_cache", None)
-        if visual_cache is None:
+        if visual_cache is None or isinstance(activity, ActivityFolder):
             super()._draw_activity_tile_content(
                 screen, rect, activity, state, theme, pygame
             )

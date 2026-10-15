@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creation-kind pictogram (image). Core-icon grammar: transparent 256 canvas, subject
+       inside a 16 px inset, cocoa contour. Used by My Creations tabs, empty state and audio/text
+       tiles. Recipe: GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- sky light -> sky -->
+    <linearGradient id="pictogram_image_sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EAF6FC"/>
+      <stop offset="1" stop-color="#CFEAF7"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="228" rx="88" ry="12" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="frame">
+    <rect x="26" y="38" width="204" height="176" rx="26" fill="#F39A38" stroke="#4B372F" stroke-width="8" stroke-linejoin="round"/>
+    <rect x="46" y="58" width="164" height="136" rx="12" fill="url(#pictogram_image_sky)" stroke="#4B372F" stroke-width="5"/>
+  </g>
+  <g id="picture" stroke="#4B372F" stroke-linejoin="round">
+    <circle cx="166" cy="96" r="18" fill="#FFC234" stroke-width="5"/>
+    <path d="M48 176 C72 132 98 124 122 152 C138 134 164 132 208 168 L208 184 C208 189 204 192 199 192 L57 192 C52 192 48 188 48 183 Z" fill="#59B86A" stroke-width="5"/>
+  </g>
+  <g id="highlight">
+    <path d="M40 92 C40 66 50 52 70 48" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.6"/>
+  </g>
+</svg>

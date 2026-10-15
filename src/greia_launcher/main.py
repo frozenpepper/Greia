@@ -1069,6 +1069,7 @@ class LauncherApplication:
                                 "volume_budget",
                                 None,
                             ),
+                            visual_cache=getattr(self, "_visual_cache", None),
                         )
                         # Allow a bounded focus-settling interval after the child
                         # window reports READY; never poll X11 indefinitely.

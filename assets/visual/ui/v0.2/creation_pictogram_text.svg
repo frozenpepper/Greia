@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creation-kind pictogram (text). Core-icon grammar: transparent 256 canvas, subject
+       inside a 16 px inset, cocoa contour. Used by My Creations tabs, empty state and audio/text
+       tiles. Recipe: GREIA_SVG_AUTHORING_RULES.md. -->
+  <g id="shadow">
+    <ellipse cx="122" cy="228" rx="80" ry="12" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="paper">
+    <path d="M46 30 L164 30 L198 64 L198 206 C198 213 193 218 186 218 L58 218 C51 218 46 213 46 206 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M164 30 L164 64 L198 64" fill="#EEDDBA" stroke="#4B372F" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M72 88 L170 88 M72 120 L170 120 M72 152 L136 152" fill="none" stroke="#9464C9" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <g id="pencil" stroke="#4B372F" stroke-width="6" stroke-linejoin="round">
+    <path d="M216 108 L236 128 L162 202 L136 208 L142 182 Z" fill="#F39A38"/>
+    <path d="M142 182 L162 202" fill="none"/>
+    <path d="M136 208 L142 182 L162 202 Z" fill="#F8D8BD"/>
+    <path d="M216 108 L236 128 L226 138 L206 118 Z" fill="#F46F61"/>
+  </g>
+</svg>

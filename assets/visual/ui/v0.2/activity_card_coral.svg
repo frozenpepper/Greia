@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 304" width="288" height="304">
+  <!-- Greia Activity card tile (coral). Same canvas and body/slab/shadow grammar as
+       collection_portal*.svg (body x28-260 y26-262 rx58, slab to y276, shadow y290), so the
+       portal focus ring (collection_portal_focus.svg) fits it exactly. Inset icon window: ring
+       x44-244 y42-242 rx44, cream face x48-240 y48-240 rx40; the Shell draws the Activity icon
+       inside the cream face. Recipe: GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- coral light (mix 35% white) -> coral -->
+    <linearGradient id="activity_card_coral_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A198"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="144" cy="289" rx="112" ry="10" fill="#6A5147" opacity="0.16"/>
+  </g>
+  <g id="slab">
+    <rect x="28" y="40" width="232" height="236" rx="58" fill="#CA6154" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+  <g id="body">
+    <rect x="28" y="26" width="232" height="236" rx="58" fill="url(#activity_card_coral_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M36 112 C36 76 44 52 64 38" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g id="window">
+    <rect x="44" y="42" width="200" height="200" rx="44" fill="#B0594D" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="48" y="48" width="192" height="192" rx="40" fill="#FFFBEB"/>
+  </g>
+</svg>

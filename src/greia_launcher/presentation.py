@@ -33,7 +33,12 @@ from greia_platform.ui_scroll import ScrollModel
 from .launch_feedback import launch_feedback
 from .activity_icon import ActivityIconError, package_icon_path
 from .spoken_labels import SpokenLabelController
-from .catalogue_view import ALL_ACTIVITIES_ID, ActivityCatalogue, _category_title
+from .catalogue_view import (
+    ALL_ACTIVITIES_ID,
+    ActivityCatalogue,
+    ActivityFolder,
+    _category_title,
+)
 from .title_presentation import (
     contain_fit_icon_surface,
     render_activity_card_label,
@@ -81,6 +86,9 @@ class GreiaLauncherPresentation(LauncherApplication):
     _DEPTH = PygameDepthStyle(shadow_offset=5, shadow_alpha=45, radius=24)
     _HOVER = HoverMotion(scale=1.025, lift_pixels=3.0)
     _LAUNCH = LaunchMotion(duration_seconds=0.42, wiggle_pixels=7, bounce_pixels=10)
+    # Inflation (width, height) of a card hit rect restored from the backdrop
+    # before a hover/launch-tick repair redraws that card.
+    _TILE_REPAIR_PAD = (34, 40)
 
     def __init__(
         self,
@@ -202,6 +210,8 @@ class GreiaLauncherPresentation(LauncherApplication):
                 if not (0 <= idx < len(acts)):
                     return None
                 manifest = acts[idx]
+                if isinstance(manifest, ActivityFolder):
+                    return self._spoken_labels.collection_focus(manifest.folder_id, loc)
                 return self._spoken_labels.activity_focus(manifest, loc)
             if action == "home_collection":
                 cid = str(value)
@@ -222,6 +232,10 @@ class GreiaLauncherPresentation(LauncherApplication):
             if not acts or not (0 <= self._selected < len(acts)):  # type: ignore[attr-defined]
                 return False
             manifest = acts[self._selected]  # type: ignore[attr-defined]
+            if isinstance(manifest, ActivityFolder):
+                return self._spoken_labels.announce_collection(
+                    manifest.folder_id, self._spoken_locale(), pygame
+                )
             return self._spoken_labels.announce_activity(
                 manifest, self._spoken_locale(), pygame
             )
@@ -621,9 +635,16 @@ class GreiaLauncherPresentation(LauncherApplication):
         width = surface.get_width() if surface is not None else 1024
         return 3 if width >= 760 else 2
 
+    def _rows(self, pygame: Any) -> int:
+        """Rows of Activity cards per page (presentation layers may refine)."""
+
+        return 2
+
+    def _page_capacity(self, pygame: Any) -> int:
+        return max(1, self._columns(pygame) * self._rows(pygame))
+
     def _scroll_model(self, pygame: Any) -> ScrollModel:
-        columns = self._columns(pygame)
-        page_capacity = columns * 2
+        page_capacity = self._page_capacity(pygame)
         return ScrollModel(capacity=page_capacity, step=page_capacity)
 
     def _handle_key(self, key: int, pygame: Any) -> bool:
@@ -755,8 +776,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                 self._catalogue_error = False
                 old = getattr(self, "_selected", 0)
                 page_idx = int(target.value)
-                columns = self._columns(pygame)
-                page_cap = columns * 2
+                page_cap = self._page_capacity(pygame)
                 self._selected = min(page_idx * page_cap, len(self._presented_activities) - 1)
                 self._ensure_selected_visible(pygame)
                 if getattr(self, "_selected", 0) != old:
@@ -794,8 +814,7 @@ class GreiaLauncherPresentation(LauncherApplication):
         activities = self._presented_activities
         if not activities or direction == 0:
             return
-        columns = self._columns(pygame)
-        page_capacity = columns * 2
+        page_capacity = self._page_capacity(pygame)
         delta = page_capacity * (-1 if direction < 0 else 1)
         self._selected = min(max(0, self._selected + delta), len(activities) - 1)
         self._ensure_selected_visible(pygame)
@@ -974,9 +993,13 @@ class GreiaLauncherPresentation(LauncherApplication):
     ) -> None:
         width, height = screen.get_size()
         activities = self._presented_activities
-        if not activities:
+        if not activities and self._category_id == ALL_ACTIVITIES_ID:
             self._draw_empty(screen, pygame)
             return
+        # Inside a Collection an empty projection (an adaptive group chooser,
+        # or every Activity hidden by Parent policy) still renders the page so
+        # its header and local Back stay reachable; the content renderer owns
+        # the empty state.
 
         pointer = self._pointer_pos(pygame)
         pointer_active = self._is_pointer_active(pygame)
@@ -1173,7 +1196,7 @@ class GreiaLauncherPresentation(LauncherApplication):
             for index, rect in sorted(damage_tiles.items()):
                 if not 0 <= index < len(activities):
                     return False
-                restore = rect.inflate(34, 40).clip(backdrop_rect)
+                restore = rect.inflate(*self._TILE_REPAIR_PAD).clip(backdrop_rect)
                 cached_surface.blit(backdrop, restore.topleft, restore)
 
             for index, rect in sorted(damage_tiles.items()):
@@ -1206,20 +1229,9 @@ class GreiaLauncherPresentation(LauncherApplication):
 
         # 3. Repair category bar (semantic region owner)
         if damage_header:
-            left = 112 if self._active_profile is not None else 20
-            error_active = (
-                (self._last_result and not self._last_result.succeeded)
-                or self._catalogue_error
+            header_rect = self._activities_header_repair_rect(screen, pygame).clip(
+                backdrop_rect
             )
-            has_topright_badge = (
-                error_active
-                or getattr(self, "_achievement_service", None) is not None
-                or getattr(self, "_achievement_snapshot", None) is not None
-            )
-            right = screen.get_width() - (96 if has_topright_badge else 20)
-            header_rect = pygame.Rect(
-                left - 4, 0, max(0, right - left + 8), 84
-            ).clip(backdrop_rect)
             cached_surface.blit(backdrop, header_rect.topleft, header_rect)
             saved_targets = self._targets
             self._targets = []
@@ -1229,6 +1241,26 @@ class GreiaLauncherPresentation(LauncherApplication):
                 self._targets = saved_targets
 
         return True
+
+    def _activities_header_repair_rect(self, screen: Any, pygame: Any) -> Any:
+        """Return the header region restored before the category bar is redrawn.
+
+        It must cover every pixel the category bar/header may draw and nothing
+        drawn by other owners (profile badge, cards, top-right badges).
+        """
+
+        left = 112 if self._active_profile is not None else 20
+        error_active = (
+            (self._last_result and not self._last_result.succeeded)
+            or self._catalogue_error
+        )
+        has_topright_badge = (
+            error_active
+            or getattr(self, "_achievement_service", None) is not None
+            or getattr(self, "_achievement_snapshot", None) is not None
+        )
+        right = screen.get_width() - (96 if has_topright_badge else 20)
+        return pygame.Rect(left - 4, 0, max(0, right - left + 8), 84)
 
     def _draw_activity_title_disclosure(
         self, screen: Any, theme: Any, pygame: Any
@@ -1252,6 +1284,8 @@ class GreiaLauncherPresentation(LauncherApplication):
                             break
 
             if target_activity is None or target_rect is None:
+                return
+            if isinstance(target_activity, ActivityFolder):
                 return
 
             full_title = self._child_display_text(
@@ -1357,7 +1391,7 @@ class GreiaLauncherPresentation(LauncherApplication):
             return
 
         columns = self._columns(pygame)
-        rows = 2
+        rows = self._rows(pygame)
         page_capacity = max(1, columns * rows)
         self._selected = max(0, min(self._selected, max(0, len(activities) - 1)))
         self._activity_scroll_start = max(0, min(self._activity_scroll_start, max(0, len(activities) - 1)))
@@ -1787,7 +1821,7 @@ class GreiaLauncherPresentation(LauncherApplication):
         activities = self._presented_activities
         if not activities:
             return
-        page_capacity = max(1, columns * 2)
+        page_capacity = self._page_capacity(pygame)
         from .navigation_layout import PageControlsState
 
         page_state = PageControlsState.from_scroll_window(
@@ -1837,6 +1871,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                 theme.text,
                 theme.background,
                 self._active_locale,
+                self._activity_tile_style_token(),
             )
             cached = self._tile_surface_cache.get(key)
             if cached is None:
@@ -1857,6 +1892,11 @@ class GreiaLauncherPresentation(LauncherApplication):
 
         self._draw_activity_tile_content(screen, rect, activity, state, theme, pygame)
 
+    def _activity_tile_style_token(self) -> Any:
+        """Extra tile-cache identity for presentation layers (e.g. a Collection hue)."""
+
+        return None
+
     def _draw_activity_tile_content(
         self,
         screen: Any,
@@ -1866,6 +1906,9 @@ class GreiaLauncherPresentation(LauncherApplication):
         theme: Any,
         pygame: Any,
     ) -> None:
+        if isinstance(activity, ActivityFolder):
+            self._draw_folder_tile_fallback(screen, rect, activity, state, theme, pygame)
+            return
         motion = (
             self._LAUNCH.sample(time.monotonic() - self._launch_animation_started)
             if state.launching
@@ -1984,6 +2027,43 @@ class GreiaLauncherPresentation(LauncherApplication):
             )
             screen.blit(launch_text, launch_text.get_rect(center=badge_rect.center))
 
+    def _draw_folder_tile_fallback(
+        self,
+        screen: Any,
+        rect: Any,
+        folder: ActivityFolder,
+        state: InteractionVisualState,
+        theme: Any,
+        pygame: Any,
+    ) -> None:
+        """Primitive theme-folder tile used when shared artwork is unavailable."""
+
+        target = transformed_rect(rect, self._HOVER.sample(state), pygame)
+        tab = pygame.Rect(target.x, target.y, target.width * 2 // 5, max(10, target.height // 8))
+        body = pygame.Rect(target.x, tab.bottom - 4, target.width, target.bottom - tab.bottom + 4)
+        fill = _mix(theme.panel, (243, 154, 56), 0.35)
+        outline = theme.accent if state.emphasized else _mix(theme.text, theme.panel, 0.5)
+        for part in (tab, body):
+            pygame.draw.rect(screen, fill, part, border_radius=12)
+            pygame.draw.rect(screen, outline, part, width=4 if state.emphasized else 2, border_radius=12)
+        label_h = max(30, body.height // 4)
+        icon_size = max(24, min(body.width - 20, body.height - label_h - 12))
+        icon = self._category_shadowed_icon(
+            folder.group.icon_id or "backpack", icon_size, shadow_alpha=40,
+            shadow_offset=2, pygame=pygame,
+        )
+        screen.blit(icon, icon.get_rect(center=(body.centerx, body.top + 6 + icon_size // 2)))
+        title = self._category_label_surface(
+            f"{folder.group.title or folder.folder_id} ({len(folder.items)})",
+            max(14, min(20, label_h // 2)), theme.text, pygame,
+        )
+        if title.get_width() > body.width - 8:
+            scale = (body.width - 8) / title.get_width()
+            title = pygame.transform.smoothscale(
+                title, (body.width - 8, max(1, round(title.get_height() * scale)))
+            )
+        screen.blit(title, title.get_rect(center=(body.centerx, body.bottom - label_h // 2)))
+
     def _render_activity_label(
         self,
         text: str,
@@ -2047,6 +2127,22 @@ class GreiaLauncherPresentation(LauncherApplication):
         if cached is not None:
             return cached
 
+        raw_source = self._activity_raw_icon(activity, size, pygame)
+        source = contain_fit_icon_surface(raw_source, size, pygame, safe_padding_ratio=0.03)
+        decorated = make_shadowed_icon(
+            source,
+            pygame,
+            shadow_alpha=54,
+            shadow_offset=max(2, size // 28),
+        )
+        self._decorated_icon_cache[key] = decorated
+        return decorated
+
+    def _activity_raw_icon(
+        self, activity: ActivityManifest, size: int, pygame: Any
+    ) -> Any:
+        """Return the decoded package icon once per Activity version (bounded cache)."""
+
         raw_key = ("raw_icon", activity.activity_id, activity.version)
         raw_source = self._icon_cache.get(raw_key)
         if raw_source is None:
@@ -2060,16 +2156,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                 self._catalogue_error = True
                 raw_source = self._load_icon("robot", size, pygame)
             self._icon_cache[raw_key] = raw_source
-
-        source = contain_fit_icon_surface(raw_source, size, pygame, safe_padding_ratio=0.03)
-        decorated = make_shadowed_icon(
-            source,
-            pygame,
-            shadow_alpha=54,
-            shadow_offset=max(2, size // 28),
-        )
-        self._decorated_icon_cache[key] = decorated
-        return decorated
+        return raw_source
 
     def _shadow_for(self, size: tuple[int, int], pygame: Any) -> Any:
         key = (size[0], size[1], self._DEPTH.shadow_alpha)

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 120" width="112" height="120">
+  <!-- Greia round control button (previous, sunshine face). Canvas 112x120: face r46 at (56,52),
+       slab (physical thickness) at (56,60), contact shadow y110. The glyph is part of the art;
+       the Shell only lifts the whole button on hover. Recipe: GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="round_button_previous_face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFD77B"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="56" cy="110" rx="40" ry="6" fill="#6A5147" opacity="0.16"/>
+  </g>
+  <g id="slab">
+    <circle cx="56" cy="60" r="46" fill="#D29F33" stroke="#4B372F" stroke-width="4"/>
+  </g>
+  <g id="body">
+    <circle cx="56" cy="52" r="46" fill="url(#round_button_previous_face)" stroke="#4B372F" stroke-width="4"/>
+    <path d="M22 44 C24 30 34 18 48 12" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.65"/>
+  </g>
+  <g id="glyph">
+    <path d="M81 44 L59 44 L59 30 L33 52 L59 74 L59 60 L81 60 Z" fill="#4B372F" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+</svg>

@@ -1,6 +1,6 @@
 catalog_id = "greia.shared-visuals.v1"
 catalog_version = "0.5.0"
-source_sha256 = "79df13ede716a5ec3724a935711dba70b612e2c2c1a306627127f79729cec25d"
+source_sha256 = "59a3fc50996c8062f7fdeab88ebf28e97865da2391259dbe7fec0164878c630f"
 generated_note = "Build-time PNG renditions from explicit reviewed SVG masters; runtime must not discover or rasterize SVG source."
 
 [[visuals]]
@@ -62,6 +62,7 @@ default = "visual/runtime/v1/characters/dani_neutral.png"
 happy = "visual/runtime/v1/characters/dani_happy.png"
 pose_cheer = "visual/runtime/v1/characters/dani_pose_cheer.png"
 pose_point = "visual/runtime/v1/characters/dani_pose_point.png"
+pose_think = "visual/runtime/v1/characters/dani_pose_think.png"
 sleepy = "visual/runtime/v1/characters/dani_sleepy.png"
 surprised = "visual/runtime/v1/characters/dani_surprised.png"
 
@@ -76,6 +77,7 @@ default = "visual/runtime/v1/characters/flash_neutral.png"
 happy = "visual/runtime/v1/characters/flash_happy.png"
 pose_cheer = "visual/runtime/v1/characters/flash_pose_cheer.png"
 pose_point = "visual/runtime/v1/characters/flash_pose_point.png"
+pose_think = "visual/runtime/v1/characters/flash_pose_think.png"
 sleepy = "visual/runtime/v1/characters/flash_sleepy.png"
 surprised = "visual/runtime/v1/characters/flash_surprised.png"
 
@@ -90,6 +92,7 @@ default = "visual/runtime/v1/characters/leo_neutral.png"
 happy = "visual/runtime/v1/characters/leo_happy.png"
 pose_cheer = "visual/runtime/v1/characters/leo_pose_cheer.png"
 pose_point = "visual/runtime/v1/characters/leo_pose_point.png"
+pose_think = "visual/runtime/v1/characters/leo_pose_think.png"
 sleepy = "visual/runtime/v1/characters/leo_sleepy.png"
 surprised = "visual/runtime/v1/characters/leo_surprised.png"
 
@@ -104,6 +107,7 @@ default = "visual/runtime/v1/characters/lilli_neutral.png"
 happy = "visual/runtime/v1/characters/lilli_happy.png"
 pose_cheer = "visual/runtime/v1/characters/lilli_pose_cheer.png"
 pose_point = "visual/runtime/v1/characters/lilli_pose_point.png"
+pose_think = "visual/runtime/v1/characters/lilli_pose_think.png"
 sleepy = "visual/runtime/v1/characters/lilli_sleepy.png"
 surprised = "visual/runtime/v1/characters/lilli_surprised.png"
 
@@ -118,6 +122,7 @@ default = "visual/runtime/v1/characters/momo_neutral.png"
 happy = "visual/runtime/v1/characters/momo_happy.png"
 pose_cheer = "visual/runtime/v1/characters/momo_pose_cheer.png"
 pose_point = "visual/runtime/v1/characters/momo_pose_point.png"
+pose_think = "visual/runtime/v1/characters/momo_pose_think.png"
 sleepy = "visual/runtime/v1/characters/momo_sleepy.png"
 surprised = "visual/runtime/v1/characters/momo_surprised.png"
 
@@ -132,6 +137,7 @@ default = "visual/runtime/v1/characters/tito_neutral.png"
 happy = "visual/runtime/v1/characters/tito_happy.png"
 pose_cheer = "visual/runtime/v1/characters/tito_pose_cheer.png"
 pose_point = "visual/runtime/v1/characters/tito_pose_point.png"
+pose_think = "visual/runtime/v1/characters/tito_pose_think.png"
 sleepy = "visual/runtime/v1/characters/tito_sleepy.png"
 surprised = "visual/runtime/v1/characters/tito_surprised.png"
 
@@ -174,6 +180,54 @@ role = "far_background"
 
 [visuals.variants]
 default = "visual/runtime/v1/forest_meadow/distant_hills.png"
+
+[[visuals]]
+id = "icon.hud.bell"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/controls/hud_bell.png"
+
+[[visuals]]
+id = "icon.hud.check"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/controls/hud_check.png"
+
+[[visuals]]
+id = "icon.hud.clear"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/controls/hud_clear.png"
+
+[[visuals]]
+id = "icon.hud.listen"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/controls/hud_listen.png"
+
+[[visuals]]
+id = "icon.hud.replay"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/controls/hud_replay.png"
+
+[[visuals]]
+id = "icon.hud.trophy"
+kind = "ui"
+role = "hud_glyph"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/controls/hud_trophy.png"
 
 [[visuals]]
 id = "log.fallen.01"
@@ -252,6 +306,21 @@ hover = "visual/runtime/v1/ui/button_primary_hover.png"
 pressed = "visual/runtime/v1/ui/button_primary_pressed.png"
 
 [[visuals]]
+id = "ui.button.round"
+kind = "ui"
+role = "navigation_control"
+
+[visuals.variants]
+check = "visual/runtime/v1/ui/round_button_check.png"
+default = "visual/runtime/v1/ui/round_button_back.png"
+next = "visual/runtime/v1/ui/round_button_next.png"
+pause = "visual/runtime/v1/ui/round_button_pause.png"
+play = "visual/runtime/v1/ui/round_button_play.png"
+previous = "visual/runtime/v1/ui/round_button_previous.png"
+replay = "visual/runtime/v1/ui/round_button_replay.png"
+trash = "visual/runtime/v1/ui/round_button_trash.png"
+
+[[visuals]]
 id = "ui.card.activity"
 kind = "ui"
 role = "activity_card"
@@ -260,6 +329,46 @@ role = "activity_card"
 completed = "visual/runtime/v1/ui/activity_card_completed.png"
 default = "visual/runtime/v1/ui/activity_card.png"
 focused = "visual/runtime/v1/ui/activity_card_focused.png"
+
+[[visuals]]
+id = "ui.card.activity_tile"
+kind = "ui"
+role = "activity_destination"
+
+[visuals.variants]
+coral = "visual/runtime/v1/ui/activity_card_tile_coral.png"
+default = "visual/runtime/v1/ui/activity_card_tile.png"
+grape = "visual/runtime/v1/ui/activity_card_tile_grape.png"
+leaf = "visual/runtime/v1/ui/activity_card_tile_leaf.png"
+ocean = "visual/runtime/v1/ui/activity_card_tile_ocean.png"
+orange = "visual/runtime/v1/ui/activity_card_tile_orange.png"
+sunshine = "visual/runtime/v1/ui/activity_card_tile_sunshine.png"
+
+[[visuals]]
+id = "ui.card.folder"
+kind = "ui"
+role = "theme_folder"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/folder_card_back.png"
+front = "visual/runtime/v1/ui/folder_card_front.png"
+
+[[visuals]]
+id = "ui.completion.card"
+kind = "ui"
+role = "completion_card"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/controls/completion_card.png"
+
+[[visuals]]
+id = "ui.control.star"
+kind = "ui"
+role = "control_star"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/controls/star.png"
+off = "visual/runtime/v1/ui/controls/star_off.png"
 
 [[visuals]]
 id = "ui.empty.basket"
@@ -292,6 +401,17 @@ role = "panel"
 
 [visuals.variants]
 default = "visual/runtime/v1/ui/panel_base.png"
+
+[[visuals]]
+id = "ui.pictogram.creation"
+kind = "ui"
+role = "creation_kind"
+
+[visuals.variants]
+audio = "visual/runtime/v1/ui/creation_pictogram_audio.png"
+default = "visual/runtime/v1/ui/creation_pictogram_all.png"
+image = "visual/runtime/v1/ui/creation_pictogram_image.png"
+text = "visual/runtime/v1/ui/creation_pictogram_text.png"
 
 [[visuals]]
 id = "ui.portal.collection"

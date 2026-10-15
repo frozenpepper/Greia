@@ -8,7 +8,7 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["play", "explore", "learn"]
-discovery_tags = ["nature", "care", "music"]
+discovery_tags = ["sea", "nature", "care", "music"]
 
 [achievement_art]
 emblems = [

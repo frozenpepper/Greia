@@ -10,8 +10,8 @@ import unittest
 from pathlib import Path
 
 from greia_launcher.catalogue_view import (
-    ActivityCatalogue, DISCOVERY_GROUP_IDS, _CATEGORY_ICONS,
-    _DISCOVERY_ICONS, _DISCOVERY_TRANSLATIONS,
+    ActivityCatalogue, ActivityFolder, DISCOVERY_GROUP_IDS, FOLDER_THEME_IDS,
+    _CATEGORY_ICONS, _DISCOVERY_ICONS, _DISCOVERY_TRANSLATIONS,
 )
 from greia_launcher.presentation import _launch_status_label
 from greia_platform.activities import ActivityManifest
@@ -139,6 +139,48 @@ class LauncherCollectionVisualCurationTests(unittest.TestCase):
                         set(members), {item.activity_id for item in items}
                     )
                     self.assertTrue(all(len(group.items) >= 2 for group in groups))
+
+    def test_sea_theme_folder_is_mixed_honest_and_one_level(self) -> None:
+        """Owner-approved mixed page (2026-10-15): theme folders beside cards."""
+
+        source = _draft_activities()
+        sea = {a.activity_id for a in source if "sea" in a.discovery_tags}
+        projections = [ActivityCatalogue.from_activities(source)]
+        for age in (3, 4, 5):
+            visible = ActivityDiscoveryService().effective_activities(
+                source,
+                approximate_age=age,
+                challenge_preference=ChallengePreference.AUTOMATIC,
+                policy=ActivityDiscoveryPolicy(
+                    visibility_mode=ActivityVisibilityMode.RECOMMENDED_ONLY
+                ),
+            )
+            projections.append(ActivityCatalogue.from_activities(visible))
+        for index, catalogue in enumerate(projections):
+            for collection in catalogue.home_collections:
+                with self.subTest(projection=index, collection=collection.collection_id):
+                    entries = catalogue.page_entries(collection.collection_id)
+                    reachable: list[str] = []
+                    for entry in entries:
+                        if isinstance(entry, ActivityFolder):
+                            self.assertIn(entry.folder_id, FOLDER_THEME_IDS)
+                            self.assertGreaterEqual(len(entry.items), 3)
+                            self.assertFalse(any(isinstance(i, ActivityFolder) for i in entry.items))
+                            reachable.extend(item.activity_id for item in entry.items)
+                        else:
+                            reachable.append(entry.activity_id)
+                    self.assertEqual(len(reachable), len(set(reachable)))
+                    self.assertEqual(
+                        set(reachable), {item.activity_id for item in collection.items}
+                    )
+        unfiltered = projections[0]
+        for collection_id in ("play", "explore"):
+            members = {a.activity_id for a in unfiltered.collection(collection_id).items} & sea
+            if len(members) >= 3:
+                folders = unfiltered.folders_for(collection_id)
+                self.assertEqual([f.collection_id for f in folders], ["sea"])
+                self.assertEqual({a.activity_id for a in folders[0].items}, members)
+        self.assertEqual(_DISCOVERY_ICONS["sea"], "sea")
 
     def test_launch_status_speaks_the_current_ui_language_in_both_art_paths(self) -> None:
         self.assertEqual(_launch_status_label("it"), "Avvio...")

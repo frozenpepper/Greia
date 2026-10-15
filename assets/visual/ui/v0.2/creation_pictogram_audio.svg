@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia creation-kind pictogram (audio). Core-icon grammar: transparent 256 canvas, subject
+       inside a 16 px inset, cocoa contour. Used by My Creations tabs, empty state and audio/text
+       tiles. Recipe: GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- coral light -> coral -->
+    <linearGradient id="pictogram_audio_head" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A198"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="228" rx="56" ry="10" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="waves" fill="none" stroke-linecap="round">
+    <path d="M58 72 C42 92 42 132 58 152" stroke="#4B372F" stroke-width="16"/>
+    <path d="M58 72 C42 92 42 132 58 152" stroke="#44B8AE" stroke-width="8"/>
+    <path d="M198 72 C214 92 214 132 198 152" stroke="#4B372F" stroke-width="16"/>
+    <path d="M198 72 C214 92 214 132 198 152" stroke="#44B8AE" stroke-width="8"/>
+    <path d="M30 52 C6 86 6 138 30 172" stroke="#4B372F" stroke-width="14"/>
+    <path d="M30 52 C6 86 6 138 30 172" stroke="#44B8AE" stroke-width="6"/>
+    <path d="M226 52 C250 86 250 138 226 172" stroke="#4B372F" stroke-width="14"/>
+    <path d="M226 52 C250 86 250 138 226 172" stroke="#44B8AE" stroke-width="6"/>
+  </g>
+  <g id="stand" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M84 128 C84 160 104 178 128 178 C152 178 172 160 172 128" fill="none" stroke-width="9"/>
+    <path d="M128 178 L128 212" stroke-width="10"/>
+    <rect x="92" y="206" width="72" height="16" rx="8" fill="#FFC234" stroke-width="6"/>
+  </g>
+  <g id="microphone">
+    <rect x="96" y="30" width="64" height="124" rx="32" fill="url(#pictogram_audio_head)" stroke="#4B372F" stroke-width="8"/>
+    <path d="M106 76 L150 76 M106 98 L150 98 M106 120 L150 120" fill="none" stroke="#B0594D" stroke-width="6" stroke-linecap="round"/>
+    <path d="M110 58 C110 48 116 42 124 40" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.7"/>
+  </g>
+</svg>

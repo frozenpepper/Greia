@@ -16,7 +16,7 @@ class VisualFamilyContactSheetTests(unittest.TestCase):
         samples = collect_samples(root)
         by_group = {group: [item for item in samples if item.group == group]
                     for group in ("CORE", "ACTIVITY", "CAST")}
-        self.assertEqual(len(by_group["CORE"]), 29)
+        self.assertEqual(len(by_group["CORE"]), 30)
         self.assertEqual(len(by_group["ACTIVITY"]), 45)
         self.assertEqual(len(by_group["CAST"]), len(CAST) * len(EXPRESSIONS))
         self.assertTrue(all(item.source.is_file() for item in samples))
@@ -27,7 +27,7 @@ class VisualFamilyContactSheetTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp) / "families.png"
             counts = render_sheet(root, output)
-            self.assertEqual(counts, {"core": 29, "activity": 45, "cast": 30})
+            self.assertEqual(counts, {"core": 30, "activity": 45, "cast": 30})
             with Image.open(output) as img:
                 self.assertEqual(img.format, "PNG")
                 self.assertGreater(img.width, 1000)

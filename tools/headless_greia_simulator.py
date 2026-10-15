@@ -297,7 +297,17 @@ def _discover_launch_route(
         previously_subdivided=policy.subdivided_collections,
     )
     candidates: list[ShellLaunchRoute] = []
-    for home_index, collection in enumerate(catalogue.home_collections):
+    # The child Shell's Home also shows the trusted My Creations portal right
+    # after Create (GreiaChildShell._home_collections); keep portal indices
+    # aligned with what the RIGHT key actually walks through.
+    home_ids = [item.collection_id for item in catalogue.home_collections]
+    create_at = home_ids.index("create") + 1 if "create" in home_ids else 0
+    home_positions = {
+        cid: index + (1 if index >= create_at else 0)
+        for index, cid in enumerate(home_ids)
+    }
+    for collection in catalogue.home_collections:
+        home_index = home_positions[collection.collection_id]
         collection_ids = tuple(item.activity_id for item in collection.items)
         if activity_id not in collection_ids:
             continue
@@ -318,16 +328,36 @@ def _discover_launch_route(
                     )
                 )
         else:
-            candidates.append(
-                ShellLaunchRoute(
-                    activity_id=activity_id,
-                    collection_id=collection.collection_id,
-                    home_collection_index=home_index,
-                    subcollection_id=None,
-                    subcollection_index=None,
-                    activity_index=collection_ids.index(activity_id),
+            # A mixed page shows theme folders first, then direct cards; an
+            # Activity inside a folder is reached like a sub-Collection
+            # (select the folder tile, RETURN, then select the Activity).
+            entries = catalogue.page_entries(collection.collection_id)
+            entry_ids = tuple(entry.activity_id for entry in entries)
+            if activity_id in entry_ids:
+                candidates.append(
+                    ShellLaunchRoute(
+                        activity_id=activity_id,
+                        collection_id=collection.collection_id,
+                        home_collection_index=home_index,
+                        subcollection_id=None,
+                        subcollection_index=None,
+                        activity_index=entry_ids.index(activity_id),
+                    )
                 )
-            )
+            for entry_index, entry in enumerate(entries):
+                members = tuple(item.activity_id for item in getattr(entry, "items", ()))
+                if getattr(entry, "folder_id", None) is None or activity_id not in members:
+                    continue
+                candidates.append(
+                    ShellLaunchRoute(
+                        activity_id=activity_id,
+                        collection_id=collection.collection_id,
+                        home_collection_index=home_index,
+                        subcollection_id=entry.folder_id,
+                        subcollection_index=entry_index,
+                        activity_index=members.index(activity_id),
+                    )
+                )
 
     if not candidates:
         raise ValueError(

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 304" width="288" height="304">
+  <!-- Greia themed folder tile, back layer (manila / orange family). Same 288x304 canvas and
+       body bounds (x28-260, y26-262, slab to y276, shadow y290) as the Activity cards, so the
+       portal focus ring fits. The Shell draws member icons peeking out between this layer and
+       folder_card_front.svg. Recipe: GREIA_SVG_AUTHORING_RULES.md. -->
+  <g id="shadow">
+    <ellipse cx="144" cy="289" rx="112" ry="10" fill="#6A5147" opacity="0.16"/>
+  </g>
+  <g id="back">
+    <path d="M28 66 C28 46 40 30 60 30 L104 30 C115 30 121 34 127 42 L136 56 L230 56 C247 56 260 69 260 86 L260 232 C260 248 247 262 230 262 L58 262 C41 262 28 248 28 232 Z" fill="#C98136" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M46 46 C54 40 70 39 100 39" fill="none" stroke="#F7BD7E" stroke-width="5" stroke-linecap="round" opacity="0.8"/>
+  </g>
+</svg>

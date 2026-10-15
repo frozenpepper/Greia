@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Any, Iterable
 
 from greia_platform.activities import ActivityManifest
 from greia_platform.activity_discovery import AdaptiveCollectionPlanner
@@ -35,7 +35,14 @@ DISCOVERY_GROUP_IDS = (
     "care",
     "action",
     "settings",
+    "sea",
 )
+# Concrete themes that may become one-level *folder* tiles on a mixed
+# Collection page (owner-approved 2026-10-15; P6 §4). Kept deliberately
+# small: broad intents above stay card-level so navigation does not change
+# shape. A theme needs >= FOLDER_MINIMUM_MEMBERS visible Activities.
+FOLDER_THEME_IDS = ("sea",)
+FOLDER_MINIMUM_MEMBERS = 3
 _CATEGORY_ORDER = {
     "create": 10,
     "play": 20,
@@ -71,6 +78,7 @@ _DISCOVERY_ICONS = {
     "care": "heart",
     "action": "lightning",
     "settings": "unicorn",
+    "sea": "sea",
 }
 _DEFAULT_CATEGORY_ICON = "backpack"
 
@@ -148,7 +156,36 @@ _DISCOVERY_TRANSLATIONS: dict[str, dict[str, str]] = {
     "care": {"it": "Prenditi cura", "en": "Caring", "es": "Cuidar", "de": "Kümmern", "fr": "Prendre soin"},
     "action": {"it": "Azione", "en": "Action", "es": "Acción", "de": "Action", "fr": "Action"},
     "settings": {"it": "Il mio spazio", "en": "My space", "es": "Mi espacio", "de": "Mein Bereich", "fr": "Mon espace"},
+    "sea": {"it": "Mare", "en": "Sea", "es": "Mar", "de": "Meer", "fr": "Mer"},
 }
+
+
+@dataclass(frozen=True, slots=True)
+class ActivityFolder:
+    """A themed folder entry presented among a Collection page's Activities.
+
+    Not an Activity: it has no package, launch authority or saves. Opening it
+    shows ``group.items`` one level deep. ``activity_id``/``version`` exist
+    only so page caches and hover identity can key entries uniformly.
+    """
+
+    group: Collection[ActivityManifest]
+
+    @property
+    def folder_id(self) -> str:
+        return self.group.collection_id
+
+    @property
+    def activity_id(self) -> str:
+        return f"folder:{self.group.collection_id}"
+
+    @property
+    def version(self) -> str:
+        return f"folder-{len(self.group.items)}"
+
+    @property
+    def items(self) -> tuple[ActivityManifest, ...]:
+        return self.group.items
 
 
 @dataclass(frozen=True, slots=True)
@@ -176,6 +213,10 @@ class ActivityCatalogue:
     collections: tuple[Collection[ActivityManifest], ...]
     subcollections: tuple[
         tuple[str, tuple[Collection[ActivityManifest], ...]], ...
+    ] = ()
+    # Mixed pages: (collection_id, theme folders, Activities shown directly).
+    folders: tuple[
+        tuple[str, tuple[Collection[ActivityManifest], ...], tuple[ActivityManifest, ...]], ...
     ] = ()
 
     @classmethod
@@ -227,6 +268,9 @@ class ActivityCatalogue:
         subdivision_state = frozenset(previously_subdivided)
         planner = AdaptiveCollectionPlanner()
         nested: list[tuple[str, tuple[Collection[ActivityManifest], ...]]] = []
+        mixed: list[
+            tuple[str, tuple[Collection[ActivityManifest], ...], tuple[ActivityManifest, ...]]
+        ] = []
 
         for category_id in sorted(buckets, key=_category_sort_key):
             items = tuple(buckets[category_id])
@@ -247,6 +291,28 @@ class ActivityCatalogue:
                 previously_subdivided=category_id in subdivision_state,
             )
             if not plan.subdivided:
+                folder_plan = planner.plan_theme_folders(
+                    category_id,
+                    items,
+                    folder_theme_ids=FOLDER_THEME_IDS,
+                    minimum_members=FOLDER_MINIMUM_MEMBERS,
+                )
+                if folder_plan.folders:
+                    mixed.append(
+                        (
+                            category_id,
+                            tuple(
+                                Collection(
+                                    folder.group_id,
+                                    folder.activities,
+                                    title=_discovery_title(folder.group_id, locale),
+                                    icon_id=_discovery_icon(folder.group_id),
+                                )
+                                for folder in folder_plan.folders
+                            ),
+                            folder_plan.direct,
+                        )
+                    )
                 continue
             groups = tuple(
                 Collection(
@@ -258,7 +324,7 @@ class ActivityCatalogue:
                 for group in plan.groups
             )
             nested.append((category_id, groups))
-        return cls(tuple(collections), tuple(nested))
+        return cls(tuple(collections), tuple(nested), tuple(mixed))
 
     @property
     def category_ids(self) -> tuple[str, ...]:
@@ -295,10 +361,31 @@ class ActivityCatalogue:
     def subcollection(
         self, category_id: str, group_id: str
     ) -> Collection[ActivityManifest] | None:
-        for group in self.subcollections_for(category_id):
+        """Return a chooser group or a theme folder of ``category_id``."""
+
+        for group in self.subcollections_for(category_id) + self.folders_for(category_id):
             if group.collection_id == group_id:
                 return group
         return None
+
+    def folders_for(
+        self, category_id: str
+    ) -> tuple[Collection[ActivityManifest], ...]:
+        for collection_id, folders, _direct in self.folders:
+            if collection_id == category_id:
+                return folders
+        return ()
+
+    def page_entries(self, category_id: str) -> tuple[Any, ...]:
+        """Return a Collection page's entries: theme folders first, then cards.
+
+        Without folders this is exactly the Collection's Activity tuple.
+        """
+
+        for collection_id, folders, direct in self.folders:
+            if collection_id == category_id:
+                return tuple(ActivityFolder(folder) for folder in folders) + direct
+        return self.collection(category_id).items
 
     def nearest_category(self, category_id: str | None) -> str:
         if category_id and category_id in self.category_ids:

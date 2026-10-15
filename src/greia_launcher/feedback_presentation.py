@@ -49,11 +49,21 @@ class SharedUiFeedbackMixin:
             return None
 
     def _draw_shared_launch_overlay(self, pygame: Any, *, text: str) -> bool:
-        """Draw the shared launch treatment and return whether it was consumed."""
+        """Draw the shared launch treatment and return whether it was consumed.
+
+        Preferred: the storybook wait screen (scene, the Activity's own card,
+        the child's cast friend and a localized status pill). It is composed
+        once per launch into one opaque surface; each 0.1 s pre-READY tick
+        only re-blits it and moves three small dots, so the transient wait
+        never decodes, scales or allocates per frame. Falls back to the
+        reviewed loading orbit, then to the primitive overlay.
+        """
 
         screen = pygame.display.get_surface()
         if screen is None:
             return False
+        if self._draw_storybook_launch_overlay(screen, pygame, text=text):
+            return True
 
         width, height = screen.get_size()
         orbit_size = max(112, min(180, height // 3))
@@ -79,7 +89,7 @@ class SharedUiFeedbackMixin:
         scale = self.theme_controller.interface_scale
         control_size = max(22, min(54, int(round(30 * scale))))
         label = self._typography.font(FontRole.CONTROL, control_size).render(
-            text,
+            self._child_display_text(text),
             True,
             (61, 44, 31),
         )
@@ -88,6 +98,138 @@ class SharedUiFeedbackMixin:
         )
         screen.blit(label, label_rect)
         return True
+
+    def _launching_manifest(self) -> Any | None:
+        """The Activity being started (the base launch indexes the registry)."""
+
+        activities = getattr(self, "_activities", ())
+        index = getattr(self, "_selected", -1)
+        if 0 <= index < len(activities):
+            return activities[index]
+        return None
+
+    def _draw_storybook_launch_overlay(self, screen: Any, pygame: Any, *, text: str) -> bool:
+        if getattr(self, "_storybook_launch_disabled", False):
+            return False
+        if getattr(self, "_visual_cache", None) is None:
+            return False
+        manifest = self._launching_manifest()
+        if manifest is None:
+            return False
+        size = screen.get_size()
+        label = self._child_display_text(text)
+        key = (manifest.activity_id, getattr(manifest, "version", ""), size, label,
+               getattr(self, "_category_id", None), getattr(self, "_subcollection_id", None))
+        cache = getattr(self, "_launch_overlay_cache", None)
+        if cache is None or cache[0] != key:
+            try:
+                composed = self._compose_launch_overlay(size, manifest, label, pygame)
+            except (_SHARED_FEEDBACK_ERRORS + (pygame.error, AttributeError)):
+                self._storybook_launch_disabled = True
+                return False
+            cache = (key, composed)
+            # Bounded: exactly one composed wait screen is ever retained.
+            self._launch_overlay_cache = cache
+        surface, dots_center, dot_radius = cache[1]
+        screen.blit(surface, (0, 0))
+        self._draw_launch_dots(screen, dots_center, dot_radius, pygame)
+        return True
+
+    def _compose_launch_overlay(
+        self, size: tuple[int, int], manifest: Any, label: str, pygame: Any
+    ) -> tuple[Any, tuple[int, int], int]:
+        from greia_platform.responsive_layout import UiRect
+
+        from .collection_hues import collection_hue
+        from .collection_page_layout import card_art_height, card_face_rect
+        from .home_layout import greeter_rect, layout_scale
+        from .presentation import _activity_title
+        from .shared_ui_presentation import CAPTION_INK, draw_caption_pill, draw_title_pill
+
+        width, height = size
+        scale = layout_scale(width, height)
+        surface = pygame.Surface(size).convert()
+        theme = self.theme_controller.theme
+        surface.fill(theme.background)
+        draw_scene = getattr(self, "_draw_shell_scene_backdrop", None)
+        if draw_scene is not None:
+            draw_scene(surface, pygame, theme=theme)
+        veil = pygame.Surface(size, pygame.SRCALPHA)
+        veil.fill((255, 251, 235, 96))
+        surface.blit(veil, (0, 0))
+
+        card_w = max(96, min(int(round(height * 0.40)), int(round(250 * scale))))
+        card = pygame.Rect(0, 0, card_w, card_art_height(card_w))
+        card.midtop = (width // 2, max(12, int(round(height * 0.12))))
+        hue = collection_hue(
+            getattr(self, "_category_id", None),
+            group_id=getattr(self, "_subcollection_id", None),
+        )
+        art = self._visual_cache.get("ui.card.activity_tile", variant=hue, size=card.size)
+        surface.blit(art, card)
+        face = card_face_rect(UiRect(card.x, card.y, card.width, card.height))
+        face_icon = getattr(self, "_card_face_icon", None)
+        icon = (
+            face_icon(manifest, face.width, pygame)
+            if face_icon is not None
+            else self._activity_icon(manifest, face.width, pygame)
+        )
+        surface.blit(icon, icon.get_rect(center=(face.x + face.width // 2, face.y + face.height // 2)))
+
+        font_px = max(16, min(30, int(round(24 * scale))))
+        title = self._render_activity_label(
+            self._child_display_text(_activity_title(manifest, self._active_locale)),
+            max_width=min(width - 40, int(card_w * 1.8)),
+            max_height=int(font_px * 2.9),
+            pygame=pygame,
+            color=CAPTION_INK,
+            preferred_size=font_px,
+        )
+        min_pill = font_px + 14
+        slot = pygame.Rect(0, card.bottom + 6, min(width - 24, title.get_width() + 2 * min_pill), title.get_height() + 16)
+        slot.centerx = width // 2
+        title_pill = draw_title_pill(surface, pygame, slot, title, focused=False, min_height=min_pill)
+
+        status_px = max(15, min(26, int(round(20 * scale))))
+        status = self._category_label_surface(label, status_px, CAPTION_INK, pygame)
+        pill_h = status_px + 16
+        status_slot = pygame.Rect(0, title_pill.bottom + max(8, int(10 * scale)),
+                                  status.get_width() + 2 * pill_h, pill_h)
+        status_slot.centerx = width // 2
+        draw_caption_pill(surface, pygame, status_slot, status, focused=True)
+
+        greeter = getattr(self, "_draw_profile_greeter", None)
+        if greeter is not None:
+            spot = greeter_rect(width, height, free_right_edge=max(0, min(card.left, title_pill.left) - 8))
+            if spot is not None:
+                profile = getattr(self, "_active_profile", None)
+                avatar = profile.profile.avatar_id if profile is not None else None
+                greeter(surface, spot, avatar, "pose_cheer", pygame)
+
+        dot_radius = max(5, int(round(7 * scale)))
+        dots_center = (width // 2, min(height - dot_radius - 6, status_slot.bottom + dot_radius * 3))
+        return surface, dots_center, dot_radius
+
+    @staticmethod
+    def _draw_launch_dots(screen: Any, center: tuple[int, int], radius: int, pygame: Any) -> None:
+        """Three sunshine dots taking turns to grow: a calm 'working' cue."""
+
+        import time
+
+        from pygame import gfxdraw
+
+        from .shared_ui_presentation import CAPTION_FOCUS, CAPTION_INK
+
+        now = time.monotonic()
+        step = radius * 4
+        for index in range(3):
+            phase = (now * 1.6 - index * 0.33) % 1.0
+            grow = max(0.0, 1.0 - abs(phase - 0.5) * 4.0)
+            r = int(round(radius * (0.8 + 0.45 * grow)))
+            cx = center[0] + (index - 1) * step
+            gfxdraw.aacircle(screen, cx, center[1], r + 2, CAPTION_INK)
+            pygame.draw.circle(screen, CAPTION_INK, (cx, center[1]), r + 2)
+            pygame.draw.circle(screen, CAPTION_FOCUS, (cx, center[1]), r)
 
     def _draw_error_badge(self, screen: Any, pygame: Any) -> None:
         width, height = screen.get_size()

@@ -8,7 +8,7 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["play", "explore"]
-discovery_tags = ["action", "nature"]
+discovery_tags = ["sea", "action", "nature"]
 
 [education]
 categories = ["motor_skills", "reaction_time", "science_curiosity"]

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 304" width="288" height="304">
+  <!-- Greia themed folder tile, front flap (manila / orange family) over folder_card_back.svg on
+       the same 288x304 canvas. Theme window centre (144,186) r56 (cream face r50); the Shell
+       draws the theme's core icon there and a count badge at the flap's top-right corner.
+       Recipe: GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- orange + 55% white -> orange + 25% white -->
+    <linearGradient id="folder_card_front_flap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FAD2A6"/>
+      <stop offset="1" stop-color="#F6B36A"/>
+    </linearGradient>
+  </defs>
+  <g id="slab">
+    <path d="M28 132 C28 118 38 108 52 108 L236 108 C250 108 260 118 260 132 L260 246 C260 262 247 276 230 276 L58 276 C41 276 28 262 28 246 Z" fill="#C98136" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+  <g id="flap">
+    <path d="M28 124 C28 110 38 100 52 100 L236 100 C250 100 260 110 260 124 L260 232 C260 248 247 262 230 262 L58 262 C41 262 28 248 28 232 Z" fill="url(#folder_card_front_flap)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M44 150 C44 128 50 116 64 113" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.65"/>
+  </g>
+  <g id="window">
+    <circle cx="144" cy="183" r="58" fill="#C98136" stroke="#4B372F" stroke-width="4"/>
+    <circle cx="144" cy="186" r="51" fill="#FFFBEB"/>
+  </g>
+</svg>

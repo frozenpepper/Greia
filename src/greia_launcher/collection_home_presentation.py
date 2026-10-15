@@ -18,6 +18,7 @@ from greia_platform.ui_motion import InteractionVisualState
 from greia_platform.responsive_layout import UiRect
 
 from .catalogue_view import ALL_ACTIVITIES_ID, _category_title
+from .collection_hues import COLLECTION_HUES, HUE_RGB
 from .home_layout import CollectionHomeLayout, portal_icon_rect
 from .main import HitTarget
 from .shared_ui_presentation import CAPTION_CREAM, CAPTION_INK, draw_caption_pill
@@ -32,28 +33,11 @@ _COLLECTION_VISUAL_ERRORS = (
     ValueError,
 )
 
-# Collection hue per Home portal (GREIA_SVG_AUTHORING_RULES §7, accepted
-# 2026-10-15). My Creations takes sunshine: the warm "treasure" gold reads as
-# "things I kept", is clearly different from the adjacent coral Create, and is
-# not any other Collection's hue (turquoise stays reserved for music).
-_COLLECTION_PORTAL_HUES = {
-    "create": "coral",
-    "my_creations": "sunshine",
-    "play": "ocean",
-    "learn": "orange",
-    "explore": "leaf",
-    "my_greia": "grape",
-}
-# Theme-token values for the primitive fallback only (runtime/theme-defaults.toml).
-_FALLBACK_HUES = {
-    "default": (68, 184, 174),
-    "coral": (244, 111, 97),
-    "sunshine": (255, 194, 52),
-    "ocean": (74, 145, 216),
-    "orange": (243, 154, 56),
-    "leaf": (89, 184, 106),
-    "grape": (148, 100, 201),
-}
+# Collection hue per Home portal lives in one shared vocabulary
+# (GREIA_SVG_AUTHORING_RULES §7). Kept under the historical private names for
+# the Home layout tests; both are the shared tables, never copies.
+_COLLECTION_PORTAL_HUES = COLLECTION_HUES
+_FALLBACK_HUES = HUE_RGB
 
 
 class CollectionFirstHomeMixin:

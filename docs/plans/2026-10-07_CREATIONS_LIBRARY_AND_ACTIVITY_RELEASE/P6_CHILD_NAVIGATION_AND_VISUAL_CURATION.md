@@ -219,6 +219,29 @@ Their artwork consistency still needs GLA-008 actual
 for subcollection groups *when those groups legitimately exist*;
 the current Play/Learn screens still browse directly.
 
+**2026-10-15 — owner-approved mixed pages with theme folders
+(SOURCE + headless Simulator capture).** The full-coverage group
+chooser above is unchanged and still not triggered by the roster.
+In addition, a Collection page may now show one-level **theme
+folder** tiles *beside* its remaining Activity cards. Only themes in
+the platform-owned `FOLDER_THEME_IDS` (currently just `sea`) can
+form a folder, and only with at least three Activities visible
+*after* Parent/age filtering; a theme that would contain the whole
+page stays as cards. Every Activity is reachable exactly once (in
+one folder or as a card) and folders never nest
+(`AdaptiveCollectionPlanner.plan_theme_folders`,
+`ActivityCatalogue.page_entries`). The folder tile is visibly a
+folder (manila folder art, up to three member icons peeking out,
+the theme's core icon on the flap and a member-count badge), opens
+with the same tap/RETURN as a card, and Back returns focus to the
+folder. First case: `sea` (`acquario_magico`, `baia_delle_orche`,
+`sottomarino_giramondo`, `viaggio_delfino`; only their
+`[presentation].discovery_tags` line changed) with the new flat
+`sea` core icon. The folder's spoken name uses the platform label
+path and is silent until an approved `sea` clip exists — no new
+recordings. Tests: `tests/test_launcher_collection_pages.py`,
+`tests/test_launcher_collection_visual_curation.py`.
+
 The launch status also now uses `Avvio...` in Italian and
 `Starting...` in English for **both** ordinary and shared-art
 Activity cards. This repairs a real language inconsistency

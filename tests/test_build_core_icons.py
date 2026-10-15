@@ -41,7 +41,7 @@ class RepositoryCoreIconInventoryTests(unittest.TestCase):
     def test_every_icon_has_a_linted_master_and_no_orphans(self) -> None:
         specs = builder.load_specs(CATALOG, ASSETS)
         builder.verify_inventory(specs, ASSETS)
-        self.assertEqual(len(specs), 29)
+        self.assertEqual(len(specs), 30)  # + sea (2026-10-15)
 
     def test_retired_glossy_route_is_gone(self) -> None:
         self.assertFalse((PROJECT_ROOT / "tools" / "extract_core_icons.py").exists())

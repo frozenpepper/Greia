@@ -494,6 +494,13 @@ output = "visual/runtime/v1/characters/lilli_pose_point.png"
 width = 256
 height = 256
 
+[[visuals.variants]]
+name = "pose_think"
+source = "visual/characters/canonical/v0.1/lilli/pose_think.svg"
+output = "visual/runtime/v1/characters/lilli_pose_think.png"
+width = 256
+height = 256
+
 [[visuals]]
 id = "character.leo"
 kind = "character"
@@ -545,6 +552,13 @@ height = 256
 name = "pose_point"
 source = "visual/characters/canonical/v0.1/leo/pose_point.svg"
 output = "visual/runtime/v1/characters/leo_pose_point.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "pose_think"
+source = "visual/characters/canonical/v0.1/leo/pose_think.svg"
+output = "visual/runtime/v1/characters/leo_pose_think.png"
 width = 256
 height = 256
 
@@ -602,6 +616,13 @@ output = "visual/runtime/v1/characters/flash_pose_point.png"
 width = 256
 height = 256
 
+[[visuals.variants]]
+name = "pose_think"
+source = "visual/characters/canonical/v0.1/flash/pose_think.svg"
+output = "visual/runtime/v1/characters/flash_pose_think.png"
+width = 256
+height = 256
+
 [[visuals]]
 id = "character.dani"
 kind = "character"
@@ -653,6 +674,13 @@ height = 256
 name = "pose_point"
 source = "visual/characters/canonical/v0.1/dani/pose_point.svg"
 output = "visual/runtime/v1/characters/dani_pose_point.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "pose_think"
+source = "visual/characters/canonical/v0.1/dani/pose_think.svg"
+output = "visual/runtime/v1/characters/dani_pose_think.png"
 width = 256
 height = 256
 
@@ -710,6 +738,13 @@ output = "visual/runtime/v1/characters/tito_pose_point.png"
 width = 256
 height = 256
 
+[[visuals.variants]]
+name = "pose_think"
+source = "visual/characters/canonical/v0.1/tito/pose_think.svg"
+output = "visual/runtime/v1/characters/tito_pose_think.png"
+width = 256
+height = 256
+
 [[visuals]]
 id = "character.momo"
 kind = "character"
@@ -764,6 +799,13 @@ output = "visual/runtime/v1/characters/momo_pose_point.png"
 width = 256
 height = 256
 
+[[visuals.variants]]
+name = "pose_think"
+source = "visual/characters/canonical/v0.1/momo/pose_think.svg"
+output = "visual/runtime/v1/characters/momo_pose_think.png"
+width = 256
+height = 256
+
 [[visuals]]
 id = "shadow.contact.small.01"
 kind = "shadow"
@@ -775,3 +817,289 @@ source = "visual/environments/forest_meadow/v0.2/shadow_contact_small.svg"
 output = "visual/runtime/v1/shared/shadow_contact_small.png"
 width = 512
 height = 128
+
+[[visuals]]
+id = "icon.hud.listen"
+kind = "ui"
+role = "hud_glyph"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/controls/v1/hud_listen.svg"
+output = "visual/runtime/v1/ui/controls/hud_listen.png"
+width = 96
+height = 96
+
+[[visuals]]
+id = "icon.hud.replay"
+kind = "ui"
+role = "hud_glyph"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/controls/v1/hud_replay.svg"
+output = "visual/runtime/v1/ui/controls/hud_replay.png"
+width = 96
+height = 96
+
+[[visuals]]
+id = "icon.hud.check"
+kind = "ui"
+role = "hud_glyph"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/controls/v1/hud_check.svg"
+output = "visual/runtime/v1/ui/controls/hud_check.png"
+width = 96
+height = 96
+
+[[visuals]]
+id = "icon.hud.trophy"
+kind = "ui"
+role = "hud_glyph"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/controls/v1/hud_trophy.svg"
+output = "visual/runtime/v1/ui/controls/hud_trophy.png"
+width = 96
+height = 96
+
+[[visuals]]
+id = "icon.hud.bell"
+kind = "ui"
+role = "hud_glyph"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/controls/v1/hud_bell.svg"
+output = "visual/runtime/v1/ui/controls/hud_bell.png"
+width = 96
+height = 96
+
+[[visuals]]
+id = "icon.hud.clear"
+kind = "ui"
+role = "hud_glyph"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/controls/v1/hud_clear.svg"
+output = "visual/runtime/v1/ui/controls/hud_clear.png"
+width = 96
+height = 96
+
+[[visuals]]
+id = "ui.control.star"
+kind = "ui"
+role = "control_star"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/controls/v1/star.svg"
+output = "visual/runtime/v1/ui/controls/star.png"
+width = 128
+height = 128
+
+[[visuals.variants]]
+name = "off"
+source = "visual/ui/controls/v1/star_off.svg"
+output = "visual/runtime/v1/ui/controls/star_off.png"
+width = 128
+height = 128
+
+[[visuals]]
+id = "ui.completion.card"
+kind = "ui"
+role = "completion_card"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/controls/v1/completion_card.svg"
+output = "visual/runtime/v1/ui/controls/completion_card.png"
+width = 760
+height = 440
+
+# Collection-page Activity cards (flat recipe; same 288x304 body/slab/shadow
+# grammar as ui.portal.collection, so ui.portal.collection_focus fits them).
+# One variant per Collection hue (greia_launcher.collection_hues); the Shell
+# draws the Activity icon inside the cream face x48-240 y48-240.
+
+[[visuals]]
+id = "ui.card.activity_tile"
+kind = "ui"
+role = "activity_destination"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/v0.2/activity_card.svg"
+output = "visual/runtime/v1/ui/activity_card_tile.png"
+width = 288
+height = 304
+
+[[visuals.variants]]
+name = "coral"
+source = "visual/ui/v0.2/activity_card_coral.svg"
+output = "visual/runtime/v1/ui/activity_card_tile_coral.png"
+width = 288
+height = 304
+
+[[visuals.variants]]
+name = "sunshine"
+source = "visual/ui/v0.2/activity_card_sunshine.svg"
+output = "visual/runtime/v1/ui/activity_card_tile_sunshine.png"
+width = 288
+height = 304
+
+[[visuals.variants]]
+name = "ocean"
+source = "visual/ui/v0.2/activity_card_ocean.svg"
+output = "visual/runtime/v1/ui/activity_card_tile_ocean.png"
+width = 288
+height = 304
+
+[[visuals.variants]]
+name = "orange"
+source = "visual/ui/v0.2/activity_card_orange.svg"
+output = "visual/runtime/v1/ui/activity_card_tile_orange.png"
+width = 288
+height = 304
+
+[[visuals.variants]]
+name = "leaf"
+source = "visual/ui/v0.2/activity_card_leaf.svg"
+output = "visual/runtime/v1/ui/activity_card_tile_leaf.png"
+width = 288
+height = 304
+
+[[visuals.variants]]
+name = "grape"
+source = "visual/ui/v0.2/activity_card_grape.svg"
+output = "visual/runtime/v1/ui/activity_card_tile_grape.png"
+width = 288
+height = 304
+
+# Round control buttons (Collection page arrows/Back, My Creations controls).
+# Canvas 112x120: face r46, slab, contact shadow; glyph is part of the art.
+
+[[visuals]]
+id = "ui.button.round"
+kind = "ui"
+role = "navigation_control"
+
+[[visuals.variants]]
+# default is the cream local-Back button.
+name = "default"
+source = "visual/ui/v0.2/round_button_back.svg"
+output = "visual/runtime/v1/ui/round_button_back.png"
+width = 112
+height = 120
+
+[[visuals.variants]]
+name = "previous"
+source = "visual/ui/v0.2/round_button_previous.svg"
+output = "visual/runtime/v1/ui/round_button_previous.png"
+width = 112
+height = 120
+
+[[visuals.variants]]
+name = "next"
+source = "visual/ui/v0.2/round_button_next.svg"
+output = "visual/runtime/v1/ui/round_button_next.png"
+width = 112
+height = 120
+
+[[visuals.variants]]
+name = "play"
+source = "visual/ui/v0.2/round_button_play.svg"
+output = "visual/runtime/v1/ui/round_button_play.png"
+width = 112
+height = 120
+
+[[visuals.variants]]
+name = "pause"
+source = "visual/ui/v0.2/round_button_pause.svg"
+output = "visual/runtime/v1/ui/round_button_pause.png"
+width = 112
+height = 120
+
+[[visuals.variants]]
+name = "replay"
+source = "visual/ui/v0.2/round_button_replay.svg"
+output = "visual/runtime/v1/ui/round_button_replay.png"
+width = 112
+height = 120
+
+[[visuals.variants]]
+name = "check"
+source = "visual/ui/v0.2/round_button_check.svg"
+output = "visual/runtime/v1/ui/round_button_check.png"
+width = 112
+height = 120
+
+[[visuals.variants]]
+name = "trash"
+source = "visual/ui/v0.2/round_button_trash.svg"
+output = "visual/runtime/v1/ui/round_button_trash.png"
+width = 112
+height = 120
+
+# Creation-kind pictograms (My Creations tabs, empty state, audio/text tiles).
+
+[[visuals]]
+id = "ui.pictogram.creation"
+kind = "ui"
+role = "creation_kind"
+
+[[visuals.variants]]
+# default is the "all kinds" pictogram.
+name = "default"
+source = "visual/ui/v0.2/creation_pictogram_all.svg"
+output = "visual/runtime/v1/ui/creation_pictogram_all.png"
+width = 128
+height = 128
+
+[[visuals.variants]]
+name = "image"
+source = "visual/ui/v0.2/creation_pictogram_image.svg"
+output = "visual/runtime/v1/ui/creation_pictogram_image.png"
+width = 128
+height = 128
+
+[[visuals.variants]]
+name = "audio"
+source = "visual/ui/v0.2/creation_pictogram_audio.svg"
+output = "visual/runtime/v1/ui/creation_pictogram_audio.png"
+width = 128
+height = 128
+
+[[visuals.variants]]
+name = "text"
+source = "visual/ui/v0.2/creation_pictogram_text.svg"
+output = "visual/runtime/v1/ui/creation_pictogram_text.png"
+width = 128
+height = 128
+
+# Themed folder tile (one-level discovery folder on a Collection page): back
+# layer (default) and front flap; the Shell draws member icons peeking out
+# between them, the theme core icon in the flap window and a count badge.
+
+[[visuals]]
+id = "ui.card.folder"
+kind = "ui"
+role = "theme_folder"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/v0.2/folder_card_back.svg"
+output = "visual/runtime/v1/ui/folder_card_back.png"
+width = 288
+height = 304
+
+[[visuals.variants]]
+name = "front"
+source = "visual/ui/v0.2/folder_card_front.svg"
+output = "visual/runtime/v1/ui/folder_card_front.png"
+width = 288
+height = 304

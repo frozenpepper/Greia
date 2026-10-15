@@ -166,5 +166,105 @@ class CreationGalleryRenderingTests(unittest.TestCase):
         screen.on_exit()
 
 
+
+class StorybookCreationGalleryTests(unittest.TestCase):
+    """Shared-art presentation: framed tiles, round controls, pictograms."""
+
+    def setUp(self) -> None:
+        from greia_platform.assets import AssetCatalogue
+        from greia_platform.pygame_visual_assets import PygameVisualSurfaceCache
+
+        pygame.init()
+        self.addCleanup(pygame.quit)
+        work = tempfile.TemporaryDirectory()
+        self.addCleanup(work.cleanup)
+        self.library = CreationLibrary(Path(work.name) / "creations")
+        self.typography = GreiaTypography()
+        self.addCleanup(self.typography.clear)
+        root = Path(__file__).resolve().parents[1]
+        self.cache = PygameVisualSurfaceCache.for_pygame(
+            AssetCatalogue.load(root / "assets" / "catalog" / "shared_visuals_v1.toml"),
+            max_entries=32,
+        )
+        self.requested: list[str] = []
+        real_get = self.cache.get
+
+        def observed(asset_id, **kwargs):
+            self.requested.append(asset_id)
+            return real_get(asset_id, **kwargs)
+
+        self.cache.get = observed
+
+    def _screen(self, *, backdrop=None) -> CreationsGalleryScreen:
+        controller = CreationsGalleryController(self.library)
+        return CreationsGalleryScreen(
+            controller, typography=self.typography, locale="en",
+            visual_cache=self.cache, backdrop=backdrop, greeter="leo",
+            text_transform=str.upper,
+        )
+
+    def test_empty_and_filled_gallery_use_shared_art_at_every_size(self) -> None:
+        scene = {}
+
+        def backdrop(size):
+            return scene.setdefault(size, pygame.Surface(size))
+
+        for size in ((480, 320), (800, 480), (1024, 600), (1280, 800)):
+            with self.subTest(size=size, state="empty"):
+                surface = pygame.display.set_mode(size)
+                screen = self._screen(backdrop=backdrop)
+                screen.draw(surface)
+                self.assertFalse(screen.error)
+                self.assertTrue(any(t.action == "back" for t in screen.painter.targets))
+                screen.on_exit()
+        self.assertIn("ui.pictogram.creation", self.requested)
+        self.assertIn("character.leo", self.requested)
+        self.library.publish(b"Once upon a time", producer_id="org.greia.writing",
+                             media_type="text/plain", role="story", title="Tale")
+        for size in ((480, 320), (1024, 600)):
+            with self.subTest(size=size, state="filled"):
+                surface = pygame.display.set_mode(size)
+                screen = self._screen(backdrop=backdrop)
+                screen.draw(surface)
+                self.assertFalse(screen.error)
+                self.assertTrue(any(t.action == "open" for t in screen.painter.targets))
+                screen.on_exit()
+        self.assertIn("ui.card.activity_tile", self.requested)
+        self.assertIn("ui.button.round", self.requested)
+
+    def test_storybook_delete_dialog_keeps_safe_default_and_visible_focus(self) -> None:
+        record = self.library.publish(
+            b"Keep me", producer_id="org.greia.writing", media_type="text/plain", role="story",
+        )
+        screen = self._screen()
+        surface = pygame.display.set_mode((800, 480))
+        screen.draw(surface)
+        screen.controller.open_item(record.creation_id)
+        screen._activate("ask_delete", None)
+        screen.draw(surface)
+        self.assertFalse(screen.error)
+        self.assertEqual(
+            {hit.action for hit in screen.painter.targets}, {"confirm_delete", "cancel_delete"}
+        )
+        layout = CreationGalleryLayout.for_surface(800, 480)
+        border = (layout.cancel.x + layout.cancel.width // 2, layout.cancel.y + 2)
+        self.assertEqual(tuple(surface.get_at(border)[:3]), screen.painter.INK)
+        screen.handle_event(pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_RETURN}))
+        self.assertEqual(self.library.read(record.creation_id), b"Keep me")
+        screen.on_exit()
+
+    def test_broken_shared_art_falls_back_to_primitive_gallery(self) -> None:
+        def broken(asset_id, **kwargs):
+            raise FileNotFoundError(asset_id)
+
+        self.cache.get = broken
+        screen = self._screen()
+        surface = pygame.display.set_mode((1024, 600))
+        screen.draw(surface)
+        self.assertFalse(screen.error)
+        self.assertTrue(any(t.action == "back" for t in screen.painter.targets))
+        screen.on_exit()
+
+
 if __name__ == "__main__":
     unittest.main()

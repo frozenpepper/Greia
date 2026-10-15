@@ -286,3 +286,14 @@ path_64 = "icons/core/v1/64/close_button.png"
 path_128 = "icons/core/v1/128/close_button.png"
 path_256 = "icons/core/v1/256/close_button.png"
 source_svg = "source/icons/core/v1/close_button.svg"
+
+# Sea discovery theme (2026-10-15): curling wave + leaping fish; the Shell's
+# themed "sea" folder tile on Play/Explore.
+[[icons]]
+id = "sea"
+category = "nature"
+alt_key = "asset.sea"
+path_64 = "icons/core/v1/64/sea.png"
+path_128 = "icons/core/v1/128/sea.png"
+path_256 = "icons/core/v1/256/sea.png"
+source_svg = "source/icons/core/v1/sea.svg"

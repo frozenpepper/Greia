@@ -29,6 +29,7 @@ from .activity_policy_presentation import PolicyEnforcedAdaptiveActivityDiscover
 from .achievement_presentation import AchievementLibraryMixin
 from .catalogue_view import ALL_ACTIVITIES_ID
 from .collection_home_presentation import CollectionFirstHomeMixin
+from .collection_page_presentation import CollectionPageMixin
 from .composition import (
     build_launcher_runtime_services,
     provisional_installed_display_session,
@@ -137,6 +138,7 @@ class GreiaChildShell(
     PolicyEnforcedAdaptiveActivityDiscoveryMixin,
     AchievementLibraryMixin,
     CollectionFirstHomeMixin,
+    CollectionPageMixin,
     SharedUiNavigationChromeMixin,
     SharedUiFeedbackMixin,
     SharedUiProfileChromeMixin,
@@ -206,8 +208,14 @@ class GreiaChildShell(
             controller = CreationsGalleryController(
                 library, audio_player=PygameRecordingPreview(),
             )
+            from .profile_chrome_presentation import greeter_character_for
+
             self._creations_screen = CreationsGalleryScreen(
                 controller, typography=self._typography, locale=self._active_locale,
+                visual_cache=getattr(self, "_visual_cache", None),
+                backdrop=self._creations_backdrop,
+                greeter=greeter_character_for(self._active_profile.profile.avatar_id),
+                text_transform=self._child_display_text,
             )
         except (OSError, ValueError, ProfileError, CreationLibraryError, sqlite3.Error):
             self._catalogue_error = True
@@ -215,11 +223,32 @@ class GreiaChildShell(
         self._mode = "creations"
         self._targets.clear()
 
+    def _creations_backdrop(self, size: tuple[int, int]) -> Any | None:
+        """Opaque storybook scene for My Creations (the Shell's cached backdrop)."""
+
+        import pygame
+
+        cached = getattr(self, "_creations_backdrop_surface", None)
+        if cached is not None and cached.get_size() == size:
+            return cached
+        if getattr(self, "_visual_cache", None) is None:
+            return None
+        surface = pygame.Surface(size).convert()
+        theme = self.theme_controller.theme
+        surface.fill(theme.background)
+        self._draw_shell_scene_backdrop(surface, pygame, theme=theme)
+        if getattr(self, "_shared_scene_disabled", False):
+            return None
+        # One retained surface, replaced only when the display size changes.
+        self._creations_backdrop_surface = surface
+        return surface
+
     def _close_creations(self) -> None:
         screen = getattr(self, "_creations_screen", None)
         if screen is not None:
             screen.on_exit()
         self._creations_screen = None
+        self._creations_backdrop_surface = None
         if self._mode == "creations":
             self._mode = "activities"
             super()._set_category(ALL_ACTIVITIES_ID)
@@ -528,11 +557,15 @@ class GreiaChildShell(
         control_size = max(18, min(160, int(round(32 * scale))))
         body_size = max(18, min(160, int(round(20 * scale))))
         label = self._typography.font(FontRole.CONTROL, control_size).render(
-            text, True, (61, 44, 31)
+            self._child_display_text(text), True, (61, 44, 31)
         )
         screen.blit(label, label.get_rect(center=(center[0], center[1] + 25)))
+        from .launch_feedback import launch_feedback
+
         hint_label = self._typography.font(FontRole.BODY, body_size).render(
-            "Please wait…", True, (130, 120, 100)
+            self._child_display_text(launch_feedback(self._active_locale).wait),
+            True,
+            (130, 120, 100),
         )
         screen.blit(hint_label, hint_label.get_rect(center=(center[0], center[1] + 65)))
 

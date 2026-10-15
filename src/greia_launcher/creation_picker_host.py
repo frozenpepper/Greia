@@ -36,8 +36,12 @@ class ActivityCreationPickerHost:
         typography: Any,
         locale: str,
         volume_budget: VolumeBudget | None = None,
+        visual_cache: Any | None = None,
     ) -> None:
         self._volume_budget = volume_budget
+        # Optional shared storybook art (framed tiles, round controls,
+        # pictograms); the modal keeps its navy veil over the Activity.
+        self._visual_cache = visual_cache
         self._supervisor = supervisor
         self._shell_window_backend = shell_window_backend
         self._session = session
@@ -170,6 +174,7 @@ class ActivityCreationPickerHost:
                 controller,
                 typography=self._typography,
                 locale=self._locale,
+                visual_cache=self._visual_cache,
             )
             # Prepare the first trusted picker frame while the Shell is still
             # behind the Activity. Raising an old Home framebuffer would cause

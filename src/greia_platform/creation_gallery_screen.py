@@ -7,7 +7,7 @@ an Activity broker, and no capture/playback occurs until requested.
 from __future__ import annotations
 
 import sqlite3
-from typing import Any
+from typing import Any, Callable
 
 from .creation_gallery import CreationsGalleryController, GalleryError, GalleryMode
 from .creation_gallery_layout import CreationGalleryLayout
@@ -26,10 +26,20 @@ class CreationsGalleryScreen(Screen):
         *,
         typography: GreiaTypography,
         locale: str = "it",
+        visual_cache: Any | None = None,
+        backdrop: Callable[[tuple[int, int]], Any] | None = None,
+        greeter: str | None = None,
+        text_transform: Callable[[str], str] | None = None,
     ):
+        """``visual_cache``/``backdrop``/``greeter``/``text_transform`` are the
+        trusted host's optional storybook presentation (shared art cache,
+        cached scene surface provider, cast character ID, child case policy);
+        all are presentation-only and fail soft."""
         self.controller = controller
         self.painter = CreationsPygamePainter(
-            controller, typography=typography, locale=locale
+            controller, typography=typography, locale=locale,
+            visual_cache=visual_cache, backdrop=backdrop, greeter=greeter,
+            text_transform=text_transform,
         )
         self._size: tuple[int, int] | None = None
         self._closed = False

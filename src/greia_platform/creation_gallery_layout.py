@@ -31,26 +31,31 @@ class CreationGalleryLayout:
         chrome = ActivitySystemChromeLayout.for_surface(width, height, back_available=True)
         margin = max(14, min(28, round(width*0.022)))
         gap = max(12, min(22, round(width*0.019)))
+        # Short landscape screens (480x320 class) tighten the header and
+        # footer bands so the creation tiles keep a useful height.
+        short = height < 400
         header_left = chrome.protected_region.right + 18
-        title = UiRect(header_left, 14, max(1,width-header_left-margin), 58)
-        tabs_top = max(chrome.protected_region.bottom+8, 82)
+        title = UiRect(header_left, 12 if short else 14, max(1,width-header_left-margin), 44 if short else 58)
+        tabs_top = max(chrome.protected_region.bottom+(6 if short else 8), 66 if short else 82)
+        tab_h = 48 if short else 50
         tab_gap = max(6,min(16,width//90))
         tab_w = min(148,(width-2*margin-(tabs-1)*tab_gap)//tabs)
         tab_start = (width-(tabs*tab_w+(tabs-1)*tab_gap))//2
-        tab_rects=tuple(UiRect(tab_start+i*(tab_w+tab_gap),tabs_top,tab_w,50) for i in range(tabs))
-        gallery_top = tabs_top+64
-        footer_top = height-74
+        tab_rects=tuple(UiRect(tab_start+i*(tab_w+tab_gap),tabs_top,tab_w,tab_h) for i in range(tabs))
+        gallery_top = tabs_top+tab_h+(8 if short else 14)
+        footer_top = height-(66 if short else 74)
+        control_y = height-(62 if short else 69)
         usable_w=width-2*margin
-        columns = 3 if width >= 1300 else 2 if width>=740 else 1
+        columns = 3 if width >= 1000 else 2 if width>=740 else 1
         card_w=(usable_w-gap*(columns-1))//columns
         card_h=max(90,footer_top-gallery_top-11)
         cards=tuple(UiRect(margin+i*(card_w+gap),gallery_top,card_w,card_h) for i in range(columns))
         # Footer controls deliberately reserve big non-overlapping touch targets.
         control=64
-        back=UiRect(margin, height-69, control, 58)
-        prev=UiRect(max(margin+control+gap,width//2-108),height-69,64,58)
-        nex=UiRect(min(width-margin-2*control-gap,width//2+44),height-69,64,58)
-        primary=UiRect(width-margin-168,height-69,168,58)
+        back=UiRect(margin, control_y, control, 58)
+        prev=UiRect(max(margin+control+gap,width//2-108),control_y,64,58)
+        nex=UiRect(min(width-margin-2*control-gap,width//2+44),control_y,64,58)
+        primary=UiRect(width-margin-168,control_y,168,58)
         detail_top=tabs_top+10
         detail_bottom=height-92
         preview=UiRect(margin+12, detail_top, width-2*(margin+12),max(100,detail_bottom-detail_top))
