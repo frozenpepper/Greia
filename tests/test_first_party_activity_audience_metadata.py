@@ -52,7 +52,8 @@ class FirstPartyActivityAudienceMetadataTests(unittest.TestCase):
         by_id = {manifest.activity_id: manifest for manifest in self.manifests}
         for activity_id in (
             "org.greia.labirinto-magico",
-            "org.greia.costruiamo-ponti",
+            # org.greia.costruiamo-ponti is deliberately excluded: its manifest
+            # declares three fixed bridge designs, not an adaptive progression.
             "org.greia.bottega-delle-misure",
             "org.greia.casa-del-dieci",
             "org.greia.luci-di-momo",

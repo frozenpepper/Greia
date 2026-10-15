@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from greia_platform.display_metrics import PhysicalUiPolicy
-from greia_platform.hardware import HardwareSettingsStore
+from greia_platform.hardware import HardwareSettings, HardwareSettingsStore
 from greia_platform.hardware_session import (
     preset_to_speed,
     speed_preset_names,
@@ -880,11 +880,36 @@ class ParentSettingsOverlay:
         except Exception as exc:
             self._pointer_message = self._ui_message("pointer.change.failed", detail=str(exc))
             return False
-        self._pointer_settings = updated
-        self._cached_pointer_settings = updated
-        self._pointer_settings_read_at = time.monotonic()
+        self._adopt_service_settings(updated)
         self._pointer_message = success
         return True
+
+    def _adopt_service_settings(self, payload: Any) -> None:
+        """Cache the settings the Parent service confirmed.
+
+        The service answers a write with the flat settings object. Anything the
+        panel cannot read back as typed settings is dropped so the next read
+        re-fetches them, instead of caching a shape the draw code cannot use.
+        """
+
+        settings: HardwareSettings | None = None
+        if isinstance(payload, HardwareSettings):
+            settings = payload
+        elif isinstance(payload, dict):
+            nested = payload.get("desired")
+            source = nested if isinstance(nested, dict) else payload
+            try:
+                settings = HardwareSettings(
+                    **{
+                        name: source[name]
+                        for name in HardwareSettings.__slots__
+                        if name in source
+                    }
+                )
+            except (TypeError, ValueError):
+                settings = None
+        self._cached_pointer_settings = settings
+        self._pointer_settings_read_at = time.monotonic() if settings is not None else 0.0
 
     def _toggle_pointer_setting(self, field: str) -> None:
         if field not in self._POINTER_TOGGLE_FIELDS:
@@ -919,9 +944,8 @@ class ParentSettingsOverlay:
             except Exception as exc:
                 self._pointer_message = self._ui_message("pointer.reset.failed", detail=str(exc))
                 return
-            self._pointer_settings = updated
-            self._cached_pointer_settings = updated
-            self._pointer_settings_read_at = time.monotonic()
+            self._adopt_service_settings(updated)
+            self._pointer_focus = 0
             self._pointer_message = self._ui_message("pointer.reset.done")
             return
         if self.hardware_store is None:
@@ -1226,7 +1250,7 @@ class ParentSettingsOverlay:
         "_security_message",
         "_security_message_is_error",
         "_text_field",
-        "_pointer_settings",
+        "_cached_pointer_settings",
         "_pointer_current_preset",
         "_pointer_focus",
         "_pointer_focus_items",

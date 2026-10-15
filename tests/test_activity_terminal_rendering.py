@@ -131,13 +131,16 @@ class FirstPartyTerminalRenderingContractTests(unittest.TestCase):
         self.assertEqual(treno.count('"train.station_completed"'), 1)
         self.assertEqual(treno.count('"train.journey_completed"'), 1)
         self.assertNotIn('"train.problem_solved"', treno)
-        # Decomposed code may reference `self.model.round_idx`; accept either.
-        self.assertTrue(
-            'idempotency_key=f"station-{round_idx}"' in treno
-            or 'idempotency_key=f"station-{self.model.round_idx}"' in treno,
+        # Keys are scoped per journey so a replayed journey is never
+        # deduplicated against the previous one (see treno_numeri tests).
+        self.assertIn(
+            'idempotency_key=f"train:{self._journey_id}:station:{self.model.round_idx}"',
+            treno,
             "station idempotency key must be present",
         )
-        self.assertIn('idempotency_key="journey-completed"', treno)
+        self.assertIn(
+            'idempotency_key=f"train:{self._journey_id}:completed"', treno
+        )
 
 
 if __name__ == "__main__":

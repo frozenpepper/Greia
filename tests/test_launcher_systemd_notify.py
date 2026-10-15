@@ -92,12 +92,22 @@ def _run_intro_quick() -> None:
 
 
 class ServiceUnitTests(unittest.TestCase):
-    def test_notify_contract_directives(self) -> None:
+    def test_unit_does_not_depend_on_a_systemd_readiness_notification(self) -> None:
+        # Measured on the reference Acer: the logind session the unprivileged
+        # X server needs moves the launcher out of the unit's cgroup, so a
+        # READY=1 datagram can never be attributed to it and Type=notify made
+        # systemd kill a working Shell every TimeoutStartSec. The unit is
+        # Type=simple; readiness lives in the launcher_interactive_ready boot
+        # marker instead (see the unit's own comment).
         text = SERVICE_PATH.read_text(encoding="utf-8")
-        self.assertIn("Type=notify", text)
-        self.assertNotIn("Type=simple", text)
-        self.assertIn("NotifyAccess=all", text)
-        self.assertIn("TimeoutStartSec=90", text)
+        directives = [
+            line.strip() for line in text.splitlines()
+            if line.strip() and not line.lstrip().startswith("#")
+        ]
+        self.assertIn("Type=simple", directives)
+        self.assertNotIn("Type=notify", directives)
+        self.assertNotIn("Type=exec", directives)
+        self.assertIn("TimeoutStartSec=90", directives)
 
     def test_restart_policy_retained(self) -> None:
         text = SERVICE_PATH.read_text(encoding="utf-8")

@@ -8,6 +8,8 @@ import unittest
 
 import pygame
 
+import hermetic_volume
+
 
 ROOT = Path(__file__).resolve().parents[1]
 ACTIVITY_ROOT = ROOT / "activities" / "luci_di_momo"
@@ -25,6 +27,12 @@ from firefly_model import (  # noqa: E402
     adapt_level,
 )
 from firefly_services import FireflyProgress, GreiaFireflyProgress  # noqa: E402
+
+
+def setUpModule() -> None:
+    # The Simulator supervision test exercises real history/storage services,
+    # whose production capacity policy depends on how full the host disk is.
+    hermetic_volume.install_for_module()
 
 
 class FireflyRoundFactoryTests(unittest.TestCase):

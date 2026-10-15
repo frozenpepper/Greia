@@ -147,6 +147,15 @@ class TestContrariRendererAndApp(unittest.TestCase):
         self.assertEqual(events.opposite_explored.call_count, 5)
         events.all_opposites_completed.assert_called_once()
 
+    def test_toolbar_buttons_stay_outside_protected_system_chrome(self) -> None:
+        from greia_platform.pygame_canvas import activity_viewport_for_surface
+        vp = activity_viewport_for_surface(self.screen)
+        protected = vp.protected_regions[0]
+        for cat, rect in self.renderer.category_buttons.items():
+            with self.subTest(category=cat):
+                self.assertGreaterEqual(rect.left, protected.x + protected.width)
+                self.assertLessEqual(rect.right, REFERENCE_WIDTH)
+
     def test_protected_pointer_cannot_select_or_exit(self) -> None:
         from greia_platform.pygame_canvas import activity_viewport_for_surface
         app = ContrariActivity(self.screen, self.renderer, self.audio, self.model)
@@ -199,7 +208,10 @@ class TestContrariRendererAndApp(unittest.TestCase):
                     self.model.set_category(category)
                     renderer.render(self.screen, self.model)
                 self.assertGreaterEqual(len(renderer._status_surfaces), 5)
-                self.assertEqual(len(renderer._toolbar_surfaces), 5)
+                # One cached label per (category, active/inactive) pair: every
+                # tab was drawn active once and inactive in the other frames,
+                # so the cache is complete and cannot exceed 2 x 5 entries.
+                self.assertEqual(len(renderer._toolbar_surfaces), 10)
                 # The first completed frame already cached the strings; no
                 # per-frame translation or rasterization is needed.
                 self.assertTrue(all(renderer._status_surfaces.values()))

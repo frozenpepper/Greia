@@ -154,7 +154,13 @@ class LegBlockedTests(unittest.TestCase):
             image.write_bytes(b"installed")
             bundle = Path(tmp) / "candidate.greiaupdate"
             bundle.write_bytes(b"bundle")
-            with self.assertRaises(Exception) as caught:
+            from tools.x8_qemu import product as _product
+
+            # The identical-release refusal is a product rule that must fire
+            # even where the host gate would otherwise answer BLOCKED first.
+            with mock.patch.object(
+                _product, "require_product_host", lambda **kwargs: None
+            ), self.assertRaises(Exception) as caught:
                 _harness(tmp).run_userspace_failure_product(
                     installed_image=image,
                     unhealthy_bundle=bundle,
@@ -330,7 +336,26 @@ class NonbootBundleTests(unittest.TestCase):
 
 
 class LegOrderingTests(unittest.TestCase):
-    """Phase order + report closure through recording fakes (no QEMU)."""
+    """Phase order + report closure through recording fakes (no QEMU).
+
+    Every collaborator is a fake, so the fail-closed Linux/QEMU host gate is
+    replaced here; its BLOCKED behaviour is covered by ``LegBlockedTests`` and
+    the live legs themselves stay gated on a capable Linux host.
+    """
+
+    def setUp(self) -> None:
+        from tools.x8_qemu import product as _product
+
+        # Same "capable host" seam the other product tests use: only the host
+        # gate and QEMU selection are replaced; execution stays in the fakes.
+        for patcher in (
+            mock.patch.object(_product, "require_product_host", lambda **kwargs: None),
+            mock.patch.object(
+                _product, "select_install_qemu_binary", lambda **kwargs: "qemu-system-i386"
+            ),
+        ):
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     def _fakes(self, calls: list[str], *, digest_b_after: str | None = None):
         digest_b = digest_b_after or _hex("slot-b")

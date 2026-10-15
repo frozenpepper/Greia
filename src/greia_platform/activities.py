@@ -591,8 +591,8 @@ class ActivityRegistry:
                 permissions, "requested", allow_empty=True
             ),
             storage_schema_version=_integer(storage, "schema_version", 1),
-            creations_produces=_texts(creations, "produces", allow_empty=True),
-            creations_consumes=_texts(creations, "consumes", allow_empty=True),
+            creations_produces=_texts(creations, "produces", allow_empty=True, scope="creations."),
+            creations_consumes=_texts(creations, "consumes", allow_empty=True, scope="creations."),
             root=root,
             input_profile=input_profile,
             launcher_categories=launcher_categories,
@@ -820,13 +820,19 @@ def _text(container: Mapping[str, object], key: str) -> str:
 
 
 def _texts(
-    container: Mapping[str, object], key: str, *, allow_empty: bool = False
+    container: Mapping[str, object],
+    key: str,
+    *,
+    allow_empty: bool = False,
+    scope: str = "",
 ) -> tuple[str, ...]:
+    """Read a string array; ``scope`` names the owning table in the error."""
+
     value = container.get(key, [] if allow_empty else None)
     if not isinstance(value, list) or (not allow_empty and not value):
-        raise ActivityValidationError(f"{key} must be an array of strings")
+        raise ActivityValidationError(f"{scope}{key} must be an array of strings")
     if not all(isinstance(item, str) and item.strip() for item in value):
-        raise ActivityValidationError(f"{key} must contain only non-empty strings")
+        raise ActivityValidationError(f"{scope}{key} must contain only non-empty strings")
     return tuple(item.strip() for item in value)
 
 

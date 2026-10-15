@@ -195,6 +195,7 @@ class TimeToolModelTests(unittest.TestCase):
     def test_composition_root_uses_platform_localized_text_api(self) -> None:
         """Actually enter main(): model-only tests must not mask a broken launch path."""
         import os
+        from types import SimpleNamespace
         from unittest.mock import patch
 
         os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
@@ -219,8 +220,16 @@ class TimeToolModelTests(unittest.TestCase):
         try:
             for locale in ("it", "en"):
                 with self.subTest(locale=locale):
+                    # The composition root resolves language through the shared
+                    # manifest/profile factory (`activity_resources`), not a
+                    # private profile-locale reader.
+                    stub_resources = SimpleNamespace(
+                        context=SimpleNamespace(selected=SimpleNamespace(language=locale)),
+                        text=lambda key, _locale=locale: f"{_locale}:{key}",
+                    )
                     with (
-                        patch.object(entrypoint, "get_profile_locale", return_value=locale),
+                        patch.object(entrypoint, "activity_resources", return_value=stub_resources),
+                        patch.object(entrypoint, "LocalTimeSpeechTransport", lambda resources: object()),
                         patch.object(entrypoint, "TimeActivity", FakeTimeActivity),
                     ):
                         self.assertEqual(entrypoint.main(), 0)

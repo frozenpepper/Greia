@@ -146,11 +146,17 @@ class BootScrubRelocationTests(unittest.TestCase):
     def test_build_gate_owns_builtin_hygiene_before_composition(self) -> None:
         builder = BUILD_IMAGE.read_text(encoding="utf-8")
         self.assertIn("GREIA_BUILTIN_GATE", builder)
-        rsync_anchor = "rsync -a --delete --exclude '__pycache__'"
-        self.assertIn(rsync_anchor, builder)
-        self.assertLess(
-            builder.index("GREIA_BUILTIN_GATE"), builder.index(rsync_anchor)
-        )
+        # The gate validates the *installed* Activity tree (after the
+        # development rsync or the approved release staging), so it must come
+        # after Activity staging and before the tree is made read-only and
+        # before the built-in index is generated from it.
+        stage_anchor = 'rsync -a --delete --exclude \'__pycache__\' \\\n      "$project_root/activities/"'
+        self.assertIn(stage_anchor, builder)
+        gate = builder.index("GREIA_BUILTIN_GATE")
+        self.assertGreater(gate, builder.index(stage_anchor))
+        self.assertGreater(gate, builder.index("tools/stage_release_activities.py"))
+        self.assertLess(gate, builder.index("chmod -R a-w"))
+        self.assertLess(gate, builder.index("tools/build_activity_index.py"))
         consumer = THIN_CONSUMER.read_text(encoding="utf-8")
         self.assertIn('compose_root --profile "$PROFILE_PATH" --role target', consumer)
 

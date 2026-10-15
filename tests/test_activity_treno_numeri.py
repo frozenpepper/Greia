@@ -70,9 +70,13 @@ class TrainEventKeySourceTests(unittest.TestCase):
         from pathlib import Path
         source = (PROJECT_ROOT / "activities" / "treno_numeri" / "treno_app.py").read_text(encoding="utf-8")
         self.assertIn("self._journey_id = uuid4().hex", source)
-        self.assertIn('idempotency_key=f"train:{self._journey_id}:station:{round_idx}"', source)
+        self.assertIn('idempotency_key=f"train:{self._journey_id}:station:{self.model.round_idx}"', source)
         self.assertIn('idempotency_key=f"train:{self._journey_id}:completed"', source)
-        self.assertEqual(source.count("self._journey_id = uuid4().hex"), 3)
+        # One at construction and one inside the single shared restart
+        # transaction (keyboard and pointer both route through it).
+        self.assertEqual(source.count("self._journey_id = uuid4().hex"), 2)
+        restart = source.split("def _restart_journey", 1)[1].split("\n    def ", 1)[0]
+        self.assertIn("self._journey_id = uuid4().hex", restart)
 
 
 if __name__ == "__main__":

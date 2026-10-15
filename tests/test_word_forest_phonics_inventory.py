@@ -10,6 +10,7 @@ from tools.audit_greia_language_coverage import _foresta_lesson_audio
 
 
 ROOT = Path(__file__).resolve().parents[1]
+ACTIVITY_DIR = ROOT / "activities" / "foresta_parole"
 
 
 class WordForestPhonicsInventoryTests(unittest.TestCase):
@@ -28,7 +29,7 @@ class WordForestPhonicsInventoryTests(unittest.TestCase):
                     {"letter": lessons, "prompt": lessons, "word": lessons},
                 )
 
-    def test_new_language_lesson_audio_is_missing_and_undecided_scripts_blocked(self) -> None:
+    def test_staged_language_lesson_audio_is_integrated_and_unspecified_scripts_stay_blocked(self) -> None:
         errors: list[str] = []
         cues = _foresta_lesson_audio(ROOT, errors)
         self.assertEqual(errors, [])
@@ -38,7 +39,11 @@ class WordForestPhonicsInventoryTests(unittest.TestCase):
             with self.subTest(locale=cue["locale"], cue=cue["cue_id"]):
                 self.assertEqual(cue["source"], "activities/foresta_parole")
                 self.assertTrue(cue["path"].startswith(f"assets/audio/{cue['locale']}/"))
-                self.assertFalse(cue["file_exists"])
+                # ES/FR phonics recordings were integrated and owner-approved;
+                # the audit must see the committed files (English fallback is
+                # allowed for any cue that is ever missing, so existence is the
+                # meaningful inventory fact, not absence).
+                self.assertTrue(cue["file_exists"])
                 self.assertEqual(cue["speaker"], "UNASSIGNED")
                 self.assertEqual(cue["kind"], "UNASSIGNED")
                 role = cue["cue_id"].split(".")[1]
@@ -47,10 +52,10 @@ class WordForestPhonicsInventoryTests(unittest.TestCase):
                     self.assertEqual(cue["state"], "BLOCKED_TEXT")
                 else:
                     self.assertTrue(cue["text"])
-                    self.assertEqual(cue["state"], "MISSING_AUDIO")
+                    self.assertEqual(cue["state"], "EXISTING_ASSET_NEEDS_REVIEW")
 
 
-    def test_missing_feedback_falls_back_without_a_foreign_language(self) -> None:
+    def test_feedback_text_comes_from_localized_resources(self) -> None:
         import json
 
         app_source = (ACTIVITY_DIR / "foresta_app.py").read_text(encoding="utf-8")

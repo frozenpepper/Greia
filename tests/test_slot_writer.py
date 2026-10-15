@@ -1889,7 +1889,19 @@ class SharedSeamTests(unittest.TestCase):
             )
             installed = adapter.install(("firmware-realtek",), ())
             self.assertEqual([package.name for package in installed], ["firmware-realtek"])
-            self.assertEqual(len(mounted), 1)
+            # The existing installer mounts the minimal chroot filesystems apt
+            # needs (dev, proc, sys, run) plus the read-only support pool, and
+            # records every one in the caller-owned list for reverse cleanup.
+            self.assertEqual(
+                mounted,
+                [
+                    target_root / "dev",
+                    target_root / "proc",
+                    target_root / "sys",
+                    target_root / "run",
+                    target_root / "run/greia-hardware-support",
+                ],
+            )
             self.assertFalse((target_root / "run/greia-hardware-support.list").exists())
             with self.assertRaises(Exception):
                 adapter.install(("firmware-evil",), ())

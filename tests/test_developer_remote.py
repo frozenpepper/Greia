@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import stat
 import subprocess
 import sys
@@ -15,7 +16,9 @@ from unittest import mock
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TOOLS = PROJECT_ROOT / "tools"
 if str(TOOLS) not in sys.path:
-    sys.path.insert(0, str(TOOLS))
+    # Append, never prepend: tools/greia_parent.py is a script that would
+    # otherwise shadow the greia_parent package under src/.
+    sys.path.append(str(TOOLS))
 
 from greia_launcher.main import _activity_sources  # noqa: E402
 from greia_platform import developer_control as devctl  # noqa: E402

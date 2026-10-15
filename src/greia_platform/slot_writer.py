@@ -55,6 +55,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import BinaryIO, Mapping, Protocol
 
+from . import session04_serial_diag
 from .hardware_enablement import (
     HardwareSupportPlan,
     SupportDisposition,
@@ -1238,19 +1239,12 @@ def _check_slot_config(config: Mapping[str, str]) -> dict[str, str]:
 
 
 def _s04_diag_stage(name: str) -> None:
-    """TEMPORARY Session-04 diagnostic: serial emit when marker present.
+    """TEMPORARY Session-04 diagnostic; removed before Session 04 closure.
 
-    Writes one line to the guest serial console iff the test-only marker
-    ``/run/greia-x8-debug`` exists (touched by the test control runner;
-    production never creates it). Removed before Session 04 closure.
+    Delegates to :mod:`greia_platform.session04_serial_diag`, which owns the
+    marker-gated serial emit, so this module carries no device surface.
     """
-    try:
-        if not os.path.exists("/run/greia-x8-debug"):
-            return
-        with open("/dev/ttyS0", "a") as handle:
-            handle.write(f"s04-svc: finalize-{name}\n")
-    except OSError:
-        pass
+    session04_serial_diag.emit_stage(f"finalize-{name}")
 
 
 @dataclass(frozen=True, slots=True)

@@ -82,16 +82,26 @@ def _parse_unit(path: Path) -> configparser.ConfigParser:
 
 
 def _installed_enable_tokens() -> set[str]:
-    """Tokens of the installed-image ``systemctl enable`` list in the engine."""
+    """Units the engine enables for the installed (target) role.
+
+    The engine declares them as the ``target_services=(...)`` bash array that
+    is passed to ``systemctl --root=... enable``; read that declaration rather
+    than a particular line layout of the command.
+    """
     tokens: set[str] = set()
     lines = COMPOSE_ENGINE.read_text(encoding="utf-8").splitlines()
     for index, line in enumerate(lines):
-        if line.strip() == 'systemctl --root="$rootfs" enable \\':
+        if line.strip() == "local target_services=(":
             for follow in lines[index + 1:]:
-                tokens.update(follow.strip().rstrip("\\").split())
-                if not follow.strip().endswith("\\"):
+                content = follow.split("#", 1)[0].strip()
+                if content == ")":
                     break
+                tokens.update(content.split())
             break
+    assert tokens, "target_services declaration not found in the composition engine"
+    assert 'systemctl --root="$rootfs" enable "${target_services[@]}"' in (
+        COMPOSE_ENGINE.read_text(encoding="utf-8")
+    ), "target_services must be what the engine enables"
     consumer = BUILD_IMAGE.read_text(encoding="utf-8")
     assert 'compose_root --profile "$PROFILE_PATH" --role target' in consumer, (
         "thin consumer must compose the installed image through the engine"

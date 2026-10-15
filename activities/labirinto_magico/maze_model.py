@@ -69,7 +69,8 @@ HEROES: list[dict[str, Any]] = [
     {"id": "puppy", "name": "Cucciolo", "color": (217, 119, 6)},
 ]
 
-# Six release-facing difficulty levels match manifest D1–D6. Keep the hardest\n# maze bounded for child-readable cells on Greia's 1024×600 reference surface.
+# Six release-facing difficulty levels match manifest D1–D6. Keep the hardest
+# maze bounded for child-readable cells on Greia's 1024×600 reference surface.
 DIFFICULTIES: list[dict[str, Any]] = [
     {"id": "small", "label_it": "FACILE", "label_en": "EASY", "cols": 13, "rows": 9, "stars": 3},
     {"id": "medium", "label_it": "MEDIO", "label_en": "MEDIUM", "cols": 21, "rows": 13, "stars": 5},

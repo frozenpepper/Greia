@@ -8,6 +8,8 @@ import unittest
 
 import pygame
 
+import hermetic_volume
+
 
 ROOT = Path(__file__).resolve().parents[1]
 ACTIVITY_ROOT = ROOT / "activities" / "posta_di_leo"
@@ -25,6 +27,12 @@ from postcard_model import (  # noqa: E402
     SavedPostcard,
 )
 from postcard_services import GreiaPostcardStorage, StoragePort  # noqa: E402
+
+
+def setUpModule() -> None:
+    # The Simulator supervision test exercises real history/storage services,
+    # whose production capacity policy depends on how full the host disk is.
+    hermetic_volume.install_for_module()
 
 
 class PostcardContentTests(unittest.TestCase):

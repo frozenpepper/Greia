@@ -8,6 +8,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import LocalizedResources
+from greia_platform.system_chrome import ActivitySystemChromeLayout
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
@@ -93,9 +94,16 @@ class ContrariRenderer:
         self._status_surfaces: dict[tuple[str, tuple[int, int, int]], pygame.Surface] = {}
         self._reference_surf = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
 
-        # Top Toolbar buttons (5 categories)
-        btn_w, btn_h, spacing = 176, 56, 12
-        start_x = (REFERENCE_WIDTH - (5 * btn_w + 4 * spacing)) // 2
+        # Top Toolbar buttons (5 categories). They start to the right of the
+        # platform-owned Home/Back region: a button under protected chrome has
+        # an unreachable centre, since Greia routes that input to the system.
+        chrome = ActivitySystemChromeLayout.for_surface(
+            REFERENCE_WIDTH, REFERENCE_HEIGHT
+        ).protected_region
+        btn_h, spacing, edge = 56, 10, 20
+        left = chrome.right + spacing
+        btn_w = (REFERENCE_WIDTH - edge - left - 4 * spacing) // 5
+        start_x = left
         self.category_buttons: dict[OppositeCategory, pygame.Rect] = {
             cat: pygame.Rect(start_x + idx * (btn_w + spacing), 18, btn_w, btn_h)
             for idx, cat in enumerate(OppositeCategory)

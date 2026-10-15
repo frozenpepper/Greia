@@ -224,7 +224,9 @@ class SoundWorkshopRenderer:
         hl = r_draw.inflate(-16, -r_draw.height + 8).move(0, -r_draw.height // 2 + 8)
         pygame.draw.rect(target, (186, 230, 253, 100), hl, border_radius=4)
 
-        speaker_icon = self._typography.render("🔊 ASCOLTA", FontRole.TITLE, 22, (255, 255, 255))
+        # Pre-rendered once from the Activity's localized `button.listen`; the
+        # label must never be a literal in one language.
+        speaker_icon = self._replay_label
         target.blit(
             speaker_icon,
             (

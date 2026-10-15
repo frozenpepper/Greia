@@ -30,6 +30,7 @@ from greia_platform.ssh_maintenance import (
     SshMaintenanceService,
 )
 from greia_platform.wifi import DemoWifiBackend, WifiNetwork, WifiSecurity
+from parent_service_double import ParentServiceDouble
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -102,7 +103,7 @@ def _overlay(temp_dir: str, *, controller=None) -> ParentSettingsOverlay:
         Path(temp_dir),
     )
     return ParentSettingsOverlay(
-        credential_store,
+        ParentServiceDouble(credential_store, hardware_store),
         wifi_backend=DemoWifiBackend([
             WifiNetwork("HomeNetwork", WifiSecurity.PERSONAL, -45.0, "/net/connman/iwd/demo/1"),
         ]),

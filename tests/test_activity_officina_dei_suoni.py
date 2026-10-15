@@ -8,6 +8,8 @@ import unittest
 
 import pygame
 
+import hermetic_volume
+
 
 ROOT = Path(__file__).resolve().parents[1]
 ACTIVITY_ROOT = ROOT / "activities" / "officina_dei_suoni"
@@ -34,6 +36,12 @@ from sound_workshop_model import (  # noqa: E402
     adapt_level,
 )
 from sound_services import GreiaWorkshopProgress, WorkshopProgress  # noqa: E402
+
+
+def setUpModule() -> None:
+    # The Simulator supervision test exercises real history/storage services,
+    # whose production capacity policy depends on how full the host disk is.
+    hermetic_volume.install_for_module()
 
 
 class CorpusTests(unittest.TestCase):
@@ -289,6 +297,38 @@ class AppIntegrationTests(unittest.TestCase):
             clock=clock,
         )
         return app, simulated_time, events, progress
+
+    def test_listen_button_label_comes_from_localized_resources(self) -> None:
+        from greia_platform.localization import (
+            ActivityLocaleSupport,
+            LocalizedResources,
+            resolve_activity_locale,
+        )
+        from greia_platform.typography import GreiaTypography
+        from sound_art import SoundWorkshopArt
+        from sound_renderer import SoundWorkshopRenderer
+
+        support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
+        typography = GreiaTypography()
+        art = SoundWorkshopArt(1024, 600, typography)
+        button_pixels: dict[str, bytes] = {}
+        for language in ("en", "it"):
+            context = resolve_activity_locale(language, support)
+            assert context is not None
+            resources = LocalizedResources(ACTIVITY_ROOT, context)
+            renderer = SoundWorkshopRenderer(art, typography, resources)
+            target = pygame.Surface((1024, 600))
+            session = SoundSession(
+                SoundRoundFactory(random.Random(3), locale=language).build_set(1),
+                level=1,
+            )
+            renderer._draw_top_bar(target, session)
+            button = target.subsurface(pygame.Rect(80, 24, 180, 48))
+            button_pixels[language] = pygame.image.tobytes(button, "RGB")
+        # Same geometry, different language: the button text must differ.
+        self.assertNotEqual(button_pixels["en"], button_pixels["it"])
+        renderer_source = (ACTIVITY_ROOT / "sound_renderer.py").read_text(encoding="utf-8")
+        self.assertNotIn("ASCOLTA", renderer_source)
 
     def test_full_session_with_keyboard_and_pointer(self) -> None:
         from sound_app import AppState

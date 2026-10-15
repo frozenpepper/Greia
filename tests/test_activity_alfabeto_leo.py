@@ -143,6 +143,7 @@ class AlfabetoLeoTests(unittest.TestCase):
                 audio = object.__new__(AlfabetoAudio)
                 audio.locale = lang
                 audio._spoken_sounds = {}
+                audio._resources = None  # legacy direct-folder construction
                 with patch("alfabeto_audio.AUDIO_DIR", base), patch(
                     "alfabeto_audio.pygame.mixer.Sound"
                 ) as load:

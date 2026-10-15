@@ -82,9 +82,18 @@ class ParentOrderingTests(unittest.TestCase):
             )
 
     def test_launcher_readiness_precondition(self) -> None:
+        # The launcher is Type=simple: a logind session moves it out of the
+        # unit cgroup so READY=1 can never be attributed, and Type=notify made
+        # systemd kill a working Shell (see greia-launcher.service). Parent's
+        # After= therefore orders behind the launcher *start*, and real
+        # readiness is the launcher_interactive_ready boot marker.
         launcher = _read_unit(LAUNCHER)
-        self.assertEqual(launcher.get("Service", "Type").strip(), "notify")
-        self.assertIn("NotifyAccess=all", LAUNCHER.read_text(encoding="utf-8"))
+        self.assertEqual(launcher.get("Service", "Type").strip(), "simple")
+        self.assertNotIn(
+            "NotifyAccess",
+            dict(launcher.items("Service")),
+            "a Type=simple launcher has no notification channel to authorize",
+        )
 
     def test_no_ordering_cycle(self) -> None:
         """Static After/Before graph over overlay units must stay acyclic.

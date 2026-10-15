@@ -40,6 +40,16 @@ CURRICULUM_UI_ONLY = (
 
 # Source-key parity alone does not establish accurate narration or pedagogy.
 
+# Activities that draw no locale-specific text declare the platform's
+# language-neutral marker instead of a locale list. That is not an ES/FR claim.
+LANGUAGE_NEUTRAL_MANIFESTS = {"shape_garden": ["*"]}
+
+# Per-language lesson vocabulary: Word Forest teaches each language's own
+# letter->word examples (EN "cat", IT "gatto"), so these keys are curriculum
+# data and legitimately differ between the EN and IT bundles. They are still
+# compared against the English bundle and must be non-empty in every locale.
+LANGUAGE_SPECIFIC_KEY_PREFIXES = {"foresta_parole": ("word.",)}
+
 
 def _fields(text: str) -> set[str]:
     return {
@@ -62,7 +72,13 @@ class StagedActivityTranslationTests(unittest.TestCase):
                     self.assertEqual(localized["locale"], locale)
                     self.assertEqual(localized["direction"], "ltr")
                     self.assertEqual(set(localized["strings"]), set(english["strings"]))
-                    self.assertEqual(set(localized["strings"]), set(italian["strings"]))
+                    specific = LANGUAGE_SPECIFIC_KEY_PREFIXES.get(activity, ())
+                    shared = lambda strings: {
+                        key for key in strings if not key.startswith(specific)
+                    }
+                    self.assertEqual(
+                        shared(localized["strings"]), shared(italian["strings"])
+                    )
                     for key, value in localized["strings"].items():
                         self.assertTrue(isinstance(value, str) and value.strip())
                         self.assertEqual(
@@ -280,6 +296,12 @@ class StagedActivityTranslationTests(unittest.TestCase):
                 (ROOT / "activities" / activity / "activity.toml").read_text(encoding="utf-8")
             )
             declared = manifest["activity"]["languages"]
+            if activity in LANGUAGE_NEUTRAL_MANIFESTS:
+                self.assertEqual(
+                    declared, LANGUAGE_NEUTRAL_MANIFESTS[activity],
+                    f"{activity}: neutral declaration changed",
+                )
+                continue
             self.assertEqual(set(declared), {"en", "it"},
                              f"{activity}: do not claim ES/FR before voice acceptance")
 

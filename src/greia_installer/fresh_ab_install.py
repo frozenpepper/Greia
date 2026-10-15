@@ -63,6 +63,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO, Callable, Mapping, Sequence
 
+from greia_platform import session04_serial_diag
 from greia_platform.boot_transaction import (
     BootArtifactSet,
     BootTransactionBackend,
@@ -511,19 +512,12 @@ def open_bundle_payload_stream(
 
 
 def _s04_diag_stage(name: str) -> None:
-    """TEMPORARY Session-04 diagnostic: serial emit when marker present.
+    """TEMPORARY Session-04 diagnostic; removed before Session 04 closure.
 
-    Writes one line to the guest serial console iff the test-only marker
-    ``/run/greia-x8-debug`` exists (touched by the test control runner;
-    production never creates it). Removed before Session 04 closure.
+    Delegates to :mod:`greia_platform.session04_serial_diag`, which owns the
+    marker-gated serial emit, so the orchestrator carries no device surface.
     """
-    try:
-        if not os.path.exists("/run/greia-x8-debug"):
-            return
-        with open("/dev/ttyS0", "a") as handle:
-            handle.write(f"s04-svc: {name}\n")
-    except OSError:
-        pass
+    session04_serial_diag.emit_stage(name)
 
 
 def execute_fresh_ab_install(

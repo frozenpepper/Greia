@@ -46,6 +46,7 @@ class TeatrinoBackdropFlowTests(unittest.TestCase):
         app.app_mode = "stage"
         app.is_recording = False
         app.backdrop_import_request = None
+        app.narration_import_request = None
         app.backdrop_import_next_poll = 0.0
         app.backdrop_import_state = ""
         app.backdrop_import_feedback_until = 0.0

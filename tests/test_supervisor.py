@@ -7,6 +7,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from unittest import mock
 
+import hermetic_volume
 from greia_launcher.event_broker import ActivityEventBroker
 from greia_launcher.lifecycle import ActivityExitReason, ActivitySessionState
 from greia_launcher.runtime_adapter import (
@@ -33,6 +34,13 @@ class _Profile:
     profile_id: str = "0123456789abcdef0123456789abcdef"
     display_name: str = "Mia"
     avatar_id: str = "unicorn"
+
+
+def setUpModule() -> None:
+    # Supervisor sessions write real history/storage whose production capacity
+    # policy depends on how full the host disk is; capacity itself is tested
+    # elsewhere with explicit probes.
+    hermetic_volume.install_for_module()
 
 
 class _ProfileContext:

@@ -15,6 +15,7 @@ from greia_platform.hardware import HardwareSettingsStore
 from greia_platform.main_credential import MainCredentialStore
 from greia_platform.ssh_maintenance import MockSshMaintenanceProvider, SshMaintenanceService
 from greia_platform.wifi import DemoWifiBackend, WifiNetwork, WifiSecurity
+from parent_service_double import ParentServiceDouble
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -63,7 +64,7 @@ class ParentSettingsOverlayTests(unittest.TestCase):
         self.ssh_service = SshMaintenanceService(self.ssh_provider)
 
         self.overlay = ParentSettingsOverlay(
-            self.credential_store,
+            ParentServiceDouble(self.credential_store, self.hardware_store),
             wifi_backend=self.wifi_backend,
             ssh_service=self.ssh_service,
             hardware_store=self.hardware_store,

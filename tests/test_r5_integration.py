@@ -15,8 +15,15 @@ from greia_platform.device_capabilities import DeviceCapabilityService
 from greia_platform.event_client import ActivityEventClient, ActivityEventClientError
 from greia_platform.history import PlatformHistoryService
 from greia_platform.profiles import ProfileStore
+from greia_platform.creation_capacity import VolumeBudget
 from greia_platform.storage import ActivityStorageService, StorageError, StoragePolicy
 from greia_platform.trust import ActivitySource, PackageTrust
+
+import hermetic_volume
+
+
+def setUpModule() -> None:
+    hermetic_volume.install_for_module()
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -57,6 +64,12 @@ class _FakeProcess:
 
 
 class _FailingStorage:
+    """Storage double whose every open fails; still exposes the volume budget
+    the Supervisor reads from its injected storage service."""
+
+    def __init__(self) -> None:
+        self.volume_budget = VolumeBudget()
+
     def open(self, *args, **kwargs):
         raise StorageError("synthetic platform storage failure")
 

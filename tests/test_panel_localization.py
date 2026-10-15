@@ -160,6 +160,7 @@ class ParentPanelLocaleStateTests(unittest.TestCase):
         panel._device_locale = "en"
         panel._language_message = ""
         panel._language_message_is_error = False
+        panel._content_animating = False
         return panel
 
     def test_device_locale_reloads_without_profile_locale_guess(self) -> None:

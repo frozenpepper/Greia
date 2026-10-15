@@ -16,9 +16,11 @@ LAUNCH_PATH = (SERVICE, PREPARE, X_SESSION)
 # The X server options are the accepted contract: same VT, no switch back, no
 # root-window repaint, no TCP listener, no reset on exit. The command line also
 # carries an explicit -logfile, because an unprivileged Xorg cannot create
-# /var/log/Xorg.0.log and aborts before opening the display.
+# /var/log/Xorg.0.log and aborts before opening the display. The real
+# /usr/lib/xorg/Xorg binary is named (not /usr/bin/Xorg) because the latter
+# execs the setuid wrapper, and Xorg refuses -logfile when uid != euid.
 EXPECTED_X_OPTIONS = (
-    " -- :0 vt1 -logfile /run/greia-os/Xorg.0.log"
+    " -- /usr/lib/xorg/Xorg :0 vt1 -logfile /run/greia-os/Xorg.0.log"
     " -keeptty -novtswitch -background none"
     " -quiet -nolisten tcp -noreset"
 )

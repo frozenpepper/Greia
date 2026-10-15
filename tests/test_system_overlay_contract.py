@@ -15,8 +15,10 @@ class SystemOverlayContractTests(unittest.TestCase):
             config,
         )
         self.assertIn("d /run/greia-hardware 2750 greiakid greiapanel -", config)
-        self.assertIn("d /var/lib/greia-profiles 2770 greiakid greiaprofiles -", config)
-        self.assertIn("d /run/greia-os 0770 greiakid greiaprofiles -", config)
+        # tmpfiles must name groups compose.sh actually creates (see
+        # test_image_tmpfiles_identities); a missing group broke boot once.
+        self.assertIn("d /var/lib/greia-profiles 2770 greiakid pipprofiles -", config)
+        self.assertIn("d /run/greia-os 0770 greiakid pipprofiles -", config)
 
     def test_installed_x_session_starts_hardware_controller_before_launcher(self) -> None:
         session = (

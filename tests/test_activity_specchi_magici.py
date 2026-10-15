@@ -8,6 +8,8 @@ import unittest
 
 import pygame
 
+import hermetic_volume
+
 
 ROOT = Path(__file__).resolve().parents[1]
 ACTIVITY_ROOT = ROOT / "activities" / "specchi_magici"
@@ -32,6 +34,12 @@ from mirror_model import (  # noqa: E402
     reflect_piece,
 )
 from mirror_services import GreiaMirrorProgress, MirrorProgress  # noqa: E402
+
+
+def setUpModule() -> None:
+    # The Simulator supervision test exercises real history/storage services,
+    # whose production capacity policy depends on how full the host disk is.
+    hermetic_volume.install_for_module()
 
 
 class SymmetryInvariantsTests(unittest.TestCase):

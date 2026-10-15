@@ -62,18 +62,17 @@ class LabirintoMagicoTests(unittest.TestCase):
             for star in collectibles:
                 self.assertEqual(grid[star["r"]][star["c"]], 0)
 
-    def test_difficulty_levels_contain_large_and_colossal_sizes(self) -> None:
-        self.assertGreaterEqual(len(DIFFICULTIES), 8)
+    def test_difficulty_levels_match_declared_d1_to_d6_scope(self) -> None:
+        # The release roster is six levels (manifest difficulty 1-6); the
+        # titan/colossal/infinite sizes were retired because their cells were
+        # unreadable on the 1024x600 reference surface.
         difficulty_ids = [d["id"] for d in DIFFICULTIES]
-        self.assertIn("small", difficulty_ids)
-        self.assertIn("medium", difficulty_ids)
-        self.assertIn("large", difficulty_ids)
-        self.assertIn("giant", difficulty_ids)
-        self.assertIn("epic", difficulty_ids)
-        self.assertIn("master", difficulty_ids)
-        self.assertIn("titan", difficulty_ids)
-        self.assertIn("colossal", difficulty_ids)
-        self.assertIn("infinite", difficulty_ids)
+        self.assertEqual(
+            difficulty_ids,
+            ["small", "medium", "large", "giant", "epic", "master"],
+        )
+        for retired in ("titan", "colossal", "infinite"):
+            self.assertNotIn(retired, difficulty_ids)
 
     def test_biomes_and_heroes_metadata_integrity(self) -> None:
         self.assertEqual(len(BIOMES), 4)
@@ -146,10 +145,12 @@ class LabirintoMagicoTests(unittest.TestCase):
         self.assertEqual((dr, dc), (1, 0))
 
     def test_largest_difficulty_grid_size_and_complexity(self) -> None:
-        infinite = next(d for d in DIFFICULTIES if d["id"] == "infinite")
-        self.assertGreaterEqual(infinite["cols"], 89)
-        self.assertGreaterEqual(infinite["rows"], 41)
-        self.assertGreaterEqual(infinite["stars"], 30)
+        largest = next(d for d in DIFFICULTIES if d["id"] == "master")
+        self.assertGreaterEqual(largest["cols"], 59)
+        self.assertGreaterEqual(largest["rows"], 29)
+        self.assertGreaterEqual(largest["stars"], 20)
+        sizes = [(d["cols"], d["rows"], d["stars"]) for d in DIFFICULTIES]
+        self.assertEqual(sizes, sorted(sizes))
 
     def test_maze_renderer_computes_fullscreen_viewport(self) -> None:
         from greia_platform.activity_ui import ChildUiMetrics
@@ -164,10 +165,10 @@ class LabirintoMagicoTests(unittest.TestCase):
         self.assertGreater(rect.height, 400)
         self.assertGreaterEqual(rect.top, 76)  # Below platform chrome
 
-        # Infinite maze
-        infinite = next(d for d in DIFFICULTIES if d["id"] == "infinite")
+        # Largest shipped maze
+        largest = next(d for d in DIFFICULTIES if d["id"] == "master")
         cs_inf, ox_inf, oy_inf, rect_inf = renderer.compute_maze_viewport(
-            1024, 600, infinite["cols"], infinite["rows"], metrics
+            1024, 600, largest["cols"], largest["rows"], metrics
         )
         self.assertGreaterEqual(cs_inf, 10)
         self.assertGreater(rect_inf.width, 900)
