@@ -7,11 +7,7 @@ from pathlib import Path
 import pygame
 
 from greia_platform.activity_api import get_profile_locale, get_storage
-from greia_platform.localization import (
-    ActivityLocaleSupport,
-    LocalizedResources,
-    resolve_activity_locale,
-)
+from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import GreiaTypography
 
@@ -26,17 +22,15 @@ else:
 
 
 def _resolve_locale() -> LocalizedResources:
-    support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
+    # Keep the historic standalone fallback if the Greia profile service is
+    # temporarily unavailable; the shared factory owns locale selection.
     try:
-        context = resolve_activity_locale(get_profile_locale(), support)
+        locale = get_profile_locale()
     except Exception:
-        context = resolve_activity_locale("it", support)
-    if context is None:
-        context = resolve_activity_locale("it", support)
-        if context is None:
-            raise RuntimeError("bosco_numeri: locale support is unavailable")
-    return LocalizedResources(Path(__file__).resolve().parent, context)
-
+        locale = "it"
+    return activity_resources(
+        Path(__file__).resolve().parent, requested_locale=locale
+    )
 
 def main() -> int:
     pygame.init()
