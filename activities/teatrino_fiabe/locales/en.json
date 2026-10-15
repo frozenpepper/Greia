@@ -23,6 +23,7 @@
     "ui.recording_saved": "Show saved in your library!",
     "ui.playing_show": "Showtime in progress! Yay!",
     "ui.stage_cleared": "Stage ready!",
+    "ui.shelf_full": "The shelf is full! Delete a show to make room.",
     "ui.recording_save_failed": "I couldn't save this show.",
     "ui.narration_imported": "Narration ready for the show!",
     "ui.narration_play_failed": "I couldn't use this narration.",

@@ -23,6 +23,7 @@
     "ui.recording_saved": "Spectacle enregistré dans ta bibliothèque !",
     "ui.playing_show": "Spectacle en cours ! Hourra !",
     "ui.stage_cleared": "Scène prête !",
+    "ui.shelf_full": "L'étagère est pleine ! Supprime un spectacle pour faire de la place.",
     "ui.recording_save_failed": "Je n'ai pas pu enregistrer ce spectacle.",
     "ui.narration_imported": "Voix prête pour le spectacle !",
     "ui.narration_play_failed": "Je ne peux pas utiliser cette voix.",

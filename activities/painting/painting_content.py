@@ -20,6 +20,8 @@ STORAGE_KEY: Final = INDEX_KEY
 AUTOSAVE_IDLE_SECONDS: Final = 1.0
 CREATION_PICKER_POLL_SECONDS: Final = 0.12
 MAX_PAINTINGS: Final = 48
+# Gallery shows a 3x2 page; every saved painting must be reachable by paging.
+GALLERY_PAGE_SIZE: Final = 6
 MAX_UNDO_STROKES: Final = 24
 MAX_STROKE_POINTS: Final = 2048
 
@@ -47,6 +49,7 @@ __all__ = [
     "AUTOSAVE_IDLE_SECONDS",
     "CREATION_PICKER_POLL_SECONDS",
     "MAX_PAINTINGS",
+    "GALLERY_PAGE_SIZE",
     "MAX_UNDO_STROKES",
     "MAX_STROKE_POINTS",
     "COLORS",

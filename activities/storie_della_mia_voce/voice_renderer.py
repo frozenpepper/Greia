@@ -394,6 +394,66 @@ class VoiceRenderer:
         return pygame.Rect(card.x + 60, card.y + 108, 80, 46)
 
     @staticmethod
+    def delete_dialog_layout() -> dict[str, pygame.Rect]:
+        """Rectangles for the deliberate "delete this story?" dialog."""
+        box = pygame.Rect(212, 118, 600, 364)
+        return {
+            "box": box,
+            "preview": pygame.Rect(box.x + 40, box.y + 28, box.width - 80, 104),
+            "keep": pygame.Rect(box.x + 50, box.bottom - 190, 220, 150),
+            "delete": pygame.Rect(box.right - 50 - 220, box.bottom - 190, 220, 150),
+        }
+
+    def draw_delete_dialog(self, story, *, armed: bool, focus: str, text_fn) -> None:
+        """Pictogram-only confirmation: preview of the story, keep vs delete.
+
+        Safe "keep" is on the left and focused first; the destructive button is
+        dimmed until the dialog has armed so a double-tap can never delete.
+        """
+        surf = self.surface
+        shade = pygame.Surface(surf.get_size(), pygame.SRCALPHA)
+        shade.fill((10, 8, 20, 170))
+        surf.blit(shade, (0, 0))
+        layout = self.delete_dialog_layout()
+        box = layout["box"]
+        pygame.draw.rect(surf, WHITE, box, border_radius=22)
+        pygame.draw.rect(surf, MIC_RED, box, width=5, border_radius=22)
+
+        preview = layout["preview"]
+        pygame.draw.rect(surf, (248, 240, 225), preview, border_radius=16)
+        pygame.draw.rect(surf, BUTTON_BORDER, preview, width=2, border_radius=16)
+        if story is not None:
+            for scene_index, scene in enumerate(SCENES):
+                chip = pygame.Rect(preview.x + 22 + scene_index * 70, preview.centery - 30, 60, 60)
+                present = scene.scene_id in story.scene_recordings
+                pygame.draw.rect(
+                    surf, scene.primary_color if present else (218, 222, 228), chip, border_radius=16
+                )
+                pygame.draw.rect(surf, BUTTON_BORDER, chip, width=2, border_radius=16)
+            dur = text_fn(f"{sum(story.scene_durations.values()):3.1f}s", DARK_TEXT, 24)
+            surf.blit(dur, dur.get_rect(midright=(preview.right - 24, preview.centery)))
+
+        keep = layout["keep"]
+        pygame.draw.rect(surf, (220, 255, 225), keep, border_radius=24)
+        pygame.draw.rect(surf, PLAY_GREEN, keep, width=4, border_radius=24)
+        kx, ky = keep.center
+        pygame.draw.lines(surf, PLAY_DARK, False, [(kx - 36, ky + 2), (kx - 10, ky + 28), (kx + 38, ky - 28)], 14)
+
+        delete = layout["delete"]
+        pygame.draw.rect(surf, (255, 214, 214) if armed else (235, 228, 228), delete, border_radius=24)
+        pygame.draw.rect(surf, MIC_RED if armed else (190, 170, 170), delete, width=4, border_radius=24)
+        tx, ty = delete.center
+        ink = MIC_DARK if armed else (170, 150, 150)
+        pygame.draw.rect(surf, ink, (tx - 26, ty - 14, 52, 50), width=6, border_radius=8)
+        pygame.draw.line(surf, ink, (tx - 36, ty - 22), (tx + 36, ty - 22), 7)
+        pygame.draw.rect(surf, ink, (tx - 10, ty - 36, 20, 12), border_radius=3)
+        for dx in (-13, 0, 13):
+            pygame.draw.line(surf, ink, (tx + dx, ty - 4), (tx + dx, ty + 24), 4)
+
+        focus_rect = keep if focus == "keep" else delete
+        pygame.draw.rect(surf, DARK_TEXT, focus_rect.inflate(14, 14), width=5, border_radius=28)
+
+    @staticmethod
     def library_prev_rect() -> pygame.Rect:
         return pygame.Rect(300, 520, 120, 58)
 

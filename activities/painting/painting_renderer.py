@@ -19,9 +19,9 @@ from greia_platform.activity_ui import draw_activity_pointer, load_icon, mix
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
-    from .painting_content import BRUSH_SIZES, COLORS
+    from .painting_content import BRUSH_SIZES, COLORS, GALLERY_PAGE_SIZE
 else:  # pragma: no cover - runtime/script fallback
-    from painting_content import BRUSH_SIZES, COLORS
+    from painting_content import BRUSH_SIZES, COLORS, GALLERY_PAGE_SIZE
 
 try:
     from greia_platform.activity_api import get_icon_path
@@ -206,16 +206,34 @@ class PaintingRenderer:
             result.append((pygame.Rect(right - (order + 1) * size - order * gap, y - size // 2, size, size), brush_index))
         return result
 
-    def gallery_cards(self, records) -> list[tuple[pygame.Rect, object]]:
+    @staticmethod
+    def gallery_page_count(record_count: int) -> int:
+        """Number of 3x2 gallery pages needed to reach every saved painting."""
+        return max(1, -(-int(record_count) // GALLERY_PAGE_SIZE))
+
+    def gallery_cards(self, records, page: int = 0) -> list[tuple[pygame.Rect, object]]:
+        """Return the hit rectangles for one gallery page (default: first)."""
         area = self.canvas_rect
         gap = self.metrics.px(18)
         card_w = (area.width - gap * 2) // 3
         card_h = (area.height - gap) // 2
+        page = max(0, min(int(page), self.gallery_page_count(len(records)) - 1))
+        first = page * GALLERY_PAGE_SIZE
         cards = []
-        for index, record in enumerate(records[:6]):
+        for index, record in enumerate(records[first:first + GALLERY_PAGE_SIZE]):
             row, col = divmod(index, 3)
             cards.append((pygame.Rect(area.left + col * (card_w + gap), area.top + row * (card_h + gap), card_w, card_h), record))
         return cards
+
+    def gallery_nav_buttons(self) -> tuple[pygame.Rect, pygame.Rect]:
+        """Big previous/next arrows in the (otherwise unused) palette strip."""
+        safe = self.metrics.activity_safe_rect()
+        height = self.metrics.px(66)
+        width = self.metrics.px(96)
+        y = safe.bottom - self.metrics.margin - self.palette_height // 2 - height // 2
+        left = safe.left + self.metrics.margin + self.metrics.px(10)
+        right = safe.right - self.metrics.margin - self.metrics.px(10) - width
+        return pygame.Rect(left, y, width, height), pygame.Rect(right, y, width, height)
 
     def thumbnail(self, record, size: tuple[int, int], repository) -> pygame.Surface | None:
         cached = self.thumbnail_cache.get(record.painting_id)
@@ -483,9 +501,21 @@ class PaintingRenderer:
                 dot_col = (245, 158, 11) if is_active else (51, 65, 85)
                 pygame.draw.circle(screen, dot_col, rect.center, dot_r)
 
-    def draw_gallery(self, screen: pygame.Surface, records, repository) -> None:
+    def draw_gallery(
+        self,
+        screen: pygame.Surface,
+        records,
+        repository,
+        page: int = 0,
+        focus_index: int | None = None,
+        library_full: bool = False,
+    ) -> None:
+        page_count = self.gallery_page_count(len(records))
+        page = max(0, min(int(page), page_count - 1))
         scaled_frame = self._scaled_card_frame
-        for rect, record in self.gallery_cards(records):
+        if not records and self.empty_icon is not None:
+            screen.blit(self.empty_icon, self.empty_icon.get_rect(center=self.canvas_rect.center))
+        for rect, record in self.gallery_cards(records, page):
             if scaled_frame is not None and scaled_frame.get_size() == rect.size:
                 screen.blit(scaled_frame, rect)
             else:
@@ -499,8 +529,62 @@ class PaintingRenderer:
             else:
                 screen.blit(thumb, inner)
                 pygame.draw.rect(screen, (226, 232, 240), inner, width=1, border_radius=self.metrics.radius // 2)
+            if focus_index is not None and records[focus_index] is record:
+                pygame.draw.rect(
+                    screen, (234, 88, 12), rect.inflate(self.metrics.px(8), self.metrics.px(8)),
+                    width=max(3, self.metrics.px(5)), border_radius=self.metrics.radius + 4,
+                )
+        if page_count > 1 or library_full:
+            self._draw_gallery_nav(screen, page, page_count, library_full)
 
-
+    def _draw_gallery_nav(self, screen: pygame.Surface, page: int, page_count: int, library_full: bool) -> None:
+        """Language-free pager: big arrows, one dot per page, full-shelf badge."""
+        previous, following = self.gallery_nav_buttons()
+        for rect, direction, enabled in (
+            (previous, -1, page > 0),
+            (following, 1, page < page_count - 1),
+        ):
+            fill = (254, 240, 138) if enabled else (241, 245, 249)
+            pygame.draw.rect(screen, (203, 213, 225), rect.move(0, self.metrics.px(3)), border_radius=self.metrics.radius)
+            pygame.draw.rect(screen, fill, rect, border_radius=self.metrics.radius)
+            pygame.draw.rect(screen, (245, 158, 11) if enabled else (226, 232, 240), rect, width=2, border_radius=self.metrics.radius)
+            half_h = rect.height // 4
+            half_w = rect.width // 6
+            cx, cy = rect.center
+            tip = cx + direction * half_w
+            tail = cx - direction * half_w
+            colour = (51, 65, 85) if enabled else (203, 213, 225)
+            pygame.draw.polygon(screen, colour, [(tip, cy), (tail, cy - half_h), (tail, cy + half_h)])
+        badge = None
+        if library_full:
+            badge = pygame.Rect(0, 0, self.metrics.px(150), self.metrics.px(44))
+            badge.midleft = (previous.right + self.metrics.px(14), previous.centery)
+        # One dot per page (at most 8 pages for 48 paintings).
+        span_left = badge.right if badge is not None else previous.right
+        dot = self.metrics.px(9)
+        gap = self.metrics.px(14)
+        total = page_count * dot * 2 + (page_count - 1) * gap
+        x = (span_left + following.left) // 2 - total // 2 + dot
+        for index in range(page_count):
+            colour = (245, 158, 11) if index == page else (203, 213, 225)
+            pygame.draw.circle(screen, colour, (x, previous.centery), dot if index == page else dot - 2)
+            x += dot * 2 + gap
+        if badge is not None:
+            pygame.draw.rect(screen, (254, 226, 226), badge, border_radius=badge.height // 2)
+            pygame.draw.rect(screen, (211, 61, 65), badge, width=3, border_radius=badge.height // 2)
+            # Full-shelf pictogram: a 3x2 grid of filled cards and an alert dot.
+            cell = self.metrics.px(10)
+            left = badge.left + self.metrics.px(18)
+            for index in range(6):
+                row, col = divmod(index, 3)
+                pygame.draw.rect(
+                    screen, (211, 61, 65),
+                    (left + col * (cell + 3), badge.centery - cell - 1 + row * (cell + 3), cell, cell),
+                    border_radius=2,
+                )
+            pygame.draw.circle(screen, (211, 61, 65), (badge.right - self.metrics.px(32), badge.centery), self.metrics.px(14))
+            pygame.draw.rect(screen, (255, 255, 255), (badge.right - self.metrics.px(35), badge.centery - self.metrics.px(8), self.metrics.px(6), self.metrics.px(10)), border_radius=2)
+            pygame.draw.circle(screen, (255, 255, 255), (badge.right - self.metrics.px(32), badge.centery + self.metrics.px(8)), self.metrics.px(3))
 
 
 # -- PNG helpers (shared with app, keeps per-frame encode at save boundary only) --

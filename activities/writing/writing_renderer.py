@@ -17,10 +17,10 @@ from greia_platform.activity_ui import draw_icon_button, draw_plus_symbol, draw_
 from greia_platform.typography import FontRole, GreiaTypography, grapheme_spans
 
 if __package__:
-    from .writing_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from .writing_content import GALLERY_PAGE_SIZE, REFERENCE_HEIGHT, REFERENCE_WIDTH
     from .writing_model import DocumentRecord
 else:  # pragma: no cover - runtime/script fallback
-    from writing_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from writing_content import GALLERY_PAGE_SIZE, REFERENCE_HEIGHT, REFERENCE_WIDTH
     from writing_model import DocumentRecord
 
 try:
@@ -211,15 +211,40 @@ class WritingRenderer:
 
     # -- geometry helpers -------------------------------------------------
 
+    @staticmethod
+    def gallery_page_count(record_count: int) -> int:
+        """Number of 3x2 gallery pages needed to reach every saved document."""
+        return max(1, -(-int(record_count) // GALLERY_PAGE_SIZE))
+
+    def _gallery_nav_height(self) -> int:
+        return self.metrics.px(78)
+
+    def gallery_nav_buttons(self, editor_rect: pygame.Rect) -> tuple[pygame.Rect, pygame.Rect]:
+        """Big previous/next arrows along the bottom edge of the gallery."""
+        height = self.metrics.px(62)
+        width = self.metrics.px(96)
+        y = editor_rect.bottom - height
+        return (
+            pygame.Rect(editor_rect.left, y, width, height),
+            pygame.Rect(editor_rect.right - width, y, width, height),
+        )
+
     def gallery_cards(
-        self, editor_rect: pygame.Rect, records: list[DocumentRecord]
+        self,
+        editor_rect: pygame.Rect,
+        records: list[DocumentRecord],
+        page: int = 0,
     ) -> list[tuple[pygame.Rect, DocumentRecord]]:
-        area = editor_rect
+        """Return the hit rectangles for one gallery page (default: first)."""
+        area = editor_rect.copy()
+        area.height -= self._gallery_nav_height()
         gap = self.metrics.px(18)
         card_w = (area.width - gap * 2) // 3
         card_h = (area.height - gap) // 2
+        page = max(0, min(int(page), self.gallery_page_count(len(records)) - 1))
+        first = page * GALLERY_PAGE_SIZE
         cards: list[tuple[pygame.Rect, DocumentRecord]] = []
-        for index, record in enumerate(records[:6]):
+        for index, record in enumerate(records[first:first + GALLERY_PAGE_SIZE]):
             row, col = divmod(index, 3)
             cards.append(
                 (
@@ -467,9 +492,24 @@ class WritingRenderer:
             )
             screen.blit(rendered, rendered.get_rect(center=rect.center))
 
-    def draw_gallery(self, screen: pygame.Surface, editor_rect: pygame.Rect, records: list[DocumentRecord]) -> None:
-        for rect, record in self.gallery_cards(editor_rect, records):
+    def draw_gallery(
+        self,
+        screen: pygame.Surface,
+        editor_rect: pygame.Rect,
+        records: list[DocumentRecord],
+        page: int = 0,
+        focus_index: int | None = None,
+        library_full: bool = False,
+    ) -> None:
+        page_count = self.gallery_page_count(len(records))
+        page = max(0, min(int(page), page_count - 1))
+        for rect, record in self.gallery_cards(editor_rect, records, page):
             pygame.draw.rect(screen, self.theme.panel, rect, border_radius=self.metrics.radius)
+            if focus_index is not None and records[focus_index] is record:
+                pygame.draw.rect(
+                    screen, self.theme.accent, rect.inflate(self.metrics.px(8), self.metrics.px(8)),
+                    width=max(3, self.metrics.px(5)), border_radius=self.metrics.radius + 4,
+                )
             if not record.preview:
                 if self._empty_icon is not None:
                     screen.blit(self._empty_icon, self._empty_icon.get_rect(center=rect.center))
@@ -500,6 +540,62 @@ class WritingRenderer:
                     self._cached_gallery_text(line, self.theme.text),
                     (rect.left + self.metrics.px(16), y),
                 )
+        if page_count > 1 or library_full:
+            self._draw_gallery_nav(screen, editor_rect, page, page_count, library_full)
+
+    def _draw_gallery_nav(
+        self,
+        screen: pygame.Surface,
+        editor_rect: pygame.Rect,
+        page: int,
+        page_count: int,
+        library_full: bool,
+    ) -> None:
+        """Language-free pager: big arrows, one dot per page, full-shelf badge."""
+        previous, following = self.gallery_nav_buttons(editor_rect)
+        for rect, direction, enabled in (
+            (previous, -1, page > 0),
+            (following, 1, page < page_count - 1),
+        ):
+            fill = self.theme.accent if enabled else mix(self.theme.panel, self.theme.background, 0.35)
+            pygame.draw.rect(screen, fill, rect, border_radius=self.metrics.radius)
+            half_h = rect.height // 4
+            half_w = rect.width // 6
+            cx, cy = rect.center
+            tip = cx + direction * half_w
+            tail = cx - direction * half_w
+            colour = self.theme.accent_text if enabled else mix(self.theme.text, self.theme.background, 0.6)
+            pygame.draw.polygon(screen, colour, [(tip, cy), (tail, cy - half_h), (tail, cy + half_h)])
+        badge = None
+        if library_full:
+            badge = pygame.Rect(0, 0, self.metrics.px(150), self.metrics.px(44))
+            badge.midleft = (previous.right + self.metrics.px(14), previous.centery)
+        # One dot per page; shrink the spacing so 20 pages (120 documents) fit.
+        span_left = badge.right if badge is not None else previous.right
+        room = following.left - span_left - self.metrics.px(40)
+        dot = self.metrics.px(7)
+        gap = max(self.metrics.px(3), min(self.metrics.px(12), (room - page_count * dot * 2) // max(1, page_count - 1)))
+        total = page_count * dot * 2 + (page_count - 1) * gap
+        x = (span_left + following.left) // 2 - total // 2 + dot
+        for index in range(page_count):
+            colour = self.theme.accent if index == page else mix(self.theme.panel, self.theme.text, 0.25)
+            pygame.draw.circle(screen, colour, (x, previous.centery), dot if index == page else dot - 2)
+            x += dot * 2 + gap
+        if badge is not None:
+            pygame.draw.rect(screen, (254, 226, 226), badge, border_radius=badge.height // 2)
+            pygame.draw.rect(screen, (211, 61, 65), badge, width=3, border_radius=badge.height // 2)
+            cell = self.metrics.px(10)
+            left = badge.left + self.metrics.px(18)
+            for index in range(6):
+                row, col = divmod(index, 3)
+                pygame.draw.rect(
+                    screen, (211, 61, 65),
+                    (left + col * (cell + 3), badge.centery - cell - 1 + row * (cell + 3), cell, cell),
+                    border_radius=2,
+                )
+            pygame.draw.circle(screen, (211, 61, 65), (badge.right - self.metrics.px(32), badge.centery), self.metrics.px(14))
+            pygame.draw.rect(screen, (255, 255, 255), (badge.right - self.metrics.px(35), badge.centery - self.metrics.px(8), self.metrics.px(6), self.metrics.px(10)), border_radius=2)
+            pygame.draw.circle(screen, (255, 255, 255), (badge.right - self.metrics.px(32), badge.centery + self.metrics.px(8)), self.metrics.px(3))
 
 
 __all__ = ["VisualLine", "WritingRenderer"]

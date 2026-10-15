@@ -102,6 +102,8 @@ class TeatrinoNarrationFlowTests(unittest.TestCase):
         app.sound_mgr = FakeSound()
         app.active_bg_idx = 0
         app.puppets_on_stage = []
+        # Recording is refused up front when the show shelf is full.
+        app.show_repo = SimpleNamespace(is_full=lambda: False)
         return app
 
     def test_picker_is_wav_and_narration_role_only(self):

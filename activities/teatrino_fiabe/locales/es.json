@@ -23,6 +23,7 @@
     "ui.recording_saved": "¡Función guardada en tu biblioteca!",
     "ui.playing_show": "¡Función en marcha! ¡Hurra!",
     "ui.stage_cleared": "¡Escenario listo!",
+    "ui.shelf_full": "¡La estantería está llena! Borra una función para hacer sitio.",
     "ui.recording_save_failed": "No he podido guardar esta función.",
     "ui.narration_imported": "¡Voz lista para la función!",
     "ui.narration_play_failed": "No puedo usar esta voz.",

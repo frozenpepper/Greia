@@ -23,6 +23,7 @@
     "ui.recording_saved": "Spettacolo salvato nella tua libreria!",
     "ui.playing_show": "Spettacolo in corso! Evviva!",
     "ui.stage_cleared": "Palcoscenico pronto!",
+    "ui.shelf_full": "Lo scaffale è pieno! Elimina una storia per fare spazio.",
     "ui.recording_save_failed": "Non sono riuscito a salvare questo spettacolo.",
     "ui.narration_imported": "Voce pronta per lo spettacolo!",
     "ui.narration_play_failed": "Non riesco a usare questa voce.",

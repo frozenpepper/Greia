@@ -56,6 +56,19 @@ def get_library_modal_layout(page: int, total_shows: int) -> dict:
     }
 
 
+def get_delete_dialog_layout() -> dict:
+    """Rectangles for the deliberate "delete this show?" dialog.
+
+    A preview of the show sits on top; two big pictogram buttons sit below,
+    with the safe "keep" choice on the left and the destructive one on the right.
+    """
+    box = pygame.Rect(212, 118, 600, 364)
+    preview = pygame.Rect(box.x + 40, box.y + 28, box.width - 80, 104)
+    keep = pygame.Rect(box.x + 50, box.bottom - 190, 220, 150)
+    delete = pygame.Rect(box.right - 50 - 220, box.bottom - 190, 220, 150)
+    return {"box": box, "preview": preview, "keep": keep, "delete": delete}
+
+
 def draw_puppet(surface: pygame.Surface, puppet, sprite_img: pygame.Surface, typography: GreiaTypography) -> None:
     """Draw one puppet with rod, shadow, glow, tilt and jump/talk offsets."""
     # Puppet is expected to expose update() + attributes; we call update here
@@ -148,4 +161,4 @@ def draw_stage_curtains_and_valance(surface: pygame.Surface) -> None:
     pygame.draw.rect(surface, STAGE_GOLD, (0, 10, REFERENCE_WIDTH, 4))
 
 
-__all__ = ["get_library_modal_layout", "draw_puppet", "draw_ambient_spark", "draw_stage_curtains_and_valance"]
+__all__ = ["get_library_modal_layout", "get_delete_dialog_layout", "draw_puppet", "draw_ambient_spark", "draw_stage_curtains_and_valance"]

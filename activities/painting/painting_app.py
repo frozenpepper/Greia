@@ -20,11 +20,11 @@ from greia_platform.localization import ActivityLocaleSupport, LocalizedResource
 from pathlib import Path
 
 if __package__:
-    from .painting_content import BRUSH_SIZES, COLORS, CREATION_PICKER_POLL_SECONDS
+    from .painting_content import BRUSH_SIZES, COLORS, CREATION_PICKER_POLL_SECONDS, GALLERY_PAGE_SIZE
     from .painting_model import PaintingRecord, PaintingRepository, Stroke, StrokeHistory
     from .painting_renderer import PaintingRenderer, _decode_png, _encode_png
 else:  # pragma: no cover - runtime/script fallback
-    from painting_content import BRUSH_SIZES, COLORS, CREATION_PICKER_POLL_SECONDS
+    from painting_content import BRUSH_SIZES, COLORS, CREATION_PICKER_POLL_SECONDS, GALLERY_PAGE_SIZE
     from painting_model import PaintingRecord, PaintingRepository, Stroke, StrokeHistory
     from painting_renderer import PaintingRenderer, _decode_png, _encode_png
 
@@ -89,6 +89,10 @@ class PaintingApp:
         self.dirty = False
         self.save_error = False
         self.last_change = 0.0
+        # Gallery cursor over *all* saved paintings; the visible 3x2 page is
+        # derived from it so every drawing is reachable by arrows or paging.
+        self.gallery_focus = 0
+        self.library_full_until = 0.0
 
         # Canvas styling: warm crisp white studio paper
         self.canvas_background = (255, 255, 255)
@@ -97,6 +101,7 @@ class PaintingApp:
         if self.records:
             self._open(self.records[0])
         else:
+            # A fresh blank page is only a draft until the child draws on it.
             self._new()
 
     # -- geometry proxies (renderer owns metrics-aware rects) ---------------
@@ -122,6 +127,10 @@ class PaintingApp:
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     if self._save():
                         running = False
+                elif event.type == pygame.KEYDOWN:
+                    self.handle_key(event)
+                elif event.type == pygame.MOUSEWHEEL and self.mode == "gallery":
+                    self._gallery_page_step(-1 if event.y > 0 else 1)
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.handle_pointer_down(event.pos)
                 elif event.type == pygame.MOUSEMOTION and self.drawing:
@@ -165,6 +174,49 @@ class PaintingApp:
             return
         self._mouse_down(pos)
 
+    def handle_key(self, event: pygame.event.Event) -> None:
+        """Keyboard/controller-mapped gallery navigation (arrows + Space/Enter)."""
+        if self.mode != "gallery" or not self.records:
+            return
+        key = event.key
+        if key == pygame.K_LEFT:
+            self._gallery_move(-1)
+        elif key == pygame.K_RIGHT:
+            self._gallery_move(1)
+        elif key == pygame.K_UP:
+            self._gallery_move(-3)
+        elif key == pygame.K_DOWN:
+            self._gallery_move(3)
+        elif key == pygame.K_PAGEUP:
+            self._gallery_page_step(-1)
+        elif key == pygame.K_PAGEDOWN:
+            self._gallery_page_step(1)
+        elif key in {pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE}:
+            self._open(self.records[self.gallery_focus])
+
+    def _gallery_move(self, delta: int) -> None:
+        count = len(self.records)
+        if count:
+            self.gallery_focus = max(0, min(count - 1, self.gallery_focus + delta))
+
+    def _gallery_page_step(self, direction: int) -> None:
+        """Move one 3x2 page, landing on that page's first painting."""
+        count = len(self.records)
+        if not count:
+            return
+        pages = self.renderer.gallery_page_count(count)
+        page = max(0, min(pages - 1, self.gallery_focus // GALLERY_PAGE_SIZE + direction))
+        self.gallery_focus = page * GALLERY_PAGE_SIZE
+
+    def _enter_gallery(self) -> None:
+        self.mode = "gallery"
+        self.gallery_focus = 0
+        if self.current is not None:
+            for index, record in enumerate(self.records):
+                if record.painting_id == self.current.painting_id:
+                    self.gallery_focus = index
+                    break
+
     def handle_pointer_motion(self, pos: tuple[int, int]) -> None:
         self._mouse_motion(pos)
 
@@ -179,24 +231,33 @@ class PaintingApp:
         return self._mouse_up(pos)
 
     def handle_resize(self, event: pygame.event.Event) -> None:
+        # Persist in-flight strokes at the old geometry before it changes: the
+        # canvas is re-decoded from storage at the new size below.
+        saved = self._save()
         self.screen = pygame.display.get_surface() or self.screen
         self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
         # Rebuild renderer caches for new size
         self.renderer.on_resize(self.metrics, self.screen)
-        # Recreate canvas surfaces sized to new canvas_rect
-        # Keep existing artwork scaled/thumbnail-aware? For now create blank
-        # and reload current painting at new size (centered).
-        if self.current is not None:
-            try:
-                # Re-decode current PNG at new size
-                surface = _decode_png(self.repository.load_png(self.current.painting_id), self.canvas_rect.size)
-                self.canvas = surface
-                self.base_canvas = surface.copy()
-                self.history.clear()
-                self.active_points = []
-                self.continuation_only = False
-            except Exception:
-                pass
+        if not saved:
+            return
+        if self.current is None:
+            # Blank draft: just resize the empty page.
+            self.canvas = self._new_blank_surface()
+            self.base_canvas = self.canvas.copy()
+            self.history.clear()
+            self.active_points = []
+            self.continuation_only = False
+            return
+        try:
+            # Re-decode current PNG at new size (centered, aspect preserved)
+            surface = _decode_png(self.repository.load_png(self.current.painting_id), self.canvas_rect.size)
+            self.canvas = surface
+            self.base_canvas = surface.copy()
+            self.history.clear()
+            self.active_points = []
+            self.continuation_only = False
+        except Exception:
+            pass
 
     # -- internal mouse handlers (preserve original semantics) ------------
 
@@ -253,7 +314,10 @@ class PaintingApp:
         if gallery.collidepoint(pos):
             if not self._save():
                 return True
-            self.mode = "gallery" if self.mode == "paint" else "paint"
+            if self.mode == "paint":
+                self._enter_gallery()
+            else:
+                self.mode = "paint"
             return True
         if new.collidepoint(pos):
             if self._save():
@@ -273,7 +337,15 @@ class PaintingApp:
                 self._request_shared_png()
             return True
         if self.mode == "gallery":
-            for rect, record in self.renderer.gallery_cards(self.records):
+            previous, following = self.renderer.gallery_nav_buttons()
+            if previous.collidepoint(pos):
+                self._gallery_page_step(-1)
+                return True
+            if following.collidepoint(pos):
+                self._gallery_page_step(1)
+                return True
+            page = self.gallery_focus // GALLERY_PAGE_SIZE
+            for rect, record in self.renderer.gallery_cards(self.records, page):
                 if rect.collidepoint(pos):
                     self._open(record)
                     break
@@ -317,14 +389,26 @@ class PaintingApp:
         self.last_change = time.monotonic()
 
     def _new(self) -> None:
-        blank = self._new_blank_surface()
-        try:
-            record = self.repository.create(_encode_png(blank))
-        except (RuntimeError, ValueError, OSError):
-            self.save_error = True
+        """Start a fresh page without persisting an empty drawing.
+
+        A blank page is only an in-memory draft: no record or PNG is written
+        until the child actually draws (see ``_save``). Pressing New on a page
+        that is still blank reuses it instead of piling up empty records.
+        """
+        if self._canvas_is_blank() and not self.dirty:
+            self.mode = "paint"
+            self.active_points = []
+            self.continuation_only = False
+            self.save_error = False
             return
-        self.current = record
-        self.records = [record, *[item for item in self.records if item.painting_id != record.painting_id]]
+        if self.repository.is_full():
+            # Never evict old work: show the full shelf and let the child
+            # browse; the current painting stays open and untouched.
+            self.library_full_until = time.monotonic() + 4.0
+            self._enter_gallery()
+            return
+        blank = self._new_blank_surface()
+        self.current = None
         self.mode = "paint"
         self.canvas = blank
         self.base_canvas = blank.copy()
@@ -333,6 +417,12 @@ class PaintingApp:
         self.continuation_only = False
         self.dirty = False
         self.save_error = False
+
+    def _canvas_is_blank(self) -> bool:
+        blank = self._new_blank_surface()
+        if self.canvas.get_size() != blank.get_size():
+            return False
+        return pygame.image.tostring(self.canvas, "RGB") == pygame.image.tostring(blank, "RGB")
 
     def _open(self, record: PaintingRecord) -> bool:
         if not self._save():
@@ -368,10 +458,18 @@ class PaintingApp:
             self._save()
 
     def _save(self) -> bool:
-        if not self.dirty or self.current is None:
+        if not self.dirty:
+            return True
+        if self.current is None and self._canvas_is_blank():
+            # Drew and then erased/undid everything on a draft: nothing to keep.
+            self.dirty = False
             return True
         try:
-            record = self.repository.save_png(self.current.painting_id, _encode_png(self.canvas))
+            payload = _encode_png(self.canvas)
+            if self.current is None:
+                record = self.repository.create(payload)
+            else:
+                record = self.repository.save_png(self.current.painting_id, payload)
         except (RuntimeError, ValueError, OSError):
             self.save_error = True
             return False
@@ -384,12 +482,14 @@ class PaintingApp:
 
     def _publish_current(self) -> None:
         """Explicit copy into My Creations, never an automatic autosave export."""
-        if self.creations is None or self.current is None:
+        if self.creations is None:
             return
         if not self._save():
             self.shared_feedback = "error"
             self.shared_feedback_until = time.monotonic() + 2.0
             return
+        if self.current is None:
+            return  # nothing drawn yet: there is nothing to publish
         try:
             private_name = self.repository.private_png_name(self.current.painting_id)
             png = self.repository.load_png(self.current.painting_id)
@@ -545,7 +645,12 @@ class PaintingApp:
             shared_import_state=self.shared_import_state,
         )
         if self.mode == "gallery":
-            self.renderer.draw_gallery(self.screen, self.records, self.repository)
+            self.renderer.draw_gallery(
+                self.screen, self.records, self.repository,
+                page=self.gallery_focus // GALLERY_PAGE_SIZE,
+                focus_index=self.gallery_focus if self.records else None,
+                library_full=time.monotonic() < self.library_full_until,
+            )
         else:
             self.renderer.draw_canvas(self.screen, self.canvas)
             self.renderer.draw_palette(self.screen, self.selected_color, self.eraser, self.selected_size)

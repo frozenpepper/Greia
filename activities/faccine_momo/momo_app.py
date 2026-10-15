@@ -95,7 +95,9 @@ class MomoActivity:
                 self._quiz_advance_timer -= dt
                 if self._quiz_advance_timer <= 0.0 and self.model.mode == GameMode.GUESS_EMOTION:
                     self.model.start_quiz_round()
-                    self.speech_queue.enqueue(self.model.quiz_target.value, delay_after=0.3)
+                    # Ask the question only: naming the target emotion aloud
+                    # would hand the child the answer.
+                    self.speech_queue.enqueue("game_prompt", delay_after=0.3)
 
             # Update simulation & speech
             self.model.update(dt)
@@ -147,8 +149,8 @@ class MomoActivity:
             self.audio.play_sfx("pop")
             new_mode = self.model.toggle_mode()
             if new_mode == GameMode.GUESS_EMOTION:
+                # Ask the question only; never speak the target emotion's name.
                 self.speech_queue.enqueue("game_prompt", delay_after=0.5)
-                self.speech_queue.enqueue(self.model.quiz_target.value, delay_after=0.3)
             else:
                 self.speech_queue.enqueue("welcome", delay_after=0.3)
             return

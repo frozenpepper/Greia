@@ -6,6 +6,7 @@ import unittest
 
 from activities.teatrino_fiabe.teatrino_content import MAX_SAVED_SHOWS
 from activities.teatrino_fiabe.teatrino_model import (
+    ShowLibraryFullError,
     ShowRepository,
     ShowStorageError,
 )
@@ -94,35 +95,55 @@ class TeatrinoBackdropRepositoryTests(unittest.TestCase):
         storage.files[name] = b"tampered"
         self.assertIsNone(repo.load_show_backdrop(meta["id"]))
 
-    def test_show_cap_reclaims_dropped_show_files_and_backdrop(self):
+    def test_full_shelf_refuses_save_and_never_evicts_oldest_show(self):
+        """Superseded policy: the 17th save used to delete the oldest show.
+
+        Child work is never evicted silently; the repository refuses and the
+        child must delete a show deliberately.
+        """
+        storage = MemoryStorage()
+        repo = ShowRepository(storage)
+        metas = []
+        for index in range(MAX_SAVED_SHOWS):
+            metas.append(
+                repo.save_show(
+                    "cottage", [], [], [], 1.0,
+                    b"RIFF" + bytes([index]), f"picture-{index}".encode(),
+                )
+            )
+        self.assertTrue(repo.is_full())
+        files_before = dict(storage.files)
+        index_before = list(repo.list_shows())
+        with self.assertRaises(ShowLibraryFullError):
+            repo.save_show("cottage", [], [], [], 1.0, b"RIFF-new", b"picture-new")
+        # Nothing was written, dropped or reclaimed.
+        self.assertEqual(storage.files, files_before)
+        self.assertEqual(repo.list_shows(), index_before)
+        self.assertEqual(len(repo.list_shows()), MAX_SAVED_SHOWS)
+        first = metas[0]
+        self.assertTrue(any(item["id"] == first["id"] for item in repo.list_shows()))
+        self.assertIn(repo._show_json_name(first["id"]), storage.files)
+        self.assertIn(repo._show_wav_name(first["id"]), storage.files)
+        self.assertIn(repo._backdrop_name(first["backdrop_sha256"]), storage.files)
+
+    def test_deliberate_delete_makes_room_and_reclaims_its_files(self):
         storage = MemoryStorage()
         repo = ShowRepository(storage)
         first = None
-        for index in range(MAX_SAVED_SHOWS + 1):
+        for index in range(MAX_SAVED_SHOWS):
             meta = repo.save_show(
-                "cottage",
-                [],
-                [],
-                [],
-                1.0,
-                b"RIFF" + bytes([index]),
-                f"picture-{index}".encode(),
+                "cottage", [], [], [], 1.0,
+                b"RIFF" + bytes([index]), f"picture-{index}".encode(),
             )
-            if index == 0:
-                first = meta
+            first = first or meta
         assert first is not None
-        first_id = first["id"]
-        first_digest = first["backdrop_sha256"]
-        self.assertFalse(
-            any(item.get("id") == first_id for item in repo.list_shows())
-        )
-        self.assertNotIn(repo._show_json_name(first_id), storage.files)
-        self.assertNotIn(repo._show_wav_name(first_id), storage.files)
-        self.assertNotIn(repo._backdrop_name(first_digest), storage.files)
-        self.assertEqual(
-            len([name for name in storage.files if name.startswith("backdrop_")]),
-            MAX_SAVED_SHOWS,
-        )
+        repo.delete_show(first["id"])
+        self.assertFalse(repo.is_full())
+        self.assertNotIn(repo._show_json_name(first["id"]), storage.files)
+        self.assertNotIn(repo._show_wav_name(first["id"]), storage.files)
+        self.assertNotIn(repo._backdrop_name(first["backdrop_sha256"]), storage.files)
+        repo.save_show("cottage", [], [], [], 1.0, b"RIFF-new", b"picture-new")
+        self.assertEqual(len(repo.list_shows()), MAX_SAVED_SHOWS)
 
     def test_failed_index_read_refuses_save_without_overwriting_catalogue(self):
         storage = MemoryStorage()

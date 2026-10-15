@@ -81,6 +81,41 @@ class StoryLibrary:
         return None
 
 
+class DeleteConfirmation:
+    """Pure state for the deliberate "delete this story?" step.
+
+    The dialog always opens with the safe choice (keep) focused, so a stray
+    Space/Enter or controller south-button press never deletes. The destructive
+    choice only works after a short arming delay, which also absorbs a
+    double-tap that opened and then immediately confirmed the dialog. Teatrino
+    uses the same behaviour so both Activities feel identical.
+    """
+
+    KEEP = "keep"
+    DELETE = "delete"
+    ARM_SECONDS = 0.6
+
+    def __init__(self, target_id: str, opened_at: float) -> None:
+        self.target_id = target_id
+        self.opened_at = float(opened_at)
+        self.focus = self.KEEP
+
+    def move_focus(self) -> None:
+        """Toggle between the two buttons (left/right/up/down all do this)."""
+        self.focus = self.DELETE if self.focus == self.KEEP else self.KEEP
+
+    def armed(self, now: float) -> bool:
+        return (float(now) - self.opened_at) >= self.ARM_SECONDS
+
+    def resolve(self, choice: str, now: float) -> str | None:
+        """Return ``keep``/``delete`` when the choice takes effect, else ``None``."""
+        if choice == self.KEEP:
+            return self.KEEP
+        if choice == self.DELETE and self.armed(now):
+            return self.DELETE
+        return None
+
+
 class VoiceStorageError(RuntimeError):
     """A private voice-story mutation could not be committed."""
 
@@ -334,6 +369,7 @@ def _emit(event_id: str, payload: dict) -> None:
 
 
 __all__ = [
+    "DeleteConfirmation",
     "SavedStory",
     "StoryLibrary",
     "VoiceStorage",

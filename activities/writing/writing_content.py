@@ -18,6 +18,8 @@ STORAGE_KEY: Final = INDEX_KEY
 
 AUTOSAVE_IDLE_SECONDS: Final = 1.2
 MAX_DOCUMENTS: Final = 120
+# Gallery shows a 3x2 page; every saved page must be reachable by paging.
+GALLERY_PAGE_SIZE: Final = 6
 MAX_CHARACTERS: Final = 120_000
 MAX_UNDO_EDITS: Final = 128
 MAX_UNDO_PAYLOAD_CHARS: Final = 65_536
@@ -32,6 +34,7 @@ __all__ = [
     "AUTOSAVE_IDLE_SECONDS",
     "MAX_CHARACTERS",
     "MAX_DOCUMENTS",
+    "GALLERY_PAGE_SIZE",
     "MAX_UNDO_EDITS",
     "MAX_UNDO_PAYLOAD_CHARS",
     "PREVIEW_GRAPHEME_LIMIT",

@@ -20,11 +20,11 @@ from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewpor
 from greia_platform.typography import FontRole, GreiaTypography, grapheme_boundaries, grapheme_spans
 
 if __package__:
-    from .writing_content import AUTOSAVE_IDLE_SECONDS
+    from .writing_content import AUTOSAVE_IDLE_SECONDS, GALLERY_PAGE_SIZE
     from .writing_model import DocumentRecord, DocumentRepository, TextBuffer, UndoHistory
     from .writing_renderer import VisualLine, WritingRenderer
 else:  # pragma: no cover - runtime/script fallback
-    from writing_content import AUTOSAVE_IDLE_SECONDS
+    from writing_content import AUTOSAVE_IDLE_SECONDS, GALLERY_PAGE_SIZE
     from writing_model import DocumentRecord, DocumentRepository, TextBuffer, UndoHistory
     from writing_renderer import VisualLine, WritingRenderer
 
@@ -81,9 +81,14 @@ class WritingApp:
         self.save_error = False
         self.last_change = 0.0
         self.scroll_line = 0
+        # Gallery cursor over *all* saved documents; the visible 3x2 page is
+        # derived from it so every page is reachable by arrows or paging.
+        self.gallery_focus = 0
+        self.library_full_until = 0.0
         if self.records:
             self._open(self.records[0])
         else:
+            # A fresh empty page is only a draft until something is written.
             self._new()
         pygame.key.start_text_input()
 
@@ -108,6 +113,8 @@ class WritingApp:
                     self._apply_edit(lambda: self.buffer.insert(event.text))
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     running = self.handle_pointer(event.pos)
+                elif event.type == pygame.MOUSEWHEEL and self.mode == "gallery":
+                    self._gallery_page_step(-1 if event.y > 0 else 1)
                 elif event.type == pygame.VIDEORESIZE:
                     self.handle_resize(event)
             self._step_frame()
@@ -154,8 +161,7 @@ class WritingApp:
                 return True
             return not self._save()
         if self.mode == "gallery":
-            if event.key in {pygame.K_RETURN, pygame.K_SPACE} and self.records:
-                self._open(self.records[0])
+            self._handle_gallery_key(event.key)
             return True
         if event.key == pygame.K_z and event.mod & (pygame.KMOD_CTRL | pygame.KMOD_META):
             self._undo()
@@ -181,6 +187,49 @@ class WritingApp:
         self._keep_cursor_visible()
         return True
 
+    def _handle_gallery_key(self, key: int) -> None:
+        """Arrow keys / D-pad move over every page; Space/Enter opens."""
+        if not self.records:
+            return
+        if key == pygame.K_LEFT:
+            self._gallery_move(-1)
+        elif key == pygame.K_RIGHT:
+            self._gallery_move(1)
+        elif key == pygame.K_UP:
+            self._gallery_move(-3)
+        elif key == pygame.K_DOWN:
+            self._gallery_move(3)
+        elif key == pygame.K_PAGEUP:
+            self._gallery_page_step(-1)
+        elif key == pygame.K_PAGEDOWN:
+            self._gallery_page_step(1)
+        elif key in {pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE}:
+            self._open(self.records[self.gallery_focus])
+
+    def _gallery_move(self, delta: int) -> None:
+        count = len(self.records)
+        if count:
+            self.gallery_focus = max(0, min(count - 1, self.gallery_focus + delta))
+
+    def _gallery_page_step(self, direction: int) -> None:
+        """Move one 3x2 page, landing on that page's first document."""
+        count = len(self.records)
+        if not count:
+            return
+        pages = self.renderer.gallery_page_count(count)
+        page = max(0, min(pages - 1, self.gallery_focus // GALLERY_PAGE_SIZE + direction))
+        self.gallery_focus = page * GALLERY_PAGE_SIZE
+
+    def _enter_gallery(self) -> None:
+        self.mode = "gallery"
+        self.emoji_picker_open = False
+        self.gallery_focus = 0
+        if self.current is not None:
+            for index, record in enumerate(self.records):
+                if record.document_id == self.current.document_id:
+                    self.gallery_focus = index
+                    break
+
     def handle_pointer(self, pos: tuple[int, int]) -> bool:
         if not _is_safe_point(self.screen, pos):
             return True
@@ -201,7 +250,10 @@ class WritingApp:
         if gallery.collidepoint(pos):
             if not self._save():
                 return True
-            self.mode = "gallery" if self.mode == "edit" else "edit"
+            if self.mode == "edit":
+                self._enter_gallery()
+            else:
+                self.mode = "edit"
             self.emoji_picker_open = False
             return True
         if undo.collidepoint(pos) and self.mode == "edit":
@@ -215,7 +267,15 @@ class WritingApp:
                 self._new()
             return True
         if self.mode == "gallery":
-            for rect, record in self.renderer.gallery_cards(self.editor_rect, self.records):
+            previous, following = self.renderer.gallery_nav_buttons(self.editor_rect)
+            if previous.collidepoint(pos):
+                self._gallery_page_step(-1)
+                return True
+            if following.collidepoint(pos):
+                self._gallery_page_step(1)
+                return True
+            page = self.gallery_focus // GALLERY_PAGE_SIZE
+            for rect, record in self.renderer.gallery_cards(self.editor_rect, self.records, page):
                 if rect.collidepoint(pos):
                     self._open(record)
                     break
@@ -240,15 +300,26 @@ class WritingApp:
     # -- internal helpers -----------------------------------------------
 
     def _new(self) -> None:
-        try:
-            record = self.repository.create()
-        except RuntimeError:
-            self.save_error = True
+        """Start a fresh page without persisting an empty document.
+
+        A new page is only an in-memory draft: no record is written until the
+        child has typed something (see ``_save``). Pressing New on a page that
+        is still empty reuses it instead of piling up blank documents.
+        """
+        if not self.buffer.text and not self.dirty:
+            self.mode = "edit"
+            self.emoji_picker_open = False
+            self.save_error = False
             return
-        self.current = record
+        if self.repository.is_full():
+            # Never evict old work: show the full shelf and let the child
+            # browse; the current document stays open and untouched.
+            self.library_full_until = time.monotonic() + 4.0
+            self._enter_gallery()
+            return
+        self.current = None
         self.buffer = TextBuffer()
         self.undo_history.clear()
-        self.records = [record, *[item for item in self.records if item.document_id != record.document_id]]
         self.mode = "edit"
         self.emoji_picker_open = False
         self.dirty = False
@@ -313,10 +384,17 @@ class WritingApp:
             self._save()
 
     def _save(self) -> bool:
-        if not self.dirty or self.current is None:
+        if not self.dirty:
+            return True
+        if self.current is None and not self.buffer.text.strip():
+            # Typed and then deleted everything on a draft: nothing to keep.
+            self.dirty = False
             return True
         try:
-            updated = self.repository.save_text(self.current.document_id, self.buffer.text)
+            if self.current is None:
+                updated = self.repository.create_text(self.buffer.text)
+            else:
+                updated = self.repository.save_text(self.current.document_id, self.buffer.text)
         except (RuntimeError, ValueError):
             self.save_error = True
             return False
@@ -329,15 +407,13 @@ class WritingApp:
     # -- shared UTF-8 documents ------------------------------------------
 
     def _publish_current_document(self) -> None:
-        if (
-            self.creations is None
-            or self.current is None
-            or not self.buffer.text.strip()
-        ):
+        if self.creations is None or not self.buffer.text.strip():
             return
         if not self._save():
             self.shared_state = "error"
             self.shared_feedback_until = time.monotonic() + 2.0
+            return
+        if self.current is None:
             return
         payload = self.buffer.text.encode("utf-8")
         digest = hashlib.sha256(payload).hexdigest()
@@ -528,7 +604,12 @@ class WritingApp:
             self.metrics.px(6),
         )
         if self.mode == "gallery":
-            self.renderer.draw_gallery(self.screen, self.editor_rect, self.records)
+            self.renderer.draw_gallery(
+                self.screen, self.editor_rect, self.records,
+                page=self.gallery_focus // GALLERY_PAGE_SIZE,
+                focus_index=self.gallery_focus if self.records else None,
+                library_full=time.monotonic() < self.library_full_until,
+            )
         else:
             lines = self._layout()
             self.renderer.draw_editor(

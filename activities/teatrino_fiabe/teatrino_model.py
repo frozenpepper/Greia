@@ -24,8 +24,56 @@ class ShowStorageError(RuntimeError):
     """A saved show could not be committed to Greia private storage."""
 
 
+class ShowLibraryFullError(ShowStorageError):
+    """The show shelf is full; the child must delete a show on purpose.
+
+    Saving never evicts older child work to make room. The bound is an Activity
+    UX safeguard well under the platform Storage quota (a 45 s mono show WAV is
+    roughly 1.5 MiB, so 16 shows stay near 25 MiB at most).
+    """
+
+
+class DeleteConfirmation:
+    """Pure state for the deliberate "delete this?" step shown before removal.
+
+    The dialog always opens with the safe choice (keep) focused, so a stray
+    Space/Enter or controller south-button press never deletes. The destructive
+    choice only works after a short arming delay, which also absorbs a
+    double-tap that opened and then immediately confirmed the dialog.
+    """
+
+    KEEP = "keep"
+    DELETE = "delete"
+    ARM_SECONDS = 0.6
+
+    def __init__(self, target_id: str, opened_at: float) -> None:
+        self.target_id = target_id
+        self.opened_at = float(opened_at)
+        self.focus = self.KEEP
+
+    def move_focus(self) -> None:
+        """Toggle between the two buttons (left/right/up/down all do this)."""
+        self.focus = self.DELETE if self.focus == self.KEEP else self.KEEP
+
+    def armed(self, now: float) -> bool:
+        return (float(now) - self.opened_at) >= self.ARM_SECONDS
+
+    def resolve(self, choice: str, now: float) -> str | None:
+        """Return ``keep``/``delete`` when the choice takes effect, else ``None``."""
+        if choice == self.KEEP:
+            return self.KEEP
+        if choice == self.DELETE and self.armed(now):
+            return self.DELETE
+        return None
+
+
 class ShowRepository:
-    """Bounded saved shows with deduplicated content-addressed custom backdrops."""
+    """Bounded saved shows with deduplicated content-addressed custom backdrops.
+
+    The repository never evicts a saved show: when the shelf holds
+    ``MAX_SAVED_SHOWS`` it raises :class:`ShowLibraryFullError` and the child
+    deletes a show deliberately before saving another.
+    """
 
     MAX_BACKDROP_BYTES = 8 * 1024 * 1024
     BACKDROP_PREFIX = "backdrop_"
@@ -66,6 +114,10 @@ class ShowRepository:
                 cleaned.append(item)
         return cleaned[:MAX_SAVED_SHOWS]
 
+    def is_full(self) -> bool:
+        """True when another show would be refused by the shelf bound."""
+        return len(self.list_shows()) >= MAX_SAVED_SHOWS
+
     def list_shows(self) -> list[dict]:
         if self.storage is None:
             return list(self._mem_index[:MAX_SAVED_SHOWS])
@@ -103,6 +155,8 @@ class ShowRepository:
             if self.storage is not None
             else self.list_shows()
         )
+        if len(old_shows) >= MAX_SAVED_SHOWS:
+            raise ShowLibraryFullError("show shelf is full")
         show_id = uuid.uuid4().hex[:12]
         backdrop_digest = (
             hashlib.sha256(backdrop_png_bytes).hexdigest()
@@ -142,8 +196,7 @@ class ShowRepository:
             show_meta,
             *[item for item in old_shows if item.get("id") != show_id],
         ]
-        new_shows = candidates[:MAX_SAVED_SHOWS]
-        dropped = candidates[MAX_SAVED_SHOWS:]
+        new_shows = candidates
         try:
             self.storage.file_write_atomic(
                 self._show_json_name(show_id), json_bytes
@@ -165,10 +218,6 @@ class ShowRepository:
             )
             raise ShowStorageError("show could not be saved") from exc
 
-        for item in dropped:
-            old_id = item.get("id")
-            if isinstance(old_id, str) and old_id != show_id:
-                self._delete_storage_show_files(old_id)
         self._cleanup_storage_backdrops(new_shows)
         return show_meta
 
@@ -186,16 +235,10 @@ class ShowRepository:
         digest = show_meta.get("backdrop_sha256")
         if isinstance(digest, str) and backdrop_png_bytes:
             self._mem_files[self._backdrop_name(digest)] = backdrop_png_bytes
-        candidates = [
+        self._mem_index = [
             show_meta,
             *[item for item in self._mem_index if item.get("id") != show_id],
         ]
-        dropped = candidates[MAX_SAVED_SHOWS:]
-        self._mem_index = candidates[:MAX_SAVED_SHOWS]
-        for item in dropped:
-            old_id = item.get("id")
-            if isinstance(old_id, str):
-                self._delete_mem_show_files(old_id)
         self._cleanup_mem_backdrops()
 
     def _rollback_failed_save(
@@ -449,4 +492,11 @@ class AmbientSpark:
             pass
 
 
-__all__ = ["ShowRepository", "ShowStorageError", "Puppet", "AmbientSpark"]
+__all__ = [
+    "DeleteConfirmation",
+    "ShowLibraryFullError",
+    "ShowRepository",
+    "ShowStorageError",
+    "Puppet",
+    "AmbientSpark",
+]

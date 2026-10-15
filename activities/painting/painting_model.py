@@ -59,6 +59,10 @@ class PaintingRepository:
                 break
         return records
 
+    def is_full(self) -> bool:
+        """True when a new painting would be refused by the library bound."""
+        return len(self.list_records()) >= MAX_PAINTINGS
+
     def create(self, initial_png: bytes) -> PaintingRecord:
         records = self.list_records()
         if len(records) >= MAX_PAINTINGS:

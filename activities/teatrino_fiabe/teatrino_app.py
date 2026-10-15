@@ -44,6 +44,7 @@ if __package__:
         DARK_TEXT,
         FX_BUTTONS,
         MAX_RECORDING_SECONDS,
+        MAX_SAVED_SHOWS,
         PUPPET_ROSTER,
         REC_RED,
         REFERENCE_HEIGHT,
@@ -55,11 +56,19 @@ if __package__:
         MIC_GREEN,
         WHITE,
     )
-    from .teatrino_model import AmbientSpark, Puppet, ShowRepository, ShowStorageError
+    from .teatrino_model import (
+        AmbientSpark,
+        DeleteConfirmation,
+        Puppet,
+        ShowLibraryFullError,
+        ShowRepository,
+        ShowStorageError,
+    )
     from .teatrino_renderer import (
         draw_ambient_spark,
         draw_puppet,
         draw_stage_curtains_and_valance,
+        get_delete_dialog_layout,
         get_library_modal_layout,
     )
 else:
@@ -70,6 +79,7 @@ else:
         DARK_TEXT,
         FX_BUTTONS,
         MAX_RECORDING_SECONDS,
+        MAX_SAVED_SHOWS,
         PUPPET_ROSTER,
         REC_RED,
         REFERENCE_HEIGHT,
@@ -81,11 +91,19 @@ else:
         MIC_GREEN,
         WHITE,
     )
-    from teatrino_model import AmbientSpark, Puppet, ShowRepository, ShowStorageError
+    from teatrino_model import (
+        AmbientSpark,
+        DeleteConfirmation,
+        Puppet,
+        ShowLibraryFullError,
+        ShowRepository,
+        ShowStorageError,
+    )
     from teatrino_renderer import (
         draw_ambient_spark,
         draw_puppet,
         draw_stage_curtains_and_valance,
+        get_delete_dialog_layout,
         get_library_modal_layout,
     )
 
@@ -282,6 +300,8 @@ class TeatrinoApp:
 
         self.library_page = 0
         self.library_shows = self.show_repo.list_shows()
+        # Deliberate-delete dialog state; None unless a delete was requested.
+        self.delete_confirm: DeleteConfirmation | None = None
 
         self.running = True
 
@@ -436,8 +456,26 @@ class TeatrinoApp:
 
     # -- recording source / narration --------------------------------------
 
+    def _show_shelf_full(self) -> None:
+        """Friendly full-shelf state: open the library so the child can choose.
+
+        Nothing is deleted or overwritten. The child removes a show on
+        purpose (with confirmation) before another can be saved.
+        """
+        self.library_shows = self.show_repo.list_shows()
+        self.library_page = 0
+        self.app_mode = "library"
+        self.delete_confirm = None
+        self.feedback_text = "📚 " + self._ui("shelf_full")
+        self.feedback_timer = 4.0
+        self.sound_mgr.play("boing")
+
     def _start_recording(self) -> bool:
         if self.is_recording:
+            return False
+        if self.show_repo.is_full():
+            # Refuse *before* a 45 s performance is recorded and lost.
+            self._show_shelf_full()
             return False
         self.recorded_frames = []
         self.recorded_sfx = []
@@ -674,6 +712,9 @@ class TeatrinoApp:
                 wav_bytes,
                 self.custom_backdrop_png,
             )
+        except ShowLibraryFullError:
+            self._show_shelf_full()
+            return None
         except (ShowStorageError, ValueError, OSError):
             self.library_shows = self.show_repo.list_shows()
             self.feedback_text = (
@@ -836,7 +877,60 @@ class TeatrinoApp:
 
     # -- input dispatch -----------------------------------------------------
 
+    # -- deliberate delete ----------------------------------------------------
+
+    def _request_delete(self, show_item: dict) -> None:
+        """Open the confirmation dialog; nothing is removed by this call."""
+        self.sound_mgr.play("pop")
+        self.delete_confirm = DeleteConfirmation(show_item["id"], time.monotonic())
+
+    def _resolve_delete(self, choice: str) -> None:
+        """Apply the child's choice in the dialog (keep is always safe)."""
+        confirm = self.delete_confirm
+        if confirm is None:
+            return
+        outcome = confirm.resolve(choice, time.monotonic())
+        if outcome is None:
+            return  # delete pressed before the dialog armed: ignore
+        self.delete_confirm = None
+        if outcome != DeleteConfirmation.DELETE:
+            self.sound_mgr.play("pop")
+            return
+        self.sound_mgr.play("boing")
+        self.show_repo.delete_show(confirm.target_id)
+        self.library_shows = self.show_repo.list_shows()
+        per_page = get_library_modal_layout(0, 0)["cards_per_page"]
+        if self.library_page * per_page >= len(self.library_shows) and self.library_page > 0:
+            self.library_page -= 1
+
+    def _handle_delete_dialog_click(self, rx: int, ry: int) -> None:
+        layout = get_delete_dialog_layout()
+        if layout["delete"].collidepoint(rx, ry):
+            self._resolve_delete(DeleteConfirmation.DELETE)
+        elif layout["keep"].collidepoint(rx, ry) or not layout["box"].collidepoint(rx, ry):
+            # Tapping outside the dialog also keeps the show.
+            self._resolve_delete(DeleteConfirmation.KEEP)
+
+    def _handle_key_down(self, key: int) -> None:
+        """Keyboard/controller-mapped keys for the delete dialog.
+
+        Arrows/D-pad move between the two buttons, Space/Enter/south button
+        activate the focused one (initially "keep"), Escape keeps the show.
+        """
+        confirm = self.delete_confirm
+        if confirm is None:
+            return
+        if key in (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_TAB):
+            confirm.move_focus()
+        elif key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE):
+            self._resolve_delete(confirm.focus)
+        elif key == pygame.K_ESCAPE:
+            self._resolve_delete(DeleteConfirmation.KEEP)
+
     def _handle_mouse_down(self, rx: int, ry: int) -> None:
+        if self.delete_confirm is not None:
+            self._handle_delete_dialog_click(rx, ry)
+            return
         if self.app_mode == "library":
             modal_layout = get_library_modal_layout(self.library_page, len(self.library_shows))
             if modal_layout["close"].collidepoint(rx, ry):
@@ -898,11 +992,7 @@ class TeatrinoApp:
                                 self.playback_audio_channel = None
                     break
                 if card_info["del_btn"].collidepoint(rx, ry):
-                    self.sound_mgr.play("boing")
-                    self.show_repo.delete_show(show_item["id"])
-                    self.library_shows = self.show_repo.list_shows()
-                    if self.library_page * modal_layout["cards_per_page"] >= len(self.library_shows) and self.library_page > 0:
-                        self.library_page -= 1
+                    self._request_delete(show_item)
                     break
             return
 
@@ -1250,6 +1340,8 @@ class TeatrinoApp:
             cx, cy = cls_rect.center
             pygame.draw.line(surf, (185, 28, 28), (cx - 8, cy - 8), (cx + 8, cy + 8), 3)
             pygame.draw.line(surf, (185, 28, 28), (cx + 8, cy - 8), (cx - 8, cy + 8), 3)
+            if len(self.library_shows) >= MAX_SAVED_SHOWS:
+                self._draw_shelf_full_badge(surf, pygame.Rect(box_rect.x + 30, box_rect.y + 10, 170, 44))
             if not self.library_shows:
                 empty_icon = self.get_text("🎬", FontRole.DISPLAY, 72, DARK_TEXT)
                 surf.blit(empty_icon, (box_rect.centerx - empty_icon.get_width() // 2, box_rect.centery - 130))
@@ -1321,12 +1413,94 @@ class TeatrinoApp:
                         ncx, ncy = next_rect.center
                         pygame.draw.polygon(surf, DARK_TEXT, [(ncx - 6, ncy - 9), (ncx - 6, ncy + 9), (ncx + 8, ncy)])
 
+        if self.delete_confirm is not None:
+            self._draw_delete_dialog(surf)
+
         if self.feedback_text and self.app_mode == "stage":
             fb_surf = self.get_text(self.feedback_text, FontRole.TITLE, 19, STAGE_GOLD)
             fb_bg = pygame.Rect(REFERENCE_WIDTH // 2 - fb_surf.get_width() // 2 - 20, 100, fb_surf.get_width() + 40, 42)
             pygame.draw.rect(surf, (20, 16, 32), fb_bg, border_radius=12)
             pygame.draw.rect(surf, STAGE_GOLD, fb_bg, width=2, border_radius=12)
             surf.blit(fb_surf, (REFERENCE_WIDTH // 2 - fb_surf.get_width() // 2, 108))
+
+    def _draw_shelf_full_badge(self, surf: pygame.Surface, rect: pygame.Rect) -> None:
+        """Language-free "shelf is full" pictogram: filled slots plus an alert dot."""
+        pygame.draw.rect(surf, (254, 226, 226), rect, border_radius=rect.height // 2)
+        pygame.draw.rect(surf, (220, 38, 38), rect, width=3, border_radius=rect.height // 2)
+        cell = 12
+        left = rect.x + 20
+        for index in range(8):
+            row, col = divmod(index, 4)
+            pygame.draw.rect(
+                surf, (185, 28, 28),
+                (left + col * (cell + 3), rect.centery - cell - 1 + row * (cell + 3), cell, cell),
+                border_radius=3,
+            )
+        ax, ay = rect.right - 34, rect.centery
+        pygame.draw.circle(surf, (220, 38, 38), (ax, ay), 15)
+        pygame.draw.rect(surf, WHITE, (ax - 3, ay - 9, 6, 11), border_radius=2)
+        pygame.draw.circle(surf, WHITE, (ax, ay + 8), 3)
+
+    def _draw_delete_dialog(self, surf: pygame.Surface) -> None:
+        """Pictogram-only confirmation: preview of the show, keep vs delete.
+
+        Safe "keep" is on the left and focused first; the destructive button is
+        dimmed until the dialog has armed so a double-tap can never delete.
+        """
+        confirm = self.delete_confirm
+        if confirm is None:
+            return
+        shade = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA)
+        shade.fill((10, 8, 20, 170))
+        surf.blit(shade, (0, 0))
+        layout = get_delete_dialog_layout()
+        box = layout["box"]
+        pygame.draw.rect(surf, (255, 250, 240), box, border_radius=22)
+        pygame.draw.rect(surf, (220, 38, 38), box, width=5, border_radius=22)
+
+        show_item = next((item for item in self.library_shows if item.get("id") == confirm.target_id), None)
+        preview = layout["preview"]
+        pygame.draw.rect(surf, (248, 240, 225), preview, border_radius=16)
+        pygame.draw.rect(surf, (180, 140, 90), preview, width=2, border_radius=16)
+        if show_item is not None:
+            bg_sym = "🏡"
+            for b_id, b_sym, _ in BG_CONFIGS:
+                if b_id == show_item.get("backdrop"):
+                    bg_sym = b_sym
+                    break
+            bg_icon = self.get_text(bg_sym, FontRole.DISPLAY, 48, DARK_TEXT)
+            surf.blit(bg_icon, (preview.x + 26, preview.centery - bg_icon.get_height() // 2))
+            for a_idx, actor_id in enumerate(show_item.get("actors", [])[:4]):
+                micro = self.puppet_thumbs.get(actor_id, self.puppet_thumbs.get("lilli"))
+                if micro is not None:
+                    surf.blit(micro, (preview.x + 120 + a_idx * 62, preview.centery - micro.get_height() // 2))
+            dur_text = ("🎙️ " if show_item.get("has_audio") else "") + f"{show_item.get('duration', 0)}s"
+            dur_s = self.get_text(dur_text, FontRole.CONTROL, 20, (120, 60, 20))
+            surf.blit(dur_s, (preview.right - dur_s.get_width() - 24, preview.centery - dur_s.get_height() // 2))
+
+        now = time.monotonic()
+        armed = confirm.armed(now)
+        keep = layout["keep"]
+        pygame.draw.rect(surf, (220, 255, 225), keep, border_radius=24)
+        pygame.draw.rect(surf, MIC_GREEN, keep, width=4, border_radius=24)
+        kx, ky = keep.center
+        pygame.draw.lines(surf, (20, 140, 60), False, [(kx - 36, ky + 2), (kx - 10, ky + 28), (kx + 38, ky - 28)], 14)
+
+        delete = layout["delete"]
+        fill = (255, 214, 214) if armed else (235, 228, 228)
+        edge = (220, 38, 38) if armed else (190, 170, 170)
+        pygame.draw.rect(surf, fill, delete, border_radius=24)
+        pygame.draw.rect(surf, edge, delete, width=4, border_radius=24)
+        tx, ty = delete.center
+        ink = (185, 28, 28) if armed else (170, 150, 150)
+        pygame.draw.rect(surf, ink, (tx - 26, ty - 14, 52, 50), width=6, border_radius=8)
+        pygame.draw.line(surf, ink, (tx - 36, ty - 22), (tx + 36, ty - 22), 7)
+        pygame.draw.rect(surf, ink, (tx - 10, ty - 36, 20, 12), border_radius=3)
+        for dx in (-13, 0, 13):
+            pygame.draw.line(surf, ink, (tx + dx, ty - 4), (tx + dx, ty + 24), 4)
+
+        focus_rect = keep if confirm.focus == DeleteConfirmation.KEEP else delete
+        pygame.draw.rect(surf, (45, 25, 15), focus_rect.inflate(14, 14), width=5, border_radius=28)
 
     # -- main loop --------------------------------------------------------
 
@@ -1351,6 +1525,8 @@ class TeatrinoApp:
                             continue
                         rx, ry = int(logical[0]), int(logical[1])
                         self._handle_mouse_down(rx, ry)
+                    elif event.type == pygame.KEYDOWN:
+                        self._handle_key_down(event.key)
                     elif event.type == pygame.MOUSEMOTION:
                         if self.held_puppet is not None:
                             logical = self.canvas.pointer(event.pos)

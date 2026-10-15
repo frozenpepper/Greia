@@ -45,7 +45,7 @@ from voice_content import (
 )
 from voice_microphone import VoiceRecorder
 from voice_renderer import VoiceRenderer
-from voice_services import SavedStory, VoiceEvents, VoiceStorage, VoiceStorageError
+from voice_services import DeleteConfirmation, SavedStory, VoiceEvents, VoiceStorage, VoiceStorageError
 
 
 class Phase(StrEnum):
@@ -84,6 +84,7 @@ class VoiceApp:
     share_feedback: tuple[str, str, str] | None = None
     share_feedback_until: float = 0.0
     save_error_until: float = 0.0
+    delete_confirm: DeleteConfirmation | None = None
 
     def run(self) -> int:
         clock = pygame.time.Clock()
@@ -100,7 +101,9 @@ class VoiceApp:
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
+                    if self.delete_confirm is not None:
+                        self._handle_delete_key(event.key)
+                    elif event.key == pygame.K_ESCAPE:
                         running = False
                 elif event.type == pygame.VIDEORESIZE:
                     self.metrics = ChildUiMetrics.for_size(
@@ -143,7 +146,55 @@ class VoiceApp:
             self.current_channel = None
         self.current_sound = None
 
+    # -- deliberate delete ----------------------------------------------------
+
+    def _request_delete(self, story: SavedStory) -> None:
+        """Open the confirmation dialog; nothing is removed by this call."""
+        self.delete_confirm = DeleteConfirmation(story.story_id, time.monotonic())
+
+    def _resolve_delete(self, choice: str) -> None:
+        """Apply the child's choice in the dialog (keep is always safe)."""
+        confirm = self.delete_confirm
+        if confirm is None:
+            return
+        outcome = confirm.resolve(choice, time.monotonic())
+        if outcome is None:
+            return  # delete pressed before the dialog armed: ignore
+        self.delete_confirm = None
+        if outcome != DeleteConfirmation.DELETE:
+            return
+        if self.storage.delete_story(confirm.target_id):
+            self.shared_scene_keys = {
+                key for key in self.shared_scene_keys if key[0] != confirm.target_id
+            }
+            max_page = max(0, (self.storage._library.count - 1) // 4)
+            self.library_page = min(self.library_page, max_page)
+
+    def _handle_delete_key(self, key: int) -> None:
+        """Arrows/D-pad move between the two buttons; Space/Enter/south
+        activate the focused one (initially keep); Escape keeps the story."""
+        confirm = self.delete_confirm
+        if confirm is None:
+            return
+        if key in (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_TAB):
+            confirm.move_focus()
+        elif key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE):
+            self._resolve_delete(confirm.focus)
+        elif key == pygame.K_ESCAPE:
+            self._resolve_delete(DeleteConfirmation.KEEP)
+
+    def _handle_delete_click(self, pos: tuple[int, int]) -> None:
+        layout = self.renderer.delete_dialog_layout()
+        if layout["delete"].collidepoint(pos):
+            self._resolve_delete(DeleteConfirmation.DELETE)
+        elif layout["keep"].collidepoint(pos) or not layout["box"].collidepoint(pos):
+            # Tapping outside the dialog also keeps the story.
+            self._resolve_delete(DeleteConfirmation.KEEP)
+
     def _handle_click(self, pos: tuple[int, int]) -> None:
+        if self.delete_confirm is not None:
+            self._handle_delete_click(pos)
+            return
         x, y = pos
         if self.phase == Phase.SCENE_PICKER:
             # Library pill (top left)
@@ -240,19 +291,7 @@ class VoiceApp:
                     self._play_story(story)
                     return
                 if self.renderer.library_delete_rect(local_index).collidepoint(x, y):
-                    if self.storage.delete_story(story.story_id):
-                        self.shared_scene_keys = {
-                            key
-                            for key in self.shared_scene_keys
-                            if key[0] != story.story_id
-                        }
-                        max_page = max(
-                            0,
-                            (self.storage._library.count - 1) // 4,
-                        )
-                        self.library_page = min(
-                            self.library_page, max_page
-                        )
+                    self._request_delete(story)
                     return
         elif self.phase == Phase.MIC_REQUIRED:
             if self.renderer.back_btn_rect.collidepoint(x, y):
@@ -451,6 +490,14 @@ class VoiceApp:
             )
         elif self.phase == Phase.MIC_REQUIRED:
             self.renderer.draw_mic_required(text_fn)
+        confirm = self.delete_confirm
+        if confirm is not None:
+            self.renderer.draw_delete_dialog(
+                self.storage._library.get(confirm.target_id),
+                armed=confirm.armed(time.monotonic()),
+                focus=confirm.focus,
+                text_fn=text_fn,
+            )
 
     def _make_text_fn(self) -> "LocalizedTextSurfaces":
         """Return the app's single cached text callable (built lazily once).

@@ -84,6 +84,10 @@ class DocumentRepository:
                 break
         return records
 
+    def is_full(self) -> bool:
+        """True when a new document would be refused by the library bound."""
+        return len(self.list_records()) >= MAX_DOCUMENTS
+
     def create(self) -> DocumentRecord:
         return self.create_text("")
 

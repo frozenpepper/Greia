@@ -99,6 +99,7 @@ def _probe(
     screenshot_prefix: Path,
     click: tuple[int, int] | None,
     key: str | None,
+    storage_dir: Path | None = None,
 ) -> int:
     """Return nonzero on launch/frame/interaction/teardown failure."""
     if not activity_main.is_file():
@@ -143,6 +144,12 @@ def _probe(
                 "GREIA_MAIN_CREDENTIAL_PATH": str(scratch / "credentials" / "main.json"),
                 "GREIA_ACTIVE_PROFILE_STATUS": str(scratch / "active-profile.json"),
                 "GREIA_SKIP_BOOT_HANDOFF": "1",
+                # Standalone Activity storage must never touch the developer's
+                # real ~/.greia-simulator/standalone-storage: use a disposable
+                # directory unless the caller seeds one explicitly.
+                "GREIA_STANDALONE_STORAGE_DIR": str(
+                    storage_dir.resolve() if storage_dir is not None else scratch / "standalone-storage"
+                ),
             })
             command = [
                 sys.executable, "-m", "greia_simulator.python_activity",
@@ -226,6 +233,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--click-x", type=int, default=None)
     parser.add_argument("--click-y", type=int, default=None)
     parser.add_argument("--press-key", default=None)
+    parser.add_argument(
+        "--storage-dir", type=Path, default=None,
+        help="Standalone Activity storage directory (default: a disposable temp dir).",
+    )
     args = parser.parse_args(argv)
     if (args.click_x is None) != (args.click_y is None):
         parser.error("--click-x and --click-y must be supplied together")
@@ -239,6 +250,7 @@ def main(argv: list[str] | None = None) -> int:
         screenshot_prefix=args.screenshot_prefix,
         click=(args.click_x, args.click_y) if args.click_x is not None else None,
         key=args.press_key,
+        storage_dir=args.storage_dir,
     )
 
 
