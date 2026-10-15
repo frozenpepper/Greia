@@ -194,6 +194,34 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
                 french,
             )
 
+    def test_real_owner_approved_translated_activity_clips_are_reachable(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        examples = (
+            ("faccine_momo", "es", "happy", "assets/audio/es/happy.wav"),
+            ("mondo_contrari", "es", "big", "assets/audio/es/big.wav"),
+            ("quattro_stagioni", "es", "autumn", "assets/audio/es/autumn.wav"),
+            ("festa_delle_rime", "es", "bear", "assets/audio/es/bear.wav"),
+            ("officina_dei_suoni", "es", "bear", "assets/audio/es/bear.wav"),
+            ("luci_di_momo", "fr", "correct_1", "assets/audio/fr/correct_1.wav"),
+            ("il_giardino_dei_numeri", "fr", "count_1", "assets/audio/fr/count_1.wav"),
+            ("bosco_numeri", "es", "ask_1", "assets/audio/es/ask_1.wav"),
+            ("specchi_magici", "es", "correct_1", "assets/audio/es/correct_1.wav"),
+            ("baia_delle_orche", "es", "tito_fact_breach", "assets/audio/es/tito_fact_breach.wav"),
+        )
+        for package, locale, stem, relative in examples:
+            with self.subTest(package=package, locale=locale, stem=stem):
+                package_root = root / "activities" / package
+                expected = package_root / relative
+                self.assertTrue(expected.is_file(), str(expected))
+                resources = activity_resources(
+                    package_root, requested_locale=locale,
+                    supported_locales=("it", "en", "es", "fr"),
+                )
+                self.assertEqual(
+                    resources.audio_path(stem, filename=f"{stem}.wav"),
+                    expected,
+                )
+
     def test_approved_shared_character_library_resolves_without_copies(self) -> None:
         root = Path(__file__).resolve().parents[1]
         expected = (
