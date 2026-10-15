@@ -60,6 +60,12 @@ from tools.x8_qemu.product import (
     sha256_file,
 )
 
+import hermetic_volume
+
+
+def setUpModule() -> None:
+    hermetic_volume.install_for_module()
+
 HEAD_40 = "a" * 40
 
 

@@ -46,7 +46,7 @@ def _resources(root: Path, *, english_clip: bool) -> LocalizedResources:
 class TimeAudioBoundaryTests(unittest.TestCase):
     def test_missing_english_cue_never_loads_italian_even_if_default_fallback(self) -> None:
         with TemporaryDirectory() as tmp:
-            resources = _resources(Path(tmp), english_clip=False)
+            resources = _resources(Path(tmp).resolve(), english_clip=False)
             # English-only UI must not silently route speech to Italian.
             self.assertIsNone(resources.audio_path("instruction.clock"))
             with (
@@ -86,7 +86,7 @@ class TimeAudioBoundaryTests(unittest.TestCase):
 
     def test_semantic_filename_falls_back_to_english_if_selected_locale_absent(self) -> None:
         with TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             (root / "locales").mkdir()
             for locale in ("it", "en", "fr"):
                 (root / "locales" / f"{locale}.json").write_text(
@@ -124,7 +124,7 @@ class TimeAudioBoundaryTests(unittest.TestCase):
 
     def test_selected_english_clip_can_live_in_any_safe_package_directory(self) -> None:
         with TemporaryDirectory() as tmp:
-            resources = _resources(Path(tmp), english_clip=True)
+            resources = _resources(Path(tmp).resolve(), english_clip=True)
             with (
                 patch("pygame.mixer.get_init", return_value=(22050, -16, 2)),
                 patch("pygame.mixer.Channel") as channel,
@@ -145,7 +145,7 @@ class TimeAudioBoundaryTests(unittest.TestCase):
 
     def test_invalid_clip_fails_closed_without_redecoding(self) -> None:
         with TemporaryDirectory() as tmp:
-            resources = _resources(Path(tmp), english_clip=True)
+            resources = _resources(Path(tmp).resolve(), english_clip=True)
             import pygame
             with (
                 patch("pygame.mixer.get_init", return_value=(22050, -16, 2)),
@@ -162,7 +162,7 @@ class TimeAudioBoundaryTests(unittest.TestCase):
 
     def test_audio_device_unavailable_is_silent_and_decodes_nothing(self) -> None:
         with TemporaryDirectory() as tmp:
-            resources = _resources(Path(tmp), english_clip=True)
+            resources = _resources(Path(tmp).resolve(), english_clip=True)
             with (
                 patch("pygame.mixer.get_init", return_value=None),
                 patch("pygame.mixer.Sound") as sound,

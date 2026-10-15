@@ -22,6 +22,12 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 from greia_launcher.presentation import idle_sleep_seconds
 from greia_platform.pygame_visual_assets import PygameVisualSurfaceCache
 
+import hermetic_volume
+
+
+def setUpModule() -> None:
+    hermetic_volume.install_for_module()
+
 _monotonic = __import__("time").monotonic
 
 

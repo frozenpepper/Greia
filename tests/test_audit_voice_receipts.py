@@ -12,9 +12,15 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+import tempfile
+import unittest
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 AUDIT = PROJECT_ROOT / "tools" / "audit_voice_receipts.py"
+
+sys.path.insert(0, str(PROJECT_ROOT / "tools"))
+
+from greia_voice_core.verification import transcript_similarity  # noqa: E402
 
 
 def _write_receipt(workspace: Path, rel: str, *, expected: str, transcript, score, disposition: str) -> None:
@@ -55,74 +61,74 @@ def _run_audit(shared: Path, intro: Path) -> subprocess.CompletedProcess:
         text=True,
     )
 
+class AuditVoiceReceiptsTests(unittest.TestCase):
+    def setUp(self) -> None:
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        # resolve(): macOS temp roots are /var -> /private/var symlinks.
+        self.tmp_path = Path(temporary.name).resolve()
 
-def test_audit_passes_on_reproducible_scores(tmp_path):
-    shared = tmp_path / "shared"
-    intro = tmp_path / "intro"
-    intro.mkdir()
-    expected = "Complimenti!"
-    transcript = "Complimenti."
-    # Score the auditor would compute for this exact pair.
-    from greia_voice_core.verification import transcript_similarity
-    score = transcript_similarity(expected, transcript)
-    _write_receipt(shared, "lilli/it/lilli__it__praise.general__01.wav.receipt.json",
-                   expected=expected, transcript=transcript, score=score, disposition="PASS")
-    _write_receipt(shared, "lilli/en/lilli__en__praise.general__01.wav.receipt.json",
-                   expected=expected, transcript=transcript, score=score, disposition="PASS")
+    def test_audit_passes_on_reproducible_scores(self) -> None:
+        shared = self.tmp_path / "shared"
+        intro = self.tmp_path / "intro"
+        intro.mkdir()
+        expected = "Complimenti!"
+        transcript = "Complimenti."
+        # Score the auditor would compute for this exact pair.
+        score = transcript_similarity(expected, transcript)
+        _write_receipt(shared, "lilli/it/lilli__it__praise.general__01.wav.receipt.json",
+                       expected=expected, transcript=transcript, score=score, disposition="PASS")
+        _write_receipt(shared, "lilli/en/lilli__en__praise.general__01.wav.receipt.json",
+                       expected=expected, transcript=transcript, score=score, disposition="PASS")
 
-    proc = _run_audit(shared, intro)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "Score mismatches" in proc.stdout
-    assert "  Score mismatches (|stored - recomputed| > 0.0005): 0" in proc.stdout
-    assert "PASS: 2" in proc.stdout
+        proc = _run_audit(shared, intro)
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+        assert "Score mismatches" in proc.stdout
+        assert "  Score mismatches (|stored - recomputed| > 0.0005): 0" in proc.stdout
+        assert "PASS: 2" in proc.stdout
 
+    def test_audit_hard_fails_on_score_mismatch(self) -> None:
+        shared = self.tmp_path / "shared"
+        intro = self.tmp_path / "intro"
+        intro.mkdir()
+        _write_receipt(shared, "lilli/it/lilli__it__praise.general__01.wav.receipt.json",
+                       expected="Complimenti!", transcript="Complimenti.", score=0.999, disposition="PASS")
 
-def test_audit_hard_fails_on_score_mismatch(tmp_path):
-    shared = tmp_path / "shared"
-    intro = tmp_path / "intro"
-    intro.mkdir()
-    _write_receipt(shared, "lilli/it/lilli__it__praise.general__01.wav.receipt.json",
-                   expected="Complimenti!", transcript="Complimenti.", score=0.999, disposition="PASS")
+        proc = _run_audit(shared, intro)
+        assert proc.returncode == 2, proc.stdout
+        assert "SCORE MISMATCHES" in proc.stdout
 
-    proc = _run_audit(shared, intro)
-    assert proc.returncode == 2, proc.stdout
-    assert "SCORE MISMATCHES" in proc.stdout
+    def test_audit_hard_fails_on_disposition_mismatch(self) -> None:
+        shared = self.tmp_path / "shared"
+        intro = self.tmp_path / "intro"
+        intro.mkdir()
+        # Score is reproducible but disposition lies: 0.95 should be PASS, not WARN.
+        expected, transcript = "Complimenti!", "Complimenti."
+        _write_receipt(shared, "lilli/it/lilli__it__praise.general__01.wav.receipt.json",
+                       expected=expected, transcript=transcript,
+                       score=transcript_similarity(expected, transcript),
+                       disposition="WARN")
 
+        proc = _run_audit(shared, intro)
+        assert proc.returncode == 2, proc.stdout
+        assert "DISPOSITION MISMATCHES" in proc.stdout
 
-def test_audit_hard_fails_on_disposition_mismatch(tmp_path):
-    shared = tmp_path / "shared"
-    intro = tmp_path / "intro"
-    intro.mkdir()
-    # Score is reproducible but disposition lies: 0.95 should be PASS, not WARN.
-    from greia_voice_core.verification import transcript_similarity
-    expected, transcript = "Complimenti!", "Complimenti."
-    _write_receipt(shared, "lilli/it/lilli__it__praise.general__01.wav.receipt.json",
-                   expected=expected, transcript=transcript,
-                   score=transcript_similarity(expected, transcript),
-                   disposition="WARN")
+    def test_audit_counts_warn_rows_correctly(self) -> None:
+        shared = self.tmp_path / "shared"
+        intro = self.tmp_path / "intro"
+        intro.mkdir()
+        expected, transcript = "Quasi! Proviamo ancora!", "quasi"
+        s = transcript_similarity(expected, transcript)
+        _write_receipt(shared, "lilli/it/lilli__it__encourage.retry__02.wav.receipt.json",
+                       expected=expected, transcript=transcript, score=s, disposition="WARN")
+        s_pass = transcript_similarity("Great work!", "Great work.")
+        _write_receipt(shared, "lilli/en/lilli__en__praise.general__01.wav.receipt.json",
+                       expected="Great work!", transcript="Great work.", score=s_pass, disposition="PASS")
+        _write_receipt(shared, "lilli/it/lilli__it__ready.go__01.wav.receipt.json",
+                       expected="Forza, andiamo!", transcript=None, score=None, disposition="NOT_APPLICABLE")
 
-    proc = _run_audit(shared, intro)
-    assert proc.returncode == 2, proc.stdout
-    assert "DISPOSITION MISMATCHES" in proc.stdout
-
-
-def test_audit_counts_warn_rows_correctly(tmp_path):
-    shared = tmp_path / "shared"
-    intro = tmp_path / "intro"
-    intro.mkdir()
-    expected, transcript = "Quasi! Proviamo ancora!", "quasi"
-    from greia_voice_core.verification import transcript_similarity
-    s = transcript_similarity(expected, transcript)
-    _write_receipt(shared, "lilli/it/lilli__it__encourage.retry__02.wav.receipt.json",
-                   expected=expected, transcript=transcript, score=s, disposition="WARN")
-    s_pass = transcript_similarity("Great work!", "Great work.")
-    _write_receipt(shared, "lilli/en/lilli__en__praise.general__01.wav.receipt.json",
-                   expected="Great work!", transcript="Great work.", score=s_pass, disposition="PASS")
-    _write_receipt(shared, "lilli/it/lilli__it__ready.go__01.wav.receipt.json",
-                   expected="Forza, andiamo!", transcript=None, score=None, disposition="NOT_APPLICABLE")
-
-    proc = _run_audit(shared, intro)
-    assert proc.returncode == 0, proc.stdout
-    assert "PASS: 1" in proc.stdout
-    assert "WARN: 1" in proc.stdout
-    assert "Audited receipts: 3 total" in proc.stdout
+        proc = _run_audit(shared, intro)
+        assert proc.returncode == 0, proc.stdout
+        assert "PASS: 1" in proc.stdout
+        assert "WARN: 1" in proc.stdout
+        assert "Audited receipts: 3 total" in proc.stdout

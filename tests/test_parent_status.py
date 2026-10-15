@@ -12,6 +12,12 @@ from greia_parent.server import ParentHTTPServer, ParentStatusApplication, rende
 from greia_platform.activities import ActivityValidationError
 from greia_platform.history import ProfileHistoryStore, ProgressionPolicy
 
+import hermetic_volume
+
+
+def setUpModule() -> None:
+    hermetic_volume.install_for_module()
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 

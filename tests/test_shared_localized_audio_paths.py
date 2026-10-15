@@ -46,7 +46,7 @@ def _put(root: Path, relative: str) -> Path:
 class SharedLocalizedAudioPathTests(unittest.TestCase):
     def test_english_mapping_projects_to_existing_es_and_fr_filenames(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             original = _put(root, "assets/audio/en/animals/intro.ogg")
             spanish = _put(root, "assets/audio/es/animals/intro.ogg")
             french = _put(root, "assets/audio/fr/animals/intro.ogg")
@@ -63,7 +63,7 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
 
     def test_existing_es_mapping_wins_before_english_projection(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             _put(root, "assets/audio/en/animals/intro.ogg")
             preferred = _put(root, "assets/audio/es/special.ogg")
             _put(root, "assets/audio/es/animals/intro.ogg")
@@ -78,7 +78,7 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
 
     def test_missing_es_uses_english_not_italian_and_can_opt_out(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             english = _put(root, "assets/audio/en/animals/intro.ogg")
             _put(root, "assets/audio/it/animals/intro.ogg")
             _bundle(root, "en", audio={
@@ -93,7 +93,7 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
 
     def test_dolphin_submarine_and_activity_title_legacy_paths(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             _put(root, "audio/en/sub_fact_whale_1.wav")
             submarine_fr = _put(root, "audio/fr/sub_fact_whale_1.wav")
             _put(root, "assets/audio/en/presenter-welcome.ogg")
@@ -132,7 +132,7 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
 
     def test_legacy_underscore_title_falls_back_to_english_without_italian_substitution(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             for language in ("en", "it", "fr"):
                 _bundle(root, language)
             en = _put(root, "locales/en/audio/activity_title.wav")
@@ -141,7 +141,7 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
 
     def test_italian_only_legacy_alias_projects_alarm_to_fr_and_en(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             _bundle(root, "en")
             _bundle(root, "es")
             _bundle(root, "fr")
@@ -163,7 +163,7 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
 
     def test_conventional_names_work_without_json_audio_maps(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             _bundle(root, "en")
             _bundle(root, "it")
             _bundle(root, "es")
@@ -178,7 +178,7 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
 
     def test_eager_speech_discovery_handles_two_legacy_directories_and_english(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             for locale in ("en", "it", "es", "fr"):
                 _bundle(root, locale)
             spanish = _put(root, "assets/audio/es/intro.wav")
@@ -202,7 +202,7 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
 
     def test_legacy_locale_audio_directory_uses_english_fallback(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             for loc in ("it", "en", "fr"):
                 _bundle(root, loc)
             english = _put(root, "locales/en/audio/shape_circle.wav")
@@ -269,7 +269,7 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
 
     def test_shared_character_fallback_is_english_and_missing_is_optional(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             clip = _put(
                 root,
                 "assets/audio/characters/shared/v0.2/leo/en/"
@@ -290,7 +290,7 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
 
     def test_invalid_alias_filename_does_not_escape_package(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             for loc in ("it", "en", "es"):
                 _bundle(root, loc)
             res = _context(root, "es")
@@ -300,7 +300,7 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
 
     def test_english_text_fallback_precedes_default_italian(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             _bundle(root, "en", strings={"intro": "Hello"})
             _bundle(root, "it", strings={"intro": "Ciao"})
             _bundle(root, "es", strings={})
@@ -308,7 +308,7 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
 
     def test_manifest_factory_keeps_release_locale_separate_from_staging(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             (root / "activity.toml").write_text(
                 '[activity]\nlanguages = ["it", "en"]\n', encoding="utf-8"
             )
@@ -351,7 +351,7 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
 
     def test_regional_locale_uses_base_language_before_english(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             _bundle(root, "es-MX", strings={"welcome": "Regional"})
             _bundle(root, "es", strings={"lesson": "Español"})
             _bundle(root, "en", strings={"lesson": "English"})
@@ -381,7 +381,7 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
 
     def test_unmapped_audio_variant_prefers_variant_filename(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             _bundle(root, "en")
             _bundle(root, "it")
             default = _put(root, "assets/audio/en/welcome.wav")

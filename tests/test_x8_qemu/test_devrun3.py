@@ -51,6 +51,12 @@ from tools.x8_qemu.payload import (
     verify_staged_payload,
 )
 
+import hermetic_volume
+
+
+def setUpModule() -> None:
+    hermetic_volume.install_for_module()
+
 
 def _device_harness(tmp: str) -> LifecycleHarness:
     return LifecycleHarness(LifecycleConfig(output_dir=Path(tmp) / "out"))

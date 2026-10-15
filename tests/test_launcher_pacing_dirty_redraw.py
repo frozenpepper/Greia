@@ -27,6 +27,12 @@ from greia_launcher.parent_panel import ParentSettingsOverlay, ParentPanelState
 from greia_launcher.presentation import GreiaLauncherPresentation
 from greia_platform.wifi import WifiSetupController, WifiSetupPhase, DemoWifiBackend
 
+import hermetic_volume
+
+
+def setUpModule() -> None:
+    hermetic_volume.install_for_module()
+
 
 class LauncherPacingDirtyRedrawContractTests(unittest.TestCase):
     @classmethod

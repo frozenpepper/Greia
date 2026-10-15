@@ -12,6 +12,7 @@ These tests lock the shared cleanup semantics and every first-party shell owner.
 
 from __future__ import annotations
 
+import shlex
 import subprocess
 import unittest
 from pathlib import Path
@@ -19,6 +20,8 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SAFE_CLEANUP = PROJECT_ROOT / "build" / "lib" / "safe-cleanup.sh"
+# The checkout path may contain spaces; quote it for the bash -c scripts below.
+SAFE_CLEANUP_SHELL = shlex.quote(str(SAFE_CLEANUP))
 FRONT_DOOR = PROJECT_ROOT / "tools" / "build-and-flash-development-usb.sh"
 DELETED_BACKING_FIXTURE = PROJECT_ROOT / "tools" / "test-loop-cleanup-deleted-backing.sh"
 PARTSCAN_OWNERS = (
@@ -63,7 +66,7 @@ class BuildLoopCleanupContractTests(unittest.TestCase):
     def test_shared_detach_requests_parent_detach_before_waiting_for_children(self) -> None:
         script = f"""
 set -Eeuo pipefail
-source {SAFE_CLEANUP!s}
+source {SAFE_CLEANUP_SHELL}
 ASSOCIATED=1
 CHILDREN=1
 DETACH_WITH_CHILD=0
@@ -120,7 +123,7 @@ safe_detach_loop /dev/loop99
     def test_interleaved_detach_then_partx_clears_busy_partition_shape(self) -> None:
         script = f"""
 set -Eeuo pipefail
-source {SAFE_CLEANUP!s}
+source {SAFE_CLEANUP_SHELL}
 ASSOCIATED=1
 CHILDREN=1
 DETACH_REQUESTED=0
@@ -173,7 +176,7 @@ safe_detach_loop /dev/loop99
     def test_non_mount_cleanup_path_does_not_walk_containing_root_filesystem(self) -> None:
         script = f"""
 set -Eeuo pipefail
-source {SAFE_CLEANUP!s}
+source {SAFE_CLEANUP_SHELL}
 MARKER="$(mktemp)"
 rm -f "$MARKER"
 mountpoint() {{ return 1; }}
@@ -193,7 +196,7 @@ safe_unmount_path_tree /definitely-not-a-mount
     def test_cleanup_failure_changes_successful_exit_status(self) -> None:
         script = f"""
 set -Eeuo pipefail
-source {SAFE_CLEANUP!s}
+source {SAFE_CLEANUP_SHELL}
 cleanup() {{
   original_status=$?
   trap - EXIT INT TERM
@@ -215,7 +218,7 @@ true
     def test_cleanup_preserves_original_nonzero_status(self) -> None:
         script = f"""
 set -Eeuo pipefail
-source {SAFE_CLEANUP!s}
+source {SAFE_CLEANUP_SHELL}
 cleanup() {{
   original_status=$?
   trap - EXIT INT TERM

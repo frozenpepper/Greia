@@ -22,6 +22,12 @@ from greia_platform.creations import CreationLibrary
 from greia_platform.typography import GreiaTypography
 from greia_platform.ui_core import UiEventResult
 
+import hermetic_volume
+
+
+def setUpModule() -> None:
+    hermetic_volume.install_for_module()
+
 
 class CreationGalleryRenderingTests(unittest.TestCase):
     def setUp(self) -> None:

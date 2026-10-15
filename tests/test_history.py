@@ -24,6 +24,12 @@ from greia_platform.history import (
 from greia_platform.profiles import ProfileStore
 from greia_platform.trust import ActivitySource, PackageTrust
 
+import hermetic_volume
+
+
+def setUpModule() -> None:
+    hermetic_volume.install_for_module()
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 

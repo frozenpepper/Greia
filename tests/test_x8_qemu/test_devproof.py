@@ -43,6 +43,12 @@ from tools.x8_qemu.devproof import (
     write_d31_representative_state,
 )
 
+import hermetic_volume
+
+
+def setUpModule() -> None:
+    hermetic_volume.install_for_module()
+
 
 class EnvelopeSpecTests(unittest.TestCase):
     def test_frozen_envelope_shape(self) -> None:

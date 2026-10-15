@@ -65,6 +65,12 @@ from tools.x8_qemu.lifecycle import (
 )
 from tools.x8_qemu.runner import layout_plan_for_device
 
+import hermetic_volume
+
+
+def setUpModule() -> None:
+    hermetic_volume.install_for_module()
+
 
 def _harness(tmp: str) -> LifecycleHarness:
     return LifecycleHarness(LifecycleConfig(output_dir=Path(tmp) / "out"))

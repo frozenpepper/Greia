@@ -4,6 +4,7 @@ import json
 import os
 import stat
 import shutil
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -51,6 +52,13 @@ class ProfileStoreTests(unittest.TestCase):
                     self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o2770)
                     self.assertEqual(path.stat().st_gid, store.root.stat().st_gid)
 
+    # The premise is the Linux kernel rule that mkdir() inside a setgid parent
+    # yields a setgid child. BSD/macOS never sets S_ISGID on mkdir(), so the
+    # appliance contract can only be observed on Linux.
+    @unittest.skipUnless(
+        sys.platform.startswith("linux"),
+        "setgid inheritance on mkdir is Linux kernel behaviour",
+    )
     def test_parent_umask_path_needs_no_sgid_chmod_for_new_profile(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

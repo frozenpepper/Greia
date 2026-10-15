@@ -40,6 +40,12 @@ from tools.x8_qemu.payload import (
 )
 from tools.x8_qemu.runner import layout_plan_for_device
 
+import hermetic_volume
+
+
+def setUpModule() -> None:
+    hermetic_volume.install_for_module()
+
 _PASSWORD_HASH = "grub.pbkdf2.sha512.10000.T7PAYLOADABCDEF0123456789"
 
 

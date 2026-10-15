@@ -65,6 +65,12 @@ from tools.x8_qemu.product import (
     verify_unhealthy_candidate_bundle,
 )
 
+import hermetic_volume
+
+
+def setUpModule() -> None:
+    hermetic_volume.install_for_module()
+
 
 def _payload_bytes(size: int, tag: bytes) -> bytes:
     body = bytes((index * 31 + 7) % 256 for index in range(size))
