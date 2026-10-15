@@ -496,8 +496,14 @@ class LocalizedResources:
             )
         else:
             names = (f"{key}.ogg", f"{key}.wav")
+        # Existing Activities store ordinary speech in either of these
+        # two conventional locations. Keep the files where authors put them.
         return tuple(
-            self.package_root / "assets" / "audio" / locale / name
+            directory / name
+            for directory in (
+                self.package_root / "assets" / "audio" / locale,
+                self.package_root / "locales" / locale / "audio",
+            )
             for name in names
         )
 
