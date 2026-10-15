@@ -553,9 +553,10 @@ class LocalizedResources:
                 if projected is not None and projected.is_file():
                     return LocalizedAudioCue(projected, cue.caption_key)
 
-        for candidate in self._conventional_audio(locale.value, keys[-1], filename):
-            if candidate.is_file():
-                return LocalizedAudioCue(candidate)
+        for key in keys:
+            for candidate in self._conventional_audio(locale.value, key, filename):
+                if candidate.is_file():
+                    return LocalizedAudioCue(candidate)
         return None
 
     def _conventional_audio(
