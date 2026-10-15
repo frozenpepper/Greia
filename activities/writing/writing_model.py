@@ -14,37 +14,52 @@ import uuid
 from greia_platform.typography import (
     grapheme_boundaries,
     grapheme_spans,
+    is_emoji_cluster,
     snap_grapheme_boundary,
     truncate_grapheme_safe,
 )
 
 if __package__:
     from .writing_content import (
+        DEFAULT_TINT,
         INDEX_KEY,
         MAX_CHARACTERS,
         MAX_DOCUMENTS,
         MAX_UNDO_EDITS,
         MAX_UNDO_PAYLOAD_CHARS,
         PREVIEW_GRAPHEME_LIMIT,
+        TINT_IDS,
     )
 else:  # pragma: no cover - runtime/script fallback
     from writing_content import (
+        DEFAULT_TINT,
         INDEX_KEY,
         MAX_CHARACTERS,
         MAX_DOCUMENTS,
         MAX_UNDO_EDITS,
         MAX_UNDO_PAYLOAD_CHARS,
         PREVIEW_GRAPHEME_LIMIT,
+        TINT_IDS,
     )
 
 
 @dataclass(frozen=True, slots=True)
 class DocumentRecord:
+    """One saved page: id, compact preview and the paper colour it uses.
+
+    Index entries written before paper colours existed are plain
+    ``{"id", "preview"}`` and load on the default cream paper. The tint is
+    index metadata only; the document body remains plain UTF-8 text.
+    """
+
     document_id: str
     preview: str
+    tint: str = DEFAULT_TINT
 
     def as_dict(self) -> dict[str, str]:
-        return {"id": self.document_id, "preview": self.preview}
+        if self.tint == DEFAULT_TINT:
+            return {"id": self.document_id, "preview": self.preview}
+        return {"id": self.document_id, "preview": self.preview, "tint": self.tint}
 
 
 class DocumentRepository:
@@ -52,7 +67,9 @@ class DocumentRepository:
 
     The index key holds ordered preview records; private files hold
     UTF-8 document bodies. Text storage is ordinary Unicode — never
-    renderer glyph IDs or proprietary tokens.
+    renderer glyph IDs or proprietary tokens. The repository never evicts old
+    work to satisfy a bound: it refuses a new page when the library is full,
+    and only an explicit, child-confirmed ``delete`` removes one.
     """
 
     def __init__(self, storage) -> None:
@@ -76,9 +93,16 @@ class DocumentRepository:
                 or not isinstance(preview, str)
             ):
                 continue
+            tint = item.get("tint", DEFAULT_TINT)
+            if tint not in TINT_IDS:
+                tint = DEFAULT_TINT
             seen.add(document_id)
             records.append(
-                DocumentRecord(document_id, truncate_grapheme_safe(preview, PREVIEW_GRAPHEME_LIMIT)),
+                DocumentRecord(
+                    document_id,
+                    truncate_grapheme_safe(preview, PREVIEW_GRAPHEME_LIMIT),
+                    tint,
+                ),
             )
             if len(records) >= MAX_DOCUMENTS:
                 break
@@ -91,13 +115,15 @@ class DocumentRepository:
     def create(self) -> DocumentRecord:
         return self.create_text("")
 
-    def create_text(self, text: str) -> DocumentRecord:
+    def create_text(self, text: str, *, tint: str = DEFAULT_TINT) -> DocumentRecord:
         """Atomically create one new private UTF-8 document snapshot."""
+        if tint not in TINT_IDS:
+            raise ValueError("unknown paper tint")
         records = self.list_records()
         if len(records) >= MAX_DOCUMENTS:
             raise RuntimeError("document library limit reached")
         normalized = clamp_text(text)
-        record = DocumentRecord(uuid.uuid4().hex, preview_text(normalized))
+        record = DocumentRecord(uuid.uuid4().hex, preview_text(normalized), tint)
         name = self._name(record.document_id)
         self.storage.file_write_atomic(name, normalized.encode("utf-8"))
         try:
@@ -120,14 +146,40 @@ class DocumentRepository:
         decoded = self.storage.file_read(self._name(document_id)).decode("utf-8")
         return truncate_grapheme_safe(decoded, MAX_CHARACTERS)
 
-    def save_text(self, document_id: str, text: str) -> DocumentRecord:
+    def save_text(self, document_id: str, text: str, *, tint: str | None = None) -> DocumentRecord:
+        """Write the body and move the page to the front, keeping its tint."""
         _require_document_id(document_id)
+        if tint is not None and tint not in TINT_IDS:
+            raise ValueError("unknown paper tint")
         text = clamp_text(text)
         self.storage.file_write_atomic(self._name(document_id), text.encode("utf-8"))
-        updated = DocumentRecord(document_id, preview_text(text))
-        others = [item for item in self.list_records() if item.document_id != document_id]
+        records = self.list_records()
+        if tint is None:
+            existing = next((item for item in records if item.document_id == document_id), None)
+            tint = existing.tint if existing is not None else DEFAULT_TINT
+        updated = DocumentRecord(document_id, preview_text(text), tint)
+        others = [item for item in records if item.document_id != document_id]
         self._write_index([updated, *others])
         return updated
+
+    def delete(self, document_id: str) -> bool:
+        """Remove one page the child explicitly confirmed deleting.
+
+        The index entry goes first so a failed file removal can never leave a
+        visible card pointing at missing text. Copies already shared to My
+        Creations are independent artifacts and are not touched.
+        """
+        _require_document_id(document_id)
+        records = self.list_records()
+        remaining = [item for item in records if item.document_id != document_id]
+        if len(remaining) == len(records):
+            return False
+        self._write_index(remaining)
+        try:
+            self.storage.file_delete(self._name(document_id))
+        except (RuntimeError, OSError):
+            pass  # orphan bytes are harmless; the index no longer lists them
+        return True
 
     def _write_index(self, records: list[DocumentRecord]) -> None:
         self.storage.kv_set(INDEX_KEY, [item.as_dict() for item in records])
@@ -300,6 +352,22 @@ def preview_text(text: str) -> str:
     return truncate_grapheme_safe(compact, PREVIEW_GRAPHEME_LIMIT)
 
 
+def card_badge(preview: str) -> str:
+    """Pick the one big identity glyph for a gallery card.
+
+    The first emoji the child used wins ("the dinosaur page"); otherwise the
+    first letter or digit, exactly as typed (child text is never re-cased).
+    Returns ``""`` for a page without either.
+    """
+    first_letter = ""
+    for span in grapheme_spans(preview):
+        if is_emoji_cluster(span.text):
+            return span.text
+        if not first_letter and span.text[:1].isalnum():
+            first_letter = span.text
+    return first_letter
+
+
 def _valid_document_id(value: str) -> bool:
     return len(value) == 32 and all(ch in "0123456789abcdef" for ch in value)
 
@@ -315,6 +383,7 @@ __all__ = [
     "TextBuffer",
     "TextEdit",
     "UndoHistory",
+    "card_badge",
     "clamp_text",
     "preview_text",
 ]

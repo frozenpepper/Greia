@@ -2,9 +2,12 @@
 
 The historical ``main.py`` was a 942-line monolith that mixed constants,
 domain state, rendering and the event loop. Real work now lives in
-:mod:`writing_content`, :mod:`writing_model`, :mod:`writing_renderer`
-and :mod:`writing_app`. This module only re-exports the historical API
-surface and composes the lifecycle owned by :class:`WritingApp`.
+:mod:`writing_content` (pure data), :mod:`writing_model` (records, text
+buffer, undo, storage), :mod:`writing_renderer` (geometry, page, cards,
+caches), :mod:`writing_controls` (shared control kit wiring and sheets),
+:mod:`writing_audio` and :mod:`writing_app` (lifecycle and input routing).
+This module only re-exports the historical API surface and composes the
+lifecycle owned by :class:`WritingApp`.
 
 The Activity remains R7.3-migrated: it does not own the trusted Greia
 Home/Back chrome. Writing already renders responsively to the physical SDL
