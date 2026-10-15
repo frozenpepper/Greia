@@ -5,6 +5,18 @@
 **Single local task queue:** `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`  
 **Evidence status:** GitHub source commits, no newly executed full checkout tests / GUI / recording / physical install in this session.
 
+## 2026-10-15 — Continuation: shared locale composition across Activities, regional fallback
+
+**Actual implementation on GitHub main:** extended `src/greia_platform/localization.py` so region-tagged locale lookups try the exact variant, then base language, then English for both text and prerecorded speech; the eager `speech_paths()` catalogue uses the same ordering. Conventional filenames preserve semantic variants. No installer, built-in recording, receipt or language-registry asset was changed.
+
+**Removed duplicated Activity localization bootstraps:** Word Forest, Magic Syllables, Rhyme Festival, Sound Workshop, Momo's Lights, Number Garden, Magic Mirrors, Opposites, Orca Bay, Number Forest, Momo's Faces, Four Seasons and Quattro Amici's `build_app` now resolve language via the existing manifest-aware `activity_resources()` rather than rebuilding `ActivityLocaleSupport` in every file. Momo's Faces and Four Seasons titles now use `resources.text("activity.title")`. In Quattro Amici, previously the voice owner received raw profile locale while UI used Activity fallback: it now receives the resolved Activity language.
+
+**Audio-path consolidation:** removed independent prerecorded-file scans from the previous Word Forest, Alphabet Leo, Measurement Workshop and Ten House adapters; all now use the platform `speech_paths()` stem→Path catalogue, retaining their own Pygame sound managers, sound effects and playback timing. Existing standalone SoundManager callers keep their compatibility route. A source inspection of the other 19 audio modules found most remaining modules are synthesized SFX, recording/playback of the child's own creations, or semantic audio callers: these do **not** warrant migration for localization alone.
+
+**Tests:** added three focused cases to `tests/test_shared_localized_audio_paths.py` for `es-MX → es → en`, filename semantic variants and effective IT/EN manifest languages of 13 migrated Activities. GitHub tree/manifest and code readback were used, **but executable Python/Pygame/UI/hardware tests have not been run**. Do not claim acceptance or that all four languages are released. Existing 35 genuinely missing new recordings remain a separate local-agent order; every already committed audio recording remains personally owner-approved.
+
+**Source authority:** [`SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md`](./SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md). Next: execute focused localization + launcher + representative Activity tests once in an executable checkout; fix resulting behavioral bugs; verify spoken cue timing and language in a live Simulator. No anti-tamper, redundant language JSON maps or wholesale clip regeneration.
+
 ## 2026-10-15 — Shared Activity localization: additional speech integration
 
 **Source implemented on `main`, no changes to any approved voice asset.**
