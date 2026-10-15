@@ -17,6 +17,8 @@ import wave
 
 import pygame
 
+from greia_platform.localization import LocalizedResources
+
 if __package__:
     from .sillabe_content import get_syllable_curriculum
 else:
@@ -41,7 +43,8 @@ class SoundManager:
     and cached. Playback is best-effort and never raises to the caller.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, resources: LocalizedResources | None = None) -> None:
+        self._resources = resources
         self._sounds: dict[str, pygame.mixer.Sound] = {}
         self._audio_dir = Path(__file__).resolve().parent / "assets" / "audio"
         self._enabled = False
@@ -102,13 +105,23 @@ class SoundManager:
             return self._sounds[key]
         if ":" in key:
             loc, name = key.split(":", 1)
-            audio_file = self._audio_dir / loc / f"{name}.wav"
-            if audio_file.exists():
+            if self._resources is not None:
+                # A single resolver decides the selected language and English
+                # fallback. The SoundManager only decodes and plays.
+                audio_file = self._resources.audio_path(
+                    name, filename=f"{name}.wav"
+                )
+            else:
+                # Retain compatibility for isolated sound-manager test clients.
+                audio_file = self._audio_dir / loc / f"{name}.wav"
+                if not audio_file.is_file():
+                    audio_file = self._audio_dir / "en" / f"{name}.wav"
+            if audio_file is not None and audio_file.is_file():
                 try:
                     sound = pygame.mixer.Sound(str(audio_file))
                     self._sounds[key] = sound
                     return sound
-                except Exception:
+                except (pygame.error, OSError):
                     pass
         return None
 
