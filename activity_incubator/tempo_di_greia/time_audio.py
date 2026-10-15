@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pygame
 
-from greia_platform.localization import LocalizationError, LocalizedResources
+from greia_platform.localization import LocalizedResources
 
 if __package__:
     from .time_speech import SPEECH_CUES
@@ -38,11 +38,13 @@ class LocalTimeSpeechTransport:
         except pygame.error:
             return
         for cue in SPEECH_CUES:
-            try:
-                source = resources.audio_cue(cue, allow_fallback=False).path
-            except LocalizationError:
-                continue
-            if source.is_file():
+            # Existing approved My Time voice filenames use underscores,
+            # while gameplay refers to dotted semantic IDs. The shared
+            # resolver now chooses the selected locale or English fallback.
+            source = resources.audio_path(
+                cue, filename=f"{cue.replace('.', '_')}.wav"
+            )
+            if source is not None:
                 self._paths[cue] = source
 
     def has_clip(self, cue: str) -> bool:
