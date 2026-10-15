@@ -160,3 +160,8 @@ Do **not** make step 1 return a nonexisting path and stop early. Keep path resol
 ## Notes on engineering scope
 
 This is a **moderate migration**, not a system rewrite. The common string/audio API and effective language owner already exist; the work is removing several file-lookup implementations and adapting older filename patterns. The riskiest changes are real playback ownership, cache invalidation and accidental wrong-resource selection, not file tampering. No new automated policy/checksum framework, no distributed service, no provider calls and no new user-facing settings required.
+
+## 2026-10-16 - Shared vocabulary audio bank
+
+Wonder Match (`memory_meraviglie`) needed approved noun clips already owned by Rhyme Party, Word Forest and Magic Syllables. Rather than copy them per Activity, the 38 byte-identical clips (21 EN, 17 IT, with receipts) now live once in the platform-owned `assets/audio/vocab/v1/<locale>/<noun_id>.wav` bank (README documents ids and sha256 provenance; originals in the source Activities are untouched). `greia_platform.localization.shared_vocab_audio_path(project_root, noun_id, locale)` resolves it with the standard locale chain -> base -> English -> `None` policy, validating only the simple concept id (no path escape, no decoding). It is reached via `project_root` exactly like `shared_character_audio_path`, and `build/lib/compose.sh` already installs `assets/audio/**`. Wonder Match uses the bank and carries no private audio. Migrating Rhyme Party / Word Forest / Magic Syllables to the bank (to drop their duplicate copies) is a separate owner-gated step because their committed files must not be moved.
+

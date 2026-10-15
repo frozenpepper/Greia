@@ -13,6 +13,7 @@ from greia_platform.localization import (
     LocalizedResources,
     activity_resources,
     shared_character_audio_path,
+    shared_vocab_audio_path,
     resolve_activity_locale,
 )
 
@@ -266,6 +267,32 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
             shared_character_audio_path(root, "flash", "celebrate.success", "it"),
             italian,
         )
+
+    def test_shared_vocab_bank_resolves_with_locale_base_english_fallback(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        bank = root / "assets/audio/vocab/v1"
+        self.assertEqual(shared_vocab_audio_path(root, "apple", "it"), bank / "it/apple.wav")
+        self.assertEqual(shared_vocab_audio_path(root, "apple", "it-IT"), bank / "it/apple.wav")
+        # No Italian "lion" clip yet and no Spanish bank: English is the floor.
+        self.assertEqual(shared_vocab_audio_path(root, "lion", "it"), bank / "en/lion.wav")
+        self.assertEqual(shared_vocab_audio_path(root, "apple", "es-ES"), bank / "en/apple.wav")
+        self.assertIsNone(shared_vocab_audio_path(root, "not_a_noun", "en"))
+        for noun in ("apple", "pizza"):
+            for locale in ("en", "it"):
+                receipt = bank / locale / f"{noun}.wav.receipt.json"
+                self.assertTrue(receipt.is_file(), receipt)
+
+    def test_shared_vocab_bank_prefers_exact_locale_and_rejects_path_ids(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            base = _put(root, "assets/audio/vocab/v1/pt/cat.wav")
+            _put(root, "assets/audio/vocab/v1/en/cat.wav")
+            exact = _put(root, "assets/audio/vocab/v1/pt-BR/cat.wav")
+            self.assertEqual(shared_vocab_audio_path(root, "cat", "pt-BR"), exact)
+            self.assertEqual(shared_vocab_audio_path(root, "cat", "pt-PT"), base)
+            for bad in ("../cat", "a/b", "Cat", "cat.wav", "", "1cat", "x" * 49, "a-b"):
+                with self.subTest(noun=bad), self.assertRaises(LocalizationError):
+                    shared_vocab_audio_path(root, bad, "en")
 
     def test_shared_character_fallback_is_english_and_missing_is_optional(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

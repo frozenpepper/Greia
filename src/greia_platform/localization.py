@@ -282,6 +282,41 @@ def shared_character_audio_path(
 
 
 
+VOCAB_AUDIO_VERSION = "v1"
+_VOCAB_NOUN_ID_MAX = 48
+
+
+def shared_vocab_audio_path(
+    project_root: Path,
+    noun_id: str,
+    locale: str,
+) -> Path | None:
+    """Resolve an approved shared picture-name clip, or None for silence.
+
+    Noun names live once in the platform-owned vocabulary bank
+    ``assets/audio/vocab/v1/<language>/<noun_id>.wav`` (see the README there)
+    instead of being copied into every Activity package.  ``noun_id`` is the
+    language-neutral concept id (``apple``), never a translated word.  The
+    fallback policy matches all Greia speech: requested locale chain, then
+    its base language, then English, then None.  Only the id is validated
+    (simple lower-case token, so it cannot form a path); no decoding happens.
+    """
+    noun = _resource_key(noun_id)
+    if (
+        len(noun) > _VOCAB_NOUN_ID_MAX
+        or not noun[0].isalpha()
+        or any(ch in noun for ch in ".-")
+    ):
+        raise LocalizationError("noun id must be one simple concept token")
+    root = project_root / "assets" / "audio" / "vocab" / VOCAB_AUDIO_VERSION
+    languages = [tag.value for tag in LocaleTag.parse(locale).fallback_chain()]
+    for language in dict.fromkeys((*languages, "en")):
+        candidate = root / language / f"{noun}.wav"
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 @dataclass(frozen=True, slots=True)
 class LocalizedAudioCue:
     path: Path

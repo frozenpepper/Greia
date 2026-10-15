@@ -296,6 +296,19 @@ from the same localization module. These canonical voices live in the
 shared character v0.2 library, not each Activity; do not duplicate or
 rerecord them in an Activity package.
 
+**Shared vocabulary audio bank.** Spoken picture/noun names ("apple",
+"mela") live once in `assets/audio/vocab/v1/<locale>/<noun_id>.wav`
+(+ `.receipt.json`), resolved with
+`shared_vocab_audio_path(project_root, noun_id, locale)`
+(locale chain -> base -> English -> `None`, so keep a silent path).
+`noun_id` is the language-neutral concept id (`apple`, `ice_cream`), the
+last segment of the picture's semantic id. Use the bank for any
+naming/matching game; **never copy noun clips into an Activity package**
+(installed-disk budget). Add missing approved nouns to the bank (clip,
+receipt, provenance row in its README), not to the Activity. The bank
+ships in images with the rest of `assets/audio/**` and is read from
+`project_root` exactly like the shared character library.
+
 For all speech, **including literacy and phonics for now**, choose
 selected-language file if present, then its base-language file for a
 regional locale (`es-MX → es`, `fr-CA → fr`), otherwise English,
