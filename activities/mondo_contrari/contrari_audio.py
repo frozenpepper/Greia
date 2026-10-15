@@ -9,6 +9,8 @@ from typing import Final
 
 import pygame
 
+from greia_platform.localization import LocalizedResources
+
 _SAMPLE_RATE: Final = 22_050
 MAX_SPEECH_QUEUE: Final = 3
 
@@ -51,7 +53,11 @@ class ContrariSpeechQueue:
 class ContrariAudio:
     """Manage playback of localized voice cues and synthesized physical SFX."""
 
-    def __init__(self, package_root: Path, locale: str = "it") -> None:
+    def __init__(
+        self, package_root: Path, locale: str = "it",
+        resources: LocalizedResources | None = None,
+    ) -> None:
+        self._resources = resources
         self.locale = locale
         self._package_root = package_root
         self._speech_sounds: dict[str, pygame.mixer.Sound] = {}
@@ -73,13 +79,18 @@ class ContrariAudio:
             self._available = False
 
     def _load_speech_clips(self) -> None:
-        audio_dir = self._package_root / "locales" / self.locale / "audio"
-        if not audio_dir.exists():
-            return
-        for wav_file in audio_dir.glob("*.wav"):
+        if self._resources is not None:
+            # Locale and EN compatibility selection belongs to Greia, not
+            # the Activity's mixer, queues or procedural sound effects.
+            files = self._resources.speech_paths()
+        else:
+            # Keep isolated legacy callers compatible.
+            audio_dir = self._package_root / "locales" / self.locale / "audio"
+            files = {p.stem: p for p in audio_dir.glob("*.wav")}
+        for stem, path in files.items():
             try:
-                self._speech_sounds[wav_file.stem] = pygame.mixer.Sound(str(wav_file))
-            except (pygame.error, RuntimeError):
+                self._speech_sounds[stem] = pygame.mixer.Sound(str(path))
+            except (pygame.error, RuntimeError, OSError):
                 pass
 
     def play_speech(self, cue_id: str) -> None:
