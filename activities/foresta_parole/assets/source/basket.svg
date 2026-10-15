@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 160" width="256" height="160">
+  <!-- Word Forest catching basket (front view, open top). Activity-private prop,
+       recipe docs/design/GREIA_SVG_AUTHORING_RULES.md; wood = orange material steps. -->
+  <defs>
+    <!-- bark light (mix 35% white) -> bark (orange mixed 35% ink) -->
+    <linearGradient id="basket_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D1A77C"/>
+      <stop offset="1" stop-color="#B87735"/>
+    </linearGradient>
+    <!-- rim: orange shade (mix 25% ink), light (mix 40% white) -> base -->
+    <linearGradient id="basket_rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#DFB386"/>
+      <stop offset="1" stop-color="#C98136"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="149" rx="96" ry="9" fill="#6A5147" opacity="0.16"/>
+  </g>
+  <g id="body" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M30 50 L226 50 L206 136 C204 143 199 146 192 146 L64 146 C57 146 52 143 50 136 Z" fill="url(#basket_body)" stroke="#4B372F" stroke-width="4"/>
+    <g fill="none" stroke="#976433" stroke-width="3">
+      <path d="M36 78 L220 78 M42 106 L214 106 M47 128 L209 128"/>
+      <path d="M72 54 L78 142 M104 54 L107 144 M128 54 L128 144 M152 54 L149 144 M184 54 L178 142"/>
+    </g>
+    <path d="M44 62 C44 86 50 110 56 128" fill="none" stroke="#F0CFA4" stroke-width="5" opacity="0.8"/>
+  </g>
+  <g id="rim" stroke-linejoin="round">
+    <rect x="16" y="34" width="224" height="28" rx="14" fill="url(#basket_rim)" stroke="#4B372F" stroke-width="4"/>
+    <path d="M34 42 L120 42" fill="none" stroke="#F6D9B0" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <path d="M40 54 L60 54 M86 54 L106 54 M132 54 L152 54 M178 54 L198 54" fill="none" stroke="#976433" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <g id="leaf_tag" stroke="#51714A" stroke-width="3" stroke-linejoin="round">
+    <path d="M206 96 C222 84 238 90 240 104 C226 114 212 110 206 96 Z" fill="#59B86A"/>
+    <path d="M208 97 C218 99 228 101 236 103" fill="none" stroke-width="2"/>
+  </g>
+</svg>

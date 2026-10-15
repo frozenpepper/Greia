@@ -25,17 +25,24 @@
     <!-- small letter fruits still on the branches -->
     <g stroke="#4B372F" stroke-width="3.5">
       <circle cx="76" cy="122" r="12" fill="#D85683"/>
+      <circle cx="106" cy="134" r="10" fill="#9464C9"/>
       <circle cx="132" cy="96" r="12" fill="#FFC234"/>
-      <circle cx="158" cy="128" r="10" fill="#9464C9"/>
     </g>
   </g>
-  <!-- the letter the child catches, falling from the tree -->
+  <!-- the letter the child catches, dropping into the basket -->
   <g id="accent_motion" fill="none" stroke="#FFFBEB" stroke-width="6" stroke-linecap="round">
-    <path d="M196 136 L200 150 M214 132 L216 144"/>
+    <path d="M190 90 L193 102 M207 88 L209 99"/>
   </g>
   <g id="subject_letter" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
-    <circle cx="186" cy="186" r="34" fill="#FFFBEB" stroke-width="4.5"/>
-    <ellipse cx="172" cy="168" rx="8" ry="5" fill="#FFFFFF" stroke="none" transform="rotate(-30 172 168)"/>
-    <path d="M170 204 L186 164 L202 204 M176 192 L196 192" fill="none" stroke="#4A91D8" stroke-width="9"/>
+    <circle cx="178" cy="138" r="30" fill="#FFFBEB" stroke-width="4.5"/>
+    <ellipse cx="166" cy="123" rx="7" ry="4.5" fill="#FFFFFF" stroke="none" transform="rotate(-30 166 123)"/>
+    <path d="M164 154 L178 119 L192 154 M169 143 L187 143" fill="none" stroke="#4A91D8" stroke-width="8"/>
+  </g>
+  <g id="subject_basket" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="182" cy="226" rx="50" ry="7" fill="#8E5F33" opacity="0.18" stroke="none"/>
+    <path d="M136 188 L228 188 L218 220 C217 224 214 226 210 226 L154 226 C150 226 147 224 146 220 Z" fill="#B87735" stroke-width="4.5"/>
+    <path d="M140 204 L224 204 M160 190 L163 224 M182 190 L182 224 M204 190 L201 224" fill="none" stroke="#976433" stroke-width="3"/>
+    <rect x="128" y="176" width="108" height="18" rx="9" fill="#C98136" stroke-width="4.5"/>
+    <path d="M140 182 L176 182" fill="none" stroke="#F6D9B0" stroke-width="4" opacity="0.85"/>
   </g>
 </svg>

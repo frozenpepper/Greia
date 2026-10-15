@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 220" width="1024" height="220">
+  <!-- Word Forest canopy: leafy band the letters drop from. Activity-private art,
+       recipe docs/design/GREIA_SVG_AUTHORING_RULES.md (scene foreground band). -->
+  <g id="back">
+    <path d="M-12 -12 L1036 -12 L1036 112 Q1036 148 1004 126 Q972 154 940 132 Q908 140 876 118 Q844 162 812 140 Q780 140 748 118 Q716 154 684 132 Q652 148 620 126 Q588 154 556 132 Q524 140 492 118 Q460 162 428 140 Q396 140 364 118 Q332 154 300 132 Q268 148 236 126 Q204 154 172 132 Q140 140 108 118 Q76 162 44 140 Q12 140 -20 118 L-12 118 Z" fill="#56985B" stroke="#4A7A4E" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
+  <g id="branches" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M-12 128 C40 132 120 132 196 124 C214 122 230 116 244 108 L250 118 C232 130 214 136 196 138 C120 146 40 146 -12 144 Z" fill="#9A6A45"/>
+    <path d="M1036 136 C980 134 920 138 872 132 L868 144 C920 152 980 150 1036 150 Z" fill="#9A6A45"/>
+    <path d="M8 136 C50 138 110 137 170 132" fill="none" stroke="#C4936A" stroke-width="3"/>
+  </g>
+  <g id="crowns" stroke-linejoin="round" stroke-linecap="round">
+    <g transform="translate(-30 220.0) scale(1.25 1.25)">
+      <path d="M-58 -82 C-86 -86 -88 -122 -62 -130 C-70 -164 -36 -186 -10 -172 C2 -198 46 -196 54 -168 C82 -170 94 -134 74 -118 C90 -98 72 -72 48 -76 C36 -58 2 -56 -14 -68 C-28 -60 -50 -66 -58 -82 Z" fill="#6DB25A" stroke="#51714A" stroke-width="2.9"/>
+      <path d="M-74 -100 C-80 -112 -76 -124 -64 -129" fill="none" stroke="#9BD4A6" stroke-width="5.6"/>
+      <path d="M50 -78 C64 -82 74 -94 76 -108" fill="none" stroke="#4E9A5C" stroke-width="5.6"/>
+    </g>
+    <g transform="translate(118 186.8) scale(-1.05 1.05)">
+      <path d="M-58 -82 C-86 -86 -88 -122 -62 -130 C-70 -164 -36 -186 -10 -172 C2 -198 46 -196 54 -168 C82 -170 94 -134 74 -118 C90 -98 72 -72 48 -76 C36 -58 2 -56 -14 -68 C-28 -60 -50 -66 -58 -82 Z" fill="#59B86A" stroke="#51714A" stroke-width="3.4"/>
+      <path d="M-74 -100 C-80 -112 -76 -124 -64 -129" fill="none" stroke="#9BD4A6" stroke-width="6.7"/>
+      <path d="M50 -78 C64 -82 74 -94 76 -108" fill="none" stroke="#4E9A5C" stroke-width="6.7"/>
+    </g>
+    <g transform="translate(262 204.4) scale(1.15 1.15)">
+      <path d="M-58 -82 C-86 -86 -88 -122 -62 -130 C-70 -164 -36 -186 -10 -172 C2 -198 46 -196 54 -168 C82 -170 94 -134 74 -118 C90 -98 72 -72 48 -76 C36 -58 2 -56 -14 -68 C-28 -60 -50 -66 -58 -82 Z" fill="#6DB25A" stroke="#51714A" stroke-width="3.1"/>
+      <path d="M-74 -100 C-80 -112 -76 -124 -64 -129" fill="none" stroke="#9BD4A6" stroke-width="6.1"/>
+      <path d="M50 -78 C64 -82 74 -94 76 -108" fill="none" stroke="#4E9A5C" stroke-width="6.1"/>
+    </g>
+    <g transform="translate(420 178.0) scale(-1.00 1.00)">
+      <path d="M-58 -82 C-86 -86 -88 -122 -62 -130 C-70 -164 -36 -186 -10 -172 C2 -198 46 -196 54 -168 C82 -170 94 -134 74 -118 C90 -98 72 -72 48 -76 C36 -58 2 -56 -14 -68 C-28 -60 -50 -66 -58 -82 Z" fill="#59B86A" stroke="#51714A" stroke-width="3.6"/>
+      <path d="M-74 -100 C-80 -112 -76 -124 -64 -129" fill="none" stroke="#9BD4A6" stroke-width="7.0"/>
+      <path d="M50 -78 C64 -82 74 -94 76 -108" fill="none" stroke="#4E9A5C" stroke-width="7.0"/>
+    </g>
+    <g transform="translate(566 203.2) scale(1.20 1.20)">
+      <path d="M-58 -82 C-86 -86 -88 -122 -62 -130 C-70 -164 -36 -186 -10 -172 C2 -198 46 -196 54 -168 C82 -170 94 -134 74 -118 C90 -98 72 -72 48 -76 C36 -58 2 -56 -14 -68 C-28 -60 -50 -66 -58 -82 Z" fill="#6DB25A" stroke="#51714A" stroke-width="3.0"/>
+      <path d="M-74 -100 C-80 -112 -76 -124 -64 -129" fill="none" stroke="#9BD4A6" stroke-width="5.8"/>
+      <path d="M50 -78 C64 -82 74 -94 76 -108" fill="none" stroke="#4E9A5C" stroke-width="5.8"/>
+    </g>
+    <g transform="translate(724 176.0) scale(-1.00 1.00)">
+      <path d="M-58 -82 C-86 -86 -88 -122 -62 -130 C-70 -164 -36 -186 -10 -172 C2 -198 46 -196 54 -168 C82 -170 94 -134 74 -118 C90 -98 72 -72 48 -76 C36 -58 2 -56 -14 -68 C-28 -60 -50 -66 -58 -82 Z" fill="#59B86A" stroke="#51714A" stroke-width="3.6"/>
+      <path d="M-74 -100 C-80 -112 -76 -124 -64 -129" fill="none" stroke="#9BD4A6" stroke-width="7.0"/>
+      <path d="M50 -78 C64 -82 74 -94 76 -108" fill="none" stroke="#4E9A5C" stroke-width="7.0"/>
+    </g>
+    <g transform="translate(870 202.4) scale(1.15 1.15)">
+      <path d="M-58 -82 C-86 -86 -88 -122 -62 -130 C-70 -164 -36 -186 -10 -172 C2 -198 46 -196 54 -168 C82 -170 94 -134 74 -118 C90 -98 72 -72 48 -76 C36 -58 2 -56 -14 -68 C-28 -60 -50 -66 -58 -82 Z" fill="#6DB25A" stroke="#51714A" stroke-width="3.1"/>
+      <path d="M-74 -100 C-80 -112 -76 -124 -64 -129" fill="none" stroke="#9BD4A6" stroke-width="6.1"/>
+      <path d="M50 -78 C64 -82 74 -94 76 -108" fill="none" stroke="#4E9A5C" stroke-width="6.1"/>
+    </g>
+    <g transform="translate(1030 220.0) scale(-1.25 1.25)">
+      <path d="M-58 -82 C-86 -86 -88 -122 -62 -130 C-70 -164 -36 -186 -10 -172 C2 -198 46 -196 54 -168 C82 -170 94 -134 74 -118 C90 -98 72 -72 48 -76 C36 -58 2 -56 -14 -68 C-28 -60 -50 -66 -58 -82 Z" fill="#59B86A" stroke="#51714A" stroke-width="2.9"/>
+      <path d="M-74 -100 C-80 -112 -76 -124 -64 -129" fill="none" stroke="#9BD4A6" stroke-width="5.6"/>
+      <path d="M50 -78 C64 -82 74 -94 76 -108" fill="none" stroke="#4E9A5C" stroke-width="5.6"/>
+    </g>
+  </g>
+  <g id="leaves" stroke="#51714A" stroke-width="2.5" stroke-linejoin="round">
+    <path transform="translate(190 158) rotate(20)" d="M0 -14 C10 -8 10 6 0 14 C-10 6 -10 -8 0 -14 Z" fill="#7BC487"/>
+    <path transform="translate(344 150) rotate(-15)" d="M0 -14 C10 -8 10 6 0 14 C-10 6 -10 -8 0 -14 Z" fill="#7BC487"/>
+    <path transform="translate(496 146) rotate(12)" d="M0 -14 C10 -8 10 6 0 14 C-10 6 -10 -8 0 -14 Z" fill="#7BC487"/>
+    <path transform="translate(650 160) rotate(-10)" d="M0 -14 C10 -8 10 6 0 14 C-10 6 -10 -8 0 -14 Z" fill="#7BC487"/>
+    <path transform="translate(800 146) rotate(18)" d="M0 -14 C10 -8 10 6 0 14 C-10 6 -10 -8 0 -14 Z" fill="#7BC487"/>
+    <path transform="translate(958 160) rotate(-20)" d="M0 -14 C10 -8 10 6 0 14 C-10 6 -10 -8 0 -14 Z" fill="#7BC487"/>
+  </g>
+  <g id="ropes" stroke="#976433" stroke-width="4" stroke-linecap="round">
+    <path d="M64 140 L64 220 M188 132 L188 220" fill="none"/>
+  </g>
+</svg>

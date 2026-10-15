@@ -55,20 +55,19 @@ class WordForestPhonicsInventoryTests(unittest.TestCase):
                     self.assertEqual(cue["state"], "EXISTING_ASSET_NEEDS_REVIEW")
 
 
-    def test_feedback_text_comes_from_localized_resources(self) -> None:
+    def test_child_visible_text_comes_from_localized_resources(self) -> None:
         import json
 
         app_source = (ACTIVITY_DIR / "foresta_app.py").read_text(encoding="utf-8")
-        self.assertNotIn("Ottimo lavoro!", app_source)
-        self.assertNotIn("Splendido!", app_source)
-        self.assertIn('self.resources.text("feedback.correct")', app_source)
-        self.assertIn('self.resources.text("feedback.word_complete")', app_source)
-        # Both keys have real copy in all four staged catalogues.
+        # The only child-visible copy is the completion card; prompts are
+        # picture + voice, and example words come from the lesson data.
+        self.assertIn('self.resources.text("victory.title")', app_source)
+        self.assertIn('self.resources.text("button.play_again")', app_source)
         for locale in ("en", "it", "es", "fr"):
             with self.subTest(locale=locale):
                 bundle = json.loads((ACTIVITY_DIR / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
-                self.assertTrue(bundle["strings"]["feedback.correct"].strip())
-                self.assertTrue(bundle["strings"]["feedback.word_complete"].strip())
+                self.assertTrue(bundle["strings"]["victory.title"].strip())
+                self.assertTrue(bundle["strings"]["button.play_again"].strip())
 
     def test_nonliteral_phonics_source_is_never_executed(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

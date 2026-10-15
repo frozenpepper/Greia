@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Word Forest letter fruit: a round cream fruit with a leaf; the letter is
+       drawn on it at runtime. Activity-private prop, recipe GREIA_SVG_AUTHORING_RULES. -->
+  <defs>
+    <!-- cream -> sand -->
+    <linearGradient id="token_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFBEB"/>
+      <stop offset="1" stop-color="#EEDDBA"/>
+    </linearGradient>
+  </defs>
+  <g id="fruit" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M64 18 C68 12 72 8 78 6" fill="none" stroke="#4B372F" stroke-width="4"/>
+    <path d="M70 16 C80 4 98 4 106 12 C96 24 80 26 70 16 Z" fill="#59B86A" stroke="#51714A" stroke-width="3.5"/>
+    <path d="M74 15 C84 13 94 12 102 12" fill="none" stroke="#9BD4A6" stroke-width="2.5"/>
+    <circle cx="64" cy="70" r="52" fill="url(#token_body)" stroke="#4B372F" stroke-width="4.5"/>
+    <ellipse cx="42" cy="42" rx="13" ry="8" fill="#FFFFFF" opacity="0.8" transform="rotate(-35 42 42)"/>
+  </g>
+</svg>

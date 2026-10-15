@@ -1,138 +1,92 @@
-"""Foresta Parole — thin composition root.
+"""Thin Greia composition root for La Foresta delle Parole (The Word Forest).
 
-The historical ``main.py`` was a 663-line monolith that mixed constants,
-domain progression, rendering and the event loop. Real work now lives in
-:mod:`foresta_content`, :mod:`foresta_model`, :mod:`foresta_renderer`
-and :mod:`foresta_app`. This module only re-exports the historical API
-surface and composes the lifecycle owned by :class:`ForestaApp`.
-
-The Activity remains R7.3-migrated: it does not own the trusted Greia
-Home/Back chrome and respects the protected viewport through the shared
-``PygameReferenceCanvas``/``activity_viewport_for_surface`` seam.
+The round, the falling letters and the basket live in :mod:`foresta_model`;
+art in :mod:`foresta_art`; drawing in :mod:`foresta_renderer`; kit controls in
+:mod:`foresta_controls`; speech in :mod:`foresta_audio`; storage/events in
+:mod:`foresta_services`; the lifecycle in :class:`foresta_app.ForestaApp`.
 """
 
 from __future__ import annotations
 
+from pathlib import Path
+import random
+import time
+
 import pygame
 
-if __package__:
-    from .foresta_app import ForestaApp, SoundManager
-    from .foresta_content import (
-        BRANCH_BROWN,
-        CANOPY_DARK,
-        CANOPY_LIGHT,
-        CARD_BG,
-        CARD_BORDER,
-        DARK_TEXT,
-        FOREST_SKY_BOTTOM,
-        FOREST_SKY_TOP,
-        GOLD,
-        LEAF_GREEN,
-        LEAF_LIGHT,
-        ORB_COLORS,
-        PHONICS_DATA,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        STORAGE_KEY,
-        WHITE,
-    )
-    from .foresta_model import ForestaModel
-    from .foresta_renderer import ForestaRenderer, LetterOrb, OwlCompanion, Particle
-else:
-    from foresta_app import ForestaApp, SoundManager  # type: ignore[no-redef]
-    from foresta_content import (  # type: ignore[no-redef]
-        BRANCH_BROWN,
-        CANOPY_DARK,
-        CANOPY_LIGHT,
-        CARD_BG,
-        CARD_BORDER,
-        DARK_TEXT,
-        FOREST_SKY_BOTTOM,
-        FOREST_SKY_TOP,
-        GOLD,
-        LEAF_GREEN,
-        LEAF_LIGHT,
-        ORB_COLORS,
-        PHONICS_DATA,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        STORAGE_KEY,
-        WHITE,
-    )
-    from foresta_model import ForestaModel  # type: ignore[no-redef]
-    from foresta_renderer import ForestaRenderer, LetterOrb, OwlCompanion, Particle  # type: ignore[no-redef]
+from greia_platform.activity_api import get_profile_locale
+from greia_platform.localization import LocalizedResources, activity_resources
+from greia_platform.pygame_canvas import PygameReferenceCanvas
+from greia_platform.typography import GreiaTypography
 
-# Backwards-compatible re-exports. Historical contract tests
-# (tests/test_activity_foresta_parole.py) import PHONICS_DATA,
-# SoundManager, OwlCompanion, LetterOrb and Particle directly from
-# this module. Keep those names so the migration does not require
-# touching every caller; the new modules own the real work.
-__all__ = [
-    "BRANCH_BROWN",
-    "CANOPY_DARK",
-    "CANOPY_LIGHT",
-    "CARD_BG",
-    "CARD_BORDER",
-    "DARK_TEXT",
-    "FOREST_SKY_BOTTOM",
-    "FOREST_SKY_TOP",
-    "ForestaApp",
-    "ForestaModel",
-    "ForestaRenderer",
-    "GOLD",
-    "LEAF_GREEN",
-    "LEAF_LIGHT",
-    "LetterOrb",
-    "ORB_COLORS",
-    "OwlCompanion",
-    "PHONICS_DATA",
-    "Particle",
-    "REFERENCE_HEIGHT",
-    "REFERENCE_WIDTH",
-    "STORAGE_KEY",
-    "SoundManager",
-    "WHITE",
-    "main",
-]
+if __package__:
+    from .foresta_app import ForestaApp
+    from .foresta_art import ForestArt
+    from .foresta_audio import ForestAudio, SpeechQueue
+    from .foresta_content import PHONICS_DATA, REFERENCE_HEIGHT, REFERENCE_WIDTH, STORAGE_KEY
+    from .foresta_model import RoundPlanner
+    from .foresta_renderer import ForestRenderer
+    from .foresta_services import GreiaForestEvents, GreiaForestProgress
+else:
+    from foresta_app import ForestaApp
+    from foresta_art import ForestArt
+    from foresta_audio import ForestAudio, SpeechQueue
+    from foresta_content import PHONICS_DATA, REFERENCE_HEIGHT, REFERENCE_WIDTH, STORAGE_KEY
+    from foresta_model import RoundPlanner
+    from foresta_renderer import ForestRenderer
+    from foresta_services import GreiaForestEvents, GreiaForestProgress
+
+__all__ = ["ForestaApp", "PHONICS_DATA", "STORAGE_KEY", "build_app", "main"]
+
+
+def _locale_and_resources() -> tuple[str, LocalizedResources]:
+    resources = activity_resources(Path(__file__).resolve().parent, requested_locale=get_profile_locale())
+    return resources.context.selected.language, resources
+
+
+def build_app(screen: pygame.Surface, *, rng: random.Random | None = None) -> ForestaApp:
+    """Compose the Activity on ``screen`` (also used by tests and tools)."""
+
+    locale, resources = _locale_and_resources()
+    rng = rng if rng is not None else random.Random()
+    typography = GreiaTypography()
+    canvas = PygameReferenceCanvas(screen)
+    art = ForestArt(REFERENCE_WIDTH, REFERENCE_HEIGHT, typography)
+    audio = ForestAudio(Path(__file__).resolve().parent, locale=locale, resources=resources)
+    progress_port = GreiaForestProgress()
+    return ForestaApp(
+        screen=screen,
+        canvas=canvas,
+        planner=RoundPlanner(rng, language=locale),
+        progress=progress_port.load(),
+        progress_port=progress_port,
+        events=GreiaForestEvents(),
+        renderer=ForestRenderer(art),
+        typography=typography,
+        resources=resources,
+        audio=audio,
+        speech_queue=SpeechQueue(audio),
+        locale=locale,
+        rng=rng,
+        session_id=f"{int(time.time())}-{rng.randrange(1_000_000):06d}",
+    )
 
 
 def main() -> int:
-    """Compose the Activity and enter its lifecycle."""
-
-    # Keep a tiny reference to the historical constants so this bootstrap
-    # remains the documented export surface for tests/tools.
-    _ = (
-        BRANCH_BROWN,
-        CANOPY_DARK,
-        CANOPY_LIGHT,
-        CARD_BG,
-        CARD_BORDER,
-        DARK_TEXT,
-        FOREST_SKY_BOTTOM,
-        FOREST_SKY_TOP,
-        GOLD,
-        LEAF_GREEN,
-        LEAF_LIGHT,
-        ORB_COLORS,
-        PHONICS_DATA,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        STORAGE_KEY,
-        ForestaModel,
-        ForestaRenderer,
-        LetterOrb,
-        OwlCompanion,
-        Particle,
-        SoundManager,
-    )
-    app = ForestaApp()
+    pygame.init()
+    screen = pygame.display.get_surface()
+    if screen is None:
+        screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
+    pygame.mouse.set_visible(True)
+    app = build_app(screen)
     try:
         return app.run()
     finally:
-        try:
-            pygame.quit()
-        except Exception:
-            pass
+        app.speech_queue.clear()
+        app.kit.clear()
+        app.renderer.art.clear()
+        app.typography.clear()
+        pygame.quit()
 
 
 if __name__ == "__main__":

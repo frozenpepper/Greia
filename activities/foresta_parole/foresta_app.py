@@ -1,545 +1,621 @@
-"""Foresta Parole — Activity lifecycle, input and simulation ownership.
+"""App lifecycle, round flow and input orchestration for The Word Forest.
 
-The ``ForestaApp`` coordinates the Pygame event loop, viewport/canvas,
-model progression, renderer presentation, audio sequencing and storage.
-Domain truth lives in :mod:`foresta_model`; baked scenery and bounded
-text caches live in :mod:`foresta_renderer`.
+Round grammar (P7 §1): Leo says the word with its letter name while its
+picture hangs on the sign ("B as Boat") → letters drop from the canopy → the
+child steers the basket under the letter that starts the word → it drops in,
+Leo cheers, the sign shows the word with that letter in colour → six words →
+confetti and the shared completion scene.
+
+Hints are graduated: after ~6 s without input Leo points, the sign pulses,
+the right letters in the air glow and the word is said again; a wrong catch
+makes Leo think, the letter bounces out and the word is repeated; after two
+wrong catches (or two right letters missed) Leo demonstrates: the drops slow
+down and the right letter comes next, glowing, right above the basket.
+Misses never cost anything; retries are unlimited and kind.
 """
 
 from __future__ import annotations
 
-import io
-import math
+from enum import StrEnum
 import random
-import struct
 import time
-import wave
-from pathlib import Path
+from typing import Callable
 
 import pygame
 
-from greia_platform.activity_api import (
-    activity_stop_requested,
-    emit_activity_event,
-    get_storage,
-    get_theme,
-    mark_activity_ready,
+from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.activity_controls import (
+    ControlKit,
+    ControlLayout,
+    ControlTheme,
+    KitPointer,
+    PointerPhase,
+    PygameControlInput,
 )
-from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.child_text import display_text
-from greia_platform.localization import LocalizedResources, activity_resources
+from greia_platform.activity_feedback import CastFeedback
+from greia_platform.input_core import (
+    DEFAULT_INPUT_POLICY,
+    ControllerAxis,
+    InputEdge,
+    InteractionProfile,
+    SemanticAction,
+    SemanticInputEvent,
+    normalize_stick,
+)
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
+from greia_platform.pygame_completion import (
+    CompletionContent,
+    CompletionOverlay,
+    CompletionPalette,
+    CompletionScene,
+    PygameCompletionScreen,
+)
+from greia_platform.pygame_input import PygameInputTranslator
 from greia_platform.typography import GreiaTypography
+from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 
 if __package__:
-    from .foresta_content import PHONICS_DATA, REFERENCE_HEIGHT, REFERENCE_WIDTH, STORAGE_KEY
-    from .foresta_model import ForestaModel
-    from .foresta_renderer import ForestaRenderer, LetterOrb, OwlCompanion, Particle
+    from .foresta_audio import ForestAudio, SpeechQueue
+    from .foresta_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from .foresta_controls import LEO_HEIGHT, ForestControls
+    from .foresta_model import (
+        Basket,
+        CatchRound,
+        FieldEventKind,
+        ForestField,
+        RoundPlanner,
+        lesson_language,
+        next_stage,
+        stage_spec,
+    )
+    from .foresta_renderer import ForestRenderer, SceneState
+    from .foresta_services import EventPort, ForestProgress, ProgressPort
 else:
-    from foresta_content import PHONICS_DATA, REFERENCE_HEIGHT, REFERENCE_WIDTH, STORAGE_KEY  # type: ignore[no-redef]
-    from foresta_model import ForestaModel  # type: ignore[no-redef]
-    from foresta_renderer import ForestaRenderer, LetterOrb, OwlCompanion, Particle  # type: ignore[no-redef]
+    from foresta_audio import ForestAudio, SpeechQueue  # type: ignore[no-redef]
+    from foresta_content import REFERENCE_HEIGHT, REFERENCE_WIDTH  # type: ignore[no-redef]
+    from foresta_controls import LEO_HEIGHT, ForestControls  # type: ignore[no-redef]
+    from foresta_model import (  # type: ignore[no-redef]
+        Basket,
+        CatchRound,
+        FieldEventKind,
+        ForestField,
+        RoundPlanner,
+        lesson_language,
+        next_stage,
+        stage_spec,
+    )
+    from foresta_renderer import ForestRenderer, SceneState  # type: ignore[no-redef]
+    from foresta_services import EventPort, ForestProgress, ProgressPort  # type: ignore[no-redef]
 
 
-# ---------------------------------------------------------------------------
-# Audio — small prebuilt sound bank (wav assets + procedural fallbacks).
-# ---------------------------------------------------------------------------
+IDLE_HINT_SECONDS = 6.0
+MAX_IDLE_HINTS = 3
+POINT_SECONDS = 2.6
+INTRO_MAX_SECONDS = 2.6
+CAUGHT_MIN_SECONDS = 2.0
+CAUGHT_MAX_SECONDS = 5.0
+FINALE_SECONDS = 2.6
+SPARKLE_SECONDS = 0.6
+BUMP_SECONDS = 0.6
+KEY_SPEED = 520.0      # logical px/s while an arrow / D-pad is held
+STICK_SPEED = 600.0    # at full left-stick deflection
 
 
-def _synth_wav(samples: list[int], rate: int = 22050) -> bytes:
-    buf = io.BytesIO()
-    with wave.open(buf, "wb") as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(rate)
-        raw = b"".join(struct.pack("<h", max(-32767, min(32767, s))) for s in samples)
-        w.writeframes(raw)
-    return buf.getvalue()
+COMPLETION_PALETTE = CompletionPalette(
+    background=(207, 234, 247),
+    panel=(254, 243, 199),
+    panel_border=(180, 83, 9),
+    title=(120, 53, 15),
+    body=(71, 85, 105),
+    primary=(243, 154, 56),
+    primary_text=(61, 44, 31),
+)
 
 
-class SoundManager:
-    """Own the Word Forest audio catalogue with graceful fallback.
+class AppState(StrEnum):
+    INTRO = "intro"          # word spoken; letters start dropping shortly
+    PLAYING = "playing"
+    CAUGHT = "caught"        # right letter in the basket: word shown, cheer
+    FINALE = "finale"
+    TERMINAL = "terminal"    # shared completion scene
 
-    Synthesis happens once at construction. The hot path only looks up
-    a cached ``pygame.mixer.Sound`` and calls ``play()``.
-    """
+
+class ForestaApp:
+    """Coordinate the catch round, speech, basket input, kit controls and lifecycle."""
 
     def __init__(
-        self, resources: LocalizedResources | None = None, locale: str = "it"
+        self,
+        *,
+        screen: pygame.Surface,
+        canvas: PygameReferenceCanvas,
+        planner: RoundPlanner,
+        progress: ForestProgress,
+        progress_port: ProgressPort,
+        events: EventPort,
+        renderer: ForestRenderer,
+        typography: GreiaTypography,
+        resources,
+        audio: ForestAudio,
+        speech_queue: SpeechQueue,
+        locale: str,
+        rng: random.Random,
+        session_id: str,
+        clock: Callable[[], float] = time.monotonic,
+        kit: ControlKit | None = None,
     ) -> None:
-        self._resources = resources
-        self._locale = locale
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
-        self._enabled = False
-        try:
-            if not pygame.mixer.get_init():
-                pygame.mixer.init(22050, -16, 1, 512)
-            self._init_sounds()
-            self._enabled = True
-        except Exception:
-            self._enabled = False
+        self.screen = screen
+        self.canvas = canvas
+        self.planner = planner
+        self.progress = progress
+        self.progress_port = progress_port
+        self.events = events
+        self.renderer = renderer
+        self.typography = typography
+        self.resources = resources
+        self.audio = audio
+        self.speech_queue = speech_queue
+        self.language = lesson_language(locale)
+        self.rng = rng
+        self.session_id = session_id
+        self.clock = clock
 
-    def _init_sounds(self) -> None:
-        # The platform resolves which physical recording belongs to each
-        # stem. Keep this game's Pygame cache and effects here, not the
-        # locale directory/search policy.
-        if self._resources is not None:
-            voices = {
-                (self._locale, stem): path
-                for stem, path in self._resources.speech_paths().items()
-            }
-        else:
-            # Historical direct SoundManager() callers, such as isolated
-            # SFX tests, have no Activity context.
-            root = Path(__file__).resolve().parent / "assets" / "audio"
-            voices = {
-                (loc, path.stem): path
-                for loc in PHONICS_DATA
-                for path in sorted((root / loc).glob("*.wav"))
-            }
-        for (loc, stem), path in voices.items():
-            try:
-                self._sounds[f"{loc}:{stem.lower()}"] = pygame.mixer.Sound(str(path))
-            except (OSError, pygame.error):
-                continue
+        self.round: CatchRound = self._new_round()
+        self.state = AppState.INTRO
+        self.state_started = clock()
+        self._running = True
+        self._ready_published = False
+        self._last_tick = clock()
+        self._quiet_since = clock()
+        self._idle_hints = 0
+        self._point_until = 0.0
+        self._hint = False
+        self._sparkle: tuple[tuple[int, int], float] | None = None
+        self._bump: tuple[tuple[int, int], float] | None = None
+        self._pulse_phase = 0
+        self._activated = False
+        self._held: set[SemanticAction] = set()
+        self._stick_x = 0.0
+        self._stick_y = 0.0
+        self._revealed = False
 
-        pop_samples = [
-            int(math.sin(2 * math.pi * (600 + (1200 - i) * 0.8) * (i / 22050.0)) * max(0.0, 1.0 - (i / 22050.0) / 0.05) * 14000)
-            for i in range(1200)
-        ]
-        self._sounds["pop"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(pop_samples)))
+        # Shared control kit (ADR 0037): learn Collection -> orange accent. The
+        # kit shares the Activity's picture cache so art is decoded once.
+        self.kit = kit if kit is not None else ControlKit(
+            typography, ControlTheme.for_accent("orange"), art=renderer.art.art
+        )
+        renderer.kit = self.kit
+        if renderer.cast is None:
+            renderer.cast = CastFeedback("leo", height=LEO_HEIGHT, art=self.kit.art, clock=clock)
+        self.controls = ForestControls(
+            self.kit,
+            ControlLayout.for_canvas(canvas, screen.get_size()),
+            task_total=self.round.total,
+            on_listen=self._on_listen,
+        )
+        self.field = ForestField(rng, self.controls.geometry.field)
+        self.basket = Basket(self.controls.geometry.field)
+        self._surfaces = SurfaceNavigator(self.controls.layer)
+        self._input = self._make_input()
+        self._game_input = PygameInputTranslator(InteractionProfile.DIRECTIONAL)
+        self.completion = self._make_completion()
+        self._enter_target(opening=True)
 
-        chime_samples = []
-        for i in range(6000):
-            t = i / 22050.0
-            f = 523.25 if t < 0.08 else (659.25 if t < 0.16 else (783.99 if t < 0.24 else 1046.50))
-            env = max(0.0, 1.0 - t / 0.27)
-            chime_samples.append(int(math.sin(2 * math.pi * f * t) * env * 12000))
-        self._sounds["chime"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(chime_samples)))
+    # -- setup helpers ----------------------------------------------------------------
+    def _new_round(self) -> CatchRound:
+        stage = self.progress.stage_for(self.language)
+        return self.planner.build(stage, self.progress.caught_for(self.language))
 
-        fanfare_samples = []
-        notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]
-        for i in range(11000):
-            t = i / 22050.0
-            idx = min(len(notes) - 1, int(t / 0.08))
-            f = notes[idx]
-            env = max(0.0, 1.0 - t / 0.48)
-            fanfare_samples.append(int(math.sin(2 * math.pi * f * t) * env * 14000))
-        self._sounds["fanfare"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(fanfare_samples)))
+    def _make_completion(self) -> PygameCompletionScreen:
+        return PygameCompletionScreen(
+            self.typography,
+            width=REFERENCE_WIDTH,
+            height=REFERENCE_HEIGHT,
+            palette=COMPLETION_PALETTE,
+            scene=CompletionScene(self.kit, character="leo", star_total=self.round.total),
+        )
 
-        wobble_samples = [
-            int(math.sin(2 * math.pi * (340 + math.sin(i * 0.04) * 40) * (i / 22050.0)) * max(0.0, 1.0 - (i / 22050.0) / 0.15) * 9000)
-            for i in range(3300)
-        ]
-        self._sounds["wobble"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(wobble_samples)))
+    def _make_input(self) -> PygameControlInput:
+        return PygameControlInput(
+            to_logical=self.canvas.pointer,
+            is_safe=lambda pos: _safe_point(self.screen, pos),
+        )
 
-    def play(self, name: str) -> None:
-        if self._enabled and name in self._sounds:
-            try:
-                self._sounds[name].play()
-            except Exception:
-                pass
+    # -- main loop -------------------------------------------------------------------------
+    def run(self) -> int:
+        ticker = pygame.time.Clock()
+        while self._running and not activity_stop_requested():
+            for event in pygame.event.get():
+                self._handle_event(event)
+            if self.state is AppState.TERMINAL:
+                repeat = self._input.poll()
+                if repeat is not None:
+                    self._dispatch(repeat)
+            self.tick()
+            self._render()
+            self.canvas.present()
+            pygame.display.flip()
+            if not self._ready_published:
+                mark_activity_ready()
+                self._ready_published = True
+            ticker.tick(20 if self.state is AppState.TERMINAL else 30)
+        self._save()
+        return 0
 
-    def play_prompt(self, letter: str, locale: str = "it") -> None:
-        key = f"{locale}:find_{letter.lower()}"
-        if key in self._sounds:
-            self.play(key)
-        else:
-            self.play_letter(letter, locale)
+    def tick(self) -> None:
+        """Advance speech, cast, basket, falling letters and state timers."""
 
-    def play_letter(self, letter: str, locale: str = "it") -> None:
-        key = f"{locale}:{letter.lower()}"
-        if key in self._sounds:
-            self.play(key)
-        else:
-            self.play("pop")
+        now = self.clock()
+        dt = max(0.0, min(0.1, now - self._last_tick))
+        self._last_tick = now
+        was_busy = self.speech_queue.busy
+        self.speech_queue.update(dt)
+        if was_busy and not self.speech_queue.busy:
+            self._quiet_since = now
+        cast = self.renderer.cast
+        if cast is not None:
+            cast.update()
+        self._move_basket(dt)
+        if self.state in {AppState.INTRO, AppState.PLAYING, AppState.CAUGHT}:
+            for event in self.field.update(dt, self.basket.x):
+                self._on_field_event(event.kind, event.letter, now)
+        self._advance_state(now)
 
-    def play_word(self, word: str, locale: str = "it") -> None:
-        key = f"{locale}:{word.lower()}"
-        if key in self._sounds:
-            self.play(key)
-        else:
-            self.play("chime")
+    # -- input --------------------------------------------------------------------------------
+    def _handle_event(self, event: pygame.event.Event) -> None:
+        if event.type == pygame.QUIT:
+            self._running = False
+            return
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            self._running = False
+            return
+        if event.type == pygame.VIDEORESIZE:
+            self._relayout()
+            return
+        if self.state is AppState.TERMINAL:
+            translated = self._input.translate(event)
+            if translated is not None:
+                self._dispatch(translated)
+            return
+        if event.type in {pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP}:
+            translated = self._input.translate(event)
+            if isinstance(translated, KitPointer):
+                self._pointer(translated)
+            return
+        semantic = self._game_input.digital(event)
+        if semantic is not None:
+            self._game_action(semantic)
+            return
+        axis = self._game_input.controller_axis(event)
+        if axis is not None:
+            if axis.axis is ControllerAxis.LEFT_X:
+                self._stick_x = axis.value
+            elif axis.axis is ControllerAxis.LEFT_Y:
+                self._stick_y = axis.value
+            self._note_input()
 
-    def play_praise(self, locale: str = "it") -> None:
-        praise_cues = {
-            "it": ("ben_fatto", "fantastico", "ottimo"),
-            "en": ("great_job", "wonderful", "you_did_it"),
-            "es": ("bien_hecho", "fantastico", "muy_bien"),
-            "fr": ("bien_joue", "fantastique", "tres_bien"),
-        }
-        cues = praise_cues.get(locale, praise_cues["en"])
-        index = random.randrange(len(cues))
-        chosen = cues[index]
-        key = f"{locale}:{chosen}"
-        if key not in self._sounds:
-            key = f"{locale}:{praise_cues['en'][index]}"
-        if key in self._sounds:
-            self.play(key)
-        else:
-            self.play("fanfare")
+    def _relayout(self) -> None:
+        self.screen = pygame.display.get_surface() or self.screen
+        self.canvas = PygameReferenceCanvas(self.screen)
+        self.controls.relayout(ControlLayout.for_canvas(self.canvas, self.screen.get_size()))
+        self.field.geometry = self.controls.geometry.field
+        self.basket.geometry = self.controls.geometry.field
+        self.basket.x = self.basket.clamp(self.basket.x)
+        self._input = self._make_input()
+
+    def _game_action(self, semantic: SemanticInputEvent) -> None:
+        action = semantic.action
+        if action in {SemanticAction.MOVE_LEFT, SemanticAction.MOVE_RIGHT}:
+            if semantic.edge is InputEdge.PRESSED:
+                self._held.add(action)
+                self.basket.goal = None
+                self._note_input()
+            else:
+                self._held.discard(action)
+            return
+        if semantic.edge is not InputEdge.PRESSED:
+            return
+        if action in {SemanticAction.PRIMARY, SemanticAction.ACTIVATE}:
+            self._note_input()
+            self._on_listen()
+
+    def _pointer(self, pointer: KitPointer) -> None:
+        if pointer.phase is PointerPhase.DOWN:
+            self._note_input()
+        result = self._surfaces.dispatch(pointer)
+        if result is not UiEventResult.IGNORED:
+            return
+        if self.controls.layer.pressed_id is not None:
+            return  # a press that started on a control stays with the control
+        if pointer.phase in {PointerPhase.DOWN, PointerPhase.MOVE} and pointer.position[1] > 0:
+            if pointer.phase is PointerPhase.MOVE and abs(pointer.position[0] - self.basket.x) > 1:
+                self._note_input()
+            self.basket.goal = float(pointer.position[0])
+
+    def _dispatch(self, kit_input) -> bool:
+        result = self._surfaces.dispatch(kit_input)
+        return result is not UiEventResult.IGNORED
+
+    def _note_input(self) -> None:
+        self._quiet_since = self.clock()
+
+    def _move_basket(self, dt: float) -> None:
+        if dt <= 0:
+            return
+        direction = 0
+        if SemanticAction.MOVE_LEFT in self._held:
+            direction -= 1
+        if SemanticAction.MOVE_RIGHT in self._held:
+            direction += 1
+        if direction:
+            self.basket.nudge(direction * KEY_SPEED * dt)
+            return
+        stick = normalize_stick(self._stick_x, self._stick_y, DEFAULT_INPUT_POLICY.stick_dead_zone)
+        if abs(stick.x) > 0.0:
+            self.basket.goal = None
+            self.basket.nudge(stick.x * STICK_SPEED * dt)
+            self._note_input()
+            return
+        self.basket.follow(dt)
+
+    # Test/tool helpers -------------------------------------------------------------------
+    def _handle_pointer(self, raw_pos: tuple[int, int]) -> bool:
+        """Deliver one complete tap at a physical position."""
+
+        if not _safe_point(self.screen, raw_pos):
+            return False
+        logical = self.canvas.pointer(raw_pos)
+        if logical is None:
+            return False
+        return self._pointer_tap_logical((int(logical[0]), int(logical[1])))
+
+    def _pointer_tap_logical(self, point: tuple[int, int]) -> bool:
+        """Deliver one complete tap at a logical position; True when a control fired."""
+
+        self._activated = False
+        self._pointer(KitPointer(PointerPhase.DOWN, point))
+        self._pointer(KitPointer(PointerPhase.UP, point))
+        return self._activated
+
+    # -- control callbacks ------------------------------------------------------------------
+    def _on_listen(self) -> None:
+        self._activated = True
+        if self.state in {AppState.INTRO, AppState.PLAYING}:
+            self._say_prompt(clear=True)
+
+    def _say_prompt(self, *, clear: bool) -> None:
+        target = self.round.current
+        if target is None:
+            return
+        if clear:
+            self.speech_queue.clear()
+        self.speech_queue.enqueue(target.card.prompt_cue, tag="prompt", gap=0.4)
+
+    # -- falling-letter facts -----------------------------------------------------------------
+    def _on_field_event(self, kind: FieldEventKind, letter, now: float) -> None:
+        if self.state is not AppState.PLAYING and self.state is not AppState.INTRO:
+            return
+        if kind is FieldEventKind.CAUGHT_TARGET:
+            self._on_caught(letter, now)
+        elif kind is FieldEventKind.CAUGHT_DECOY:
+            self._on_wrong(letter, now)
+        elif kind is FieldEventKind.MISSED_TARGET:
+            self.round.record_miss()
+            self.audio.play_sfx("drop")
+            if self.round.needs_guide and not self.field.guide:
+                self._start_guide(now)
+
+    def _on_wrong(self, letter, now: float) -> None:
+        errors = self.round.record_wrong()
+        self.audio.play_sfx("bounce")
+        if self.renderer.cast is not None:
+            self.renderer.cast.try_again()
+        self._bump = ((int(letter.x), int(letter.y)), now)
+        self._point_until = 0.0
+        queue = self.speech_queue
+        queue.clear()
+        queue.enqueue("leo.retry", gap=0.3)
+        self._say_prompt(clear=False)
+        if errors >= 2 and not self.field.guide:
+            self._start_guide(now)
+        self._quiet_since = now
+
+    def _start_guide(self, now: float) -> None:
+        """Demonstrate: slower drops, the right letter next and glowing, Leo points."""
+
+        self.field.set_guide(True)
+        self._hint = True
+        self._point_until = now + POINT_SECONDS
+        if not self.speech_queue.busy:
+            self._say_prompt(clear=False)
+
+    def _on_caught(self, letter, now: float) -> None:
+        card = self.round.record_caught()
+        self.progress.record_catch(self.language, card.letter)
+        self._save()
+        self.events.letter_caught(self.session_id, self.round.done, card.letter, card.word)
+        self.field.stop()
+        self.field.release_all()
+        self.field.set_guide(False)
+        self.audio.play_sfx("catch")
+        if self.renderer.cast is not None:
+            self.renderer.cast.correct()
+        self._sparkle = ((int(self.basket.x), int(self.controls.geometry.field.mouth_y)), now)
+        self._hint = False
+        self._point_until = 0.0
+        self._revealed = True
+        queue = self.speech_queue
+        queue.clear()
+        queue.enqueue(card.letter_cue, tag="letter", gap=0.2)
+        queue.enqueue(card.word_cue, tag="word", gap=0.3)
+        if self.round.done == self.round.total // 2:
+            queue.enqueue("leo.progress", gap=0.2)
+        self.controls.set_progress(self.round.done)
+        self.state = AppState.CAUGHT
+        self.state_started = now
+
+    # -- targets ---------------------------------------------------------------------------------
+    def _enter_target(self, *, opening: bool = False) -> None:
+        now = self.clock()
+        self._idle_hints = 0
+        self._hint = False
+        self._point_until = 0.0
+        self._revealed = False
+        queue = self.speech_queue
+        queue.clear()
+        if opening:
+            queue.enqueue("leo.ready", gap=0.3)
+        self._say_prompt(clear=False)
+        self.state = AppState.INTRO
+        self.state_started = now
+        self._quiet_since = now
+
+    def _advance_state(self, now: float) -> None:
+        elapsed = now - self.state_started
+        if self.state is AppState.INTRO:
+            speaking_prompt = self.speech_queue.current_tag == "prompt"
+            if speaking_prompt or not self.speech_queue.busy or elapsed >= INTRO_MAX_SECONDS:
+                target = self.round.current
+                if target is not None:
+                    self.field.start(target, stage_spec(self.round.stage))
+                self.state = AppState.PLAYING
+                self.state_started = now
+                self._quiet_since = now
+        elif self.state is AppState.PLAYING:
+            waiting = self.field.falling_target()
+            if waiting is not None and abs(waiting.x - self.basket.x) <= self.field.geometry.basket_half:
+                # Already waiting under the right letter: not idle.
+                self._quiet_since = now
+            if (
+                not self.speech_queue.busy
+                and self._idle_hints < MAX_IDLE_HINTS
+                and now - self._quiet_since >= IDLE_HINT_SECONDS
+            ):
+                self._give_idle_hint(now)
+        elif self.state is AppState.CAUGHT:
+            done = elapsed >= CAUGHT_MIN_SECONDS and not self.speech_queue.busy
+            if done or elapsed >= CAUGHT_MAX_SECONDS:
+                self._sparkle = None
+                self.round.advance()
+                if self.round.is_complete:
+                    self._finish_round(now)
+                else:
+                    self._enter_target()
+        elif self.state is AppState.FINALE:
+            if elapsed >= FINALE_SECONDS:
+                self._show_completion(now)
+        if self._sparkle is not None and now - self._sparkle[1] >= SPARKLE_SECONDS:
+            self._sparkle = None
+        if self._bump is not None and now - self._bump[1] >= BUMP_SECONDS:
+            self._bump = None
+        self._pulse_phase = int(now * 4)
+
+    def _give_idle_hint(self, now: float) -> None:
+        self._idle_hints += 1
+        self.round.record_hint()
+        self._point_until = now + POINT_SECONDS
+        self._quiet_since = now
+        self._hint = True
+        for letter in self.field.falling:
+            letter.glow = letter.is_target
+        self._say_prompt(clear=True)
+
+    def _finish_round(self, now: float) -> None:
+        payload = self.round.consume_completion()
+        if payload is not None:
+            self.progress.stages[self.language] = next_stage(self.round)
+            self.progress.rounds_completed += 1
+            self._save()
+            self.events.round_completed(self.session_id, payload)
+        self.field.stop()
+        self.field.release_all()
+        self.state = AppState.FINALE
+        self.state_started = now
+        self._revealed = False
+        self.audio.play_sfx("finale")
+        self.speech_queue.clear()
+        self.speech_queue.enqueue("leo.celebrate", gap=0.2)
+        if self.renderer.cast is not None:
+            self.renderer.cast.correct()
+
+    def _save(self) -> None:
+        self.progress_port.save(self.progress)
+
+    def _show_completion(self, now: float) -> None:
+        letters = "  ".join(card.letter for card in self.round.caught)
+        self.completion.prepare(
+            CompletionContent(
+                title=self.resources.text("victory.title"),
+                primary_label=self.resources.text("button.play_again"),
+                body_lines=(letters,) if letters else (),
+                achievement_count=self.round.total,
+            )
+        )
+        self._held.clear()
+        self._surfaces.push_overlay(CompletionOverlay(self.completion, on_primary=self._restart))
+        self.state = AppState.TERMINAL
+        self.state_started = now
+
+    def _restart(self) -> None:
+        self.round = self._new_round()
+        self.session_id = f"{self.session_id.rsplit('-', 1)[0]}-{self.rng.randrange(1_000_000):06d}"
+        self._surfaces.pop_overlay()
+        self.completion.clear()
+        if self.renderer.cast is not None:
+            self.renderer.cast.reset()
+        self.controls.reset_round(self.round.total)
+        self.completion = self._make_completion()
+        self._activated = True
+        self._enter_target(opening=True)
+
+    # -- drawing -------------------------------------------------------------------------------
+    def scene_state(self) -> SceneState:
+        now = self.clock()
+        target = self.round.current
+        card = target.card if target is not None else None
+        if self.state is AppState.FINALE:
+            card = None
+        sparkle = None
+        if self._sparkle is not None:
+            sparkle = (self._sparkle[0], (now - self._sparkle[1]) / SPARKLE_SECONDS)
+        bump = None
+        if self._bump is not None:
+            bump = (self._bump[0], (now - self._bump[1]) / BUMP_SECONDS)
+        return SceneState(
+            card=card,
+            letters=tuple(self.field.letters),
+            basket_x=self.basket.x,
+            caught=tuple(self.round.caught),
+            revealed=self._revealed,
+            speaking=self.speech_queue.current_tag in {"prompt", "word"},
+            hint=self._hint and self.state is AppState.PLAYING,
+            pulse_phase=self._pulse_phase,
+            leo_pointing=now < self._point_until,
+            sparkle=sparkle,
+            bump=bump,
+            finale=(now - self.state_started) if self.state is AppState.FINALE else None,
+        )
+
+    def _render(self) -> None:
+        if self.state is AppState.TERMINAL:
+            self._surfaces.draw(self.canvas.surface)
+            return
+        self.renderer.draw_scene(
+            self.canvas.surface,
+            self.controls.geometry,
+            self.scene_state(),
+            draw_controls=self._surfaces.draw,
+        )
 
 
-# ---------------------------------------------------------------------------
-# Viewport safety — Greia owns the chrome, the Activity owns the play field.
-# ---------------------------------------------------------------------------
-
-
-def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
-    vp = activity_viewport_for_surface(surface)
+def _safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
+    viewport = activity_viewport_for_surface(surface)
     x, y = position
-    if not (0 <= x < vp.surface.width and 0 <= y < vp.surface.height):
+    if not (0 <= x < viewport.surface.width and 0 <= y < viewport.surface.height):
         return False
-    for protected in vp.protected_regions:
+    for protected in viewport.protected_regions:
         if protected.x <= x < protected.right and protected.y <= y < protected.bottom:
             return False
     return True
 
 
-# ---------------------------------------------------------------------------
-# Lifecycle owner — the only place that touches events, timing, audio,
-# storage and the renderer together.
-# ---------------------------------------------------------------------------
-
-
-class ForestaApp:
-    """Coordinate the Word Forest Activity lifecycle.
-
-    Dependencies (screen/canvas/metrics/typography, model, renderer,
-    audio) are owned here so handle_*/_step_frame/_draw remain
-    narrowly focused. The publisher-ready invariant is owned here:
-    the first presented frame publishes READY in the same loop.
-    """
-
-    def __init__(self, screen: pygame.Surface | None = None) -> None:
-        pygame.init()
-        # Resolve the platform display surface if caller did not inject one.
-        if screen is None:
-            screen = pygame.display.get_surface()
-            if screen is None:
-                screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
-        self.screen: pygame.Surface = screen
-        pygame.mouse.set_visible(False)
-
-        self.clock = pygame.time.Clock()
-        self.theme = get_theme()
-        self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
-        self.canvas = PygameReferenceCanvas(self.screen)
-        self.typography = GreiaTypography()
-
-        try:
-            self.storage = get_storage()
-        except Exception:
-            self.storage = None
-
-        # Locale and catalogue selection.
-        package_root = Path(__file__).parent
-        self.resources = activity_resources(package_root)
-        self.active_locale = self.resources.context.selected.language
-        self.sounds = SoundManager(resources=self.resources, locale=self.active_locale)
-        vocab_items = PHONICS_DATA.get(self.active_locale, PHONICS_DATA["it"])
-
-        # Persistent counters.
-        score = 0
-        stars = 0
-        words_completed = 0
-        if self.storage is not None:
-            try:
-                saved = self.storage.kv_get(STORAGE_KEY, {})  # type: ignore[call-arg]
-                if isinstance(saved, dict):
-                    score = int(saved.get("score", 0))
-                    stars = int(saved.get("stars", 0))
-                    words_completed = int(saved.get("words_completed", 0))
-            except Exception:
-                pass
-
-        self.model = ForestaModel(
-            active_locale=self.active_locale,
-            vocab_items=list(vocab_items),
-            vocab_idx=0,
-            score=score,
-            stars=stars,
-            words_completed=words_completed,
-            matches_needed=3,
-            matches_current=0,
-        )
-
-        self.renderer = ForestaRenderer(self.typography)
-        self.owl = OwlCompanion(140, 140)
-        self.particles: list[Particle] = []
-        self.orbs: list[LetterOrb] = []
-
-        self.celebration_phase: str = "idle"  # idle, letter_done, word_done, praise_done
-        self.celebration_timer: float = 0.0
-        self.initial_prompt_timer: float = 0.4  # play first prompt after 0.4s when ready
-        self.feedback_text: str = ""
-        self.feedback_timer: float = 0.0
-
-        self._running: bool = True
-        self._ready_published: bool = False
-
-        # Use renderer-owned geometry so input and visuals agree.
-        self._card_rect = self.renderer.card_rect()
-        self._audio_btn_rect = self.renderer.audio_btn_rect()
-
-        self._spawn_orbs()
-
-    # ------------------------------------------------------------------
-    # Orb spawning — domain letter distribution + presentation slots.
-    # ------------------------------------------------------------------
-
-    def _spawn_orbs(self) -> None:
-        self.orbs.clear()
-        cur_letter = self.model.cur_letter
-        vocab_items = self.model.vocab_items
-        chosen_letters = [cur_letter, cur_letter, cur_letter]
-        distractors = [item[0] for item in vocab_items if item[0] != cur_letter]
-        chosen_letters.extend(random.sample(distractors, min(4, len(distractors))))
-        random.shuffle(chosen_letters)
-
-        slots = [
-            (260, 240),
-            (420, 220),
-            (600, 240),
-            (780, 220),
-            (900, 280),
-            (320, 420),
-            (500, 440),
-            (680, 420),
-            (840, 430),
-        ]
-        random.shuffle(slots)
-        for i, ltr in enumerate(chosen_letters):
-            sx, sy = slots[i % len(slots)]
-            self.orbs.append(LetterOrb(ltr, sx + random.uniform(-20, 20), sy + random.uniform(-15, 15)))
-
-    # ------------------------------------------------------------------
-    # Platform event helpers
-    # ------------------------------------------------------------------
-
-    def _safe_emit(self, ev_id: str, ikey: str, payload: object = None) -> None:
-        try:
-            emit_activity_event(ev_id, idempotency_key=ikey, payload=payload)
-        except Exception:
-            pass
-
-    def _autosave(self) -> None:
-        if self.storage is None:
-            return
-        try:
-            self.storage.kv_set(
-                STORAGE_KEY,
-                {
-                    "score": self.model.score,
-                    "stars": self.model.stars,
-                    "words_completed": self.model.words_completed,
-                },
-            )
-        except Exception:
-            pass
-
-    # ------------------------------------------------------------------
-    # Input dispatch — translate physical pointer/key into domain actions.
-    # ------------------------------------------------------------------
-
-    def handle_event(self, event: pygame.event.Event) -> None:
-        if event.type == pygame.QUIT:
-            self._running = False
-        elif event.type == pygame.KEYDOWN:
-            self._handle_keydown(event.key)
-        elif event.type == pygame.VIDEORESIZE:
-            self._handle_resize()
-        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-            self._handle_pointer(event.pos)
-
-    def _handle_keydown(self, key: int) -> None:
-        if key == pygame.K_ESCAPE:
-            self._running = False
-        elif key == pygame.K_SPACE:
-            self.sounds.play_prompt(self.model.cur_letter, self.active_locale)
-
-    def _handle_resize(self) -> None:
-        self.screen = pygame.display.get_surface() or self.screen
-        self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
-        self.canvas = PygameReferenceCanvas(self.screen)
-        self.renderer.invalidate()
-
-    def _handle_pointer(self, screen_pos: tuple[int, int]) -> None:
-        if not _is_safe_point(self.screen, screen_pos):
-            return
-        logical = self.canvas.pointer(screen_pos)
-        if logical is None:
-            return
-        lx, ly = float(logical[0]), float(logical[1])
-
-        # Audio pill on the target card — always accessible, even during celebration.
-        if self._card_rect.collidepoint(lx, ly):
-            self.sounds.play_prompt(self.model.cur_letter, self.active_locale)
-            for _ in range(12):
-                self.particles.append(Particle(lx, ly, (255, 205, 50)))
-            return
-
-        if self.celebration_phase != "idle":
-            return
-
-        hit_orb = None
-        for orb in list(self.orbs):
-            if orb.contains(lx, ly):
-                hit_orb = orb
-                break
-
-        if hit_orb is None:
-            return
-
-        if hit_orb.letter == self.model.cur_letter:
-            self.sounds.play_letter(self.model.cur_letter, self.active_locale)
-            for _ in range(22):
-                self.particles.append(Particle(hit_orb.x, hit_orb.y, hit_orb.color_pair[1]))
-            # Remove before scoring so the orb count matches visual disappearance.
-            if hit_orb in self.orbs:
-                self.orbs.remove(hit_orb)
-            word_complete = self.model.record_correct_match()
-            self.owl.cheer()
-            self._safe_emit("letter.matched", f"match-{time.time()}")
-
-            if word_complete:
-                self.celebration_phase = "letter_done"
-                self.celebration_timer = 0.9
-                self.feedback_text = f"{display_text(self.model.cur_word)} {self.model.cur_emoji}"
-                self.feedback_timer = 5.0
-                for _ in range(35):
-                    self.particles.append(Particle(512, 300, (255, 205, 50)))
-            else:
-                # Localized praise. Missing bundles use a language-neutral visual cue;
-                # an Italian sentence must never leak into another UI locale.
-                if self.resources is not None:
-                    try:
-                        self.feedback_text = self.resources.text("feedback.correct")
-                    except Exception:
-                        self.feedback_text = "✨"
-                else:
-                    self.feedback_text = "✨"
-                self.feedback_timer = 1.8
-        else:
-            hit_orb.wobble()
-            self.sounds.play("wobble")
-            self.sounds.play_letter(hit_orb.letter, self.active_locale)
-            self.feedback_text = f"{hit_orb.letter}"
-            self.feedback_timer = 1.2
-
-    # Alias preserved for external tools that historically called the private name.
-    def handle_pointer(self, screen_pos: tuple[int, int]) -> None:
-        self._handle_pointer(screen_pos)
-
-    # ------------------------------------------------------------------
-    # Simulation step — advances timed state without touching presentation.
-    # ------------------------------------------------------------------
-
-    def _step_frame(self, dt: float) -> None:
-        # Initial speech is timed from launch so the first prompt does not
-        # collide with engine start-up audio contention.
-        if self.initial_prompt_timer > 0:
-            self.initial_prompt_timer -= dt
-            # Use a fixed 0.035 step aligned with the original 30 Hz DT so
-            # the 0.4s delay remains deterministic under variable dt tests.
-            # Keep the decrement proportional to dt for real frame timing.
-            if self.initial_prompt_timer <= 0:
-                self.sounds.play_prompt(self.model.cur_letter, self.active_locale)
-
-        # Sequential celebration state machine: letter chime -> word -> praise -> next word.
-        if self.celebration_phase == "letter_done":
-            self.celebration_timer -= dt
-            if self.celebration_timer <= 0:
-                self.sounds.play_word(self.model.cur_word_audio, self.active_locale)
-                self.celebration_phase = "word_done"
-                self.celebration_timer = 1.2
-        elif self.celebration_phase == "word_done":
-            self.celebration_timer -= dt
-            if self.celebration_timer <= 0:
-                self.sounds.play_praise(self.active_locale)
-                self.model.words_completed += 1
-                self._safe_emit(
-                    "word.completed",
-                    f"word-{time.time()}",
-                    payload={"letter": self.model.cur_letter, "word": self.model.cur_word},
-                )
-                if self.resources is not None:
-                    try:
-                        self.feedback_text = self.resources.text("feedback.word_complete")
-                    except Exception:
-                        self.feedback_text = "🌟"
-                else:
-                    self.feedback_text = "🌟"
-                self.celebration_phase = "praise_done"
-                self.celebration_timer = 1.6
-        elif self.celebration_phase == "praise_done":
-            self.celebration_timer -= dt
-            if self.celebration_timer <= 0:
-                self._autosave()
-                self.model.advance_word()
-                self._spawn_orbs()
-                self.sounds.play_prompt(self.model.cur_letter, self.active_locale)
-                self.celebration_phase = "idle"
-
-        self.owl.update()
-        for orb in self.orbs:
-            orb.update()
-        self.particles = [p for p in self.particles if p.update()]
-
-        if self.feedback_timer > 0:
-            self.feedback_timer -= dt
-        else:
-            self.feedback_text = ""
-
-    # ------------------------------------------------------------------
-    # Presentation — composes the reference surface and presents to display.
-    # ------------------------------------------------------------------
-
-    def _draw(self) -> None:
-        surf = self.canvas.surface
-        self.renderer.draw_background(surf)
-        self.renderer.draw_owl(surf, self.owl)
-        self.renderer.draw_orbs(surf, self.orbs)
-        self.renderer.draw_particles(surf, self.particles)
-        self.renderer.draw_card(
-            surf,
-            self.model.cur_letter,
-            self.model.cur_word,
-            self.model.cur_emoji,
-            self.model.matches_needed,
-            self.model.matches_current,
-        )
-        self.renderer.draw_hud(surf, self.model.stars, self.model.score)
-        self.renderer.draw_feedback(surf, self.feedback_text)
-        self.canvas.present(clear=self.theme.background)
-        pygame.display.flip()
-
-    # ------------------------------------------------------------------
-    # Main loop — the only place that publishes READY.
-    # ------------------------------------------------------------------
-
-    def run(self) -> int:
-        # Fixed-step timing: original used 0.035 at 30 Hz. Use clock.tick
-        # dt but clamp so a single hitch cannot skip celebration phases.
-        while self._running and not activity_stop_requested():
-            dt = min(0.1, self.clock.tick(30) / 1000.0)
-            # Original subtracted 0.035 each frame; keep dt semantics but
-            # preserve the legacy constant for celebration timing parity
-            # by using dt == 0.035 under normal scheduling.
-            effective_dt = 0.035 if abs(dt - 0.033) < 0.01 else dt
-            for event in pygame.event.get():
-                self.handle_event(event)
-                if not self._running:
-                    break
-            if not self._running:
-                break
-            self._step_frame(effective_dt)
-            self._draw()
-            if not self._ready_published:
-                mark_activity_ready()
-                self._ready_published = True
-        self._autosave()
-        return 0
-
-
-__all__ = ["ForestaApp", "SoundManager"]
+__all__ = ["AppState", "ForestaApp"]
