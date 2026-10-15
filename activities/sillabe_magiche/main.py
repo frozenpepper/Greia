@@ -8,7 +8,7 @@ import pygame
 
 from greia_platform.activity_api import get_profile_locale, get_storage, get_theme
 from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.localization import ActivityLocaleSupport, LocalizedResources, resolve_activity_locale
+from greia_platform.localization import activity_resources
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import GreiaTypography
 
@@ -76,11 +76,8 @@ def main() -> int:
         storage = None
 
     package_root = Path(__file__).parent
-    support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-    profile_lang = get_profile_locale()
-    context = resolve_activity_locale(profile_lang, support)
-    resources = LocalizedResources(package_root, context) if context else None
-    active_locale = context.selected.language if context else "it"
+    resources = activity_resources(package_root)
+    active_locale = resources.context.selected.language
 
     app = SillabeApp(
         screen=screen,
