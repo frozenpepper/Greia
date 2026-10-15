@@ -27,11 +27,7 @@ from greia_platform.activity_api import (
     mark_activity_ready,
 )
 from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.localization import (
-    ActivityLocaleSupport,
-    LocalizedResources,
-    resolve_activity_locale,
-)
+from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.typography import GreiaTypography
 
@@ -248,11 +244,8 @@ class ForestaApp:
 
         # Locale and catalogue selection.
         package_root = Path(__file__).parent
-        support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-        profile_lang = get_profile_locale()
-        context = resolve_activity_locale(profile_lang, support)
-        self.resources = LocalizedResources(package_root, context) if context else None
-        self.active_locale = context.selected.language if context else "it"
+        self.resources = activity_resources(package_root)
+        self.active_locale = self.resources.context.selected.language
         self.sounds = SoundManager(resources=self.resources, locale=self.active_locale)
         vocab_items = PHONICS_DATA.get(self.active_locale, PHONICS_DATA["it"])
 
