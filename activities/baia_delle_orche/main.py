@@ -60,7 +60,7 @@ def main() -> int:
             canvas=PygameReferenceCanvas(screen),
             pod=pod,
             renderer=renderer,
-            audio=PygameOrcaAudio(),
+            audio=PygameOrcaAudio(resources=resources),
             progress=progress,
             events=GreiaOrcaEvents(),
         )
