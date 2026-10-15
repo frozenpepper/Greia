@@ -18,7 +18,17 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
+from greia_platform.activity_controls import (
+    ControlKit,
+    ControlLayout,
+    ControlTheme,
+    KitPointer,
+    PointerPhase,
+    PygameControlInput,
+)
+from greia_platform.activity_feedback import CastFeedback
 from greia_platform.activity_ui import ChildUiMetrics
+from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizationError,
@@ -30,10 +40,12 @@ from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .pasticceria_content import CAKE_SLOTS, GOLD, REFERENCE_HEIGHT, REFERENCE_WIDTH, STORAGE_KEY, TOPPINGS
+    from .pasticceria_controls import CANDIDATE_RECTS, CAST_HEIGHT, CAST_MIDBOTTOM, PasticceriaControls
     from .pasticceria_model import PasticceriaModel
     from .pasticceria_renderer import PasticceriaRenderer
 else:
     from pasticceria_content import CAKE_SLOTS, GOLD, REFERENCE_HEIGHT, REFERENCE_WIDTH, STORAGE_KEY, TOPPINGS
+    from pasticceria_controls import CANDIDATE_RECTS, CAST_HEIGHT, CAST_MIDBOTTOM, PasticceriaControls
     from pasticceria_model import PasticceriaModel
     from pasticceria_renderer import PasticceriaRenderer
 
@@ -119,8 +131,11 @@ class PasticceriaApp:
     """Lifecycle owner for the Magic Bakery Activity.
 
     Owns screen/canvas/metrics/typography, model, renderer and input
-    routing. Delegates rules to the pure model and presentation to the
-    renderer. Publishes READY after the first flip in the same loop.
+    routing. Delegates rules to the pure model, scene presentation to the
+    renderer and every interactive control to the shared control kit
+    (ADR 0037), so tabs, pantry, Clear/Serve and pattern answers work with
+    pointer, touch, keyboard and controller alike. Publishes READY after
+    the first flip in the same loop.
     """
 
     def __init__(
@@ -132,6 +147,9 @@ class PasticceriaApp:
         model: PasticceriaModel,
         renderer: PasticceriaRenderer,
         resources,
+        *,
+        kit: ControlKit | None = None,
+        clock=time.monotonic,
     ) -> None:
         self._screen = screen
         self._canvas = canvas
@@ -149,12 +167,39 @@ class PasticceriaApp:
         self._running = True
         self._ready_published = False
 
+        # Shared control kit: primary Collection "learn" -> orange accent.
+        self._kit = kit if kit is not None else ControlKit(typography, ControlTheme.for_accent("orange"))
+        self._cast = CastFeedback("momo", height=CAST_HEIGHT, art=self._kit.art, clock=clock)
+        self._controls = PasticceriaControls(
+            self._kit,
+            resources,
+            ControlLayout.for_canvas(canvas, screen.get_size()),
+            mode=model.mode,
+            on_mode=self._select_mode,
+            on_topping=self._place_topping,
+            on_candidate=self._choose_candidate,
+            on_clear=self._clear_cake,
+            on_serve=self._handle_serve,
+        )
+        self._surfaces = SurfaceNavigator(self._controls.layer)
+        self._input = PygameControlInput(
+            to_logical=self._canvas_pointer,
+            is_safe=lambda pos: _is_safe_point(self._screen, pos),
+        )
+
+    @property
+    def controls(self) -> PasticceriaControls:
+        return self._controls
+
     # -- public lifecycle --
     def run(self) -> int:
         clock = pygame.time.Clock()
         while self._running and not activity_stop_requested():
             for event in pygame.event.get():
                 self.handle_event(event)
+            repeat = self._input.poll()
+            if repeat is not None:
+                self._surfaces.dispatch(repeat)
             self._step_frame()
             self._draw()
             self._canvas.present(clear=self._theme.background)
@@ -169,25 +214,34 @@ class PasticceriaApp:
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.QUIT:
             self._running = False
-        elif event.type == pygame.KEYDOWN:
-            self.handle_key(event)
-        elif event.type == pygame.VIDEORESIZE:
+            return
+        if event.type == pygame.KEYDOWN and self.handle_key(event):
+            return
+        if event.type == pygame.VIDEORESIZE:
             self.handle_resize(event)
-        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-            self.handle_pointer(event.pos)
+            return
+        translated = self._input.translate(event)
+        if translated is None:
+            return
+        result = self._surfaces.dispatch(translated)
+        if (
+            result is UiEventResult.IGNORED
+            and isinstance(translated, KitPointer)
+            and translated.phase is PointerPhase.UP
+        ):
+            self._cake_tap(translated.position)
 
-    def handle_key(self, event: pygame.event.Event) -> None:
+    def handle_key(self, event: pygame.event.Event) -> bool:
+        """Handle Activity shortcut keys; True when consumed."""
         if event.key == pygame.K_ESCAPE:
             self._running = False
-        elif event.key == pygame.K_1:
-            self._model.switch_mode("orders")
-            self._sounds.play("drop")
-        elif event.key == pygame.K_2:
-            self._model.switch_mode("patterns")
-            self._sounds.play("drop")
-        elif event.key == pygame.K_3:
-            self._model.switch_mode("free")
-            self._sounds.play("drop")
+            return True
+        shortcuts = {pygame.K_1: "orders", pygame.K_2: "patterns", pygame.K_3: "free"}
+        mode = shortcuts.get(event.key)
+        if mode is not None:
+            self._select_mode(mode)
+            return True
+        return False
 
     def handle_resize(self, event: pygame.event.Event) -> None:
         # Reacquire the display surface and rebuild canvas/metrics; renderer invalidates converts.
@@ -195,83 +249,71 @@ class PasticceriaApp:
         self._metrics = ChildUiMetrics.for_size(*self._screen.get_size())
         self._canvas = PygameReferenceCanvas(self._screen)
         self._renderer.on_resize()
+        self._controls.relayout(ControlLayout.for_canvas(self._canvas, self._screen.get_size()))
 
     def handle_pointer(self, screen_pos: tuple[int, int]) -> None:
+        """Deliver one complete tap at a physical position (tests/tools)."""
         if not _is_safe_point(self._screen, screen_pos):
             return
         logical = self._canvas.pointer(screen_pos)
         if logical is None:
             return
-        lx, ly = logical
+        point = (int(logical[0]), int(logical[1]))
+        if not self._controls.layer.tap(point):
+            self._cake_tap(point)
 
-        # 1. Mode Switcher (Header tabs)
-        if 230 <= lx <= 390 and 10 <= ly <= 68:
-            self._model.switch_mode("orders")
+    def _canvas_pointer(self, position: tuple[int, int]) -> tuple[float, float] | None:
+        return self._canvas.pointer(position)
+
+    # -- control callbacks --
+    def _select_mode(self, mode: str) -> None:
+        self._model.switch_mode(mode)
+        self._controls.sync_mode(self._model.mode)
+        self._sounds.play("drop")
+
+    def _place_topping(self, topping_id: str) -> None:
+        placed = self._model.place_topping(topping_id)
+        if placed is not None:
+            _, _, px, py = placed
             self._sounds.play("drop")
+            self._renderer.spawn_at(px, py, "✨", GOLD, 1)
+
+    def _clear_cake(self) -> None:
+        self._model.clear_toppings()
+        self._sounds.play("drop")
+        self._model.feedback_text = ""
+        self._model.feedback_timer = 0
+
+    def _choose_candidate(self, index: int) -> None:
+        if self._model.mode != "patterns":
             return
-        elif 405 <= lx <= 565 and 10 <= ly <= 68:
-            self._model.switch_mode("patterns")
+        _, correct_sym, candidates = self._model.current_pattern
+        if not 0 <= index < len(candidates):
+            return
+        rect = CANDIDATE_RECTS[index]
+        if candidates[index] == correct_sym:
+            self._sounds.play("chime")
+            self._model.apply_correct_pattern()
+            self._renderer.spawn_at(rect.centerx, rect.centery, "🌟", GOLD, 20)
+            self._model.feedback_text = self._localized_text("feedback.pattern_correct", "🌟")
+            self._model.feedback_timer = 2.5
+            self._cast.correct()
+            self._safe_emit("pattern.solved", f"pat-{time.time()}")
+        else:
             self._sounds.play("drop")
+            self._model.feedback_text = self._localized_text("feedback.try_again", "💕")
+            self._model.feedback_timer = 1.5
+            self._cast.try_again()
+
+    def _cake_tap(self, logical: tuple[int, int]) -> None:
+        """Tap on a placed topping removes it (orders/free modes only)."""
+        if self._model.mode not in {"orders", "free"}:
             return
-        elif 580 <= lx <= 740 and 10 <= ly <= 68:
-            self._model.switch_mode("free")
+        removed = self._model.remove_at((int(logical[0]), int(logical[1])))
+        if removed is not None:
+            tx, ty = removed
             self._sounds.play("drop")
-            return
-
-        if self._model.mode in {"orders", "free"}:
-            # Check if child clicked an existing topping on the cake to REMOVE it
-            removed = self._model.remove_at((int(lx), int(ly)))
-            if removed is not None:
-                tx, ty = removed
-                self._sounds.play("drop")
-                self._renderer.spawn_at(tx, ty, "✨", GOLD, 8)
-                return
-
-            # Check Pantry Shelf clicks
-            for idx, (t_id, t_icon, _) in enumerate(TOPPINGS):
-                col_idx = idx % 2
-                row_idx = idx // 2
-                bx = 720 + col_idx * 135
-                by = 140 + row_idx * 95
-                if bx <= lx <= bx + 125 and by <= ly <= by + 85:
-                    placed = self._model.place_topping(t_id)
-                    if placed is not None:
-                        _, _, px, py = placed
-                        self._sounds.play("drop")
-                        self._renderer.spawn_at(px, py, "✨", GOLD, 1)
-                    break
-
-            # 🧹 Pulisci (Clean) Button
-            if 710 <= lx <= 840 and 455 <= ly <= 565:
-                self._model.clear_toppings()
-                self._sounds.play("drop")
-                self._model.feedback_text = ""
-                self._model.feedback_timer = 0
-                return
-
-            # 🔔 SERVI! Button
-            if 850 <= lx <= 1000 and 455 <= ly <= 565:
-                self._handle_serve()
-                return
-
-        elif self._model.mode == "patterns":
-            _, correct_sym, candidates = self._model.current_pattern
-            for c_idx, cand_sym in enumerate(candidates):
-                cx = 330 + c_idx * 135
-                cy = 380
-                if cx <= lx <= cx + 110 and cy <= ly <= cy + 110:
-                    if cand_sym == correct_sym:
-                        self._sounds.play("chime")
-                        self._model.apply_correct_pattern()
-                        self._renderer.spawn_at(cx + 55, cy + 55, "🌟", GOLD, 20)
-                        self._model.feedback_text = self._localized_text("feedback.pattern_correct", "🌟")
-                        self._model.feedback_timer = 2.5
-                        self._safe_emit("pattern.solved", f"pat-{time.time()}")
-                    else:
-                        self._sounds.play("drop")
-                        self._model.feedback_text = self._localized_text("feedback.try_again", "💕")
-                        self._model.feedback_timer = 1.5
-                    break
+            self._renderer.spawn_at(tx, ty, "✨", GOLD, 8)
 
     def _localized_text(self, key: str, neutral: str) -> str:
         """Resolve feedback copy; without it only the pictogram is shown."""
@@ -293,25 +335,33 @@ class PasticceriaApp:
                 self._renderer.spawn_random_center(["🍰", "✨", "🍓", "💖"], GOLD, 30)
                 self._model.feedback_text = self._localized_text("feedback.perfect", "✨🍰")
                 self._model.feedback_timer = 3.0
+                self._cast.correct()
                 self._safe_emit("recipe.completed", f"recipe-{time.time()}")
             else:
                 self._sounds.play("drop")
                 self._model.feedback_text = self._localized_text("feedback.try_again", "💕")
                 self._model.feedback_timer = 2.5
+                self._cast.try_again()
         else:
             self._sounds.play("fanfare")
             self._renderer.spawn_random_center(["✨"], GOLD, 25)
             self._model.feedback_text = self._localized_text("feedback.masterpiece", "✨")
             self._model.feedback_timer = 2.5
+            self._cast.correct()
 
     def _step_frame(self) -> None:
-        # Model feedback tick and renderer particles.
+        # Model feedback tick, cast reaction and renderer particles.
         self._model.tick(0.035)
+        self._cast.update()
         self._renderer.update()
 
     def _draw(self) -> None:
         surf = self._canvas.surface
         self._renderer.render(surf, self._model)
+        self._controls.sync(self._model)
+        self._cast.draw(surf, CAST_MIDBOTTOM)
+        self._surfaces.draw(surf)
+        self._renderer.render_effects(surf)
 
     def _safe_emit(self, ev_id: str, ikey: str, payload: object = None) -> None:
         try:

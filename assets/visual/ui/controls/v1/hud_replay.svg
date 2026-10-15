@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- icon.hud.replay: thick round arrow (play again); cream band, ink contour -->
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M48 12 A36 36 0 1 1 13.6 58.6 L26.1 54.8 A23 23 0 1 0 48 25 L48 34 L28 18.5 L48 3 Z" fill="#FFFBEB" stroke-width="4.5"/>
+    <path d="M70 30 Q76 38 76.5 46" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.9"/>
+  </g>
+</svg>

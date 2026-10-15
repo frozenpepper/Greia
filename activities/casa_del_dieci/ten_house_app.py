@@ -10,12 +10,29 @@ from typing import Callable
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.activity_controls import (
+    ControlKit,
+    ControlLayout,
+    ControlTheme,
+    KitPointer,
+    PointerPhase,
+    PygameControlInput,
+)
+from greia_platform.activity_feedback import CastFeedback
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
-from greia_platform.pygame_completion import CompletionContent, CompletionPalette, PygameCompletionScreen
+from greia_platform.pygame_completion import (
+    CompletionContent,
+    CompletionOverlay,
+    CompletionPalette,
+    CompletionScene,
+    PygameCompletionScreen,
+)
 from greia_platform.typography import GreiaTypography
+from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 
 if __package__:
     from .ten_house_audio import TenHouseAudio
+    from .ten_house_controls import TenHouseControls
     from .ten_house_model import (
         OperationMode,
         TenHouseChallenge,
@@ -25,10 +42,11 @@ if __package__:
         REFERENCE_WIDTH,
         adapt_level,
     )
-    from .ten_house_renderer import TenHouseRenderer
+    from .ten_house_renderer import DANI_HEIGHT, TenHouseRenderer
     from .ten_house_services import EventPort, ProgressPort
 else:
     from ten_house_audio import TenHouseAudio
+    from ten_house_controls import TenHouseControls
     from ten_house_model import (
         OperationMode,
         TenHouseChallenge,
@@ -38,7 +56,7 @@ else:
         REFERENCE_WIDTH,
         adapt_level,
     )
-    from ten_house_renderer import TenHouseRenderer
+    from ten_house_renderer import DANI_HEIGHT, TenHouseRenderer
     from ten_house_services import EventPort, ProgressPort
 
 
@@ -51,7 +69,7 @@ class AppState(StrEnum):
 
 
 class TenHouseActivity:
-    """Coordinate domain model, hybrid keyboard/pointer input, and Greia lifecycle."""
+    """Coordinate domain model, shared-kit input/controls, and Greia lifecycle."""
 
     def __init__(
         self,
@@ -69,6 +87,7 @@ class TenHouseActivity:
         rng: random.Random,
         session_id: str,
         clock: Callable[[], float] = time.monotonic,
+        kit: ControlKit | None = None,
     ) -> None:
         self.screen = screen
         self.canvas = canvas
@@ -89,11 +108,28 @@ class TenHouseActivity:
         self._running = True
         self._ready_published = False
         self._dirty = True
-        self._hovered_room: int | None = None
-        self._hovered_choice: int | None = None
-        self._hovered_confirm = False
-        self._hovered_replay = False
         self._spoken_challenge_id: str | None = None
+
+        # Shared control kit (ADR 0037): learn Collection -> orange accent.
+        self.kit = kit if kit is not None else ControlKit(typography, ControlTheme.for_accent("orange"))
+        if renderer.cast is None:
+            renderer.cast = CastFeedback("dani", height=DANI_HEIGHT, art=self.kit.art, clock=clock)
+        self.controls = TenHouseControls(
+            self.kit,
+            resources,
+            ControlLayout.for_canvas(canvas, screen.get_size()),
+            on_room=self._on_room,
+            on_choice=self._on_choice,
+            on_confirm=self._perform_confirm,
+            on_replay=self._replay_prompt,
+        )
+        self.controls.sync(session)
+        self._surfaces = SurfaceNavigator(self.controls.layer)
+        self._input = PygameControlInput(
+            to_logical=self._to_logical,
+            is_safe=lambda pos: _safe_point(self.screen, pos),
+        )
+        self._activated = False
 
         self.completion = PygameCompletionScreen(
             typography,
@@ -108,6 +144,7 @@ class TenHouseActivity:
                 primary=(34, 197, 94),
                 primary_text=(255, 255, 255),
             ),
+            scene=CompletionScene(self.kit, character="dani", star_total=6),
         )
 
     def _get_prompt_cue(self, challenge: TenHouseChallenge) -> str:
@@ -126,6 +163,9 @@ class TenHouseActivity:
         while self._running and not activity_stop_requested():
             for event in pygame.event.get():
                 self._handle_event(event)
+            repeat = self._input.poll()
+            if repeat is not None:
+                self._dispatch(repeat)
             if self._advance_state():
                 self._dirty = True
             if self._dirty:
@@ -136,8 +176,14 @@ class TenHouseActivity:
                 if not self._ready_published:
                     mark_activity_ready()
                     self._ready_published = True
-            ticker.tick(30 if self.state in {AppState.WOBBLE, AppState.CELEBRATION, AppState.TRANSITION} else 20)
+            animating = self.state in {AppState.WOBBLE, AppState.CELEBRATION, AppState.TRANSITION}
+            ticker.tick(30 if animating or self.renderer.cast.animating else 20)
         return 0
+
+    # -- input ------------------------------------------------------------
+
+    def _to_logical(self, position: tuple[int, int]) -> tuple[float, float] | None:
+        return self.canvas.pointer(position)
 
     def _handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.QUIT:
@@ -149,144 +195,85 @@ class TenHouseActivity:
         if event.type == pygame.VIDEORESIZE:
             self.screen = pygame.display.get_surface() or self.screen
             self.canvas = PygameReferenceCanvas(self.screen)
+            self.controls.relayout(ControlLayout.for_canvas(self.canvas, self.screen.get_size()))
             self._dirty = True
             return
-
-        if self.state is AppState.TERMINAL:
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self._handle_terminal_pointer(event.pos):
-                    self._dirty = True
-            elif event.type == pygame.KEYDOWN and event.key in {pygame.K_SPACE, pygame.K_RETURN}:
-                self._restart()
-                self._dirty = True
+        if self.state not in {AppState.PLAYING, AppState.TERMINAL}:
             return
+        translated = self._input.translate(event)
+        if translated is not None and self._dispatch(translated):
+            self._dirty = True
 
-        if self.state is not AppState.PLAYING:
-            return
+    def _dispatch(self, kit_input) -> bool:
+        """Route one kit input through the SurfaceNavigator; True if handled."""
 
-        if event.type == pygame.MOUSEMOTION:
-            logical = self.canvas.pointer(event.pos)
-            if logical is not None:
-                point = (int(logical[0]), int(logical[1]))
-                current = self.session.current_challenge
-                new_room = self.renderer.room_at(point)
-                new_choice = self.renderer.choice_index_at(point, current) if current else None
-                new_confirm = self.renderer.confirm_contains(point) if (current and current.mode == OperationMode.COMPOSE) else False
-                new_replay = self.renderer.replay_contains(point)
-                if (
-                    new_room != self._hovered_room
-                    or new_choice != self._hovered_choice
-                    or new_confirm != self._hovered_confirm
-                    or new_replay != self._hovered_replay
-                ):
-                    self._hovered_room = new_room
-                    self._hovered_choice = new_choice
-                    self._hovered_confirm = new_confirm
-                    self._hovered_replay = new_replay
-                    self._dirty = True
-            return
-
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if self._handle_pointer(event.pos):
-                self._dirty = True
-        elif event.type == pygame.KEYDOWN:
-            if self._handle_keyboard(event.key):
-                self._dirty = True
+        if self.state not in {AppState.PLAYING, AppState.TERMINAL}:
+            return False
+        result = self._surfaces.dispatch(kit_input)
+        if self.state is AppState.PLAYING:
+            self.controls.mirror_focus(self.session)
+        if self.controls.layer.invalidation.should_draw:
+            self._dirty = True
+        return result is not UiEventResult.IGNORED
 
     def _handle_pointer(self, raw_pos: tuple[int, int]) -> bool:
+        """Deliver one complete tap at a physical position (tests/tools)."""
+
         if not _safe_point(self.screen, raw_pos):
             return False
         logical = self.canvas.pointer(raw_pos)
         if logical is None:
             return False
         point = (int(logical[0]), int(logical[1]))
-
-        current = self.session.current_challenge
-        if current is None:
-            return False
-
-        # 1. Replay voice button click
-        if self.renderer.replay_contains(point):
-            cue = self._get_prompt_cue(current)
-            self.audio.play_speech(cue)
-            return True
-
-        # 2. Room clicks
-        room_idx = self.renderer.room_at(point)
-        if room_idx is not None:
-            if current.mode == OperationMode.COMPOSE:
-                if self.session.toggle_room(room_idx):
-                    self.audio.play("toggle")
-                    self.session.focused_room = room_idx
-                    self.session.focus_in_choices = False
-                    return True
-            return False
-
-        # 3. Confirm button click (Compose mode)
-        if current.mode == OperationMode.COMPOSE and self.renderer.confirm_contains(point):
-            return self._perform_confirm()
-
-        # 4. Choice button click (Operation modes)
-        val = self.renderer.choice_at(point, current)
-        if val is not None:
-            return self._perform_choice(val)
-
-        return False
+        self._activated = False
+        self._dispatch(KitPointer(PointerPhase.DOWN, point))
+        self._dispatch(KitPointer(PointerPhase.UP, point))
+        return self._activated
 
     def _handle_keyboard(self, key: int) -> bool:
-        current = self.session.current_challenge
-        if current is None:
+        """Deliver one key press through the shared navigation mapping."""
+
+        translated = self._input.translate(pygame.event.Event(pygame.KEYDOWN, key=key))
+        if translated is None:
             return False
+        return self._dispatch(translated)
 
-        if key == pygame.K_LEFT:
-            if self.session.focus_in_choices:
-                if current.mode != OperationMode.COMPOSE:
-                    self.session.focused_choice = max(0, self.session.focused_choice - 1)
-            else:
-                self.session.focused_room = max(0, self.session.focused_room - 1)
-            return True
+    def _handle_terminal_pointer(self, raw_pos: tuple[int, int]) -> bool:
+        if self.state is not AppState.TERMINAL:
+            return False
+        before = self.state
+        if not self._handle_pointer(raw_pos) and self.state is before:
+            return False
+        return True
 
-        if key == pygame.K_RIGHT:
-            if self.session.focus_in_choices:
-                if current.mode != OperationMode.COMPOSE:
-                    self.session.focused_choice = min(2, self.session.focused_choice + 1)
-            else:
-                self.session.focused_room = min(9, self.session.focused_room + 1)
-            return True
+    # -- control callbacks --------------------------------------------------
 
-        if key == pygame.K_UP:
-            if self.session.focus_in_choices:
-                self.session.focus_in_choices = False
-                self.session.focused_room = 7  # Land on bottom row
-            elif self.session.focused_room >= 5:
-                self.session.focused_room -= 5
-            return True
+    def _on_room(self, index: int) -> None:
+        current = self.session.current_challenge
+        if current is None or current.mode != OperationMode.COMPOSE:
+            return
+        if self.session.toggle_room(index):
+            self.audio.play("toggle")
+            self.session.focused_room = index
+            self.session.focus_in_choices = False
+            self.controls.sync(self.session)
+            self._activated = True
 
-        if key == pygame.K_DOWN:
-            if not self.session.focus_in_choices:
-                if self.session.focused_room < 5:
-                    self.session.focused_room += 5
-                else:
-                    self.session.focus_in_choices = True
-                    self.session.focused_choice = 1 if current.mode != OperationMode.COMPOSE else 0
-            return True
+    def _on_choice(self, index: int) -> None:
+        current = self.session.current_challenge
+        if current is None or current.mode == OperationMode.COMPOSE:
+            return
+        self._activated = self._perform_choice(current.choice_values[index])
 
-        if key in {pygame.K_SPACE, pygame.K_RETURN}:
-            if self.session.focus_in_choices:
-                if current.mode == OperationMode.COMPOSE:
-                    return self._perform_confirm()
-                else:
-                    val = current.choice_values[self.session.focused_choice]
-                    return self._perform_choice(val)
-            else:
-                if current.mode == OperationMode.COMPOSE:
-                    if self.session.toggle_room(self.session.focused_room):
-                        self.audio.play("toggle")
-                        return True
-        return False
+    def _replay_prompt(self) -> None:
+        current = self.session.current_challenge
+        if current is not None:
+            self.audio.play_speech(self._get_prompt_cue(current))
+            self._activated = True
 
     def _perform_confirm(self) -> bool:
         result = self.session.confirm_compose()
+        self._activated = True
         return self._process_result(result)
 
     def _perform_choice(self, value: int) -> bool:
@@ -296,11 +283,13 @@ class TenHouseActivity:
     def _process_result(self, result) -> bool:
         if not result.correct:
             self.audio.play_feedback(False)
+            self.renderer.cast.try_again()
             self.state = AppState.WOBBLE
             self.state_started = self.clock()
             return True
 
         self.audio.play_feedback(True)
+        self.renderer.cast.correct()
         milestone = self.session.consume_milestone()
         if milestone is not None:
             self.events.room_completed(self.session_id, milestone)
@@ -308,61 +297,71 @@ class TenHouseActivity:
         if result.session_complete:
             self._finish_session()
         else:
+            self.controls.sync(self.session)
             self.state = AppState.CELEBRATION
             self.state_started = self.clock()
         return True
 
+    # -- state ----------------------------------------------------------------
+
     def _advance_state(self) -> bool:
-        # Automatic voice prompt at start of each challenge
         current = self.session.current_challenge
         if current is not None and current.challenge_id != self._spoken_challenge_id:
             self._spoken_challenge_id = current.challenge_id
             cue = self._get_prompt_cue(current)
             self.audio.play_speech(cue)
 
+        changed = self.renderer.cast.update() if self.renderer.cast is not None else False
         elapsed = self.clock() - self.state_started
         if self.state == AppState.WOBBLE:
             if elapsed >= 0.35:
                 self.state = AppState.PLAYING
-                return True
+                self.controls.sync(self.session)
             return True
         if self.state == AppState.CELEBRATION:
             if elapsed >= 0.55:
                 self.state = AppState.TRANSITION
                 self.state_started = self.clock()
-                return True
             return True
         if self.state == AppState.TRANSITION:
             if elapsed >= 0.20:
                 self.state = AppState.PLAYING
+                self.controls.sync(self.session)
                 return True
-            return False
-        return False
+            return changed
+        return changed
 
     def _render(self) -> None:
         if self.state is AppState.TERMINAL:
-            self.completion.draw(self.canvas.surface)
+            self._surfaces.draw(self.canvas.surface)
             return
 
         wobble_x = 0
         highlight_rooms = False
-        is_celebrating = (self.state == AppState.CELEBRATION)
+        is_celebrating = self.state == AppState.CELEBRATION
         if self.state == AppState.WOBBLE:
             elapsed = self.clock() - self.state_started
             wobble_x = int(8 * ((1 - elapsed / 0.35) * ((int(elapsed * 40) % 2) * 2 - 1)))
             highlight_rooms = True
 
+        hovered = self.controls.layer.hovered_id or ""
+        hovered_room = int(hovered.split(".", 1)[1]) if hovered.startswith("room.") else None
+        surface = self.canvas.surface
         self.renderer.draw_scene(
-            self.canvas.surface,
+            surface,
             self.session,
-            wobble_x=wobble_x,
             highlight_rooms=highlight_rooms,
-            hovered_room=self._hovered_room,
-            hovered_choice=self._hovered_choice,
-            hovered_confirm=self._hovered_confirm,
-            hovered_replay=self._hovered_replay,
+            hovered_room=hovered_room,
             is_celebrating=is_celebrating,
         )
+        shaking = self.controls.wobble_target() if wobble_x else None
+        if shaking is not None:
+            base = shaking.rect
+            shaking.rect = base.move(wobble_x, 0)
+            self._surfaces.draw(surface)
+            shaking.rect = base
+        else:
+            self._surfaces.draw(surface)
 
     def _finish_session(self) -> None:
         payload = self.session.consume_completion()
@@ -380,6 +379,7 @@ class TenHouseActivity:
                 achievement_count=6,
             )
         )
+        self._surfaces.push_overlay(CompletionOverlay(self.completion, on_primary=self._restart))
         self.state = AppState.TERMINAL
         self.state_started = self.clock()
 
@@ -388,22 +388,14 @@ class TenHouseActivity:
         challenges = self.factory.build_set(next_level)
         self.session_id = f"{self.session_id.rsplit('-', 1)[0]}-{self.rng.randrange(1_000_000):06d}"
         self.session = TenHouseSession(challenges, level=next_level, history=self.session.history)
+        self._surfaces.pop_overlay()
         self.completion.clear()
+        self.renderer.cast.reset()
+        self.controls.sync(self.session)
         self.state = AppState.PLAYING
         self.state_started = self.clock()
         self.audio.play("correct")
-
-    def _handle_terminal_pointer(self, raw_pos: tuple[int, int]) -> bool:
-        if not _safe_point(self.screen, raw_pos):
-            return False
-        logical = self.canvas.pointer(raw_pos)
-        if logical is None:
-            return False
-        point = (int(logical[0]), int(logical[1]))
-        if self.completion.primary_contains(point):
-            self._restart()
-            return True
-        return False
+        self._activated = True
 
 
 def _safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:

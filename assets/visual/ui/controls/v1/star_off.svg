@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- ui.control.star off (not yet earned): cream fill, soft contour = mix(ink, cream, 45%) -->
+  <g id="subject" stroke="#A6968A" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M64 10 L79.5 43.5 L116 47.5 L88.5 72 L96.5 108 L64 89.5 L31.5 108 L39.5 72 L12 47.5 L48.5 43.5 Z" fill="#F4ECDC" stroke-width="6.5"/>
+  </g>
+</svg>

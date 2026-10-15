@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 440" width="760" height="440">
+  <!-- ui.completion.card: shared cast completion stage. Cream card (surface), ink contour,
+       tactile lip, sunshine title ribbon (title drawn at runtime on the band y 30-80),
+       sand stage disc for the cheering cast friend (left, feet at y ~418),
+       multi-accent bunting + confetti so the card stays Collection-neutral. -->
+  <defs>
+    <!-- sunshine light (mix 35% white) -> sunshine -->
+    <linearGradient id="completion_card_ribbon" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFD978"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+    <!-- cream light -> surface -->
+    <linearGradient id="completion_card_panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFDF6"/>
+      <stop offset="1" stop-color="#FFF6E2"/>
+    </linearGradient>
+  </defs>
+  <g id="panel">
+    <rect x="4" y="16" width="752" height="420" rx="36" fill="#C9B79E" stroke="#4B372F" stroke-width="4"/>
+    <rect x="4" y="4" width="752" height="420" rx="36" fill="url(#completion_card_panel)" stroke="#4B372F" stroke-width="4"/>
+    <path d="M46 15 L118 15" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+  </g>
+  <g id="bunting" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round">
+    <path d="M26 36 Q70 64 126 54" fill="none" stroke-linecap="round"/>
+    <path d="M634 54 Q690 64 734 36" fill="none" stroke-linecap="round"/>
+    <path d="M38 43 L56 49 L43 70 Z" fill="#F46F61"/>
+    <path d="M68 53 L86 56 L75 78 Z" fill="#4A91D8"/>
+    <path d="M98 57 L116 55 L109 78 Z" fill="#59B86A"/>
+    <path d="M644 55 L662 57 L651 78 Z" fill="#9464C9"/>
+    <path d="M674 56 L692 53 L685 78 Z" fill="#F39A38"/>
+    <path d="M704 49 L722 43 L717 70 Z" fill="#44B8AE"/>
+  </g>
+  <g id="ribbon" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M168 40 L130 40 L146 62 L130 84 L184 84 Z" fill="#E0A630"/>
+    <path d="M592 40 L630 40 L614 62 L630 84 L576 84 Z" fill="#E0A630"/>
+    <path d="M184 84 L184 92 L168 84 Z M576 84 L576 92 L592 84 Z" fill="#B9862C"/>
+    <rect x="168" y="22" width="424" height="70" rx="14" fill="url(#completion_card_ribbon)"/>
+    <path d="M186 33 L300 33" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+  </g>
+  <g id="stage">
+    <ellipse cx="160" cy="402" rx="122" ry="16" fill="#EEDDBA" stroke="#C9B79E" stroke-width="3"/>
+  </g>
+  <g id="confetti">
+    <circle cx="30" cy="120" r="5" fill="#FFC234"/>
+    <rect x="70" y="150" width="10" height="6" rx="3" fill="#F46F61" transform="rotate(-28 75 153)"/>
+    <circle cx="738" cy="128" r="5" fill="#4A91D8"/>
+    <rect x="722" y="176" width="10" height="6" rx="3" fill="#59B86A" transform="rotate(32 727 179)"/>
+    <circle cx="740" cy="232" r="4" fill="#D85683"/>
+    <circle cx="36" cy="196" r="4" fill="#9464C9"/>
+  </g>
+</svg>

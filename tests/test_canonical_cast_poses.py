@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CAST_DIR = ROOT / "assets" / "visual" / "characters" / "canonical" / "v0.1"
 SOURCE_SPEC = ROOT / "assets" / "catalog" / "shared_visuals_v1_source.toml"
 CAST = ("lilli", "leo", "flash", "dani", "tito", "momo")
-POSES = ("pose_cheer", "pose_point")
+POSES = ("pose_cheer", "pose_point", "pose_think")
 RETIRED_FOLDERS = (
     "authoring_candidates",
     "authoring_kit",

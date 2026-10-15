@@ -469,6 +469,38 @@ The platform-owned PNG/WAV/UTF-8 `CreationLibrary` has a guarded Activity transf
 
 Painting is the reference PNG integration: normal autosaves stay private; an explicit up-arrow publishes an immutable snapshot; from Painting's own gallery a down-arrow requests `image/png`, the Activity polls at a bounded cadence, and a child-selected one-use handle is imported as a new independent editable private painting after digest/type validation. This latest interaction is **SOURCE-WIP and not yet accepted in a complete checkout/GUI**. New consumers should copy the semantic pattern only after the consolidated acceptance is green. The cross-Activity implementation and 45-Activity release review remain tracked in the single Creations PLAN/PROGRESS; Shape Garden is not yet a persistent stamp editor and must not be treated as one without the planned project-model work.
 
+### Use the shared control kit (ADR 0037, Proposed)
+
+Do not hand-draw buttons, mode tabs, HUD counters, prompt bubbles, try-again banners or completion cards. Compose them from `greia_platform.activity_controls` (+ `activity_feedback`, `pygame_completion`), which gives one look, cached rendering and keyboard / D-pad / stick / south-button focus for free. Reference pilots: `activities/casa_del_dieci/ten_house_controls.py`, `activities/pasticceria_magica/pasticceria_controls.py`.
+
+```python
+from greia_platform.activity_controls import (
+    BodyShape, ButtonRole, ControlKit, ControlLayout, ControlTheme, ExternalTarget, PygameControlInput,
+)
+from greia_platform.activity_feedback import CastFeedback
+from greia_platform.ui_core import SurfaceNavigator, UiEventResult
+
+kit = ControlKit(typography, ControlTheme.for_accent("orange"))      # primary Collection hue token
+layout = ControlLayout.for_canvas(canvas, screen.get_size())          # protected Home/Back mapped to logical px
+tabs = kit.tool_strip("mode", [("a", res.text("tab.a"), kit.text_icon("🧁", 30)), ...], on_select=switch_mode)
+stars = kit.hud_chip("hud.stars", rect, icon=kit.star(40), value=0)
+ok = kit.pill_button("ok", rect, label="OK", icon=kit.glyph("check", 40), role=ButtonRole.PRIMARY, on_activate=confirm)
+prompt = kit.prompt_banner("prompt", rect, text=res.text("prompt.x"), replay_icon=kit.glyph("listen", 34), on_replay=replay_cue)
+cells = [ExternalTarget(f"cell.{i}", r, lambda i=i: tap_cell(i)) for i, r in enumerate(CELL_RECTS)]  # your own art, kit focus ring
+layer = kit.layer([*cells, *tabs.controls, stars, ok, *prompt.controls])
+surfaces = SurfaceNavigator(layer)
+kit_input = PygameControlInput(to_logical=canvas.pointer, is_safe=safe_point)
+cast = CastFeedback("dani", height=170, art=kit.art)                  # cast.correct() / cast.try_again()
+
+# loop: result = surfaces.dispatch(kit_input.translate(event)) when not None; repeat = kit_input.poll() per frame;
+# IGNORED pointer input is gameplay. Draw: scene -> cast.draw(surface, midbottom) -> surfaces.draw(surface).
+```
+
+- Lay bars with `layout.top_bar(layout.control_height(64, maximum=...))`, `layout.row(...)` and `layout.fit(...)` (labels shrink first, then pills go icon-only); never place controls in `layout.protected`.
+- Labels must come from `LocalizedResources.text` (already CAPITALS per ADR 0034). HUD/system glyphs: `kit.glyph("listen" | "replay" | "check" | "trophy" | "bell" | "clear")`; stars: `kit.star(size, filled=...)`.
+- Completion: `PygameCompletionScreen(typography, scene=CompletionScene(kit, character="dani", star_total=N))`, then `surfaces.push_overlay(CompletionOverlay(completion, on_primary=restart, on_secondary=next_or_None))`; add `secondary_label` to `CompletionContent` for a "next" button.
+- Mutate control state (`label`, `value`, `visible`, `enabled`, `selected`) only when the model changes; the kit caches every state/content surface in bounded LRU caches, so `draw` stays blits only.
+
 ### Performance is correctness
 
 The Acer-class floor is part of the design target, not a later optimization pass.

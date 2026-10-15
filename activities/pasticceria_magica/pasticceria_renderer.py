@@ -47,15 +47,11 @@ _MAX_ICON_CACHE = 32
 _MAX_PARTICLES = 96
 
 # Semantic label keys resolved once; capitals come from the case policy.
+# Tab/action labels are resolved by the shared control kit wiring.
 _LABEL_KEYS = (
-    "tab.orders",
-    "tab.patterns",
-    "tab.free",
     "panel.order",
     "panel.free",
     "panel.pantry",
-    "action.clear",
-    "action.serve",
     "prompt.pattern",
 )
 
@@ -91,8 +87,8 @@ class Particle:
 class PasticceriaRenderer:
     """Own Pasticceria Pygame presentation, geometry and bounded transient effects.
 
-    Static bakery room/counter, mode tabs and HUD chrome are prepared once
-    and reused. Per-frame font/scale/decode work is avoided via bounded caches
+    Static bakery room/counter is prepared once and reused; interactive
+    controls come from the shared control kit (ADR 0037). Per-frame font/scale/decode work is avoided via bounded caches
     that invalidate when the reference canvas or locale context changes.
     """
 
@@ -244,36 +240,18 @@ class PasticceriaRenderer:
         model,
         feedback_text: str | None = None,
     ) -> None:
-        """Render the full logical canvas (1024x600) into surface."""
+        """Render the bakery scene (1024x600 logical) without kit controls.
+
+        Tabs, HUD chips, pantry/candidate tiles, Clear/Serve and the feedback
+        banner are shared control-kit controls drawn by the app's
+        ``ControlLayer`` (ADR 0037). ``feedback_text`` is accepted for
+        compatibility; feedback is presented by the kit banner.
+        """
+        del feedback_text
         self._ensure_converted()
-        # 1. Bakery Room & Counter (backdrop)
         surface.blit(self._backdrop, (0, 0))
 
-        # 2. Header Mode Tabs
         mode = model.mode
-        btn1_c = GOLD if mode == "orders" else WHITE
-        btn2_c = GOLD if mode == "patterns" else WHITE
-        btn3_c = GOLD if mode == "free" else WHITE
-        for b_name, b_col, b_x in [
-            (self._caption("🧁", "tab.orders"), btn1_c, 230),
-            (self._caption("🍪", "tab.patterns"), btn2_c, 405),
-            (self._caption("🎨", "tab.free"), btn3_c, 580),
-        ]:
-            b_rect = pygame.Rect(b_x, 12, 160, 52)
-            pygame.draw.rect(surface, b_col, b_rect, border_radius=16)
-            pygame.draw.rect(surface, (200, 160, 130), b_rect, width=2, border_radius=16)
-            m_surf = self._fit_text(b_name, FontRole.TITLE, 22, DARK_TEXT, b_rect.width - 16)
-            surface.blit(m_surf, m_surf.get_rect(center=b_rect.center))
-
-        # 3. Top-Right HUD Badge
-        hud_badge = pygame.Rect(REFERENCE_WIDTH - 250, 12, 235, 52)
-        pygame.draw.rect(surface, WHITE, hud_badge, border_radius=16)
-        pygame.draw.rect(surface, (200, 160, 130), hud_badge, width=2, border_radius=16)
-        hud_txt = f"⭐ {model.stars}   🏆 {model.score}"
-        h_surf = self._cached_text(hud_txt, FontRole.TITLE, 24, (180, 90, 20))
-        surface.blit(h_surf, h_surf.get_rect(center=hud_badge.center))
-
-        # 4. Mode Content Rendering
         if mode in {"orders", "free"}:
             if mode == "orders":
                 ticket_rect = pygame.Rect(20, 90, 250, 350)
@@ -319,7 +297,7 @@ class PasticceriaRenderer:
                 t_surf = self._cached_icon(t_icon, 40)
                 surface.blit(t_surf, t_surf.get_rect(center=(tx, ty)))
 
-            # Right Pantry Shelf
+            # Right pantry shelf (the topping tiles are kit IconButtons).
             pantry_card = pygame.Rect(705, 90, 295, 350)
             pygame.draw.rect(surface, SHELF_COLOR, pantry_card, border_radius=20)
             p_title = self._fit_text(
@@ -327,37 +305,8 @@ class PasticceriaRenderer:
             )
             surface.blit(p_title, p_title.get_rect(center=(852, 115)))
 
-            for idx, (t_id, t_icon, _) in enumerate(TOPPINGS):
-                col_idx = idx % 2
-                row_idx = idx // 2
-                bx = 720 + col_idx * 135
-                by = 140 + row_idx * 95
-                b_rect = pygame.Rect(bx, by, 125, 85)
-                pygame.draw.rect(surface, WHITE, b_rect, border_radius=16)
-                pygame.draw.rect(surface, (240, 215, 190), b_rect, width=2, border_radius=16)
-                i_surf = self._cached_icon(t_icon, 50)
-                surface.blit(i_surf, i_surf.get_rect(center=b_rect.center))
-
-            # 🧹 Pulisci (Clean) Button
-            clean_rect = pygame.Rect(710, 455, 130, 95)
-            pygame.draw.rect(surface, (230, 240, 250), clean_rect, border_radius=18)
-            pygame.draw.rect(surface, (180, 205, 230), clean_rect, width=3, border_radius=18)
-            c_icon = self._cached_text("🧹", FontRole.DISPLAY, 48, DARK_TEXT)
-            c_label = self._fit_text(self._labels["action.clear"], FontRole.TITLE, 18, DARK_TEXT, clean_rect.width - 12)
-            surface.blit(c_icon, c_icon.get_rect(center=(clean_rect.centerx, clean_rect.centery - 14)))
-            surface.blit(c_label, c_label.get_rect(center=(clean_rect.centerx, clean_rect.centery + 24)))
-
-            # 🔔 SERVI! (Serve) Button
-            serve_rect = pygame.Rect(855, 455, 145, 95)
-            pygame.draw.rect(surface, GOLD, serve_rect, border_radius=18)
-            pygame.draw.rect(surface, (220, 150, 20), serve_rect, width=3, border_radius=18)
-            s_icon = self._cached_text("🔔", FontRole.DISPLAY, 48, DARK_TEXT)
-            s_label = self._fit_text(self._labels["action.serve"], FontRole.DISPLAY, 20, DARK_TEXT, serve_rect.width - 12)
-            surface.blit(s_icon, s_icon.get_rect(center=(serve_rect.centerx, serve_rect.centery - 14)))
-            surface.blit(s_label, s_label.get_rect(center=(serve_rect.centerx, serve_rect.centery + 24)))
-
         elif mode == "patterns":
-            seq, _, candidates = model.current_pattern
+            seq, _, _candidates = model.current_pattern
             pygame.draw.rect(surface, WHITE, (120, 120, 784, 210), border_radius=24)
             pygame.draw.rect(surface, PINK, (120, 120, 784, 210), width=3, border_radius=24)
             p_prompt = self._fit_text(
@@ -380,27 +329,10 @@ class PasticceriaRenderer:
             q_sym = self._cached_text("?", FontRole.DISPLAY, 48, DARK_TEXT)
             surface.blit(q_sym, q_sym.get_rect(center=slot_rect.center))
 
-            for c_i, cand_sym in enumerate(candidates):
-                cx = 330 + c_i * 135
-                cy = 380
-                c_rect = pygame.Rect(cx, cy, 110, 110)
-                pygame.draw.rect(surface, WHITE, c_rect, border_radius=20)
-                pygame.draw.rect(surface, PINK, c_rect, width=3, border_radius=20)
-                cand_s = self._cached_icon(cand_sym, 52)
-                surface.blit(cand_s, cand_s.get_rect(center=c_rect.center))
-
-        # Particles
+    def render_effects(self, surface: pygame.Surface) -> None:
+        """Draw transient particles above scene, controls and cast."""
         for p in self._particles:
             p.draw(surface, self._typography)
-
-        # Feedback Toast
-        effective_feedback = feedback_text if feedback_text is not None else model.feedback_text
-        if effective_feedback:
-            f_rect = pygame.Rect(262, 510, 500, 52)
-            pygame.draw.rect(surface, WHITE, f_rect, border_radius=18)
-            pygame.draw.rect(surface, PINK, f_rect, width=3, border_radius=18)
-            t_msg = self._cached_text(effective_feedback, FontRole.TITLE, 26, DARK_TEXT)
-            surface.blit(t_msg, t_msg.get_rect(center=f_rect.center))
 
 
 __all__ = ["PasticceriaRenderer", "Particle"]

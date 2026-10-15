@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- icon.hud.bell: service bell (ring / serve); gold light -> gold, ink contour -->
+  <defs>
+    <linearGradient id="hud_bell_dome" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDE68A"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+  </defs>
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M42 22 L54 22" fill="none" stroke-width="5.5"/>
+    <circle cx="48" cy="17" r="5" fill="#F59E0B" stroke-width="4"/>
+    <path d="M16 66 Q16 28 48 28 Q80 28 80 66 Z" fill="url(#hud_bell_dome)" stroke-width="4.5"/>
+    <path d="M10 66 L86 66 Q90 66 90 70 L90 76 L6 76 L6 70 Q6 66 10 66 Z" fill="#F59E0B" stroke-width="4.5"/>
+    <path d="M28 52 Q30 40 42 36" fill="none" stroke="#FFFFFF" stroke-width="3.5" opacity="0.85"/>
+  </g>
+</svg>

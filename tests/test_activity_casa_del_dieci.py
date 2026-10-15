@@ -228,6 +228,37 @@ class AppIntegrationTests(unittest.TestCase):
         app._handle_keyboard(pygame.K_SPACE)
         self.assertIn("toggle", audio.played)
 
+    def test_controller_and_keyboard_reach_kit_controls(self) -> None:
+        from greia_platform import pygame_input
+
+        app, _, _, audio = self._build_app(level=3)
+        layer = app.controls.layer
+        self.assertEqual(layer.focused_id, "choice.1")
+        app._handle_keyboard(pygame.K_UP)
+        self.assertEqual(layer.focused_id, "prompt.replay")
+        app._handle_keyboard(pygame.K_DOWN)
+        self.assertTrue(layer.focused_id.startswith("choice."))
+        if pygame_input.sdl_controller is not None and pygame_input._CONTROLLER_BUTTON_DOWN >= 0:
+            press = pygame_input._CONTROLLER_BUTTON_DOWN
+            for _ in range(3):
+                app._handle_event(pygame.event.Event(press, button=pygame_input.CONTROLLER_BUTTON_DPAD_LEFT))
+            self.assertEqual(layer.focused_id, "choice.0")
+            self.assertTrue(app.session.focus_in_choices)
+            self.assertEqual(app.session.focused_choice, 0)
+            app._handle_event(pygame.event.Event(press, button=pygame_input.CONTROLLER_BUTTON_A))
+            self.assertTrue("retry" in audio.played or "correct" in audio.played)
+
+    def test_wrong_answer_shows_think_pose_and_keeps_retry(self) -> None:
+        from greia_platform.activity_feedback import CastPose
+
+        app, _, _, audio = self._build_app(level=3)
+        current = app.session.current_challenge
+        wrong = next(value for value in current.choice_values if value != current.answer)
+        app._perform_choice(wrong)
+        self.assertEqual(app.renderer.cast.pose, CastPose.THINK)
+        self.assertIn("retry", audio.played)
+        self.assertEqual(app.session.challenge_index, 0)
+
     def test_full_session_completes_and_restarts(self) -> None:
         from ten_house_app import AppState
         from ten_house_renderer import CHOICE_RECTS

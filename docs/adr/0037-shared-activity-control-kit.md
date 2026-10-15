@@ -1,0 +1,66 @@
+# ADR 0037 — Shared Activity control kit
+
+**Status:** Accepted (2026-10-15, primary agent; pilots: pasticceria_magica, casa_del_dieci)
+**Scope:** child-facing controls inside Activities (buttons, pills, tool/mode strips, HUD counters, progress, prompts, result feedback, completion)
+**Extends:** ADR 0018 (lightweight UI foundation), ADR 0019 (platform-owned Home/Back chrome), ADR 0020 (runtime-neutral input and controllers), ADR 0026 (resolution-adaptive layout), ADR 0034 (CAPITAL child text)
+**Evidence/audits:** `docs/reviews/activities/2026-10-15_activity_design_audit/GROUP_A_*.md` and `GROUP_B_*.md` (cross-cutting sections), `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md`
+**Implementation (SOURCE):** `src/greia_platform/activity_controls.py`, `src/greia_platform/activity_feedback.py`, `src/greia_platform/pygame_completion.py`; art under `assets/visual/ui/controls/v1/` and cast `pose_think` masters.
+
+## Context
+
+Every Activity drew its own buttons, pills, toolbars and HUD counters (at least eight inconsistent styles), almost none could be operated with the keyboard or a controller, wrong answers were mostly text banners, and 16 Activities ended on the same text-only `PygameCompletionScreen` card. The audits ask for one feedback grammar (correct = cast `pose_cheer`; try-again = a gentle cast pose; completion = a shared cast scene) and for focus navigation provided by the platform rather than hand-rolled per Activity.
+
+## Decision
+
+### 1. Vocabulary (one kit, no parallel framework)
+
+| Control | Meaning | Focusable |
+|---|---|---|
+| `PillButton` | rounded action: optional icon + short pre-cased label; `NEUTRAL` (cream) or `PRIMARY` (accent) role; drops its label (`compact`) when a row cannot fit it | yes |
+| `IconButton` | `ROUND` or `TILE` action with one icon and an optional caption | yes |
+| `ToolStrip` / `ToolSlot` | exclusive tool or mode selection; exactly one slot `selected` | slots yes |
+| `HudChip` | icon + number counter | no |
+| `ProgressDots` | done (accent) / current (ringed) / to-do dots | no |
+| `PromptBanner` | icon + short text, optional replay-voice `IconButton` (the Activity owns the cue) | replay yes |
+| `CastFeedback` | canonical cast friend: `correct()` → `pose_cheer`, `try_again()` → new gentle `pose_think`, then idle; optional Activity-owned sound hooks | — |
+| Completion scene | `PygameCompletionScreen(..., scene=CompletionScene(kit, character=...))`: card art, cheering cast, earned/unearned stars, replay (primary) + optional next (secondary) | buttons yes |
+
+Controls implement `ui_core.Control`. `ControlLayer` is a `ui_core.Screen`, so an Activity hosts it in a `SurfaceNavigator`; the completion scene is pushed as a modal `CompletionOverlay`. Gameplay elements the Activity draws itself (for example ten-frame windows) join focus traversal as `ExternalTarget`s and receive the same focus ring.
+
+Labels are passed already resolved through `LocalizedResources.text`, which applies the ADR 0034 case policy; the kit never re-cases or hard-codes copy. Content pictograms remain Activity content; system/HUD glyphs come from the shared `icon.hud.*` set.
+
+### 2. States
+
+Each control renders `normal`, `hover`, `pressed`, `disabled`, `selected` (and `*-selected`) bodies. `focused` is a separate ring overlay (ink | focus colour | ink, legible on light and dark scenes), shown only after keyboard/controller navigation ("focus-visible") and hidden again by pointer use.
+
+### 3. Input and focus
+
+`PygameControlInput` translates Pygame events without opening devices: keyboard and SDL-controller buttons use the standard `NAVIGATION` mapping (arrows / D-pad → `NAV_*`, Space / Enter / south face → `ACTIVATE`), the left stick goes through the central dead zone and repeat policy, and pointer/touch samples are mapped into the Activity's logical space and dropped inside the protected chrome region. This gives `pointer` and `hybrid` Activities a learned focus context for their controls without broadening raw `/dev/input` access (ADR 0020). Focus moves spatially to the nearest aligned target in the pressed direction (diagonal fallback, no wrap); disabled, hidden and display-only controls are skipped. Pointer activation happens on release over the pressed control (with a small tap slop); the layer returns `IGNORED` for anything it does not consume so gameplay taps and drags stay with the Activity.
+
+### 4. Layout outside protected chrome
+
+`ControlLayout.for_canvas(canvas, physical_size)` maps the platform Home/Back protected region (`ActivitySystemChromeLayout`) into the reference-canvas logical space; `for_surface` does the same for physical-resolution Activities. `top_bar` starts after the protected edge, `bottom_bar` sits on the bottom margin, `clear_of_chrome` pushes overlapping content down, `control_height` raises heights toward a 40 px physical touch floor (capped by the caller's band), and `fit` keeps labels (shrinking them) before falling back to icon-only compact controls. The same authored layout therefore holds at 1024×600, 800×480, 480×320 and 1280×800 without per-device coordinates (ADR 0026).
+
+### 5. Art versus code
+
+* **Code from theme tokens** — pill/icon/tile bodies, tool slots, chip, dots, banner panel and focus ring. They only vary by size, accent token and state; the `ControlPainter` implements the SVG recipe (≤ 2-stop light→base fill, one ink contour, one highlight, tactile lip, no blur) at 2× and smooth-scales once, so edges match rsvg output. Rendering these as PNG art would need eight accents × six states × arbitrary label widths, or a multiply-tint pipeline that would recolour the ink contour.
+* **SVG → PNG art** (shared renditions pipeline, `kind = "ui"`) where illustration adds value: `icon.hud.{listen,replay,check,trophy,bell,clear}` (96), `ui.control.star` (`default`, `off`; 128), `ui.completion.card` (760×440: ribbon, bunting, stage disc), and `character.<id>` `pose_think` for all six canonical characters (on-model per the SVG rules §8).
+* Accent: `ControlTheme.for_accent(<theme-defaults accent token>)`, normally the Activity's primary Collection hue; `ControlTheme.from_resolved(get_theme())` follows the child's theme instead.
+
+### 6. Performance rules
+
+Bodies, labels, composites and rings live in hard-bounded LRU caches (`BoundedCache`) owned by one `ControlKit` per Activity surface; `draw` is blits only (no font construction, text rendering, decoding or scaling per frame); content changes (a new number or label) build one new entry. `ControlLayer.invalidation` supports event-driven Activities; cast motion is an offset, never a per-frame scale. Art is resolved semantically (`get_shared_visual_path`), scaled once, and missing art degrades to vector/text fallbacks.
+
+### 7. Relationship to existing decisions
+
+* ADR 0018: the kit is the Control level of Screen → Overlay → Control; no windows, z-order games or desktop widgets.
+* ADR 0019: kit controls never enter or imitate the protected Home/Back region; the `HUD` glyph set deliberately has no Home/Back look-alikes.
+* ADR 0020: semantic actions only; the kit never opens controllers.
+* ADR 0025: completion stars and cheers are presentation, not reward or award authority.
+* `PygameCompletionScreen` without `scene` renders exactly as before, so the other users keep working until they migrate.
+
+## Consequences
+
+* New and migrated Activities get consistent controls and keyboard/controller focus by composition; pilots: `pasticceria_magica` (tabs, HUD, pantry, pattern answers, Clear/Serve, feedback, Momo) and `casa_del_dieci` (windows, prompt + replay, answers, OK, progress, Dani, completion scene).
+* Remaining Activities migrate incrementally; until then the old drawings stay valid.
+* Open: a shared next-arrow glyph, a toast/snackbar variant, a drag helper (audit request), and replacing content emoji with the shared prop sets are separate tranches.

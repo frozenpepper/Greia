@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- icon.hud.check: chunky check mark; cream fill, ink contour -->
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M10 50 L24 36 L39 51 L72 16 L86 30 L39 79 Z" fill="#FFFBEB" stroke-width="4.5"/>
+    <path d="M42 46 L70 22" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.9"/>
+  </g>
+</svg>
