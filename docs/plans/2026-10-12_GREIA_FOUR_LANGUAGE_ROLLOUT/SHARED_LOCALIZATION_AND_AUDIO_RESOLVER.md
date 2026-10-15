@@ -1,6 +1,6 @@
 # Shared localization and prerecorded speech resolver — implementation design
 
-**Decision:** owner-directed 2026-10-15; **implementation in progress** (core, launcher and first five Activity audio owners committed; further migrations and runtime acceptance remain).
+**Decision:** owner-directed 2026-10-15; **implementation in progress** (shared core, launcher, all surveyed localized Activity voice loaders and shared character voice lookup integrated; runtime acceptance remains).
 **Workstream:** `PLAN.md` in this folder; align with ADR 0028 and existing profile/device language selection.
 **Goal:** one small Greia-owned localization surface used by Activities, launcher and shared child UI for string lookup and **prerecorded** audio lookup. Do not add a new TTS runtime, giant schema, alternate voice engine, migration of approved audio bytes or a second package registry.
 
@@ -15,6 +15,23 @@
 - **No audio bytes, selector registries, manifests or approved recordings changed.** No local agent requests, hardware tests, GUI tests, Pygame tests or whole-tree unit tests were executed in this GitHub-only implementation slice. Staged ES/FR actual playback/visual acceptance remains open.
 
 **Next code slice:** review and migrate other speech-owning Activity loaders without converting procedural effects, add regression around locale-specific sound start/stop and sample playback, then review whether a shared resource factory should be adopted by all 45 (only when an Activity actually uses localization). Audio coverage and real hardware acceptance are separate tasks. Avoid turning this into a rewrite or broad governance project.
+
+## Second implementation slice — broad Activity speech migration (2026-10-15)
+
+After auditing every `activities/*/*audio.py` and checking the real GitHub asset tree, the shared resolver now also supports the older `locales/<locale>/audio/<stem>.wav` directory, alongside `assets/audio/<locale>/<stem>.wav`. The small `LocalizedResources.speech_paths()` method enumerates short voice clips for legacy eager-loading SoundManagers, preferring selected-locale files and using English when absent. It handles mixed-case filenames through one neutral semantic alias; no WAV/OGG assets or receipts changed.
+
+**Additional Activity migrations on `main`:**
+
+- `bosco_numeri/bosco_audio.py`: replaced the explicit Italian fallback with shared `audio_path`.
+- `festa_delle_rime/rhyme_audio.py`, `officina_dei_suoni/sound_audio.py`, `luci_di_momo/firefly_audio.py`: injected resources from their existing composition roots; loading via shared `speech_paths`.
+- `faccine_momo/momo_audio.py`, `mondo_contrari/contrari_audio.py`, `quattro_stagioni/tree_audio.py`: adopted `speech_paths`, retaining sound queues and procedural effects. These were especially important: the existing EN/IT WAVs live under `locales/<locale>/audio`, while the already-approved ES/FR recordings are physically under `assets/audio/<locale>`. The new resolver reaches both without migration/duplication.
+- `il_giardino_dei_numeri/giardino_audio.py`, `specchi_magici/mirror_audio.py`, `baia_delle_orche/orca_audio.py`: voice file selection delegated to shared resolver; Activity playback and SFX unchanged.
+- `quattro_amici/quattro_audio.py`: uses `shared_character_audio_path(project_root, speaker, cue_id, locale)` for the existing accepted shared v0.2 Flash/Leo clips, with English fallback rather than an Italian fallback. This is a separate existing **shared** resource scope, not an Activity voice-file copy.
+- Added test cases to `tests/test_shared_localized_audio_paths.py`: mixed-case name resolution, both directory conventions, English fallback from the legacy `locales` folder, accepted v0.2 character recordings, and **actual committed ES/FR audio filenames across ten migrated Activities**. Corrected expected Spanish curriculum stems to source-native names (`gato`, `barco`) instead of invented English equivalents; verified expected physical paths against the complete nontruncated Git tree.
+
+**Boundaries:** nonverbal-only synth engines (`maze_audio`, `dragon_audio`, `sky_audio`, etc.) are not localization migrations. No game-rule rewrites, no bulk sound regeneration, no selector changes, no increased mandatory metadata. The shared resolver does not own Pygame playback. Any remaining code-specific ad hoc voice selection outside the surveyed sound owners may be cleaned incrementally when discovered.
+
+**Verification classification:** GitHub source/asset paths reviewed; new tests authored and path expectations checked against Git tree; **no Python unittest/Pygame/GUI execution performed in this connector-only session**. GitHub Actions had no registered results for the earlier HEAD. Do not report PASS or four-language runtime acceptance. Continue with focused source/runtime tests when a runnable checkout is available, and repair any regressions before advertising ES/FR.
 
 ## Accepted owner decisions
 
