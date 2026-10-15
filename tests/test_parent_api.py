@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import tempfile
 import threading
 import unittest
 import urllib.error
 import urllib.request
+import zipfile
 from pathlib import Path
 from unittest import mock
 
@@ -20,7 +22,11 @@ from greia_parent.credentials import (
     ParentCredentialError,
     ParentDeviceCredentialStore,
 )
-from greia_parent.package_api import _activity_install_enabled
+from greia_parent.package_api import (
+    PackageParentApiApplication,
+    PackageParentApiHTTPServer,
+    _activity_install_enabled,
+)
 from greia_parent.protocol import (
     API_BASE,
     API_VERSION,
@@ -29,6 +35,7 @@ from greia_parent.protocol import (
     api_index_payload,
 )
 from greia_parent.web_client import render_parent_web_app
+from greia_platform.activity_packages import ActivityPackageError
 from greia_platform.hardware import HardwareSettingsError
 from greia_platform.usage_limits import UsageLimitError
 from greia_platform.ssh_maintenance import MockSshMaintenanceProvider, SshMaintenanceService
@@ -746,3 +753,234 @@ class RePairingClientDoesNotExhaustTheLimitTests(unittest.TestCase):
                 store.issue("device-%d" % index)
             with self.assertRaises(ParentCredentialError):
                 store.issue("one-too-many")
+
+
+INSTALLED_ACTIVITY_ID = "org.example.policy-probe"
+
+
+def _write_installed_activity_archive(destination: Path) -> None:
+    """Package a copy of Painting under an id no built-in uses."""
+
+    source = PROJECT_ROOT / "activities" / "painting"
+    with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for path in sorted(source.rglob("*")):
+            if not path.is_file() or "__pycache__" in path.parts:
+                continue
+            relative = path.relative_to(source).as_posix()
+            if relative == "activity.toml":
+                text = path.read_text(encoding="utf-8")
+                archive.writestr(
+                    relative,
+                    text.replace('id = "org.greia.painting"', f'id = "{INSTALLED_ACTIVITY_ID}"', 1),
+                )
+            else:
+                archive.write(path, relative)
+
+
+class PackageActivityPolicyCatalogueTests(unittest.TestCase):
+    """Parent policy must cover the same catalogue ``GET /activities`` lists.
+
+    Regression: policy validation and ``effective_activity_ids`` once used the
+    built-in registry only, so the HTML client's "Save Activity choices" (which
+    PUTs an override for every listed Activity, ``null`` meaning automatic)
+    failed with 400 as soon as one Parent-installed Activity existed.
+    """
+
+    def setUp(self) -> None:
+        self._temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self._temporary.cleanup)
+        self.root = Path(self._temporary.name).resolve()
+        # A minimal OS root with one real built-in keeps validated discovery
+        # cheap; runtime and asset catalogues are the repository's own.
+        os_root = self.root / "os"
+        os_root.mkdir()
+        (os_root / "runtime").symlink_to(PROJECT_ROOT / "runtime")
+        (os_root / "assets").symlink_to(PROJECT_ROOT / "assets")
+        shutil.copytree(
+            PROJECT_ROOT / "activities" / "writing",
+            os_root / "activities" / "writing",
+            ignore=shutil.ignore_patterns("__pycache__"),
+        )
+        environment = mock.patch.dict(
+            os.environ,
+            {
+                "GREIA_OS_ROOT": str(os_root),
+                "GREIA_PARENT_ACTIVITY_PACKAGE_ROOT": str(self.root / "packages"),
+            },
+        )
+        environment.start()
+        self.addCleanup(environment.stop)
+        self.app = PackageParentApiApplication(
+            os_root,
+            self.root / "parent",
+            profiles_dir=self.root / "profiles",
+            hardware_settings_dir=self.root / "hardware",
+            hardware_status_path=self.root / "hardware-status.json",
+            active_profile_status_path=self.root / "active-profile.json",
+            wifi_backend=DemoWifiBackend(),
+            ssh_service=SshMaintenanceService(MockSshMaintenanceProvider()),
+        )
+        archive = self.root / "probe.greiaactivity"
+        _write_installed_activity_archive(archive)
+        self.app.package_service.install_archive(archive)
+        self.profile_id = self.app.profile_store.list_profiles()[0].profile_id
+
+    def _client_overrides(self, **explicit: str) -> dict[str, object]:
+        """Mirror the HTML client: one entry per listed Activity, null = auto."""
+
+        return {
+            str(item["activity_id"]): explicit.get(str(item["activity_id"]))
+            for item in self.app.activities_payload()
+        }
+
+    def test_installed_activity_is_in_policy_catalogue_and_effective_set(self) -> None:
+        listed = [item["activity_id"] for item in self.app.activities_payload()]
+        self.assertEqual(listed, ["org.greia.writing", INSTALLED_ACTIVITY_ID])
+        payload = self.app.activity_policy_payload(self.profile_id)
+        self.assertIn(INSTALLED_ACTIVITY_ID, payload["effective_activity_ids"])
+
+    def test_override_for_installed_activity_is_accepted_and_applied(self) -> None:
+        hidden = self.app.update_activity_policy(
+            self.profile_id,
+            visibility_mode="show_all",
+            difficulty_min=1,
+            difficulty_max=10,
+            overrides={INSTALLED_ACTIVITY_ID: "always_hide"},
+        )
+        self.assertEqual(hidden["overrides"], {INSTALLED_ACTIVITY_ID: "always_hide"})
+        self.assertNotIn(INSTALLED_ACTIVITY_ID, hidden["effective_activity_ids"])
+
+        shown = self.app.update_activity_policy(
+            self.profile_id,
+            visibility_mode="show_all",
+            difficulty_min=1,
+            difficulty_max=10,
+            overrides={INSTALLED_ACTIVITY_ID: "always_show"},
+        )
+        self.assertIn(INSTALLED_ACTIVITY_ID, shown["effective_activity_ids"])
+
+    def test_client_shaped_put_with_null_for_installed_activity_succeeds(self) -> None:
+        issued = self.app.bootstrap_device("greia", "Test browser")
+        credential = str(issued["credential"])
+        server = PackageParentApiHTTPServer(("127.0.0.1", 0), self.app)
+        thread = threading.Thread(
+            target=server.serve_forever,
+            kwargs={"poll_interval": 0.05},
+            daemon=True,
+        )
+        thread.start()
+        try:
+            port = server.server_address[1]
+            url = (
+                f"http://127.0.0.1:{port}{API_BASE}/profiles/"
+                f"{self.profile_id}/activity-policy"
+            )
+            body = {
+                "visibility_mode": "show_all",
+                "difficulty_min": 1,
+                "difficulty_max": 10,
+                "overrides": self._client_overrides(),
+            }
+            self.assertIsNone(body["overrides"][INSTALLED_ACTIVITY_ID])  # type: ignore[index]
+            request = urllib.request.Request(
+                url, data=json.dumps(body).encode("utf-8"), method="PUT"
+            )
+            request.add_header("Authorization", f"Bearer {credential}")
+            request.add_header("Content-Type", "application/json")
+            with urllib.request.urlopen(request, timeout=60) as response:
+                self.assertEqual(response.status, 200)
+                payload = json.loads(response.read().decode("utf-8"))
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=5)
+        self.assertEqual(payload["overrides"], {})
+        self.assertIn(INSTALLED_ACTIVITY_ID, payload["effective_activity_ids"])
+
+    def test_stale_override_for_removed_activity_can_be_cleared(self) -> None:
+        self.app.update_activity_policy(
+            self.profile_id,
+            visibility_mode="show_all",
+            difficulty_min=1,
+            difficulty_max=10,
+            overrides={INSTALLED_ACTIVITY_ID: "always_hide"},
+        )
+        self.app.package_service.uninstall(INSTALLED_ACTIVITY_ID)
+        stale = self.app.activity_policy_payload(self.profile_id)
+        self.assertEqual(stale["overrides"], {INSTALLED_ACTIVITY_ID: "always_hide"})
+        self.assertNotIn(INSTALLED_ACTIVITY_ID, stale["effective_activity_ids"])
+
+        for cleared_value in (None, "default"):
+            cleared = self.app.update_activity_policy(
+                self.profile_id,
+                visibility_mode="show_all",
+                difficulty_min=1,
+                difficulty_max=10,
+                overrides={INSTALLED_ACTIVITY_ID: cleared_value},
+            )
+            self.assertEqual(cleared["overrides"], {})
+
+        # Setting a real visibility for an id that is not installed stays an error.
+        with self.assertRaisesRegex(Exception, "unknown Activity visibility override"):
+            self.app.update_activity_policy(
+                self.profile_id,
+                visibility_mode="show_all",
+                difficulty_min=1,
+                difficulty_max=10,
+                overrides={INSTALLED_ACTIVITY_ID: "always_show"},
+            )
+
+    def test_unloadable_installed_set_degrades_to_built_ins_like_the_shell(self) -> None:
+        with mock.patch.object(
+            self.app.package_service,
+            "load_active_registrations",
+            side_effect=ActivityPackageError("damaged active set"),
+        ):
+            payload = self.app.activity_policy_payload(self.profile_id)
+            self.assertEqual(payload["effective_activity_ids"], ["org.greia.writing"])
+            cleared = self.app.update_activity_policy(
+                self.profile_id,
+                visibility_mode="show_all",
+                difficulty_min=1,
+                difficulty_max=10,
+                overrides={"org.greia.writing": None, INSTALLED_ACTIVITY_ID: None},
+            )
+            self.assertEqual(cleared["overrides"], {})
+
+    def test_base_composition_tolerates_clearing_unknown_ids(self) -> None:
+        base = self.root / "base"
+        app = ParentApiApplication(
+            self.app.root,
+            base / "parent",
+            profiles_dir=base / "profiles",
+            hardware_settings_dir=base / "hardware",
+            hardware_status_path=base / "hardware-status.json",
+            active_profile_status_path=base / "active-profile.json",
+            wifi_backend=DemoWifiBackend(),
+            ssh_service=SshMaintenanceService(MockSshMaintenanceProvider()),
+        )
+        profile_id = app.profile_store.list_profiles()[0].profile_id
+        cleared = app.update_activity_policy(
+            profile_id,
+            visibility_mode="show_all",
+            difficulty_min=1,
+            difficulty_max=10,
+            overrides={INSTALLED_ACTIVITY_ID: None},
+        )
+        self.assertEqual(cleared["overrides"], {})
+        with self.assertRaisesRegex(Exception, "unknown Activity visibility override"):
+            app.update_activity_policy(
+                profile_id,
+                visibility_mode="show_all",
+                difficulty_min=1,
+                difficulty_max=10,
+                overrides={INSTALLED_ACTIVITY_ID: "always_hide"},
+            )
+        with self.assertRaisesRegex(Exception, "invalid Activity identifier"):
+            app.update_activity_policy(
+                profile_id,
+                visibility_mode="show_all",
+                difficulty_min=1,
+                difficulty_max=10,
+                overrides={"Bad/Id": None},
+            )

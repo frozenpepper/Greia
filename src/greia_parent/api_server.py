@@ -25,6 +25,7 @@ from greia_parent.server import (
 )
 from greia_parent.static_client import ParentStaticClient, StaticClientAsset
 from greia_parent.web_client import render_parent_web_app
+from greia_platform.activities import ActivityManifest
 from greia_platform.audio import AudioSettingsError
 from greia_platform.activity_discovery import (
     ActivityDiscoveryError,
@@ -268,11 +269,30 @@ class ParentApiApplication(ParentStatusApplication):
             for manifest in self.registry.discover()
         ]
 
-    def activity_policy_payload(self, profile_id: str) -> dict[str, object]:
+    def policy_activity_catalogue(self) -> tuple[ActivityManifest, ...]:
+        """Return the Activities that Parent discovery policy applies to.
+
+        This is the single catalogue used both to validate per-Activity
+        overrides and to compute ``effective_activity_ids``. It must match the
+        catalogue ``GET /activities`` exposes for the same composition, so a
+        Parent client can save a choice for every Activity it was shown. The
+        base composition knows only built-ins; package-enabled compositions
+        override this hook to add their separately trusted installed set.
+        """
+        return self.registry.discover()
+
+    def activity_policy_payload(
+        self,
+        profile_id: str,
+        *,
+        catalogue: tuple[ActivityManifest, ...] | None = None,
+    ) -> dict[str, object]:
         context = self.profile_store.context(profile_id)
         store = ActivityDiscoveryPolicyStore(context.activity_discovery_policy_path)
         policy = store.read()
-        activities = self.registry.discover()
+        activities = (
+            catalogue if catalogue is not None else self.policy_activity_catalogue()
+        )
         effective = self.activity_discovery.effective_activities(
             activities,
             approximate_age=context.profile.approximate_age,
@@ -313,14 +333,25 @@ class ParentApiApplication(ParentStatusApplication):
             difficulty_min,  # type: ignore[arg-type]
             difficulty_max,  # type: ignore[arg-type]
         )
-        known_ids = {manifest.activity_id for manifest in self.registry.discover()}
+        # Validated discovery is not free on low-resource hardware; resolve the
+        # catalogue once and reuse it for the response projection.
+        catalogue = self.policy_activity_catalogue()
+        known_ids = {manifest.activity_id for manifest in catalogue}
         for activity_id, raw_value in overrides.items():
-            if not isinstance(activity_id, str) or activity_id not in known_ids:
+            if not isinstance(activity_id, str):
                 raise ActivityDiscoveryError(
                     f"unknown Activity visibility override: {activity_id!r}"
                 )
             if raw_value is None or raw_value == "default":
+                # Clearing is always allowed, including for an id that is no
+                # longer installed: removal deliberately leaves the stored
+                # override behind, and a Parent must be able to drop it. The
+                # identifier format is still validated by ``with_override``.
                 value = None
+            elif activity_id not in known_ids:
+                raise ActivityDiscoveryError(
+                    f"unknown Activity visibility override: {activity_id!r}"
+                )
             else:
                 try:
                     value = ActivityVisibilityOverride(raw_value)
@@ -330,7 +361,7 @@ class ParentApiApplication(ParentStatusApplication):
                     ) from exc
             updated = updated.with_override(activity_id, value)
         store.write(updated)
-        return self.activity_policy_payload(profile_id)
+        return self.activity_policy_payload(profile_id, catalogue=catalogue)
 
     def usage_limits_payload(self) -> dict[str, object]:
         profiles = self.profile_store.list_profiles()
@@ -654,15 +685,26 @@ class ParentApiRequestHandler(ParentRequestHandler):
                 return
             try:
                 body = self._read_json_object()
-                current = self.app.activity_policy_payload(policy_profile_id)
+                fields = (
+                    "visibility_mode",
+                    "difficulty_min",
+                    "difficulty_max",
+                    "overrides",
+                )
+                # A partial update keeps omitted fields; a complete one (the
+                # normal client save) need not project the current policy first.
+                current = (
+                    {}
+                    if all(field in body for field in fields)
+                    else self.app.activity_policy_payload(policy_profile_id)
+                )
+                merged = {field: body.get(field, current.get(field)) for field in fields}
                 payload = self.app.update_activity_policy(
                     policy_profile_id,
-                    visibility_mode=body.get(
-                        "visibility_mode", current["visibility_mode"]
-                    ),
-                    difficulty_min=body.get("difficulty_min", current["difficulty_min"]),
-                    difficulty_max=body.get("difficulty_max", current["difficulty_max"]),
-                    overrides=body.get("overrides", current["overrides"]),
+                    visibility_mode=merged["visibility_mode"],
+                    difficulty_min=merged["difficulty_min"],
+                    difficulty_max=merged["difficulty_max"],
+                    overrides=merged["overrides"],
                 )
             except ProfileError:
                 self._send_api_error(404, "profile_not_found", "Profile not found")
