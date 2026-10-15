@@ -12,6 +12,7 @@ from greia_platform.localization import (
     LocalizationError,
     LocalizedResources,
     activity_resources,
+    shared_character_audio_path,
     resolve_activity_locale,
 )
 
@@ -191,6 +192,48 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
             self.assertEqual(
                 resources.audio_path("shape.circle", filename="shape_circle.wav"),
                 french,
+            )
+
+    def test_approved_shared_character_library_resolves_without_copies(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        expected = (
+            root / "assets/audio/characters/shared/v0.2/flash/en/"
+            "flash__en__celebrate.success__01.wav"
+        )
+        self.assertTrue(expected.is_file())
+        self.assertEqual(
+            shared_character_audio_path(root, "flash", "celebrate.success", "fr"),
+            expected,
+        )
+        italian = (
+            root / "assets/audio/characters/shared/v0.2/flash/it/"
+            "flash__it__celebrate.success__01.wav"
+        )
+        self.assertTrue(italian.is_file())
+        self.assertEqual(
+            shared_character_audio_path(root, "flash", "celebrate.success", "it"),
+            italian,
+        )
+
+    def test_shared_character_fallback_is_english_and_missing_is_optional(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            clip = _put(
+                root,
+                "assets/audio/characters/shared/v0.2/leo/en/"
+                "leo__en__celebrate.success__01.wav",
+            )
+            _put(
+                root,
+                "assets/audio/characters/shared/v0.2/leo/it/"
+                "leo__it__celebrate.success__01.wav",
+            )
+            self.assertEqual(
+                shared_character_audio_path(root, "leo", "celebrate.success", "es-ES"),
+                clip,
+            )
+            self.assertIsNone(
+                shared_character_audio_path(root, "momo", "not.recorded", "fr")
             )
 
     def test_invalid_alias_filename_does_not_escape_package(self) -> None:
