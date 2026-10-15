@@ -4,11 +4,12 @@ name = "Greia Canonical Character Cast"
 version = "0.1.0"
 status = "stable-source"
 authority = "docs/testing/2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md"
-notes = "Promoted stable source masters, registered 5-state vector sets, and authoring components for Greia's six canonical mascots."
+notes = "Promoted stable source masters, registered 5-state vector sets, shared cast poses (pose_cheer, pose_point), and authoring components for Greia's six canonical mascots."
 
 [provenance]
 canonical_ensemble = ["character.lilli", "character.leo", "character.flash", "character.dani", "character.tito", "character.momo"]
-historical_nino_provenance = "assets/visual/pack_candidates/canonical_characters/2026-08-22/nino/ (Nino owl base refined to Leo with signature glasses; preserved for provenance only)"
+promotion_commit = "0ed5eba1"
+historical_nino_provenance = "leo/source_master.svg (the retired Nino owl base was refined into Leo with signature glasses before promotion; the pre-promotion candidate sources are preserved in git history at commit 0ed5eba1, not as a current asset folder)"
 
 [[characters]]
 id = "character.lilli"
@@ -19,9 +20,10 @@ logical_artboard = [256, 256]
 min_recommended_px = 64
 max_recommended_px = 512
 primary_domain = "creativity / stories / art / imagination"
-provenance = "assets/visual/pack_candidates/canonical_characters/2026-08-22/lilli/"
+provenance = "lilli/source_master.svg (canonical v0.1 master; pre-promotion candidate history in git at commit 0ed5eba1)"
 source_master = "lilli/source_master.svg"
 states = { neutral = "lilli/neutral.svg", blink = "lilli/blink.svg", happy = "lilli/happy.svg", surprised = "lilli/surprised.svg", sleepy = "lilli/sleepy.svg" }
+poses = { pose_cheer = "lilli/pose_cheer.svg", pose_point = "lilli/pose_point.svg" }
 components = ["lilli/components/horn.svg", "lilli/components/forelock.svg", "lilli/components/eyes_blink.svg"]
 
 [[characters]]
@@ -33,9 +35,10 @@ logical_artboard = [256, 256]
 min_recommended_px = 64
 max_recommended_px = 512
 primary_domain = "learning / reading / language / knowledge"
-provenance = "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/leo/"
+provenance = "leo/source_master.svg (canonical v0.1 master; pre-promotion candidate history in git at commit 0ed5eba1)"
 source_master = "leo/source_master.svg"
 states = { neutral = "leo/neutral.svg", blink = "leo/blink.svg", happy = "leo/happy.svg", surprised = "leo/surprised.svg", sleepy = "leo/sleepy.svg" }
+poses = { pose_cheer = "leo/pose_cheer.svg", pose_point = "leo/pose_point.svg" }
 components = ["leo/components/glasses.svg", "leo/components/face_mask.svg", "leo/components/eyes_blink.svg"]
 
 [[characters]]
@@ -47,9 +50,10 @@ logical_artboard = [256, 256]
 min_recommended_px = 64
 max_recommended_px = 512
 primary_domain = "games / speed / action / reflex / playful challenge"
-provenance = "assets/visual/pack_candidates/flash_identity_revision/2026-08-22/flash/"
+provenance = "flash/source_master.svg (canonical v0.1 master; pre-promotion candidate history in git at commit 0ed5eba1)"
 source_master = "flash/source_master.svg"
 states = { neutral = "flash/neutral.svg", blink = "flash/blink.svg", happy = "flash/happy.svg", surprised = "flash/surprised.svg", sleepy = "flash/sleepy.svg" }
+poses = { pose_cheer = "flash/pose_cheer.svg", pose_point = "flash/pose_point.svg" }
 components = ["flash/components/shirt_bolt.svg", "flash/components/ears.svg", "flash/components/eyes_blink.svg"]
 
 [[characters]]
@@ -61,9 +65,10 @@ logical_artboard = [256, 256]
 min_recommended_px = 64
 max_recommended_px = 512
 primary_domain = "math / logic / patterns / sequencing"
-provenance = "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/dani/"
+provenance = "dani/source_master.svg (canonical v0.1 master; pre-promotion candidate history in git at commit 0ed5eba1)"
 source_master = "dani/source_master.svg"
 states = { neutral = "dani/neutral.svg", blink = "dani/blink.svg", happy = "dani/happy.svg", surprised = "dani/surprised.svg", sleepy = "dani/sleepy.svg" }
+poses = { pose_cheer = "dani/pose_cheer.svg", pose_point = "dani/pose_point.svg" }
 components = ["dani/components/face_display.svg", "dani/components/antennae_light.svg", "dani/components/eyes_blink.svg"]
 
 [[characters]]
@@ -75,9 +80,10 @@ logical_artboard = [256, 256]
 min_recommended_px = 64
 max_recommended_px = 512
 primary_domain = "exploration / nature / discovery / investigation"
-provenance = "assets/visual/pack_candidates/canonical_characters/2026-08-22/tito/"
+provenance = "tito/source_master.svg (canonical v0.1 master; pre-promotion candidate history in git at commit 0ed5eba1)"
 source_master = "tito/source_master.svg"
 states = { neutral = "tito/neutral.svg", blink = "tito/blink.svg", happy = "tito/happy.svg", surprised = "tito/surprised.svg", sleepy = "tito/sleepy.svg" }
+poses = { pose_cheer = "tito/pose_cheer.svg", pose_point = "tito/pose_point.svg" }
 components = ["tito/components/tail.svg", "tito/components/muzzle.svg", "tito/components/eyes_blink.svg"]
 
 [[characters]]
@@ -89,7 +95,8 @@ logical_artboard = [256, 256]
 min_recommended_px = 64
 max_recommended_px = 512
 primary_domain = "emotion / music / silly play / celebration"
-provenance = "assets/visual/pack_candidates/canonical_characters/2026-08-22/momo/"
+provenance = "momo/source_master.svg (canonical v0.1 master; pre-promotion candidate history in git at commit 0ed5eba1)"
 source_master = "momo/source_master.svg"
 states = { neutral = "momo/neutral.svg", blink = "momo/blink.svg", happy = "momo/happy.svg", surprised = "momo/surprised.svg", sleepy = "momo/sleepy.svg" }
+poses = { pose_cheer = "momo/pose_cheer.svg", pose_point = "momo/pose_point.svg" }
 components = ["momo/components/antennae.svg", "momo/components/body_fluff.svg", "momo/components/eyes_blink.svg"]

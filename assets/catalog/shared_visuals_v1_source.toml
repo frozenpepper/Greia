@@ -1,5 +1,5 @@
 catalog_id = "greia.shared-visuals.v1"
-catalog_version = "0.3.0"
+catalog_version = "0.4.0"
 status = "candidate-runtime-rendition-source"
 runtime_consumed = false
 notes = "Explicit build-time selection of reviewed SVG masters for raster runtime renditions. This file is not directory discovery."
@@ -394,6 +394,20 @@ output = "visual/runtime/v1/characters/lilli_sleepy.png"
 width = 256
 height = 256
 
+[[visuals.variants]]
+name = "pose_cheer"
+source = "visual/characters/canonical/v0.1/lilli/pose_cheer.svg"
+output = "visual/runtime/v1/characters/lilli_pose_cheer.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "pose_point"
+source = "visual/characters/canonical/v0.1/lilli/pose_point.svg"
+output = "visual/runtime/v1/characters/lilli_pose_point.png"
+width = 256
+height = 256
+
 [[visuals]]
 id = "character.leo"
 kind = "character"
@@ -431,6 +445,20 @@ height = 256
 name = "sleepy"
 source = "visual/characters/canonical/v0.1/leo/sleepy.svg"
 output = "visual/runtime/v1/characters/leo_sleepy.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "pose_cheer"
+source = "visual/characters/canonical/v0.1/leo/pose_cheer.svg"
+output = "visual/runtime/v1/characters/leo_pose_cheer.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "pose_point"
+source = "visual/characters/canonical/v0.1/leo/pose_point.svg"
+output = "visual/runtime/v1/characters/leo_pose_point.png"
 width = 256
 height = 256
 
@@ -474,6 +502,20 @@ output = "visual/runtime/v1/characters/flash_sleepy.png"
 width = 256
 height = 256
 
+[[visuals.variants]]
+name = "pose_cheer"
+source = "visual/characters/canonical/v0.1/flash/pose_cheer.svg"
+output = "visual/runtime/v1/characters/flash_pose_cheer.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "pose_point"
+source = "visual/characters/canonical/v0.1/flash/pose_point.svg"
+output = "visual/runtime/v1/characters/flash_pose_point.png"
+width = 256
+height = 256
+
 [[visuals]]
 id = "character.dani"
 kind = "character"
@@ -511,6 +553,20 @@ height = 256
 name = "sleepy"
 source = "visual/characters/canonical/v0.1/dani/sleepy.svg"
 output = "visual/runtime/v1/characters/dani_sleepy.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "pose_cheer"
+source = "visual/characters/canonical/v0.1/dani/pose_cheer.svg"
+output = "visual/runtime/v1/characters/dani_pose_cheer.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "pose_point"
+source = "visual/characters/canonical/v0.1/dani/pose_point.svg"
+output = "visual/runtime/v1/characters/dani_pose_point.png"
 width = 256
 height = 256
 
@@ -554,6 +610,20 @@ output = "visual/runtime/v1/characters/tito_sleepy.png"
 width = 256
 height = 256
 
+[[visuals.variants]]
+name = "pose_cheer"
+source = "visual/characters/canonical/v0.1/tito/pose_cheer.svg"
+output = "visual/runtime/v1/characters/tito_pose_cheer.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "pose_point"
+source = "visual/characters/canonical/v0.1/tito/pose_point.svg"
+output = "visual/runtime/v1/characters/tito_pose_point.png"
+width = 256
+height = 256
+
 [[visuals]]
 id = "character.momo"
 kind = "character"
@@ -591,6 +661,20 @@ height = 256
 name = "sleepy"
 source = "visual/characters/canonical/v0.1/momo/sleepy.svg"
 output = "visual/runtime/v1/characters/momo_sleepy.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "pose_cheer"
+source = "visual/characters/canonical/v0.1/momo/pose_cheer.svg"
+output = "visual/runtime/v1/characters/momo_pose_cheer.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "pose_point"
+source = "visual/characters/canonical/v0.1/momo/pose_point.svg"
+output = "visual/runtime/v1/characters/momo_pose_point.png"
 width = 256
 height = 256
 

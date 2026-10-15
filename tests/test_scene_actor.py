@@ -168,7 +168,15 @@ class SceneActorTests(unittest.TestCase):
             "character.tito",
             "character.momo",
         ]
-        expected_variants = {"default", "blink", "happy", "surprised", "sleepy"}
+        expected_variants = {
+            "default",
+            "blink",
+            "happy",
+            "surprised",
+            "sleepy",
+            "pose_cheer",
+            "pose_point",
+        }
         for cid in expected_chars:
             self.assertIn(cid, visuals, f"Missing character visual {cid}")
             variants = {v["name"]: v for v in visuals[cid]["variants"]}
