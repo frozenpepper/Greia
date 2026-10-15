@@ -110,31 +110,51 @@ class DropAnimation:
     velocity_y: float = 0.0
     bounce_timer: float = 0.0
     settled: bool = False
+    landed: bool = False
+    _landing_pending: bool = False
+
+    BOUNCE_SECONDS = 0.15
 
     def update(self, dt: float) -> bool:
-        """Update animation by delta-time. Return True when settled."""
+        """Update animation by delta-time. Return True when settled.
+
+        Two explicit phases: falling, then a short landing bounce. The bounce
+        must never push the token back into the falling phase (it sits above
+        the target), so the phase is tracked by ``landed`` rather than by
+        comparing ``current_y`` with ``target_y``.
+        """
         if self.settled:
             return True
 
-        if self.current_y < self.target_y:
+        if not self.landed:
             # Gravity acceleration
             self.velocity_y += 1800.0 * dt
             self.current_y += self.velocity_y * dt
             if self.current_y >= self.target_y:
                 self.current_y = self.target_y
-                # Trigger small spring bounce
-                self.bounce_timer = 0.15
-        elif self.bounce_timer > 0.0:
-            self.bounce_timer -= dt
-            if self.bounce_timer <= 0.0:
-                self.settled = True
-            else:
-                bounce_offset = math.sin(self.bounce_timer / 0.15 * math.pi) * 8.0
-                self.current_y = self.target_y - bounce_offset
-        else:
-            self.settled = True
+                self.landed = True
+                self._landing_pending = True
+                self.bounce_timer = self.BOUNCE_SECONDS
+            return False
 
+        self.bounce_timer -= dt
+        if self.bounce_timer <= 0.0:
+            self.bounce_timer = 0.0
+            self.current_y = self.target_y
+            self.settled = True
+        else:
+            bounce_offset = (
+                math.sin(self.bounce_timer / self.BOUNCE_SECONDS * math.pi) * 8.0
+            )
+            self.current_y = self.target_y - bounce_offset
         return self.settled
+
+    def consume_landing(self) -> bool:
+        """Return True exactly once, on the frame the token first hits the row."""
+        if self._landing_pending:
+            self._landing_pending = False
+            return True
+        return False
 
 
 @dataclass

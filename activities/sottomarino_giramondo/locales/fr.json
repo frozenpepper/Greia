@@ -28,6 +28,8 @@
     "btn.steer_right": "Tribord",
     "btn.ahead": "Avancer",
     "btn.stop": "Arrêter",
+    "btn.dive": "Plonger",
+    "btn.surface": "Remonter",
     "order.ahead": "En avant toute ! Démarre les moteurs !",
     "order.stop": "Stop ! Arrête les moteurs !",
     "order.left": "Vire à bâbord ! Tourne le gouvernail vers la gauche !",

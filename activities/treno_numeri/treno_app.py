@@ -404,6 +404,15 @@ class TrenoApp:
             pygame.draw.rect(surf, (56, 189, 248), rect.inflate(8, 8), 3, border_radius=16)
         self.canvas.present()
 
+    def _present_completion(self) -> None:
+        """Present the completion screen; re-present every frame so the pointer follows the mouse."""
+        if not self.completion_presented:
+            self.completion.prepare(self.completion_content)
+            self.completion.draw(self.canvas.surface)
+            self.completion_presented = True
+        self.canvas.present(clear=self.theme.background)
+        pygame.display.flip()
+
     # -- main loop --------------------------------------------------------
 
     def run(self) -> int:
@@ -414,12 +423,7 @@ class TrenoApp:
             for event in pygame.event.get():
                 self.handle_event(event)
             if self.model.is_victory:
-                if not self.completion_presented:
-                    self.completion.prepare(self.completion_content)
-                    self.completion.draw(self.canvas.surface)
-                    self.canvas.present(clear=self.theme.background)
-                    pygame.display.flip()
-                    self.completion_presented = True
+                self._present_completion()
                 clock.tick(25)
                 continue
             if self.train_state == "arriving":

@@ -28,6 +28,8 @@
     "btn.steer_right": "Estribor",
     "btn.ahead": "Avanzar",
     "btn.stop": "Parar",
+    "btn.dive": "Bajar",
+    "btn.surface": "Subir",
     "order.ahead": "¡Avante toda! ¡Enciende los motores!",
     "order.stop": "¡Alto! ¡Detén los motores!",
     "order.left": "¡Gira a babor! ¡Lleva el timón a la izquierda!",

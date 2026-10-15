@@ -19,6 +19,9 @@ REFERENCE_HEIGHT = 600
 # Depth layers (meters)
 MAX_DEPTH = 100.0
 MIN_DEPTH = 0.0
+# One press of Dive/Surface moves the target by this many metres, so the three
+# zones (boundaries at 25 m and 65 m) are each a few taps apart for a child.
+DEPTH_STEP = 15.0
 
 class BiomeType(enum.Enum):
     SHALLOW_REEF = "shallow"     # 0 - 25m: Turquoise, sunbeams, clownfish, turtles
@@ -234,6 +237,12 @@ class SubmarineModel:
         """Steer heading (-1.0 to 1.0) and adjust target depth (0 to 100m)."""
         self.heading = max(-1.0, min(1.0, self.heading + dx * 0.1))
         self.target_depth = max(MIN_DEPTH, min(MAX_DEPTH, self.target_depth + dy * 2.0))
+
+    def change_depth(self, direction: int) -> float:
+        """Dive (+1) or surface (-1) by one step; returns the new target depth."""
+        step = DEPTH_STEP if direction > 0 else -DEPTH_STEP
+        self.target_depth = max(MIN_DEPTH, min(MAX_DEPTH, self.target_depth + step))
+        return self.target_depth
 
     def set_speed(self, speed: float) -> None:
         self.speed = max(0.0, min(1.0, speed))

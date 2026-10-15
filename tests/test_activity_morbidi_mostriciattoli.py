@@ -283,11 +283,62 @@ class TestMonsterAppInteraction(unittest.TestCase):
         self.assertTrue(app._running)
         self.assertEqual(app.gallery.count, 0)
 
+    def test_gallery_shows_and_hit_tests_every_saved_monster(self) -> None:
+        from activities.morbidi_mostriciattoli.monster_renderer import gallery_card_rect
+
+        recipes = [MonsterRecipe.default_recipe(f"g-{i}") for i in range(MAX_SAVED_PORTRAITS)]
+        gallery = MonsterGallery(recipes)
+        self.assertEqual(gallery.count, 24)
+        self.renderer.draw_gallery(self.screen, gallery)
+        seen = set()
+        for i in range(gallery.count):
+            rect = gallery_card_rect(i)
+            self.assertTrue(self.screen.get_rect().contains(rect), f"card {i} off-screen")
+            self.assertEqual(self.renderer.gallery_card_at(rect.center, gallery.count), i)
+            seen.add(i)
+        self.assertEqual(len(seen), 24)
+        # Cards never overlap each other.
+        rects = [gallery_card_rect(i) for i in range(24)]
+        for a in range(24):
+            for b in range(a + 1, 24):
+                self.assertFalse(rects[a].colliderect(rects[b]))
+
+    def test_app_selects_the_last_saved_monster_from_the_gallery(self) -> None:
+        from activities.morbidi_mostriciattoli.monster_renderer import gallery_card_rect
+
+        app = MonsterActivity(
+            self.screen, self.renderer, self.audio, self.events, self.storage
+        )
+        for i in range(MAX_SAVED_PORTRAITS):
+            app.gallery.add(MonsterRecipe.default_recipe(f"s-{i}"))
+        app.view_mode = ViewMode.GALLERY
+        app._handle_pointer(gallery_card_rect(23).center)
+        # Newest first: card 23 (bottom-right) is the oldest saved monster.
+        self.assertEqual(app.selected_portrait_id, app.gallery.recipes[23].portrait_id)
+        self.assertEqual(app.selected_portrait_id, "s-0")
+
+    def test_gloss_highlight_does_not_cover_the_face(self) -> None:
+        recipe = MonsterRecipe.default_recipe("face")
+        canvas = pygame.Surface((460, 400), pygame.SRCALPHA)
+        self.art.draw_monster(canvas, pygame.Rect(0, 0, 460, 400), recipe)
+        w, h = int(460 * 0.75), int(400 * 0.75)
+        cx, cy = 230, 200
+        # The old opaque white blob sat at (cx - w/4, cy - h/4), over the face.
+        self.assertNotEqual(tuple(canvas.get_at((cx - w // 4, cy - h // 4)))[:3], (255, 255, 255))
+        # Whole eye/cheek band is free of pure-white highlight blobs: pure white
+        # only appears inside the eyes (a small area, never a 40px+ wide blob).
+        row = [canvas.get_at((x, cy - int(h * 0.30)))[:3] for x in range(cx - w // 3, cx + w // 3)]
+        longest = run = 0
+        for pixel in row:
+            run = run + 1 if pixel == (255, 255, 255) else 0
+            longest = max(longest, run)
+        self.assertLess(longest, 20)
+
     def test_thumbnail_cache_lru_cap_and_clear(self) -> None:
         recipes = [MonsterRecipe.default_recipe(f"m-{i}") for i in range(16)]
         for r in recipes:
             self.renderer._get_thumbnail(r)
-        self.assertLessEqual(len(self.renderer._thumb_cache), 12)
+        self.assertLessEqual(len(self.renderer._thumb_cache), MAX_SAVED_PORTRAITS)
 
         self.renderer.clear_thumbnail_cache()
         self.assertEqual(len(self.renderer._thumb_cache), 0)

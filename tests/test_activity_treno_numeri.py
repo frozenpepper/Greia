@@ -78,6 +78,40 @@ class TrainEventKeySourceTests(unittest.TestCase):
         restart = source.split("def _restart_journey", 1)[1].split("\n    def ", 1)[0]
         self.assertIn("self._journey_id = uuid4().hex", restart)
 
+def _pointer_pixel_is_drawn(target, position) -> bool:
+    # draw_activity_pointer's default body colour, 8 px right of the hot spot.
+    return tuple(target.get_at((position[0] + 8, position[1])))[:3] == (254, 202, 87)
+
+
+class TrenoNumeriPointerTests(unittest.TestCase):
+    """The OS cursor is hidden; the platform canvas must draw Greia's pointer."""
+
+    def test_pointer_is_drawn_while_playing_and_follows_on_completion(self) -> None:
+        import os
+        from unittest import mock
+
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+        import pygame
+        from activities.treno_numeri.treno_app import TrenoApp
+
+        pygame.init()
+        pygame.display.set_mode((1024, 600))
+        app = TrenoApp()
+        target = app.canvas.target
+        with mock.patch("pygame.mouse.get_focused", return_value=True), mock.patch(
+            "pygame.mouse.get_pos", return_value=(300, 200)
+        ):
+            app._draw(0.0)
+            self.assertTrue(_pointer_pixel_is_drawn(target, (300, 200)))
+        app.model.is_victory = True
+        for position in ((420, 260), (640, 340)):
+            with mock.patch("pygame.mouse.get_focused", return_value=True), mock.patch(
+                "pygame.mouse.get_pos", return_value=position
+            ):
+                app._present_completion()
+                self.assertTrue(_pointer_pixel_is_drawn(target, position))
+
 
 if __name__ == "__main__":
     unittest.main()

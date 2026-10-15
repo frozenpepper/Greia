@@ -26,28 +26,34 @@ from greia_platform.activity_api import (
     mark_activity_ready,
 )
 from greia_platform.activity_ui import ChildUiMetrics
+from greia_platform.input_core import InputEdge, InteractionProfile, SemanticAction
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
+from greia_platform.pygame_input import PygameInputTranslator
 from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .ponti_content import (
+        BLOCKS,
         BRIDGE_START_X,
         BRIDGE_Y,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
         STORAGE_KEY,
     )
+    from .ponti_focus import FocusTarget, PontiFocus
     from .ponti_model import PontiModel
     from .ponti_renderer import PontiRenderer
 else:
     from ponti_content import (
+        BLOCKS,
         BRIDGE_START_X,
         BRIDGE_Y,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
         STORAGE_KEY,
     )
+    from ponti_focus import FocusTarget, PontiFocus
     from ponti_model import PontiModel
     from ponti_renderer import PontiRenderer
 
@@ -129,6 +135,14 @@ def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
 # canvas.pointer(event.pos) — historical contract string preserved for tooling parity
 
 
+_FOCUS_STEPS = {
+    SemanticAction.NAV_LEFT: (-1, 0),
+    SemanticAction.NAV_RIGHT: (1, 0),
+    SemanticAction.NAV_UP: (0, -1),
+    SemanticAction.NAV_DOWN: (0, 1),
+}
+
+
 class PontiApp:
     """Coordinate Greia lifecycle, input, domain stepping and rendering."""
 
@@ -178,6 +192,19 @@ class PontiApp:
         self._completion_presented = False
         self._start_time = time.time()
         self._clock = pygame.time.Clock()
+        # Arrows / D-pad move this cursor over the same targets a pointer can
+        # press; Space / south button act on it (hybrid profile, ADR 0020).
+        self._focus = PontiFocus()
+        self._translator = PygameInputTranslator(InteractionProfile.NAVIGATION)
+
+    def _present_completion(self) -> None:
+        """Present the completion screen; re-present every frame so the pointer follows the mouse."""
+        if not self._completion_presented:
+            self._renderer.prepare_completion()
+            self._renderer.draw_completion(self._canvas.surface)
+            self._completion_presented = True
+        self._canvas.present()
+        pygame.display.flip()
 
     def run(self) -> int:
         while self._running and not activity_stop_requested():
@@ -188,12 +215,7 @@ class PontiApp:
                 self._handle_event(event)
 
             if self._model.is_victory:
-                if not self._completion_presented:
-                    self._renderer.prepare_completion()
-                    self._renderer.draw_completion(self._canvas.surface)
-                    self._canvas.present()
-                    pygame.display.flip()
-                    self._completion_presented = True
+                self._present_completion()
                 time.sleep(0.04)
                 continue
 
@@ -271,6 +293,42 @@ class PontiApp:
 
     def _draw(self, elapsed: float, now: float) -> None:
         self._renderer.draw(self._canvas.surface, self._model, elapsed, now)
+        if self._focus.active and not self._model.is_victory:
+            target = self._focus.target(self._model.num_slots)
+            self._renderer.draw_focus_ring(
+                self._canvas.surface,
+                self._renderer.focus_rect(target.kind, target.index, self._model.num_slots),
+            )
+
+    def _focus_center_x(self, target: FocusTarget) -> float:
+        return self._renderer.focus_rect(target.kind, target.index, self._model.num_slots).centerx
+
+    def _handle_semantic(self, action: SemanticAction) -> None:
+        """Apply an arrows / D-pad / Space / south-button intent."""
+        if self._model.is_victory:
+            if action is SemanticAction.ACTIVATE:
+                self._model.restart_after_victory()
+                self._renderer.reset_transients()
+                self._completion_presented = False
+            return
+        step = _FOCUS_STEPS.get(action)
+        if step is not None:
+            if not self._focus.active:
+                ids = [str(block["id"]) for block in BLOCKS]
+                self._focus.reveal(ids.index(self._model.selected_block_id))
+            else:
+                self._focus.move(step[0], step[1], self._model.num_slots, self._focus_center_x)
+            return
+        if action is not SemanticAction.ACTIVATE:
+            return
+        if not self._focus.active:
+            ids = [str(block["id"]) for block in BLOCKS]
+            self._focus.reveal(ids.index(self._model.selected_block_id))
+            return
+        target = self._focus.target(self._model.num_slots)
+        rect = self._renderer.focus_rect(target.kind, target.index, self._model.num_slots)
+        # One rule path: a confirmed focus target is exactly a press at its centre.
+        self._press(rect.center)
 
     def _handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.QUIT:
@@ -284,7 +342,12 @@ class PontiApp:
             self._renderer.invalidate()
             self._completion_presented = False
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            self._focus.hide()
             self._handle_pointer(event.pos)
+        else:
+            semantic = self._translator.digital(event)
+            if semantic is not None and semantic.edge is InputEdge.PRESSED:
+                self._handle_semantic(semantic.action)
 
     def _handle_pointer(self, screen_pos: tuple[int, int]) -> None:
         if not _is_safe_point(self._screen, screen_pos):
@@ -292,8 +355,10 @@ class PontiApp:
         pointer = self._canvas.pointer(screen_pos)
         if pointer is None:
             return
-        mx, my = int(pointer[0]), int(pointer[1])
-        point = (mx, my)
+        self._press((int(pointer[0]), int(pointer[1])))
+
+    def _press(self, point: tuple[int, int]) -> None:
+        """Apply a press at a logical point (pointer, touch or focus activation)."""
 
         if self._model.is_victory:
             if self._renderer.play_again_contains(point):

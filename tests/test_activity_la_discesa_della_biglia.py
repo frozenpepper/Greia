@@ -21,6 +21,7 @@ for path in (ROOT / "src", ACTIVITY_ROOT):
 
 from ramp_content import (
     LEVELS,
+    MAX_RUN_SECONDS,
     MARBLE_RADIUS,
     MARBLE_START,
     PlacedTool,
@@ -190,6 +191,120 @@ class RampPointerSafetyTests(unittest.TestCase):
         app._handle_release((380, 250))
         self.assertEqual(len(app.engine.tools), 1)
         self.assertEqual(app.engine.tools[0].spec.kind, ToolKind.BUMPER)
+
+
+class RampTerminationRegressionTests(unittest.TestCase):
+    """Every run ends: a resting marble used to soft-lock DROP/CLEAR for ever."""
+
+    def test_marble_resting_in_a_pocket_settles_and_finishes(self) -> None:
+        eng = RampEngine(level=LEVELS[0])
+        eng.add_tool(_slope(ToolKind.SLOPE, 130, 200, 25))
+        eng.add_tool(_slope(ToolKind.SLOPE, 198, 200, -25))
+        events = []
+        for _ in range(30 * 20):
+            events.extend(eng.step(1 / 30))
+            if eng.finished:
+                break
+        self.assertTrue(eng.finished)
+        self.assertEqual(eng.outcome, "settled")
+        self.assertIn("settled", [event.kind for event in events])
+        self.assertLess(eng.elapsed, MAX_RUN_SECONDS)
+
+    def test_flat_slope_resting_marble_settles(self) -> None:
+        eng = RampEngine(level=LEVELS[0])
+        eng.add_tool(_slope(ToolKind.SLOPE, 160, 200, 0))
+        for _ in range(30 * 20):
+            eng.step(1 / 30)
+            if eng.finished:
+                break
+        self.assertEqual(eng.outcome, "settled")
+
+    def test_hard_time_cap_ends_a_run_that_never_rests(self) -> None:
+        eng = RampEngine(level=LEVELS[0])
+        eng.elapsed = MAX_RUN_SECONDS - 0.01
+        eng.marble.y = 150
+        for _ in range(5):
+            eng.step(1 / 30)
+        self.assertTrue(eng.finished)
+        self.assertEqual(eng.outcome, "settled")
+
+
+class RampAppRunRegressionTests(unittest.TestCase):
+    """Drive the real app state machine (placement -> DROP -> result -> edit)."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+        import pygame
+
+        pygame.init()
+        cls.screen = pygame.display.set_mode((1024, 600))
+
+    def _app(self):
+        from ramp_app import Phase, build_app
+
+        app = build_app(self.screen, locale="en")
+        # Isolate from the profile store, event broker and sound device.
+        app.audio = Mock()
+        app.events = Mock()
+        app.storage = Mock(best_time=Mock(return_value=None))
+        return app, Phase
+
+    def _place(self, app, kind: ToolKind, pos: tuple[int, int]) -> None:
+        app.renderer.drag_kind = kind
+        app._handle_release(pos)
+
+    def test_placed_slopes_are_tilted_towards_the_basket(self) -> None:
+        app, _phase = self._app()
+        self._place(app, ToolKind.SLOPE, (300, 250))
+        self._place(app, ToolKind.BUMPER, (400, 250))
+        slope, bumper = app.engine.tools
+        self.assertGreater(slope.angle, math.radians(10))
+        self.assertEqual(bumper.angle, 0.0)
+
+    def test_every_run_returns_to_edit_mode_and_keeps_the_pieces(self) -> None:
+        app, phase = self._app()
+        # A pocket under the marble that it can never leave.
+        self._place(app, ToolKind.SLOPE, (130, 200))
+        app.engine.tools[0] = _slope(ToolKind.SLOPE, 130, 200, 25)
+        app.engine.tools.append(_slope(ToolKind.SLOPE, 198, 200, -25))
+        app._try_drop()
+        self.assertEqual(app.phase, phase.RUNNING)
+        for _ in range(30 * 40):
+            app._update(1 / 30)
+            if app.phase != phase.RUNNING:
+                break
+        self.assertEqual(app.phase, phase.FINISHED)
+        self.assertEqual(app.last_outcome, "missed")
+        app.finished_banner_timer = 0.0
+        app._draw()
+        self.assertEqual(app.phase, phase.PALETTE)
+        self.assertEqual(len(app.engine.tools), 2)
+        # DROP and CLEAR are usable again.
+        app._clear_tools()
+        self.assertEqual(app.engine.tools, [])
+        app._try_drop()
+        self.assertEqual(app.phase, phase.RUNNING)
+
+    def test_missed_marble_is_drawn_inside_the_playfield(self) -> None:
+        from ramp_content import MARBLE_COLOR, PLAYFIELD_BOTTOM, PLAYFIELD_LEFT, PLAYFIELD_RIGHT
+
+        app, _phase = self._app()
+        renderer = app.renderer
+        renderer.surface.fill((0, 0, 0))
+        renderer._draw_marble(500.0, PLAYFIELD_BOTTOM + 300.0, 0.0, 900.0, True, "missed")
+        below = [
+            (x, y)
+            for y in range(PLAYFIELD_BOTTOM + 1, 600)
+            for x in range(PLAYFIELD_LEFT, PLAYFIELD_RIGHT, 2)
+            if tuple(renderer.surface.get_at((x, y)))[:3] == MARBLE_COLOR
+        ]
+        self.assertEqual(below, [], "marble pixels were drawn below the playfield")
+        self.assertEqual(
+            tuple(renderer.surface.get_at((500, PLAYFIELD_BOTTOM - 14)))[:3], MARBLE_COLOR
+        )
+
 
 class RampStorageContractTests(unittest.TestCase):
     """Storage shape is owned by the Activity; tests cover the

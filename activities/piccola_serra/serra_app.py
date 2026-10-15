@@ -435,6 +435,15 @@ class SerraApp:
         )
         self.canvas.present(clear=self.theme.background)
 
+    def _present_completion(self) -> None:
+        """Present the completion screen; re-present every frame so the pointer follows the mouse."""
+        if not self.completion_presented:
+            self.completion.prepare(self.completion_content)
+            self.completion.draw(self.canvas.surface)
+            self.completion_presented = True
+        self.canvas.present(clear=self.theme.background)
+        pygame.display.flip()
+
     # -- main loop --------------------------------------------------------
 
     def run(self) -> int:
@@ -448,12 +457,7 @@ class SerraApp:
                 # keep loop responsive.
 
             if self.model.is_victory:
-                if not self.completion_presented:
-                    self.completion.prepare(self.completion_content)
-                    self.completion.draw(self.canvas.surface)
-                    self.canvas.present(clear=self.theme.background)
-                    pygame.display.flip()
-                    self.completion_presented = True
+                self._present_completion()
                 clock.tick(25)
                 continue
 

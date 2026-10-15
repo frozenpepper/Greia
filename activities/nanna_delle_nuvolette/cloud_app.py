@@ -2,27 +2,30 @@
 
 from __future__ import annotations
 
+import math
 import time
 from uuid import uuid4
 
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.input_core import InputEdge, InteractionProfile, SemanticAction
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
+from greia_platform.pygame_input import PygameInputTranslator
 from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .cloud_audio import CloudAudio
     from .cloud_content import BLANKETS
     from .cloud_model import NightScene, REFERENCE_HEIGHT, REFERENCE_WIDTH
-    from .cloud_renderer import CloudRenderer
+    from .cloud_renderer import BASKET_RECT, CLOUD_RECTS, MOON_RECT, CloudRenderer
     from .cloud_services import GreiaCloudEvents, GreiaCloudStorage
 else:
     from cloud_audio import CloudAudio
     from cloud_content import BLANKETS
     from cloud_model import NightScene, REFERENCE_HEIGHT, REFERENCE_WIDTH
-    from cloud_renderer import CloudRenderer
+    from cloud_renderer import BASKET_RECT, CLOUD_RECTS, MOON_RECT, CloudRenderer
     from cloud_services import GreiaCloudEvents, GreiaCloudStorage
 
 
@@ -35,6 +38,18 @@ def _is_safe_point(screen: pygame.Surface, pos: tuple[int, int]) -> bool:
         and 0 <= y < viewport.surface.height
         and not any(r.x <= x < r.right and r.y <= y < r.bottom for r in viewport.protected_regions)
     )
+
+
+# A press that moves less than this (reference px) before release is a tap, not
+# a drag: the picked-up blanket/star stays in hand for a tap on a cloud.
+DRAG_THRESHOLD_PX = 14
+
+_FOCUS_STEP = {
+    SemanticAction.NAV_LEFT: -1,
+    SemanticAction.NAV_UP: -1,
+    SemanticAction.NAV_RIGHT: 1,
+    SemanticAction.NAV_DOWN: 1,
+}
 
 
 class CloudActivity:
@@ -73,6 +88,14 @@ class CloudActivity:
         self._hovered_blanket: int | None = None
         self._hovered_basket: bool = False
         self._hovered_moon: bool = False
+
+        # Pointer press origin (to tell a tap from a drag) and keyboard /
+        # controller focus over the same targets the pointer can hit.
+        self._press_point: tuple[int, int] | None = None
+        self._focus: int | None = None
+        # Pointer Activities still get a learned focus context for their
+        # controls (arrows / D-pad move focus, Space / south button activate).
+        self._translator = PygameInputTranslator(InteractionProfile.NAVIGATION)
 
         # Yawn animation tracking for 3 clouds (progress 0.0 .. 1.0)
         self._yawn_starts: list[float | None] = [None, None, None]
@@ -124,6 +147,11 @@ class CloudActivity:
             self._cancel_held_item()
             return
 
+        semantic = self._translator.digital(event)
+        if semantic is not None:
+            self._handle_semantic(semantic.action, semantic.edge)
+            return
+
         if event.type == pygame.MOUSEMOTION:
             if not _is_safe_point(self.screen, event.pos):
                 return
@@ -163,6 +191,8 @@ class CloudActivity:
             logical = self.canvas.pointer(pos)
             if logical is not None:
                 point = (int(logical[0]), int(logical[1]))
+                self._press_point = point
+                self._focus = None
                 if self._handle_pointer_click(point):
                     self._dirty = True
             return
@@ -181,6 +211,67 @@ class CloudActivity:
             point = (int(logical[0]), int(logical[1]))
             if self._handle_pointer_drop(point):
                 self._dirty = True
+
+    # ------------------------------------------------------------------
+    # Keyboard / controller focus
+    # ------------------------------------------------------------------
+
+    def _focus_targets(self) -> list[tuple[str, int, pygame.Rect]]:
+        """Focusable targets in reading order: blankets, star basket, clouds, moon."""
+        targets: list[tuple[str, int, pygame.Rect]] = [
+            ("blanket", idx, self.renderer.blanket_rect_at(idx))
+            for idx in range(len(BLANKETS))
+        ]
+        targets.append(("basket", 0, BASKET_RECT))
+        targets.extend(("cloud", idx, rect) for idx, rect in enumerate(CLOUD_RECTS))
+        if self.scene.all_asleep:
+            targets.append(("moon", 0, MOON_RECT))
+        return targets
+
+    def _handle_semantic(self, action: SemanticAction, edge: InputEdge) -> None:
+        if edge is not InputEdge.PRESSED:
+            return
+        step = _FOCUS_STEP.get(action)
+        if step is not None:
+            targets = self._focus_targets()
+            if self._focus is None:
+                self._focus = 0 if step > 0 else len(targets) - 1
+            else:
+                self._focus = (self._focus + step) % len(targets)
+            self._apply_focus(targets)
+            self.audio.play("chime")
+            return
+        if action is SemanticAction.ACTIVATE:
+            targets = self._focus_targets()
+            if self._focus is None or self._focus >= len(targets):
+                self._focus = 0
+                self._apply_focus(targets)
+                return
+            point = targets[self._focus][2].center
+            self._handle_pointer_click(point)
+            # The set of targets can change (the moon appears at the end).
+            self._apply_focus(self._focus_targets())
+            return
+        if action is SemanticAction.CANCEL:
+            self._cancel_held_item()
+
+    def _apply_focus(self, targets: list[tuple[str, int, pygame.Rect]]) -> None:
+        """Mirror keyboard focus into the pointer hover highlight state."""
+        self._hovered_cloud = self._hovered_blanket = None
+        self._hovered_basket = self._hovered_moon = False
+        if self._focus is not None and self._focus < len(targets):
+            kind, idx, rect = targets[self._focus]
+            if kind == "blanket":
+                self._hovered_blanket = idx
+            elif kind == "cloud":
+                self._hovered_cloud = idx
+            elif kind == "basket":
+                self._hovered_basket = True
+            elif kind == "moon":
+                self._hovered_moon = True
+            if self._selected_blanket_idx is not None or self._holding_star:
+                self._drag_pos = rect.center
+        self._dirty = True
 
     def _event_position(self, event: pygame.event.Event) -> tuple[int, int]:
         position = getattr(event, "pos", None)
@@ -257,6 +348,15 @@ class CloudActivity:
         return False
 
     def _handle_pointer_drop(self, point: tuple[int, int]) -> bool:
+        press, self._press_point = self._press_point, None
+        dragged = (
+            press is not None
+            and math.hypot(point[0] - press[0], point[1] - press[1]) > DRAG_THRESHOLD_PX
+        )
+        if not dragged:
+            # A plain tap: the item picked up on press stays in hand so the next
+            # tap on a cloud tucks/attaches it (tap-then-tap works like drag).
+            return True
         c_idx = self.renderer.cloud_at(point)
         if c_idx is not None:
             cloud = self.scene.clouds[c_idx]

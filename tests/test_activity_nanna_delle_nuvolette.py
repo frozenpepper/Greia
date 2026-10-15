@@ -179,6 +179,75 @@ class TestCloudAppInteraction(unittest.TestCase):
         self.assertFalse(app._holding_star)
         self.assertEqual(app.scene.total_stars, 0)
 
+    def _mouse(self, app, kind: int, pos: tuple[int, int]) -> None:
+        app._handle_event(pygame.event.Event(kind, {"button": 1, "pos": pos}))
+
+    def test_tap_blanket_then_tap_cloud_tucks_it_in(self) -> None:
+        from activities.nanna_delle_nuvolette.cloud_renderer import CLOUD_RECTS
+
+        app = CloudActivity(self.screen, self.renderer, self.audio, self.events, self.storage)
+        blanket = self.renderer.blanket_rect_at(1).center
+        # Tap (press + release in place) picks the blanket up and keeps it in hand.
+        self._mouse(app, pygame.MOUSEBUTTONDOWN, blanket)
+        self._mouse(app, pygame.MOUSEBUTTONUP, blanket)
+        self.assertEqual(app._selected_blanket_idx, 1)
+        # Tap on a cloud tucks it in.
+        cloud = CLOUD_RECTS[0].center
+        self._mouse(app, pygame.MOUSEBUTTONDOWN, cloud)
+        self._mouse(app, pygame.MOUSEBUTTONUP, cloud)
+        self.assertIsNone(app._selected_blanket_idx)
+        self.assertEqual(app.scene.clouds[0].blanket_id, "amber")
+
+    def test_tap_basket_then_tap_cloud_attaches_a_star(self) -> None:
+        from activities.nanna_delle_nuvolette.cloud_renderer import BASKET_RECT, CLOUD_RECTS
+
+        app = CloudActivity(self.screen, self.renderer, self.audio, self.events, self.storage)
+        self._mouse(app, pygame.MOUSEBUTTONDOWN, BASKET_RECT.center)
+        self._mouse(app, pygame.MOUSEBUTTONUP, BASKET_RECT.center)
+        self.assertTrue(app._holding_star)
+        self._mouse(app, pygame.MOUSEBUTTONDOWN, CLOUD_RECTS[1].center)
+        self._mouse(app, pygame.MOUSEBUTTONUP, CLOUD_RECTS[1].center)
+        self.assertFalse(app._holding_star)
+        self.assertEqual(app.scene.clouds[1].star_count, 1)
+
+    def test_drag_blanket_to_cloud_and_drag_into_empty_space(self) -> None:
+        from activities.nanna_delle_nuvolette.cloud_renderer import CLOUD_RECTS
+
+        app = CloudActivity(self.screen, self.renderer, self.audio, self.events, self.storage)
+        blanket = self.renderer.blanket_rect_at(0).center
+        self._mouse(app, pygame.MOUSEBUTTONDOWN, blanket)
+        self._mouse(app, pygame.MOUSEBUTTONUP, CLOUD_RECTS[2].center)
+        self.assertEqual(app.scene.clouds[2].blanket_id, "rose")
+        # A real drag released over nothing cancels (nothing stays in hand).
+        self._mouse(app, pygame.MOUSEBUTTONDOWN, blanket)
+        self._mouse(app, pygame.MOUSEBUTTONUP, (500, 20))
+        self.assertIsNone(app._selected_blanket_idx)
+
+    def test_keyboard_and_controller_select_then_place(self) -> None:
+        from greia_platform.pygame_input import (
+            CONTROLLER_BUTTON_A,
+            CONTROLLER_BUTTON_DPAD_RIGHT,
+        )
+
+        app = CloudActivity(self.screen, self.renderer, self.audio, self.events, self.storage)
+        key = lambda k: app._handle_event(pygame.event.Event(pygame.KEYDOWN, key=k))
+        # RIGHT focuses the first blanket, SPACE picks it up.
+        key(pygame.K_RIGHT)
+        self.assertEqual(app._hovered_blanket, 0)
+        key(pygame.K_SPACE)
+        self.assertEqual(app._selected_blanket_idx, 0)
+        # Walk the focus to the first cloud (6 blankets + basket) and place it.
+        for _ in range(7):
+            app._handle_event(pygame.event.Event(
+                pygame.CONTROLLERBUTTONDOWN, button=CONTROLLER_BUTTON_DPAD_RIGHT
+            ))
+        self.assertEqual(app._hovered_cloud, 0)
+        app._handle_event(pygame.event.Event(
+            pygame.CONTROLLERBUTTONDOWN, button=CONTROLLER_BUTTON_A
+        ))
+        self.assertIsNone(app._selected_blanket_idx)
+        self.assertEqual(app.scene.clouds[0].blanket_id, "rose")
+
     def test_render_scene_without_error(self) -> None:
         scene = NightScene.create_night("test-night")
         self.renderer.draw_scene(self.screen, scene)

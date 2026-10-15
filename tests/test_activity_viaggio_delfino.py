@@ -408,6 +408,34 @@ class GreiaDelfinoEventsTests(unittest.TestCase):
         self.assertEqual(calls, ["dolphin.chapter_completed"])
         self.assertTrue(service.flush(timeout=0.1))
 
+def _pointer_pixel_is_drawn(target, position) -> bool:
+    # draw_activity_pointer's default body colour, 8 px right of the hot spot.
+    return tuple(target.get_at((position[0] + 8, position[1])))[:3] == (254, 202, 87)
+
+
+class ViaggioDelfinoPointerTests(unittest.TestCase):
+    """The OS cursor is hidden; the platform canvas must draw Greia's pointer."""
+
+    def test_frame_presentation_draws_the_platform_pointer(self) -> None:
+        import os
+        from unittest import mock
+
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+        import pygame
+        from greia_platform.activity_api import get_theme
+        from activities.viaggio_delfino.delfino_app import DelfinoJourneyApp
+
+        pygame.init()
+        pygame.display.set_mode((1024, 600))
+        app = DelfinoJourneyApp()
+        for position in ((300, 200), (700, 380)):
+            with mock.patch("pygame.mouse.get_focused", return_value=True), mock.patch(
+                "pygame.mouse.get_pos", return_value=position
+            ):
+                app._present_frame(app.canvas, get_theme())
+                self.assertTrue(_pointer_pixel_is_drawn(app.canvas.target, position))
+
 
 if __name__ == "__main__":
     unittest.main()

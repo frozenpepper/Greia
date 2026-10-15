@@ -13,6 +13,7 @@ isolation once the platform inputs are faked.
 
 from __future__ import annotations
 
+import math
 import time
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -40,8 +41,10 @@ if __package__:
         PLAYFIELD_TOP,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
+        SLOPE_TILT_DEGREES,
         TOOL_CATALOGUE,
         PlacedTool,
+        ToolKind,
     )
     from .ramp_engine import RampEngine
     from .ramp_renderer import RampRenderer
@@ -56,8 +59,10 @@ else:
         PLAYFIELD_TOP,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
+        SLOPE_TILT_DEGREES,
         TOOL_CATALOGUE,
         PlacedTool,
+        ToolKind,
     )
     from ramp_engine import RampEngine
     from ramp_renderer import RampRenderer
@@ -229,10 +234,18 @@ class RampApp:
         if math_hypot(x - 160, y - 110) < 28:
             return
         spec = next(item for item in TOOL_CATALOGUE if item.kind == kind)
-        tool = PlacedTool(spec, float(x), float(y))
+        tool = PlacedTool(spec, float(x), float(y), self._tool_angle(kind, x, level))
         if self.engine.add_tool(tool):
             self.events.tool_placed(kind.value)
             self.audio.play("place")
+
+    @staticmethod
+    def _tool_angle(kind: ToolKind, x: float, level) -> float:
+        """Slopes tilt downhill towards the basket; other tools have no tilt."""
+        if kind is not ToolKind.SLOPE:
+            return 0.0
+        tilt = math.radians(SLOPE_TILT_DEGREES)
+        return tilt if level.basket_x >= x else -tilt
 
     def _handle_motion(self, pos: tuple[int, int]) -> None:
         if self.renderer.drag_kind is None:
@@ -276,6 +289,11 @@ class RampApp:
             elif ev.kind == "basket_hit":
                 self._on_basket_hit()
             elif ev.kind == "missed":
+                self._on_missed()
+                self.audio.play("miss")
+            elif ev.kind == "settled":
+                # The marble stopped (or ran too long) without reaching the
+                # basket: end the run like a miss so the child can try again.
                 self._on_missed()
                 self.audio.play("miss")
 
@@ -340,11 +358,15 @@ class RampApp:
             self._advance_after_banner()
 
     def _advance_after_banner(self) -> None:
+        previous_tools: list[PlacedTool] = []
         if self.last_outcome == "hit":
             self.level_index = min(self.level_index + 1, len(LEVELS) - 1)
             self.last_published_best = False
-        # Reset for the next attempt
+        else:
+            # A failed run keeps the child's pieces so they can adjust them.
+            previous_tools = list(self.engine.tools)
         self.engine = RampEngine(level=LEVELS[self.level_index])
+        self.engine.tools.extend(previous_tools)
         self.phase = Phase.PALETTE
 
     def _make_text_fn(self) -> "LocalizedTextSurfaces":

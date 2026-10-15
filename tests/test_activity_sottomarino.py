@@ -125,6 +125,65 @@ class SottomarinoTests(unittest.TestCase):
         assert model.active_fact.cue_key == "voice.fact.dolphin.1"
         assert model.active_fact.display_timer > 0.0
 
+    def test_dive_and_surface_reach_every_zone(self):
+        model = SubmarineModel()
+        seen = {get_biome(model.depth)}
+        for _ in range(8):
+            model.change_depth(+1)
+            for _ in range(60):
+                model.update(0.1)
+            seen.add(get_biome(model.depth))
+        assert seen == set(BiomeType)
+        assert model.target_depth == MAX_DEPTH
+        for _ in range(12):
+            model.change_depth(-1)
+        assert model.target_depth == MIN_DEPTH
+
+    def test_app_dive_surface_via_pointer_keyboard_and_controller(self):
+        import os
+        os.environ["SDL_VIDEODRIVER"] = "dummy"
+        os.environ["SDL_AUDIODRIVER"] = "dummy"
+        import pygame
+        from sub_app import SubmarineApp
+        from sub_cockpit_view import BUTTON_RECTS
+
+        assert "dive" in BUTTON_RECTS and "surface" in BUTTON_RECTS
+        app = SubmarineApp()
+        start = app.model.target_depth
+
+        # Keyboard arrows (shared NAVIGATION vocabulary): down dives, up surfaces.
+        down = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_DOWN)
+        up = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_UP)
+        assert app._handle_semantic_input(down)
+        assert app.model.target_depth > start
+        assert app._handle_semantic_input(up)
+        assert app.model.target_depth == start
+
+        # Controller D-pad down (SDL controller event, brand-neutral south/D-pad).
+        from greia_platform.pygame_input import CONTROLLER_BUTTON_DPAD_DOWN
+
+        dpad = pygame.event.Event(
+            pygame.CONTROLLERBUTTONDOWN, button=CONTROLLER_BUTTON_DPAD_DOWN
+        )
+        assert app._handle_semantic_input(dpad)
+        assert app.model.target_depth > start
+
+        # Pointer on the on-screen Dive button.
+        before = app.model.target_depth
+        rect = BUTTON_RECTS["dive"]
+        screen_pt = (rect.centerx, rect.centery)
+        pt = app._safe_pointer(screen_pt)
+        assert pt is not None and rect.collidepoint(pt)
+        app._handle_button_press("dive")
+        assert app.model.target_depth > before
+
+        # Repeated dives reach the deepest zone through the real app handler.
+        for _ in range(8):
+            app._handle_button_press("dive")
+        for _ in range(80):
+            app.model.update(0.1)
+        assert get_biome(app.model.depth) == BiomeType.MIDNIGHT_ABYSS
+
     def test_octopus_bubbles_resolution_no_crash(self):
         import os
         os.environ["SDL_VIDEODRIVER"] = "dummy"

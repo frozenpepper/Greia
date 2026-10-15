@@ -328,14 +328,10 @@ class QuattroApp:
         """Update active animations and CPU opponent decision."""
         # 1. Update falling token animation
         if self.active_drop is not None:
-            pre_y = self.active_drop.current_y
             settled = self.active_drop.update(dt)
 
-            # Check if hit bottom on this frame for clack sound
-            if (
-                pre_y < self.active_drop.target_y
-                and self.active_drop.current_y >= self.active_drop.target_y
-            ):
+            # The clack plays once, on the frame the token reaches its row.
+            if self.active_drop.consume_landing():
                 self.audio.play_drop_clack()
 
             if settled:

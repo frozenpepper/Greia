@@ -71,6 +71,9 @@ BUTTON_RECTS = {
     # Right throttle engine controls (chunky propulsion buttons under the lever)
     "ahead": pygame.Rect(795, 335, 85, 56),
     "stop": pygame.Rect(895, 335, 85, 56),
+    # Depth controls: Surface (up) and Dive (down), top-right above the lever
+    "surface": pygame.Rect(795, 66, 85, 56),
+    "dive": pygame.Rect(895, 66, 85, 56),
 }
 
 
@@ -370,6 +373,9 @@ class CockpitPresenter:
             # Right engine throttle controls
             ("ahead", "btn.ahead", (65, 185, 120), model.speed > 0.4, "ahead", target_ord == "ahead"),
             ("stop", "btn.stop", (220, 80, 80), model.speed <= 0.1, "stop", target_ord == "stop"),
+            # Depth controls (lit while the sub is still travelling to that depth)
+            ("surface", "btn.surface", (120, 200, 235), model.target_depth < model.depth - 0.5, "surface", False),
+            ("dive", "btn.dive", (70, 120, 205), model.target_depth > model.depth + 0.5, "dive", False),
         ]
 
         for name, key, color, active, icon_type, is_hinted in button_configs:
@@ -530,6 +536,21 @@ class CockpitPresenter:
                 (cx, cy - 12), (cx + 11, cy + 3), (cx + 4, cy + 3),
                 (cx + 4, cy + 11), (cx - 4, cy + 11), (cx - 4, cy + 3), (cx - 11, cy + 3)
             ])
+
+        elif icon_type == "dive":
+            # Bold downward arrow: go deeper
+            pygame.draw.polygon(surface, color, [
+                (cx, cy + 12), (cx + 11, cy - 3), (cx + 4, cy - 3),
+                (cx + 4, cy - 11), (cx - 4, cy - 11), (cx - 4, cy - 3), (cx - 11, cy - 3)
+            ])
+
+        elif icon_type == "surface":
+            # Bold upward arrow with a wave line: come up to the surface
+            pygame.draw.polygon(surface, color, [
+                (cx, cy - 12), (cx + 11, cy + 1), (cx + 4, cy + 1),
+                (cx + 4, cy + 7), (cx - 4, cy + 7), (cx - 4, cy + 1), (cx - 11, cy + 1)
+            ])
+            pygame.draw.line(surface, color, (cx - 11, cy + 11), (cx + 11, cy + 11), 3)
 
         elif icon_type == "stop":
             # Engine telegraph Stop square

@@ -10,12 +10,15 @@ from typing import Callable
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.input_core import InputEdge, InteractionProfile, SemanticAction
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import CompletionContent, CompletionPalette, PygameCompletionScreen
+from greia_platform.pygame_input import PygameInputTranslator
 from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .mirror_audio import MirrorAudio
+    from .mirror_focus import FocusZone, MirrorFocus
     from .mirror_model import (
         MirrorRoundFactory,
         MirrorSession,
@@ -28,6 +31,7 @@ if __package__:
     from .mirror_services import EventPort, ProgressPort
 else:
     from mirror_audio import MirrorAudio
+    from mirror_focus import FocusZone, MirrorFocus
     from mirror_model import (
         MirrorRoundFactory,
         MirrorSession,
@@ -38,6 +42,14 @@ else:
     )
     from mirror_renderer import MirrorRenderer
     from mirror_services import EventPort, ProgressPort
+
+
+_FOCUS_STEPS = {
+    SemanticAction.NAV_LEFT: (-1, 0),
+    SemanticAction.NAV_RIGHT: (1, 0),
+    SemanticAction.NAV_UP: (0, -1),
+    SemanticAction.NAV_DOWN: (0, 1),
+}
 
 
 class AppState(StrEnum):
@@ -89,6 +101,10 @@ class MirrorActivity:
         self._hovered_cell: tuple[int, int] | None = None
         self._hovered_tray_idx: int | None = None
         self._hovered_undo = False
+        # Arrows / D-pad move this cursor, Space / south button act on it. It is
+        # mirrored into the pointer hover highlight state so the focus is visible.
+        self._focus = MirrorFocus()
+        self._translator = PygameInputTranslator(InteractionProfile.NAVIGATION)
 
         self.completion = PygameCompletionScreen(
             typography,
@@ -141,9 +157,24 @@ class MirrorActivity:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self._handle_terminal_pointer(event.pos):
                     self._dirty = True
+            else:
+                semantic = self._translator.digital(event)
+                if (
+                    semantic is not None
+                    and semantic.edge is InputEdge.PRESSED
+                    and semantic.action is SemanticAction.ACTIVATE
+                ):
+                    self._restart()
+                    self._dirty = True
             return
 
         if self.state is not AppState.PLAYING:
+            return
+
+        semantic = self._translator.digital(event)
+        if semantic is not None:
+            if semantic.edge is InputEdge.PRESSED and self._handle_semantic(semantic.action):
+                self._dirty = True
             return
 
         if event.type == pygame.MOUSEMOTION:
@@ -163,6 +194,63 @@ class MirrorActivity:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self._handle_pointer(event.pos):
                 self._dirty = True
+
+    # ------------------------------------------------------------------
+    # Keyboard / controller
+    # ------------------------------------------------------------------
+
+    def _handle_semantic(self, action: SemanticAction) -> bool:
+        step = _FOCUS_STEPS.get(action)
+        focus = self._focus
+        tray_count = len(self.session.tray)
+        if step is not None:
+            focus.move(step[0], step[1], tray_count)
+            self._mirror_focus_into_hover()
+            return True
+        if action is SemanticAction.CANCEL:
+            # East face button: put the picked-up piece back (back to the tray).
+            self.session.selected_tray_index = None
+            focus.zone = FocusZone.TRAY
+            self._mirror_focus_into_hover()
+            return True
+        if action is not SemanticAction.ACTIVATE:
+            return False
+        if not focus.active:
+            focus.move(0, 0, tray_count)
+            self._mirror_focus_into_hover()
+            return True
+        if focus.zone is FocusZone.TRAY:
+            if focus.tray_index >= tray_count:
+                if self.session.undo():
+                    self.audio.play("place")
+                self._mirror_focus_into_hover()
+                return True
+            self.session.select_tray_index(focus.tray_index)
+            self.audio.play("place")
+            self.audio.play_shape(self.session.tray[focus.tray_index].kind)
+            focus.enter_grid()
+            self._mirror_focus_into_hover()
+            return True
+        if self.session.selected_tray_index is None:
+            # Nothing in hand yet: go and pick a piece first.
+            focus.zone = FocusZone.TRAY
+            self._mirror_focus_into_hover()
+            return True
+        result = self.session.place_selected_at(*focus.cell)
+        if result is not None:
+            self._process_result(result)
+        # The tray shrinks after a correct placement; keep the cursor valid.
+        focus.tray_index = min(focus.tray_index, len(self.session.tray))
+        self._mirror_focus_into_hover()
+        return True
+
+    def _mirror_focus_into_hover(self) -> None:
+        focus = self._focus
+        self._hovered_cell = focus.cell if focus.active and focus.zone is FocusZone.GRID else None
+        in_tray = focus.active and focus.zone is FocusZone.TRAY
+        count = len(self.session.tray)
+        self._hovered_tray_idx = focus.tray_index if in_tray and focus.tray_index < count else None
+        self._hovered_undo = bool(in_tray and focus.tray_index >= count)
 
     def _handle_pointer(self, raw_pos: tuple[int, int]) -> bool:
         if not _safe_point(self.screen, raw_pos):
@@ -292,6 +380,8 @@ class MirrorActivity:
         self.session_id = f"{self.session_id.rsplit('-', 1)[0]}-{self.rng.randrange(1_000_000):06d}"
         self.session = MirrorSession(puzzles, level=next_level, history=self.session.history)
         self.completion.clear()
+        self._focus.reset()
+        self._mirror_focus_into_hover()
         self.state = AppState.PLAYING
         self.state_started = self.clock()
         self.audio.play("correct")

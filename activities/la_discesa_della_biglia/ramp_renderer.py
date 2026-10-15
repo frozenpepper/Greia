@@ -35,6 +35,7 @@ if __package__:
         PLAYFIELD_TOP,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
+        SLOPE_TILT_DEGREES,
         SPRING_RADIUS,
         TOOL_BUMPER_RADIUS,
         TOOL_CATALOGUE,
@@ -57,6 +58,7 @@ else:
         PLAYFIELD_TOP,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
+        SLOPE_TILT_DEGREES,
         SPRING_RADIUS,
         TOOL_BUMPER_RADIUS,
         TOOL_CATALOGUE,
@@ -213,7 +215,7 @@ class RampRenderer:
         self._draw_tools(tools)
         self._draw_marble(*marble, finished=finished, outcome=outcome)
         self._draw_palette()
-        self._draw_drag_ghost()
+        self._draw_drag_ghost(level)
         self._draw_top_bar(level, level_index, elapsed, finished, best_time, text_fn)
         self._draw_action_buttons(finished, outcome, text_fn)
         self._draw_result_banner(finished, outcome, elapsed, best_time, text_fn)
@@ -327,7 +329,10 @@ class RampRenderer:
         self, x: float, y: float, vx: float, vy: float,
         finished: bool, outcome: str | None,
     ) -> None:
-        cx, cy = int(x), int(y)
+        # A marble that left the playfield (a miss) stays visible at the edge it
+        # fell past instead of being drawn over the tool palette or off-screen.
+        cx = int(min(max(x, PLAYFIELD_LEFT + MARBLE_RADIUS), PLAYFIELD_RIGHT - MARBLE_RADIUS))
+        cy = int(min(max(y, PLAYFIELD_TOP + MARBLE_RADIUS), PLAYFIELD_BOTTOM - MARBLE_RADIUS))
         # Soft shadow
         pygame.draw.ellipse(
             self.surface, (30, 41, 59, 60),
@@ -399,7 +404,7 @@ class RampRenderer:
                 pygame.draw.circle(self.surface, (220, 252, 231), (cx, cy), 16)
                 pygame.draw.circle(self.surface, (22, 101, 52), (cx, cy), 16, 2)
 
-    def _draw_drag_ghost(self) -> None:
+    def _draw_drag_ghost(self, level: Level) -> None:
         if self.drag_kind is None or self.drag_pos is None:
             return
         x, y = self.drag_pos
@@ -409,6 +414,9 @@ class RampRenderer:
             surf = pygame.Surface((length, thickness), pygame.SRCALPHA)
             pygame.draw.rect(surf, (180, 130, 70, 180), (0, 0, length, thickness), border_radius=6)
             pygame.draw.rect(surf, (120, 90, 50, 220), (0, 0, length, thickness), width=2, border_radius=6)
+            # Preview the tilt the slope will have once placed
+            tilt = SLOPE_TILT_DEGREES * (1.0 if level.basket_x >= x else -1.0)
+            surf = pygame.transform.rotate(surf, -tilt)
             self.surface.blit(surf, surf.get_rect(center=(x, y)))
         elif self.drag_kind == ToolKind.BUMPER:
             ghost = pygame.Surface(

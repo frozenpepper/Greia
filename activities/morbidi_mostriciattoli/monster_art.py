@@ -152,8 +152,13 @@ class MonsterArt:
             pygame.draw.polygon(target, body_col, pts)
             pygame.draw.polygon(target, accent_col, pts, 4)
 
-        # Gloss highlight
-        pygame.draw.circle(target, (255, 255, 255, 120), (cx - w // 4, cy - h // 4), max(4, w // 8))
+        # Gloss highlight: a small translucent glint on the upper-left shoulder.
+        # It must sit above the face (eyes start near cy - 0.08h) and be blended
+        # as alpha; drawn opaque it used to become a white blob over the face.
+        gw, gh = max(6, w // 9), max(4, h // 14)
+        glint = pygame.Surface((gw, gh), pygame.SRCALPHA)
+        pygame.draw.ellipse(glint, (255, 255, 255, 110), glint.get_rect())
+        target.blit(glint, (cx - int(w * 0.19) - gw // 2, cy - int(h * 0.29) - gh // 2))
 
     def _draw_tuft(
         self,

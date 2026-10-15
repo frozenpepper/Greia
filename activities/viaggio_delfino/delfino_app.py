@@ -257,6 +257,13 @@ class DelfinoJourneyApp:
 
     # -------------------------------------------------------------- lifecycle
 
+    @staticmethod
+    def _present_frame(canvas: PygameReferenceCanvas, theme) -> None:
+        """Present one frame. The OS cursor is hidden, so the canvas draws Greia's
+        platform pointer (``present(pointer=True)``); never pass ``pointer=False``."""
+        canvas.present(clear=theme.background)
+        pygame.display.flip()
+
     def run(self) -> int:
         screen = self.screen
         canvas = self.canvas
@@ -319,8 +326,7 @@ class DelfinoJourneyApp:
                 assert self.completion_screen is not None
                 self.completion_screen.draw(surf)
 
-            canvas.present(clear=theme.background)
-            pygame.display.flip()
+            self._present_frame(canvas, theme)
 
             if not ready_published:
                 mark_activity_ready()

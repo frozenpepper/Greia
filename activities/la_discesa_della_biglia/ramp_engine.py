@@ -24,11 +24,14 @@ if __package__:
         GRAVITY,
         MARBLE_RADIUS,
         MARBLE_START,
+        MAX_RUN_SECONDS,
         PHYSICS_SUBSTEPS,
         PLAYFIELD_BOTTOM,
         PLAYFIELD_LEFT,
         PLAYFIELD_RIGHT,
         PLAYFIELD_TOP,
+        REST_RADIUS,
+        REST_SECONDS,
         RESTITUTION,
         SPRING_IMPULSE,
         SPRING_RADIUS,
@@ -45,11 +48,14 @@ else:
         GRAVITY,
         MARBLE_RADIUS,
         MARBLE_START,
+        MAX_RUN_SECONDS,
         PHYSICS_SUBSTEPS,
         PLAYFIELD_BOTTOM,
         PLAYFIELD_LEFT,
         PLAYFIELD_RIGHT,
         PLAYFIELD_TOP,
+        REST_RADIUS,
+        REST_SECONDS,
         RESTITUTION,
         SPRING_IMPULSE,
         SPRING_RADIUS,
@@ -96,8 +102,10 @@ class RampEngine:
     )
     elapsed: float = 0.0
     finished: bool = False
-    outcome: str | None = None  # "hit" | "missed" | None
+    outcome: str | None = None  # "hit" | "missed" | "settled" | None
     spent_tools: set[int] = field(default_factory=set)
+    _rest_anchor: tuple[float, float] = (0.0, 0.0)
+    _rest_timer: float = 0.0
 
     def reset_marble(self) -> None:
         self.marble = Marble(MARBLE_START[0], MARBLE_START[1])
@@ -105,6 +113,8 @@ class RampEngine:
         self.finished = False
         self.outcome = None
         self.spent_tools = set()
+        self._rest_anchor = (self.marble.x, self.marble.y)
+        self._rest_timer = 0.0
 
     def add_tool(self, tool: PlacedTool) -> bool:
         if self.finished:
@@ -144,8 +154,29 @@ class RampEngine:
                 break
             self.elapsed += sub_dt
             sub_events = self._substep(sub_dt)
+            if not self.finished:
+                sub_events.extend(self._check_termination(sub_dt))
             events.extend(sub_events)
         return events
+
+    def _check_termination(self, sub_dt: float) -> list[CollisionEvent]:
+        """End a run whose marble has come to rest or has run too long.
+
+        Resting is detected by displacement, not speed: a marble pressed into
+        a flat slope keeps accumulating normal velocity while not moving.
+        """
+        marble = self.marble
+        ax, ay = self._rest_anchor
+        if math.hypot(marble.x - ax, marble.y - ay) > REST_RADIUS:
+            self._rest_anchor = (marble.x, marble.y)
+            self._rest_timer = 0.0
+        else:
+            self._rest_timer += sub_dt
+        if self._rest_timer >= REST_SECONDS or self.elapsed >= MAX_RUN_SECONDS:
+            self.finished = True
+            self.outcome = "settled"
+            return [CollisionEvent("settled", position=(marble.x, marble.y))]
+        return []
 
     # ------------------------------------------------------------------
     # Internal

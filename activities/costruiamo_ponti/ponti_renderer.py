@@ -396,6 +396,22 @@ class PontiRenderer:
                 return s_idx
         return None
 
+    def focus_rect(self, kind: str, index: int, num_slots: int) -> pygame.Rect:
+        """Visible rectangle of a keyboard/controller focus target."""
+        if kind == "block":
+            return pygame.Rect(180 + index * 170, PALETTE_Y, 140, 96)
+        if kind == "slot":
+            slot_w = (BRIDGE_END_X - BRIDGE_START_X) // max(1, num_slots)
+            return pygame.Rect(BRIDGE_START_X + index * slot_w + 4, BRIDGE_Y, slot_w - 8, 70)
+        return CLEAR_RECT.copy() if kind == "clear" else GO_RECT.copy()
+
+    @staticmethod
+    def draw_focus_ring(surf: pygame.Surface, rect: pygame.Rect) -> None:
+        """Bright outline for the focused target (distinct from the yellow selection)."""
+        ring = rect.inflate(10, 10)
+        pygame.draw.rect(surf, (255, 255, 255), ring.inflate(6, 6), width=3, border_radius=26)
+        pygame.draw.rect(surf, (14, 116, 144), ring, width=5, border_radius=24)
+
     def go_contains(self, point: tuple[int, int]) -> bool:
         return GO_RECT.collidepoint(point)
 

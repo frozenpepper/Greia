@@ -29,6 +29,8 @@ from greia_platform.pygame_canvas import (
     PygameReferenceCanvas,
     activity_viewport_for_surface,
 )
+from greia_platform.input_core import InputEdge, InteractionProfile, SemanticAction
+from greia_platform.pygame_input import PygameInputTranslator
 from greia_platform.typography import GreiaTypography
 
 if __package__:
@@ -63,6 +65,17 @@ else:
     )
 
 
+# Arrow keys / D-pad: up = come up, down = dive deeper, left/right = steer.
+# South face button / Space / Enter = the central action (horn / alarm).
+_SEMANTIC_BUTTONS = {
+    SemanticAction.NAV_UP: "surface",
+    SemanticAction.NAV_DOWN: "dive",
+    SemanticAction.NAV_LEFT: "steer_left",
+    SemanticAction.NAV_RIGHT: "steer_right",
+    SemanticAction.ACTIVATE: "action",
+}
+
+
 class SubmarineApp:
     """Main application lifecycle coordinator for Sottomarino Giramondo."""
 
@@ -81,6 +94,11 @@ class SubmarineApp:
         self.audio = SubmarineAudio()
         self.typography = GreiaTypography()
         self.presenter = CockpitPresenter(self.art, self.typography)
+        # Hybrid Activities compose explicit contexts: the cockpit uses the
+        # shared NAVIGATION vocabulary for arrows, D-pad and the south button.
+        self._translator = PygameInputTranslator(InteractionProfile.NAVIGATION)
+        self._dragging_wheel = False
+        self._dragging_lever = False
 
         self._init_localization()
         self._ready_published = False
@@ -140,7 +158,13 @@ class SubmarineApp:
 
         # Check if this button action fulfills the Captain's order
         order_solved = False
-        if btn_name in ("steer_left", "left"):
+        if btn_name == "dive":
+            self.model.change_depth(+1)
+            emit_activity_event("submarine.instrument_used", payload={"instrument": "dive"})
+        elif btn_name == "surface":
+            self.model.change_depth(-1)
+            emit_activity_event("submarine.instrument_used", payload={"instrument": "surface"})
+        elif btn_name in ("steer_left", "left"):
             self.model.steer(-1.0, 0.0)
             order_solved = self.model.check_action("left")
         elif btn_name in ("steer_right", "right"):
@@ -208,6 +232,17 @@ class SubmarineApp:
             self._speak_cue("voice.order.compliment")
             emit_activity_event("submarine.order_completed", payload={"order": self.model.current_order.order_id})
 
+    def _handle_semantic_input(self, event: pygame.event.Event) -> bool:
+        """Route arrows/D-pad/south-button events through the shared vocabulary."""
+        semantic = self._translator.digital(event)
+        if semantic is None or semantic.edge is not InputEdge.PRESSED:
+            return False
+        button = _SEMANTIC_BUTTONS.get(semantic.action)
+        if button is None:
+            return False
+        self._handle_button_press(button)
+        return True
+
     def run(self) -> int:
         running = True
         last_time = time.monotonic()
@@ -225,16 +260,12 @@ class SubmarineApp:
                     if event.key in (pygame.K_ESCAPE, pygame.K_q):
                         running = False
                         break
-                    elif event.key == pygame.K_UP:
+                    elif self._handle_semantic_input(event):
+                        pass
+                    elif event.key == pygame.K_w:
                         self._handle_button_press("ahead")
-                    elif event.key == pygame.K_DOWN:
+                    elif event.key == pygame.K_x:
                         self._handle_button_press("stop")
-                    elif event.key == pygame.K_LEFT:
-                        self._handle_button_press("steer_left")
-                    elif event.key == pygame.K_RIGHT:
-                        self._handle_button_press("steer_right")
-                    elif event.key == pygame.K_SPACE:
-                        self._handle_button_press("action")
                     elif event.key == pygame.K_l:
                         self._handle_button_press("light")
                     elif event.key == pygame.K_s:
@@ -243,6 +274,10 @@ class SubmarineApp:
                         self._handle_button_press("bubbles")
                     elif event.key == pygame.K_h:
                         self._handle_button_press("horn")
+
+                elif self._handle_semantic_input(event):
+                    # SDL-controller buttons (D-pad, south face) delivered by the platform
+                    pass
 
                 elif event.type == pygame.WINDOWFOCUSLOST:
                     self._dragging_wheel = False

@@ -346,6 +346,73 @@ class AppIntegrationTests(unittest.TestCase):
         self.assertEqual(app.state, AppState.PLAYING)
         self.assertEqual(app.session.puzzle_index, 0)
 
+    def _key(self, app, key: int) -> None:
+        app._handle_event(pygame.event.Event(pygame.KEYDOWN, key=key))
+
+    def _walk_focus_to_cell(self, app, row: int, col: int) -> None:
+        """Move the keyboard cell cursor to (row, col) with arrow presses only."""
+        for _ in range(40):
+            cur_r, cur_c = app._focus.cell
+            if (cur_r, cur_c) == (row, col):
+                return
+            if cur_c != col:
+                self._key(app, pygame.K_RIGHT if col > cur_c else pygame.K_LEFT)
+            else:
+                self._key(app, pygame.K_DOWN if row > cur_r else pygame.K_UP)
+        self.fail("could not reach the cell with arrows")
+
+    def test_keyboard_plays_a_whole_puzzle_without_a_pointer(self) -> None:
+        from mirror_focus import FocusZone
+
+        app, sim_time, events, audio, _progress = self._build_app(level=1)
+        current = app.session.current_puzzle
+        assert current is not None
+        for req in current.required:
+            idx = next(i for i, piece in enumerate(app.session.tray) if piece == req.piece)
+            # Cursor starts hidden; the first arrow reveals it on the tray.
+            while app._focus.zone is not FocusZone.TRAY or app._focus.tray_index != idx or not app._focus.active:
+                if not app._focus.active:
+                    self._key(app, pygame.K_RIGHT)
+                elif app._focus.zone is not FocusZone.TRAY:
+                    self._key(app, pygame.K_DOWN)
+                elif app._focus.tray_index < idx:
+                    self._key(app, pygame.K_RIGHT)
+                else:
+                    self._key(app, pygame.K_LEFT)
+            self._key(app, pygame.K_SPACE)  # pick the piece up
+            self.assertEqual(app.session.selected_tray_index, idx)
+            self.assertIs(app._focus.zone, FocusZone.GRID)
+            self._walk_focus_to_cell(app, req.row, req.col)
+            self._key(app, pygame.K_SPACE)  # place it
+            sim_time[0] += 0.5
+            app._advance_state()
+        self.assertEqual(app.session.puzzle_index, 1)
+        self.assertEqual(len(events.milestones), 1)
+
+    def test_controller_dpad_and_south_button_select_and_place(self) -> None:
+        from greia_platform.pygame_input import (
+            CONTROLLER_BUTTON_A,
+            CONTROLLER_BUTTON_DPAD_RIGHT,
+        )
+
+        app, _sim, _events, _audio, _progress = self._build_app(level=1)
+        pad = lambda b: app._handle_event(pygame.event.Event(pygame.CONTROLLERBUTTONDOWN, button=b))
+        pad(CONTROLLER_BUTTON_DPAD_RIGHT)  # reveal focus on the tray
+        pad(CONTROLLER_BUTTON_A)  # pick up piece 0
+        self.assertEqual(app.session.selected_tray_index, 0)
+        pad(CONTROLLER_BUTTON_DPAD_RIGHT)  # move the board cursor
+        self.assertIsNotNone(app._hovered_cell)
+
+    def test_keyboard_activate_restarts_from_the_completion_screen(self) -> None:
+        from mirror_app import AppState
+
+        app, _sim, _events, _audio, _progress = self._build_app(level=1)
+        app._finish_session()
+        self.assertEqual(app.state, AppState.TERMINAL)
+        self._key(app, pygame.K_SPACE)
+        self.assertEqual(app.state, AppState.PLAYING)
+        self.assertEqual(app.session.puzzle_index, 0)
+
     def test_listen_button_replays_welcome(self) -> None:
         from mirror_renderer import LISTEN_BTN_RECT
 

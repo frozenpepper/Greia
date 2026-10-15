@@ -51,6 +51,25 @@ else:
     )
 
 
+# Gallery grid: every one of the MAX_SAVED_PORTRAITS (24) saved monsters has a
+# visible, hit-testable card (6 columns x 4 rows).
+GALLERY_COLUMNS: Final = 6
+GALLERY_CARD_SIZE: Final = (150, 108)
+GALLERY_ORIGIN: Final = (34, 96)
+GALLERY_STRIDE: Final = (162, 118)
+GALLERY_THUMB_SIZE: Final = (72, 86)
+
+
+def gallery_card_rect(index: int) -> pygame.Rect:
+    """Screen rectangle of the gallery card for saved-monster ``index``."""
+    col, row = index % GALLERY_COLUMNS, index // GALLERY_COLUMNS
+    return pygame.Rect(
+        GALLERY_ORIGIN[0] + col * GALLERY_STRIDE[0],
+        GALLERY_ORIGIN[1] + row * GALLERY_STRIDE[1],
+        *GALLERY_CARD_SIZE,
+    )
+
+
 PORTRAIT_CANVAS_RECT: Final[pygame.Rect] = pygame.Rect(70, 96, 460, 400)
 
 SURPRISE_BTN_RECT: Final[pygame.Rect] = pygame.Rect(70, 520, 150, 56)
@@ -185,11 +204,9 @@ class MonsterRenderer:
             target.blit(empty_txt, (REFERENCE_WIDTH // 2 - empty_txt.get_width() // 2, 280))
             return
 
-        # Grid of saved monsters (4 columns x 3 rows)
-        for i, recipe in enumerate(gallery.recipes[:12]):
-            col = i % 4
-            row = i // 4
-            card_rect = pygame.Rect(70 + col * 224, 100 + row * 150, 210, 136)
+        # Grid of saved monsters (6 columns x 4 rows = all 24 slots)
+        for i, recipe in enumerate(gallery.recipes[:MAX_SAVED_PORTRAITS]):
+            card_rect = gallery_card_rect(i)
             is_hovered = (i == hovered_idx)
 
             # Drop shadow
@@ -200,12 +217,18 @@ class MonsterRenderer:
 
             # Thumbnail
             thumb = self._get_thumbnail(recipe)
-            target.blit(thumb, (card_rect.left + 10, card_rect.top + 8))
+            target.blit(thumb, (card_rect.left + 6, card_rect.top + (card_rect.height - thumb.get_height()) // 2))
 
             # Name / Label
             name_str = display_text(recipe.name if recipe.name else self._default_name)
-            name_surf = self._typography.render(name_str[:12], FontRole.TITLE, 16, (254, 240, 138))
-            target.blit(name_surf, (card_rect.left + 120, card_rect.centery - 10))
+            name_surf = self._fit_render(
+                name_str[:12], FontRole.TITLE, 15, (254, 240, 138),
+                card_rect.right - (card_rect.left + 6 + GALLERY_THUMB_SIZE[0] + 6) - 8,
+            )
+            target.blit(
+                name_surf,
+                (card_rect.left + 6 + GALLERY_THUMB_SIZE[0] + 6, card_rect.centery - name_surf.get_height() // 2),
+            )
 
         # Modal preview if selected
         if selected_portrait_id is not None:
@@ -218,11 +241,13 @@ class MonsterRenderer:
 
     def _get_thumbnail(self, recipe: MonsterRecipe) -> pygame.Surface:
         if recipe.portrait_id not in self._thumb_cache:
-            if len(self._thumb_cache) >= 12:
+            if len(self._thumb_cache) >= MAX_SAVED_PORTRAITS:
                 # Evict oldest
                 self._thumb_cache.pop(next(iter(self._thumb_cache)))
-            surf = pygame.Surface((100, 120), pygame.SRCALPHA)
-            self._art.draw_monster(surf, pygame.Rect(0, 0, 100, 120), recipe)
+            full = pygame.Surface((100, 120), pygame.SRCALPHA)
+            self._art.draw_monster(full, pygame.Rect(0, 0, 100, 120), recipe)
+            # Rendered once and cached at the card's size (no per-frame scaling).
+            surf = pygame.transform.smoothscale(full, GALLERY_THUMB_SIZE)
             self._thumb_cache[recipe.portrait_id] = surf
         return self._thumb_cache[recipe.portrait_id]
 
@@ -441,11 +466,8 @@ class MonsterRenderer:
         return None
 
     def gallery_card_at(self, point: tuple[int, int], count: int) -> int | None:
-        for i in range(min(12, count)):
-            col = i % 4
-            row = i // 4
-            card_rect = pygame.Rect(70 + col * 224, 100 + row * 150, 210, 136)
-            if card_rect.collidepoint(point):
+        for i in range(min(MAX_SAVED_PORTRAITS, count)):
+            if gallery_card_rect(i).collidepoint(point):
                 return i
         return None
 

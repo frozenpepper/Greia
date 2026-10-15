@@ -28,6 +28,8 @@
     "btn.steer_right": "Starboard",
     "btn.ahead": "Ahead",
     "btn.stop": "Stop",
+    "btn.dive": "Dive",
+    "btn.surface": "Surface",
     "order.ahead": "Full ahead! Turn on the engines!",
     "order.stop": "All stop! Stop the engines!",
     "order.left": "Turn to port! Steer to the left!",

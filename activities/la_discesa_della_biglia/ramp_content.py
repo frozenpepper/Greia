@@ -45,6 +45,17 @@ FAN_WIND: Final = 240.0            # px / s^2 horizontal push while in arc
 PHYSICS_SUBSTEPS: Final = 4        # physics sub-steps per frame
 MAX_DT: Final = 1.0 / 30.0         # upper-bound a single frame delta
 
+# Every run must end. A marble that has not travelled REST_RADIUS pixels for
+# REST_SECONDS has come to rest ("settled"); MAX_RUN_SECONDS is a hard cap for
+# marbles that jitter in place or bounce for ever between tools.
+REST_RADIUS: Final = 4.0
+REST_SECONDS: Final = 0.7
+MAX_RUN_SECONDS: Final = 14.0
+
+# Placed slopes always tilt (flat slopes never move a marble). The tilt is
+# towards the basket so the slope is a ramp in the useful direction.
+SLOPE_TILT_DEGREES: Final = 25.0
+
 # Marble
 MARBLE_RADIUS: Final = 14
 MARBLE_COLOR: Final = (245, 158, 11)

@@ -28,6 +28,8 @@
     "btn.steer_right": "Destra",
     "btn.ahead": "Avanti",
     "btn.stop": "Stop",
+    "btn.dive": "Scendi",
+    "btn.surface": "Sali",
     "order.ahead": "Avanti tutta! Accendiamo i motori!",
     "order.stop": "Tutti fermi! Rallentiamo e stop ai motori!",
     "order.left": "Vira a sinistra! Attenzione al timone!",

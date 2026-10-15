@@ -326,5 +326,78 @@ class TestQuattroPackageAndLocales(unittest.TestCase):
             self.assertEqual(im.mode, "RGBA")
 
 
+class TestQuattroAppLoop(unittest.TestCase):
+    """Drive the real app update loop (not just the model) over several turns.
+
+    Regression: ``DropAnimation.update`` never reported settled, so the AI never
+    moved, two-player drops were refused and the clack repeated for ever.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        import os
+
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+        import pygame
+
+        pygame.init()
+        cls.screen = pygame.display.set_mode((1024, 600))
+
+    def _app(self, mode: GameMode):
+        from activities.quattro_amici.quattro_app import build_app
+
+        app = build_app(self.screen, locale="en")
+        app.model.set_mode(mode)
+        clacks: list[int] = []
+        app.audio.play_drop_clack = lambda: clacks.append(1)  # type: ignore[method-assign]
+        app._safe_emit = lambda *a, **k: None  # type: ignore[method-assign]
+        return app, clacks
+
+    @staticmethod
+    def _run(app, seconds: float) -> None:
+        for _ in range(int(seconds * 60)):
+            app._update(1 / 60)
+
+    def test_drop_animation_settles_and_clacks_once(self) -> None:
+        from activities.quattro_amici.quattro_renderer import DropAnimation
+
+        drop = DropAnimation(
+            col=0, target_row=3, player=Player.FLASH, current_y=0.0, target_y=300.0
+        )
+        landings = 0
+        for _ in range(240):
+            settled = drop.update(1 / 60)
+            landings += int(drop.consume_landing())
+            if settled:
+                break
+        self.assertTrue(drop.settled)
+        self.assertEqual(landings, 1)
+        self.assertEqual(drop.current_y, drop.target_y)
+
+    def test_vs_cpu_leo_answers_every_turn(self) -> None:
+        app, clacks = self._app(GameMode.VS_CPU)
+        for turn in range(3):
+            self.assertEqual(app.model.current_player, Player.FLASH)
+            col = app.model.board.valid_columns()[0]
+            self.assertTrue(app._try_drop(col), f"child drop refused on turn {turn}")
+            self._run(app, 3.0)
+            self.assertIsNone(app.active_drop)
+            self.assertEqual(len(app.model.history), 2 * (turn + 1), "Leo did not move")
+            if app.model.status != GameStatus.IN_PROGRESS:
+                break
+        self.assertEqual(len(clacks), len(app.model.history))
+
+    def test_two_players_can_drop_back_to_back(self) -> None:
+        app, clacks = self._app(GameMode.TWO_PLAYERS)
+        for turn in range(4):
+            col = app.model.board.valid_columns()[turn % 2]
+            self.assertTrue(app._try_drop(col), f"drop {turn} refused")
+            self._run(app, 1.0)
+            self.assertIsNone(app.active_drop)
+        self.assertEqual(len(app.model.history), 4)
+        self.assertEqual(len(clacks), 4)
+
+
 if __name__ == "__main__":
     unittest.main()
