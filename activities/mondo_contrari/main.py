@@ -48,7 +48,9 @@ def main() -> int:
     pygame.display.set_caption(resources.text("activity.title"))
 
     model = ContrariModel()
-    audio = ContrariAudio(package_root, locale=context.selected.language)
+    audio = ContrariAudio(
+        package_root, locale=context.selected.language, resources=resources
+    )
     renderer = ContrariRenderer(
         locale=context.selected.language,
         resources=resources,
