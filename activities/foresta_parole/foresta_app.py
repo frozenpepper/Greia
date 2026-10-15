@@ -21,7 +21,6 @@ import pygame
 from greia_platform.activity_api import (
     activity_stop_requested,
     emit_activity_event,
-    get_profile_locale,
     get_storage,
     get_theme,
     mark_activity_ready,
