@@ -58,7 +58,7 @@ def main() -> int:
     session = SoundSession(factory.build_set(saved.level), level=saved.level, history=saved.history)
     session_id = f"{int(time.time())}-{rng.randrange(1_000_000):06d}"
 
-    audio = SoundWorkshopAudio(Path(__file__).resolve().parent, locale=locale)
+    audio = SoundWorkshopAudio(Path(__file__).resolve().parent, locale=locale, resources=resources)
     speech_queue = SpeechQueue(audio)
 
     app = SoundWorkshopActivity(
