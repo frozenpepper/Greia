@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 430" width="1000" height="430">
+  <!-- painting colouring_sea: sea page: whale with spout, two fish, starfish, seaweed, bubbles, waves. Line art only: ink contour, open interiors (paint shows through), no fills except eyes. -->
+  <g id="outline" fill="none" stroke="#4B372F" stroke-width="8" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M0 46 Q50 22 100 46 Q150 22 200 46 Q250 22 300 46 Q350 22 400 46 Q450 22 500 46 Q550 22 600 46 Q650 22 700 46 Q750 22 800 46 Q850 22 900 46 Q950 22 1000 46"/>
+    <path d="M690 250 C690 315 615 350 515 350 C430 350 370 330 335 300 C305 275 282 262 260 256 C236 272 206 274 184 262 C198 246 214 232 232 226 C214 210 204 190 204 166 C228 170 248 188 260 210 C286 206 310 200 336 190 C380 152 440 136 515 136 C620 136 690 182 690 250 Z"/>
+    <ellipse cx="626" cy="228" rx="7" ry="9" fill="#4B372F" stroke="none"/>
+    <path d="M640 276 Q662 288 682 266"/>
+    <path d="M478 349 C484 380 506 396 534 400 C530 382 532 364 540 351"/>
+    <path d="M598 122 C598 98 588 84 572 76 M612 120 C614 96 622 82 642 74 M605 120 L605 86"/>
+    <circle cx="564" cy="62" r="6"/>
+    <circle cx="650" cy="60" r="6"/>
+    <circle cx="605" cy="70" r="6"/>
+    <path d="M800 150 C815 122 870 115 900 142 L936 120 C930 140 930 160 936 180 L900 158 C870 185 815 178 800 150 Z"/>
+    <circle cx="826" cy="145" r="5" fill="#4B372F" stroke="none"/>
+    <path d="M848 132 Q840 150 848 168"/>
+    <path transform="translate(920 225) scale(-0.8 0.8)" d="M800 150 C815 122 870 115 900 142 L936 120 C930 140 930 160 936 180 L900 158 C870 185 815 178 800 150 Z" stroke-width="10"/>
+    <circle transform="translate(920 225) scale(-0.8 0.8)" cx="826" cy="145" r="5" fill="#4B372F" stroke="none"/>
+    <path transform="translate(920 225) scale(-0.8 0.8)" d="M848 132 Q840 150 848 168" stroke-width="10"/>
+    <path d="M880.0 306.0 L892.3 335.0 L923.7 337.8 L900.0 358.5 L907.0 389.2 L880.0 373.0 L853.0 389.2 L860.0 358.5 L836.3 337.8 L867.7 335.0 Z"/>
+    <path d="M70 410 C55 372 86 352 70 314 C60 286 86 266 80 240 C102 264 96 296 106 326 C116 356 94 382 100 410"/>
+    <path d="M120 410 C112 386 132 372 124 350 C142 368 138 390 146 410"/>
+    <circle cx="720" cy="92" r="10"/>
+    <circle cx="744" cy="64" r="7"/>
+    <circle cx="150" cy="240" r="9"/>
+    <circle cx="168" cy="206" r="6"/>
+    <circle cx="950" cy="260" r="8"/>
+    <circle cx="300" cy="316" r="8"/>
+    <path d="M0 410 C200 394 400 418 600 402 C760 392 900 398 1000 408"/>
+  </g>
+</svg>

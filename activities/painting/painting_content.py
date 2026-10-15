@@ -3,7 +3,8 @@
 No pygame imports. Defines reference geometry, storage keys and
 tunable bounds as pure data so runtime modules can be reasoned
 about independently. Keeps the Activity simple, fast and cute:
-large canvas, small cheerful palette, bounded undo, autosave.
+large canvas, small cheerful palette, a few stamps from the shared
+art library, a handful of colouring pages, bounded undo, autosave.
 """
 
 from __future__ import annotations
@@ -39,7 +40,37 @@ COLORS: Final = (
     (133, 91, 61),  # Warm Cocoa Brown
 )
 
+# Stroke widths at the 1024x600 reference scale (small, medium, large).
 BRUSH_SIZES: Final = (8, 18, 34)
+
+# Stamps are shared-library props (``assets/catalog/shared_visuals_v1_source``),
+# never Activity-private redraws. One tap places one stamp; its size follows
+# the selected brush size so the child keeps a single "how big" control.
+STAMP_IDS: Final = (
+    "prop.shape.star",
+    "prop.shape.heart",
+    "prop.nature.flower",
+    "prop.nature.sun",
+    "prop.nature.rainbow",
+    "prop.nature.cloud",
+    "prop.vocab.butterfly",
+    "prop.vocab.bee",
+    "prop.vocab.cat",
+    "prop.vocab.dog",
+    "prop.vocab.whale",
+    "prop.vocab.turtle",
+)
+# Stamp edge length at the reference scale for each brush size index.
+STAMP_SIZES: Final = (72, 116, 172)
+
+# Colouring pages: Activity-private line art (1024x600 source SVG + runtime
+# PNG). The outline stays above the paint while the child colours and is
+# flattened only into the saved/shared PNG (one overlay, never layers).
+COLOURING_PAGES: Final = ("garden", "sea", "pets")
+
+# Short presentation timings (seconds).
+FEEDBACK_SECONDS: Final = 2.0
+LIBRARY_FULL_SECONDS: Final = 4.0
 
 __all__ = [
     "REFERENCE_WIDTH",
@@ -54,4 +85,9 @@ __all__ = [
     "MAX_STROKE_POINTS",
     "COLORS",
     "BRUSH_SIZES",
+    "STAMP_IDS",
+    "STAMP_SIZES",
+    "COLOURING_PAGES",
+    "FEEDBACK_SECONDS",
+    "LIBRARY_FULL_SECONDS",
 ]

@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 192" width="256" height="192">
-  <defs>
-    <filter id="cardShadow" x="-10%" y="-10%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="6" stdDeviation="5" flood-opacity="0.18"/>
-    </filter>
-  </defs>
-  <rect x="8" y="8" width="240" height="176" rx="20" fill="#FFFFFF" filter="url(#cardShadow)"/>
-  <rect x="14" y="14" width="228" height="164" rx="16" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="2"/>
-</svg>

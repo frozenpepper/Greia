@@ -43,20 +43,40 @@ def _load_painting_module():
 
 class PaintingContractTests(unittest.TestCase):
 
-    def test_status_badge_uses_locale_bundles_not_hardcoded_italian(self) -> None:
+    def test_studio_ui_is_word_free_and_status_is_pictorial(self) -> None:
+        # Superseded policy: the save badge used to render localized words
+        # ("SAVED"/"SALVATO"). Painting is now word-free for pre-readers: the
+        # status is a pictogram (tick / dots / "!") and every control is an icon.
         import json
 
         renderer_source = (ACTIVITY_ROOT / "painting_renderer.py").read_text(encoding="utf-8")
+        controls_source = (ACTIVITY_ROOT / "painting_controls.py").read_text(encoding="utf-8")
         app_source = (ACTIVITY_ROOT / "painting_app.py").read_text(encoding="utf-8")
-        self.assertNotIn('"Salvo"', renderer_source)
-        self.assertNotIn('"Salva..."', renderer_source)
-        self.assertNotIn('"Errore"', renderer_source)
-        self.assertIn("resolve_activity_locale(", app_source)
-        self.assertIn('resources.text(f"status.{name}")', app_source)
+        for source in (renderer_source, controls_source, app_source):
+            self.assertNotIn("typography.render(", source)
+            self.assertNotIn("label=", source)
+            self.assertNotIn("caption=", source)
+        self.assertIn('"saved", "saving", "error"', renderer_source)
+        # Locale bundles stay in four-locale key parity for the title and
+        # retained keys even though the studio draws no words.
+        keys = None
         for language in ("en", "it", "es", "fr"):
             with self.subTest(language=language):
                 bundle = json.loads((ACTIVITY_ROOT / "locales" / f"{language}.json").read_text(encoding="utf-8"))
-                self.assertTrue(all(bundle["strings"][f"status.{key}"] for key in ("saved", "saving", "error")))
+                self.assertTrue(bundle["strings"]["activity.painting.title"])
+                keys = keys or set(bundle["strings"])
+                self.assertEqual(set(bundle["strings"]), keys)
+
+    def test_controls_use_the_shared_kit(self) -> None:
+        app_source = (ACTIVITY_ROOT / "painting_app.py").read_text(encoding="utf-8")
+        controls_source = (ACTIVITY_ROOT / "painting_controls.py").read_text(encoding="utf-8")
+        self.assertIn("ControlKit", app_source)
+        self.assertIn("CastFeedback", app_source)
+        self.assertIn("PygameControlInput", app_source)
+        self.assertIn("SurfaceNavigator", app_source)
+        self.assertIn("kit.icon_button(", controls_source)
+        self.assertIn("kit.tool_strip(", controls_source)
+        self.assertNotIn("_draw_tactile_button", app_source + controls_source)
 
     def test_painting_manifest_contract(self) -> None:
         manifest_path = ACTIVITY_ROOT / "activity.toml"
@@ -82,16 +102,15 @@ class PaintingContractTests(unittest.TestCase):
     def test_runtime_assets_exist(self) -> None:
         runtime_dir = ACTIVITY_ROOT / "assets" / "runtime"
         self.assertTrue(runtime_dir.exists(), "assets/runtime directory must exist")
+        # Undo/new/eraser/share/import/trash/arrows are shared icon.hud.*
+        # glyphs; only Painting-specific art stays private.
         required_assets = [
             "tool_gallery.png",
-            "tool_undo.png",
-            "tool_new.png",
-            "tool_eraser.png",
-            "brush_small.png",
-            "brush_medium.png",
-            "brush_large.png",
-            "canvas_card_frame.png",
+            "tool_colouring.png",
             "color_well_dish.png",
+            "colouring_garden.png",
+            "colouring_sea.png",
+            "colouring_pets.png",
         ]
         for asset_name in required_assets:
             p = runtime_dir / asset_name
@@ -137,6 +156,8 @@ class PaintingSwatchGeometryTests(unittest.TestCase):
 
             sizes = renderer._size_buttons()
             self.assertEqual(len(sizes), 3, "Palette must expose 3 brush size buttons")
+            self.assertEqual([index for _rect, index in sizes], [0, 1, 2], "sizes run small to large")
+            tools = list(renderer.tool_buttons())
 
             # No pairwise overlap between swatches.
             rects = [rect for rect, _index in swatches]
@@ -147,26 +168,22 @@ class PaintingSwatchGeometryTests(unittest.TestCase):
                         f"Swatches {i} and {j} overlap: {rects[i]} vs {rects[j]}",
                     )
 
-            # No overlap between swatches and brush size buttons.
-            size_rects = [rect for rect, _index in sizes]
+            # No overlap between swatches, brush sizes and the eraser/stamp tiles.
+            others = [rect for rect, _index in sizes] + tools
             for i, swatch in enumerate(rects):
-                for j, size_rect in enumerate(size_rects):
-                    self.assertFalse(
-                        swatch.colliderect(size_rect),
-                        f"Swatch {i} overlaps size button {j}",
-                    )
+                for j, other in enumerate(others):
+                    self.assertFalse(swatch.colliderect(other), f"Swatch {i} overlaps tool {j}")
+            for i in range(len(others)):
+                for j in range(i + 1, len(others)):
+                    self.assertFalse(others[i].colliderect(others[j]), f"Tools {i} and {j} overlap")
 
-            # Separator sits in the gap between the swatch row and size buttons.
-            first_size_left = min(rect.left for rect in size_rects)
-            last_swatch_right = max(rect.right for rect in rects)
-            sep_x = sizes[-1][0].left - metrics.px(14)
-            self.assertGreater(sep_x, last_swatch_right, "Separator must clear the swatch row")
-            self.assertLess(sep_x, first_size_left, "Separator must clear the size buttons")
-            for rect in rects + size_rects:
-                self.assertFalse(
-                    rect.left < sep_x < rect.right,
-                    f"Separator x={sep_x} clips palette button {rect}",
-                )
+            # Separator sits between the brush sizes and the eraser/stamp tiles.
+            sep_x = renderer.separator_x()
+            self.assertGreater(sep_x, max(rect.right for rect, _ in sizes))
+            self.assertLess(sep_x, min(rect.left for rect in tools))
+            tray = renderer.tray_rect()
+            for rect in rects + others:
+                self.assertTrue(tray.contains(rect), f"{rect} leaves the tray {tray}")
 
             # Dish blit stays keyed to the 46px swatch diameter.
             if renderer._scaled_dish is not None:

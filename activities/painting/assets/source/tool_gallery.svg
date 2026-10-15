@@ -1,23 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
-  <defs>
-    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.15"/>
-    </filter>
-  </defs>
-  <rect x="16" y="16" width="42" height="42" rx="10" fill="#60A5FA" filter="url(#shadow)"/>
-  <rect x="22" y="22" width="30" height="30" rx="6" fill="#93C5FD"/>
-  <circle cx="32" cy="32" r="5" fill="#FEF08A"/>
-  <path d="M22 46 L34 38 L42 44 L52 34 L52 52 L22 52 Z" fill="#3B82F6"/>
-
-  <rect x="70" y="16" width="42" height="42" rx="10" fill="#F472B6" filter="url(#shadow)"/>
-  <rect x="76" y="22" width="30" height="30" rx="6" fill="#FBCFE8"/>
-  <circle cx="91" cy="37" r="8" fill="#EC4899"/>
-
-  <rect x="16" y="70" width="42" height="42" rx="10" fill="#34D399" filter="url(#shadow)"/>
-  <rect x="22" y="76" width="30" height="30" rx="6" fill="#A7F3D0"/>
-  <path d="M37 82 C30 82 26 90 26 96 C26 102 32 106 37 106 C42 106 48 102 48 96 C48 90 44 82 37 82 Z" fill="#10B981"/>
-
-  <rect x="70" y="70" width="42" height="42" rx="10" fill="#FBBF24" filter="url(#shadow)"/>
-  <rect x="76" y="76" width="30" height="30" rx="6" fill="#FDE68A"/>
-  <polygon points="91,80 95,90 105,91 97,98 100,108 91,102 82,108 85,98 77,91 87,90" fill="#F59E0B"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- painting tool_gallery: my pictures shelf; four little framed paintings (sun, heart, hill, star) in a 2x2 grid; HUD style, ink contour -->
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="8" y="8" width="37" height="37" rx="8" fill="#FFFBEB" stroke-width="4.5"/>
+    <circle cx="26.5" cy="26.5" r="9" fill="#FFC234" stroke-width="3.5"/>
+    <rect x="51" y="8" width="37" height="37" rx="8" fill="#FFFBEB" stroke-width="4.5"/>
+    <path d="M69.5 37 C60 30 57 25 57 21.5 C57 17.5 60 15 63.5 15 C66.3 15 68.5 16.8 69.5 19 C70.5 16.8 72.7 15 75.5 15 C79 15 82 17.5 82 21.5 C82 25 79 30 69.5 37 Z" fill="#F46F61" stroke-width="3.5"/>
+    <rect x="8" y="51" width="37" height="37" rx="8" fill="#FFFBEB" stroke-width="4.5"/>
+    <path d="M12 80 Q19 66 27 72 Q34 64 41 78 L41 84 L12 84 Z" fill="#59B86A" stroke-width="3.5"/>
+    <rect x="51" y="51" width="37" height="37" rx="8" fill="#FFFBEB" stroke-width="4.5"/>
+    <path d="M69.5 57 L73 65.5 L81.5 66 L75 71.8 L77.2 80.5 L69.5 75.8 L61.8 80.5 L64 71.8 L57.5 66 L66 65.5 Z" fill="#4A91D8" stroke-width="3.5"/>
+  </g>
 </svg>

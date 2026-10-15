@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 430" width="1000" height="430">
+  <!-- painting colouring_garden: garden page: smiling sun, two clouds, big and small flower, butterfly, grass. Line art only: ink contour, open interiors (paint shows through), no fills except eyes. -->
+  <g id="outline" fill="none" stroke="#4B372F" stroke-width="8" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="95" cy="92" r="48"/>
+    <path d="M154.1 116.5 L176.3 125.7 M119.5 151.1 L128.7 173.3 M70.5 151.1 L61.3 173.3 M35.9 116.5 L13.7 125.7 M35.9 67.5 L13.7 58.3 M70.5 32.9 L61.3 10.7 M119.5 32.9 L128.7 10.7 M154.1 67.5 L176.3 58.3"/>
+    <ellipse cx="78" cy="84" rx="5" ry="7" fill="#4B372F" stroke="none"/>
+    <ellipse cx="112" cy="84" rx="5" ry="7" fill="#4B372F" stroke="none"/>
+    <path d="M76 104 Q95 120 114 104"/>
+    <path transform="translate(792 -44) scale(0.85)" d="M58 190 C24 190 16 146 46 136 C40 100 76 80 104 96 C112 62 166 56 180 92 C210 84 238 108 226 138 C250 148 244 190 214 190 Z" stroke-width="9.4"/>
+    <path transform="translate(552 -12) scale(0.55)" d="M58 190 C24 190 16 146 46 136 C40 100 76 80 104 96 C112 62 166 56 180 92 C210 84 238 108 226 138 C250 148 244 190 214 190 Z" stroke-width="14.5"/>
+    <path d="M0 382 C150 362 300 398 500 378 C650 362 820 366 1000 384"/>
+    <path d="M459.0 119.8 A36.0 36.0 0 1 1 488.0 170.0 A36.0 36.0 0 1 1 459.0 220.2 A36.0 36.0 0 1 1 401.0 220.2 A36.0 36.0 0 1 1 372.0 170.0 A36.0 36.0 0 1 1 401.0 119.8 A36.0 36.0 0 1 1 459.0 119.8 Z"/>
+    <circle cx="430" cy="170" r="26"/>
+    <path d="M422 276 L422 375 M438 276 L438 373"/>
+    <path d="M422 348 C392 350 366 334 356 306 C386 300 410 312 422 330"/>
+    <path d="M438 330 C452 310 478 298 508 302 C498 328 472 342 438 344"/>
+    <path d="M640.0 216.0 A21.0 21.0 0 1 1 672.3 239.5 A21.0 21.0 0 1 1 660.0 277.5 A21.0 21.0 0 1 1 620.0 277.5 A21.0 21.0 0 1 1 607.7 239.5 A21.0 21.0 0 1 1 640.0 216.0 Z"/>
+    <circle cx="640" cy="250" r="14"/>
+    <path d="M634 304 L634 374 M646 304 L646 374"/>
+    <path d="M646 342 C660 326 680 320 698 324 C690 340 672 350 646 352"/>
+  <g transform="translate(0 36)">
+    <rect x="820" y="176" width="20" height="98" rx="10"/>
+    <circle cx="830" cy="157" r="16"/>
+    <ellipse cx="824" cy="154" rx="2.8" ry="3.6" fill="#4B372F" stroke="none"/>
+    <ellipse cx="836" cy="154" rx="2.8" ry="3.6" fill="#4B372F" stroke="none"/>
+    <path d="M824 163 Q830 168 836 163" stroke-width="4"/>
+    <path d="M823 143 C815 128 806 118 796 113 M837 143 C845 128 854 118 864 113"/>
+    <circle cx="791" cy="110" r="6"/>
+    <circle cx="869" cy="110" r="6"/>
+    <path d="M820 190 C790 140 738 118 724 152 C712 190 770 224 820 228"/>
+    <path d="M820 238 C782 238 746 258 752 286 C760 312 806 298 820 264"/>
+    <circle cx="765" cy="170" r="12"/>
+    <circle cx="782" cy="274" r="9"/>
+    <path d="M840 190 C870 140 922 118 936 152 C948 190 890 224 840 228"/>
+    <path d="M840 238 C878 238 914 258 908 286 C900 312 854 298 840 264"/>
+    <circle cx="895" cy="170" r="12"/>
+    <circle cx="878" cy="274" r="9"/>
+  </g>
+    <path d="M106 380 L112 358 L120 376 L128 356 L134 378"/>
+    <path d="M196 380 L202 358 L210 376 L218 356 L224 378"/>
+    <path d="M546 380 L552 358 L560 376 L568 356 L574 378"/>
+    <path d="M746 380 L752 358 L760 376 L768 356 L774 378"/>
+    <path d="M916 380 L922 358 L930 376 L938 356 L944 378"/>
+  </g>
+</svg>

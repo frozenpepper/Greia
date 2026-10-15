@@ -2,9 +2,13 @@
 
 The historical ``main.py`` was an 845-line monolith that mixed constants,
 domain state, rendering and the event loop. Real work now lives in
-:mod:`painting_content`, :mod:`painting_model`, :mod:`painting_renderer`
-and :mod:`painting_app`. This module only re-exports the historical API
-surface and composes the lifecycle owned by :class:`PaintingApp`.
+:mod:`painting_content` (pure data), :mod:`painting_model` (records, marks,
+storage), :mod:`painting_renderer` (geometry, art, caches),
+:mod:`painting_controls` (shared control kit wiring and sheets),
+:mod:`painting_input` (controller virtual pointer), :mod:`painting_audio`
+and :mod:`painting_app` (lifecycle). This module only re-exports the
+historical API surface and composes the lifecycle owned by
+:class:`PaintingApp`.
 
 The Activity remains R7.3-migrated: it does not own the trusted Greia
 Home/Back chrome and respects the protected viewport through the shared

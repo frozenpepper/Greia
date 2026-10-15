@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 430" width="1000" height="430">
+  <!-- painting colouring_pets: home page: house with chimney, tree, sitting kitten, ball, sun, little flowers. Line art only: ink contour, open interiors (paint shows through), no fills except eyes. -->
+  <g id="outline" fill="none" stroke="#4B372F" stroke-width="8" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M0 382 L1000 382"/>
+    <path d="M58 236 L190 120 L322 236 Z"/>
+    <path d="M96 236 L96 382 M284 236 L284 382"/>
+    <path d="M245 169 L245 138 L272 138 L272 193"/>
+    <path d="M166 382 L166 318 C166 292 214 292 214 318 L214 382"/>
+    <circle cx="203" cy="345" r="4" fill="#4B372F" stroke="none"/>
+    <rect x="112" y="268" width="40" height="40" rx="7"/>
+    <path d="M132 270 L132 306 M114 288 L150 288" stroke-width="5"/>
+    <rect x="232" y="268" width="40" height="40" rx="7"/>
+    <path d="M252 270 L252 306 M234 288 L270 288" stroke-width="5"/>
+    <path d="M432.0 284.0 A30.0 30.0 0 1 1 388.2 262.9 A30.0 30.0 0 1 1 377.4 215.5 A30.0 30.0 0 1 1 407.7 177.5 A30.0 30.0 0 1 1 456.3 177.5 A30.0 30.0 0 1 1 486.6 215.5 A30.0 30.0 0 1 1 475.8 262.9 A30.0 30.0 0 1 1 432.0 284.0 Z"/>
+    <path d="M420 313.7 L420 382 M444 313.7 L444 382"/>
+    <path d="M390 214 Q400 204 412 210 M454 196 Q466 188 474 200" stroke-width="5"/>
+    <path d="M580 200 L584 138 L622 164 C636 159 654 159 668 164 L706 138 L710 200 C712 240 682 262 645 262 C608 262 578 240 580 200 Z"/>
+    <path d="M590 154 L600 176 M700 154 L690 176" stroke-width="5"/>
+    <ellipse cx="627" cy="205" rx="6" ry="9" fill="#4B372F" stroke="none"/>
+    <ellipse cx="663" cy="205" rx="6" ry="9" fill="#4B372F" stroke="none"/>
+    <path d="M639 220 L651 220 L645 228 Z" fill="#4B372F" stroke-width="4"/>
+    <path d="M645 229 Q639 238 632 234 M645 229 Q651 238 658 234" stroke-width="5"/>
+    <path d="M612 226 L586 222 M612 234 L588 238 M678 226 L704 222 M678 234 L702 238" stroke-width="4"/>
+    <path d="M612 255 C588 290 582 340 592 382 M678 255 C702 290 708 340 698 382"/>
+    <path d="M698 370 C760 378 782 330 752 296"/>
+    <path d="M618 382 C618 362 642 362 642 382 M650 382 C650 362 674 362 674 382"/>
+    <circle cx="850" cy="340" r="38"/>
+    <path d="M850 302 Q830 340 850 378 M813 330 Q850 352 887 330"/>
+    <circle cx="905" cy="78" r="34"/>
+    <path d="M949.3 96.4 L966.0 103.3 M923.4 122.3 L930.3 139.0 M886.6 122.3 L879.7 139.0 M860.7 96.4 L844.0 103.3 M860.7 59.6 L844.0 52.7 M886.6 33.7 L879.7 17.0 M923.4 33.7 L930.3 17.0 M949.3 59.6 L966.0 52.7"/>
+    <ellipse cx="894" cy="72" rx="4" ry="5.5" fill="#4B372F" stroke="none"/>
+    <ellipse cx="916" cy="72" rx="4" ry="5.5" fill="#4B372F" stroke="none"/>
+    <path d="M893 88 Q905 98 917 88" stroke-width="5"/>
+    <path d="M47.6 329.5 A8.5 8.5 0 1 1 52.4 344.0 A8.5 8.5 0 1 1 40.0 353.0 A8.5 8.5 0 1 1 27.6 344.0 A8.5 8.5 0 1 1 32.4 329.5 A8.5 8.5 0 1 1 47.6 329.5 Z" stroke-width="5"/>
+    <circle cx="40" cy="340" r="4" fill="#4B372F" stroke="none"/>
+    <path d="M40 354 L40 382" stroke-width="5"/>
+    <path d="M347.6 329.5 A8.5 8.5 0 1 1 352.4 344.0 A8.5 8.5 0 1 1 340.0 353.0 A8.5 8.5 0 1 1 327.6 344.0 A8.5 8.5 0 1 1 332.4 329.5 A8.5 8.5 0 1 1 347.6 329.5 Z" stroke-width="5"/>
+    <circle cx="340" cy="340" r="4" fill="#4B372F" stroke="none"/>
+    <path d="M340 354 L340 382" stroke-width="5"/>
+    <path d="M547.6 329.5 A8.5 8.5 0 1 1 552.4 344.0 A8.5 8.5 0 1 1 540.0 353.0 A8.5 8.5 0 1 1 527.6 344.0 A8.5 8.5 0 1 1 532.4 329.5 A8.5 8.5 0 1 1 547.6 329.5 Z" stroke-width="5"/>
+    <circle cx="540" cy="340" r="4" fill="#4B372F" stroke="none"/>
+    <path d="M540 354 L540 382" stroke-width="5"/>
+  </g>
+</svg>
