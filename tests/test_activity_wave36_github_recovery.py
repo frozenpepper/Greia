@@ -7,14 +7,12 @@ These are source/interaction tests, not a substitute for real child sessions.
 from __future__ import annotations
 
 import random
-from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
 import pygame
 
 from activities.memory_meraviglie.memory_app import MemoryApp
-from activities.labirinto_magico.maze_app import MazeApp, MazeEngine
 
 
 def key(code: int) -> pygame.event.Event:
@@ -97,25 +95,11 @@ class MemoryKeyboardRecoveryTests(unittest.TestCase):
         self.assertEqual(app.flipped_indices, [])
 
 
-class MazeMovingLockTests(unittest.TestCase):
-    def test_new_commands_cannot_overwrite_active_slide(self) -> None:
-        app = MazeApp.__new__(MazeApp)
-        app.state = SimpleNamespace(
-            is_victory=False, sliding_waypoints=[(0, 1)],
-            facing_right=False, player_r=0, player_c=0,
-            grid=[], exit_pos={"r": 2, "c": 2},
-        )
-        app.sounds = Mock()
-        with patch.object(MazeEngine, "compute_slide_path") as compute:
-            app.trigger_move(0, 1)
-            compute.assert_not_called()
-            self.assertEqual(app.state.sliding_waypoints, [(0, 1)])
-            self.assertFalse(app.state.facing_right)
-            app.state.sliding_waypoints.clear()
-            compute.return_value = [(0, 1)]
-            app.trigger_move(0, 1)
-            self.assertEqual(app.state.sliding_waypoints, [(0, 1)])
-            compute.assert_called_once()
+# Magical Labyrinth's "a new command cannot overwrite an active slide" lock
+# moved to tests/test_activity_labirinto_magico.py (AppLoopTests) when the
+# Activity was reworked onto the shared control kit; a press while Tito walks
+# is now one buffered turn applied on arrival. The old MazeApp/MazeEngine no
+# longer exist.
 
 
 # Treno Numeri's keyboard-only journey and bounded-celebration recovery moved to

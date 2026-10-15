@@ -36,33 +36,24 @@ def _strings(activity: Path, locale: str) -> dict[str, str]:
 
 
 class FourLanguageRuntimeTextContract(unittest.TestCase):
-    def test_labyrinth_visible_controls_and_completion_are_localized(self) -> None:
-        difficulties = _items_from_module(MAZE / "maze_model.py", "DIFFICULTIES")
-        biomes = _items_from_module(MAZE / "maze_model.py", "BIOMES")
-        required = {
-            "btn.new_maze_short", "btn.play_again", "victory.title", "victory.subtitle"
-        }
-        required.update(f"difficulty.{item['id']}" for item in difficulties)
-        required.update(f"biome.{item['id']}" for item in biomes)
+    def test_labyrinth_is_pictorial_and_its_completion_is_localized(self) -> None:
+        # The 2026-10-15 rework removed the text setting chips (EASY / GALAXY /
+        # NEW): maze size adapts automatically and the HUD is pictorial, so the
+        # only child-visible text is the shared completion scene.
+        required = {"activity.title", "victory.title", "btn.play_again"}
         for language in LANGUAGES:
             with self.subTest(language=language):
                 translations = _strings(MAZE, language)
                 self.assertFalse(required.difference(translations))
                 self.assertTrue(all(translations[key].strip() for key in required))
-
-    def test_labyrinth_renderer_consumes_ui_locale_not_italian_model_fields(self) -> None:
         app = (MAZE / "maze_app.py").read_text(encoding="utf-8")
-        renderer = (MAZE / "maze_renderer.py").read_text(encoding="utf-8")
         compile(app, str(MAZE / "maze_app.py"), "exec")
-        compile(renderer, str(MAZE / "maze_renderer.py"), "exec")
         self.assertIn('self.resources.text("victory.title")', app)
-        self.assertIn('labels=self._hud_labels()', app)
-        self.assertIn("class MazeHudLabels:", renderer)
-        self.assertNotIn('diff["label_it"]', renderer)
-        self.assertNotIn('biome["name_it"]', renderer)
+        self.assertIn('self.resources.text("btn.play_again")', app)
         for old_copy in ("PORTALE RAGGIUNTO", "Tito ha trovato l'uscita magica",
-                         "NUOVO LABIRINTO", 'self._render_text("NUOVO'):
-            self.assertNotIn(old_copy, app + renderer)
+                         "NUOVO LABIRINTO", "MazeHudLabels", 'diff["label_it"]',
+                         'biome["name_it"]'):
+            self.assertNotIn(old_copy, app)
 
     def test_memory_card_names_and_theme_labels_cover_all_four_languages(self) -> None:
         themes = _items_from_module(MEMORY / "memory_content.py", "THEMES")

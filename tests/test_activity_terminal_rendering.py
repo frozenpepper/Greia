@@ -9,13 +9,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 class FirstPartyTerminalRenderingContractTests(unittest.TestCase):
-    """Keep the three Acer-sensitive terminal loops on the shared owner."""
+    """Keep the Acer-sensitive terminal loops on the shared owner."""
 
     SOURCES = {
-        "labirinto": (
-            PROJECT_ROOT / "activities" / "labirinto_magico" / "maze_app.py",
-            PROJECT_ROOT / "activities" / "labirinto_magico" / "maze_renderer.py",
-        ),
         "serra": (
             PROJECT_ROOT / "activities" / "piccola_serra" / "main.py",
             PROJECT_ROOT / "activities" / "piccola_serra" / "serra_app.py",
@@ -46,12 +42,6 @@ class FirstPartyTerminalRenderingContractTests(unittest.TestCase):
                 self.assertIsNone(frame_overlay.search(self._source(activity)))
 
     def test_active_simulation_is_structurally_after_terminal_gate(self) -> None:
-        maze = self._source("labirinto")
-        self.assertLess(
-            maze.index("if self.state is not None and self.state.is_victory:"),
-            maze.index("self.update(dt, self.canvas.surface, self.metrics)"),
-        )
-
         serra = self._source("serra")
         # Victory gate must be before the reference render marker.
         # Monolith used `if is_victory:` while decomposed uses
@@ -78,12 +68,29 @@ class FirstPartyTerminalRenderingContractTests(unittest.TestCase):
         )
 
     def test_completion_facts_are_declared_and_once_only_terminal_transitions(self) -> None:
-        maze = self._source("labirinto")
-        self.assertEqual(maze.count('emit_activity_event(\n                            "maze.completed"'), 1)
-
         serra = self._source("serra")
         # Harvest completion is emitted once; one-liner vs multi-line still counts once.
         self.assertEqual(serra.count('"greenhouse.harvest_completed"'), 1)
+
+    def test_magical_labyrinth_uses_the_shared_completion_overlay(self) -> None:
+        """Il Labirinto Magico moved to the ADR 0037 kit: the shared cast
+        completion scene is a modal Overlay, gameplay stops in the terminal
+        state, and facts are published once each with per-visit keys."""
+
+        root = PROJECT_ROOT / "activities" / "labirinto_magico"
+        app = (root / "maze_app.py").read_text(encoding="utf-8")
+        services = (root / "maze_services.py").read_text(encoding="utf-8")
+        self.assertIn("CompletionOverlay(self.completion", app)
+        self.assertIn("CompletionScene(self.kit", app)
+        self.assertIn("self.completion.prepare(", app)
+        self.assertIn("if self.state is not AppState.PLAYING:\n            return False", app)
+        self.assertIsNone(
+            re.search(r"Surface\(\(REFERENCE_WIDTH,\s*REFERENCE_HEIGHT\),\s*pygame\.SRCALPHA\)", app)
+        )
+        self.assertEqual(services.count('"maze.completed"'), 1)
+        self.assertEqual(services.count('"maze.solved"'), 1)
+        self.assertIn('f"labirinto:{visit_id}:completed"', services)
+        self.assertEqual(app.count("self._visit_id = uuid4().hex"), 2)  # start + restart
 
     def test_number_express_uses_the_shared_completion_overlay(self) -> None:
         """Treno Numeri moved to the ADR 0037 kit: the shared cast completion

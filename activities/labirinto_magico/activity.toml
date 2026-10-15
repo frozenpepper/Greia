@@ -2,7 +2,7 @@
 id = "org.greia.labirinto-magico"
 legacy_ids = []
 title_key = "activity.labirinto_magico.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
@@ -11,20 +11,26 @@ categories = ["play", "explore"]
 discovery_tags = ["puzzles"]
 
 [education]
-categories = ["spatial_awareness", "problem_solving", "fine_motor"]
-difficulty = 3
+# Tito's hedge maze: spatial reasoning and route planning. One visit is four
+# short mazes; the child steers Tito to his tent, deciding at every junction.
+# Rungs of the same loop: small loopy mazes with open-direction arrows, then
+# dead ends, stars to gather before the tent opens (plan an order), and a key
+# that opens the garden door on the only route (a sub-goal). The next maze's
+# rung adapts to how the last one went; nothing is timed.
+categories = ["spatial_awareness", "problem_solving"]
+difficulty = 2
 recommended_age_min = 4
-recommended_age_max = 10
+recommended_age_max = 7
 difficulty_min = 1
 difficulty_max = 6
 adaptive_difficulty = true
 skills = [
   { id = "cognitive.spatial.navigation", weight = 3 },
-  { id = "cognitive.planning.pathfinding", weight = 2 },
-  { id = "motor.pointer.target_selection", weight = 2 },
+  { id = "cognitive.planning.pathfinding", weight = 3 },
 ]
 events = [
   { id = "maze.star_collected", kind = "milestone" },
+  { id = "maze.solved", kind = "milestone" },
   { id = "maze.completed", kind = "completion" },
 ]
 
@@ -34,14 +40,16 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "hybrid"
+profile = "directional"
 
 [requirements]
-required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["keyboard", "touch"]
+required_capabilities = ["display"]
+optional_capabilities = ["keyboard", "pointer", "touch", "audio.basic"]
 
 [permissions]
 requested = []
 
 [storage]
+# Platform save schema stays 1: the progress payload carries its own version
+# (maze_services.SCHEMA_VERSION) and migrates the first release's star count.
 schema_version = 1
