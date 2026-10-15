@@ -1,8 +1,20 @@
 # Shared localization and prerecorded speech resolver — implementation design
 
-**Decision:** proposed/owner-directed 2026-10-15; **implementation not complete**.
+**Decision:** owner-directed 2026-10-15; **implementation in progress** (core, launcher and first five Activity audio owners committed; further migrations and runtime acceptance remain).
 **Workstream:** `PLAN.md` in this folder; align with ADR 0028 and existing profile/device language selection.
 **Goal:** one small Greia-owned localization surface used by Activities, launcher and shared child UI for string lookup and **prerecorded** audio lookup. Do not add a new TTS runtime, giant schema, alternate voice engine, migration of approved audio bytes or a second package registry.
+
+## First implementation slice — source committed 2026-10-15
+
+- `src/greia_platform/localization.py`: added `activity_resources(package_root, requested_locale=...)` factory backed by `activity.toml` + Greia's existing profile/device locale owner; a single `LocalizedResources.audio_path(key, filename=None)` returning an existing file or `None`; preserved compatible `audio_cue(key)`. Resolution first tries selected-locale semantic mapping, then projects the canonical EN path (or an existing legacy IT-only path) into the selected locale, then checks conventional assets, then English. Existing text lookup now prefers English before package-default compatibility text for missing selected-locale keys. No playback, mutation, TTS or file authenticity layer.
+- `src/greia_launcher/spoken_labels.py`: launcher **Activity title** speech now uses the shared path resolver; platform collection-label playback stays unchanged.
+- **Existing semantic users gain ES/FR files without new per-locale audio maps:** `activities/enciclopedia_greia/enciclopedia_audio.py`, `activities/viaggio_delfino/delfino_audio.py`, `activities/sottomarino_giramondo/sub_app.py` already call `LocalizedResources.audio_cue`. Their code was not rewritten; staged fixtures now resolve existing ES/FR audio via English filename projection. Normal installed OS locale selection is unchanged (EN/IT).
+- **Five legacy Activity sound owners adapted:** Measurement Workshop (`measure_audio.py`), Ten House (`ten_house_audio.py`), Magic Syllables (`sillabe_audio.py`), Alphabet Leo (`alfabeto_audio.py`) and Word Forest (`foresta_app.py`). Each keeps its preloading/on-demand decode, mixer channels, gameplay/synth SFX and original asset filenames but delegates selected-language + English fallback to `audio_path`. Their composition roots pass the shared resources. Bottega/Casa/Alphabet composition uses the new `activity_resources` factory.
+- **Real source tests authored, NOT executed:** `tests/test_shared_localized_audio_paths.py` tests existing ES/FR Encyclopedia, Dolphin and Submarine paths, fallback, actual filename conventions, IT-only alarm alias, manifest/profile localization composition, missing audio, and conventional files; existing `tests/test_localization.py` updated for the owner's EN-only speech fallback instead of a legacy Italian fallback. No GitHub status checks or workflow results reported.
+- **Skill updated to the implemented API:** `skills/greia-activity-authoring/SKILL.md`, `VOICE_GENERATION.md`, `LAUNCHER_SPOKEN_LABELS.md`. New Activities now use `activity_resources`, `.text` and `.audio_path` rather than inventing local file/language lookups; nonstandard approved older filenames remain supported.
+- **No audio bytes, selector registries, manifests or approved recordings changed.** No local agent requests, hardware tests, GUI tests, Pygame tests or whole-tree unit tests were executed in this GitHub-only implementation slice. Staged ES/FR actual playback/visual acceptance remains open.
+
+**Next code slice:** review and migrate other speech-owning Activity loaders without converting procedural effects, add regression around locale-specific sound start/stop and sample playback, then review whether a shared resource factory should be adopted by all 45 (only when an Activity actually uses localization). Audio coverage and real hardware acceptance are separate tasks. Avoid turning this into a rewrite or broad governance project.
 
 ## Accepted owner decisions
 
