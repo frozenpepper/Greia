@@ -69,7 +69,7 @@ def main() -> int:
         resources=resources,
         progress=progress,
         events=GreiaMeasureEvents(),
-        audio=MeasureAudio(package_root, locale=locale_lang),
+        audio=MeasureAudio(package_root, locale=locale_lang, resources=resources),
         rng=rng,
         session_id=session_id,
     )
