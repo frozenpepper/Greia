@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia core icon: desk globe (world / learning avatar). Flat Greia vector. -->
+  <defs>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="globe_sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#92BDE8"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+    <clipPath id="globe_clip">
+      <circle cx="132" cy="104" r="70"/>
+    </clipPath>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="226" rx="62" ry="10" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="stand">
+    <path d="M128 190 L128 206" stroke="#4B372F" stroke-width="22" stroke-linecap="round"/>
+    <path d="M128 190 L128 206" stroke="#F39A38" stroke-width="12" stroke-linecap="round"/>
+    <rect x="78" y="200" width="100" height="24" rx="12" fill="#F39A38" stroke="#4B372F" stroke-width="5"/>
+    <path d="M92 208 L130 208" stroke="#F8C08A" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <g id="sphere">
+    <circle cx="132" cy="104" r="70" fill="url(#globe_sea)"/>
+    <g clip-path="url(#globe_clip)" fill="#59B86A" stroke="#51714A" stroke-width="3.5" stroke-linejoin="round">
+      <path d="M70 70 C80 52 104 46 122 54 C134 60 132 74 120 80 C110 86 98 84 94 94 C90 104 100 110 108 116 C118 124 120 140 112 156 C106 166 96 166 92 156 C88 144 90 130 82 122 C72 112 64 98 64 88 C64 80 66 76 70 70 Z"/>
+      <path d="M144 46 C162 36 194 42 204 62 L204 84 C196 90 186 88 182 96 C180 108 194 118 190 134 C186 150 170 160 160 152 C150 144 156 130 148 120 C138 108 132 96 138 84 C142 72 136 58 144 46 Z"/>
+    </g>
+    <path d="M86 76 C94 60 108 50 124 46" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" opacity="0.75"/>
+    <circle cx="132" cy="104" r="70" fill="none" stroke="#4B372F" stroke-width="5"/>
+  </g>
+  <g id="meridian" fill="none" stroke-linecap="round">
+    <path d="M132 20 A84 84 0 0 0 132 188" stroke="#4B372F" stroke-width="18"/>
+    <path d="M132 20 A84 84 0 0 0 132 188" stroke="#FFC234" stroke-width="9"/>
+    <circle cx="132" cy="20" r="7" fill="#FFC234" stroke="#4B372F" stroke-width="4.5"/>
+  </g>
+</svg>

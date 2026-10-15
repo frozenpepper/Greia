@@ -17,6 +17,7 @@ from greia_platform.ui_motion import InteractionVisualState
 
 from .catalogue_view import ALL_ACTIVITIES_ID, _category_title
 from .main import HitTarget
+from .portal_geometry import portal_icon_center, portal_icon_size
 
 
 _COLLECTION_VISUAL_ERRORS = (
@@ -335,7 +336,9 @@ class CollectionFirstHomeMixin:
                     width=max(3, portal_size // 44),
                 )
 
-            icon_size = max(42, min(96, int(round(target.width * 0.42))))
+            # Size from the untransformed portal so hover motion reuses the
+            # cached icon; centre on the drawn frame's opening.
+            icon_size = portal_icon_size(portal_rect.width)
             icon = self._category_shadowed_icon(
                 collection.icon_id or "backpack",
                 icon_size,
@@ -343,7 +346,10 @@ class CollectionFirstHomeMixin:
                 shadow_offset=max(2, icon_size // 28),
                 pygame=pygame,
             )
-            screen.blit(icon, icon.get_rect(center=(target.centerx, target.centery - 2)))
+            screen.blit(
+                icon,
+                icon.get_rect(center=portal_icon_center(target.center, target.height)),
+            )
 
             # A six-portal layout should not squeeze a long saved-work label
             # into unreadable miniature text on the 480–800px canvases.

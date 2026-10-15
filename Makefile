@@ -1,6 +1,6 @@
 PYTHON ?= python3
 PYTHONPATH := src
-.PHONY: verify test validate assets visual-assets visual-assets-check footprint shell-check clean-bytecode
+.PHONY: verify test validate assets assets-check visual-assets visual-assets-check footprint shell-check clean-bytecode
 
 verify: clean-bytecode test validate shell-check footprint
 	$(MAKE) clean-bytecode
@@ -20,11 +20,10 @@ validate:
 	done
 
 assets:
-	$(PYTHON) tools/extract_core_icons.py \
-		--source assets/source/core_icons_v1_source.png \
-		--output-root assets/icons/core/v1 \
-		--catalog assets/catalog/core_icons_v1.toml \
-		--contact-sheet assets/catalog/core_icons_v1_contact_sheet.png
+	$(PYTHON) tools/build_core_icons.py
+
+assets-check:
+	$(PYTHON) tools/build_core_icons.py --check
 
 visual-assets:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) tools/build_visual_renditions.py

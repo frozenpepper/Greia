@@ -1,36 +1,30 @@
 # Greia core semantic icons v1.
 #
 # IDs, file names and 64/128/256 RGBA PNG sizes are a stable contract:
-# saved profiles store avatar IDs and Collections store icon IDs.
+# saved profiles store avatar IDs and Collections store icon IDs. This
+# catalogue is hand-maintained; no tool rewrites it.
 #
-# Two provenances coexist while the 2026-10-15 redraw is in progress
-# (docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md, P0 #4):
+# Every icon is a flat Greia vector master authored under
+# docs/design/GREIA_SVG_AUTHORING_RULES.md (core semantic icon: 256 viewBox,
+# transparent, no tile), stored at assets/<source_svg> (assets/source/** is
+# excluded from target images). The avatar IDs unicorn/robot/owl/green_monster
+# are the canonical cast Lilli/Dani/Leo/Momo (happy state copied verbatim from
+# assets/visual/characters/canonical/v0.1); dinosaur and wizard are non-cast
+# Bean creatures.
 #
-# 1. Entries with `source_svg` are flat Greia vector icons authored under
-#    docs/design/GREIA_SVG_AUTHORING_RULES.md (core semantic icon: 256 viewBox,
-#    transparent, no tile). The SVG master lives at assets/<source_svg>
-#    (assets/source/** is excluded from target images). The avatar IDs
-#    unicorn/robot/owl/green_monster are the canonical cast Lilli/Dani/Leo/Momo
-#    (happy state copied verbatim from assets/visual/characters/canonical/v0.1).
-#    Rebuild the PNGs from the repository root with exactly:
+# Build the PNGs from the repository root (rsvg-convert >= 2.40, Debian
+# librsvg2-bin; the 2026-10-15 renders used 2.40.20):
 #
-#      for f in assets/source/icons/core/v1/*.svg; do n=$(basename "$f" .svg); \
-#        for s in 64 128 256; do \
-#          rsvg-convert -w $s -h $s "$f" -o "assets/icons/core/v1/$s/$n.png"; \
-#        done; done
+#   python3 tools/build_core_icons.py            # `make assets`
+#   python3 tools/build_core_icons.py --check    # `make assets-check`, writes nothing
 #
-#    (rsvg-convert >= 2.40: Debian librsvg2-bin; the 2026-10-15 renders used
-#    2.40.20.) Review at 256/64/48 on cream and navy per rules section 12/13.
-#
-# 2. Entries without `source_svg` are still extracted from the archival glossy
-#    sheet (source_sha256 below, `make assets` / tools/extract_core_icons.py).
-#    WARNING: `make assets` rewrites this whole catalogue and every PNG from that
-#    sheet and would revert the redrawn icons; do not run it until the
-#    extraction path is retired.
+# Review new or changed masters at 256/64/48 on cream and navy (rules
+# sections 12/13). History: v1.0.0 was extracted from a glossy raster sheet
+# (retired 2026-10-15 with tools/extract_core_icons.py; git history only);
+# v1.2.0 retired ten never-referenced IDs (potions, treasure_chest, map,
+# coin_bag, cup_trophy, medal, puzzle_trophy, pouch, small_heart, pink_star).
 catalog_id = "greia.core-icons.v1"
-catalog_version = "1.1.0"
-source_sha256 = "026f09eddb72a0befb43beb1bc2ad912009c923feedcba86dc82e0302900b3c8"
-source_note = "Extracted from the first approved project-generated icon sheet; later regenerated sheets are non-canonical experiments."
+catalog_version = "1.2.0"
 
 [[icons]]
 id = "book"
@@ -66,6 +60,7 @@ alt_key = "asset.globe"
 path_64 = "icons/core/v1/64/globe.png"
 path_128 = "icons/core/v1/128/globe.png"
 path_256 = "icons/core/v1/256/globe.png"
+source_svg = "source/icons/core/v1/globe.svg"
 
 [[icons]]
 id = "backpack"
@@ -104,22 +99,6 @@ path_256 = "icons/core/v1/256/music_star.png"
 source_svg = "source/icons/core/v1/music_star.svg"
 
 [[icons]]
-id = "potions"
-category = "science"
-alt_key = "asset.potions"
-path_64 = "icons/core/v1/64/potions.png"
-path_128 = "icons/core/v1/128/potions.png"
-path_256 = "icons/core/v1/256/potions.png"
-
-[[icons]]
-id = "treasure_chest"
-category = "rewards"
-alt_key = "asset.treasure_chest"
-path_64 = "icons/core/v1/64/treasure_chest.png"
-path_128 = "icons/core/v1/128/treasure_chest.png"
-path_256 = "icons/core/v1/256/treasure_chest.png"
-
-[[icons]]
 id = "coins"
 category = "rewards"
 alt_key = "asset.coins"
@@ -135,14 +114,7 @@ alt_key = "asset.star_trophy"
 path_64 = "icons/core/v1/64/star_trophy.png"
 path_128 = "icons/core/v1/128/star_trophy.png"
 path_256 = "icons/core/v1/256/star_trophy.png"
-
-[[icons]]
-id = "map"
-category = "adventure"
-alt_key = "asset.map"
-path_64 = "icons/core/v1/64/map.png"
-path_128 = "icons/core/v1/128/map.png"
-path_256 = "icons/core/v1/256/map.png"
+source_svg = "source/icons/core/v1/star_trophy.svg"
 
 [[icons]]
 id = "magnifier"
@@ -169,6 +141,7 @@ alt_key = "asset.car"
 path_64 = "icons/core/v1/64/car.png"
 path_128 = "icons/core/v1/128/car.png"
 path_256 = "icons/core/v1/256/car.png"
+source_svg = "source/icons/core/v1/car.svg"
 
 [[icons]]
 id = "garden"
@@ -178,14 +151,6 @@ path_64 = "icons/core/v1/64/garden.png"
 path_128 = "icons/core/v1/128/garden.png"
 path_256 = "icons/core/v1/256/garden.png"
 source_svg = "source/icons/core/v1/garden.svg"
-
-[[icons]]
-id = "coin_bag"
-category = "rewards"
-alt_key = "asset.coin_bag"
-path_64 = "icons/core/v1/64/coin_bag.png"
-path_128 = "icons/core/v1/128/coin_bag.png"
-path_256 = "icons/core/v1/256/coin_bag.png"
 
 [[icons]]
 id = "owl"
@@ -203,14 +168,7 @@ alt_key = "asset.dinosaur"
 path_64 = "icons/core/v1/64/dinosaur.png"
 path_128 = "icons/core/v1/128/dinosaur.png"
 path_256 = "icons/core/v1/256/dinosaur.png"
-
-[[icons]]
-id = "cup_trophy"
-category = "rewards"
-alt_key = "asset.cup_trophy"
-path_64 = "icons/core/v1/64/cup_trophy.png"
-path_128 = "icons/core/v1/128/cup_trophy.png"
-path_256 = "icons/core/v1/256/cup_trophy.png"
+source_svg = "source/icons/core/v1/dinosaur.svg"
 
 [[icons]]
 id = "rainbow"
@@ -228,6 +186,7 @@ alt_key = "asset.abc_blocks"
 path_64 = "icons/core/v1/64/abc_blocks.png"
 path_128 = "icons/core/v1/128/abc_blocks.png"
 path_256 = "icons/core/v1/256/abc_blocks.png"
+source_svg = "source/icons/core/v1/abc_blocks.svg"
 
 [[icons]]
 id = "block_puzzle"
@@ -239,28 +198,13 @@ path_256 = "icons/core/v1/256/block_puzzle.png"
 source_svg = "source/icons/core/v1/block_puzzle.svg"
 
 [[icons]]
-id = "medal"
-category = "rewards"
-alt_key = "asset.medal"
-path_64 = "icons/core/v1/64/medal.png"
-path_128 = "icons/core/v1/128/medal.png"
-path_256 = "icons/core/v1/256/medal.png"
-
-[[icons]]
-id = "puzzle_trophy"
-category = "rewards"
-alt_key = "asset.puzzle_trophy"
-path_64 = "icons/core/v1/64/puzzle_trophy.png"
-path_128 = "icons/core/v1/128/puzzle_trophy.png"
-path_256 = "icons/core/v1/256/puzzle_trophy.png"
-
-[[icons]]
 id = "wizard"
 category = "characters"
 alt_key = "asset.wizard"
 path_64 = "icons/core/v1/64/wizard.png"
 path_128 = "icons/core/v1/128/wizard.png"
 path_256 = "icons/core/v1/256/wizard.png"
+source_svg = "source/icons/core/v1/wizard.svg"
 
 [[icons]]
 id = "green_monster"
@@ -299,14 +243,6 @@ path_256 = "icons/core/v1/256/train_blocks.png"
 source_svg = "source/icons/core/v1/train_blocks.svg"
 
 [[icons]]
-id = "pouch"
-category = "rewards"
-alt_key = "asset.pouch"
-path_64 = "icons/core/v1/64/pouch.png"
-path_128 = "icons/core/v1/128/pouch.png"
-path_256 = "icons/core/v1/256/pouch.png"
-
-[[icons]]
 id = "lightning"
 category = "status"
 alt_key = "asset.lightning"
@@ -316,14 +252,6 @@ path_256 = "icons/core/v1/256/lightning.png"
 source_svg = "source/icons/core/v1/lightning.svg"
 
 [[icons]]
-id = "small_heart"
-category = "status"
-alt_key = "asset.small_heart"
-path_64 = "icons/core/v1/64/small_heart.png"
-path_128 = "icons/core/v1/128/small_heart.png"
-path_256 = "icons/core/v1/256/small_heart.png"
-
-[[icons]]
 id = "yellow_star"
 category = "status"
 alt_key = "asset.yellow_star"
@@ -331,14 +259,6 @@ path_64 = "icons/core/v1/64/yellow_star.png"
 path_128 = "icons/core/v1/128/yellow_star.png"
 path_256 = "icons/core/v1/256/yellow_star.png"
 source_svg = "source/icons/core/v1/yellow_star.svg"
-
-[[icons]]
-id = "pink_star"
-category = "status"
-alt_key = "asset.pink_star"
-path_64 = "icons/core/v1/64/pink_star.png"
-path_128 = "icons/core/v1/128/pink_star.png"
-path_256 = "icons/core/v1/256/pink_star.png"
 
 [[icons]]
 id = "check"

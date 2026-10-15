@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia core avatar icon: little wizard (non-cast Bean: robe body, round face, star hat, wand). Flat Greia vector. -->
+  <defs>
+    <!-- grape light -> grape -->
+    <linearGradient id="wizard_robe" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BFA2DF"/>
+      <stop offset="1" stop-color="#9464C9"/>
+    </linearGradient>
+    <!-- peach light -> peach -->
+    <linearGradient id="wizard_face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FCEADB"/>
+      <stop offset="1" stop-color="#F8D8BD"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="124" cy="228" rx="64" ry="10" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="robe" stroke="#4B372F" stroke-linejoin="round">
+    <path d="M92 160 C80 180 70 202 68 214 C66 222 72 224 80 224 L168 224 C176 224 182 222 180 214 C178 202 168 180 156 160 Z" fill="url(#wizard_robe)" stroke-width="5"/>
+    <path d="M100 196 L103 203 L110 204 L105 209 L106 216 L100 212 L94 216 L95 209 L90 204 L97 203 Z" fill="#FFC234" stroke-width="2.5"/>
+  </g>
+  <g id="wand" stroke-linecap="round">
+    <path d="M168 190 L206 128" stroke="#4B372F" stroke-width="12"/>
+    <path d="M168 190 L206 128" stroke="#C98A5A" stroke-width="5"/>
+    <path d="M210 98 L216.5 111 L230.8 113 L220.4 123 L222.9 137.2 L210 130.5 L197.1 137.2 L199.6 123 L189.2 113 L203.5 111 Z" fill="#FFC234" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="164" cy="190" r="11" fill="#F8D8BD" stroke="#4B372F" stroke-width="4"/>
+  </g>
+  <g id="head">
+    <circle cx="124" cy="132" r="42" fill="url(#wizard_face)" stroke="#4B372F" stroke-width="5"/>
+    <circle cx="108" cy="136" r="7" fill="#342C35"/>
+    <circle cx="110.5" cy="133.5" r="2.5" fill="#FFFFFF"/>
+    <circle cx="140" cy="136" r="7" fill="#342C35"/>
+    <circle cx="142.5" cy="133.5" r="2.5" fill="#FFFFFF"/>
+    <ellipse cx="98" cy="152" rx="8" ry="5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="150" cy="152" rx="8" ry="5" fill="#FDA4AF" opacity="0.55"/>
+    <path d="M114 154 C120 161 128 161 134 154" fill="none" stroke="#72513F" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <g id="hat" stroke="#4B372F" stroke-linejoin="round">
+    <path d="M70 110 C88 86 100 60 112 36 C118 24 132 18 146 24 C152 27 156 32 158 38 C150 34 142 36 140 44 C150 66 164 90 178 110 Z" fill="url(#wizard_robe)" stroke-width="5"/>
+    <path d="M84 94 C98 102 150 102 166 94" fill="none" stroke="#FFC234" stroke-width="10" stroke-linecap="round"/>
+    <path d="M116 56 L119.5 63.1 L127.3 64.2 L121.6 69.8 L123 77.6 L116 73.9 L109 77.6 L110.4 69.8 L104.7 64.2 L112.5 63.1 Z" fill="#FFC234" stroke-width="2.5"/>
+    <ellipse cx="124" cy="110" rx="64" ry="13" fill="#9464C9" stroke-width="5"/>
+    <path d="M106 64 C110 54 114 46 120 38" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+  </g>
+</svg>

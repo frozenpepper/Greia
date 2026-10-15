@@ -381,7 +381,7 @@ Core owners:
 
 ```text
 src/greia_platform/assets.py
-assets/catalog/core_icons_v1.toml
+assets/catalog/core_icons_v1.toml        # masters: assets/source/icons/core/v1/*.svg, built by tools/build_core_icons.py
 assets/catalog/shared_visuals_v1_source.toml
 assets/catalog/shared_visuals_v1.toml
 ```

@@ -7,6 +7,7 @@ from greia_platform.pygame_visual_assets import VisualSurfaceCacheError
 
 from .catalogue_view import ALL_ACTIVITIES_ID
 from .main import HitTarget
+from .portal_geometry import portal_icon_center, portal_icon_size
 
 
 _ADAPTIVE_VISUAL_ERRORS = (
@@ -290,12 +291,15 @@ class AdaptiveActivityDiscoveryMixin:
                 )
             icon = self._category_shadowed_icon(
                 group.icon_id or "backpack",
-                max(42, min(88, int(drawn.width * 0.42))),
+                portal_icon_size(portal.width),
                 shadow_alpha=42,
                 shadow_offset=2,
                 pygame=pygame,
             )
-            screen.blit(icon, icon.get_rect(center=drawn.center))
+            screen.blit(
+                icon,
+                icon.get_rect(center=portal_icon_center(drawn.center, drawn.height)),
+            )
             label = self._category_label_surface(
                 group.title or group.collection_id,
                 max(18, min(26, label_height * 2 // 3)),

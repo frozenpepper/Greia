@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia core avatar icon: friendly baby dinosaur (non-cast creature, Bean grammar). Flat Greia vector. -->
+  <defs>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="dinosaur_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="124" cy="226" rx="76" ry="11" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="plates" fill="#F39A38" stroke="#4B372F" stroke-width="4" stroke-linejoin="round">
+    <path d="M48 168 L40 140 L70 154 Z"/>
+    <path d="M78 146 L70 112 L102 128 Z"/>
+    <path d="M100 110 L98 76 L126 96 Z"/>
+    <path d="M124 72 L136 34 L158 54 Z"/>
+  </g>
+  <g id="legs" fill="#59B86A" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round">
+    <rect x="86" y="186" width="34" height="34" rx="14"/>
+    <rect x="140" y="186" width="34" height="34" rx="14"/>
+  </g>
+  <g id="body">
+    <path d="M22 176 C46 182 70 176 84 158 C90 128 100 98 120 76 C134 58 152 48 176 48 C206 48 228 66 228 92 C228 114 210 126 188 128 C178 130 174 138 176 150 C180 172 176 196 160 206 C146 214 116 216 96 210 C80 204 70 196 60 192 C46 188 32 186 22 176 Z" fill="url(#dinosaur_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M154 138 C170 150 176 176 168 196 C164 204 154 210 140 210 C146 190 148 162 142 142 C146 138 150 136 154 138 Z" fill="#D9F2D0" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M136 72 C146 62 160 58 174 58" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity="0.7"/>
+    <ellipse cx="184" cy="152" rx="9" ry="15" fill="#59B86A" stroke="#4B372F" stroke-width="3.5" transform="rotate(-35 184 152)"/>
+  </g>
+  <g id="face">
+    <circle cx="186" cy="84" r="11" fill="#342C35"/>
+    <circle cx="190" cy="79" r="4" fill="#FFFFFF"/>
+    <ellipse cx="174" cy="108" rx="11" ry="7" fill="#FDA4AF" opacity="0.55"/>
+    <path d="M196 106 C204 112 214 110 220 102" fill="none" stroke="#72513F" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="218" cy="78" r="2.5" fill="#4B372F"/>
+  </g>
+</svg>

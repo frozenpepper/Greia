@@ -33,14 +33,14 @@ Greia should favor **large silhouettes, simple internal detail, and strong state
 
 # 2. Existing canonical icon inventory
 
-Core Icons v1 currently provides 39 semantic icons, including:
+Core Icons v1 currently provides 29 semantic icons (flat SVG masters since 2026-10-15; ten never-referenced glossy IDs were retired in catalogue 1.2.0):
 
 - literacy: book, ABC board, ABC blocks, notebook;
 - characters: robot, unicorn, owl, dinosaur, wizard, green monster;
-- learning/science: globe, potions, magnifier;
+- learning/science: globe, magnifier;
 - creativity/music: palette, music star;
-- rewards/status: treasure chest, coins, coin bag, pouch, star/cup/puzzle trophies, medal, hearts, stars, lightning;
-- navigation/adventure/world: backpack, map, car, garden, rainbow, train blocks;
+- rewards/status: coins, star trophy, heart, yellow star, lightning;
+- navigation/world: backpack, car, garden, rainbow, train blocks;
 - logic: puzzle pieces, block puzzle;
 - controls: check, X mark, close button.
 

@@ -19,7 +19,7 @@ class AssetCatalogueTests(unittest.TestCase):
 
     def test_individual_pngs_exist(self) -> None:
         icons = self.catalogue.all_icons()
-        self.assertGreaterEqual(len(icons), 35)
+        self.assertGreaterEqual(len(icons), 29)
         for icon in icons:
             self.assertTrue(icon.path_64.is_file())
             self.assertTrue(icon.path_128.is_file())
