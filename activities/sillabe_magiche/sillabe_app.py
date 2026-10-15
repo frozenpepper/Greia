@@ -104,7 +104,7 @@ class SillabeApp:
         self._theme = theme
         self._storage = storage
 
-        self._sounds = SoundManager()
+        self._sounds = SoundManager(resources=resources)
         self._renderer = SillabeRenderer(typography)
 
         self._curriculum = get_syllable_curriculum(active_locale)
