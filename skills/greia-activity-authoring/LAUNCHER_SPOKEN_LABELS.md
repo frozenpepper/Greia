@@ -15,37 +15,24 @@ activity.title
 
 Do not invent per-Activity cue names such as `launcher.my_game_name`, do not add speech code to `main.py`, and do not synthesize the title at child runtime.
 
-The localized bundle already used by ADR 0028 owns the mapping:
+Greia's shared `LocalizedResources.audio_path("activity.title")` resolves
+the current catalogue locale using the standard on-disk convention:
 
-```json
-{
-  "schema_version": 1,
-  "locale": "it",
-  "direction": "ltr",
-  "strings": {
-    "activity.title": "L'Acquario Magico"
-  },
-  "audio": {
-    "activity.title": {
-      "path": "locales/it/audio/activity-title.wav",
-      "caption_key": "activity.title"
-    }
-  }
-}
+```text
+locales/en.json                         strings["activity.title"]
+locales/it.json                         strings["activity.title"]
+locales/es.json                         strings["activity.title"]
+locales/fr.json                         strings["activity.title"]
+locales/en/audio/activity-title.wav
+locales/it/audio/activity-title.wav
+locales/es/audio/activity-title.wav
+locales/fr/audio/activity-title.wav
 ```
 
-Equivalent English example:
-
-```json
-{
-  "audio": {
-    "activity.title": {
-      "path": "locales/en/audio/activity-title.wav",
-      "caption_key": "activity.title"
-    }
-  }
-}
-```
+**No per-language `audio.activity.title` JSON entry is necessary**
+when the standard file exists. Existing packages with declared paths
+remain compatible. The shared resolver chooses the selected-language
+file, otherwise the English file, otherwise no speech.
 
 The displayed title and spoken title must identify the same Activity. They need not be byte-for-byte identical when natural speech requires a harmless article or pronunciation choice, but they must not communicate a different name.
 
@@ -118,7 +105,7 @@ Do not hand-edit every Activity's Python code. Migration consists only of:
 1. confirm the accepted localized launcher title;
 2. produce/review `activity.title` speech through the Voice Production Engine;
 3. place the accepted clip below that locale's package resources;
-4. add the `audio.activity.title` mapping to the locale JSON;
+4. use the conventional file path; add a single legacy alias only if filenames are nonstandard;
 5. validate package/localization resources;
 6. exercise launcher hover + keyboard navigation in the Greia Simulator;
 7. later perform physical-device audio/latency acceptance on the Acer floor.
@@ -129,7 +116,7 @@ An Activity's launcher-name accessibility is complete only when:
 
 ```text
 [ ] activity.title display string exists for every claimed catalogue locale
-[ ] activity.title audio mapping exists for every completed catalogue locale
+[ ] activity.title WAV exists at its conventional locale path (or an existing legacy mapping)
 [ ] clip produced through VoiceEngine
 [ ] clip human-reviewed
 [ ] no runtime TTS or Activity-side launcher behavior added
