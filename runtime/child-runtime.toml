@@ -4,6 +4,7 @@ api_version = "0.1"
 [python]
 allowed_import_roots = [
   "__future__",
+  "abc",
   "array",
   "bisect",
   "collections",
