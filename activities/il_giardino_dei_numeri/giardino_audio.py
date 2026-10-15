@@ -8,6 +8,8 @@ from typing import Final
 
 import pygame
 
+from greia_platform.localization import LocalizedResources
+
 from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
 
 MAX_SIMULTANEOUS_CHANNELS: Final[int] = 4
@@ -17,7 +19,10 @@ AUDIO_DIR = Path(__file__).resolve().parent / "assets" / "audio"
 class GiardinoAudio:
     """Soft, cheerful musical and spoken feedback for toddler counting."""
 
-    def __init__(self, locale: str = "it") -> None:
+    def __init__(
+        self, locale: str = "it", resources: LocalizedResources | None = None
+    ) -> None:
+        self._resources = resources
         self.locale = locale.split("-")[0]
         self._sounds: dict[str, pygame.mixer.Sound] = {}
         self._spoken_sounds: dict[str, pygame.mixer.Sound] = {}
@@ -77,16 +82,18 @@ class GiardinoAudio:
         self.play_spoken("basket_full")
 
     def _load_spoken_assets(self) -> None:
-        loc_dir = AUDIO_DIR / self.locale
-        if not loc_dir.is_dir():
-            loc_dir = AUDIO_DIR / "it"
-        if not loc_dir.is_dir():
-            return
-
-        for wav_path in loc_dir.glob("*.wav"):
+        if self._resources is not None:
+            files = self._resources.speech_paths()
+        else:
+            # Compatibility for tests constructing a standalone audio owner.
+            loc_dir = AUDIO_DIR / self.locale
+            if not loc_dir.is_dir():
+                loc_dir = AUDIO_DIR / "en"
+            files = {path.stem: path for path in loc_dir.glob("*.wav")}
+        for stem, path in files.items():
             try:
-                self._spoken_sounds[wav_path.stem] = pygame.mixer.Sound(str(wav_path))
-            except pygame.error:
+                self._spoken_sounds[stem] = pygame.mixer.Sound(str(path))
+            except (pygame.error, OSError):
                 pass
 
     def _build_sounds(self) -> None:
