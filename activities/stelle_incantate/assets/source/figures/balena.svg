@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 372" width="820" height="372">
+  <!-- Stelle Incantate: whale; stars snout (110,214) head (226,124) spout (246,30) back (400,96) hump (556,138) tail stock (656,204)
+       fluke (742,116) (748,292) belly (548,290) (380,316) jaw (218,292).
+       Sky-local space = the Activity's sky play area; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="balena_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="spout" stroke="#4A91D8" stroke-width="3" stroke-linejoin="round" fill="#CFEAF7">
+    <path d="M236 120 C230 90 238 60 246 30 C252 60 256 90 252 120 Z"/>
+    <path d="M244 44 C226 28 206 30 196 46 C214 44 228 48 240 58 Z"/>
+    <path d="M250 44 C268 28 288 30 298 46 C280 44 266 48 254 58 Z"/>
+  </g>
+  <g id="fluke" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M640 204 C680 170 720 140 742 116 C756 150 744 186 720 204 C744 222 756 258 748 292 C720 266 680 236 640 210 Z" fill="url(#balena_body)"/>
+  </g>
+  <g id="body" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M110 214 C116 160 170 124 226 124 C300 102 350 94 400 96 C470 98 520 116 556 138 C600 162 630 186 662 206 C620 240 594 280 548 290 C490 310 430 318 380 316 C310 316 250 306 218 292 C160 272 112 250 110 214 Z" fill="url(#balena_body)"/>
+    <path d="M134 246 C190 276 300 296 400 298 C470 298 530 286 572 272 C530 300 470 314 380 314 C300 314 236 300 200 284 C170 272 146 262 134 246 Z" fill="#FFFBEB"/>
+    <path d="M220 290 C230 300 240 304 252 306 M290 300 C300 308 312 310 322 312" fill="none" stroke="#C9D8E8" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M330 272 C360 296 380 326 360 340 C330 330 312 300 318 276 Z" fill="#4A91D8"/>
+  </g>
+  <g id="face">
+    <circle cx="194" cy="200" r="8" fill="#342C35"/>
+    <circle cx="196" cy="197" r="3" fill="#FFFFFF"/>
+    <path d="M128 230 C150 244 176 246 200 240" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="214" cy="226" rx="11" ry="6" fill="#FDA4AF" opacity="0.55"/>
+  </g>
+  <g id="highlight">
+    <path d="M280 124 C330 108 380 104 430 108" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.6"/>
+  </g>
+</svg>

@@ -1,346 +1,339 @@
-"""Scene renderer for Stelle Incantate.
+"""Storybook night-sky presentation for Stelle Incantate.
 
-Draws the cached night backdrop plus the live connect-the-dots layer: big
-numbered stars, glowing connection lines with a draw-in animation, a pulsing
-invitation halo on the next star, gentle wobble feedback, Leo the owl as the
-Activity's presenter, the curiosity-fact bubble and the big next-figure
-control. Text is secondary support; every core action is visually obvious.
+The renderer owns the sky (backdrop, the figure's revealed picture, glowing
+lines, numbered stars), Leo, the bottom "speech band" (name plate or fact
+bubble) and FX. Kit controls (goal strip, progress dots, number cards, next
+and fact buttons) and their focus ring are drawn afterwards by the shared
+``ControlLayer``. Nothing here marks the next star: hint pulses and the
+demonstration trail appear only when the app asks for them (after hesitation
+or a mistake). Per-frame work is blits plus a handful of short lines; every
+surface comes prepared from ``SkyArt`` and animation is expressed as offsets
+and prepared sizes.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass, field
 import math
-from typing import Final
+import random
+import time
 
 import pygame
 
-from greia_platform.activity_api import get_icon_path, get_shared_visual_path
-from greia_platform.localization import LocalizedResources
-from greia_platform.typography import FontRole, GreiaTypography
+from greia_platform.activity_feedback import CastFeedback, CastPose
 
 if __package__:
-    from .sky_art import build_backdrop, build_star_sprite
+    from .sky_art import INK, LINE_GLOW, SkyArt
+    from .sky_content import BAND_CENTER, LEO_MIDBOTTOM, STAR_POP_SIZE, STAR_SIZE, sky_point
     from .sky_model import SkyRound
 else:
-    from sky_art import build_backdrop, build_star_sprite
+    from sky_art import INK, LINE_GLOW, SkyArt
+    from sky_content import BAND_CENTER, LEO_MIDBOTTOM, STAR_POP_SIZE, STAR_SIZE, sky_point
     from sky_model import SkyRound
 
+APPEAR_STEP = 0.07
+APPEAR_SECONDS = 0.3
+LINE_SECONDS = 0.32
+POP_SECONDS = 0.32
+PULSE_SECONDS = 1.3
+WOBBLE_SECONDS = 0.7
+TRAIL_SECONDS = 0.7
+REVEAL_FADE_SECONDS = 0.9
+REVEAL_BREATH_SECONDS = 4.0
+PICTURE_ALPHA = 235
+RUMBLE = {"razzo": 3.0}  # the rocket rumbles as it "lifts off" (shooting star + whoosh)
+RUMBLE_SECONDS = 0.9
+MAX_FX = 10
+FX_SECONDS = {"sparkle": 0.45, "star_burst": 0.8, "firework": 1.1, "shooting_star": 0.9}
+FX_DEFAULT_SECONDS = 0.6
+FX_DRIFT = {"shooting_star": (120.0, -60.0)}
 
-REFERENCE_WIDTH: Final[int] = 1024
-REFERENCE_HEIGHT: Final[int] = 600
 
-#: Normalized sky play area mapped onto the reference frame.
-SKY_RECT: Final[pygame.Rect] = pygame.Rect(48, 30, 928, 420)
+class SkyCast:
+    """Leo with the shared feedback grammar plus a pointing hint pose.
 
-STAR_RADIUS: Final[int] = 24
-STAR_TAP_RADIUS: Final[int] = 46
-LINE_COLOR: Final[tuple[int, int, int]] = (186, 214, 255)
-LINE_WIDTH: Final[int] = 5
+    ``CastFeedback`` owns cheer (correct) and think (try again); this wrapper
+    adds ``point`` for figure starts and graduated hints, drawn only while the
+    feedback friend is idle so the grammar stays unambiguous.
+    """
 
-LEO_SIZE: Final[int] = 128
-LEO_CENTER: Final[tuple[int, int]] = (REFERENCE_WIDTH - 104, REFERENCE_HEIGHT - 96)
-FACT_BUTTON_RADIUS: Final[int] = 32
-FACT_BUTTON_CENTER: Final[tuple[int, int]] = (
-    LEO_CENTER[0] - LEO_SIZE // 2 - FACT_BUTTON_RADIUS - 16,
-    LEO_CENTER[1] + 6,
-)
-NEXT_BUTTON_RECT: Final[pygame.Rect] = pygame.Rect(
-    REFERENCE_WIDTH // 2 - 92, REFERENCE_HEIGHT - 96, 184, 68
-)
+    def __init__(self, feedback: CastFeedback, point: pygame.Surface | None, clock: Callable[[], float]) -> None:
+        self.feedback = feedback
+        self._point = point
+        self._clock = clock
+        self._point_until = 0.0
 
-CELEBRATE_SECONDS: Final[float] = 2.6
+    @property
+    def animating(self) -> bool:
+        return self.feedback.animating or self.pointing
+
+    @property
+    def pointing(self) -> bool:
+        return self._clock() < self._point_until and self._point is not None
+
+    def point(self, seconds: float = 1.8) -> None:
+        self._point_until = self._clock() + seconds
+
+    def correct(self) -> None:
+        self._point_until = 0.0
+        self.feedback.correct()
+
+    def try_again(self) -> None:
+        self._point_until = 0.0
+        self.feedback.try_again()
+
+    def reset(self) -> None:
+        self._point_until = 0.0
+        self.feedback.reset()
+
+    def update(self) -> bool:
+        was_pointing = self._point_until > 0.0
+        changed = self.feedback.update()
+        if was_pointing and not self.pointing:
+            self._point_until = 0.0
+            changed = True
+        return changed
+
+    def draw(self, target: pygame.Surface, midbottom: tuple[int, int]) -> None:
+        if self.pointing and self.feedback.pose is CastPose.IDLE:
+            target.blit(self._point, self._point.get_rect(midbottom=midbottom))  # type: ignore[union-attr]
+            return
+        self.feedback.draw(target, midbottom)
+
+
+@dataclass(slots=True)
+class SceneMotion:
+    """Bounded, time-stamped animation state owned by the app."""
+
+    figure_started: float = -10.0
+    appear_order: tuple[int, ...] = ()
+    line_started: float = -10.0
+    line_from: dict[tuple[int, int], int] = field(default_factory=dict)  # edge -> star it grows from
+    pops: dict[int, float] = field(default_factory=dict)
+    pulses: dict[int, float] = field(default_factory=dict)
+    wobble: tuple[int, float] | None = None
+    trail: tuple[int, int, float] | None = None  # (from star, to star, start)
+    reveal_started: float | None = None
+    fx: list[tuple[str, tuple[int, int], float]] = field(default_factory=list)
+
+    def start_figure(self, now: float, count: int, seed: str) -> None:
+        self.figure_started = now
+        order = list(range(count))
+        # Stars twinkle in a scrambled order so their appearance never hints
+        # at the counting order.
+        random.Random(seed).shuffle(order)
+        self.appear_order = tuple(order)
+        self.line_from.clear()
+        self.line_started = -10.0
+        self.pops.clear()
+        self.pulses.clear()
+        self.wobble = None
+        self.trail = None
+        self.reveal_started = None
+        self.fx.clear()
+
+    def appear_seconds(self) -> float:
+        return APPEAR_STEP * len(self.appear_order) + APPEAR_SECONDS
+
+    def add_fx(self, name: str, position: tuple[int, int], now: float) -> None:
+        self.fx.append((name, position, now))
+        del self.fx[:-MAX_FX]
+
+    def active(self, now: float) -> bool:
+        if now - self.figure_started < self.appear_seconds() or now - self.line_started < LINE_SECONDS:
+            return True
+        if any(now - start < POP_SECONDS for start in self.pops.values()):
+            return True
+        if any(now - start < PULSE_SECONDS for start in self.pulses.values()):
+            return True
+        if self.wobble is not None and now - self.wobble[1] < WOBBLE_SECONDS:
+            return True
+        if self.trail is not None and now - self.trail[2] < TRAIL_SECONDS + PULSE_SECONDS:
+            return True
+        if self.reveal_started is not None and now - self.reveal_started < REVEAL_BREATH_SECONDS:
+            return True  # the revealed picture breathes, then rests (no idle redraw)
+        return any(now - start < _fx_seconds(name) for name, _, start in self.fx)
+
+    def prune(self, now: float) -> None:
+        self.fx = [entry for entry in self.fx if now - entry[2] < _fx_seconds(entry[0])]
+        for store, limit in ((self.pops, POP_SECONDS), (self.pulses, PULSE_SECONDS)):
+            for key in [key for key, start in store.items() if now - start >= limit]:
+                del store[key]
+        if self.wobble is not None and now - self.wobble[1] >= WOBBLE_SECONDS:
+            self.wobble = None
+        if self.trail is not None and now - self.trail[2] >= TRAIL_SECONDS + PULSE_SECONDS:
+            self.trail = None
+
+
+def _fx_seconds(name: str) -> float:
+    return FX_SECONDS.get(name, FX_DEFAULT_SECONDS)
+
+
+def _ease_out(t: float) -> float:
+    t = max(0.0, min(1.0, t))
+    return 1.0 - (1.0 - t) ** 3
+
+
+@dataclass(slots=True)
+class Band:
+    """What the bottom speech band shows (resolved, already-cased text)."""
+
+    name: str | None = None
+    fact: str | None = None
 
 
 class SkyRenderer:
-    """Own all presentation state and draw one complete frame."""
+    """Compose one frame of the night sky from prepared surfaces."""
 
     def __init__(
-        self,
-        typography: GreiaTypography,
-        resources: LocalizedResources,
+        self, art: SkyArt, cast: SkyCast | None = None, *, clock: Callable[[], float] = time.monotonic
     ) -> None:
-        self.typography = typography
-        self.resources = resources
-        self._backdrop_size: tuple[int, int] | None = None
-        self._backdrop: pygame.Surface | None = None
-        self._star_sprite: pygame.Surface | None = None
-        self._leo_frames: dict[str, pygame.Surface] = {}
-        self._fact_icon: pygame.Surface | None = None
+        self.art = art
+        self.cast = cast
+        self._clock = clock
 
-    # ------------------------------------------------------------------
-    # Cached resources
-    # ------------------------------------------------------------------
+    def figure_offset(self, round_: SkyRound, motion: SceneMotion, now: float) -> tuple[int, int]:
+        """Revealed figures breathe gently, then rest (the rocket rumbles first).
 
-    def _ensure_backdrop(self, size: tuple[int, int]) -> pygame.Surface:
-        if self._backdrop is None or self._backdrop_size != size:
-            self._backdrop = build_backdrop(*size)
-            self._backdrop_size = size
-        return self._backdrop
+        Offsets stay small so a figure never reaches the goal strip or the
+        speech band.
+        """
 
-    def _ensure_star_sprite(self, radius: int) -> pygame.Surface:
-        size = radius * 2
-        if self._star_sprite is None or self._star_sprite.get_width() != size:
-            self._star_sprite = build_star_sprite(radius)
-        return self._star_sprite
+        if motion.reveal_started is None:
+            return (0, 0)
+        age = now - motion.reveal_started
+        shake = RUMBLE.get(round_.figure.figure_id, 0.0) if age < RUMBLE_SECONDS else 0.0
+        settle = max(0.0, min(1.0, age, REVEAL_BREATH_SECONDS - age))
+        bob = math.sin(age * 2.2) * 4.0 * settle
+        return (int(round(math.sin(age * 70.0) * shake)), int(round(bob)))
 
-    def _leo(self, variant: str) -> pygame.Surface:
-        frame = self._leo_frames.get(variant)
-        if frame is None:
-            try:
-                path = get_shared_visual_path("character.leo", variant=variant)
-                frame = pygame.image.load(str(path)).convert_alpha()
-                frame = pygame.transform.smoothscale(frame, (LEO_SIZE, LEO_SIZE))
-            except (OSError, ValueError, pygame.error):
-                frame = pygame.Surface((LEO_SIZE, LEO_SIZE), pygame.SRCALPHA)
-                pygame.draw.circle(frame, (150, 110, 70), (LEO_SIZE // 2, LEO_SIZE // 2), LEO_SIZE // 2 - 6)
-            self._leo_frames[variant] = frame
-        return frame
+    def draw(self, target: pygame.Surface, round_: SkyRound, motion: SceneMotion, band: Band) -> None:
+        now = self._clock()
+        target.blit(self.art.background, (0, 0))
+        offset = self.figure_offset(round_, motion, now)
+        self._draw_picture(target, round_, motion, now, offset)
+        self._draw_lines(target, round_, motion, now, offset)
+        self._draw_trail(target, round_, motion, now)
+        self._draw_stars(target, round_, motion, now, offset)
+        if self.cast is not None:
+            self.cast.draw(target, LEO_MIDBOTTOM)
+        self._draw_band(target, band)
+        self._draw_fx(target, motion, now)
 
-    def _ensure_fact_icon(self, size: int) -> pygame.Surface:
-        size = max(20, size)
-        if self._fact_icon is None or self._fact_icon.get_width() != size:
-            try:
-                path = get_icon_path("magnifier", 128)
-                icon = pygame.image.load(str(path)).convert_alpha()
-                self._fact_icon = pygame.transform.smoothscale(icon, (size, size))
-            except (OSError, ValueError, pygame.error):
-                self._fact_icon = pygame.Surface((size, size), pygame.SRCALPHA)
-                pygame.draw.circle(
-                    self._fact_icon, (255, 255, 255), (size // 2, size // 2), size // 3, width=4
-                )
-        return self._fact_icon
+    def star_centre(self, round_: SkyRound, index: int, offset: tuple[int, int] = (0, 0)) -> tuple[int, int]:
+        x, y = sky_point(round_.figure.stars[index])
+        return (x + offset[0], y + offset[1])
 
-    # ------------------------------------------------------------------
-    # Geometry helpers
-    # ------------------------------------------------------------------
+    # -- layers ---------------------------------------------------------------
 
-    def star_center(self, round_state: SkyRound, star_index: int) -> tuple[int, int]:
-        star = round_state.constellation.stars[star_index]
-        return (
-            SKY_RECT.left + round(star.x * SKY_RECT.width),
-            SKY_RECT.top + round(star.y * SKY_RECT.height),
-        )
-
-    def star_at(self, round_state: SkyRound, point: tuple[int, int]) -> int | None:
-        """Return the tapped star index, or None when the tap is empty sky."""
-
-        best: int | None = None
-        best_distance = STAR_TAP_RADIUS
-        for index in range(round_state.star_count):
-            center = self.star_center(round_state, index)
-            distance = math.hypot(point[0] - center[0], point[1] - center[1])
-            if distance <= best_distance:
-                best = index
-                best_distance = distance
-        return best
-
-    def fact_button_contains(self, point: tuple[int, int]) -> bool:
-        return (
-            math.hypot(point[0] - FACT_BUTTON_CENTER[0], point[1] - FACT_BUTTON_CENTER[1])
-            <= FACT_BUTTON_RADIUS + 8
-        )
-
-    # ------------------------------------------------------------------
-    # Frame drawing
-    # ------------------------------------------------------------------
-
-    def draw_scene(
-        self,
-        surface: pygame.Surface,
-        round_state: SkyRound,
-        *,
-        now: float,
-        line_progress: float,
-        wrong_star: int | None,
-        wrong_age: float,
-        celebrating: bool,
-        fact_text: str | None,
-        leo_happy: bool,
-        name_text: str | None,
-        show_next: bool,
-        hovered_next: bool,
+    def _draw_picture(
+        self, target: pygame.Surface, round_: SkyRound, motion: SceneMotion, now: float, offset: tuple[int, int]
     ) -> None:
-        size = surface.get_size()
-        surface.blit(self._ensure_backdrop(size), (0, 0))
+        if motion.reveal_started is None:
+            return
+        picture = self.art.picture(round_.figure.figure_id)
+        if picture is None:
+            return
+        age = now - motion.reveal_started
+        alpha = int(PICTURE_ALPHA * _ease_out(age / REVEAL_FADE_SECONDS))
+        if picture.get_alpha() != alpha:
+            picture.set_alpha(alpha)
+        origin = sky_point((0, 0))
+        target.blit(picture, (origin[0] + offset[0], origin[1] + offset[1]))
 
-        constellation = round_state.constellation
-        pulse = 0.5 + 0.5 * math.sin(now * 3.4)
+    def _draw_lines(
+        self, target: pygame.Surface, round_: SkyRound, motion: SceneMotion, now: float, offset: tuple[int, int]
+    ) -> None:
+        growing = now - motion.line_started < LINE_SECONDS
+        progress = _ease_out((now - motion.line_started) / LINE_SECONDS)
+        for edge in round_.lit_edges():
+            a = self.star_centre(round_, edge[0], offset)
+            b = self.star_centre(round_, edge[1], offset)
+            source = motion.line_from.get(edge) if growing else None
+            if source is not None:
+                start, end = (a, b) if source == edge[0] else (b, a)
+                b = (int(start[0] + (end[0] - start[0]) * progress), int(start[1] + (end[1] - start[1]) * progress))
+                a = start
+            pygame.draw.line(target, INK, a, b, 11)
+            pygame.draw.line(target, LINE_GLOW, a, b, 5)
 
-        # Connection lines (with draw-in progress for the newest edge).
-        completed_edges = tuple(
-            edge
-            for edge in constellation.edges
-            if edge[0] in round_state.connected and edge[1] in round_state.connected
-        )
-        newest = round_state.last_connected
-        newest_edges = tuple(
-            edge for edge in completed_edges if newest is not None and newest in edge
-        ) if celebrating is False else tuple()
-        for edge in completed_edges:
-            if edge in newest_edges and line_progress < 1.0:
-                start = self.star_center(round_state, edge[0])
-                end = self.star_center(round_state, edge[1])
-                current = (
-                    round(start[0] + (end[0] - start[0]) * line_progress),
-                    round(start[1] + (end[1] - start[1]) * line_progress),
-                )
-                pygame.draw.line(surface, LINE_COLOR, start, current, LINE_WIDTH)
-            else:
-                start = self.star_center(round_state, edge[0])
-                end = self.star_center(round_state, edge[1])
-                pygame.draw.line(surface, LINE_COLOR, start, end, LINE_WIDTH)
+    def _draw_trail(self, target: pygame.Surface, round_: SkyRound, motion: SceneMotion, now: float) -> None:
+        """Demonstration after mistakes: dots travel from the last lit star."""
 
-        # Stars.
-        sprite = self._ensure_star_sprite(STAR_RADIUS)
-        for index in range(round_state.star_count):
-            center = self.star_center(round_state, index)
-            connected = index in round_state.connected
-            is_next = (not celebrating) and index == round_state.next_star
+        if motion.trail is None:
+            return
+        start_index, end_index, started = motion.trail
+        age = now - started
+        a = self.star_centre(round_, start_index)
+        b = self.star_centre(round_, end_index)
+        distance = math.dist(a, b)
+        dots = max(2, int(distance // 26))
+        shown = int(dots * min(1.0, age / TRAIL_SECONDS))
+        for step in range(1, shown):
+            t = step / dots
+            centre = (int(a[0] + (b[0] - a[0]) * t), int(a[1] + (b[1] - a[1]) * t))
+            pygame.draw.circle(target, INK, centre, 7)
+            pygame.draw.circle(target, LINE_GLOW, centre, 5)
 
-            if connected:
-                sprite_rect = sprite.get_rect(center=center)
-                surface.blit(sprite, sprite_rect)
-            else:
-                dim = pygame.Surface((STAR_RADIUS * 2, STAR_RADIUS * 2), pygame.SRCALPHA)
-                base_alpha = 150
-                if is_next:
-                    base_alpha = 190 + round(60 * pulse)
-                pygame.draw.circle(
-                    dim,
-                    (220, 228, 255, base_alpha),
-                    (STAR_RADIUS, STAR_RADIUS),
-                    STAR_RADIUS // 2 + 2,
-                )
-                surface.blit(dim, dim.get_rect(center=center))
-                if is_next:
-                    # Pulsing invitation halo: the next action is obvious.
-                    halo_radius = STAR_RADIUS + 8 + round(8 * pulse)
-                    pygame.draw.circle(
-                        surface,
-                        (255, 236, 150),
-                        center,
-                        halo_radius,
-                        width=4,
-                    )
-
-            # Big number label: the primary pre-reader instruction channel.
-            number_color = (30, 34, 60) if connected else (255, 255, 255)
-            label_size = 26 if connected else 30
-            label = self.typography.font(FontRole.DISPLAY, label_size).render(
-                str(index + 1), True, number_color
+    def _draw_stars(
+        self, target: pygame.Surface, round_: SkyRound, motion: SceneMotion, now: float, offset: tuple[int, int]
+    ) -> None:
+        appear_rank = {index: rank for rank, index in enumerate(motion.appear_order)}
+        for index in range(round_.star_count):
+            rank = appear_rank.get(index, 0)
+            appear = (now - motion.figure_started - APPEAR_STEP * rank) / APPEAR_SECONDS
+            if appear <= 0.0:
+                continue
+            lit = round_.is_lit(index)
+            big = (
+                appear < 1.0
+                or now - motion.pops.get(index, -10.0) < POP_SECONDS
+                or self._pulsing(motion, index, now)
             )
-            surface.blit(label, label.get_rect(center=center))
+            x, y = self.star_centre(round_, index, offset)
+            missed = False
+            if motion.wobble is not None and motion.wobble[0] == index:
+                elapsed = now - motion.wobble[1]
+                if elapsed < WOBBLE_SECONDS:
+                    missed = True
+                    x += int(9 * (1 - elapsed / WOBBLE_SECONDS) * math.sin(elapsed * 38))
+            if lit and motion.reveal_started is None:
+                target.blit(self.art.glow, self.art.glow.get_rect(center=(x, y)))
+            if missed:
+                target.blit(self.art.miss_ring, self.art.miss_ring.get_rect(center=(x, y)))
+            face = self.art.star_face(round_.label(index), lit=lit, size=STAR_POP_SIZE if big else STAR_SIZE)
+            target.blit(face, face.get_rect(center=(x, y)))
 
-            # Wrong tap feedback: soft wobble ring on the mistaken star.
-            if wrong_star == index and wrong_age < 0.6:
-                wobble = math.sin(wrong_age * 26) * 5 * (1.0 - wrong_age / 0.6)
-                offset_center = (center[0] + round(wobble), center[1])
-                pygame.draw.circle(
-                    surface,
-                    (255, 170, 150),
-                    offset_center,
-                    STAR_TAP_RADIUS - 8,
-                    width=4,
-                )
+    @staticmethod
+    def _pulsing(motion: SceneMotion, index: int, now: float) -> bool:
+        start = motion.pulses.get(index)
+        if start is None and motion.trail is not None and motion.trail[1] == index:
+            start = motion.trail[2] + TRAIL_SECONDS
+        if start is None:
+            return False
+        age = now - start
+        return 0.0 <= age < PULSE_SECONDS and int(age / 0.22) % 2 == 0
 
-        # Celebration: whole figure glows and breathes.
-        if celebrating:
-            glow_alpha = 120 + round(70 * pulse)
-            glow = pygame.Surface(size, pygame.SRCALPHA)
-            for index in range(round_state.star_count):
-                center = self.star_center(round_state, index)
-                pygame.draw.circle(glow, (255, 240, 170, glow_alpha), center, STAR_RADIUS + 14)
-            surface.blit(glow, (0, 0))
-            if name_text:
-                self._draw_name_banner(surface, name_text)
+    def _draw_band(self, target: pygame.Surface, band: Band) -> None:
+        if band.fact:
+            bubble = self.art.fact_bubble(band.fact)
+            target.blit(bubble, bubble.get_rect(center=BAND_CENTER))
+        elif band.name:
+            plate = self.art.name_plate(band.name)
+            target.blit(plate, plate.get_rect(center=BAND_CENTER))
 
-        if show_next:
-            self._draw_next_button(surface, hovered_next)
+    def _draw_fx(self, target: pygame.Surface, motion: SceneMotion, now: float) -> None:
+        for name, position, start in motion.fx:
+            frames = self.art.fx_frames(name)
+            duration = _fx_seconds(name)
+            age = now - start
+            if not frames or age >= duration:
+                continue
+            frame = frames[min(len(frames) - 1, int(age / duration * len(frames)))]
+            dx, dy = FX_DRIFT.get(name, (0.0, 0.0))
+            k = age / duration
+            target.blit(frame, frame.get_rect(center=(int(position[0] + dx * k), int(position[1] + dy * k))))
 
-        self._draw_leo(surface, happy=leo_happy, now=now)
-        self._draw_fact_button(surface, now=now)
-        if fact_text:
-            self._draw_fact_bubble(surface, fact_text)
 
-    def _draw_name_banner(self, surface: pygame.Surface, name_text: str) -> None:
-        font = self.typography.font(FontRole.DISPLAY, 34)
-        label = font.render(name_text, True, (36, 44, 84))
-        banner = pygame.Surface(
-            (label.get_width() + 48, label.get_height() + 22), pygame.SRCALPHA
-        )
-        banner_rect = banner.get_rect()
-        pygame.draw.rect(banner, (253, 250, 240, 238), banner_rect, border_radius=18)
-        pygame.draw.rect(banner, (186, 214, 255, 255), banner_rect, width=3, border_radius=18)
-        banner.blit(label, label.get_rect(center=banner_rect.center))
-        surface.blit(banner, banner.get_rect(center=(SKY_RECT.centerx, SKY_RECT.top + 34)))
-
-    def _draw_next_button(self, surface: pygame.Surface, hovered: bool) -> None:
-        rect = NEXT_BUTTON_RECT.inflate(10 if hovered else 0, 10 if hovered else 0)
-        rect.center = NEXT_BUTTON_RECT.center
-        pygame.draw.rect(surface, (34, 197, 94), rect, border_radius=34)
-        pygame.draw.rect(surface, (255, 255, 255), rect, width=4, border_radius=34)
-        # Draw the play arrow as a polygon: the UI font has no triangle glyph.
-        center = rect.center
-        size = 26
-        points = (
-            (center[0] - size // 2 + 4, center[1] - size),
-            (center[0] - size // 2 + 4, center[1] + size),
-            (center[0] + size + 4, center[1]),
-        )
-        pygame.draw.polygon(surface, (255, 255, 255), points)
-
-    def _draw_leo(self, surface: pygame.Surface, *, happy: bool, now: float) -> None:
-        blink = (now % 4.2) < 0.16
-        if happy:
-            variant = "happy"
-        elif blink:
-            variant = "blink"
-        else:
-            variant = "default"
-        frame = self._leo(variant)
-        bob = round(math.sin(now * 1.6) * 3)
-        surface.blit(frame, frame.get_rect(center=(LEO_CENTER[0], LEO_CENTER[1] + bob)))
-
-    def _draw_fact_button(self, surface: pygame.Surface, *, now: float) -> None:
-        pulse = 0.5 + 0.5 * math.sin(now * 2.2)
-        radius = FACT_BUTTON_RADIUS + round(2 * pulse)
-        pygame.draw.circle(surface, (250, 246, 235), FACT_BUTTON_CENTER, radius)
-        pygame.draw.circle(surface, (234, 179, 8), FACT_BUTTON_CENTER, radius, width=4)
-        icon_size = FACT_BUTTON_RADIUS
-        icon = self._ensure_fact_icon(icon_size)
-        surface.blit(icon, icon.get_rect(center=FACT_BUTTON_CENTER))
-
-    def _draw_fact_bubble(self, surface: pygame.Surface, fact_text: str) -> None:
-        font = self.typography.font(FontRole.BODY, 22)
-        wrapped = self._wrap(fact_text, font, 560)
-        line_height = font.get_linesize()
-        bubble_w = max(font.size(line)[0] for line in wrapped) + 44
-        bubble_h = line_height * len(wrapped) + 30
-        bubble = pygame.Surface((bubble_w, bubble_h), pygame.SRCALPHA)
-        rect = bubble.get_rect()
-        pygame.draw.rect(bubble, (253, 250, 240, 242), rect, border_radius=20)
-        pygame.draw.rect(bubble, (101, 119, 170, 255), rect, width=3, border_radius=20)
-        for i, line in enumerate(wrapped):
-            rendered = font.render(line, True, (44, 52, 90))
-            bubble.blit(rendered, (22, 15 + i * line_height))
-        bubble_center = (
-            min(FACT_BUTTON_CENTER[0] - 40, REFERENCE_WIDTH - bubble_w // 2 - 20),
-            SKY_RECT.bottom - bubble_h // 2 - 8,
-        )
-        surface.blit(bubble, bubble.get_rect(center=bubble_center))
-
-    def _wrap(self, text: str, font: Any, max_width: int) -> tuple[str, ...]:
-        words = text.split()
-        lines: list[str] = []
-        current = ""
-        for word in words:
-            candidate = f"{current} {word}".strip()
-            if font.size(candidate)[0] <= max_width:
-                current = candidate
-            else:
-                if current:
-                    lines.append(current)
-                current = word
-        if current:
-            lines.append(current)
-        return tuple(lines) or (text,)
+__all__ = ["Band", "SceneMotion", "SkyCast", "SkyRenderer"]

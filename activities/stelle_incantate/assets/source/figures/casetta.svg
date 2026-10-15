@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 372" width="820" height="372">
+  <!-- Stelle Incantate: little house revealed by stars (300,330) (300,184) (410,62) (520,184) (520,330).
+       Sky-local space = the Activity's sky play area; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- peach light -> peach -->
+    <linearGradient id="casetta_wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FCEBDD"/>
+      <stop offset="1" stop-color="#F8D8BD"/>
+    </linearGradient>
+    <!-- coral light -> coral -->
+    <linearGradient id="casetta_roof" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="chimney" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <rect x="458" y="80" width="34" height="70" rx="5" fill="#C98136"/>
+    <rect x="452" y="72" width="46" height="16" rx="6" fill="#976433"/>
+  </g>
+  <g id="smoke" fill="#E8DDF7" opacity="0.55">
+    <circle cx="486" cy="50" r="12"/>
+    <circle cx="506" cy="30" r="9"/>
+  </g>
+  <g id="walls" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <rect x="300" y="184" width="220" height="146" fill="url(#casetta_wall)"/>
+    <path d="M300 318 H520" stroke="#C9A98C" stroke-width="2.5"/>
+  </g>
+  <g id="roof" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M280 192 L410 58 L540 192 Z" fill="url(#casetta_roof)"/>
+    <circle cx="410" cy="140" r="17" fill="#FFC234"/>
+    <path d="M410 124 V156 M394 140 H426" stroke="#976433" stroke-width="3"/>
+    <path d="M330 152 L398 82" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g id="window" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <rect x="322" y="212" width="66" height="56" rx="8" fill="#FFC234"/>
+    <path d="M355 214 V266 M324 240 H386" stroke="#976433" stroke-width="3"/>
+    <path d="M328 270 H382" stroke="#59B86A" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <g id="door" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M428 330 V262 C428 236 476 236 476 262 V330 Z" fill="#C98136"/>
+    <circle cx="466" cy="296" r="4" fill="#FFC234"/>
+  </g>
+</svg>

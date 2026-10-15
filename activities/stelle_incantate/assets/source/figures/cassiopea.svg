@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 372" width="820" height="372">
+  <!-- Stelle Incantate: Cassiopeia's W as the top of a queen's crown; stars (220,112) (318,214) (410,92) (504,214) (600,112).
+       Sky-local space = the Activity's sky play area; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- gold light -> gold -->
+    <linearGradient id="cassiopea_gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDE08A"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="410" cy="330" rx="170" ry="16" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="crown" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M220 112 L318 214 L410 92 L504 214 L600 112 L582 314 C480 330 340 330 238 314 Z" fill="url(#cassiopea_gold)"/>
+    <path d="M232 262 C340 278 480 278 590 262 L584 312 C480 328 340 328 238 312 Z" fill="#F59E0B"/>
+  </g>
+  <g id="gems" stroke="#4B372F" stroke-width="3" stroke-linejoin="round">
+    <circle cx="410" cy="292" r="15" fill="#D85683"/>
+    <path d="M318 278 L332 292 L318 306 L304 292 Z" fill="#4A91D8"/>
+    <path d="M502 278 L516 292 L502 306 L488 292 Z" fill="#4A91D8"/>
+    <circle cx="410" cy="200" r="20" fill="#44B8AE"/>
+    <circle cx="278" cy="226" r="11" fill="#D85683"/>
+    <circle cx="542" cy="226" r="11" fill="#D85683"/>
+  </g>
+  <g id="highlight" fill="none" stroke="#FFFFFF" stroke-linecap="round" opacity="0.7">
+    <path d="M248 150 L262 248" stroke-width="7"/>
+    <circle cx="404" cy="194" r="5" fill="#FFFFFF" stroke="none"/>
+  </g>
+</svg>

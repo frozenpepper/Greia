@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 372" width="820" height="372">
+  <!-- Stelle Incantate: Cygnus as a flying swan; stars tail (190,170) heart (396,188) head (620,236) wings (432,48) (360,326).
+       Sky-local space = the Activity's sky play area; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- cream -> lavender (swan white with a cool night shade) -->
+    <linearGradient id="cigno_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFBEB"/>
+      <stop offset="1" stop-color="#E8DDF7"/>
+    </linearGradient>
+  </defs>
+  <g id="wing_back" stroke="#7E6F8E" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M344 182 C360 120 392 74 432 48 C436 74 432 96 422 116 C430 126 424 140 410 146 C414 158 404 170 390 172 C384 180 370 186 344 182 Z" fill="url(#cigno_body)"/>
+    <path d="M300 178 C304 136 330 104 372 84 C384 110 374 130 360 140 C364 154 352 166 336 168 C330 178 318 182 300 178 Z" fill="#F3EEF8"/>
+  </g>
+  <g id="tail" stroke="#7E6F8E" stroke-width="3.5" stroke-linejoin="round" fill="#F3EEF8">
+    <path d="M232 166 C214 150 196 150 182 160 C196 166 196 176 182 184 C198 192 216 190 232 180 Z"/>
+  </g>
+  <g id="body" stroke="#7E6F8E" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M220 172 C240 146 330 140 410 156 C450 164 470 178 490 192 C540 214 580 220 604 220 C624 216 638 226 636 240 C628 252 608 254 592 248 C556 244 516 236 476 222 C440 222 410 230 370 230 C300 230 240 212 220 172 Z" fill="url(#cigno_body)"/>
+    <path d="M634 232 L672 246 L634 250 Z" fill="#F39A38" stroke="#4B372F"/>
+    <circle cx="620" cy="232" r="5" fill="#342C35" stroke="none"/>
+    <path d="M262 166 C310 154 370 156 420 166" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.85"/>
+  </g>
+  <g id="wing_front" stroke="#7E6F8E" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M330 214 C370 222 420 220 446 212 C432 260 404 300 360 326 C352 312 352 300 356 290 C340 290 332 278 336 264 C320 262 312 250 316 236 C312 228 318 220 330 214 Z" fill="url(#cigno_body)"/>
+    <path d="M372 238 C392 244 410 244 428 240 M366 264 C384 270 398 270 414 266" fill="none" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+</svg>

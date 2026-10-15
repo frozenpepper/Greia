@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 372" width="820" height="372">
+  <!-- Stelle Incantate: crossed-tail fish; stars tail top (210,96) belly (420,290) nose (610,190) back (420,92) tail bottom (210,286).
+       Sky-local space = the Activity's sky play area; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- orange light -> orange -->
+    <linearGradient id="pesce_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C288"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="tail" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M330 190 L210 96 C228 130 238 162 246 190 C238 220 228 252 210 286 Z" fill="#F46F61"/>
+  </g>
+  <g id="fins" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" fill="#F46F61">
+    <path d="M384 96 C410 64 450 64 470 100 Z"/>
+    <path d="M396 286 C420 318 452 316 466 284 Z"/>
+  </g>
+  <g id="body" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M318 190 C336 128 376 92 420 92 C510 92 584 140 610 190 C584 242 510 290 420 290 C376 290 336 252 318 190 Z" fill="url(#pesce_body)"/>
+    <path d="M400 150 C420 170 420 210 400 230 M450 140 C474 166 474 214 450 240" fill="none" stroke="#C0782A" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M520 172 C506 190 506 206 520 222" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <g id="face">
+    <circle cx="556" cy="168" r="16" fill="#FFFFFF" stroke="#4B372F" stroke-width="3"/>
+    <circle cx="560" cy="170" r="8" fill="#342C35"/>
+    <path d="M574 214 C584 220 594 218 600 210" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="538" cy="204" rx="10" ry="6" fill="#FDA4AF" opacity="0.55"/>
+  </g>
+  <g id="highlight">
+    <path d="M372 132 C392 112 414 104 440 104" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.7"/>
+  </g>
+</svg>

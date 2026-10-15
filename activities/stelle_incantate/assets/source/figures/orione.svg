@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 372" width="820" height="372">
+  <!-- Stelle Incantate: Orion the friendly sky giant; stars club (196,44) shoulders (296,124) (540,132) head (418,40)
+       shield (650,176) belt (520,230) (420,214) (320,222) feet (262,338) (566,338).
+       Sky-local space = the Activity's sky play area; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="orione_tunic" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="legs" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M340 270 L276 326 L298 344 L372 284 Z" fill="#F8D8BD"/>
+    <path d="M480 270 L548 326 L528 346 L452 286 Z" fill="#F8D8BD"/>
+    <path d="M276 322 C256 324 238 336 240 348 L300 348 L304 330 Z" fill="#976433"/>
+    <path d="M546 322 C566 324 586 336 584 348 L524 348 L522 330 Z" fill="#976433"/>
+  </g>
+  <g id="arms" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M300 112 L222 58 L206 78 L286 140 Z" fill="#F8D8BD"/>
+    <path d="M536 120 L636 160 L626 186 L528 150 Z" fill="#F8D8BD"/>
+  </g>
+  <g id="club" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M180 66 L150 8 C164 -2 182 -2 196 6 L208 56 Z" fill="#C98136"/>
+  </g>
+  <g id="tunic" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M296 124 C360 106 480 110 540 132 L520 222 L556 290 C470 306 350 306 268 290 L320 222 Z" fill="url(#orione_tunic)"/>
+    <path d="M312 206 C380 196 460 200 534 214 L530 240 C460 228 380 226 306 236 Z" fill="#FFC234"/>
+    <rect x="404" y="204" width="32" height="30" rx="6" fill="#F59E0B"/>
+    <path d="M330 132 C370 122 410 120 450 122" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g id="head" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <circle cx="418" cy="70" r="44" fill="#F8D8BD"/>
+    <path d="M374 66 C376 30 410 18 440 26 C460 32 470 48 462 66 C446 52 420 46 396 54 C388 58 380 64 374 66 Z" fill="#976433"/>
+    <circle cx="404" cy="80" r="5" fill="#342C35" stroke="none"/>
+    <circle cx="436" cy="80" r="5" fill="#342C35" stroke="none"/>
+    <path d="M408 98 C416 104 426 104 434 98" fill="none" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="392" cy="94" rx="8" ry="5" fill="#FDA4AF" stroke="none" opacity="0.55"/>
+    <ellipse cx="446" cy="94" rx="8" ry="5" fill="#FDA4AF" stroke="none" opacity="0.55"/>
+  </g>
+  <g id="shield" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <circle cx="650" cy="176" r="50" fill="#F46F61"/>
+    <circle cx="650" cy="176" r="30" fill="#FFDB85"/>
+  </g>
+</svg>

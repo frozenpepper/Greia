@@ -7,8 +7,8 @@ icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
 [presentation]
-categories = ["explore", "learn"]
-discovery_tags = ["nature", "numbers"]
+categories = ["learn", "explore"]
+discovery_tags = ["numbers", "nature"]
 
 [achievement_art]
 emblems = [
@@ -17,14 +17,19 @@ emblems = [
 ]
 
 [education]
-categories = ["number_recognition", "counting", "shape_recognition", "science_curiosity"]
+categories = ["early_math", "counting", "number_recognition", "science_curiosity"]
 difficulty = 2
 recommended_age_min = 4
-recommended_age_max = 7
+recommended_age_max = 6
+difficulty_min = 1
+difficulty_max = 6
+adaptive_difficulty = true
 skills = [
   { id = "math.number_order", weight = 3 },
-  { id = "science.astronomy_curiosity", weight = 2 },
-  { id = "cognitive.shape_completion", weight = 2 },
+  { id = "math.counting.count_on", weight = 2 },
+  { id = "math.counting.count_back", weight = 2 },
+  { id = "math.number_recognition", weight = 2 },
+  { id = "science.astronomy_curiosity", weight = 1 },
 ]
 events = [
   { id = "constellation.completed", kind = "completion" },
@@ -37,11 +42,11 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "pointer"
+profile = "hybrid"
 
 [requirements]
 required_capabilities = ["display", "pointer"]
-optional_capabilities = ["touch", "audio.basic"]
+optional_capabilities = ["touch", "keyboard", "audio.basic"]
 
 [permissions]
 requested = []

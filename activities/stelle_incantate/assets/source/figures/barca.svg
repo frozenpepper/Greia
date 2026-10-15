@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 372" width="820" height="372">
+  <!-- Stelle Incantate: sailing boat; stars keel (290,322) bow (196,236) mast foot (400,240) mast top (400,40)
+       sail corner (570,176) stern (636,248) keel (540,322).
+       Sky-local space = the Activity's sky play area; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- orange light -> orange (painted wood) -->
+    <linearGradient id="barca_hull" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C288"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="waves" fill="none" stroke="#89B8E6" stroke-width="5" stroke-linecap="round" opacity="0.8">
+    <path d="M220 344 C250 330 280 358 310 344 C340 330 370 358 400 344 C430 330 460 358 490 344 C520 330 550 358 580 344"/>
+  </g>
+  <g id="mast" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <rect x="392" y="32" width="16" height="214" rx="6" fill="#C98136"/>
+    <path d="M396 36 L344 48 L396 62 Z" fill="#F46F61"/>
+  </g>
+  <g id="sails" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M412 46 C480 90 540 140 570 176 L412 226 Z" fill="#FFFBEB"/>
+    <path d="M412 150 L520 158 L540 186 L412 210 Z" fill="#F46F61" stroke="none" opacity="0.85"/>
+    <path d="M388 70 C330 120 290 180 270 222 L388 224 Z" fill="#FFDB85"/>
+    <path d="M430 76 C470 104 500 130 520 150" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.8"/>
+  </g>
+  <g id="hull" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M196 236 L636 248 C620 278 584 312 540 322 L290 322 C246 306 212 274 196 236 Z" fill="url(#barca_hull)"/>
+    <path d="M214 262 C330 270 500 274 618 272" fill="none" stroke="#FFFBEB" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="320" cy="292" r="10" fill="#CFEAF7"/>
+    <circle cx="380" cy="294" r="10" fill="#CFEAF7"/>
+    <circle cx="440" cy="294" r="10" fill="#CFEAF7"/>
+  </g>
+</svg>

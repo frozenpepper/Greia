@@ -1,57 +1,66 @@
-"""Thin Greia composition root for Stelle Incantate."""
+"""Thin Greia composition root for Stelle Incantate (Enchanted Stars).
+
+``activity.toml`` points here. Real work lives in cohort modules: content
+(figure catalogue + geometry), model (pure rules), services (storage/events),
+art, renderer, controls, audio and the app lifecycle.
+"""
 
 from __future__ import annotations
 
 from pathlib import Path
-import time
+import random
 
 import pygame
 
+from greia_platform.activity_api import get_profile_locale
 from greia_platform.localization import LocalizedResources, activity_resources
+from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .sky_app import SkyActivity
     from .sky_audio import SkyAudio
-    from .sky_renderer import REFERENCE_HEIGHT, REFERENCE_WIDTH, SkyRenderer
-    from .sky_services import GreiaSkyEvents, GreiaSkyStorage
+    from .sky_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from .sky_model import Night, RoundFactory
+    from .sky_services import GreiaSkyEvents, GreiaSkyProgress
 else:
     from sky_app import SkyActivity
     from sky_audio import SkyAudio
-    from sky_renderer import REFERENCE_HEIGHT, REFERENCE_WIDTH, SkyRenderer
-    from sky_services import GreiaSkyEvents, GreiaSkyStorage
+    from sky_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from sky_model import Night, RoundFactory
+    from sky_services import GreiaSkyEvents, GreiaSkyProgress
 
 
-def _locale_and_resources() -> LocalizedResources:
-    return activity_resources(Path(__file__).resolve().parent)
+def _resources() -> LocalizedResources:
+    return activity_resources(Path(__file__).resolve().parent, requested_locale=get_profile_locale())
 
 
 def main() -> int:
     pygame.init()
     screen = pygame.display.get_surface()
     if screen is None:
-        screen = pygame.display.set_mode(
-            (REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE
-        )
+        screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
     pygame.mouse.set_visible(True)
 
-    resources = _locale_and_resources()
+    resources = _resources()
     typography = GreiaTypography()
-    renderer = SkyRenderer(typography, resources)
-    audio = SkyAudio()
-    events = GreiaSkyEvents()
-    storage = GreiaSkyStorage()
-
+    canvas = PygameReferenceCanvas(screen)
+    progress = GreiaSkyProgress()
+    night = Night(RoundFactory(random.Random()), progress.load())
     app = SkyActivity(
-        screen,
-        renderer,
-        audio,
-        events,
-        storage,
-        resources,
-        session_id=f"sky-{int(time.time()):06d}",
+        screen=screen,
+        canvas=canvas,
+        night=night,
+        typography=typography,
+        resources=resources,
+        audio=SkyAudio(locale=resources.context.selected.language, resources=resources),
+        progress=progress,
+        events=GreiaSkyEvents(),
     )
-    return app.run()
+    try:
+        return app.run()
+    finally:
+        pygame.quit()
 
 
 if __name__ == "__main__":

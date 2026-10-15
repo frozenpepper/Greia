@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 372" width="820" height="372">
+  <!-- Stelle Incantate: Leo the lion; stars tail (100,196) back (276,140) neck (470,152) mane (530,50)
+       face (650,92) jaw (664,206) chest (520,276) hip (300,270).
+       Sky-local space = the Activity's sky play area; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="leone_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDB85"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+    <!-- orange light -> orange -->
+    <linearGradient id="leone_mane" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C288"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="420" cy="344" rx="190" ry="13" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="tail" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M284 158 C230 150 190 214 138 204 C122 200 112 196 104 196" stroke="#4B372F" stroke-width="12"/>
+    <path d="M284 158 C230 150 190 214 138 204 C122 200 112 196 104 196" stroke="#FFC234" stroke-width="5"/>
+    <path d="M96 176 C76 186 76 208 98 216 C118 214 124 192 110 180 Z" fill="url(#leone_mane)"/>
+  </g>
+  <g id="legs" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" fill="#F2B22A">
+    <path d="M296 250 L292 334 C306 342 332 342 338 334 L344 254 Z"/>
+    <path d="M478 252 L478 334 C492 342 518 342 524 334 L528 252 Z"/>
+  </g>
+  <g id="body" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M300 270 C266 240 260 170 276 140 C350 128 430 134 476 156 L524 270 C450 292 360 292 300 270 Z" fill="url(#leone_body)"/>
+    <path d="M300 156 C350 146 400 146 440 154" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g id="mane" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M470 152 C462 100 494 56 530 50 C576 36 632 56 650 92 C688 118 690 176 664 206 C650 248 586 290 520 276 C482 262 462 206 470 152 Z" fill="url(#leone_mane)"/>
+  </g>
+  <g id="face" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <circle cx="582" cy="164" r="62" fill="url(#leone_body)"/>
+    <ellipse cx="594" cy="196" rx="30" ry="22" fill="#FFFBEB"/>
+    <path d="M582 180 L606 180 L594 194 Z" fill="#9A5A3E"/>
+    <circle cx="560" cy="150" r="7" fill="#342C35" stroke="none"/>
+    <circle cx="616" cy="150" r="7" fill="#342C35" stroke="none"/>
+    <path d="M584 206 C590 212 598 212 604 206" fill="none" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="546" cy="180" rx="10" ry="6" fill="#FDA4AF" stroke="none" opacity="0.55"/>
+    <ellipse cx="636" cy="180" rx="10" ry="6" fill="#FDA4AF" stroke="none" opacity="0.55"/>
+  </g>
+</svg>

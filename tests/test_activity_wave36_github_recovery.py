@@ -15,8 +15,6 @@ import pygame
 
 from activities.memory_meraviglie.memory_app import MemoryApp
 from activities.labirinto_magico.maze_app import MazeApp, MazeEngine
-from activities.stelle_incantate.sky_app import AppState, SkyActivity
-from activities.stelle_incantate.sky_model import SkySession
 
 
 def key(code: int) -> pygame.event.Event:
@@ -126,52 +124,11 @@ class MazeMovingLockTests(unittest.TestCase):
 # longer exists.
 
 
-class StarsKeyboardRecoveryTests(unittest.TestCase):
-    def make_app(self) -> SkyActivity:
-        app = SkyActivity.__new__(SkyActivity)
-        app.session = SkySession()
-        app._state = AppState.PLAYING
-        app._state_started = 0.0
-        app.selected_star_index = 0
-        app.audio = Mock()
-        app.events = Mock()
-        app.storage = Mock()
-        app.storage.load_completed.return_value = ()
-        app.resources = Mock()
-        app.resources.text.return_value = "A constellation"
-        app.clock = lambda: 10.0
-        app.session_id = "test"
-        app.completion = Mock()
-        app._line_progress = 1.0
-        app._wrong_star = None
-        app._fact_opened_for = None
-        return app
+# Stelle Incantate's keyboard-only figure and number-input recovery moved to
+# tests/test_activity_stelle_incantate.py (AppLoopTests) when the Activity was
+# reworked onto the shared control kit; the old SkySession/auto-focus app no
+# longer exists. Its "fact speech disallows foreign-language fallback" check was
+# retired: the owner's speech fallback policy (selected -> base -> English ->
+# silence) supersedes it.
 
-    def test_connect_star_round_and_advance_keyboard_only(self) -> None:
-        app = self.make_app()
-        expected = app.session.current.star_count
-        for idx in range(expected):
-            self.assertEqual(app.selected_star_index, idx)
-            app._handle_keydown(pygame.K_RETURN)
-        self.assertEqual(app._state, AppState.CELEBRATE)
-        app._state_started = 0.0
-        app._handle_keydown(pygame.K_SPACE)
-        self.assertEqual(app._state, AppState.PLAYING)
-        self.assertEqual(app.selected_star_index, 0)
-        app.events.constellation_completed.assert_called_once()
 
-    def test_number_shortcut_cannot_leave_selection_outside_star_array(self) -> None:
-        app = self.make_app()
-        count = app.session.current.star_count
-        app._handle_keydown(pygame.K_9)
-        if count < 9:
-            self.assertEqual(app.selected_star_index, 0)
-            self.assertEqual(len(app.session.current.connected), 0)
-
-    def test_fact_speech_disallows_foreign_language_fallback(self) -> None:
-        app = self.make_app()
-        app.resources.audio_cue.return_value = None
-        app._handle_keydown(pygame.K_f)
-        app.resources.audio_cue.assert_called_once_with(
-            app.session.current.constellation.fact_key, allow_fallback=False
-        )

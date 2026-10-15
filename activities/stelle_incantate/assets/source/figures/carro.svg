@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 372" width="820" height="372">
+  <!-- Stelle Incantate: the Great Bear; the Big Dipper's handle is its tail and the bowl its back.
+       Stars (110,110) (220,146) (318,186) (412,180) (570,150) (586,262) (432,282).
+       Sky-local space = the Activity's sky play area; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- bear light (mix brown 40% white) -> brown (orange mixed 35% ink) -->
+    <linearGradient id="carro_fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D4AD86"/>
+      <stop offset="1" stop-color="#B87735"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="510" cy="344" rx="130" ry="12" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="tail" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" fill="url(#carro_fur)">
+    <path d="M424 172 C380 170 320 176 260 156 C200 136 150 112 104 98 C92 104 96 120 110 124 C160 136 210 158 258 178 C320 200 380 206 420 204 Z"/>
+  </g>
+  <g id="legs" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" fill="#A86E33">
+    <path d="M420 270 L416 334 C430 342 452 342 460 334 L462 276 Z"/>
+    <path d="M540 274 L536 334 C550 342 572 342 580 334 L586 268 Z"/>
+  </g>
+  <g id="body" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M404 196 C410 160 470 140 570 146 C620 150 626 232 596 266 C560 296 470 298 432 288 C404 280 396 230 404 196 Z" fill="url(#carro_fur)"/>
+    <path d="M444 162 C480 150 520 146 556 150" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g id="head" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <circle cx="612" cy="132" r="18" fill="#B87735"/>
+    <circle cx="684" cy="132" r="18" fill="#B87735"/>
+    <circle cx="612" cy="132" r="8" fill="#F8D8BD" stroke="none"/>
+    <circle cx="684" cy="132" r="8" fill="#F8D8BD" stroke="none"/>
+    <circle cx="648" cy="176" r="52" fill="url(#carro_fur)"/>
+    <ellipse cx="668" cy="198" rx="28" ry="20" fill="#FFFBEB"/>
+    <ellipse cx="676" cy="190" rx="9" ry="7" fill="#342C35" stroke="none"/>
+    <circle cx="636" cy="164" r="6" fill="#342C35" stroke="none"/>
+    <circle cx="672" cy="160" r="6" fill="#342C35" stroke="none"/>
+    <path d="M664 208 C670 214 680 214 686 208" fill="none" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="624" cy="190" rx="9" ry="6" fill="#FDA4AF" stroke="none" opacity="0.55"/>
+  </g>
+</svg>

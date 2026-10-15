@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 372" width="820" height="372">
+  <!-- Stelle Incantate: rocket; stars nose (410,30) shoulders (484,132) (336,132) fin tips (566,330) (254,330) base (472,262) (348,262).
+       Sky-local space = the Activity's sky play area; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- cream -> sand -->
+    <linearGradient id="razzo_body" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFBEB"/>
+      <stop offset="1" stop-color="#EEDDBA"/>
+    </linearGradient>
+    <!-- coral light -> coral -->
+    <linearGradient id="razzo_red" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="flame" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M362 262 C362 300 386 330 410 360 C434 330 458 300 458 262 Z" fill="#F39A38"/>
+    <path d="M386 262 C386 290 398 310 410 330 C422 310 434 290 434 262 Z" fill="#FFC234" stroke="none"/>
+  </g>
+  <g id="fins" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" fill="url(#razzo_red)">
+    <path d="M478 156 L566 330 L472 262 Z"/>
+    <path d="M342 156 L254 330 L348 262 Z"/>
+  </g>
+  <g id="body" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M336 132 C340 90 370 52 410 30 C450 52 480 90 484 132 C490 180 482 230 472 262 L348 262 C338 230 330 180 336 132 Z" fill="url(#razzo_body)"/>
+    <path d="M336 132 C340 90 370 52 410 30 C450 52 480 90 484 132 C440 120 380 120 336 132 Z" fill="url(#razzo_red)"/>
+    <rect x="356" y="244" width="108" height="22" rx="8" fill="#9464C9"/>
+    <circle cx="410" cy="182" r="32" fill="#4A91D8"/>
+    <circle cx="410" cy="182" r="22" fill="#CFEAF7" stroke="none"/>
+    <path d="M398 172 C402 166 408 164 414 164" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+    <path d="M356 150 C352 180 354 214 360 238" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.7"/>
+  </g>
+</svg>

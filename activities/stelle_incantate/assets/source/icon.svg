@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Stelle Incantate icon: a round night window with stars 1, 2, 3 joined in order (learn tile = orange). -->
+  <defs>
+    <!-- orange light (mix 35% white) -> orange -->
+    <linearGradient id="stelle_icon_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BE81"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+    <!-- navy light (mix 12% white) -> navy -->
+    <linearGradient id="stelle_icon_sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3B4F6B"/>
+      <stop offset="1" stop-color="#253B59"/>
+    </linearGradient>
+    <!-- gold light -> gold -->
+    <linearGradient id="stelle_icon_star" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDE08A"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+  </defs>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#stelle_icon_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="128" cy="222" rx="84" ry="9" fill="#9A5F2C" opacity="0.18"/>
+  </g>
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="128" cy="124" r="96" fill="url(#stelle_icon_sky)" stroke-width="5"/>
+    <path d="M196 54 A20 20 0 1 0 196 92 A16 16 0 0 1 196 54 Z" fill="#FFF1C2" stroke="#E9C46A" stroke-width="3"/>
+    <path d="M74 160 L126 98 L184 146" fill="none" stroke-width="12"/>
+    <path d="M74 160 L126 98 L184 146" fill="none" stroke="#FFE7A6" stroke-width="5"/>
+    <path d="M74.0 126.0 L84.0 146.2 L106.3 149.5 L90.2 165.3 L94.0 187.5 L74.0 177.0 L54.0 187.5 L57.8 165.3 L41.7 149.5 L64.0 146.2 Z" fill="url(#stelle_icon_star)" stroke-width="4.5"/>
+    <path d="M126.0 64.0 L136.0 84.2 L158.3 87.5 L142.2 103.3 L146.0 125.5 L126.0 115.0 L106.0 125.5 L109.8 103.3 L93.7 87.5 L116.0 84.2 Z" fill="url(#stelle_icon_star)" stroke-width="4.5"/>
+    <path d="M184.0 112.0 L194.0 132.2 L216.3 135.5 L200.2 151.3 L204.0 173.5 L184.0 163.0 L164.0 173.5 L167.8 151.3 L151.7 135.5 L174.0 132.2 Z" fill="#FFFBEB" stroke-width="4.5"/>
+  </g>
+  <g id="numerals" fill="none" stroke="#3D2C1F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M70 156 L76 152 L76 173"/>
+    <path d="M120 96 C120 89 133 88 133 96 C133 102 120 105 120 111 L134 111"/>
+    <path d="M178 139 L190 139 L184 147 C191 147 193 152 191 156 C189 160 181 161 177 157"/>
+  </g>
+  <g id="accent" fill="#FFFBEB" stroke="none">
+    <circle cx="70" cy="80" r="3.5"/>
+    <circle cx="96" cy="196" r="3"/>
+    <circle cx="168" cy="200" r="3.5"/>
+    <path d="M58 112 L61 120 L69 123 L61 126 L58 134 L55 126 L47 123 L55 120 Z" opacity="0.9"/>
+  </g>
+</svg>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 372" width="820" height="372">
+  <!-- Stelle Incantate: butterfly; stars head (410,112) antennae (340,36) (480,36) wing tips (620,62) (600,322) (220,322) (200,62)
+       waists (526,196) (294,196) tail (410,304) body (410,208).
+       Sky-local space = the Activity's sky play area; recipe docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- grape light -> grape -->
+    <linearGradient id="farfalla_top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BE9EE0"/>
+      <stop offset="1" stop-color="#9464C9"/>
+    </linearGradient>
+    <!-- raspberry light -> raspberry -->
+    <linearGradient id="farfalla_low" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EA9AB6"/>
+      <stop offset="1" stop-color="#D85683"/>
+    </linearGradient>
+  </defs>
+  <g id="antennae" fill="none" stroke="#4B372F" stroke-width="4" stroke-linecap="round">
+    <path d="M400 104 C390 74 370 50 340 36"/>
+    <path d="M420 104 C430 74 450 50 480 36"/>
+  </g>
+  <g id="wings" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M414 130 C470 80 560 52 620 62 C640 120 590 176 526 196 C480 204 440 200 414 196 Z" fill="url(#farfalla_top)"/>
+    <path d="M406 130 C350 80 260 52 200 62 C180 120 230 176 294 196 C340 204 380 200 406 196 Z" fill="url(#farfalla_top)"/>
+    <path d="M414 206 C460 196 500 194 526 196 C580 220 610 280 600 322 C540 334 460 318 414 290 Z" fill="url(#farfalla_low)"/>
+    <path d="M406 206 C360 196 320 194 294 196 C240 220 210 280 220 322 C280 334 360 318 406 290 Z" fill="url(#farfalla_low)"/>
+  </g>
+  <g id="spots" stroke="#4B372F" stroke-width="3" fill="#FFC234">
+    <circle cx="552" cy="114" r="20"/>
+    <circle cx="268" cy="114" r="20"/>
+    <circle cx="540" cy="262" r="14" fill="#FFFBEB"/>
+    <circle cx="280" cy="262" r="14" fill="#FFFBEB"/>
+  </g>
+  <g id="body" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <ellipse cx="410" cy="210" rx="20" ry="98" fill="#6A5147"/>
+    <circle cx="410" cy="112" r="26" fill="#6A5147"/>
+    <circle cx="401" cy="108" r="4.5" fill="#FFFFFF" stroke="none"/>
+    <circle cx="419" cy="108" r="4.5" fill="#FFFFFF" stroke="none"/>
+  </g>
+  <g id="highlight">
+    <path d="M466 96 C500 80 540 72 580 72" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+  </g>
+</svg>
