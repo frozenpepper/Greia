@@ -1,279 +1,432 @@
-"""Pure domain model for Il Bosco dei Numeri di Tito (no pygame dependencies)."""
+"""Numeral catalogue and forest-walk model for Tito's Number Forest.
+
+One core experience: *meet a numeral, find it, write it, show it*. A forest
+walk takes a small teaching group of numerals (two). For each numeral Tito
+counts its forest friends into a frame and says the number (MEET); the child
+finds the numeral among a few numeral tiles (FIND), traces it stroke by stroke
+(TRACE), then picks the frame that holds that many forest things (SHOW) — the
+link from the written numeral back to its quantity. Two review finds close the
+walk. Numerals are introduced 1–2, 3–4, 5 with 0, 6–7, 8–9, then 10, and the
+stages of the same loop get harder:
+
+* groups 1–2: two numeral tiles that look different, two frames far apart;
+* groups 3–4: three numeral tiles, two frames closer together;
+* group 5 onwards: three tiles with a look-alike decoy (6/9, 1/7, 2/5 …) and
+  three frames one or two apart;
+* after 10: review walks of the two numerals the child has traced least.
+
+Numerals are language-neutral; only the spoken names come from the
+Activity's approved clips. Pure logic: no Pygame import.
+"""
 
 from __future__ import annotations
 
-import math
-import random
 from dataclasses import dataclass, field
+from enum import StrEnum
+import random
+from typing import Final, Sequence
 
-if __package__:
-    from .bosco_content import ForestItemKind, NUMBERS_1_TO_10
-else:
-    from bosco_content import ForestItemKind, NUMBERS_1_TO_10
-
-
-@dataclass
-class CountableForestItem:
-    """An interactive item in the forest clearing."""
-
-    item_id: int
-    kind: ForestItemKind
-    x: float
-    y: float
-    slot_x: float = 0.0
-    slot_y: float = 0.0
-    radius: float = 44.0
-    counted: bool = False
-    order_counted: int = 0
-    pulse_timer: float = 0.0
-    fly_progress: float = 0.0  # 0.0 in forest -> 1.0 in Ten-Frame
-    giggle_timer: float = 0.0
-
-    @property
-    def current_pos(self) -> tuple[float, float]:
-        if self.fly_progress <= 0.0:
-            return (self.x, self.y)
-        if self.fly_progress >= 1.0:
-            return (self.slot_x, self.slot_y)
-        t = self.fly_progress
-        # Smooth ease-in-out curve with a gentle hop arc
-        ease_t = 0.5 - 0.5 * math.cos(math.pi * t)
-        cur_x = self.x + (self.slot_x - self.x) * ease_t
-        cur_y = self.y + (self.slot_y - self.y) * ease_t - 50.0 * math.sin(math.pi * t)
-        return (cur_x, cur_y)
+REFERENCE_WIDTH: Final[int] = 1024
+REFERENCE_HEIGHT: Final[int] = 600
+REVIEW_FINDS: Final[int] = 2
+WALK_NUMERALS: Final[int] = 2
+MAX_VALUE: Final[int] = 10
 
 
-@dataclass
-class BoscoModel:
-    """State machine for 1-to-10 counting and number recognition."""
+@dataclass(frozen=True, slots=True)
+class NumeralItem:
+    """One numeral with the forest friend that shows its quantity.
 
-    current_number: int = 1
-    mode: str = "count"  # "count" | "guess"
-    items: list[CountableForestItem] = field(default_factory=list)
-    counted_count: int = 0
-    celebrating: bool = False
-    pending_celebration: bool = False
-    celebration_delay: float = 0.0
-    celebration_timer: float = 0.0
-    total_completed: int = 0
-    tito_mood: str = "neutral"
-    tito_jump: float = 0.0
+    ``creature`` is a shared visual ID (``creature.woodland.*`` or
+    ``prop.nature.*``); ``color`` is a theme accent token for the numeral ink.
+    For 0 the creature appears only on the other frames of a SHOW step.
+    """
 
-    # Guess challenge state
-    guess_target: int = 1
-    guess_options: list[int] = field(default_factory=list)
-    guess_wobble_card: int | None = None
-    guess_wobble_timer: float = 0.0
-    guess_solved: bool = False
-    guess_solved_timer: float = 0.0
-    advance_guess_round: bool = False
-    auto_advanced: bool = False
+    value: int
+    creature: str
+    color: str
 
-    ripple_effects: list[tuple[float, float, float]] = field(default_factory=list)
+
+NUMERALS: Final[tuple[NumeralItem, ...]] = (
+    NumeralItem(0, "prop.nature.pinecone", "grape"),
+    NumeralItem(1, "creature.woodland.bear", "coral"),
+    NumeralItem(2, "creature.woodland.deer", "ocean"),
+    NumeralItem(3, "creature.woodland.squirrel", "orange"),
+    NumeralItem(4, "creature.woodland.hedgehog", "leaf"),
+    NumeralItem(5, "creature.woodland.frog", "raspberry"),
+    NumeralItem(6, "creature.woodland.ladybird", "turquoise"),
+    NumeralItem(7, "creature.woodland.snail", "grape"),
+    NumeralItem(8, "creature.woodland.butterfly", "coral"),
+    NumeralItem(9, "prop.nature.mushroom", "ocean"),
+    NumeralItem(10, "prop.nature.acorn", "orange"),
+)
+NUMERAL_BY_VALUE: Final[dict[int, NumeralItem]] = {item.value: item for item in NUMERALS}
+
+# Teaching order: small numbers first, zero once "none" can be contrasted with
+# real quantities, ten last (it is written with two digits the child knows).
+TEACHING_GROUPS: Final[tuple[tuple[int, ...], ...]] = ((1, 2), (3, 4), (5, 0), (6, 7), (8, 9), (10,))
+
+# Numerals children confuse when reading or writing them.
+LOOK_ALIKES: Final[dict[int, tuple[int, ...]]] = {
+    0: (6, 8, 9),
+    1: (7, 4),
+    2: (5, 7),
+    3: (8, 5),
+    4: (1, 9),
+    5: (2, 3, 6),
+    6: (9, 0, 5),
+    7: (1, 2),
+    8: (3, 0),
+    9: (6, 4),
+    10: (1, 0),
+}
+
+
+@dataclass(frozen=True, slots=True)
+class Stage:
+    """How hard the finds and frames of one teaching group are."""
+
+    find_tiles: int
+    look_alike: bool
+    show_cards: int
+    min_gap: int
+    max_gap: int
+
+
+def stage_for(group: int) -> Stage:
+    if group < 2:
+        return Stage(2, False, 2, 2, 4)
+    if group < 4:
+        return Stage(3, False, 2, 2, 3)
+    return Stage(3, True, 3, 1, 2)
+
+
+class StepKind(StrEnum):
+    MEET = "meet"
+    FIND = "find"
+    TRACE = "trace"
+    SHOW = "show"
+    REVIEW = "review"
+
+
+@dataclass(frozen=True, slots=True)
+class ForestStep:
+    """One step of a walk.
+
+    FIND/REVIEW ``choices`` are numeral values on tiles; SHOW ``choices`` are
+    quantities in frames. ``choices[correct_index]`` is always the numeral.
+    """
+
+    kind: StepKind
+    numeral: NumeralItem
+    choices: tuple[int, ...] = ()
+    correct_index: int = 0
 
     def __post_init__(self) -> None:
-        self.setup_number(self.current_number)
+        if self.is_choice:
+            if not 2 <= len(self.choices) <= 3:
+                raise ValueError("a choice step needs two or three options")
+            if len(set(self.choices)) != len(self.choices):
+                raise ValueError("options must be distinct")
+            if any(not 0 <= value <= MAX_VALUE for value in self.choices):
+                raise ValueError("options must be numerals 0-10")
+            if self.choices[self.correct_index] != self.numeral.value:
+                raise ValueError("the correct option must show the numeral")
 
-    def setup_number(self, num: int) -> None:
-        """Populate the clearing with items for the selected number (1..10)."""
-        self.current_number = max(1, min(10, num))
-        self.counted_count = 0
-        self.celebrating = False
-        self.pending_celebration = False
-        self.celebration_delay = 0.0
-        self.celebration_timer = 0.0
-        self.tito_mood = "neutral"
-        self.tito_jump = 0.0
-        self.ripple_effects.clear()
+    @property
+    def is_find(self) -> bool:
+        return self.kind in {StepKind.FIND, StepKind.REVIEW}
 
-        num_def = NUMBERS_1_TO_10[self.current_number - 1]
-        slot_positions = self._calculate_ten_frame_slots()
-        forest_positions = self._generate_forest_positions(self.current_number)
+    @property
+    def is_choice(self) -> bool:
+        return self.kind in {StepKind.FIND, StepKind.REVIEW, StepKind.SHOW}
 
-        self.items = [
-            CountableForestItem(
-                item_id=i,
-                kind=num_def.kind,
-                x=forest_positions[i][0],
-                y=forest_positions[i][1],
-                slot_x=slot_positions[i][0],
-                slot_y=slot_positions[i][1],
-            )
-            for i in range(self.current_number)
-        ]
+    @property
+    def counts_as_task(self) -> bool:
+        return self.kind is not StepKind.MEET
 
-    def _calculate_ten_frame_slots(self) -> list[tuple[float, float]]:
-        """Ten-frame: 2 rows of 5 slots located at the bottom-center."""
-        slots = []
-        # Center horizontally: frame width ~520px (5 columns of 95px, 2 rows of 60px)
-        start_x = 240.0
-        slot_spacing_x = 95.0
-        row_y_top = 460.0
-        row_y_bottom = 530.0
 
-        for col in range(5):
-            slots.append((start_x + col * slot_spacing_x, row_y_top))
-        for col in range(5):
-            slots.append((start_x + col * slot_spacing_x, row_y_bottom))
-        return slots
+@dataclass(frozen=True, slots=True)
+class ChoiceResult:
+    correct: bool
+    errors: int
+    round_complete: bool = False
 
-    def _generate_forest_positions(self, count: int) -> list[tuple[float, float]]:
-        """Generate safe, well-spaced coordinates in the open forest clearing."""
-        # Safe clearing bounds: x in [140, 780], y in [180, 390]
-        # Keep clear of Tito on the right (~890) and Home button on the top-left
-        positions: list[tuple[float, float]] = []
-        min_dist = 85.0 if count > 6 else 105.0
 
-        for i in range(count):
-            placed = False
-            for _ in range(80):
-                rx = random.uniform(140.0, 780.0)
-                ry = random.uniform(180.0, 390.0)
-                if all(math.hypot(rx - px, ry - py) >= min_dist for px, py in positions):
-                    positions.append((rx, ry))
-                    placed = True
-                    break
-            if not placed:
-                # Fallback grid layout if random placement is crowded
-                col = i % 5
-                row = i // 5
-                positions.append((180.0 + col * 130.0, 210.0 + row * 110.0))
-        return positions
+@dataclass(slots=True)
+class _StepProgress:
+    errors: int = 0
+    hints: int = 0
+    eliminated: set[int] = field(default_factory=set)
 
-    def setup_guess_round(self, target: int | None = None) -> None:
-        """Prepare a number recognition challenge."""
-        prev_target = getattr(self, "guess_target", None)
-        if target is not None:
-            self.guess_target = max(1, min(10, target))
-        else:
-            candidates = [n for n in range(1, 11) if n != prev_target]
-            self.guess_target = random.choice(candidates) if candidates else random.randint(1, 10)
 
-        # 3 options including target
-        pool = [n for n in range(1, 11) if n != self.guess_target]
-        distractors = random.sample(pool, 2)
-        options = [self.guess_target, distractors[0], distractors[1]]
-        random.shuffle(options)
-        self.guess_options = options
-        self.guess_wobble_card = None
-        self.guess_wobble_timer = 0.0
-        self.guess_solved = False
-        self.guess_solved_timer = 0.0
-        self.advance_guess_round = False
-        self.tito_mood = "neutral"
-        self.mode = "guess"
+class WalkPlanner:
+    """Build forest walks: which numerals, in which order, with which decoys."""
 
-    def handle_tap(self, x: float, y: float) -> tuple[str, int]:
-        """Process tap on an item in count mode.
+    def __init__(self, rng: random.Random) -> None:
+        self._rng = rng
 
-        Returns (outcome, count_number):
-        - ("counted", N): item successfully counted as N
-        - ("already_counted", 0): tapped an item already placed
-        - ("miss", 0): empty space tapped
+    @property
+    def group_count(self) -> int:
+        return len(TEACHING_GROUPS)
+
+    def numerals_for(self, group: int, traced: dict[int, int] | None = None) -> tuple[NumeralItem, ...]:
+        """Numerals of teaching ``group``; a short group gains a practised one.
+
+        Past the last group, a review walk takes the least-traced numerals.
         """
-        for item in reversed(self.items):
-            cur_x, cur_y = item.current_pos
-            if math.hypot(x - cur_x, y - cur_y) <= item.radius + 15.0:
-                if not item.counted:
-                    self.counted_count += 1
-                    item.counted = True
-                    item.order_counted = self.counted_count
-                    item.pulse_timer = 0.5
-                    self.tito_mood = "happy"
-                    self.tito_jump = 0.35
 
-                    if self.counted_count >= self.current_number:
-                        self.pending_celebration = True
-                        self.celebration_delay = 1.0  # 1.0s delay so number audio speaks fully
+        counts = traced or {}
+        values: list[int] = list(TEACHING_GROUPS[group]) if 0 <= group < len(TEACHING_GROUPS) else []
+        if len(values) < WALK_NUMERALS:
+            known = self._known_before(group) if values else tuple(NUMERAL_BY_VALUE)
+            pool = [value for value in known if value not in values]
+            self._rng.shuffle(pool)
+            pool.sort(key=lambda value: counts.get(value, 0))  # least practised first (stable)
+            values.extend(pool[: WALK_NUMERALS - len(values)])
+        return tuple(NUMERAL_BY_VALUE[value] for value in values)
 
-                    return ("counted", self.counted_count)
-                else:
-                    item.giggle_timer = 0.3
-                    return ("already_counted", 0)
+    def build(self, group: int, traced: dict[int, int] | None = None) -> tuple[ForestStep, ...]:
+        numerals = self.numerals_for(group, traced)
+        stage = stage_for(group)
+        # Decoys prefer numerals the child has met (this group, then earlier).
+        pool = tuple(item.value for item in numerals) + self._known_before(group)
+        steps: list[ForestStep] = []
+        last_slot = -1
+        for item in numerals:
+            steps.append(ForestStep(StepKind.MEET, item))
+            find, last_slot = self._find(StepKind.FIND, item, stage, pool, last_slot)
+            steps.append(find)
+            steps.append(ForestStep(StepKind.TRACE, item))
+            show, last_slot = self._show(item, stage, pool, last_slot)
+            steps.append(show)
+        for target in self._review_targets(numerals):
+            review, last_slot = self._find(StepKind.REVIEW, target, stage, pool, last_slot)
+            steps.append(review)
+        return tuple(steps)
 
-        self.ripple_effects.append((x, y, 0.0))
-        return ("miss", 0)
+    # -- helpers ---------------------------------------------------------------
+    def _known_before(self, group: int) -> tuple[int, ...]:
+        upto = max(0, min(group, len(TEACHING_GROUPS)))
+        return tuple(value for values in TEACHING_GROUPS[:upto] for value in values)
 
-    def handle_guess_tap(self, chosen_num: int) -> bool:
-        """Process child choice in guess mode."""
-        if self.guess_solved:
-            return False
-        if chosen_num == self.guess_target:
-            self.guess_solved = True
-            self.guess_solved_timer = 1.8
-            self.tito_mood = "happy"
-            self.tito_jump = 0.5
-            self.total_completed += 1
-            return True
-        else:
-            self.guess_wobble_card = chosen_num
-            self.guess_wobble_timer = 0.4
-            self.tito_mood = "surprised"
-            return False
+    def _review_targets(self, numerals: Sequence[NumeralItem]) -> list[NumeralItem]:
+        """Review numerals in a new order; never the numeral just written first."""
 
-    def next_number(self) -> None:
-        nxt = 1 if self.current_number >= 10 else self.current_number + 1
-        self.setup_number(nxt)
+        order = list(numerals)
+        self._rng.shuffle(order)
+        if len(order) > 1 and order[0].value == numerals[-1].value:
+            order.append(order.pop(0))
+        while len(order) < REVIEW_FINDS:
+            order.append(self._rng.choice(list(numerals)))
+        return order[:REVIEW_FINDS]
 
-    def prev_number(self) -> None:
-        prv = 10 if self.current_number <= 1 else self.current_number - 1
-        self.setup_number(prv)
+    def _place(self, target: int, decoys: Sequence[int], last_slot: int) -> tuple[tuple[int, ...], int]:
+        """Insert the answer at a random slot, never the previous answer's slot."""
 
-    def update(self, dt: float) -> None:
-        """Advance animations and celebration timers."""
-        # Tito jump & mood
-        if self.tito_jump > 0.0:
-            self.tito_jump = max(0.0, self.tito_jump - dt)
-            if self.tito_jump == 0.0 and not self.celebrating:
-                self.tito_mood = "neutral"
+        options = [slot for slot in range(len(decoys) + 1) if slot != last_slot] or [0]
+        slot = self._rng.choice(options)
+        ordered = list(decoys)
+        ordered.insert(slot, target)
+        return tuple(ordered), slot
 
-        # Item pulse / fly physics
-        for item in self.items:
-            if item.pulse_timer > 0.0:
-                item.pulse_timer = max(0.0, item.pulse_timer - dt)
-            if item.giggle_timer > 0.0:
-                item.giggle_timer = max(0.0, item.giggle_timer - dt)
-            if item.counted and item.fly_progress < 1.0:
-                item.fly_progress = min(1.0, item.fly_progress + dt * 2.2)
+    def _find(
+        self, kind: StepKind, target: NumeralItem, stage: Stage, pool: Sequence[int], last_slot: int
+    ) -> tuple[ForestStep, int]:
+        decoys = self._find_decoys(target.value, stage.find_tiles - 1, stage.look_alike, pool)
+        choices, slot = self._place(target.value, decoys, last_slot)
+        return ForestStep(kind, target, choices, slot), slot
 
-        # Pending celebration delay (so spoken number is never cut off)
-        if self.pending_celebration:
-            self.celebration_delay -= dt
-            if self.celebration_delay <= 0.0:
-                self.pending_celebration = False
-                self.celebrating = True
-                self.celebration_timer = 3.2
-                self.tito_mood = "happy"
-                self.tito_jump = 0.6
-                self.total_completed += 1
+    def _find_decoys(self, target: int, wanted: int, look_alike: bool, pool: Sequence[int]) -> list[int]:
+        similar = [value for value in LOOK_ALIKES.get(target, ()) if value != target]
+        picked: list[int] = []
+        if look_alike and similar:
+            picked.append(self._rng.choice(similar))
+        preferred = [value for value in dict.fromkeys(pool) if value != target and value not in picked]
+        self._rng.shuffle(preferred)
+        others = [value for value in NUMERAL_BY_VALUE if value != target and value not in picked and value not in preferred]
+        self._rng.shuffle(others)
+        if not look_alike:
+            # Early stages: decoys must look clearly different from the target.
+            preferred = [value for value in preferred if value not in similar]
+            others = [value for value in others if value not in similar]
+        for value in preferred + others:
+            if len(picked) >= wanted:
+                break
+            if value not in picked:
+                picked.append(value)
+        return picked[:wanted]
 
-        # Celebration timer (auto-advances to next number when finished)
-        if self.celebrating:
-            self.celebration_timer -= dt
-            if self.celebration_timer <= 0.0:
-                self.celebrating = False
-                self.tito_mood = "neutral"
-                if self.mode == "count":
-                    self.next_number()
-                    self.auto_advanced = True
+    def _show(self, target: NumeralItem, stage: Stage, pool: Sequence[int], last_slot: int) -> tuple[ForestStep, int]:
+        allow_zero = 0 in pool and target.value != 0
+        candidates = [
+            value
+            for value in range(MAX_VALUE + 1)
+            if value != target.value
+            and stage.min_gap <= abs(value - target.value) <= stage.max_gap
+            and (value != 0 or allow_zero)
+        ]
+        if len(candidates) < stage.show_cards - 1:
+            # Near the ends of 0–10 widen the gap rather than repeat a frame.
+            candidates = [
+                value
+                for value in range(MAX_VALUE + 1)
+                if value != target.value and abs(value - target.value) >= stage.min_gap and (value != 0 or allow_zero)
+            ]
+            candidates.sort(key=lambda value: abs(value - target.value))
+            candidates = candidates[: max(stage.show_cards - 1, 3)]
+        self._rng.shuffle(candidates)
+        decoys = candidates[: stage.show_cards - 1]
+        choices, slot = self._place(target.value, decoys, last_slot)
+        return ForestStep(StepKind.SHOW, target, choices, slot), slot
 
-        # Guess mode timers
-        if self.guess_wobble_timer > 0.0:
-            self.guess_wobble_timer = max(0.0, self.guess_wobble_timer - dt)
-            if self.guess_wobble_timer == 0.0:
-                self.guess_wobble_card = None
-                self.tito_mood = "neutral"
 
-        if self.guess_solved:
-            self.guess_solved_timer = max(0.0, self.guess_solved_timer - dt)
-            if self.guess_solved_timer == 0.0:
-                # Advance to next challenge round in guess mode (no loop, no teleporting items!)
-                self.setup_guess_round()
-                self.advance_guess_round = True
+class ForestWalk:
+    """State of one walk: steps, tries, hints, written numerals, completion."""
 
-        # Ripples
-        new_ripples = []
-        for x, y, age in self.ripple_effects:
-            if age + dt < 0.4:
-                new_ripples.append((x, y, age + dt))
-        self.ripple_effects = new_ripples
+    def __init__(self, steps: Sequence[ForestStep], *, group: int) -> None:
+        if not steps:
+            raise ValueError("a forest walk needs steps")
+        self._steps = tuple(steps)
+        self.group = int(group)
+        self._index = 0
+        self._progress = _StepProgress()
+        self._written: list[NumeralItem] = []
+        self.choice_errors = 0
+        self.hints = 0
+        self.first_try_choices = 0
+        self._completion_consumed = False
+
+    # -- queries -----------------------------------------------------------------
+    @property
+    def steps(self) -> tuple[ForestStep, ...]:
+        return self._steps
+
+    @property
+    def step(self) -> ForestStep | None:
+        return None if self.is_complete else self._steps[self._index]
+
+    @property
+    def step_index(self) -> int:
+        return self._index
+
+    @property
+    def is_complete(self) -> bool:
+        return self._index >= len(self._steps)
+
+    @property
+    def numerals(self) -> tuple[NumeralItem, ...]:
+        return tuple(step.numeral for step in self._steps if step.kind is StepKind.MEET)
+
+    @property
+    def written(self) -> tuple[NumeralItem, ...]:
+        """Numerals traced this walk, in order (the signposts along the path)."""
+
+        return tuple(self._written)
+
+    @property
+    def task_total(self) -> int:
+        return sum(step.counts_as_task for step in self._steps)
+
+    @property
+    def tasks_done(self) -> int:
+        return sum(step.counts_as_task for step in self._steps[: self._index])
+
+    @property
+    def eliminated(self) -> frozenset[int]:
+        return frozenset(self._progress.eliminated)
+
+    @property
+    def errors(self) -> int:
+        return self._progress.errors
+
+    # -- actions -----------------------------------------------------------------
+    def record_hint(self) -> None:
+        if not self.is_complete:
+            self._progress.hints = min(32, self._progress.hints + 1)
+            self.hints = min(999, self.hints + 1)
+
+    def finish_meet(self) -> None:
+        self._require(StepKind.MEET)
+        self._advance()
+
+    def select(self, index: int) -> ChoiceResult:
+        step = self.step
+        if step is None or not step.is_choice:
+            raise RuntimeError("no options to choose from")
+        if not 0 <= index < len(step.choices):
+            raise IndexError("option index out of range")
+        progress = self._progress
+        if index in progress.eliminated:
+            return ChoiceResult(False, progress.errors)
+        if index != step.correct_index:
+            progress.errors += 1
+            progress.eliminated.add(index)
+            self.choice_errors += 1
+            return ChoiceResult(False, progress.errors)
+        if progress.errors == 0:
+            self.first_try_choices += 1
+        self._advance()
+        return ChoiceResult(True, 0, self.is_complete)
+
+    def finish_trace(self) -> bool:
+        """Put the written numeral on the path; True when the walk is complete."""
+
+        step = self._require(StepKind.TRACE)
+        self._written.append(step.numeral)
+        self._advance()
+        return self.is_complete
+
+    def consume_completion(self) -> dict[str, int] | None:
+        if not self.is_complete or self._completion_consumed:
+            return None
+        self._completion_consumed = True
+        return {
+            "group": self.group + 1,
+            "numerals": len(self._written),
+            "first_try": self.first_try_choices,
+            "retries": self.choice_errors,
+        }
+
+    def _require(self, kind: StepKind) -> ForestStep:
+        step = self.step
+        if step is None or step.kind is not kind:
+            raise RuntimeError(f"current step is not {kind.value}")
+        return step
+
+    def _advance(self) -> None:
+        self._index += 1
+        self._progress = _StepProgress()
+
+
+def next_group(current: int, walk: ForestWalk, group_count: int) -> int:
+    """Bounded adaptation: repeat a group the child found hard, else move on.
+
+    Past the last teaching group the child stays in review walks
+    (``group_count``), which pick the least-practised numerals.
+    """
+
+    if walk.choice_errors >= 3:
+        return max(0, min(current, group_count))
+    return min(group_count, current + 1)
+
+
+__all__ = [
+    "ChoiceResult",
+    "ForestStep",
+    "ForestWalk",
+    "LOOK_ALIKES",
+    "MAX_VALUE",
+    "NUMERALS",
+    "NUMERAL_BY_VALUE",
+    "NumeralItem",
+    "REFERENCE_HEIGHT",
+    "REFERENCE_WIDTH",
+    "REVIEW_FINDS",
+    "Stage",
+    "StepKind",
+    "TEACHING_GROUPS",
+    "WalkPlanner",
+    "next_group",
+    "stage_for",
+]

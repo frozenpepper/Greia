@@ -2,7 +2,7 @@
 id = "org.greia.bosco-numeri"
 legacy_ids = []
 title_key = "activity.bosco_numeri.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
@@ -11,18 +11,28 @@ categories = ["learn", "play"]
 discovery_tags = ["numbers", "nature"]
 
 [education]
-categories = ["early_math", "counting", "fine_motor"]
-difficulty = 1
-recommended_age_min = 3
-recommended_age_max = 5
+# Tito's Number Forest: numeral recognition and writing 0-10. Meet a numeral
+# (Tito counts its forest friends into a frame and names it), find it among
+# 2-3 numeral tiles, trace it in stroke order, then pick the frame holding that
+# many friends. Teaching groups of the same loop get harder (2 tiles -> 3 tiles
+# -> look-alike decoys and closer frames -> review walks); a hard walk repeats
+# its group.
+categories = ["early_math", "number_recognition", "fine_motor"]
+difficulty = 2
+recommended_age_min = 4
+recommended_age_max = 6
+difficulty_min = 1
+difficulty_max = 4
+adaptive_difficulty = true
 skills = [
-  { id = "math.counting.cardinality", weight = 3 },
   { id = "math.number_recognition", weight = 3 },
-  { id = "motor.pointer.target_selection", weight = 2 },
+  { id = "math.numeral_formation", weight = 3 },
+  { id = "math.quantity.numeral_match", weight = 2 },
+  { id = "motor.pointer.tracing", weight = 1 },
 ]
 events = [
   { id = "bosco.number_completed", kind = "milestone" },
-  { id = "bosco.challenge_completed", kind = "milestone" },
+  { id = "bosco.challenge_completed", kind = "completion" },
 ]
 
 [runtime]
@@ -34,8 +44,8 @@ entrypoint = "main.py"
 profile = "hybrid"
 
 [requirements]
-required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["keyboard", "touch"]
+required_capabilities = ["display", "audio.basic"]
+optional_capabilities = ["pointer", "touch", "keyboard"]
 
 [permissions]
 requested = []

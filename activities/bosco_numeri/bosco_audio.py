@@ -1,215 +1,231 @@
-"""Audio playback and channel coordination for Il Bosco dei Numeri di Tito."""
+"""Audio and speech sequencing for Tito's Number Forest.
+
+Only existing recordings are played: this package's approved number clips
+(``count_<N>`` — "Three!" — and ``ask_<N>`` — "Where is number 3?"), Tito's
+package lines (``intro``, ``well_done``) through
+``LocalizedResources.speech_paths`` (selected language → base → English →
+silence), and Tito's owner-accepted shared character clips
+(``shared_character_audio_path``). A cue without a clip (there is no "zero"
+recording yet) stays silent while its picture still glows. Nonverbal chimes
+are tiny tones built once at start-up. Nothing here generates speech.
+"""
 
 from __future__ import annotations
 
+from array import array
+from collections import deque
+from dataclasses import dataclass
 import math
 from pathlib import Path
+from typing import Final, Protocol
 
 import pygame
 
-from greia_platform.localization import LocalizedResources
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.localization import LocalizedResources, shared_character_audio_path
 
-VOICE_CHANNEL_ID = 0
-SFX_CHANNEL_ID = 1
+_SAMPLE_RATE: Final = 22_050
+MAX_QUEUE_LEN: Final = 24
+# A cue without a playable clip (silent build, missing file) still keeps its
+# picture glowing this long, so the pictorial sequence stays readable.
+SILENT_CUE_SECONDS: Final = 0.9
+PACKAGE_LINES: Final = ("intro", "well_done")
+
+# Shared Tito clips (owner-accepted v0.2 character library).
+TITO_CUES: Final[dict[str, str]] = {
+    "tito.ready": "ready.go",
+    "tito.retry": "encourage.retry",
+    "tito.praise": "praise.general",
+    "tito.progress": "encourage.progress",
+    "tito.celebrate": "celebrate.success",
+}
+
+
+def count_cue(value: int) -> str:
+    """Spoken number name ("Three!"); ``count_0`` has no recording yet."""
+
+    return f"count_{int(value)}"
+
+
+def ask_cue(value: int) -> str:
+    """Spoken find question ("Where is number 3?")."""
+
+    return f"ask_{int(value)}"
+
+
+class SpeechPlayer(Protocol):
+    def play_speech(self, cue_id: str) -> float | None: ...
+    def stop_speech(self) -> None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class SpeechCue:
+    """One queued clip; ``tag`` names what glows while it plays."""
+
+    cue_id: str
+    tag: str | None = None
+    gap: float = 0.25
+
+
+class SpeechQueue:
+    """Bounded, clock-driven speech sequence that never overlaps clips.
+
+    Timing follows each clip's own length (plus a small gap) rather than
+    polling the mixer, so glows are deterministic and the sequence still
+    advances when audio is unavailable.
+    """
+
+    def __init__(self, audio: SpeechPlayer, *, max_len: int = MAX_QUEUE_LEN) -> None:
+        self._audio = audio
+        self._queue: deque[SpeechCue] = deque()
+        self._max_len = int(max_len)
+        self._current: SpeechCue | None = None
+        self._remaining = 0.0
+
+    def enqueue(self, cue_id: str, *, tag: str | None = None, gap: float = 0.25) -> None:
+        if len(self._queue) < self._max_len:
+            self._queue.append(SpeechCue(cue_id, tag, max(0.0, float(gap))))
+
+    def clear(self) -> None:
+        self._queue.clear()
+        self._current = None
+        self._remaining = 0.0
+        self._audio.stop_speech()
+
+    @property
+    def busy(self) -> bool:
+        return self._current is not None or bool(self._queue)
+
+    @property
+    def current_tag(self) -> str | None:
+        return self._current.tag if self._current is not None else None
+
+    def update(self, dt: float) -> bool:
+        """Advance by ``dt`` seconds; return True when the speaking tag changed."""
+
+        before = self.current_tag
+        if self._current is not None:
+            self._remaining -= max(0.0, dt)
+            if self._remaining <= 0.0:
+                self._current = None
+        if self._current is None and self._queue:
+            cue = self._queue.popleft()
+            length = self._audio.play_speech(cue.cue_id) or 0.0
+            if length <= 0.0 and cue.tag is not None:
+                length = SILENT_CUE_SECONDS
+            self._current = cue
+            self._remaining = length + cue.gap
+        return self.current_tag != before
 
 
 class BoscoAudio:
-    """Coordinates cached voice playback and lightweight procedural SFX."""
+    """Load approved speech clips and prepare the nonverbal chimes."""
 
-    def __init__(self, root: Path, resources: LocalizedResources) -> None:
-        self.root = root
-        self.resources = resources
-        self._voice_channel: pygame.mixer.Channel | None = None
-        self._sfx_channel: pygame.mixer.Channel | None = None
-        self._voice_clips: dict[str, pygame.mixer.Sound] = {}
+    def __init__(
+        self,
+        package_root: Path,
+        locale: str = "it",
+        resources: LocalizedResources | None = None,
+        *,
+        project_root: Path | None = None,
+    ) -> None:
+        self._resources = resources
+        self._locale = locale
+        self._package_root = package_root
+        self._project_root = project_root if project_root is not None else package_root.resolve().parents[1]
+        self._speech: dict[str, pygame.mixer.Sound] = {}
         self._sfx: dict[str, pygame.mixer.Sound] = {}
-        self._init_mixer()
-
-    def _init_mixer(self) -> None:
-        if not pygame.mixer.get_init():
-            try:
-                pygame.mixer.init(
-                    frequency=44100,
-                    size=-16,
-                    channels=2,
-                    buffer=1024,
-                )
-            except pygame.error:
-                return
-        pygame.mixer.set_num_channels(8)
-        self._voice_channel = pygame.mixer.Channel(VOICE_CHANNEL_ID)
-        self._sfx_channel = pygame.mixer.Channel(SFX_CHANNEL_ID)
-        self._build_sfx()
-
-    def _get_clip(self, name: str) -> pygame.mixer.Sound | None:
-        cached = self._voice_clips.get(name)
-        if cached is not None:
-            return cached
-
-        path = self.resources.audio_path(name, filename=f"{name}.wav")
-        if path is None:
-            return None
+        self._speech_channel: pygame.mixer.Channel | None = None
+        self._sfx_channel: pygame.mixer.Channel | None = None
         try:
-            sound = pygame.mixer.Sound(str(path))
-        except pygame.error:
-            return None
-        self._voice_clips[name] = sound
-        return sound
+            if not pygame.mixer.get_init():
+                pygame.mixer.init(frequency=_SAMPLE_RATE, size=-16, channels=2, buffer=256)
+            pygame.mixer.set_num_channels(8)
+            self._speech_channel = pygame.mixer.Channel(0)
+            self._sfx_channel = pygame.mixer.Channel(1)
+            self._sfx = {
+                "correct": self._tone(880.0, 0.14, 0.20),
+                "retry": self._tone(340.0, 0.08, 0.12),
+                "stroke": self._tone(660.0, 0.07, 0.14),
+                "pop": self._tone(760.0, 0.05, 0.12),
+                "bloom": self._tone(1040.0, 0.22, 0.20),
+            }
+            self._load_package_clips()
+            self._load_tito_clips()
+        except (pygame.error, ValueError, OSError):
+            self._speech = {}
+            self._sfx = {}
 
-    def play_count_number(self, n: int) -> None:
-        """Play one reviewed pedagogical counting clip and a cached tap cue."""
-        sound = self._get_clip(f"count_{n}")
-        if sound is not None and self._voice_channel is not None:
-            self._voice_channel.play(sound)
-        self.play_tap()
+    def has_speech(self, cue_id: str) -> bool:
+        return cue_id in self._speech
 
-    def play_intro(self) -> None:
-        sound = self._get_clip("intro")
-        if sound is not None and self._voice_channel is not None:
-            self._voice_channel.play(sound)
+    def _load_package_clips(self) -> None:
+        if self._resources is not None:
+            # The shared resolver owns locale selection and English fallback.
+            clips = self._resources.speech_paths()
+        else:
+            folder = self._package_root / "assets" / "audio" / self._locale
+            clips = {wav.stem: wav for wav in sorted(folder.glob("*.wav"))} if folder.is_dir() else {}
+        for stem, path in clips.items():
+            if stem.startswith(("count_", "ask_")) or stem in PACKAGE_LINES:
+                self._load(stem, path)
 
-    def play_ask_number(self, n: int) -> None:
-        sound = self._get_clip(f"ask_{n}")
-        if sound is not None and self._voice_channel is not None:
-            self._voice_channel.play(sound)
+    def _load_tito_clips(self) -> None:
+        for cue_id, shared in TITO_CUES.items():
+            try:
+                path = shared_character_audio_path(self._project_root, "tito", shared, self._locale)
+            except Exception:
+                path = None
+            if path is not None:
+                self._load(cue_id, path)
 
-    def play_well_done(self) -> None:
-        sound = self._get_clip("well_done")
-        if sound is not None and self._voice_channel is not None:
-            self._voice_channel.play(sound)
-        self.play_chime()
-
-    def play_try_again(self) -> None:
-        sound = self._get_clip("try_again")
-        if sound is not None and self._voice_channel is not None:
-            self._voice_channel.play(sound)
-        self.play_wobble()
-
-    def play_celebration(self, n: int | None = None) -> None:
-        """Repeat final cardinality, then queue Tito praise without overlap."""
-        self.play_fanfare()
-        if self._voice_channel is None:
+    def _load(self, cue_id: str, path: Path) -> None:
+        try:
+            self._speech[cue_id] = pygame.mixer.Sound(str(path))
+        except (pygame.error, OSError):
             return
 
-        final_num_clip = self._get_clip(f"count_{n}") if n is not None else None
-        praise_clip = self._get_clip("celebrate")
+    def play_speech(self, cue_id: str) -> float | None:
+        """Play one clip; return its length in seconds (None when unavailable)."""
 
-        if final_num_clip is not None and praise_clip is not None:
-            self._voice_channel.play(final_num_clip)
-            self._voice_channel.queue(praise_clip)
-        elif final_num_clip is not None:
-            self._voice_channel.play(final_num_clip)
-        elif praise_clip is not None:
-            self._voice_channel.play(praise_clip)
+        sound = self._speech.get(cue_id)
+        if sound is None or self._speech_channel is None:
+            return None
+        try:
+            self._speech_channel.play(sound)
+            return float(sound.get_length())
+        except pygame.error:
+            return None
 
-    def play_tap(self) -> None:
-        self._play_sfx("tap")
+    def stop_speech(self) -> None:
+        if self._speech_channel is not None:
+            try:
+                self._speech_channel.stop()
+            except pygame.error:
+                return
 
-    def play_chime(self) -> None:
-        self._play_sfx("chime")
-
-    def play_wobble(self) -> None:
-        self._play_sfx("wobble")
-
-    def play_fanfare(self) -> None:
-        self._play_sfx("fanfare")
-
-    def _play_sfx(self, name: str) -> None:
-        sound = self._sfx.get(name)
+    def play_sfx(self, cue: str) -> None:
+        sound = self._sfx.get(cue)
         if sound is None or self._sfx_channel is None:
             return
         try:
             self._sfx_channel.play(sound)
         except pygame.error:
-            pass
-
-    def _build_sfx(self) -> None:
-        """Build bounded procedural clips once, never in the interaction hot path."""
-        spec = current_pcm16_mixer_spec()
-        if spec is None:
             return
-        sample_rate, channel_count = spec
-        try:
-            self._sfx = {
-                "tap": self._synthesize_tone(
-                    sample_rate,
-                    channel_count,
-                    520.0,
-                    0.08,
-                    "sine",
-                    0.55,
-                ),
-                "chime": self._synthesize_tone(
-                    sample_rate,
-                    channel_count,
-                    880.0,
-                    0.18,
-                    "sine",
-                    0.65,
-                ),
-                "wobble": self._synthesize_tone(
-                    sample_rate,
-                    channel_count,
-                    240.0,
-                    0.22,
-                    "triangle",
-                    0.50,
-                ),
-                "fanfare": self._synthesize_fanfare(sample_rate, channel_count),
-            }
-        except pygame.error:
-            self._sfx.clear()
 
     @staticmethod
-    def _synthesize_tone(
-        sample_rate: int,
-        channel_count: int,
-        frequency: float,
-        duration: float,
-        wave: str,
-        volume: float,
-    ) -> pygame.mixer.Sound:
-        sample_count = max(1, int(sample_rate * duration))
-        raw = bytearray()
-        for index in range(sample_count):
-            t = index / sample_rate
-            decay = max(0.0, 1.0 - (index / sample_count) ** 1.5)
-            if wave == "triangle":
-                value = (
-                    2.0
-                    * abs(2.0 * (t * frequency - math.floor(t * frequency + 0.5)))
-                    - 1.0
-                )
-            else:
-                value = math.sin(2.0 * math.pi * frequency * t)
-            sample = int(max(-1.0, min(1.0, value * decay * volume)) * 32767)
-            append_mono_pcm16(raw, sample, channel_count)
-        return pygame.mixer.Sound(buffer=bytes(raw))
+    def _tone(frequency: float, duration: float, volume: float) -> pygame.mixer.Sound:
+        amplitude = max(0, min(32767, int(32767 * volume)))
+        init = pygame.mixer.get_init()
+        channels = init[2] if init is not None else 2
+        rate = init[0] if init is not None else _SAMPLE_RATE
+        samples = array("h")
+        count = max(1, int(rate * duration))
+        for i in range(count):
+            # Short fade in/out avoids clicks on low-cost speakers.
+            envelope = min(1.0, i / 220.0, (count - i) / 220.0)
+            value = int(amplitude * envelope * math.sin(2.0 * math.pi * frequency * i / rate))
+            samples.extend([value] * channels)
+        return pygame.mixer.Sound(buffer=samples.tobytes())
 
-    @staticmethod
-    def _synthesize_fanfare(
-        sample_rate: int,
-        channel_count: int,
-    ) -> pygame.mixer.Sound:
-        """Render the four-note reward as one sequenced clip."""
-        notes = (
-            (0.00, 0.16, 523.25),
-            (0.14, 0.16, 659.25),
-            (0.28, 0.16, 783.99),
-            (0.42, 0.38, 1046.50),
-        )
-        total_duration = 0.82
-        sample_count = max(1, int(sample_rate * total_duration))
-        raw = bytearray()
-        for index in range(sample_count):
-            t = index / sample_rate
-            value = 0.0
-            for start, duration, frequency in notes:
-                if start <= t < start + duration:
-                    local_t = t - start
-                    envelope = math.exp(-3.5 * (local_t / duration))
-                    value += math.sin(2.0 * math.pi * frequency * local_t) * envelope
-            sample = int(max(-1.0, min(1.0, value * 0.55)) * 32767)
-            append_mono_pcm16(raw, sample, channel_count)
-        return pygame.mixer.Sound(buffer=bytes(raw))
+
+__all__ = ["BoscoAudio", "SpeechCue", "SpeechQueue", "TITO_CUES", "ask_cue", "count_cue"]

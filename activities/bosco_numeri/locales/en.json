@@ -5,9 +5,8 @@
   "strings": {
     "activity.bosco_numeri.title": "Tito's Number Forest",
     "activity.title": "Tito's Number Forest",
-    "ui.mode_count": "Count",
-    "ui.mode_guess": "Find",
-    "ui.guess_prompt": "Where is number $num?"
+    "victory.title": "You wrote your numbers!",
+    "button.play_again": "Play again"
   },
   "audio": {
     "activity.title": {

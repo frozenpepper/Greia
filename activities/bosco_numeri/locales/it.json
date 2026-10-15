@@ -5,9 +5,8 @@
   "strings": {
     "activity.bosco_numeri.title": "Il Bosco dei Numeri di Tito",
     "activity.title": "Il Bosco dei Numeri di Tito",
-    "ui.mode_count": "Conta",
-    "ui.mode_guess": "Indovina",
-    "ui.guess_prompt": "Dov'è il numero $num?"
+    "victory.title": "Hai scritto i tuoi numeri!",
+    "button.play_again": "Gioca ancora"
   },
   "audio": {
     "activity.title": {
