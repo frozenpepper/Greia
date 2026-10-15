@@ -1,646 +1,860 @@
-from __future__ import annotations
+"""App lifecycle, speech flow and input orchestration for Leo's Syllable Train.
 
-"""Lifecycle coordinator for Sillabe Magiche — screen/canvas/metrics/typography, model, audio, renderer.
+Round grammar (P7 §1): a train arrives with one wagon per beat → spoken goal →
+clap / choose → the train reads (cheer) → it leaves → progress dots → finale →
+shared completion scene.
 
-Owns the event loop, safe-input gating, audio state machines, and the
-READY contract (publish exactly once after first flip in the same loop
-iteration). Resize invalidates metrics/canvas; no per-frame decode/scale.
+* Italian / Spanish / (staged) French: the word is said; the child claps its
+  beats on the drum (each clap couples a beat and says that syllable), then
+  builds every wagon (vowel after the given consonant, or whole syllable
+  tiles); the train reads "LU… NA… luna!".
+* English: the train asks for N beats (drum beats light its wagons); the child
+  chooses the picture whose word fits, then claps its beats onto the wagons.
+
+Hints are graduated: after ~6 s of quiet Leo points and the goal is replayed
+with a pulse; a first wrong pick makes Leo think and contrasts the pick with
+the target; from the second wrong pick the right tile pulses while it is
+demonstrated. Retries are unlimited and always kind.
 """
 
+from __future__ import annotations
+
+from enum import StrEnum
 import random
 import time
+from typing import Callable
 
 import pygame
 
-from greia_platform.activity_api import activity_stop_requested, emit_activity_event, mark_activity_ready
-from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.child_text import display_text
+from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.activity_controls import (
+    ControlKit,
+    ControlLayout,
+    ControlTheme,
+    KitPointer,
+    PointerPhase,
+    PygameControlInput,
+)
+from greia_platform.activity_feedback import CastFeedback
+from greia_platform.input_core import SemanticInputEvent
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
-from greia_platform.typography import FontRole
+from greia_platform.pygame_completion import (
+    CompletionContent,
+    CompletionOverlay,
+    CompletionPalette,
+    CompletionScene,
+    PygameCompletionScreen,
+)
+from greia_platform.typography import GreiaTypography
+from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 
 if __package__:
-    from .sillabe_audio import SoundManager
+    from .sillabe_audio import SFX_PREFIX, SillabeAudio, SpeechQueue
     from .sillabe_content import (
-        BG_SKY_BOTTOM,
-        BG_SKY_TOP,
-        CARD_BG,
-        CARD_BORDER,
-        CORAL,
-        DARK_TEXT,
-        GOLD,
-        GOLD_BORDER,
-        LIGHT_TEXT,
-        MINT_GREEN,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
-        SHADOW_COLOR,
-        SKY_BLUE,
-        STORAGE_KEY,
-        get_syllable_curriculum,
+        WORD_DONE_CUES,
+        ReadingMethod,
+        TrainWord,
+        syllable_cue,
     )
-    from .sillabe_model import SillabeSession
-    from .sillabe_renderer import FloatingOrb, LeoCompanion, Particle, SillabeRenderer, SyllableCard, WordTile
+    from .sillabe_controls import (
+        LEO_HEIGHT,
+        PICTURE_SIZE,
+        TILE_TEXT_SIZE,
+        WAGON_FACE,
+        TrainControls,
+        TrainLayout,
+        choice_id,
+    )
+    from .sillabe_model import (
+        CHALLENGE_COUNT,
+        ChoiceStep,
+        Phase,
+        StepKind,
+        TrainChallenge,
+        TrainRoundFactory,
+        TrainSession,
+        adapt_level,
+    )
+    from .sillabe_renderer import Flight, SceneState, SillabeRenderer
+    from .sillabe_services import EventPort, ProgressPort
 else:
-    from sillabe_audio import SoundManager
+    from sillabe_audio import SFX_PREFIX, SillabeAudio, SpeechQueue
     from sillabe_content import (
-        BG_SKY_BOTTOM,
-        BG_SKY_TOP,
-        CARD_BG,
-        CARD_BORDER,
-        CORAL,
-        DARK_TEXT,
-        GOLD,
-        GOLD_BORDER,
-        LIGHT_TEXT,
-        MINT_GREEN,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
-        SHADOW_COLOR,
-        SKY_BLUE,
-        STORAGE_KEY,
-        get_syllable_curriculum,
+        WORD_DONE_CUES,
+        ReadingMethod,
+        TrainWord,
+        syllable_cue,
     )
-    from sillabe_model import SillabeSession
-    from sillabe_renderer import FloatingOrb, LeoCompanion, Particle, SillabeRenderer, SyllableCard, WordTile
+    from sillabe_controls import (
+        LEO_HEIGHT,
+        PICTURE_SIZE,
+        TILE_TEXT_SIZE,
+        WAGON_FACE,
+        TrainControls,
+        TrainLayout,
+        choice_id,
+    )
+    from sillabe_model import (
+        CHALLENGE_COUNT,
+        ChoiceStep,
+        Phase,
+        StepKind,
+        TrainChallenge,
+        TrainRoundFactory,
+        TrainSession,
+        adapt_level,
+    )
+    from sillabe_renderer import Flight, SceneState, SillabeRenderer
+    from sillabe_services import EventPort, ProgressPort
 
 
-def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
-    vp = activity_viewport_for_surface(surface)
-    x, y = position
-    if not (0 <= x < vp.surface.width and 0 <= y < vp.surface.height):
+IDLE_HINT_SECONDS = 6.0
+MAX_IDLE_HINTS = 3
+POINT_SECONDS = 2.6
+SHAKE_SECONDS = 0.45
+ARRIVE_SECONDS = 1.1
+DEPART_SECONDS = 1.3
+TRAIN_TRAVEL = 860
+FLIGHT_START = 0.15
+FLIGHT_END = 0.70
+POP_SECONDS = 0.5
+RING_SECONDS = 0.5
+STEP_MIN = 1.2
+STEP_MAX = 3.5
+BLEND_MIN = 2.0
+BLEND_MAX = 8.0
+FINALE_SECONDS = 2.4
+WHEEL_STRIDE = 9  # px of travel per wheel frame
+
+_VOWEL_KEYS = {getattr(pygame, f"K_{c.lower()}"): c for c in "AEIOU"}
+
+
+class AppState(StrEnum):
+    ARRIVE = "arrive"
+    PLAYING = "playing"
+    TRY_AGAIN = "try_again"
+    STEP = "step"          # a wagon was built / a picture chosen; the next part follows
+    CLAPPED = "clapped"    # all beats clapped on a building train; the word is said
+    BLEND = "blend"        # the train reads the word; Leo cheers
+    DEPART = "depart"
+    FINALE = "finale"
+    TERMINAL = "terminal"
+
+
+class SillabeActivity:
+    """Coordinate the train model, speech sequence, kit controls and lifecycle."""
+
+    def __init__(
+        self,
+        *,
+        screen: pygame.Surface,
+        canvas: PygameReferenceCanvas,
+        session: TrainSession,
+        factory: TrainRoundFactory,
+        renderer: SillabeRenderer,
+        typography: GreiaTypography,
+        resources,
+        locale: str,
+        progress: ProgressPort,
+        events: EventPort,
+        audio: SillabeAudio,
+        speech_queue: SpeechQueue,
+        rng: random.Random,
+        session_id: str,
+        clock: Callable[[], float] = time.monotonic,
+        kit: ControlKit | None = None,
+    ) -> None:
+        self.screen = screen
+        self.canvas = canvas
+        self.session = session
+        self.factory = factory
+        self.renderer = renderer
+        self.typography = typography
+        self.resources = resources
+        self.language = locale.replace("_", "-").split("-", 1)[0].lower()
+        self.progress = progress
+        self.events = events
+        self.audio = audio
+        self.speech_queue = speech_queue
+        self.rng = rng
+        self.session_id = session_id
+        self.clock = clock
+
+        self.state = AppState.ARRIVE
+        self.state_started = clock()
+        self._running = True
+        self._ready_published = False
+        self._dirty = True
+        self._last_tick = clock()
+        self._quiet_since = clock()
+        self._idle_hints = 0
+        self._point_until = 0.0
+        self._hint_target: str | None = None
+        self._shake: tuple[str, float] | None = None
+        self._picked: tuple[int, ChoiceStep] | None = None
+        self._ring: tuple[int, float] | None = None
+        self._display: TrainChallenge | None = session.current_challenge
+        self._pulse_phase = 0
+        self._activated = False
+        self._opening = True
+
+        # Shared control kit (ADR 0037): learn Collection -> orange accent. The
+        # kit shares the Activity's picture cache so art is decoded once.
+        self.kit = kit if kit is not None else ControlKit(
+            typography, ControlTheme.for_accent("orange"), art=renderer.art.art
+        )
+        if renderer.cast is None:
+            renderer.cast = CastFeedback("leo", height=LEO_HEIGHT, art=self.kit.art, clock=clock)
+        self.controls = TrainControls(
+            self.kit,
+            renderer.art,
+            ControlLayout.for_canvas(canvas, screen.get_size()),
+            on_choice=self._on_choice,
+            on_listen=self._on_listen,
+            on_sign=self._on_sign,
+            on_drum=self._on_drum,
+        )
+        self.controls.sync(session, interactive=False)
+        self._surfaces = SurfaceNavigator(self.controls.layer)
+        self._input = PygameControlInput(
+            to_logical=self.canvas.pointer,
+            is_safe=lambda pos: _safe_point(self.screen, pos),
+        )
+        self.completion = PygameCompletionScreen(
+            typography,
+            width=REFERENCE_WIDTH,
+            height=REFERENCE_HEIGHT,
+            palette=CompletionPalette(
+                background=(217, 242, 208),
+                panel=(255, 251, 235),
+                panel_border=(180, 83, 9),
+                title=(120, 53, 15),
+                body=(71, 85, 105),
+                primary=(243, 154, 56),
+                primary_text=(61, 44, 31),
+            ),
+            scene=CompletionScene(self.kit, character="leo", star_total=CHALLENGE_COUNT),
+        )
+        self.audio.play_sfx("whistle")
+
+    @property
+    def method(self) -> ReadingMethod:
+        return self.factory.method
+
+    # -- main loop --------------------------------------------------------------------
+    def run(self) -> int:
+        ticker = pygame.time.Clock()
+        while self._running and not activity_stop_requested():
+            for event in pygame.event.get():
+                self._handle_event(event)
+            repeat = self._input.poll()
+            if repeat is not None:
+                self._dispatch(repeat)
+            if self.tick():
+                self._dirty = True
+            if self._dirty:
+                self._render()
+                self.canvas.present()
+                pygame.display.flip()
+                self._dirty = False
+                if not self._ready_published:
+                    mark_activity_ready()
+                    self._ready_published = True
+            ticker.tick(30 if self._animating() else 20)
+        return 0
+
+    def tick(self) -> bool:
+        """Advance speech, cast and state timers; True when the frame changed."""
+
+        now = self.clock()
+        dt = max(0.0, now - self._last_tick)
+        self._last_tick = now
+        was_busy = self.speech_queue.busy
+        changed = self.speech_queue.update(dt)
+        if was_busy and not self.speech_queue.busy:
+            self._quiet_since = now
+        cast = self.renderer.cast
+        if cast is not None and cast.update():
+            changed = True
+        if self._ring is not None and now - self._ring[1] >= RING_SECONDS:
+            self._ring = None
+            changed = True
+        return self._advance_state(now) or changed or self._ring is not None
+
+    def _animating(self) -> bool:
+        cast = self.renderer.cast
+        return (
+            self.state is not AppState.PLAYING and self.state is not AppState.TERMINAL
+            or self.speech_queue.busy
+            or self._hint_target is not None
+            or self._ring is not None
+            or (cast is not None and cast.animating)
+        )
+
+    # -- input --------------------------------------------------------------------------
+    def _handle_event(self, event: pygame.event.Event) -> None:
+        if event.type == pygame.QUIT:
+            self._running = False
+            return
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            self._running = False
+            return
+        if event.type == pygame.VIDEORESIZE:
+            self.screen = pygame.display.get_surface() or self.screen
+            self.canvas = PygameReferenceCanvas(self.screen)
+            self.controls.relayout(ControlLayout.for_canvas(self.canvas, self.screen.get_size()))
+            self._input = PygameControlInput(
+                to_logical=self.canvas.pointer,
+                is_safe=lambda pos: _safe_point(self.screen, pos),
+            )
+            self._dirty = True
+            return
+        if self.state not in {AppState.PLAYING, AppState.TERMINAL}:
+            return
+        if event.type == pygame.KEYDOWN and self.state is AppState.PLAYING:
+            if self._pick_by_vowel_key(event.key):
+                self._dirty = True
+                return
+            if event.key == pygame.K_r:
+                self._note_input()
+                self._speak_goal(hint=False)
+                self._dirty = True
+                return
+        translated = self._input.translate(event)
+        if translated is not None and self._dispatch(translated):
+            self._dirty = True
+
+    def _pick_by_vowel_key(self, key: int) -> bool:
+        """Typing a vowel picks that vowel tile (vowel steps only)."""
+
+        vowel = _VOWEL_KEYS.get(key)
+        step = self.session.current_step
+        if vowel is None or step is None or step.kind is not StepKind.VOWEL:
+            return False
+        for index, choice in enumerate(step.choices):
+            if choice == vowel and index not in self.session.eliminated:
+                self._note_input()
+                self.controls.layer.focus(choice_id(index))
+                self._on_choice(index)
+                return True
         return False
-    for protected in vp.protected_regions:
+
+    def _dispatch(self, kit_input) -> bool:
+        if self.state not in {AppState.PLAYING, AppState.TERMINAL}:
+            return False
+        if isinstance(kit_input, SemanticInputEvent) or (
+            isinstance(kit_input, KitPointer) and kit_input.phase is PointerPhase.DOWN
+        ):
+            self._note_input()
+        result = self._surfaces.dispatch(kit_input)
+        if self.controls.layer.invalidation.should_draw:
+            self._dirty = True
+        return result is not UiEventResult.IGNORED
+
+    def _note_input(self) -> None:
+        self._quiet_since = self.clock()
+
+    def _handle_pointer(self, raw_pos: tuple[int, int]) -> bool:
+        """Deliver one complete tap at a physical position (tests/tools)."""
+
+        if not _safe_point(self.screen, raw_pos):
+            return False
+        logical = self.canvas.pointer(raw_pos)
+        if logical is None:
+            return False
+        point = (int(logical[0]), int(logical[1]))
+        self._activated = False
+        self._dispatch(KitPointer(PointerPhase.DOWN, point))
+        self._dispatch(KitPointer(PointerPhase.UP, point))
+        return self._activated
+
+    def _handle_keyboard(self, key: int) -> bool:
+        """Deliver one key press through the shared navigation mapping (tests/tools)."""
+
+        event = pygame.event.Event(pygame.KEYDOWN, key=key, mod=0, unicode="", scancode=0)
+        self._activated = False
+        before = self._quiet_since
+        if key == pygame.K_r or key in _VOWEL_KEYS:
+            self._handle_event(event)
+            if self._activated or self._quiet_since != before:
+                return True
+            if key == pygame.K_r:
+                return False
+        translated = self._input.translate(event)
+        if translated is None:
+            return False
+        handled = self._dispatch(translated)
+        return handled or self._activated
+
+    # -- control callbacks ------------------------------------------------------------------
+    def _on_listen(self) -> None:
+        self._activated = True
+        self._speak_goal(hint=False)
+
+    def _on_sign(self) -> None:
+        self._activated = True
+        challenge = self.session.current_challenge
+        if challenge is None:
+            return
+        self.speech_queue.clear()
+        if self.method is ReadingMethod.BEATS and self.session.phase is Phase.CHOOSE:
+            self._enqueue_train_beats(challenge.wagons)
+        else:
+            self.speech_queue.enqueue(challenge.word.audio_id, tag="sign", gap=0.3)
+        self._quiet_since = self.clock()
+
+    def _on_drum(self) -> None:
+        if self.state is not AppState.PLAYING:
+            return
+        challenge = self.session.current_challenge
+        result = self.session.clap()
+        if result is None or challenge is None:
+            return
+        self._activated = True
+        self._hint_target = None
+        self._point_until = 0.0
+        self.audio.play_sfx("drum")
+        self._ring = (result.beat, self.clock())
+        if challenge.clap_first:
+            # Each beat says its syllable; clips queue so fast claps never cut.
+            if not self.speech_queue.busy or self.speech_queue.current_tag in {None, "sign"}:
+                self.speech_queue.clear()
+            self.speech_queue.enqueue(
+                syllable_cue(challenge.word.syllables[result.beat]), tag=f"wagon.{result.beat}", gap=0.15
+            )
+        if result.clap_completed and challenge.clap_first:
+            self.speech_queue.enqueue(challenge.word.audio_id, tag="train", gap=0.4)
+            self._go(AppState.CLAPPED)
+            self.controls.sync(self.session, interactive=False)
+        elif result.challenge_completed:
+            self._on_challenge_done(challenge, result.session_complete)
+        self._quiet_since = self.clock()
+
+    def _on_choice(self, index: int) -> None:
+        challenge = self.session.current_challenge
+        step = self.session.current_step
+        if self.state is not AppState.PLAYING or challenge is None or step is None:
+            return
+        if index >= len(step.choices) or index in self.session.eliminated:
+            return
+        self._activated = True
+        result = self.session.select_choice(index)
+        if not result.correct:
+            self._on_wrong(challenge, step, index, result.errors)
+        elif result.challenge_completed:
+            self._picked = (index, step)
+            self._on_challenge_done(challenge, result.session_complete)
+        else:
+            self._on_step(challenge, step, index)
+
+    # -- feedback grammar ----------------------------------------------------------------
+    def _on_wrong(self, challenge: TrainChallenge, step: ChoiceStep, index: int, errors: int) -> None:
+        self.audio.play_sfx("retry")
+        if self.renderer.cast is not None:
+            self.renderer.cast.try_again()
+        self._point_until = 0.0
+        self._shake = (choice_id(index), self.clock())
+        self._go(AppState.TRY_AGAIN)
+        self.controls.sync(self.session)
+
+        remaining = [i for i in range(len(step.choices)) if i not in self.session.eliminated]
+        demonstrate = errors >= 2 or len(remaining) == 1
+        queue = self.speech_queue
+        queue.clear()
+        queue.enqueue("leo.retry", gap=0.35)
+        if step.kind is StepKind.PICTURE:
+            # "pizza: DUM DUM" — the picked word's beats, then the right one's.
+            shown = step.correct_index if demonstrate else index
+            word = step.choices[shown]
+            assert isinstance(word, TrainWord)
+            queue.enqueue(word.audio_id, tag=choice_id(shown), gap=0.3)
+            for beat in range(word.beats):
+                queue.enqueue(f"{SFX_PREFIX}drum", tag=f"beat.{beat}", gap=0.12)
+        else:
+            # "LA … LU" — what the pick would make, then the wagon's syllable.
+            if not demonstrate:
+                queue.enqueue(syllable_cue(step.syllable_for(index)), tag=choice_id(index), gap=0.35)
+            queue.enqueue(syllable_cue(step.target_syllable), tag=f"wagon.{step.wagon}", gap=0.3)
+            if demonstrate:
+                queue.enqueue(syllable_cue(step.target_syllable), tag=choice_id(step.correct_index), gap=0.3)
+        self._hint_target = choice_id(step.correct_index) if demonstrate else None
+
+    def _on_step(self, challenge: TrainChallenge, step: ChoiceStep, index: int) -> None:
+        """A wagon was built (or the beats picture chosen); the next part follows."""
+
+        self.audio.play_sfx("correct")
+        self._point_until = 0.0
+        self._hint_target = None
+        self._picked = (index, step)
+        queue = self.speech_queue
+        queue.clear()
+        queue.pause(FLIGHT_END)
+        if step.kind is StepKind.PICTURE:
+            if self.renderer.cast is not None:
+                self.renderer.cast.correct()
+            queue.enqueue(challenge.word.audio_id, tag="sign", gap=0.4)
+        else:
+            queue.enqueue(syllable_cue(step.target_syllable), tag=f"wagon.{step.wagon}", gap=0.4)
+        self._go(AppState.STEP)
+
+    def _on_challenge_done(self, challenge: TrainChallenge, session_complete: bool) -> None:
+        """The whole word is on the train: it reads it aloud and Leo cheers."""
+
+        self.audio.play_sfx("correct")
+        if self.renderer.cast is not None:
+            self.renderer.cast.correct()
+        self._point_until = 0.0
+        self._hint_target = None
+        self._display = challenge
+        milestone = self.session.consume_milestone()
+        if milestone is not None:
+            self.events.word_completed(self.session_id, milestone)
+        if session_complete:
+            self._save_completion()
+        queue = self.speech_queue
+        queue.clear()
+        if challenge.clap_first:
+            step = challenge.steps[-1]
+            queue.pause(FLIGHT_END)
+            queue.enqueue(syllable_cue(step.target_syllable), tag=f"wagon.{step.wagon}", gap=0.5)
+            # The train reads: "LU … NA … luna!"
+            for index, syllable in enumerate(challenge.word.syllables):
+                queue.enqueue(syllable_cue(syllable), tag=f"wagon.{index}", gap=0.25)
+            queue.enqueue(challenge.word.audio_id, tag="train", gap=0.4)
+            if self.session.challenge_index == 1:
+                queue.enqueue(WORD_DONE_CUES.get(self.language, "word_complete"), gap=0.3)
+        else:
+            queue.pause(0.25)
+            queue.enqueue(challenge.word.audio_id, tag="train", gap=0.4)
+        queue.enqueue("leo.praise", gap=0.2)
+        self._go(AppState.BLEND)
+
+    def _speak_goal(self, *, hint: bool) -> None:
+        """Say (again) what the current part of the round asks for."""
+
+        challenge = self.session.current_challenge
+        if challenge is None:
+            return
+        queue = self.speech_queue
+        queue.clear()
+        phase = self.session.phase
+        step = self.session.current_step
+        opening = self._opening
+        self._opening = False
+        if opening and self.session.challenge_index == 0:
+            queue.enqueue("leo.ready", gap=0.3)
+        if phase is Phase.CLAP:
+            queue.enqueue(challenge.word.audio_id, tag="sign", gap=0.4)
+            if hint and challenge.clap_first:
+                # Model the beats once, in the word's own syllables.
+                for index, syllable in enumerate(challenge.word.syllables):
+                    queue.enqueue(syllable_cue(syllable), tag=f"wagon.{index}", gap=0.2)
+        elif step is not None and step.kind is StepKind.PICTURE:
+            self._enqueue_train_beats(challenge.wagons)
+            if challenge.level < 3 or hint:
+                for index, word in enumerate(step.choices):
+                    if index not in self.session.eliminated and isinstance(word, TrainWord):
+                        queue.enqueue(word.audio_id, tag=choice_id(index), gap=0.3)
+        elif step is not None:
+            if self.session.challenge_index == 0 and self.session.step_index == 0 and not hint:
+                queue.enqueue("instruction_build", gap=0.35)
+            if hint:
+                queue.enqueue(challenge.word.audio_id, tag="sign", gap=0.35)
+            queue.enqueue(syllable_cue(step.target_syllable), tag=f"wagon.{step.wagon}", gap=0.3)
+        self._quiet_since = self.clock()
+
+    def _enqueue_train_beats(self, wagons: int) -> None:
+        for beat in range(wagons):
+            self.speech_queue.enqueue(f"{SFX_PREFIX}drum", tag=f"beat.{beat}", gap=0.18)
+        self.speech_queue.pause(0.25)
+
+    # -- state ----------------------------------------------------------------------------
+    def _go(self, state: AppState) -> None:
+        self.state = state
+        self.state_started = self.clock()
+
+    def _advance_state(self, now: float) -> bool:
+        elapsed = now - self.state_started
+        changed = False
+        state = self.state
+        if state is AppState.ARRIVE:
+            if elapsed >= ARRIVE_SECONDS:
+                self._begin_playing(now, speak=True)
+            changed = True
+        elif state is AppState.PLAYING:
+            if (
+                not self.speech_queue.busy
+                and self._idle_hints < MAX_IDLE_HINTS
+                and now - self._quiet_since >= IDLE_HINT_SECONDS
+            ):
+                self._give_idle_hint(now)
+                changed = True
+            if self._point_until and now >= self._point_until:
+                self._point_until = 0.0
+                changed = True
+        elif state is AppState.TRY_AGAIN:
+            if elapsed >= SHAKE_SECONDS:
+                self._shake = None
+                self._go(AppState.PLAYING)
+                self._quiet_since = now
+            changed = True
+        elif state in {AppState.STEP, AppState.CLAPPED}:
+            done = elapsed >= STEP_MIN and not self.speech_queue.busy
+            if done or elapsed >= STEP_MAX:
+                self._picked = None
+                self._begin_playing(now, speak=True)
+            changed = True
+        elif state is AppState.BLEND:
+            done = elapsed >= BLEND_MIN and not self.speech_queue.busy
+            if done or elapsed >= BLEND_MAX:
+                self._picked = None
+                self.audio.play_sfx("whistle")
+                self._go(AppState.DEPART)
+            changed = True
+        elif state is AppState.DEPART:
+            if elapsed >= DEPART_SECONDS:
+                self._after_departure(now)
+            changed = True
+        elif state is AppState.FINALE:
+            if elapsed >= FINALE_SECONDS:
+                self._show_completion(now)
+            changed = True
+        phase = int(now * 4)
+        if phase != self._pulse_phase:
+            self._pulse_phase = phase
+            if self._hint_target is not None or now < self._point_until or self._has_pulsing_target():
+                changed = True
+        return changed
+
+    def _has_pulsing_target(self) -> bool:
+        if self.state is not AppState.PLAYING:
+            return False
+        step = self.session.current_step
+        return self.session.phase is Phase.CLAP or (step is not None and step.wagon is not None)
+
+    def _begin_playing(self, now: float, *, speak: bool) -> None:
+        self._go(AppState.PLAYING)
+        self._idle_hints = 0
+        self._hint_target = None
+        self._display = self.session.current_challenge
+        self.controls.sync(self.session)
+        if speak:
+            self._speak_goal(hint=False)
+        self._quiet_since = now
+
+    def _give_idle_hint(self, now: float) -> None:
+        if self.session.current_challenge is None:
+            return
+        self._idle_hints += 1
+        self.session.record_hint()
+        self._point_until = now + POINT_SECONDS
+        self._speak_goal(hint=True)
+
+    def _after_departure(self, now: float) -> None:
+        if self.session.is_complete:
+            self._go(AppState.FINALE)
+            self.audio.play_sfx("complete")
+            self.speech_queue.clear()
+            self.speech_queue.enqueue("leo.celebrate", gap=0.2)
+            if self.renderer.cast is not None:
+                self.renderer.cast.correct()
+            self.controls.sync(self.session, interactive=False)
+            return
+        self._display = self.session.current_challenge
+        self.audio.play_sfx("whistle")
+        self._go(AppState.ARRIVE)
+        self.controls.sync(self.session, interactive=False)
+
+    def _save_completion(self) -> None:
+        payload = self.session.consume_completion()
+        if payload is None:
+            return
+        next_level = adapt_level(self.session.level, self.session.history)
+        self.progress.save(next_level, self.session.history, words=CHALLENGE_COUNT, stars=CHALLENGE_COUNT)
+        self.events.train_completed(self.session_id, payload)
+
+    def _show_completion(self, now: float) -> None:
+        self.completion.prepare(
+            CompletionContent(
+                title=self.resources.text("victory.title"),
+                primary_label=self.resources.text("button.play_again"),
+                body_lines=(self.resources.text("victory.subtitle"),),
+                achievement_count=CHALLENGE_COUNT,
+            )
+        )
+        self._surfaces.push_overlay(CompletionOverlay(self.completion, on_primary=self._restart))
+        self._go(AppState.TERMINAL)
+
+    def _restart(self) -> None:
+        next_level = adapt_level(self.session.level, self.session.history)
+        challenges = self.factory.build_set(next_level)
+        self.session_id = f"{self.session_id.rsplit('-', 1)[0]}-{self.rng.randrange(1_000_000):06d}"
+        self.session = TrainSession(challenges, level=next_level, history=self.session.history)
+        self._surfaces.pop_overlay()
+        self.completion.clear()
+        if self.renderer.cast is not None:
+            self.renderer.cast.reset()
+        self._display = self.session.current_challenge
+        self._opening = True
+        self._activated = True
+        self._hint_target = None
+        self.speech_queue.clear()
+        self.audio.play_sfx("whistle")
+        self._go(AppState.ARRIVE)
+        self.controls.sync(self.session, interactive=False)
+
+    # -- drawing --------------------------------------------------------------------------
+    def scene_state(self) -> SceneState:
+        now = self.clock()
+        elapsed = now - self.state_started
+        challenge = self._display
+        session = self.session
+        same = challenge is not None and challenge is session.current_challenge
+        step = session.current_step if same else None
+        built = session.built_wagons if same else ()
+        claps = session.claps if same else 0
+        solved = challenge is not None and not same
+        if solved:
+            built = tuple(range(challenge.wagons))
+            claps = challenge.wagons
+        active = step.wagon if step is not None and self.state in {AppState.PLAYING, AppState.TRY_AGAIN} else None
+
+        offset = 0
+        if self.state is AppState.ARRIVE:
+            t = min(1.0, elapsed / ARRIVE_SECONDS)
+            offset = -int(TRAIN_TRAVEL * (1 - t) ** 2)
+        elif self.state is AppState.DEPART:
+            t = min(1.0, elapsed / DEPART_SECONDS)
+            offset = int(TRAIN_TRAVEL * t * t)
+        wheel_frame = abs(offset) // WHEEL_STRIDE
+
+        sign_picture = True
+        if challenge is not None and challenge.method is ReadingMethod.BEATS and not solved:
+            # The beats train hides its word until the right picture is chosen.
+            sign_picture = session.phase is Phase.CLAP and same
+            if self.state is AppState.STEP:
+                sign_picture = elapsed >= FLIGHT_END
+
+        sparkle = flight = pop = None
+        if self._picked is not None and self.state in {AppState.STEP, AppState.BLEND} and challenge is not None:
+            index, picked_step = self._picked
+            start = self.controls.choice_center(index)
+            if elapsed < 0.6:
+                sparkle = (start, elapsed / 0.6)
+            if picked_step.kind is StepKind.PICTURE:
+                end = self.controls.geometry.sign_face.center
+                item, start_size, end_size = picked_step.answer, PICTURE_SIZE, 100
+            else:
+                wagons, _ = TrainLayout.train_rects(challenge.wagons)
+                end = WAGON_FACE.move(wagons[picked_step.wagon].topleft).center
+                item, start_size, end_size = picked_step.answer, TILE_TEXT_SIZE, TILE_TEXT_SIZE
+                if picked_step.kind is StepKind.VOWEL:
+                    end = (end[0] + 22, end[1])
+                if elapsed < FLIGHT_END:
+                    built = tuple(w for w in built if w != picked_step.wagon)
+            if FLIGHT_START <= elapsed < FLIGHT_END:
+                flight = Flight(item, start, end, (elapsed - FLIGHT_START) / (FLIGHT_END - FLIGHT_START), start_size, end_size)
+            elif FLIGHT_END <= elapsed < FLIGHT_END + POP_SECONDS:
+                pop = (end, (elapsed - FLIGHT_END) / POP_SECONDS)
+            if picked_step.kind is not StepKind.PICTURE and elapsed < FLIGHT_END:
+                # Keep the wagon showing its consonant while the vowel flies in.
+                active = picked_step.wagon
+                step = picked_step
+
+        shake = None
+        if self._shake is not None:
+            control, started = self._shake
+            t = now - started
+            if t < SHAKE_SECONDS:
+                shake = (control, int(9 * (1 - t / SHAKE_SECONDS) * (1 if int(t * 36) % 2 else -1)))
+        hint_target = self._hint_target
+        if hint_target is None and now < self._point_until:
+            hint_target = "drum" if session.phase is Phase.CLAP else "sign"
+        if hint_target is None and self.state is AppState.PLAYING and session.phase is Phase.CLAP:
+            hint_target = "drum"
+        ring = None
+        if self._ring is not None:
+            ring = (self._ring[0], (now - self._ring[1]) / RING_SECONDS)
+        confetti = elapsed if self.state is AppState.FINALE else None
+        return SceneState(
+            challenge=challenge,
+            step=step if step is not None else (self._picked[1] if self._picked else None),
+            built=built,
+            claps=claps,
+            active_wagon=active,
+            train_offset=offset,
+            wheel_frame=wheel_frame,
+            sign_picture=sign_picture,
+            speaking=self.speech_queue.current_tag,
+            hint_target=hint_target,
+            pulse_phase=self._pulse_phase,
+            shake=shake,
+            sparkle_at=sparkle,
+            flight=flight,
+            pop_at=pop,
+            beat_ring=ring,
+            confetti=confetti,
+            leo_pointing=now < self._point_until,
+        )
+
+    def _render(self) -> None:
+        if self.state is AppState.TERMINAL:
+            self._surfaces.draw(self.canvas.surface)
+            return
+        self.renderer.draw_scene(
+            self.canvas.surface,
+            self.controls.geometry,
+            self.scene_state(),
+            draw_controls=self._draw_controls,
+        )
+
+    def _draw_controls(self, surface: pygame.Surface, offsets: dict[str, tuple[int, int]]) -> None:
+        if self.state in {AppState.STEP, AppState.BLEND} and self._picked is not None:
+            self._draw_solving_controls(surface)
+            return
+        if self.state is not AppState.PLAYING and self.state is not AppState.TRY_AGAIN:
+            self.controls.listen.draw(surface)
+            self.controls.dots.draw(surface)
+            return
+        moved = []
+        for control in self.controls.choices:
+            offset = offsets.get(control.control_id)
+            if offset is not None and control.visible:
+                moved.append((control, control.rect))
+                control.rect = control.rect.move(offset)
+        try:
+            self._surfaces.draw(surface)
+        finally:
+            for control, base in moved:
+                control.rect = base
+
+    def _draw_solving_controls(self, surface: pygame.Surface) -> None:
+        """While a pick flies to its wagon / the board, the other tiles stay put."""
+
+        self.controls.listen.draw(surface)
+        self.controls.dots.draw(surface)
+        if self._picked is None or self.clock() - self.state_started >= FLIGHT_END + POP_SECONDS:
+            return
+        picked, _ = self._picked
+        flying = self.clock() - self.state_started >= FLIGHT_START
+        for index, button in enumerate(self.controls.choices):
+            if button.visible and not (flying and index == picked):
+                button.draw(surface)
+
+
+def _safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
+    viewport = activity_viewport_for_surface(surface)
+    x, y = position
+    if not (0 <= x < viewport.surface.width and 0 <= y < viewport.surface.height):
+        return False
+    for protected in viewport.protected_regions:
         if protected.x <= x < protected.right and protected.y <= y < protected.bottom:
             return False
     return True
 
 
-class SillabeApp:
-    """Coordinate Sillabe Magiche lifecycle without owning domain or rendering details.
-
-    Dependencies are injected so the thin bootstrap can supply Greia context
-    (screen/canvas/metrics/typography/resources/locale/theme/storage) while
-    the session owns progression invariants and the renderer owns presentation
-    caches. The app only sequences input → model → audio → renderer → present.
-    """
-
-    def __init__(
-        self,
-        screen: pygame.Surface,
-        canvas: PygameReferenceCanvas,
-        metrics: ChildUiMetrics,
-        typography,
-        resources,
-        active_locale: str,
-        theme,
-        storage,
-    ) -> None:
-        self._screen = screen
-        self._canvas = canvas
-        self._metrics = metrics
-        self._typography = typography
-        self._resources = resources
-        self._active_locale = active_locale
-        self._theme = theme
-        self._storage = storage
-
-        self._sounds = SoundManager(resources=resources)
-        self._renderer = SillabeRenderer(typography)
-
-        self._curriculum = get_syllable_curriculum(active_locale)
-        self._session = SillabeSession(
-            words_pool=list(self._curriculum.words),
-            consonants_pool=self._curriculum.consonants,
-            vowels_pool=self._curriculum.vowels,
-            syllable_families=self._curriculum.syllable_families,
-        )
-        # Resolve fixed UI copy once; lesson-specific formula is recomputed
-        # only when the child selects a different consonant.
-        self._explorer_instruction = self._ui_text("ui.explorer.instruction")
-        self._catcher_instruction = self._ui_text("ui.catcher.listen")
-        self._first_slot_label = self._ui_text("ui.builder.first_syllable")
-        self._second_slot_label = self._ui_text("ui.builder.second_syllable")
-        self._explorer_formula = self._make_explorer_formula()
-        # Load persistent progression
-        if storage is not None:
-            try:
-                saved = storage.kv_get(STORAGE_KEY, {})
-                self._session.load_progress(saved)
-            except Exception:
-                pass
-
-        # Geometry (reference space)
-        self._tabs = [
-            ("explorer", "📖 " + display_text(self._curriculum.tabs[0]), pygame.Rect(180, 16, 175, 58)),
-            ("catcher", "🎯 " + display_text(self._curriculum.tabs[1]), pygame.Rect(370, 16, 175, 58)),
-            ("builder", "🧩 " + display_text(self._curriculum.tabs[2]), pygame.Rect(560, 16, 175, 58)),
-        ]
-        self._audio_btn_rect = pygame.Rect(755, 14, 68, 62)
-        self._star_jar_rect = pygame.Rect(835, 14, 130, 62)
-        self._btn_whole_word_rect = pygame.Rect(385, 208, 110, 58)
-        self._btn_split_syllables_rect = pygame.Rect(525, 208, 110, 58)
-
-        self._mascot = LeoCompanion(935, 480)
-        self._particles: list[Particle] = []
-
-        # Station 1
-        self._cards_station1: list[SyllableCard] = []
-        self._refresh_station1_cards()
-
-        # Station 2
-        self._catcher_orbs: list[FloatingOrb] = []
-        self._start_catcher_round(play_audio=False)
-
-        # Station 3
-        self._word_tiles: list[WordTile] = []
-        self._start_word_round(play_audio=False)
-
-        self._initial_prompt_timer = 0.45
-        self._running = True
-        self._ready_published = False
-        self._virtual_pointer = (512.0, 300.0)
-        self._pointer_down = False
-
-    def _ui_text(self, key: str, variables: dict[str, str] | None = None) -> str:
-        """Use the Activity's existing locale authority, never an Italian default."""
-        if self._resources is None:
-            return "✦"
-        try:
-            return self._resources.text(key, variables)
-        except (KeyError, ValueError):
-            # Missing/broken authoring data must not introduce wrong-language
-            # text; catalogues are checked explicitly before release.
-            return "✦"
-
-    def _make_explorer_formula(self) -> str:
-        return self._ui_text(
-            "ui.explorer.formula",
-            {
-                "consonant": self._session.active_consonant,
-                "syllables": " · ".join(self._session.explorer_syllables()),
-            },
-        )
-
-    # ------------------------------------------------------------------ #
-    # Persistence helper
-    # ------------------------------------------------------------------ #
-    def _save_progress(self) -> None:
-        if self._storage is None:
-            return
-        try:
-            self._storage.kv_set(STORAGE_KEY, self._session.save_progress())
-        except Exception:
-            pass
-
-    def _safe_emit(self, ev_id: str, ikey: str, payload: object = None) -> None:
-        try:
-            emit_activity_event(ev_id, idempotency_key=ikey, payload=payload)
-        except Exception:
-            pass
-
-    # ------------------------------------------------------------------ #
-    # Station factories (presentation lists derived from model logical state)
-    # ------------------------------------------------------------------ #
-    def _refresh_station1_cards(self) -> None:
-        self._cards_station1.clear()
-        base_x = 230
-        card_w = 118
-        gap = 20
-        syllables = self._session.explorer_syllables()
-        for i, syl in enumerate(syllables):
-            cx = base_x + i * (card_w + gap)
-            cy = 280
-            self._cards_station1.append(SyllableCard(syl, cx, cy, w=card_w, h=136, color_idx=i))
-
-    def _start_catcher_round(self, play_audio: bool = True) -> None:
-        target, orb_syls = self._session.start_catcher_round()
-        # Presentation placement — keep exact original slots/offsets
-        slots = [
-            (240, 230),
-            (430, 200),
-            (620, 230),
-            (800, 210),
-            (320, 390),
-            (530, 410),
-            (730, 390),
-        ]
-        # Use a fresh shuffle via session rng for determinism
-        try:
-            self._session.rng.shuffle(slots)  # type: ignore[attr-defined]
-        except Exception:
-            random.shuffle(slots)
-        self._catcher_orbs.clear()
-        for i, s in enumerate(orb_syls):
-            sx, sy = slots[i % len(slots)]
-            # Keep original jitter bounds
-            jx = self._session.rng.uniform(-15, 15) if hasattr(self._session.rng, "uniform") else random.uniform(-15, 15)  # type: ignore[union-attr]
-            jy = self._session.rng.uniform(-10, 10) if hasattr(self._session.rng, "uniform") else random.uniform(-10, 10)  # type: ignore[union-attr]
-            self._catcher_orbs.append(FloatingOrb(s, sx + jx, sy + jy, is_target=(s == target), color_idx=i))
-        if play_audio:
-            self._sounds.play_prompt(target, self._active_locale)
-
-    def _start_word_round(self, play_audio: bool = True) -> None:
-        word_tuple, choices = self._session.start_word_round()
-        # word_tuple already synced into session fields
-        self._word_tiles.clear()
-        base_x = 240
-        tile_w = 120
-        gap = 26
-        for i, s in enumerate(choices):
-            tx = base_x + i * (tile_w + gap)
-            ty = 440
-            self._word_tiles.append(WordTile(s, tx, ty, w=tile_w, h=98, color_idx=i))
-        if play_audio:
-            self._sounds.play_word(self._session.cur_stem, self._active_locale)
-
-    # ------------------------------------------------------------------ #
-    # Main loop
-    # ------------------------------------------------------------------ #
-    def run(self) -> int:
-        clock = pygame.time.Clock()
-
-        while self._running and not activity_stop_requested():
-            dt = clock.tick(60) / 1000.0
-
-            if self._initial_prompt_timer > 0:
-                self._initial_prompt_timer -= dt
-                if self._initial_prompt_timer <= 0:
-                    self._sounds.play_consonant(self._session.active_consonant, self._active_locale)
-
-            # Audio state machines (timers owned by session logical state but driven here)
-            if self._session.catcher_state == "praise_pending":
-                self._session.catcher_timer -= dt
-                if self._session.catcher_timer <= 0:
-                    self._sounds.play_praise(self._active_locale)
-                    self._session.catcher_state = "next_round_pending"
-                    self._session.catcher_timer = 1.15
-            elif self._session.catcher_state == "next_round_pending":
-                self._session.catcher_timer -= dt
-                if self._session.catcher_timer <= 0:
-                    self._start_catcher_round(play_audio=True)
-
-            if self._session.syllable_speech_step == 1:
-                self._session.syllable_speech_timer -= dt
-                if self._session.syllable_speech_timer <= 0:
-                    self._sounds.play_syllable(self._session.cur_s2, self._active_locale)
-                    self._session.syllable_speech_step = 0
-
-            if self._session.word_completion_step == 1:
-                self._session.word_completion_timer -= dt
-                if self._session.word_completion_timer <= 0:
-                    self._sounds.play_word(self._session.cur_stem, self._active_locale)
-                    self._session.word_completion_step = 2
-                    self._session.word_completion_timer = 0.90
-            elif self._session.word_completion_step == 2:
-                self._session.word_completion_timer -= dt
-                if self._session.word_completion_timer <= 0:
-                    self._sounds.play_praise(self._active_locale)
-                    self._session.word_completion_step = 3
-                    self._session.word_completion_timer = 1.40
-            elif self._session.word_completion_step == 3:
-                self._session.word_completion_timer -= dt
-                if self._session.word_completion_timer <= 0:
-                    self._session.word_completion_step = 0
-                    self._session.word_index += 1
-                    self._start_word_round(play_audio=True)
-
-            # Events
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self._running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self._running = False
-                    elif event.key == pygame.K_SPACE:
-                        if self._session.current_mode == "explorer":
-                            self._sounds.play_consonant(self._session.active_consonant, self._active_locale)
-                        elif self._session.current_mode == "catcher":
-                            self._sounds.play_prompt(self._session.target_syl, self._active_locale)
-                        elif self._session.current_mode == "builder":
-                            self._sounds.play_word(self._session.cur_stem, self._active_locale)
-                elif event.type == pygame.VIDEORESIZE:
-                    self._screen = pygame.display.get_surface() or self._screen
-                    self._metrics = ChildUiMetrics.for_size(*self._screen.get_size())
-                    self._canvas = PygameReferenceCanvas(self._screen)
-                    self._renderer.invalidate()
-                elif event.type == pygame.MOUSEMOTION:
-                    logical = self._canvas.pointer(event.pos)
-                    if logical is not None:
-                        self._virtual_pointer = logical
-                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    self._pointer_down = False
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    self._pointer_down = True
-                    logical = self._canvas.pointer(event.pos)
-                    if logical is None:
-                        continue
-                    lx, ly = logical
-                    if not _is_safe_point(self._screen, event.pos):
-                        continue
-
-                    # 1. Top Mode Tabs
-                    mode_changed = False
-                    for m_id, _m_label, r in self._tabs:
-                        if r.collidepoint(lx, ly) and self._session.current_mode != m_id:
-                            self._session.set_mode(m_id)
-                            mode_changed = True
-                            if self._session.current_mode == "explorer":
-                                self._sounds.play_consonant(self._session.active_consonant, self._active_locale)
-                            elif self._session.current_mode == "catcher":
-                                self._start_catcher_round(play_audio=True)
-                            elif self._session.current_mode == "builder":
-                                self._start_word_round(play_audio=True)
-                            break
-                    if mode_changed:
-                        continue
-
-                    # 2. Main Audio Replay Button
-                    if self._audio_btn_rect.collidepoint(lx, ly):
-                        if self._session.current_mode == "explorer":
-                            self._sounds.play_consonant(self._session.active_consonant, self._active_locale)
-                        elif self._session.current_mode == "catcher":
-                            self._sounds.play_prompt(self._session.target_syl, self._active_locale)
-                        elif self._session.current_mode == "builder":
-                            self._sounds.play_word(self._session.cur_stem, self._active_locale)
-                        continue
-
-                    # 3. Mascot Tap
-                    if self._mascot.contains(lx, ly):
-                        self._mascot.wiggle()
-                        self._sounds.play("pop")
-                        continue
-
-                    # 4. Mode Interactions
-                    if self._session.current_mode == "explorer":
-                        # Consonant Palette Buttons
-                        pal_w = 68
-                        pal_h = 56
-                        for i, c in enumerate(self._session.consonants_pool):
-                            row = i % 7
-                            col = i // 7
-                            bx = 40 + col * 76
-                            by = 136 + row * 62
-                            btn_rect = pygame.Rect(bx, by, pal_w, pal_h)
-                            if btn_rect.collidepoint(lx, ly):
-                                self._session.set_active_consonant(c)
-                                self._explorer_formula = self._make_explorer_formula()
-                                self._sounds.play_consonant(c, self._active_locale)
-                                self._refresh_station1_cards()
-                                self._mascot.wiggle()
-                                break
-
-                        for card in self._cards_station1:
-                            if card.contains(lx, ly):
-                                card.bounce()
-                                self._sounds.play_syllable(card.syl, self._active_locale)
-                                self._mascot.cheer()
-                                for _ in range(16):
-                                    self._particles.append(Particle(card.rect.centerx, card.rect.centery, card.color_pair[0]))
-                                self._safe_emit("syllable.explored", f"syl_{card.syl}_{time.time()}")
-                                self._session.on_explore(card.syl)
-
-                    elif self._session.current_mode == "catcher":
-                        if self._session.catcher_state == "idle":
-                            for orb in self._catcher_orbs:
-                                if orb.contains(lx, ly):
-                                    if orb.syl == self._session.target_syl:
-                                        self._sounds.play_syllable(orb.syl, self._active_locale)
-                                        self._mascot.cheer()
-                                        # Score via session triggers state/timers
-                                        self._session.on_catcher_tap(orb.syl)
-                                        self._save_progress()
-                                        self._safe_emit("syllable.matched", f"match_{self._session.target_syl}_{time.time()}")
-                                        for _ in range(24):
-                                            self._particles.append(Particle(orb.x, orb.y, GOLD))
-                                    else:
-                                        orb.wobble()
-                                        self._sounds.play_syllable(orb.syl, self._active_locale)
-                                    break
-
-                    elif self._session.current_mode == "builder":
-                        if self._btn_whole_word_rect.collidepoint(lx, ly):
-                            self._sounds.play_word(self._session.cur_stem, self._active_locale)
-                            self._mascot.wiggle()
-                            continue
-                        if self._btn_split_syllables_rect.collidepoint(lx, ly):
-                            self._sounds.play_syllable(self._session.cur_s1, self._active_locale)
-                            self._session.start_syllable_breakdown()
-                            self._mascot.wiggle()
-                            continue
-
-                        if not self._session.word_completed:
-                            for tile in self._word_tiles:
-                                if tile.contains(lx, ly):
-                                    result = self._session.on_builder_tile(tile.syl)
-                                    if result == "slot1_ok":
-                                        tile.used = True
-                                        self._sounds.play_syllable(self._session.cur_s1, self._active_locale)
-                                        for _ in range(12):
-                                            self._particles.append(Particle(tile.rect.centerx, tile.rect.centery, MINT_GREEN))
-                                    elif result == "wrong_slot1":
-                                        tile.wobble()
-                                        self._sounds.play_syllable(tile.syl, self._active_locale)
-                                    elif result == "word_done":
-                                        tile.used = True
-                                        self._sounds.play_syllable(self._session.cur_s2, self._active_locale)
-                                        self._mascot.cheer()
-                                        self._save_progress()
-                                        self._safe_emit("word.completed", f"word_{self._session.cur_stem}_{time.time()}")
-                                        for _ in range(30):
-                                            self._particles.append(Particle(512, 170, GOLD))
-                                    elif result in ("wrong_slot2",):
-                                        tile.wobble()
-                                        self._sounds.play_syllable(tile.syl, self._active_locale)
-                                    break
-                        else:
-                            self._session.word_index += 1
-                            self._start_word_round(play_audio=True)
-
-                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    self._pointer_down = False
-
-            # Update Scene Entities
-            self._mascot.update()
-            self._particles = [p for p in self._particles if p.update()]
-
-            if self._session.current_mode == "explorer":
-                for c in self._cards_station1:
-                    c.update()
-            elif self._session.current_mode == "catcher":
-                for orb in self._catcher_orbs:
-                    orb.update()
-            elif self._session.current_mode == "builder":
-                for tile in self._word_tiles:
-                    tile.update()
-
-            # Draw — every frame for this animated Activity (no dirty gate complexity)
-            self._draw()
-
-            # READY contract: exactly once, after first flip in the same loop iteration
-            if not self._ready_published:
-                mark_activity_ready()
-                self._ready_published = True
-
-        # Final persistence (also handled incrementally)
-        self._save_progress()
-        return 0
-
-    # ------------------------------------------------------------------ #
-    # Rendering composition (delegates entity draws to renderer-owned objects)
-    # ------------------------------------------------------------------ #
-    def _draw(self) -> None:
-        logical_surf = self._canvas.surface
-        # 1. Background Meadow (prebaked)
-        logical_surf.blit(self._renderer.backdrop(), (0, 0))
-
-        # 2. Top Navigation Bar
-        for m_id, m_label, r in self._tabs:
-            is_active = self._session.current_mode == m_id
-            tab_bg = GOLD if is_active else CARD_BG
-            tab_border = GOLD_BORDER if is_active else CARD_BORDER
-            pygame.draw.rect(logical_surf, (0, 0, 0, 30), (r.x + 2, r.y + 4, r.w, r.h), border_radius=16)
-            pygame.draw.rect(logical_surf, tab_bg, r, border_radius=16)
-            pygame.draw.rect(logical_surf, tab_border, r, width=3 if is_active else 2, border_radius=16)
-            tab_text = self._typography.render(m_label, FontRole.CONTROL, 20, DARK_TEXT)
-            logical_surf.blit(tab_text, (r.x + (r.w - tab_text.get_width()) // 2, r.y + (r.h - tab_text.get_height()) // 2))
-
-        # Audio Button
-        pygame.draw.rect(logical_surf, (0, 0, 0, 30), (self._audio_btn_rect.x + 2, self._audio_btn_rect.y + 4, self._audio_btn_rect.w, self._audio_btn_rect.h), border_radius=16)
-        pygame.draw.rect(logical_surf, SKY_BLUE, self._audio_btn_rect, border_radius=16)
-        pygame.draw.rect(logical_surf, CARD_BORDER, self._audio_btn_rect, width=2, border_radius=16)
-        speaker_icon = self._typography.render("🔊", FontRole.DISPLAY, 26, (255, 255, 255))
-        logical_surf.blit(speaker_icon, (self._audio_btn_rect.x + (self._audio_btn_rect.w - speaker_icon.get_width()) // 2, self._audio_btn_rect.y + (self._audio_btn_rect.h - speaker_icon.get_height()) // 2))
-
-        # Star Jar Counter — bounded renderer cache
-        pygame.draw.rect(logical_surf, (0, 0, 0, 30), (self._star_jar_rect.x + 2, self._star_jar_rect.y + 4, self._star_jar_rect.w, self._star_jar_rect.h), border_radius=16)
-        pygame.draw.rect(logical_surf, CARD_BG, self._star_jar_rect, border_radius=16)
-        pygame.draw.rect(logical_surf, GOLD_BORDER, self._star_jar_rect, width=2, border_radius=16)
-        star_icon = self._renderer.star_surface(self._session.stars)
-        logical_surf.blit(star_icon, (self._star_jar_rect.x + (self._star_jar_rect.w - star_icon.get_width()) // 2, self._star_jar_rect.y + (self._star_jar_rect.h - star_icon.get_height()) // 2))
-
-        # 3. Mode Content
-        if self._session.current_mode == "explorer":
-            # Consonant Toy Box Shelf
-            shelf_rect = pygame.Rect(28, 92, 172, 490)
-            pygame.draw.rect(logical_surf, (0, 0, 0, 25), (shelf_rect.x + 3, shelf_rect.y + 4, shelf_rect.w, shelf_rect.h), border_radius=18)
-            pygame.draw.rect(logical_surf, (248, 242, 230), shelf_rect, border_radius=18)
-            pygame.draw.rect(logical_surf, (215, 195, 170), shelf_rect, width=3, border_radius=18)
-
-            pal_title = self._typography.render(display_text(self._curriculum.consonant_heading), FontRole.TITLE, 18, DARK_TEXT)
-            logical_surf.blit(pal_title, (shelf_rect.centerx - pal_title.get_width() // 2, 104))
-
-            pal_w = 68
-            pal_h = 56
-            for i, c in enumerate(self._session.consonants_pool):
-                row = i % 7
-                col = i // 7
-                bx = 38 + col * 78
-                by = 136 + row * 62
-                btn_rect = pygame.Rect(bx, by, pal_w, pal_h)
-                is_sel = c == self._session.active_consonant
-                pygame.draw.rect(logical_surf, (0, 0, 0, 30), (bx + 2, by + 4, pal_w, pal_h), border_radius=14)
-                c_bg = GOLD if is_sel else (255, 255, 255)
-                c_border = GOLD_BORDER if is_sel else CARD_BORDER
-                pygame.draw.rect(logical_surf, c_bg, btn_rect, border_radius=14)
-                pygame.draw.rect(logical_surf, c_border, btn_rect, width=3 if is_sel else 2, border_radius=14)
-                c_text = self._typography.render(c, FontRole.DISPLAY, 30, DARK_TEXT)
-                logical_surf.blit(c_text, (bx + (pal_w - c_text.get_width()) // 2, by + (pal_h - c_text.get_height()) // 2 - 2))
-                if is_sel:
-                    pygame.draw.circle(logical_surf, (255, 255, 255), (bx + pal_w - 6, by + 6), 6)
-                    pygame.draw.circle(logical_surf, CORAL, (bx + pal_w - 6, by + 6), 4)
-
-            # Central Workshop Header Card
-            top_card = pygame.Rect(226, 92, 670, 140)
-            pygame.draw.rect(logical_surf, (0, 0, 0, 25), (top_card.x + 3, top_card.y + 4, top_card.w, top_card.h), border_radius=22)
-            pygame.draw.rect(logical_surf, CARD_BG, top_card, border_radius=22)
-            pygame.draw.rect(logical_surf, CARD_BORDER, top_card, width=3, border_radius=22)
-            formula_surf = self._typography.render(display_text(self._explorer_formula), FontRole.TITLE, 22, DARK_TEXT)
-            logical_surf.blit(formula_surf, (top_card.centerx - formula_surf.get_width() // 2, top_card.y + 20))
-            instruct_surf = self._typography.render(display_text(self._explorer_instruction), FontRole.BODY, 18, (100, 85, 115))
-            logical_surf.blit(instruct_surf, (top_card.centerx - instruct_surf.get_width() // 2, top_card.y + 72))
-            for card in self._cards_station1:
-                card.draw(logical_surf, self._typography)
-
-        elif self._session.current_mode == "catcher":
-            banner_rect = pygame.Rect(260, 95, 504, 76)
-            pygame.draw.rect(logical_surf, (0, 0, 0, 25), (banner_rect.x + 3, banner_rect.y + 4, banner_rect.w, banner_rect.h), border_radius=18)
-            pygame.draw.rect(logical_surf, CARD_BG, banner_rect, border_radius=18)
-            pygame.draw.rect(logical_surf, GOLD_BORDER, banner_rect, width=3, border_radius=18)
-            p_txt = display_text(self._catcher_instruction + "  ")
-            p_surf = self._typography.render(p_txt, FontRole.TITLE, 28, DARK_TEXT)
-            target_surf = self._typography.render(self._session.target_syl, FontRole.DISPLAY, 40, CORAL)
-            total_w = p_surf.get_width() + target_surf.get_width()
-            sx = banner_rect.centerx - total_w // 2
-            logical_surf.blit(p_surf, (sx, banner_rect.centery - p_surf.get_height() // 2))
-            logical_surf.blit(target_surf, (sx + p_surf.get_width(), banner_rect.centery - target_surf.get_height() // 2))
-            for orb in self._catcher_orbs:
-                orb.draw(logical_surf, self._typography)
-
-        elif self._session.current_mode == "builder":
-            center_card = pygame.Rect(240, 86, 544, 320)
-            pygame.draw.rect(logical_surf, (0, 0, 0, 25), (center_card.x + 4, center_card.y + 5, center_card.w, center_card.h), border_radius=24)
-            pygame.draw.rect(logical_surf, CARD_BG, center_card, border_radius=24)
-            pygame.draw.rect(logical_surf, CARD_BORDER, center_card, width=3, border_radius=24)
-            emoji_surf = self._typography.render(self._session.cur_emoji, FontRole.DISPLAY, 80, DARK_TEXT)
-            logical_surf.blit(emoji_surf, (center_card.centerx - emoji_surf.get_width() // 2, center_card.y + 12))
-            if self._session.word_completed:
-                comp_txt = self._typography.render(f"✨ {self._session.cur_word_display} ✨", FontRole.TITLE, 32, (220, 130, 20))
-                logical_surf.blit(comp_txt, (center_card.centerx - comp_txt.get_width() // 2, center_card.y + 104))
-            # Icon-only audio buttons (no text spoilers)
-            pygame.draw.rect(logical_surf, (0, 0, 0, 25), (self._btn_whole_word_rect.x + 2, self._btn_whole_word_rect.y + 4, self._btn_whole_word_rect.w, self._btn_whole_word_rect.h), border_radius=18)
-            pygame.draw.rect(logical_surf, GOLD, self._btn_whole_word_rect, border_radius=18)
-            pygame.draw.rect(logical_surf, GOLD_BORDER, self._btn_whole_word_rect, width=3, border_radius=18)
-            btn1_icon = self._typography.render("🔊", FontRole.DISPLAY, 32, DARK_TEXT)
-            logical_surf.blit(btn1_icon, (self._btn_whole_word_rect.centerx - btn1_icon.get_width() // 2, self._btn_whole_word_rect.centery - btn1_icon.get_height() // 2))
-            pygame.draw.rect(logical_surf, (0, 0, 0, 25), (self._btn_split_syllables_rect.x + 2, self._btn_split_syllables_rect.y + 4, self._btn_split_syllables_rect.w, self._btn_split_syllables_rect.h), border_radius=18)
-            is_speaking_split = self._session.syllable_speech_step > 0
-            pygame.draw.rect(logical_surf, SKY_BLUE if not is_speaking_split else MINT_GREEN, self._btn_split_syllables_rect, border_radius=18)
-            pygame.draw.rect(logical_surf, CARD_BORDER, self._btn_split_syllables_rect, width=3, border_radius=18)
-            btn2_icon = self._typography.render("🗣️", FontRole.DISPLAY, 32, DARK_TEXT if is_speaking_split else LIGHT_TEXT)
-            logical_surf.blit(btn2_icon, (self._btn_split_syllables_rect.centerx - btn2_icon.get_width() // 2, self._btn_split_syllables_rect.centery - btn2_icon.get_height() // 2))
-
-            # Syllable slots
-            slot_w, slot_h = 135, 96
-            slot1_rect = pygame.Rect(center_card.centerx - slot_w - 18, center_card.y + 195, slot_w, slot_h)
-            slot2_rect = pygame.Rect(center_card.centerx + 18, center_card.y + 195, slot_w, slot_h)
-            if self._session.slot1_filled:
-                pygame.draw.rect(logical_surf, MINT_GREEN, slot1_rect, border_radius=18)
-                pygame.draw.rect(logical_surf, CARD_BORDER, slot1_rect, width=3, border_radius=18)
-                s1_txt = self._typography.render(self._session.cur_s1, FontRole.DISPLAY, 46, (255, 255, 255))
-                logical_surf.blit(s1_txt, (slot1_rect.centerx - s1_txt.get_width() // 2, slot1_rect.centery - s1_txt.get_height() // 2))
-            else:
-                pygame.draw.rect(logical_surf, (244, 244, 244), slot1_rect, border_radius=18)
-                pygame.draw.rect(logical_surf, (160, 160, 175), slot1_rect, width=3, border_radius=18)
-                q1_txt = self._typography.render(display_text(self._first_slot_label), FontRole.TITLE, 20, (160, 160, 175))
-                logical_surf.blit(q1_txt, (slot1_rect.centerx - q1_txt.get_width() // 2, slot1_rect.centery - q1_txt.get_height() // 2))
-            if self._session.slot2_filled:
-                pygame.draw.rect(logical_surf, MINT_GREEN, slot2_rect, border_radius=18)
-                pygame.draw.rect(logical_surf, CARD_BORDER, slot2_rect, width=3, border_radius=18)
-                s2_txt = self._typography.render(self._session.cur_s2, FontRole.DISPLAY, 46, (255, 255, 255))
-                logical_surf.blit(s2_txt, (slot2_rect.centerx - s2_txt.get_width() // 2, slot2_rect.centery - s2_txt.get_height() // 2))
-            else:
-                pygame.draw.rect(logical_surf, (244, 244, 244), slot2_rect, border_radius=18)
-                pygame.draw.rect(logical_surf, (160, 160, 175), slot2_rect, width=3, border_radius=18)
-                q2_txt = self._typography.render(display_text(self._second_slot_label), FontRole.TITLE, 20, (160, 160, 175))
-                logical_surf.blit(q2_txt, (slot2_rect.centerx - q2_txt.get_width() // 2, slot2_rect.centery - q2_txt.get_height() // 2))
-            for tile in self._word_tiles:
-                tile.draw(logical_surf, self._typography)
-
-        # 4. Companion Leo
-        self._mascot.draw(logical_surf)
-
-        # 5. Confetti & Star Particles
-        for p in self._particles:
-            p.draw(logical_surf)
-
-        # 6. Virtual Cursor
-        cx, cy = self._virtual_pointer
-        pygame.draw.circle(logical_surf, (255, 255, 255), (int(cx), int(cy)), 10)
-        pygame.draw.circle(logical_surf, CORAL if self._pointer_down else SKY_BLUE, (int(cx), int(cy)), 7)
-        pygame.draw.circle(logical_surf, CARD_BORDER, (int(cx), int(cy)), 10, width=2)
-
-        self._canvas.present(clear=self._theme.background)
-        pygame.display.flip()
-
-
-__all__ = ["SillabeApp"]
+__all__ = ["AppState", "SillabeActivity"]

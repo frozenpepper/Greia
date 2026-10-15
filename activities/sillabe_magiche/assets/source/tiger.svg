@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Sillabe Magiche picture "tiger" (EN two beats: TI-GER): a sitting striped tiger cub, front view (stripes and round ears keep it apart from Tito's fox). Shared-library candidate prop.vocab.tiger. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange light -> orange -->
+    <linearGradient id="tiger_fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C288"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="132" cy="228" rx="80" ry="12" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="tail">
+    <path d="M178 204 C210 204 228 184 220 152 C218 144 226 138 232 146 C246 176 230 216 182 218 Z" fill="url(#tiger_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M216 166 L230 160 M222 186 L236 188 M204 204 L212 214" fill="none" stroke="#4B372F" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <g id="ears">
+    <circle cx="80" cy="64" r="20" fill="url(#tiger_fur)" stroke="#4B372F" stroke-width="3.5"/>
+    <circle cx="176" cy="64" r="20" fill="url(#tiger_fur)" stroke="#4B372F" stroke-width="3.5"/>
+    <circle cx="80" cy="66" r="9" fill="#FFFBEB"/>
+    <circle cx="176" cy="66" r="9" fill="#FFFBEB"/>
+  </g>
+  <g id="body">
+    <path d="M68 200 C62 160 92 138 128 138 C164 138 194 160 188 200 C186 218 164 226 128 226 C92 226 70 218 68 200 Z" fill="url(#tiger_fur)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="192" rx="30" ry="26" fill="#FFFBEB"/>
+    <path d="M72 174 L90 178 M70 194 L88 194 M184 174 L166 178 M186 194 L168 194" fill="none" stroke="#4B372F" stroke-width="5" stroke-linecap="round"/>
+    <ellipse cx="102" cy="218" rx="20" ry="11" fill="#FFFBEB" stroke="#4B372F" stroke-width="3.5"/>
+    <ellipse cx="154" cy="218" rx="20" ry="11" fill="#FFFBEB" stroke="#4B372F" stroke-width="3.5"/>
+  </g>
+  <g id="head">
+    <ellipse cx="128" cy="104" rx="62" ry="52" fill="url(#tiger_fur)" stroke="#4B372F" stroke-width="4.5"/>
+    <ellipse cx="100" cy="68" rx="18" ry="7" fill="#FFFFFF" opacity="0.6" transform="rotate(-16 100 68)"/>
+    <path d="M94 124 C94 108 114 104 128 112 C142 104 162 108 162 124 C162 144 146 154 128 154 C110 154 94 144 94 124 Z" fill="#FFFBEB"/>
+    <path d="M128 56 V74 M110 60 L114 76 M146 60 L142 76 M68 98 L86 102 M68 116 L86 116 M188 98 L170 102 M188 116 L170 116" fill="none" stroke="#4B372F" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <g id="face">
+    <ellipse cx="106" cy="98" rx="6" ry="7.5" fill="#342C35"/>
+    <ellipse cx="150" cy="98" rx="6" ry="7.5" fill="#342C35"/>
+    <circle cx="108" cy="95" r="2.4" fill="#FFFFFF"/>
+    <circle cx="152" cy="95" r="2.4" fill="#FFFFFF"/>
+    <path d="M119 120 H137 L128 130 Z" fill="#D85683" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M128 130 V136 M128 136 C124 142 117 142 114 138 M128 136 C132 142 139 142 142 138" fill="none" stroke="#72513F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="90" cy="130" rx="9" ry="5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="166" cy="130" rx="9" ry="5" fill="#FDA4AF" opacity="0.55"/>
+  </g>
+</svg>

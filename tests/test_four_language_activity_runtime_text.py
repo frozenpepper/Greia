@@ -110,35 +110,25 @@ class FourLanguageRuntimeTextContract(unittest.TestCase):
 
 
 
-    def test_magic_syllables_live_guidance_and_phonics_formula(self) -> None:
-        from string import Template
-
+    def test_magic_syllables_train_text_is_localized_and_pictorial(self) -> None:
+        # The free-play syllabary/catch/builder tabs (explorer formula, slot
+        # labels) were retired by the 2026-10-15 rework into Leo's Syllable
+        # Train: the game is spoken + pictorial; only the completion scene shows
+        # localized text, and the taught syllables are the only letters drawn.
         activity = ROOT / "activities/sillabe_magiche"
-        required = {
-            "ui.explorer.formula", "ui.explorer.instruction",
-            "ui.catcher.listen", "ui.builder.first_syllable",
-            "ui.builder.second_syllable",
-        }
+        required = {"activity.title", "victory.title", "victory.subtitle", "button.play_again"}
         for language in LANGUAGES:
             with self.subTest(language=language):
                 strings = _strings(activity, language)
                 self.assertFalse(required.difference(strings))
                 self.assertTrue(all(strings[key].strip() for key in required))
-                # The authored template must be compatible with Greia's
-                # real string.Template substitution, NOT Python .format().
-                result = Template(strings["ui.explorer.formula"]).substitute(
-                    consonant="M", syllables="MA · MÉ · MI · MO · MU"
-                )
-                self.assertIn("MÉ", result)
-                self.assertIn("M", result)
 
         app = (activity / "sillabe_app.py").read_text(encoding="utf-8")
         compile(app, str(activity / "sillabe_app.py"), "exec")
-        self.assertIn("self._session.explorer_syllables()", app)
-        self.assertIn("self._explorer_formula = self._make_explorer_formula()", app)
+        self.assertIn('self.resources.text("victory.title")', app)
         for obsolete in (
             "Fabbrica delle Sillabe:", "Tocca ogni tessera per ascoltare",
-            "Ascolta e tocca:", "1° Sillaba", "2° Sillaba",
+            "Ascolta e tocca:", "1° Sillaba", "2° Sillaba", "Sillabario",
         ):
             self.assertNotIn(obsolete, app)
 

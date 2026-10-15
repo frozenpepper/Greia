@@ -4,23 +4,10 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Sílabas mágicas",
-    "mode.explorer": "Explorar sílabas",
-    "mode.catcher": "Atrapar",
-    "mode.builder": "Formar palabras",
-    "prompt.explore": "¡Toca una consonante y descubre las sílabas!",
-    "prompt.catch": "¡Escucha y encuentra la sílaba correcta!",
-    "prompt.build": "¡Forma la palabra con las dos sílabas!",
-    "feedback.correct": "¡Muy bien!",
-    "feedback.fantastic": "¡Fantástico!",
-    "feedback.super": "¡Genial!",
-    "feedback.word_complete": "¡Palabra completada!",
-    "ui.replay_audio": "Repetir sonido",
-    "ui.stars": "Estrellas",
-    "ui.explorer.formula": "Sílabas con $consonant: $syllables",
-    "ui.explorer.instruction": "¡Toca una ficha para escuchar su sílaba!",
-    "ui.catcher.listen": "Escucha y toca:",
-    "ui.builder.first_syllable": "1.ª sílaba",
-    "ui.builder.second_syllable": "2.ª sílaba"
+    "activity.sillabe_magiche.title": "Sílabas mágicas",
+    "victory.title": "¡Qué buen trenecito!",
+    "victory.subtitle": "¡El tren de Leo llevó todas las palabras!",
+    "button.play_again": "Jugar otra vez"
   },
   "audio": {}
 }

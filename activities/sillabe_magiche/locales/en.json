@@ -4,23 +4,10 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Magic Syllables",
-    "mode.explorer": "Syllabary",
-    "mode.catcher": "Catch",
-    "mode.builder": "Word Builder",
-    "prompt.explore": "Tap a consonant and discover the syllables!",
-    "prompt.catch": "Listen and find the right syllable!",
-    "prompt.build": "Build the word with the two syllables!",
-    "feedback.correct": "Great job!",
-    "feedback.fantastic": "Fantastic!",
-    "feedback.super": "Super!",
-    "feedback.word_complete": "Word completed!",
-    "ui.replay_audio": "Replay sound",
-    "ui.stars": "Stars",
-    "ui.explorer.formula": "Syllables for $consonant: $syllables",
-    "ui.explorer.instruction": "Tap a tile to hear its syllable!",
-    "ui.catcher.listen": "Listen and touch:",
-    "ui.builder.first_syllable": "1st syllable",
-    "ui.builder.second_syllable": "2nd syllable"
+    "activity.sillabe_magiche.title": "Magic Syllables",
+    "victory.title": "Great syllable train!",
+    "victory.subtitle": "Leo's train carried every word!",
+    "button.play_again": "Play again"
   },
   "audio": {
     "activity.title": {

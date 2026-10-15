@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 208 300" width="208" height="300">
+  <!-- Sillabe Magiche: station picture board (from Treno Numeri; shared-library candidate prop.train.station_sign); the word picture is painted on the cream face at runtime. -->
+  <defs>
+    <!-- orange light -> orange -->
+    <linearGradient id="station_sign_frame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C288"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+    <!-- coral light -> coral -->
+    <linearGradient id="station_sign_roof" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="104" cy="292" rx="72" ry="7" fill="#6A5147" opacity="0.16"/>
+  </g>
+  <g id="posts" fill="#C98136" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <rect x="40" y="200" width="16" height="92" rx="5"/>
+    <rect x="152" y="200" width="16" height="92" rx="5"/>
+  </g>
+  <g id="board">
+    <rect x="8" y="30" width="192" height="182" rx="24" fill="url(#station_sign_frame)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="22" y="46" width="164" height="152" rx="16" fill="#FFFBEB" stroke="#976433" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
+  <g id="roof">
+    <rect x="2" y="10" width="204" height="30" rx="15" fill="url(#station_sign_roof)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M18 18 H70" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+  </g>
+</svg>

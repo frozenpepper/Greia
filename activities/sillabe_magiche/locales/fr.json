@@ -4,23 +4,10 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Syllabes magiques",
-    "mode.explorer": "Découvrir les syllabes",
-    "mode.catcher": "Attraper",
-    "mode.builder": "Former des mots",
-    "prompt.explore": "Touche une consonne et découvre les syllabes !",
-    "prompt.catch": "Écoute et trouve la bonne syllabe !",
-    "prompt.build": "Forme le mot avec les deux syllabes !",
-    "feedback.correct": "Bravo !",
-    "feedback.fantastic": "Fantastique !",
-    "feedback.super": "Super !",
-    "feedback.word_complete": "Mot terminé !",
-    "ui.replay_audio": "Réécouter le son",
-    "ui.stars": "Étoiles",
-    "ui.explorer.formula": "Syllabes avec $consonant : $syllables",
-    "ui.explorer.instruction": "Touche une tuile pour entendre sa syllabe !",
-    "ui.catcher.listen": "Écoute et touche :",
-    "ui.builder.first_syllable": "1re syllabe",
-    "ui.builder.second_syllable": "2e syllabe"
+    "activity.sillabe_magiche.title": "Syllabes magiques",
+    "victory.title": "Bravo, le petit train !",
+    "victory.subtitle": "Le train de Léo a transporté tous les mots !",
+    "button.play_again": "Rejouer"
   },
   "audio": {}
 }

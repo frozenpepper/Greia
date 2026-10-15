@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 150" width="220" height="150">
+  <!-- Sillabe Magiche: syllable-train wagon (ocean). The syllable / beat is painted on the cream face at runtime; wheels are separate art. Shared-library candidate prop.train.wagon_ocean. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="wagon_ocean_side" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#92BDE8"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="body">
+    <rect x="8" y="12" width="204" height="106" rx="18" fill="url(#wagon_ocean_side)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="24" y="17" width="96" height="5" rx="2.5" fill="#FFFFFF" opacity="0.55"/>
+    <rect x="24" y="28" width="172" height="78" rx="14" fill="#FFFBEB" stroke="#4B5F7B" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="16" cy="66" r="3.5" fill="#4B5F7B"/>
+    <circle cx="204" cy="66" r="3.5" fill="#4B5F7B"/>
+  </g>
+  <g id="chassis">
+    <rect x="14" y="114" width="192" height="14" rx="7" fill="#253B59" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="0" y="116" width="16" height="9" rx="3" fill="#253B59" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="204" y="116" width="16" height="9" rx="3" fill="#253B59" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
+</svg>

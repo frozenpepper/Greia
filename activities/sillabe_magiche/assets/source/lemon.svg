@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Sillabe Magiche picture "lemon" (EN two beats: LEM-ON). Shared-library candidate prop.food.lemon. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="lemon_skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDE8E"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="lemon_leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="222" rx="82" ry="12" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="stem">
+    <path d="M136 82 C136 72 140 64 148 58" fill="none" stroke="#4B372F" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <g id="leaf">
+    <path d="M146 64 C154 40 180 28 208 32 C202 58 178 72 148 68 Z" fill="url(#lemon_leaf)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M150 66 C166 56 182 46 198 38" fill="none" stroke="#51714A" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <g id="lemon">
+    <path d="M24 146 C24 138 30 132 40 130 C50 98 86 78 128 78 C170 78 206 98 216 128 C226 130 232 136 232 144 C232 152 226 158 216 160 C206 192 170 210 128 210 C86 210 50 192 40 162 C30 160 24 154 24 146 Z" fill="url(#lemon_skin)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M60 176 C84 198 128 204 168 194 C188 188 204 176 210 162 C196 178 168 190 132 190 C104 190 80 184 60 176 Z" fill="#F59E0B" opacity="0.35"/>
+    <ellipse cx="92" cy="110" rx="30" ry="11" fill="#FFFFFF" opacity="0.75" transform="rotate(-18 92 110)"/>
+    <circle cx="150" cy="122" r="3" fill="#E9A21F"/>
+    <circle cx="176" cy="146" r="3" fill="#E9A21F"/>
+    <circle cx="120" cy="162" r="3" fill="#E9A21F"/>
+  </g>
+</svg>

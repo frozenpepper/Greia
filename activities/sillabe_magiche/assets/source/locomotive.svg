@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 208" width="240" height="208">
+  <!-- Sillabe Magiche: syllable-train locomotive (from Treno Numeri; shared-library candidate prop.train.loco; wheels are separate art). Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- coral light -> coral -->
+    <linearGradient id="loco_boiler" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="loco_cab" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#92BDE8"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="chimney">
+    <path d="M181 84 L185 50 L175 32 H209 L199 50 L203 84 Z" fill="#6E7175" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M181 38 H203" stroke="#9A9DA1" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <g id="dome">
+    <path d="M134 84 C134 66 162 66 162 84 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+  </g>
+  <g id="boiler">
+    <rect x="88" y="78" width="132" height="78" rx="24" fill="url(#loco_boiler)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="116" y="79" width="12" height="76" fill="#FFC234" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="170" y="79" width="12" height="76" fill="#FFC234" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M100 96 L110 96" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.75"/>
+    <path d="M196 146 C206 140 212 128 213 116" fill="none" stroke="#CA6154" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <g id="lamp">
+    <rect x="212" y="90" width="18" height="24" rx="7" fill="#FFDA85" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+  <g id="cab">
+    <rect x="14" y="40" width="86" height="118" rx="12" fill="url(#loco_cab)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="30" y="58" width="54" height="42" rx="10" fill="#CFEAF7" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M38 68 L48 64" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <path d="M30 118 H84" stroke="#4A7AAE" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="4" y="24" width="106" height="22" rx="10" fill="#4A7AAE" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M16 30 H44" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.5"/>
+  </g>
+  <g id="chassis">
+    <path d="M214 158 L238 196 H204 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="8" y="152" width="214" height="18" rx="8" fill="#253B59" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="0" y="156" width="12" height="10" rx="3" fill="#253B59" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
+</svg>

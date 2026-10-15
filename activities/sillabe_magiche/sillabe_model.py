@@ -1,317 +1,592 @@
-from __future__ import annotations
+"""Domain model and round factory for Leo's Syllable Train (no pygame, no IO).
 
-"""Pure domain state for Sillabe Magiche — no pygame, no IO.
+A round is six picture words. Each word arrives on a train with one wagon per
+syllable beat. Three stages of the same loop form the difficulty ladder:
 
-SillabeSession owns persistent progression (score/stars/words_completed) and
-the logical syllable/word challenge state. Rendering, audio timing, storage
-IO and event emission live outside this module; the session only decides what
-a child action means and how persistent counters advance.
+Italian / Spanish (``ReadingMethod.CV_SYLLABLES``)
+    clap the beats first, then build each wagon:
 
-Randomness is injected so tests can freeze generation without monkey-patching
-global state. Storage mapping is intentionally trivial so the app can reuse
-GreiaStorage without duplicating policy.
+    1. the wagon shows its consonant; choose the vowel that makes the
+       syllable you hear (L + U → "lu");
+    2. choose each wagon's whole syllable tile among near neighbours
+       (same consonant / same vowel);
+    3. build the word from one shared pool of syllable tiles, in order.
+
+French (staged, ``SYLLABLE_TILES``) uses stages 2–3 only (whole syllables).
+
+English (``BEATS``) never shows letters: the train has N wagons (1 or 2
+beats); choose the picture whose word fits (2 pictures, then 3, then 3 without
+the pictures being named first), then clap its beats onto the wagons.
+
+Wrong choices are eliminated, retries are unlimited, and only syllables with an
+authored recording are ever offered (``clip_exists`` is injected).
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
+from enum import StrEnum
 import random
-from typing import Protocol, Sequence
+from typing import Callable, Final, Sequence, Union
+
+if __package__:
+    from .sillabe_content import (
+        ReadingMethod,
+        TrainWord,
+        approved_syllables,
+        get_reading_method,
+        get_syllable_curriculum,
+        syllable_cue,
+        train_words,
+    )
+else:
+    from sillabe_content import (
+        ReadingMethod,
+        TrainWord,
+        approved_syllables,
+        get_reading_method,
+        get_syllable_curriculum,
+        syllable_cue,
+        train_words,
+    )
 
 
-class RandomSource(Protocol):
-    def choice(self, seq: Sequence[object]) -> object: ...
+CHALLENGE_COUNT: Final = 6
+HISTORY_LIMIT: Final = 8
+MIN_LEVEL: Final = 1
+MAX_LEVEL: Final = 3
+MAX_CHOICES: Final = 4
 
-    def sample(self, population: Sequence[str], k: int) -> list[str]: ...
+Choice = Union[TrainWord, str]
 
-    def shuffle(self, x: list[object]) -> None: ...
 
-    def uniform(self, a: float, b: float) -> float: ...
+class StepKind(StrEnum):
+    VOWEL = "vowel"          # consonant given on the wagon; choose the vowel
+    SYLLABLE = "syllable"    # choose the wagon's whole syllable tile
+    PICTURE = "picture"      # choose the picture whose word fits the train
+
+
+class Phase(StrEnum):
+    CLAP = "clap"
+    CHOOSE = "choose"
+
+
+@dataclass(frozen=True, slots=True)
+class ChoiceStep:
+    """One decision.
+
+    ``wagon`` is the wagon the step builds (``None`` for picture steps);
+    ``given`` is the consonant already shown on the wagon (vowel steps);
+    ``used`` are pool tiles already placed on an earlier wagon (stage 3).
+    """
+
+    kind: StepKind
+    choices: tuple[Choice, ...]
+    correct_index: int
+    wagon: int | None = None
+    given: str = ""
+    used: frozenset[int] = frozenset()
+
+    def __post_init__(self) -> None:
+        if not 2 <= len(self.choices) <= MAX_CHOICES:
+            raise ValueError("a step offers two to four choices")
+        if not 0 <= self.correct_index < len(self.choices):
+            raise ValueError("correct_index is out of range")
+        if self.correct_index in self.used:
+            raise ValueError("the answer cannot be a used tile")
+        if len({_choice_key(c) for c in self.choices}) != len(self.choices):
+            raise ValueError("choices must be distinct")
+        if (self.kind is StepKind.PICTURE) != (self.wagon is None):
+            raise ValueError("only picture steps have no wagon")
+
+    @property
+    def answer(self) -> Choice:
+        return self.choices[self.correct_index]
+
+    def syllable_for(self, index: int) -> str:
+        """The syllable a (vowel or syllable) choice would put on the wagon."""
+
+        choice = self.choices[index]
+        assert isinstance(choice, str)
+        return f"{self.given}{choice}" if self.kind is StepKind.VOWEL else choice
+
+    @property
+    def target_syllable(self) -> str:
+        return self.syllable_for(self.correct_index)
+
+
+@dataclass(frozen=True, slots=True)
+class TrainChallenge:
+    """One word on the train: the clap phase plus one or more choice steps."""
+
+    challenge_id: str
+    method: ReadingMethod
+    level: int
+    word: TrainWord
+    steps: tuple[ChoiceStep, ...]
+
+    def __post_init__(self) -> None:
+        if not self.steps:
+            raise ValueError("a challenge needs at least one step")
+        if self.method is ReadingMethod.BEATS:
+            if len(self.steps) != 1 or self.steps[0].kind is not StepKind.PICTURE:
+                raise ValueError("a beats challenge is one picture step")
+            if self.steps[0].answer != self.word:
+                raise ValueError("the picture answer must be the train's word")
+            beats = [c.beats for c in self.steps[0].choices if isinstance(c, TrainWord)]
+            if beats.count(self.word.beats) != 1:
+                raise ValueError("exactly one picture may fit the train")
+        else:
+            if len(self.steps) != self.word.beats:
+                raise ValueError("one build step per wagon")
+            for index, step in enumerate(self.steps):
+                if step.wagon != index or step.target_syllable != self.word.syllables[index]:
+                    raise ValueError("a build step must make its wagon's syllable")
+
+    @property
+    def wagons(self) -> int:
+        return self.word.beats
+
+    @property
+    def clap_first(self) -> bool:
+        """Builders clap before building; the beats train claps after choosing."""
+
+        return self.method is not ReadingMethod.BEATS
+
+
+@dataclass(frozen=True, slots=True)
+class AttemptSummary:
+    """Outcome of one completed word (adaptation input, persisted)."""
+
+    first_attempt_success: bool
+    hints_used: int
+    used_retry: bool
+
+    def __post_init__(self) -> None:
+        if self.hints_used < 0:
+            raise ValueError("hints_used must be >= 0")
+
+
+@dataclass(frozen=True, slots=True)
+class AttemptResult:
+    correct: bool
+    step_completed: bool
+    challenge_completed: bool
+    session_complete: bool
+    errors: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+class ClapResult:
+    """One beat clapped onto a wagon (``beat`` is the wagon index)."""
+
+    beat: int
+    clap_completed: bool
+    challenge_completed: bool
+    session_complete: bool
 
 
 @dataclass(slots=True)
-class SillabeSession:
-    """Own deterministic syllable-magic progression state.
+class _ChallengeProgress:
+    claps: int = 0
+    step: int = 0
+    hints: int = 0
+    errors: int = 0
+    eliminated: set[int] = field(default_factory=set)
+    built: list[int] = field(default_factory=list)
+    chosen: bool = False
 
-    The session knows the active words and optional explicit letter-family
-    syllables, but never assumes spelling is a valid spoken sound. The app
-    drives timers and presentation; the session decides correctness and scoring.
-    """
 
-    words_pool: list[tuple[str, tuple[str, str], str, str]] = field(default_factory=list, repr=False)
-    consonants_pool: Sequence[str] = field(default_factory=tuple, repr=False)  # type: ignore[assignment]
-    vowels_pool: Sequence[str] = field(default_factory=tuple, repr=False)  # type: ignore[assignment]
-    rng: RandomSource = field(default_factory=random.Random, repr=False)  # type: ignore[assignment]
-    syllable_families: tuple[tuple[str, tuple[str, ...]], ...] = field(default_factory=tuple, repr=False)
+class TrainRoundFactory:
+    """Generate six balanced train words for one stage of one language."""
 
-    # Persistent progression
-    score: int = 0
-    stars: int = 0
-    words_completed: int = 0
-
-    # Explorer
-    active_consonant: str = "B"
-    consonant_index: int = 0
-
-    # Catcher (Acchiappa)
-    target_syl: str = "BA"
-    catcher_state: str = "idle"  # "idle" | "praise_pending" | "next_round_pending"
-    catcher_timer: float = 0.0
-
-    # Builder (Crea Parole)
-    word_index: int = 0
-    cur_word_display: str = "CASA"
-    cur_s1: str = "CA"
-    cur_s2: str = "SA"
-    cur_emoji: str = "🏠"
-    cur_stem: str = "casa"
-    slot1_filled: bool = False
-    slot2_filled: bool = False
-    word_completed: bool = False
-    syllable_speech_step: int = 0
-    syllable_speech_timer: float = 0.0
-    word_completion_step: int = 0
-    word_completion_timer: float = 0.0
-    current_mode: str = "explorer"  # "explorer" | "catcher" | "builder"
-
-    def __post_init__(self) -> None:
-        if self.syllable_families:
-            labels = [label for label, _ in self.syllable_families]
-            syllables = [item for _, family in self.syllable_families for item in family]
-            if (labels != list(self.consonants_pool)
-                    or len(labels) != len(set(labels))
-                    or any(len(family) != 5 for _, family in self.syllable_families)
-                    or len(syllables) != len(set(syllables))
-                    or any(not syl.startswith(label)
-                           for label, family in self.syllable_families for syl in family)):
-                raise ValueError("invalid locale-relative syllable family curriculum")
-            if len(syllables) < 6:
-                raise ValueError("insufficient distinct native syllables for matching")
-            self.target_syl = syllables[0]
-        if self.score < 0:
-            self.score = 0
-        if self.stars < 0:
-            self.stars = 0
-        if self.words_completed < 0:
-            self.words_completed = 0
-        if self.words_pool:
-            self._sync_word_from_index()
-        if self.consonants_pool:
-            # Clamp active consonant to pool
-            if self.active_consonant not in self.consonants_pool:
-                self.active_consonant = str(self.consonants_pool[0])
-                self.consonant_index = 0
-            else:
-                self.consonant_index = list(self.consonants_pool).index(self.active_consonant)
-        # Ensure target/catcher have a valid syllable
-        if not self.target_syl and self.consonants_pool and self.vowels_pool:
-            self.target_syl = f"{self.consonants_pool[0]}{self.vowels_pool[0]}"
-
-    # ------------------------------------------------------------------ #
-    # Persistence helpers
-    # ------------------------------------------------------------------ #
-    def load_progress(self, data: object) -> None:
-        if not isinstance(data, dict):
-            return
-        try:
-            self.score = int(data.get("score", self.score))  # type: ignore[union-attr]
-            self.stars = int(data.get("stars", self.stars))  # type: ignore[union-attr]
-            self.words_completed = int(data.get("words_completed", self.words_completed))  # type: ignore[union-attr]
-        except Exception:
-            pass
-        if self.score < 0:
-            self.score = 0
-        if self.stars < 0:
-            self.stars = 0
-        if self.words_completed < 0:
-            self.words_completed = 0
-
-    def save_progress(self) -> dict[str, int]:
-        return {"score": self.score, "stars": self.stars, "words_completed": self.words_completed}
-
-    # ------------------------------------------------------------------ #
-    # Explorer
-    # ------------------------------------------------------------------ #
-    def set_active_consonant(self, consonant: str) -> None:
-        if consonant not in self.consonants_pool:
-            raise ValueError(f"unknown consonant {consonant!r}")
-        self.active_consonant = consonant
-        self.consonant_index = list(self.consonants_pool).index(consonant)
+    def __init__(
+        self,
+        rng: random.Random,
+        locale: str = "it",
+        *,
+        clip_exists: Callable[[str], bool] | None = None,
+    ) -> None:
+        self._rng = rng
+        self.method = get_reading_method(locale)
+        self._curriculum = get_syllable_curriculum(locale)
+        self._vowels = tuple(self._curriculum.vowels)
+        self._consonants = tuple(self._curriculum.consonants)
+        has = clip_exists if clip_exists is not None else (lambda _cue: True)
+        self._approved = tuple(s for s in approved_syllables(locale) if has(syllable_cue(s)))
+        approved = set(self._approved)
+        self._words = tuple(
+            word for word in train_words(locale)
+            if self.method is ReadingMethod.BEATS or all(part in approved for part in word.syllables)
+        )
+        if self.method is ReadingMethod.BEATS:
+            beats = {word.beats for word in self._words}
+            if len(beats) < 2:
+                raise ValueError("a beats train needs words with different beat counts")
+        elif len(self._words) < 3:
+            raise ValueError("too few pictured words for a syllable train")
+        self._last_slot = -1
 
     @property
-    def curriculum_syllables(self) -> tuple[str, ...]:
-        """Audio and matching syllables must be part of the authored curriculum."""
-        if self.syllable_families:
-            return tuple(syl for _, family in self.syllable_families for syl in family)
-        return tuple(f"{c}{v}" for c in self.consonants_pool for v in self.vowels_pool)
+    def words(self) -> tuple[TrainWord, ...]:
+        return self._words
 
-    def explorer_syllables(self) -> list[str]:
-        if self.syllable_families:
-            for label, family in self.syllable_families:
-                if label == self.active_consonant:
-                    return list(family)
-            raise ValueError("selected consonant has no authored syllable family")
-        return [f"{self.active_consonant}{v}" for v in self.vowels_pool]
+    @property
+    def approved(self) -> tuple[str, ...]:
+        return self._approved
 
-    def on_explore(self, syl: str) -> None:
-        # Every explorer tap that reaches the domain is a scored exploration.
-        self.score += 1
+    def build_set(self, level: int, *, count: int = CHALLENGE_COUNT) -> tuple[TrainChallenge, ...]:
+        _require_level(level)
+        self._last_slot = -1
+        words = self._plan(count)
+        challenges = []
+        for index, word in enumerate(words):
+            if self.method is ReadingMethod.BEATS:
+                steps = (self._picture_step(word, level),)
+            else:
+                steps = self._build_steps(word, level)
+            challenges.append(
+                TrainChallenge(
+                    challenge_id=f"L{level}-C{index + 1}-{self._rng.randrange(1_000_000):06d}",
+                    method=self.method,
+                    level=level,
+                    word=word,
+                    steps=steps,
+                )
+            )
+        return tuple(challenges)
 
-    # ------------------------------------------------------------------ #
-    # Catcher
-    # ------------------------------------------------------------------ #
-    def start_catcher_round(self) -> tuple[str, list[str]]:
-        """Pick a new target and 6 orb syllables (including duplicates of target).
+    # -- planning -----------------------------------------------------------------
+    def _plan(self, count: int) -> list[TrainWord]:
+        if self.method is ReadingMethod.BEATS:
+            # Alternate-ish beat counts so neither train length dominates.
+            groups: dict[int, list[TrainWord]] = {}
+            for word in self._words:
+                groups.setdefault(word.beats, []).append(word)
+            beats = sorted(groups)
+            pattern = [beats[i % len(beats)] for i in range(count)]
+            self._rng.shuffle(pattern)
+            plan: list[TrainWord] = []
+            pools = {b: [] for b in beats}
+            for wanted in pattern:
+                if not pools[wanted]:
+                    pools[wanted] = list(groups[wanted])
+                    self._rng.shuffle(pools[wanted])
+                plan.append(pools[wanted].pop())
+            return plan
+        plan = []
+        while len(plan) < count:
+            batch = list(self._words)
+            self._rng.shuffle(batch)
+            if plan and batch[0] == plan[-1]:
+                batch.append(batch.pop(0))
+            plan.extend(batch)
+        return plan[:count]
 
-        Returns the chosen target and the shuffled orb list. Caller owns placement.
-        """
-        if self.syllable_families:
-            syllables = self.curriculum_syllables
-            self.target_syl = str(self.rng.choice(syllables))
-            other = [syl for syl in syllables if syl != self.target_syl]
-            orb_syls = [self.target_syl, self.target_syl, *self.rng.sample(other, 4)]
-            self.rng.shuffle(orb_syls)
-            self.catcher_state = "idle"
-            self.catcher_timer = 0.0
-            return self.target_syl, orb_syls
+    # -- beats ----------------------------------------------------------------------
+    def _picture_step(self, word: TrainWord, level: int) -> ChoiceStep:
+        size = 2 if level == 1 else 3
+        others = [w for w in self._words if w.beats != word.beats and w.picture != word.picture]
+        self._rng.shuffle(others)
+        distractors = others[: size - 1]
+        if len(distractors) < size - 1:
+            raise ValueError("too few pictures with a different beat count")
+        choices, correct = self._place(word, distractors)
+        return ChoiceStep(StepKind.PICTURE, choices, correct)
 
-        # Keep the established EN/IT seeded generator unchanged.
-        # Choose target syllable
-        c = self.rng.choice(list(self.consonants_pool))  # type: ignore[arg-type]
-        v = self.rng.choice(list(self.vowels_pool))  # type: ignore[arg-type]
-        self.target_syl = f"{c}{v}"
-        self.catcher_state = "idle"
-        self.catcher_timer = 0.0
+    # -- building -------------------------------------------------------------------
+    def _build_steps(self, word: TrainWord, level: int) -> tuple[ChoiceStep, ...]:
+        parts = word.syllables
+        if level == 3 and len(set(parts)) == len(parts) and len(parts) <= MAX_CHOICES - 2:
+            return self._pool_steps(word)
+        steps = []
+        for wagon, syllable in enumerate(parts):
+            step = None
+            if level == 1 and self.method is ReadingMethod.CV_SYLLABLES:
+                step = self._vowel_step(syllable, wagon)
+            if step is None:
+                step = self._syllable_step(syllable, wagon, exclude=set(parts) - {syllable})
+            steps.append(step)
+        return tuple(steps)
 
-        orb_syls: list[str] = [self.target_syl, self.target_syl]
-        # Fill to 6 unique distractors
-        attempts = 0
-        while len(orb_syls) < 6 and attempts < 100:
-            rc = self.rng.choice(list(self.consonants_pool))  # type: ignore[arg-type]
-            rv = self.rng.choice(list(self.vowels_pool))  # type: ignore[arg-type]
-            cand = f"{rc}{rv}"
-            if cand != self.target_syl and cand not in orb_syls:
-                orb_syls.append(cand)
-            attempts += 1
-        # Shuffle in place via injected rng
-        try:
-            self.rng.shuffle(orb_syls)  # type: ignore[attr-defined]
-        except Exception:
-            random.shuffle(orb_syls)
-        return self.target_syl, list(orb_syls)
+    def _split_cv(self, syllable: str) -> tuple[str, str] | None:
+        if len(syllable) == 2 and syllable[0] in self._consonants_all and syllable[1] in self._vowels:
+            return syllable[0], syllable[1]
+        return None
 
-    def on_catcher_tap(self, syl: str) -> bool:
-        """Process a tap on an orb while in idle state.
+    @property
+    def _consonants_all(self) -> set[str]:
+        return {s[0] for s in self._approved if len(s) == 2}
 
-        Returns True when the tap matches the target and advances scoring/state.
-        No-op when not idle. Correct taps arm praise/next-round timers.
-        """
-        if self.catcher_state != "idle":
-            return False
-        if syl == self.target_syl:
-            self.stars += 1
-            self.score += 5
-            self.catcher_state = "praise_pending"
-            self.catcher_timer = 0.55
-            return True
-        return False
+    def _vowel_step(self, syllable: str, wagon: int) -> ChoiceStep | None:
+        split = self._split_cv(syllable)
+        if split is None:
+            return None
+        consonant, vowel = split
+        siblings = [
+            v for v in self._vowels
+            if v != vowel and f"{consonant}{v}" in self._approved
+        ]
+        if len(siblings) < 2:
+            return None
+        distractors = self._rng.sample(siblings, 2)
+        choices, correct = self._place(vowel, distractors)
+        return ChoiceStep(StepKind.VOWEL, choices, correct, wagon=wagon, given=consonant)
 
-    # ------------------------------------------------------------------ #
-    # Builder
-    # ------------------------------------------------------------------ #
-    def _sync_word_from_index(self) -> None:
-        if not self.words_pool:
-            return
-        entry = self.words_pool[self.word_index % len(self.words_pool)]
-        disp, (s1, s2), emoji, stem = entry
-        self.cur_word_display = disp
-        self.cur_s1 = s1
-        self.cur_s2 = s2
-        self.cur_emoji = emoji
-        self.cur_stem = stem
-        self.slot1_filled = False
-        self.slot2_filled = False
-        self.word_completed = False
-        self.syllable_speech_step = 0
-        self.syllable_speech_timer = 0.0
-        self.word_completion_step = 0
-        self.word_completion_timer = 0.0
+    def _neighbours(self, syllable: str, exclude: set[str], count: int) -> list[str]:
+        """Near distractors: same consonant first, then same vowel, then any."""
 
-    def start_word_round(self) -> tuple[tuple[str, tuple[str, str], str, str], list[str]]:
-        """Reset builder slots and generate 4 tile choices for the current word.
+        pool = [s for s in self._approved if s != syllable and s not in exclude]
+        same_start = [s for s in pool if s[:1] == syllable[:1]]
+        same_end = [s for s in pool if s[-1:] == syllable[-1:] and s not in same_start]
+        rest = [s for s in pool if s not in same_start and s not in same_end]
+        picked: list[str] = []
+        for group in (same_start, same_end):
+            if group and len(picked) < count:
+                picked.append(self._rng.choice(group))
+        remaining = [s for s in (*same_start, *same_end, *rest) if s not in picked]
+        self._rng.shuffle(remaining)
+        picked.extend(remaining[: count - len(picked)])
+        if len(picked) < count:
+            raise ValueError("too few recorded syllables for distractors")
+        return picked
 
-        Returns the current word tuple and the shuffled choice list.
-        """
-        self._sync_word_from_index()
-        choices = [self.cur_s1, self.cur_s2]
-        if self.syllable_families:
-            # Native curriculum syllables + explicitly authored builder word
-            # segments. Never generate unaudited French C+V pronunciations.
-            candidates = dict.fromkeys((
-                *self.curriculum_syllables,
-                *(segment for _, segments, _, _ in self.words_pool for segment in segments),
-            ))
-            other = [syl for syl in candidates if syl not in choices]
-            if len(other) < 2:
-                raise ValueError("insufficient distinct authored syllable distractors")
-            choices.extend(self.rng.sample(other, 2))
-            self.rng.shuffle(choices)
-            return (self.cur_word_display,
-                    (self.cur_s1, self.cur_s2), self.cur_emoji, self.cur_stem), choices
+    def _syllable_step(self, syllable: str, wagon: int, *, exclude: set[str]) -> ChoiceStep:
+        distractors = self._neighbours(syllable, exclude, 2)
+        choices, correct = self._place(syllable, distractors)
+        return ChoiceStep(StepKind.SYLLABLE, choices, correct, wagon=wagon)
 
-        attempts = 0
-        while len(choices) < 4 and attempts < 100:
-            rc = self.rng.choice(list(self.consonants_pool))  # type: ignore[arg-type]
-            rv = self.rng.choice(list(self.vowels_pool))  # type: ignore[arg-type]
-            cand = f"{rc}{rv}"
-            if cand not in choices:
-                choices.append(cand)
-            attempts += 1
-        try:
-            self.rng.shuffle(choices)  # type: ignore[attr-defined]
-        except Exception:
-            random.shuffle(choices)
-        return (self.cur_word_display, (self.cur_s1, self.cur_s2), self.cur_emoji, self.cur_stem), list(choices)
+    def _pool_steps(self, word: TrainWord) -> tuple[ChoiceStep, ...]:
+        parts = list(word.syllables)
+        distractors: list[str] = []
+        for part in parts:
+            if len(parts) + len(distractors) >= MAX_CHOICES:
+                break
+            near = self._neighbours(part, set(parts) | set(distractors), 1)
+            distractors.extend(near)
+        pool = parts + distractors
+        self._rng.shuffle(pool)
+        steps = []
+        used: set[int] = set()
+        for wagon, part in enumerate(parts):
+            index = pool.index(part)
+            steps.append(
+                ChoiceStep(StepKind.SYLLABLE, tuple(pool), index, wagon=wagon, used=frozenset(used))
+            )
+            used.add(index)
+        return tuple(steps)
 
-    def on_builder_tile(self, syl: str) -> str:
-        """Process a builder tile tap.
-
-        Returns one of: "wrong_slot1", "slot1_ok", "wrong_slot2", "word_done", "already_done".
-        Updates slots, score and stars where appropriate and arms timed audio steps.
-        """
-        if self.word_completed:
-            return "already_done"
-        if not self.slot1_filled:
-            if syl == self.cur_s1:
-                self.slot1_filled = True
-                return "slot1_ok"
-            return "wrong_slot1"
-        if not self.slot2_filled:
-            if syl == self.cur_s2:
-                self.slot2_filled = True
-                self.word_completed = True
-                self.word_completion_step = 1
-                self.word_completion_timer = 0.50
-                self.stars += 2
-                self.score += 10
-                self.words_completed += 1
-                return "word_done"
-            return "wrong_slot2"
-        return "already_done"
-
-    def advance_word(self) -> None:
-        self.word_index += 1
-        self.start_word_round()
-
-    def start_syllable_breakdown(self) -> None:
-        self.syllable_speech_step = 1
-        self.syllable_speech_timer = 0.52
-
-    # ------------------------------------------------------------------ #
-    # Mode
-    # ------------------------------------------------------------------ #
-    def set_mode(self, mode: str) -> None:
-        if mode not in ("explorer", "catcher", "builder"):
-            raise ValueError(f"unknown mode {mode!r}")
-        self.current_mode = mode
+    def _place(self, answer: Choice, distractors: Sequence[Choice]) -> tuple[tuple[Choice, ...], int]:
+        size = len(distractors) + 1
+        options = [s for s in range(size) if s != self._last_slot] or list(range(size))
+        slot = self._rng.choice(options)
+        self._last_slot = slot
+        ordered = list(distractors)
+        ordered.insert(slot, answer)
+        return tuple(ordered), slot
 
 
-__all__ = ["RandomSource", "SillabeSession"]
+def _choice_key(choice: Choice) -> str:
+    return choice.word_id if isinstance(choice, TrainWord) else choice
+
+
+class TrainSession:
+    """Own the active round: clap beats, choice steps, attempts, hints, completion."""
+
+    def __init__(
+        self,
+        challenges: Sequence[TrainChallenge],
+        *,
+        level: int,
+        history: Sequence[AttemptSummary] = (),
+    ) -> None:
+        _require_level(level)
+        if len(challenges) != CHALLENGE_COUNT:
+            raise ValueError(f"a syllable-train round has exactly {CHALLENGE_COUNT} words")
+        self._challenges = tuple(challenges)
+        self.level = level
+        self._index = 0
+        self._progress = _ChallengeProgress()
+        self._history = list(history[-HISTORY_LIMIT:])
+        self._completion_consumed = False
+        self._pending_milestone: dict[str, int] | None = None
+
+    # -- views ----------------------------------------------------------------------
+    @property
+    def current_challenge(self) -> TrainChallenge | None:
+        return None if self.is_complete else self._challenges[self._index]
+
+    @property
+    def previous_challenge(self) -> TrainChallenge | None:
+        return self._challenges[self._index - 1] if self._index > 0 else None
+
+    @property
+    def phase(self) -> Phase | None:
+        challenge = self.current_challenge
+        if challenge is None:
+            return None
+        clap_done = self._progress.claps >= challenge.wagons
+        if challenge.clap_first:
+            return Phase.CHOOSE if clap_done else Phase.CLAP
+        return Phase.CLAP if self._progress.chosen else Phase.CHOOSE
+
+    @property
+    def current_step(self) -> ChoiceStep | None:
+        challenge = self.current_challenge
+        if challenge is None or self.phase is not Phase.CHOOSE:
+            return None
+        return challenge.steps[self._progress.step]
+
+    @property
+    def step_index(self) -> int:
+        return self._progress.step
+
+    @property
+    def claps(self) -> int:
+        return self._progress.claps
+
+    @property
+    def built_wagons(self) -> tuple[int, ...]:
+        return tuple(self._progress.built)
+
+    @property
+    def challenge_index(self) -> int:
+        return self._index
+
+    @property
+    def is_complete(self) -> bool:
+        return self._index >= len(self._challenges)
+
+    @property
+    def eliminated(self) -> frozenset[int]:
+        """Choice indices tried (wrong) in this step, plus tiles already placed."""
+
+        step = self.current_step
+        used = step.used if step is not None else frozenset()
+        return frozenset(self._progress.eliminated) | used
+
+    @property
+    def errors(self) -> int:
+        return self._progress.errors
+
+    @property
+    def history(self) -> tuple[AttemptSummary, ...]:
+        return tuple(self._history)
+
+    # -- actions ----------------------------------------------------------------------
+    def record_hint(self) -> None:
+        if not self.is_complete:
+            self._progress.hints = min(32, self._progress.hints + 1)
+
+    def clap(self) -> ClapResult | None:
+        """Clap one beat onto the next wagon; ``None`` outside the clap phase."""
+
+        challenge = self.current_challenge
+        if challenge is None or self.phase is not Phase.CLAP:
+            return None
+        beat = self._progress.claps
+        self._progress.claps += 1
+        done = self._progress.claps >= challenge.wagons
+        completed = done and not challenge.clap_first
+        if completed:
+            self._complete(challenge)
+        return ClapResult(beat, done, completed, completed and self.is_complete)
+
+    def select_choice(self, index: int) -> AttemptResult:
+        challenge = self.current_challenge
+        step = self.current_step
+        if challenge is None or step is None:
+            raise RuntimeError("no choice is open")
+        if not 0 <= index < len(step.choices):
+            raise IndexError("choice index out of bounds")
+        if index in self.eliminated:
+            raise ValueError("that choice is no longer available")
+        progress = self._progress
+        if index != step.correct_index:
+            progress.errors += 1
+            progress.hints = min(32, progress.hints + 1)
+            progress.eliminated.add(index)
+            return AttemptResult(False, False, False, False, progress.errors)
+        progress.eliminated = set()
+        if step.wagon is not None:
+            progress.built.append(step.wagon)
+        if progress.step + 1 < len(challenge.steps):
+            progress.step += 1
+            return AttemptResult(True, True, False, False)
+        if challenge.clap_first:
+            self._complete(challenge)
+            return AttemptResult(True, True, True, self.is_complete)
+        progress.chosen = True
+        return AttemptResult(True, True, False, False)
+
+    def _complete(self, challenge: TrainChallenge) -> None:
+        progress = self._progress
+        first = progress.errors == 0
+        self._history.append(AttemptSummary(first, progress.hints, progress.errors > 0))
+        del self._history[:-HISTORY_LIMIT]
+        self._pending_milestone = {
+            "level": self.level,
+            "word_index": self._index + 1,
+            "beats": challenge.wagons,
+            "first_attempt": int(first),
+        }
+        self._index += 1
+        self._progress = _ChallengeProgress()
+
+    def consume_milestone(self) -> dict[str, int] | None:
+        fact = self._pending_milestone
+        self._pending_milestone = None
+        return fact
+
+    def consume_completion(self) -> dict[str, int] | None:
+        if not self.is_complete or self._completion_consumed:
+            return None
+        self._completion_consumed = True
+        recent = self._history[-CHALLENGE_COUNT:]
+        return {
+            "level": self.level,
+            "first_attempt_count": sum(item.first_attempt_success for item in recent),
+            "retries": sum(item.used_retry for item in recent),
+        }
+
+
+def adapt_level(current: int, history: Sequence[AttemptSummary]) -> int:
+    """Bounded adaptation for stages 1..3.
+
+    Five strong words (first try, at most one hint) in the last eight move up a
+    stage; three hinted misses in a row move down one.
+    """
+
+    _require_level(current)
+    recent = tuple(history[-HISTORY_LIMIT:])
+    if len(recent) >= HISTORY_LIMIT:
+        strong = sum(item.first_attempt_success and item.hints_used <= 1 for item in recent)
+        if strong >= 5:
+            return min(MAX_LEVEL, current + 1)
+    if len(recent) >= 3 and all(
+        (not item.first_attempt_success) and item.hints_used >= 1 for item in recent[-3:]
+    ):
+        return max(MIN_LEVEL, current - 1)
+    return current
+
+
+def _require_level(level: int) -> None:
+    if not MIN_LEVEL <= level <= MAX_LEVEL:
+        raise ValueError("level must be in 1..3")
+
+
+__all__ = [
+    "AttemptResult",
+    "AttemptSummary",
+    "CHALLENGE_COUNT",
+    "ChoiceStep",
+    "ClapResult",
+    "HISTORY_LIMIT",
+    "MAX_CHOICES",
+    "Phase",
+    "StepKind",
+    "TrainChallenge",
+    "TrainRoundFactory",
+    "TrainSession",
+    "adapt_level",
+]
