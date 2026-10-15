@@ -214,7 +214,7 @@ class PaintingApp:
                 self.handle_event(event)
             repeat = self._input.poll()
             if repeat is not None and not self.controller_pointer.active:
-                self.surfaces.dispatch(repeat)
+                self._dispatch_to_kit(repeat)
             self._step_frame()
             self._draw()
             pygame.display.flip()
@@ -263,7 +263,7 @@ class PaintingApp:
         translated = self._input.translate(event)
         if translated is not None and not isinstance(translated, KitPointer):
             self.controller_pointer.deactivate()
-            self.surfaces.dispatch(translated)
+            self._dispatch_to_kit(translated)
 
     def _escape(self) -> None:
         if self.surfaces.overlays:
@@ -314,6 +314,31 @@ class PaintingApp:
         self._pointer_pressed = True
         self.surfaces.dispatch(KitPointer(PointerPhase.DOWN, pos))
 
+    def _dispatch_to_kit(self, event) -> None:
+        """Dispatch to the control kit, then re-pin gallery selection to its ring."""
+        self.surfaces.dispatch(event)
+        self._sync_gallery_focus_from_kit()
+
+    def _sync_gallery_focus_from_kit(self) -> None:
+        """Make the selected painting the one the focus ring is on.
+
+        The kit moves its ring spatially (Down from New, Tab, stick, page strip
+        hand-back) without telling the app, so ``gallery_focus`` -- the single
+        painting that open and delete act on -- must follow it, otherwise the
+        highlighted/ringed card and the acted-on painting could disagree.
+        """
+        slot = self.controls.focused_card_slot()
+        if (
+            self.mode != "gallery" or slot is None or self.surfaces.overlays
+            or not self.controls.layer.focus_visible
+        ):
+            # A hidden ring (pointer/touch) never overrides the tapped card,
+            # which pointer callbacks select by explicit index.
+            return
+        index = (self.gallery_focus // GALLERY_PAGE_SIZE) * GALLERY_PAGE_SIZE + slot
+        if 0 <= index < len(self.records) and index != self.gallery_focus:
+            self.gallery_focus = index
+
     def handle_key(self, event: pygame.event.Event) -> bool:
         """Gallery keyboard model; True when the key was consumed.
 
@@ -335,6 +360,7 @@ class PaintingApp:
         if not on_card:
             return False
         if key in {pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE}:
+            self._sync_gallery_focus_from_kit()
             self._open(self.records[self.gallery_focus])
             return True
         delta = _ARROWS.get(key)
@@ -364,8 +390,14 @@ class PaintingApp:
             return
         pages = self.renderer.gallery_page_count(count)
         page = max(0, min(pages - 1, self.gallery_focus // GALLERY_PAGE_SIZE + direction))
+        on_card = self.controls.focused_card_slot() is not None
         self.gallery_focus = page * GALLERY_PAGE_SIZE
         self._sync_gallery_targets()
+        if on_card:
+            # Keep the ring on the painting that is now selected.
+            self.controls.layer.focus(
+                self.controls.card_control_id(0), visible=self.controls.layer.focus_visible,
+            )
 
     def _focus_gallery_card(self) -> None:
         self._sync_gallery_targets()
@@ -622,6 +654,7 @@ class PaintingApp:
             self._ask_delete(self.records[index])
 
     def _ask_delete_focused(self) -> None:
+        self._sync_gallery_focus_from_kit()
         if self.records:
             self._ask_delete(self.records[self.gallery_focus])
 

@@ -317,6 +317,98 @@ class PaintingDeleteTests(PaintingStudioTestCase):
         self.assertEqual(app.mode, "paint")
         self.assertIsNone(app.current)
 
+    def _ids(self, app: PaintingApp) -> list[str]:
+        return [record.painting_id for record in app.repository.list_records()]
+
+    def _ring_on_card_via_new(self, app: PaintingApp, presses: list[int]) -> None:
+        """Park the ring on New, then let the kit carry it onto a card."""
+        app._enter_gallery()
+        app.controls.layer.focus("tool.new", visible=True)
+        for key in presses:
+            app.handle_event(_key(key))
+
+    def test_ring_and_selection_agree_after_kit_moves_focus_onto_a_card(self) -> None:
+        app = self.make_app()
+        self.seed(app, 6)
+        app._enter_gallery()
+        self.assertEqual(app.gallery_focus, 0)
+        app.controls.layer.focus("tool.new", visible=True)
+        app.handle_event(_key(pygame.K_DOWN))  # the kit, not the app, picks a card
+        slot = app.controls.focused_card_slot()
+        self.assertIsNotNone(slot)
+        self.assertEqual(app.gallery_focus, slot)
+        app.handle_event(_key(pygame.K_UP))  # back up the grid / toolbar, wherever the kit goes
+        slot = app.controls.focused_card_slot()
+        if slot is not None:
+            self.assertEqual(app.gallery_focus, slot)
+
+    def test_keyboard_delete_removes_exactly_the_card_the_ring_is_on(self) -> None:
+        app = self.make_app()
+        self.seed(app, 6)
+        before = self._ids(app)
+        self._ring_on_card_via_new(app, [pygame.K_DOWN])
+        slot = app.controls.focused_card_slot()
+        self.assertIsNotNone(slot)
+        self.assertNotEqual(slot, 0)  # the kit landed away from the stale index
+        layer = app.controls.layer
+        selected = slot  # the card the ring stood on is the selection
+        layer.focus("gallery.delete", visible=True)  # ring leaves the grid for the tile
+        self.assertEqual(app.gallery_focus, selected)
+        doomed = before[selected]
+        app.handle_event(_key(pygame.K_RETURN))
+        self.assertEqual(app.pending_delete.painting_id, doomed)
+        app.handle_event(_key(pygame.K_RIGHT))  # cancel -> confirm
+        app.handle_event(_key(pygame.K_RETURN))
+        self.assertEqual(self._ids(app), [pid for pid in before if pid != doomed])
+
+    def test_keyboard_delete_key_on_a_card_targets_that_card(self) -> None:
+        app = self.make_app()
+        self.seed(app, 6)
+        before = self._ids(app)
+        self._ring_on_card_via_new(app, [pygame.K_DOWN, pygame.K_RIGHT])
+        slot = app.controls.focused_card_slot()
+        app._ask_delete_focused()  # same action the delete tile runs
+        self.assertEqual(app.pending_delete.painting_id, before[slot])
+
+    def test_open_after_kit_focus_move_opens_the_ringed_painting(self) -> None:
+        app = self.make_app()
+        self.seed(app, 6)
+        before = self._ids(app)
+        self._ring_on_card_via_new(app, [pygame.K_DOWN])
+        slot = app.controls.focused_card_slot()
+        app.handle_event(_key(pygame.K_RETURN))
+        self.assertEqual(app.mode, "paint")
+        self.assertEqual(app.current.painting_id, before[slot])
+
+    def test_page_step_keeps_ring_on_the_selected_card(self) -> None:
+        app = self.make_app()
+        self.seed(app, GALLERY_PAGE_SIZE + 3)
+        before = self._ids(app)
+        app._enter_gallery()
+        app.controls.layer.focus("card.2", visible=True)
+        app.gallery_focus = 2
+        app.handle_event(_key(pygame.K_PAGEDOWN))
+        self.assertEqual(app.gallery_focus, GALLERY_PAGE_SIZE)
+        self.assertEqual(app.controls.focused_card_slot(), 0)
+        app.handle_event(_key(pygame.K_RIGHT))  # sync must not drift to page_first + stale slot
+        app._ask_delete_focused()
+        self.assertEqual(app.pending_delete.painting_id, before[GALLERY_PAGE_SIZE + 1])
+
+    def test_pointer_taps_still_target_the_tapped_card(self) -> None:
+        app = self.make_app()
+        self.seed(app, 6)
+        before = self._ids(app)
+        app._enter_gallery()
+        app.controls.layer.focus("card.0", visible=False)  # stale hidden ring
+        self.tap(app, app.controls.badges[4].rect.center)
+        self.assertEqual(app.pending_delete.painting_id, before[4])
+        app._close_sheet()
+        # The delete tile after a tap acts on the card that was tapped.
+        self.tap(app, app.controls.cards[3].rect.center)
+        self.assertEqual(app.current.painting_id, before[3])
+        app._enter_gallery()
+        self.assertEqual(app.gallery_focus, 3)
+
     def test_gallery_cards_page_through_every_painting_after_delete(self) -> None:
         app = self.make_app()
         self.seed(app, GALLERY_PAGE_SIZE + 1)
