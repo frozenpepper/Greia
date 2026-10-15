@@ -151,7 +151,7 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / "activity.toml").write_text(
-                '[activity]\\nlanguages = ["it", "en"]\\n', encoding="utf-8"
+                '[activity]\nlanguages = ["it", "en"]\n', encoding="utf-8"
             )
             _bundle(root, "en", strings={"title": "English"})
             _bundle(root, "it", strings={"title": "Italiano"})
