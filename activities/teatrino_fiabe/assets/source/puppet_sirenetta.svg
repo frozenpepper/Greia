@@ -1,31 +1,53 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Teatrino puppet: the little Mermaid (non-canonical; section 20 grammar: one round mass
+       ending in a fin instead of feet, 3 cues = flowing orange hair, turquoise tail, shell top). Rod puppet: no shadow. -->
   <defs>
-    <linearGradient id="mermaid_tail" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#2DD4BF"/>
-      <stop offset="100%" stop-color="#0F766E"/>
+    <!-- orange light -> orange -->
+    <linearGradient id="sirenetta_hair" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C27F"/>
+      <stop offset="1" stop-color="#EE8A2C"/>
     </linearGradient>
-    <linearGradient id="mermaid_hair" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FB7185"/>
-      <stop offset="100%" stop-color="#E11D48"/>
+    <!-- turquoise light -> turquoise -->
+    <linearGradient id="sirenetta_tail" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#86D3CC"/>
+      <stop offset="1" stop-color="#3AA89E"/>
+    </linearGradient>
+    <!-- skin light -> skin -->
+    <linearGradient id="sirenetta_skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF3E8"/>
+      <stop offset="1" stop-color="#FBDCC8"/>
     </linearGradient>
   </defs>
-  <path d="M 60 70 C 35 110 40 160 55 175 C 45 135 60 100 70 75 Z" fill="url(#mermaid_hair)" stroke="#881337" stroke-width="3"/>
-  <path d="M 140 70 C 165 110 160 160 145 175 C 155 135 140 100 130 75 Z" fill="url(#mermaid_hair)" stroke="#881337" stroke-width="3"/>
-  <path d="M 85 118 C 85 145 105 160 100 180 C 85 185 75 190 92 195 C 105 190 115 195 112 185 C 115 165 115 145 115 118 Z" fill="url(#mermaid_tail)" stroke="#115E59" stroke-width="3.5"/>
-  <path d="M 92 195 C 80 185 68 195 78 200 C 95 198 100 190 100 190 C 100 190 105 198 122 200 C 132 195 120 185 108 195 Z" fill="#2DD4BF" stroke="#115E59" stroke-width="2.5"/>
-  <path d="M 92 135 Q 100 140 108 135 M 90 148 Q 100 154 110 148 M 94 162 Q 100 166 106 162" stroke="#5EEAD4" stroke-width="2" fill="none"/>
-  <circle cx="90" cy="112" r="8" fill="#F472B6" stroke="#9D174D" stroke-width="2"/>
-  <circle cx="110" cy="112" r="8" fill="#F472B6" stroke="#9D174D" stroke-width="2"/>
-  <rect x="86" y="94" width="28" height="24" rx="6" fill="#FED7AA"/>
-  <rect x="74" y="100" width="8" height="18" rx="4" fill="#FED7AA"/>
-  <rect x="118" y="100" width="8" height="18" rx="4" fill="#FED7AA"/>
-  <ellipse cx="100" cy="74" rx="22" ry="20" fill="#FED7AA" stroke="#881337" stroke-width="2.5"/>
-  <circle cx="120" cy="60" r="7" fill="#FDE047" stroke="#D97706" stroke-width="2"/>
-  <ellipse cx="92" cy="72" rx="4.5" ry="6" fill="#1E1B4B"/>
-  <ellipse cx="108" cy="72" rx="4.5" ry="6" fill="#1E1B4B"/>
-  <circle cx="93.5" cy="70" r="1.5" fill="#FFFFFF"/>
-  <circle cx="109.5" cy="70" r="1.5" fill="#FFFFFF"/>
-  <circle cx="87" cy="78" r="3" fill="#F43F5E" opacity="0.5"/>
-  <circle cx="113" cy="78" r="3" fill="#F43F5E" opacity="0.5"/>
-  <path d="M 96 80 Q 100 84 104 80" stroke="#881337" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <g id="character">
+    <g id="hair_back">
+      <path d="M84 104 C78 66 102 48 128 48 C154 48 178 66 172 104 C178 128 180 150 170 166 C160 160 156 146 158 132 L98 132 C100 146 96 160 86 166 C76 150 78 128 84 104 Z" fill="url(#sirenetta_hair)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    </g>
+    <g id="fin">
+      <path d="M128 196 C112 196 92 200 82 214 C100 216 116 212 128 204 C140 212 156 216 174 214 C164 200 144 196 128 196 Z" fill="url(#sirenetta_tail)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    </g>
+    <g id="tail">
+      <path d="M96 142 C92 166 104 190 124 200 C130 203 136 202 140 198 C158 188 166 166 160 142 C146 136 110 136 96 142 Z" fill="url(#sirenetta_tail)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M108 164 Q114 158 120 164 Q126 158 132 164 Q138 158 144 164 Q150 158 154 162 M112 180 Q118 174 124 180 Q130 174 136 180 Q142 174 148 178" fill="none" stroke="#2C8A82" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="106" cy="160" rx="5" ry="10" fill="#FFFFFF" opacity="0.55" transform="rotate(16 106 160)"/>
+    </g>
+    <g id="shells">
+      <path d="M104 146 C104 134 124 134 124 146 C118 150 110 150 104 146 Z M132 146 C132 134 152 134 152 146 C146 150 138 150 132 146 Z" fill="#E8DDF7" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    </g>
+    <g id="head">
+      <ellipse cx="128" cy="104" rx="37" ry="35" fill="url(#sirenetta_skin)" stroke="#4B372F" stroke-width="3.5"/>
+      <path d="M92 100 C94 78 110 66 128 66 C146 66 162 78 164 100 C154 88 142 84 130 86 C122 86 104 88 92 100 Z" fill="url(#sirenetta_hair)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    </g>
+    <g id="starfish">
+      <path d="M156 66 L160 74 L169 75 L162 81 L164 90 L156 85 L148 90 L150 81 L143 75 L152 74 Z" fill="#FFC234" stroke="#4B372F" stroke-width="2.2" stroke-linejoin="round"/>
+    </g>
+    <g id="face">
+      <ellipse cx="102" cy="118" rx="8" ry="5" fill="#FDA4AF" opacity="0.55"/>
+      <ellipse cx="154" cy="118" rx="8" ry="5" fill="#FDA4AF" opacity="0.55"/>
+      <ellipse cx="113" cy="104" rx="7" ry="9.5" fill="#3C2D33"/>
+      <ellipse cx="143" cy="104" rx="7" ry="9.5" fill="#3C2D33"/>
+      <ellipse cx="115.5" cy="100.5" rx="2.4" ry="3" fill="#FFFFFF"/>
+      <ellipse cx="145.5" cy="100.5" rx="2.4" ry="3" fill="#FFFFFF"/>
+      <path d="M118 122 Q128 130 138 122" fill="none" stroke="#6D474D" stroke-width="2.8" stroke-linecap="round"/>
+    </g>
+  </g>
 </svg>

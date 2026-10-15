@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 600" width="512" height="600">
+  <!-- Teatrino closed main curtain: the LEFT half (mirrored at runtime for the right).
+       Fabric, contour and gold match bg.stage.curtain_left / valance; recipe GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- curtain light -> curtain base -->
+    <linearGradient id="curtain_closed_fabric" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EE8290"/>
+      <stop offset="1" stop-color="#E66272"/>
+    </linearGradient>
+  </defs>
+  <g id="fabric">
+    <path d="M-8 -8 L520 -8 L520 608 L-8 608 Z" fill="url(#curtain_closed_fabric)"/>
+  </g>
+  <g id="folds">
+    <path d="M46 -8 C41 200 51 400 48 608 L80 608 L80 -8 Z M136 -8 C131 200 141 400 138 608 L172 608 L172 -8 Z M228 -8 C223 200 233 400 230 608 L264 608 L264 -8 Z M320 -8 C315 200 325 400 322 608 L356 608 L356 -8 Z M412 -8 C407 200 417 400 414 608 L448 608 L448 -8 Z M496 -8 C491 200 501 400 498 608 L512 608 L512 -8 Z" fill="#D4596B"/>
+    <path d="M14 6 C12 150 17 300 14 430 M102 6 C100 150 105 300 102 430 M194 6 C192 150 197 300 194 430 M286 6 C284 150 289 300 286 430 M378 6 C376 150 381 300 378 430 M470 6 C468 150 473 300 470 430" fill="none" stroke="#F6AAB4" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+  </g>
+  <g id="edge">
+    <path d="M512 -8 L512 608" stroke="#4B372F" stroke-width="18"/>
+    <path d="M512 -8 L512 608" stroke="#FFC234" stroke-width="10"/>
+    <path d="M512 14 L512 596" stroke="#FFE08A" stroke-width="3" stroke-dasharray="9 13" stroke-linecap="round"/>
+  </g>
+</svg>

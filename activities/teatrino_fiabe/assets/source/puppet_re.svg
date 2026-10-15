@@ -1,35 +1,58 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Teatrino puppet: the King (non-canonical; section 20 grammar: one round robe mass,
+       3 cues = golden crown, white beard, ermine collar). Rod puppet: no shadow. -->
   <defs>
-    <linearGradient id="re_cape" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#DC2626"/>
-      <stop offset="100%" stop-color="#991B1B"/>
+    <!-- coral light -> coral, a little deeper for velvet -->
+    <linearGradient id="re_robe" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#E05A4E"/>
+    </linearGradient>
+    <!-- skin light -> skin -->
+    <linearGradient id="re_skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF3E8"/>
+      <stop offset="1" stop-color="#FBDCC8"/>
+    </linearGradient>
+    <!-- sunshine light -> gold deep -->
+    <linearGradient id="re_crown" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE08A"/>
+      <stop offset="1" stop-color="#F59E0B"/>
     </linearGradient>
   </defs>
-  <!-- Royal Cape -->
-  <path d="M 75 95 L 125 95 L 155 178 C 120 188 80 188 45 178 Z" fill="url(#re_cape)" stroke="#7F1D1D" stroke-width="4"/>
-  <!-- Ermine Fur Collar -->
-  <path d="M 70 95 C 70 120 130 120 130 95 Z" fill="#FFFFFF" stroke="#450A0A" stroke-width="3"/>
-  <circle cx="88" cy="108" r="2" fill="#000000"/>
-  <circle cx="100" cy="112" r="2" fill="#000000"/>
-  <circle cx="112" cy="108" r="2" fill="#000000"/>
-  <!-- Golden Scepter -->
-  <line x1="140" y1="165" x2="155" y2="85" stroke="#F59E0B" stroke-width="4.5" stroke-linecap="round"/>
-  <circle cx="156" cy="80" r="9" fill="#FDE047" stroke="#B45309" stroke-width="2"/>
-  <circle cx="156" cy="80" r="3" fill="#EF4444"/>
-  <!-- White Beard -->
-  <path d="M 74 80 C 74 135 126 135 126 80 Z" fill="#FFFFFF" stroke="#94A3B8" stroke-width="2.5"/>
-  <!-- Head -->
-  <circle cx="100" cy="70" r="24" fill="#FED7AA"/>
-  <!-- Golden Crown with Jewels -->
-  <polygon points="76,50 82,30 92,42 100,24 108,42 118,30 124,50" fill="#FDE047" stroke="#B45309" stroke-width="2.5"/>
-  <circle cx="88" cy="44" r="2.5" fill="#3B82F6"/>
-  <circle cx="100" cy="38" r="3" fill="#EF4444"/>
-  <circle cx="112" cy="44" r="2.5" fill="#10B981"/>
-  <!-- Eyes -->
-  <circle cx="91" cy="68" r="4" fill="#1E1B4B"/>
-  <circle cx="109" cy="68" r="4" fill="#1E1B4B"/>
-  <circle cx="92" cy="66" r="1.5" fill="#FFFFFF"/>
-  <circle cx="110" cy="66" r="1.5" fill="#FFFFFF"/>
-  <!-- Nose -->
-  <ellipse cx="100" cy="74" rx="4" ry="3" fill="#FB923C"/>
+  <g id="character">
+    <g id="feet">
+      <ellipse cx="106" cy="209" rx="14" ry="8.5" fill="#FBBF24" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="150" cy="209" rx="14" ry="8.5" fill="#FBBF24" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+    <g id="robe">
+      <path d="M128 92 C170 92 196 122 194 158 C192 188 166 206 128 206 C90 206 64 188 62 158 C60 122 86 92 128 92 Z" fill="url(#re_robe)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <ellipse cx="84" cy="168" rx="8" ry="14" fill="#FFFFFF" opacity="0.55" transform="rotate(20 84 168)"/>
+    </g>
+    <g id="ermine">
+      <path d="M114 138 L142 138 C144 160 144 184 146 205 C134 207 122 207 110 205 C112 184 112 160 114 138 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M124 156 l0 7 M134 172 l0 7 M123 188 l0 7" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round"/>
+    </g>
+    <g id="head">
+      <ellipse cx="128" cy="104" rx="38" ry="36" fill="url(#re_skin)" stroke="#4B372F" stroke-width="3.5"/>
+    </g>
+    <g id="beard">
+      <path d="M94 112 C98 132 110 148 128 150 C146 148 158 132 162 112 C156 120 146 124 138 122 C134 128 122 128 118 122 C110 124 100 120 94 112 Z" fill="#FFFFFF" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M128 120 C120 112 108 114 106 120 C116 124 124 124 128 120 C132 124 140 124 150 120 C148 114 136 112 128 120 Z" fill="#FFFFFF" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    </g>
+    <g id="face">
+      <ellipse cx="102" cy="108" rx="7" ry="4.5" fill="#FDA4AF" opacity="0.55"/>
+      <ellipse cx="154" cy="108" rx="7" ry="4.5" fill="#FDA4AF" opacity="0.55"/>
+      <ellipse cx="114" cy="98" rx="6.5" ry="8.5" fill="#3C2D33"/>
+      <ellipse cx="142" cy="98" rx="6.5" ry="8.5" fill="#3C2D33"/>
+      <ellipse cx="116.2" cy="95" rx="2.2" ry="2.8" fill="#FFFFFF"/>
+      <ellipse cx="144.2" cy="95" rx="2.2" ry="2.8" fill="#FFFFFF"/>
+      <path d="M122 134 Q128 139 134 134" fill="none" stroke="#6D474D" stroke-width="2.6" stroke-linecap="round"/>
+    </g>
+    <g id="crown">
+      <path d="M94 80 L90 42 L108 58 L128 34 L148 58 L166 42 L162 80 C142 86 114 86 94 80 Z" fill="url(#re_crown)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <circle cx="128" cy="66" r="6.5" fill="#F46F61" stroke="#4B372F" stroke-width="2.2"/>
+      <circle cx="105" cy="70" r="4.5" fill="#4A91D8" stroke="#4B372F" stroke-width="2"/>
+      <circle cx="151" cy="70" r="4.5" fill="#59B86A" stroke="#4B372F" stroke-width="2"/>
+      <path d="M98 50 L101 62" stroke="#FFF1B8" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </g>
 </svg>

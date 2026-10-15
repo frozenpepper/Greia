@@ -1,31 +1,50 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Teatrino puppet: the little Dragon (non-canonical; section 20 grammar: one round mass,
+       two wing flaps, 3 cues = gold horns, striped cream belly, spade tail). Rod puppet: no shadow. -->
   <defs>
-    <linearGradient id="drag_scale" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#34D399"/>
-      <stop offset="100%" stop-color="#059669"/>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="draghetto_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8FD19B"/>
+      <stop offset="1" stop-color="#4FA65F"/>
     </linearGradient>
   </defs>
-  <path d="M 70 85 C 35 60 25 95 55 115 Z" fill="#C084FC" stroke="#581C87" stroke-width="3"/>
-  <path d="M 130 85 C 165 60 175 95 145 115 Z" fill="#C084FC" stroke="#581C87" stroke-width="3"/>
-  <path d="M 130 145 C 160 150 172 170 160 180 C 150 172 142 165 130 160 Z" fill="url(#drag_scale)" stroke="#064E3B" stroke-width="3.5"/>
-  <polygon points="162,175 174,178 168,186" fill="#FDE047"/>
-  <ellipse cx="100" cy="135" rx="42" ry="42" fill="url(#drag_scale)" stroke="#064E3B" stroke-width="4"/>
-  <ellipse cx="100" cy="142" rx="26" ry="28" fill="#FEF08A" stroke="#064E3B" stroke-width="2.5"/>
-  <line x1="82" y1="130" x2="118" y2="130" stroke="#CA8A04" stroke-width="2"/>
-  <line x1="78" y1="144" x2="122" y2="144" stroke="#CA8A04" stroke-width="2"/>
-  <line x1="82" y1="158" x2="118" y2="158" stroke="#CA8A04" stroke-width="2"/>
-  <ellipse cx="76" cy="176" rx="14" ry="9" fill="#059669" stroke="#064E3B" stroke-width="3"/>
-  <ellipse cx="124" cy="176" rx="14" ry="9" fill="#059669" stroke="#064E3B" stroke-width="3"/>
-  <polygon points="80,55 72,32 90,48" fill="#FDE047" stroke="#854D0E" stroke-width="2.5"/>
-  <polygon points="120,55 128,32 110,48" fill="#FDE047" stroke="#854D0E" stroke-width="2.5"/>
-  <ellipse cx="100" cy="85" rx="36" ry="30" fill="url(#drag_scale)" stroke="#064E3B" stroke-width="4"/>
-  <ellipse cx="100" cy="94" rx="22" ry="14" fill="#6EE7B7"/>
-  <circle cx="94" cy="94" r="2.5" fill="#064E3B"/>
-  <circle cx="106" cy="94" r="2.5" fill="#064E3B"/>
-  <circle cx="118" cy="90" r="3" fill="#F97316" opacity="0.8"/>
-  <circle cx="125" cy="86" r="2" fill="#FDE047" opacity="0.9"/>
-  <circle cx="82" cy="76" r="10" fill="#1E1B4B"/>
-  <circle cx="118" cy="76" r="10" fill="#1E1B4B"/>
-  <circle cx="84" cy="74" r="3.5" fill="#FFFFFF"/>
-  <circle cx="120" cy="74" r="3.5" fill="#FFFFFF"/>
+  <g id="character">
+    <g id="tail">
+      <path d="M176 172 C204 176 218 160 214 140 C222 150 226 170 214 184 C202 196 182 196 168 190 Z" fill="#4FA65F" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M212 132 L226 124 L222 142 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    </g>
+    <g id="wings">
+      <path d="M72 112 C46 88 30 104 36 126 C46 120 52 130 62 128 C60 138 68 144 76 140 Z" fill="#B996DE" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M184 112 C210 88 226 104 220 126 C210 120 204 130 194 128 C196 138 188 144 180 140 Z" fill="#B996DE" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    </g>
+    <g id="horns">
+      <path d="M96 78 L88 48 L112 70 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M160 78 L168 48 L144 70 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    </g>
+    <g id="feet">
+      <ellipse cx="102" cy="207" rx="15" ry="9" fill="#4FA65F" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="154" cy="207" rx="15" ry="9" fill="#4FA65F" stroke="#4B372F" stroke-width="2.5"/>
+      <path d="M94 210 l0 -4 M102 211 l0 -4 M110 210 l0 -4 M146 210 l0 -4 M154 211 l0 -4 M162 210 l0 -4" stroke="#FFFBEB" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <path d="M128 64 C170 64 194 94 194 132 C194 172 166 204 128 204 C90 204 62 172 62 132 C62 94 86 64 128 64 Z" fill="url(#draghetto_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <ellipse cx="92" cy="96" rx="9" ry="16" fill="#FFFFFF" opacity="0.55" transform="rotate(32 92 96)"/>
+    </g>
+    <g id="belly">
+      <path d="M100 150 C104 136 152 136 156 150 C162 172 150 194 128 196 C106 194 94 172 100 150 Z" fill="#FFF1B8" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M106 160 C120 164 136 164 150 160 M104 174 C120 178 136 178 152 174 M110 187 C122 190 134 190 146 187" fill="none" stroke="#E5B94C" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+    <g id="face">
+      <ellipse cx="94" cy="128" rx="8" ry="5" fill="#FDA4AF" opacity="0.55"/>
+      <ellipse cx="162" cy="128" rx="8" ry="5" fill="#FDA4AF" opacity="0.55"/>
+      <ellipse cx="108" cy="108" rx="8.5" ry="12" fill="#3C2D33"/>
+      <ellipse cx="148" cy="108" rx="8.5" ry="12" fill="#3C2D33"/>
+      <ellipse cx="111" cy="104" rx="2.8" ry="3.6" fill="#FFFFFF"/>
+      <ellipse cx="151" cy="104" rx="2.8" ry="3.6" fill="#FFFFFF"/>
+      <circle cx="120" cy="124" r="2" fill="#2F6B3C"/>
+      <circle cx="136" cy="124" r="2" fill="#2F6B3C"/>
+      <path d="M114 132 Q128 142 142 132" fill="none" stroke="#6D474D" stroke-width="2.8" stroke-linecap="round"/>
+      <path d="M122 136 L125 142 L128 137 Z" fill="#FFFFFF" stroke="#4B372F" stroke-width="1.5" stroke-linejoin="round"/>
+    </g>
+  </g>
 </svg>

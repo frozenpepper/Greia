@@ -1,34 +1,57 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Teatrino puppet: the Princess (non-canonical; style guide section 20 grammar:
+       one round mass, two flaps, 3 cues = crown, golden hair, rose gown). Rod puppet: no contact shadow. -->
   <defs>
-    <linearGradient id="prin_hair" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FDE047"/>
-      <stop offset="100%" stop-color="#EAB308"/>
+    <!-- raspberry light -> raspberry -->
+    <linearGradient id="principessa_gown" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EE9BB8"/>
+      <stop offset="1" stop-color="#D85683"/>
     </linearGradient>
-    <linearGradient id="prin_dress" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#F472B6"/>
-      <stop offset="100%" stop-color="#DB2777"/>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="principessa_hair" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE08A"/>
+      <stop offset="1" stop-color="#F5B82E"/>
+    </linearGradient>
+    <!-- skin light -> skin -->
+    <linearGradient id="principessa_skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF3E8"/>
+      <stop offset="1" stop-color="#FBDCC8"/>
     </linearGradient>
   </defs>
-  <path d="M 52 75 C 38 110 45 155 60 165 C 50 130 65 95 75 75 Z" fill="url(#prin_hair)" stroke="#854D0E" stroke-width="3"/>
-  <path d="M 148 75 C 162 110 155 155 140 165 C 150 130 135 95 125 75 Z" fill="url(#prin_hair)" stroke="#854D0E" stroke-width="3"/>
-  <path d="M 85 110 L 115 110 L 148 175 C 120 185 80 185 52 175 Z" fill="url(#prin_dress)" stroke="#831843" stroke-width="4"/>
-  <path d="M 75 125 Q 100 142 125 125" stroke="#FDE047" stroke-width="4" fill="none"/>
-  <path d="M 86 95 L 114 95 L 116 118 L 84 118 Z" fill="#FDF2F8" stroke="#831843" stroke-width="3"/>
-  <circle cx="78" cy="102" r="11" fill="url(#prin_dress)" stroke="#831843" stroke-width="3"/>
-  <circle cx="122" cy="102" r="11" fill="url(#prin_dress)" stroke="#831843" stroke-width="3"/>
-  <rect x="70" y="112" width="8" height="18" rx="4" fill="#FEE2E2"/>
-  <rect x="122" y="112" width="8" height="18" rx="4" fill="#FEE2E2"/>
-  <line x1="130" y1="130" x2="148" y2="92" stroke="#D97706" stroke-width="3"/>
-  <polygon points="148,82 152,90 160,91 154,97 156,105 148,100 140,105 142,97 136,91 144,90" fill="#FDE047" stroke="#B45309" stroke-width="2"/>
-  <ellipse cx="100" cy="76" rx="24" ry="22" fill="#FEE2E2" stroke="#854D0E" stroke-width="3"/>
-  <path d="M 76 70 C 85 55 115 55 124 70 C 115 65 85 65 76 70 Z" fill="url(#prin_hair)" stroke="#854D0E" stroke-width="2.5"/>
-  <polygon points="84,54 88,40 94,48 100,34 106,48 112,40 116,54" fill="#FDE047" stroke="#B45309" stroke-width="2.5"/>
-  <circle cx="100" cy="46" r="3" fill="#EF4444"/>
-  <ellipse cx="91" cy="74" rx="4.5" ry="6" fill="#1E1B4B"/>
-  <ellipse cx="109" cy="74" rx="4.5" ry="6" fill="#1E1B4B"/>
-  <circle cx="92.5" cy="72" r="2" fill="#FFFFFF"/>
-  <circle cx="110.5" cy="72" r="2" fill="#FFFFFF"/>
-  <circle cx="86" cy="80" r="3.5" fill="#F43F5E" opacity="0.6"/>
-  <circle cx="114" cy="80" r="3.5" fill="#F43F5E" opacity="0.6"/>
-  <path d="M 96 83 Q 100 87 104 83" stroke="#9F1239" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <g id="character">
+    <g id="hair_back">
+      <path d="M78 104 C74 66 100 46 128 46 C156 46 182 66 178 104 C182 132 176 158 166 176 C158 166 156 150 158 134 L98 134 C100 150 98 166 90 176 C80 158 74 132 78 104 Z" fill="url(#principessa_hair)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    </g>
+    <g id="gown">
+      <path d="M104 146 C96 168 80 190 70 206 C96 218 160 218 186 206 C176 190 160 168 152 146 C144 140 112 140 104 146 Z" fill="url(#principessa_gown)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M98 176 C116 184 140 184 158 176" fill="none" stroke="#FFC234" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="96" cy="190" rx="7" ry="12" fill="#FFFFFF" opacity="0.6" transform="rotate(24 96 190)"/>
+    </g>
+    <g id="feet">
+      <ellipse cx="112" cy="213" rx="12" ry="7" fill="#B8456E" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="144" cy="213" rx="12" ry="7" fill="#B8456E" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+    <g id="arms">
+      <path d="M104 152 C90 156 82 166 84 176 C86 184 96 184 102 176 Z" fill="url(#principessa_skin)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M152 152 C166 156 174 166 172 176 C170 184 160 184 154 176 Z" fill="url(#principessa_skin)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    </g>
+    <g id="head">
+      <ellipse cx="128" cy="108" rx="40" ry="38" fill="url(#principessa_skin)" stroke="#4B372F" stroke-width="3.5"/>
+      <path d="M88 102 C92 78 108 66 128 66 C148 66 164 78 168 102 C158 92 146 86 134 88 C130 80 124 80 120 88 C110 86 98 92 88 102 Z" fill="url(#principessa_hair)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    </g>
+    <g id="face">
+      <ellipse cx="102" cy="124" rx="8" ry="5" fill="#FDA4AF" opacity="0.55"/>
+      <ellipse cx="154" cy="124" rx="8" ry="5" fill="#FDA4AF" opacity="0.55"/>
+      <ellipse cx="113" cy="110" rx="7" ry="9.5" fill="#3C2D33"/>
+      <ellipse cx="143" cy="110" rx="7" ry="9.5" fill="#3C2D33"/>
+      <ellipse cx="115.5" cy="106.5" rx="2.4" ry="3" fill="#FFFFFF"/>
+      <ellipse cx="145.5" cy="106.5" rx="2.4" ry="3" fill="#FFFFFF"/>
+      <path d="M118 128 Q128 136 138 128" fill="none" stroke="#6D474D" stroke-width="2.8" stroke-linecap="round"/>
+    </g>
+    <g id="crown">
+      <path d="M104 72 L100 46 L114 58 L128 40 L142 58 L156 46 L152 72 C138 76 118 76 104 72 Z" fill="#FBBF24" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="128" cy="62" r="5" fill="#F46F61" stroke="#4B372F" stroke-width="2"/>
+      <path d="M108 52 L112 60" stroke="#FFF1B8" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+  </g>
 </svg>

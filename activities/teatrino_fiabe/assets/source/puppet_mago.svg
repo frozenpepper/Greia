@@ -1,24 +1,53 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Teatrino puppet: the Wizard (non-canonical; section 20 grammar: one round robe mass,
+       3 cues = starry pointed hat, long white beard, star robe). Rod puppet: no shadow. -->
   <defs>
-    <linearGradient id="wiz_robe" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#6366F1"/>
-      <stop offset="100%" stop-color="#3730A3"/>
+    <!-- grape light -> grape -->
+    <linearGradient id="mago_robe" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B996DE"/>
+      <stop offset="1" stop-color="#8657BF"/>
+    </linearGradient>
+    <!-- grape -> grape shade -->
+    <linearGradient id="mago_hat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9F74D2"/>
+      <stop offset="1" stop-color="#7A4FB0"/>
+    </linearGradient>
+    <!-- skin light -> skin -->
+    <linearGradient id="mago_skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF3E8"/>
+      <stop offset="1" stop-color="#FBDCC8"/>
     </linearGradient>
   </defs>
-  <path d="M 80 100 L 120 100 L 145 175 C 115 182 85 182 55 175 Z" fill="url(#wiz_robe)" stroke="#1E1B4B" stroke-width="4"/>
-  <polygon points="76,140 78,144 83,144 79,147 81,152 76,149 71,152 73,147 69,144 74,144" fill="#FDE047"/>
-  <polygon points="120,135 122,139 127,139 123,142 125,147 120,144 115,147 117,142 113,139 118,139" fill="#FDE047"/>
-  <line x1="142" y1="170" x2="152" y2="70" stroke="#78350F" stroke-width="5" stroke-linecap="round"/>
-  <circle cx="154" cy="64" r="12" fill="#38BDF8" stroke="#0284C7" stroke-width="2.5"/>
-  <circle cx="152" cy="60" r="3.5" fill="#FFFFFF"/>
-  <path d="M 78 88 C 78 135 122 135 122 88 Z" fill="#F8FAFC" stroke="#94A3B8" stroke-width="2.5"/>
-  <circle cx="100" cy="80" r="22" fill="#FED7AA"/>
-  <ellipse cx="100" cy="64" rx="42" ry="12" fill="#4338CA" stroke="#1E1B4B" stroke-width="3.5"/>
-  <path d="M 68 62 Q 100 15 132 25 Q 120 45 132 62 Z" fill="#4338CA" stroke="#1E1B4B" stroke-width="3.5"/>
-  <polygon points="100,38 103,44 110,44 104,48 106,55 100,51 94,55 96,48 90,44 97,44" fill="#FDE047"/>
-  <circle cx="91" cy="76" r="4" fill="#1E1B4B"/>
-  <circle cx="109" cy="76" r="4" fill="#1E1B4B"/>
-  <circle cx="92" cy="74" r="1.5" fill="#FFFFFF"/>
-  <circle cx="110" cy="74" r="1.5" fill="#FFFFFF"/>
-  <ellipse cx="100" cy="82" rx="4" ry="3" fill="#FB923C"/>
+  <g id="character">
+    <g id="feet">
+      <ellipse cx="106" cy="209" rx="14" ry="8.5" fill="#5E3B87" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="150" cy="209" rx="14" ry="8.5" fill="#5E3B87" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+    <g id="robe">
+      <path d="M128 100 C170 100 196 128 194 162 C192 190 166 206 128 206 C90 206 64 190 62 162 C60 128 86 100 128 100 Z" fill="url(#mago_robe)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M86 182 L89 188 L96 188 L90 192 L92 199 L86 195 L80 199 L82 192 L76 188 L83 188 Z M172 170 L175 176 L182 176 L176 180 L178 187 L172 183 L166 187 L168 180 L162 176 L169 176 Z" fill="#FFC234" stroke="#4B372F" stroke-width="2" stroke-linejoin="round"/>
+    </g>
+    <g id="head">
+      <ellipse cx="128" cy="108" rx="36" ry="32" fill="url(#mago_skin)" stroke="#4B372F" stroke-width="3.5"/>
+    </g>
+    <g id="beard">
+      <path d="M94 112 C94 142 106 172 128 186 C150 172 162 142 162 112 C154 122 146 126 138 124 C134 130 122 130 118 124 C110 126 102 122 94 112 Z" fill="#FFFFFF" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M128 122 C120 114 108 116 104 122 C114 127 122 127 128 122 C134 127 142 127 152 122 C148 116 136 114 128 122 Z" fill="#FFFFFF" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M116 146 C120 158 124 166 128 172" fill="none" stroke="#E2E6EC" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <g id="face">
+      <ellipse cx="102" cy="112" rx="7" ry="4.5" fill="#FDA4AF" opacity="0.55"/>
+      <ellipse cx="154" cy="112" rx="7" ry="4.5" fill="#FDA4AF" opacity="0.55"/>
+      <ellipse cx="114" cy="102" rx="6.5" ry="8.5" fill="#3C2D33"/>
+      <ellipse cx="142" cy="102" rx="6.5" ry="8.5" fill="#3C2D33"/>
+      <ellipse cx="116.2" cy="99" rx="2.2" ry="2.8" fill="#FFFFFF"/>
+      <ellipse cx="144.2" cy="99" rx="2.2" ry="2.8" fill="#FFFFFF"/>
+    </g>
+    <g id="hat">
+      <path d="M86 88 C96 70 106 50 118 34 C124 26 136 22 146 26 C140 30 136 36 136 44 C146 58 160 74 170 88 C150 96 106 96 86 88 Z" fill="url(#mago_hat)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M78 90 C100 100 156 100 178 90 C182 96 178 102 170 104 C142 110 114 110 86 104 C78 102 74 96 78 90 Z" fill="#9F74D2" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M128 56 L132 65 L142 66 L135 72 L137 82 L128 77 L119 82 L121 72 L114 66 L124 65 Z" fill="#FFC234" stroke="#4B372F" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M108 60 C112 52 116 46 120 42" fill="none" stroke="#C6A9E8" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </g>
 </svg>

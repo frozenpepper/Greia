@@ -1,32 +1,58 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Teatrino puppet: the Fairy (non-canonical; section 20 grammar: one round dress mass,
+       two flaps, 3 cues = wings, star wand, hair bun). Rod puppet: no shadow. -->
   <defs>
-    <linearGradient id="fairy_wings" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#E0F2FE" stop-opacity="0.9"/>
-      <stop offset="50%" stop-color="#FBCFE8" stop-opacity="0.8"/>
-      <stop offset="100%" stop-color="#DDD6FE" stop-opacity="0.9"/>
+    <!-- leaf light (mix 55% white) -> leaf light (mix 30% white) -->
+    <linearGradient id="fatina_dress" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C6E8CC"/>
+      <stop offset="1" stop-color="#8ACD96"/>
     </linearGradient>
-    <linearGradient id="fairy_dress" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#86EFAC"/>
-      <stop offset="100%" stop-color="#22C55E"/>
+    <!-- skin light -> skin -->
+    <linearGradient id="fatina_skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF3E8"/>
+      <stop offset="1" stop-color="#FBDCC8"/>
     </linearGradient>
   </defs>
-  <ellipse cx="60" cy="90" rx="34" ry="18" fill="url(#fairy_wings)" stroke="#A855F7" stroke-width="2.5" transform="rotate(-30 60 90)"/>
-  <ellipse cx="62" cy="115" rx="24" ry="12" fill="url(#fairy_wings)" stroke="#A855F7" stroke-width="2" transform="rotate(-15 62 115)"/>
-  <ellipse cx="140" cy="90" rx="34" ry="18" fill="url(#fairy_wings)" stroke="#A855F7" stroke-width="2.5" transform="rotate(30 140 90)"/>
-  <ellipse cx="138" cy="115" rx="24" ry="12" fill="url(#fairy_wings)" stroke="#A855F7" stroke-width="2" transform="rotate(15 138 115)"/>
-  <path d="M 85 110 L 115 110 L 138 168 C 115 178 85 178 62 168 Z" fill="url(#fairy_dress)" stroke="#15803D" stroke-width="3.5"/>
-  <rect x="85" y="160" width="8" height="20" rx="4" fill="#FEE2E2"/>
-  <rect x="107" y="160" width="8" height="20" rx="4" fill="#FEE2E2"/>
-  <line x1="120" y1="120" x2="148" y2="85" stroke="#F59E0B" stroke-width="2.5"/>
-  <circle cx="148" cy="85" r="6" fill="#FDE047" stroke="#D97706" stroke-width="2"/>
-  <circle cx="100" cy="74" r="22" fill="#FEE2E2" stroke="#B45309" stroke-width="2"/>
-  <path d="M 76 74 C 74 50 126 50 124 74 C 115 62 85 62 76 74 Z" fill="#F59E0B" stroke="#B45309" stroke-width="2.5"/>
-  <circle cx="100" cy="54" r="6" fill="#F472B6"/>
-  <ellipse cx="91" cy="74" rx="4" ry="5.5" fill="#1E1B4B"/>
-  <ellipse cx="109" cy="74" rx="4" ry="5.5" fill="#1E1B4B"/>
-  <circle cx="92.5" cy="72" r="1.5" fill="#FFFFFF"/>
-  <circle cx="110.5" cy="72" r="1.5" fill="#FFFFFF"/>
-  <circle cx="86" cy="80" r="3" fill="#F43F5E" opacity="0.6"/>
-  <circle cx="114" cy="80" r="3" fill="#F43F5E" opacity="0.6"/>
-  <path d="M 96 83 Q 100 86 104 83" stroke="#B45309" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <g id="character">
+    <g id="wings">
+      <path d="M100 132 C70 96 38 104 44 132 C48 152 74 156 100 144 Z" fill="#E8DDF7" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M156 132 C186 96 218 104 212 132 C208 152 182 156 156 144 Z" fill="#E8DDF7" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M98 150 C76 156 58 172 68 184 C78 194 96 176 102 158 Z" fill="#E8DDF7" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M158 150 C180 156 198 172 188 184 C178 194 160 176 154 158 Z" fill="#E8DDF7" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M58 122 C66 114 78 114 88 122 M198 122 C190 114 178 114 168 122" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <g id="feet">
+      <ellipse cx="114" cy="211" rx="11" ry="7" fill="#59B86A" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="142" cy="211" rx="11" ry="7" fill="#59B86A" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+    <g id="dress">
+      <path d="M106 140 C98 160 86 186 80 204 C104 214 152 214 176 204 C170 186 158 160 150 140 C140 134 116 134 106 140 Z" fill="url(#fatina_dress)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M80 204 C90 196 98 210 108 200 C118 210 128 196 138 206 C148 196 158 210 168 200 C172 202 174 204 176 204" fill="none" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+      <ellipse cx="104" cy="176" rx="6" ry="12" fill="#FFFFFF" opacity="0.6" transform="rotate(22 104 176)"/>
+    </g>
+    <g id="arm_left">
+      <path d="M106 148 C94 152 88 160 90 170 C92 176 100 176 104 170 Z" fill="url(#fatina_skin)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    </g>
+    <g id="head">
+      <circle cx="128" cy="64" r="14" fill="#B9773F" stroke="#4B372F" stroke-width="3.5"/>
+      <ellipse cx="128" cy="106" rx="38" ry="36" fill="url(#fatina_skin)" stroke="#4B372F" stroke-width="3.5"/>
+      <path d="M90 104 C92 82 108 70 128 70 C148 70 164 82 166 104 C156 94 146 90 136 92 C132 84 124 84 120 92 C110 90 100 94 90 104 Z" fill="#B9773F" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M118 62 C120 56 126 54 132 56" fill="none" stroke="#D99A5E" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <g id="face">
+      <ellipse cx="102" cy="122" rx="8" ry="5" fill="#FDA4AF" opacity="0.55"/>
+      <ellipse cx="154" cy="122" rx="8" ry="5" fill="#FDA4AF" opacity="0.55"/>
+      <ellipse cx="113" cy="108" rx="7" ry="9.5" fill="#3C2D33"/>
+      <ellipse cx="143" cy="108" rx="7" ry="9.5" fill="#3C2D33"/>
+      <ellipse cx="115.5" cy="104.5" rx="2.4" ry="3" fill="#FFFFFF"/>
+      <ellipse cx="145.5" cy="104.5" rx="2.4" ry="3" fill="#FFFFFF"/>
+      <path d="M118 126 Q128 134 138 126" fill="none" stroke="#6D474D" stroke-width="2.8" stroke-linecap="round"/>
+    </g>
+    <g id="wand">
+      <path d="M158 168 L184 118" stroke="#4B372F" stroke-width="7" stroke-linecap="round"/>
+      <path d="M158 168 L184 118" stroke="#D99A5E" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M186 96 L191 107 L203 108 L194 116 L197 128 L186 121 L175 128 L178 116 L169 108 L181 107 Z" fill="#FFC234" stroke="#4B372F" stroke-width="2.8" stroke-linejoin="round"/>
+      <path d="M150 148 C162 150 168 158 166 168 C164 174 156 174 152 168 Z" fill="url(#fatina_skin)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    </g>
+  </g>
 </svg>

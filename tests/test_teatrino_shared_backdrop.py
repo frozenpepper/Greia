@@ -1,161 +1,101 @@
-"""Teatrino nonblocking shared-backdrop and truthful save state."""
+"""Teatrino nonblocking shared-backdrop import (P4), poster share and truthful save state."""
 from __future__ import annotations
 
 import hashlib
-import unittest
 from types import SimpleNamespace
+import unittest
 from unittest import mock
+
+from teatrino_doubles import FakeCreations, MemoryStorage, make_app, record_show
 
 from greia_platform.creation_client import CreationTransfer
 
-from activities.teatrino_fiabe.teatrino_app import TeatrinoApp
+from activities.teatrino_fiabe.teatrino_content import POSTER_FILE, POSTER_ROLE
 from activities.teatrino_fiabe.teatrino_model import ShowStorageError
 
 
-class FakeCreations:
-    def __init__(self):
-        self.requests = []
-        self.polls = []
-        self.reply = SimpleNamespace(state="pending", selection_token=None)
-        self.transfer = None
-
-    def request_selection(self, *, media_types):
-        self.requests.append(media_types)
-        return "request-1"
-
-    def poll_selection(self, request_id):
-        self.polls.append(request_id)
-        return self.reply
-
-    def import_selected(self, token):
-        return self.transfer
-
-
-class FakeSound:
-    def __init__(self):
-        self.played = []
-
-    def play(self, sound_id):
-        self.played.append(sound_id)
+def _pick_my_picture(app):
+    app.tap(app.layout.scene.center)
+    mine = app.surfaces.overlays[-1].layer.target("scene.mine")
+    app.tap(mine.rect.center)
 
 
 class TeatrinoBackdropFlowTests(unittest.TestCase):
-    def make_app(self):
-        app = object.__new__(TeatrinoApp)
-        app.creations = FakeCreations()
-        app.app_mode = "stage"
-        app.is_recording = False
-        app.backdrop_import_request = None
-        app.narration_import_request = None
-        app.backdrop_import_next_poll = 0.0
-        app.backdrop_import_state = ""
-        app.backdrop_import_feedback_until = 0.0
-        app.feedback_text = ""
-        app.feedback_timer = 0.0
-        app.custom_backdrop_png = None
-        app.custom_backdrop_surface = None
-        return app
+    def test_my_picture_card_asks_for_png_only_and_polls_politely(self):
+        creations = FakeCreations()
+        app = make_app(creations=creations)
+        _pick_my_picture(app)
+        self.assertEqual(creations.requests, [(("image/png",), ())])
+        self.assertTrue(app.bridge.busy)
+        app.clock.now += 0.05
+        app.step()
+        self.assertEqual(creations.polls, [], "no poll before the bounded interval")
+        app.clock.now += 0.1
+        app.step()
+        self.assertEqual(len(creations.polls), 1)
 
-    def test_request_is_png_only_and_poll_is_bounded(self):
-        app = self.make_app()
-        with mock.patch(
-            "activities.teatrino_fiabe.teatrino_app.time.monotonic",
-            return_value=10.0,
-        ):
-            app._request_shared_backdrop()
-        self.assertEqual(app.creations.requests, [("image/png",)])
-        self.assertEqual(app.backdrop_import_request, "request-1")
-        self.assertGreaterEqual(app.backdrop_import_next_poll, 10.12)
-        app._poll_shared_backdrop(10.1)
-        self.assertEqual(app.creations.polls, [])
-
-    def test_cancel_preserves_current_backdrop(self):
-        app = self.make_app()
-        app.custom_backdrop_png = b"current"
-        app.custom_backdrop_surface = object()
-        app.backdrop_import_request = "request-1"
-        app.creations.reply = SimpleNamespace(
-            state="cancelled", selection_token=None
-        )
-        app._poll_shared_backdrop(20.0)
-        self.assertEqual(app.custom_backdrop_png, b"current")
-        self.assertIsNotNone(app.custom_backdrop_surface)
-        self.assertIsNone(app.backdrop_import_request)
+    def test_cancel_preserves_the_current_scene(self):
+        creations = FakeCreations()
+        app = make_app(creations=creations)
+        _pick_my_picture(app)
+        creations.reply = SimpleNamespace(state="cancelled", selection_token=None)
+        app.clock.now += 0.2
+        app.step()
+        self.assertIsNone(app.custom_backdrop_surface)
+        self.assertFalse(app.bridge.busy)
 
     def test_ready_handle_validates_digest_before_replacing_backdrop(self):
-        app = self.make_app()
+        creations = FakeCreations()
+        app = make_app(creations=creations)
         payload = b"new-picture"
-        record = {
-            "media_type": "image/png",
-            "sha256": hashlib.sha256(payload).hexdigest(),
-        }
-        app.creations.transfer = CreationTransfer(record, payload)
-        surface = object()
-        with mock.patch(
-            "activities.teatrino_fiabe.teatrino_app.decode_png_surface",
-            return_value=surface,
-        ):
-            self.assertTrue(app._accept_shared_backdrop("one-use"))
+        creations.transfer = CreationTransfer({"media_type": "image/png", "sha256": hashlib.sha256(payload).hexdigest()}, payload)
+        surface = app.art.scene_backdrop("sky")
+        with mock.patch("activities.teatrino_fiabe.teatrino_creations.decode_png_surface", return_value=surface):
+            self.assertTrue(app.bridge.accept_backdrop("one-use"))
         self.assertEqual(app.custom_backdrop_png, payload)
         self.assertIs(app.custom_backdrop_surface, surface)
+        meta = record_show(app, 1.0)
+        self.assertTrue(meta["has_custom_backdrop"], "the show keeps its own copy of the picture")
 
     def test_integrity_failure_keeps_existing_backdrop(self):
-        app = self.make_app()
-        old_surface = object()
-        app.custom_backdrop_png = b"old"
-        app.custom_backdrop_surface = old_surface
-        app.creations.transfer = CreationTransfer(
-            {"media_type": "image/png", "sha256": "bad"},
-            b"corrupt",
-        )
-        self.assertFalse(app._accept_shared_backdrop("bad-handle"))
-        self.assertEqual(app.custom_backdrop_png, b"old")
-        self.assertIs(app.custom_backdrop_surface, old_surface)
+        creations = FakeCreations()
+        app = make_app(creations=creations)
+        creations.transfer = CreationTransfer({"media_type": "image/png", "sha256": "bad"}, b"corrupt")
+        self.assertFalse(app.bridge.accept_backdrop("bad-handle"))
+        self.assertIsNone(app.custom_backdrop_png)
 
-    def test_failed_show_save_reports_error_and_emits_no_creation_event(self):
-        app = self.make_app()
-        app.show_repo = SimpleNamespace(
-            save_show=mock.Mock(side_effect=ShowStorageError("disk")),
-            list_shows=mock.Mock(return_value=[]),
-        )
-        app.sound_mgr = FakeSound()
-        app.ui_strings = {
-            "recording_save_failed": "Could not save this show."
-        }
-        app.puppets_on_stage = []
-        app.recorded_frames = []
-        app.recorded_sfx = []
-        with mock.patch(
-            "activities.teatrino_fiabe.teatrino_app.emit_activity_event"
-        ) as emit:
-            result = app._persist_recorded_show(
-                "forest", 3.0, b"RIFF", feedback_seconds=2.5
-            )
-        self.assertIsNone(result)
-        emit.assert_not_called()
-        self.assertEqual(app.sound_mgr.played, ["boing"])
-        self.assertIn("Could not save", app.feedback_text)
+    def test_failed_show_save_is_pictorial_and_emits_no_creation_event(self):
+        events: list = []
+        storage = MemoryStorage()
+        app = make_app(storage=storage, events=events)
+        app.show_repo.save_show = mock.Mock(side_effect=ShowStorageError("disk"))
+        self.assertIsNone(record_show(app, 1.0))
+        self.assertEqual(events, [])
+        self.assertTrue(app.save_error)
+        self.assertIn("boing", app.sound_mgr.played)
+        self.assertEqual(app.cast.pose.value, "think")
+        self.assertEqual(app.top_sheet, "", "no curtain call for a show that was not saved")
 
-    def test_successful_show_save_emits_after_durable_repository_result(self):
-        app = self.make_app()
-        app.show_repo = SimpleNamespace(
-            save_show=mock.Mock(return_value={"id": "show-1"}),
-            list_shows=mock.Mock(return_value=[{"id": "show-1"}]),
-        )
-        app.sound_mgr = FakeSound()
-        app.ui_strings = {"recording_saved": "Saved"}
-        app.puppets_on_stage = []
-        app.recorded_frames = []
-        app.recorded_sfx = []
-        with mock.patch(
-            "activities.teatrino_fiabe.teatrino_app.emit_activity_event"
-        ) as emit:
-            result = app._persist_recorded_show(
-                "forest", 3.0, None, feedback_seconds=2.5
-            )
-        self.assertEqual(result, {"id": "show-1"})
-        emit.assert_called_once()
-        self.assertEqual(app.sound_mgr.played, ["applause"])
+    def test_share_publishes_the_poster_once_as_a_picture(self):
+        creations = FakeCreations()
+        storage = MemoryStorage()
+        app = make_app(storage=storage, creations=creations)
+        record_show(app, 1.0)
+        share = app.surfaces.overlays[-1].layer.target("call.share")
+        app.tap(share.rect.center)
+        app.tap(share.rect.center)
+        self.assertEqual(creations.published, [(POSTER_FILE, "image/png", POSTER_ROLE)])
+        self.assertTrue(storage.files[POSTER_FILE].startswith(b"\x89PNG"))
+
+    def test_no_creations_broker_means_no_share_or_picture_buttons(self):
+        app = make_app(creations=None)
+        record_show(app, 1.0)
+        ids = {t.control_id for t in app.surfaces.overlays[-1].layer.targets}
+        self.assertNotIn("call.share", ids)
+        app._close_sheets()
+        app.tap(app.layout.scene.center)
+        ids = {t.control_id for t in app.surfaces.overlays[-1].layer.targets}
+        self.assertNotIn("scene.mine", ids)
 
 
 if __name__ == "__main__":

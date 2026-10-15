@@ -2,7 +2,7 @@
 id = "org.greia.teatrino-fiabe"
 legacy_ids = []
 title_key = "activity.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
@@ -33,7 +33,7 @@ profile = "pointer"
 
 [requirements]
 required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["touch"]
+optional_capabilities = ["keyboard", "touch"]
 
 [permissions]
 requested = []
@@ -42,4 +42,8 @@ requested = []
 schema_version = 1
 
 [creations]
+# Import: a picture as the stage backdrop, a narration WAV as the show's voice
+# (both through the platform picker, verified, copied privately with the show).
+# Publish: a show's poster as a "picture", only when the child presses share.
+produces = ["image/png"]
 consumes = ["image/png", "audio/wav"]

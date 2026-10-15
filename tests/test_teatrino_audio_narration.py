@@ -57,6 +57,12 @@ class ImportedNarrationTrackTests(unittest.TestCase):
             self.assertEqual(source.getframerate(), 8000)
             self.assertEqual(source.getnframes(), 2000)
 
+    def test_loudness_envelope_drives_lip_sync_and_is_bounded(self):
+        track = ImportedNarrationTrack.from_wav(_wav(1.0), max_duration_seconds=2.0)
+        self.assertGreater(track.level_at(0.5), 0.0)
+        self.assertEqual(track.level_at(5.0), 0.0)
+        self.assertLessEqual(len(track.envelope), 45 * 15 + 2)
+
     def test_full_duration_trim_reuses_canonical_payload(self):
         track = ImportedNarrationTrack.from_wav(
             _wav(0.5),

@@ -1,35 +1,51 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Teatrino puppet: the Baby (non-canonical; section 20 grammar: one round onesie mass,
+       3 cues = hair curl, heart bib, rattle). Rod puppet: no shadow. -->
   <defs>
-    <linearGradient id="bebe_onesie" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#BAE6FD"/>
-      <stop offset="100%" stop-color="#7DD3FC"/>
+    <!-- sky -> ocean light (mix 45% white) -->
+    <linearGradient id="bebe_suit" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#CFEAF7"/>
+      <stop offset="1" stop-color="#93C1EC"/>
+    </linearGradient>
+    <!-- skin light -> skin -->
+    <linearGradient id="bebe_skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF3E8"/>
+      <stop offset="1" stop-color="#FBDCC8"/>
     </linearGradient>
   </defs>
-  <!-- Onesie Body -->
-  <ellipse cx="100" cy="138" rx="42" ry="38" fill="url(#bebe_onesie)" stroke="#0369A1" stroke-width="4"/>
-  <!-- Baby Bib -->
-  <path d="M 80 108 C 80 132 120 132 120 108 Z" fill="#FFFFFF" stroke="#0369A1" stroke-width="2.5"/>
-  <circle cx="100" cy="120" r="3.5" fill="#F43F5E"/>
-  <!-- Onesie Feet -->
-  <ellipse cx="78" cy="172" rx="14" ry="10" fill="#E0F2FE" stroke="#0369A1" stroke-width="3"/>
-  <ellipse cx="122" cy="172" rx="14" ry="10" fill="#E0F2FE" stroke="#0369A1" stroke-width="3"/>
-  <!-- Baby Rattle in Hand -->
-  <line x1="140" y1="130" x2="158" y2="105" stroke="#F59E0B" stroke-width="4" stroke-linecap="round"/>
-  <circle cx="160" cy="100" r="10" fill="#F472B6" stroke="#DB2777" stroke-width="2.5"/>
-  <circle cx="160" cy="100" r="4" fill="#FDE047"/>
-  <!-- Baby Head -->
-  <circle cx="100" cy="74" r="32" fill="#FEE2E2" stroke="#854D0E" stroke-width="3.5"/>
-  <!-- Cute Hair Curl on Top -->
-  <path d="M 100 42 C 94 30 112 30 108 42 Z" fill="#F59E0B" stroke="#B45309" stroke-width="2"/>
-  <!-- Rosy Big Cheeks -->
-  <circle cx="76" cy="82" r="7" fill="#F43F5E" opacity="0.6"/>
-  <circle cx="124" cy="82" r="7" fill="#F43F5E" opacity="0.6"/>
-  <!-- Big Wonder Eyes -->
-  <circle cx="86" cy="72" r="6" fill="#1E1B4B"/>
-  <circle cx="114" cy="72" r="6" fill="#1E1B4B"/>
-  <circle cx="88" cy="70" r="2.5" fill="#FFFFFF"/>
-  <circle cx="116" cy="70" r="2.5" fill="#FFFFFF"/>
-  <!-- Cute Pacifier or Sweet Smile -->
-  <ellipse cx="100" cy="84" rx="8" ry="6" fill="#FDE047" stroke="#D97706" stroke-width="2"/>
-  <circle cx="100" cy="84" r="3" fill="#F59E0B"/>
+  <g id="character">
+    <g id="feet">
+      <ellipse cx="104" cy="208" rx="15" ry="9" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="152" cy="208" rx="15" ry="9" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+    <g id="body">
+      <path d="M128 130 C164 130 186 150 186 174 C186 194 162 206 128 206 C94 206 70 194 70 174 C70 150 92 130 128 130 Z" fill="url(#bebe_suit)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <ellipse cx="88" cy="176" rx="6" ry="11" fill="#FFFFFF" opacity="0.6" transform="rotate(20 88 176)"/>
+    </g>
+    <g id="bib">
+      <path d="M104 146 C108 172 148 172 152 146 C140 152 116 152 104 146 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M128 166 C120 160 118 152 124 152 C126 152 128 154 128 156 C128 154 130 152 132 152 C138 152 136 160 128 166 Z" fill="#F46F61"/>
+    </g>
+    <g id="head">
+      <circle cx="128" cy="100" r="46" fill="url(#bebe_skin)" stroke="#4B372F" stroke-width="3.5"/>
+      <path d="M126 56 C120 44 130 34 140 40 C146 44 142 54 134 52" fill="none" stroke="#B9773F" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="104" cy="78" rx="8" ry="12" fill="#FFFFFF" opacity="0.7" transform="rotate(30 104 78)"/>
+    </g>
+    <g id="face">
+      <ellipse cx="98" cy="114" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.6"/>
+      <ellipse cx="158" cy="114" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.6"/>
+      <ellipse cx="112" cy="100" rx="7.5" ry="10" fill="#3C2D33"/>
+      <ellipse cx="144" cy="100" rx="7.5" ry="10" fill="#3C2D33"/>
+      <ellipse cx="114.6" cy="96.5" rx="2.6" ry="3.2" fill="#FFFFFF"/>
+      <ellipse cx="146.6" cy="96.5" rx="2.6" ry="3.2" fill="#FFFFFF"/>
+      <path d="M120 120 Q128 127 136 120" fill="none" stroke="#6D474D" stroke-width="2.8" stroke-linecap="round"/>
+    </g>
+    <g id="rattle">
+      <path d="M176 172 L196 138" stroke="#4B372F" stroke-width="7" stroke-linecap="round"/>
+      <path d="M176 172 L196 138" stroke="#F8A9A0" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="200" cy="128" r="15" fill="#FFC234" stroke="#4B372F" stroke-width="3.5"/>
+      <circle cx="195" cy="123" r="4" fill="#FFF1B8"/>
+      <ellipse cx="176" cy="168" rx="11" ry="10" fill="url(#bebe_suit)" stroke="#4B372F" stroke-width="3"/>
+    </g>
+  </g>
 </svg>

@@ -314,240 +314,253 @@ class WritingCustodyTests(unittest.TestCase):
 
 # ---------------------------------------------------------------- Teatrino
 
-from activities.teatrino_fiabe.teatrino_app import TeatrinoApp
 from activities.teatrino_fiabe.teatrino_content import MAX_SAVED_SHOWS
 from activities.teatrino_fiabe.teatrino_model import (
     DeleteConfirmation as ShowDeleteConfirmation,
     ShowLibraryFullError,
     ShowRepository,
 )
-from activities.teatrino_fiabe.teatrino_renderer import (
-    get_delete_dialog_layout,
-    get_library_modal_layout,
-)
-
-
-class RecordingSound:
-    def __init__(self) -> None:
-        self.played: list[str] = []
-
-    def play(self, sound_id: str) -> None:
-        self.played.append(sound_id)
+from teatrino_doubles import MemoryStorage as TeatrinoStorage
+from teatrino_doubles import advance as teatrino_advance
+from teatrino_doubles import make_app as make_teatrino_app
 
 
 class TeatrinoCustodyTests(unittest.TestCase):
-    def full_repo(self) -> tuple[ShowRepository, MemoryStorage]:
-        storage = MemoryStorage()
+    def full_storage(self) -> TeatrinoStorage:
+        storage = TeatrinoStorage()
         repo = ShowRepository(storage)
         for index in range(MAX_SAVED_SHOWS):
-            repo.save_show("cottage", [{"id": "lilli", "name": "Lilli"}], [], [], 1.0, b"RIFF" + bytes([index]))
-        return repo, storage
+            repo.save_show("cottage", [{"id": "lilli"}], [], [], 1.0, b"RIFF" + bytes([index]))
+        return storage
 
-    def make_app(self, repo: ShowRepository) -> TeatrinoApp:
-        app = object.__new__(TeatrinoApp)
-        app.show_repo = repo
-        app.library_shows = repo.list_shows()
-        app.library_page = 0
-        app.app_mode = "library"
-        app.delete_confirm = None
-        app.sound_mgr = RecordingSound()
-        app.is_recording = False
-        app.ui_strings = {}
-        app.feedback_text = ""
-        app.feedback_timer = 0.0
+    def open_library(self, storage: TeatrinoStorage):
+        app = make_teatrino_app(storage=storage)
+        app.tap(app.layout.shows.center)
+        self.assertEqual(app.top_sheet, "teatrino.library")
         return app
 
+    def delete_badge(self, app):
+        return app.library.controls.badges[0].rect.center
+
+    def dialog_button(self, app, control_id: str):
+        return app.surfaces.overlays[-1].layer.target(control_id).rect.center
+
     def test_full_shelf_never_silently_evicts(self) -> None:
-        repo, storage = self.full_repo()
+        repo = ShowRepository(self.full_storage())
         ids = [item["id"] for item in repo.list_shows()]
         with self.assertRaises(ShowLibraryFullError):
             repo.save_show("forest", [], [], [], 1.0, b"RIFF-extra")
         self.assertEqual([item["id"] for item in repo.list_shows()], ids)
 
     def test_recording_is_refused_up_front_when_the_shelf_is_full(self) -> None:
-        repo, _ = self.full_repo()
-        app = self.make_app(repo)
-        app.app_mode = "stage"
-        app.mic_recorder = SimpleNamespace(start_recording=mock.Mock())
-        app.imported_narration = None
-        self.assertFalse(app._start_recording())
-        app.mic_recorder.start_recording.assert_not_called()
+        storage = self.full_storage()
+        app = make_teatrino_app(storage=storage)
+        app.tap(app.layout.rec.center)
+        teatrino_advance(app, 3.0)
+        self.assertEqual(app.mic_recorder.started, 0)
         self.assertFalse(app.is_recording)
-        self.assertEqual(app.app_mode, "library")
-        self.assertEqual(len(repo.list_shows()), MAX_SAVED_SHOWS)
+        self.assertEqual(app.top_sheet, "teatrino.library", "the shows open, pictorially full")
+        self.assertTrue(app.library.full)
+        self.assertEqual(app.library.controls.shelf.current, MAX_SAVED_SHOWS)
+        self.assertEqual(len(app.show_repo.list_shows()), MAX_SAVED_SHOWS)
 
-    def test_persist_on_full_shelf_opens_the_library_and_keeps_shows(self) -> None:
-        repo, _ = self.full_repo()
-        app = self.make_app(repo)
-        app.app_mode = "stage"
-        app.puppets_on_stage = []
-        app.recorded_frames = []
-        app.recorded_sfx = []
-        app.custom_backdrop_png = None
-        self.assertIsNone(app._persist_recorded_show("cottage", 3.0, b"wav", feedback_seconds=2.0))
-        self.assertEqual(app.app_mode, "library")
-        self.assertEqual(len(repo.list_shows()), MAX_SAVED_SHOWS)
-
-    def delete_button_pos(self, app: TeatrinoApp) -> tuple[int, int]:
-        card = get_library_modal_layout(0, len(app.library_shows))["cards"][0]
-        return card["del_btn"].center
+    def test_every_saved_show_is_reachable_by_paging(self) -> None:
+        app = self.open_library(self.full_storage())
+        shown = 0
+        for _page in range(app.library.pages):
+            shown += sum(1 for card in app.library.controls.cards if card.icon is not None)
+            app.tap(app.library.controls.following.rect.center)
+        self.assertEqual(shown, MAX_SAVED_SHOWS)
 
     def test_single_tap_on_delete_does_not_delete(self) -> None:
-        repo, _ = self.full_repo()
-        app = self.make_app(repo)
-        app._handle_mouse_down(*self.delete_button_pos(app))
+        app = self.open_library(self.full_storage())
+        app.tap(self.delete_badge(app))
         self.assertIsNotNone(app.delete_confirm)
-        self.assertEqual(len(repo.list_shows()), MAX_SAVED_SHOWS)
+        self.assertEqual(len(app.show_repo.list_shows()), MAX_SAVED_SHOWS)
 
     def test_dialog_defaults_to_keep_and_ignores_a_double_tap(self) -> None:
-        repo, _ = self.full_repo()
-        app = self.make_app(repo)
-        app._handle_mouse_down(*self.delete_button_pos(app))
+        app = self.open_library(self.full_storage())
+        app.tap(self.delete_badge(app))
         self.assertEqual(app.delete_confirm.focus, ShowDeleteConfirmation.KEEP)
-        # Space/Enter/south-button on the default focus keeps the show.
-        app._handle_key_down(pygame.K_RETURN)
+        app.press(pygame.K_RETURN)  # Space/Enter/south button on the default focus keeps
         self.assertIsNone(app.delete_confirm)
-        self.assertEqual(len(repo.list_shows()), MAX_SAVED_SHOWS)
-        # An immediate second tap on the delete button (before it is armed).
-        app._handle_mouse_down(*self.delete_button_pos(app))
-        app._handle_mouse_down(*get_delete_dialog_layout()["delete"].center)
+        self.assertEqual(len(app.show_repo.list_shows()), MAX_SAVED_SHOWS)
+        app.tap(self.delete_badge(app))
+        app.tap(self.dialog_button(app, "delete.confirm"))  # immediate second tap: not armed
         self.assertIsNotNone(app.delete_confirm)
-        self.assertEqual(len(repo.list_shows()), MAX_SAVED_SHOWS)
+        self.assertEqual(len(app.show_repo.list_shows()), MAX_SAVED_SHOWS)
 
     def test_deliberate_confirmation_deletes_exactly_that_show(self) -> None:
-        repo, storage = self.full_repo()
-        app = self.make_app(repo)
+        storage = self.full_storage()
+        app = self.open_library(storage)
         target = app.library_shows[0]["id"]
-        app._handle_mouse_down(*self.delete_button_pos(app))
-        app.delete_confirm.opened_at -= 5.0  # dialog is armed
-        app._handle_mouse_down(*get_delete_dialog_layout()["delete"].center)
+        app.tap(self.delete_badge(app))
+        teatrino_advance(app, 1.0)  # the dialog arms
+        app.tap(self.dialog_button(app, "delete.confirm"))
         self.assertIsNone(app.delete_confirm)
-        remaining = [item["id"] for item in repo.list_shows()]
+        remaining = [item["id"] for item in app.show_repo.list_shows()]
         self.assertEqual(len(remaining), MAX_SAVED_SHOWS - 1)
         self.assertNotIn(target, remaining)
-        self.assertNotIn(repo._show_json_name(target), storage.files)
+        self.assertNotIn(ShowRepository._show_json_name(target), storage.files)
+        self.assertEqual(app.top_sheet, "teatrino.library", "back on the shelf after deleting")
 
     def test_keyboard_confirm_path_and_cancel(self) -> None:
-        repo, _ = self.full_repo()
-        app = self.make_app(repo)
-        app._handle_mouse_down(*self.delete_button_pos(app))
-        app._handle_key_down(pygame.K_RIGHT)  # focus -> delete
+        app = self.open_library(self.full_storage())
+        app.tap(self.delete_badge(app))
+        app.press(pygame.K_RIGHT)  # the delete button is not armed yet: focus stays on keep
+        self.assertEqual(app.delete_confirm.focus, ShowDeleteConfirmation.KEEP)
+        teatrino_advance(app, 1.0)
+        app.press(pygame.K_RIGHT)  # armed: focus -> delete
         self.assertEqual(app.delete_confirm.focus, ShowDeleteConfirmation.DELETE)
-        app.delete_confirm.opened_at -= 5.0
-        app._handle_key_down(pygame.K_ESCAPE)  # escape always keeps
-        self.assertEqual(len(repo.list_shows()), MAX_SAVED_SHOWS)
-        app._handle_mouse_down(*self.delete_button_pos(app))
-        app._handle_key_down(pygame.K_RIGHT)
-        app.delete_confirm.opened_at -= 5.0
-        app._handle_key_down(pygame.K_SPACE)
-        self.assertEqual(len(repo.list_shows()), MAX_SAVED_SHOWS - 1)
+        app.press(pygame.K_ESCAPE)  # escape always keeps
+        self.assertEqual(len(app.show_repo.list_shows()), MAX_SAVED_SHOWS)
+        app.tap(self.delete_badge(app))
+        teatrino_advance(app, 1.0)
+        app.press(pygame.K_RIGHT)
+        app.press(pygame.K_SPACE)
+        self.assertEqual(len(app.show_repo.list_shows()), MAX_SAVED_SHOWS - 1)
 
     def test_tapping_outside_the_dialog_keeps_the_show(self) -> None:
-        repo, _ = self.full_repo()
-        app = self.make_app(repo)
-        app._handle_mouse_down(*self.delete_button_pos(app))
-        app.delete_confirm.opened_at -= 5.0
-        app._handle_mouse_down(5, 5)
+        app = self.open_library(self.full_storage())
+        app.tap(self.delete_badge(app))
+        teatrino_advance(app, 1.0)
+        app.tap((1020, 590))
         self.assertIsNone(app.delete_confirm)
-        self.assertEqual(len(repo.list_shows()), MAX_SAVED_SHOWS)
+        self.assertEqual(len(app.show_repo.list_shows()), MAX_SAVED_SHOWS)
 
 
 # ------------------------------------------------------------------ Storie
 
 _VOICE_DIR = ROOT / "activities" / "storie_della_mia_voce"
+_VOICE_MODULES = (
+    "voice_app", "voice_art", "voice_audio", "voice_content", "voice_controls", "voice_layout",
+    "voice_microphone", "voice_model", "voice_renderer", "voice_services",
+)
+
+
+class _VoiceClock:
+    now = 50.0
+
+    def __call__(self) -> float:
+        return self.now
+
+
+class _SilentRecorder:
+    available = True
+    live_volume = 0.0
+
+    def start(self) -> None:
+        pass
+
+    def stop(self, gain: float = 1.0):
+        return None
 
 
 class VoiceCustodyTests(unittest.TestCase):
+    """Story shelf: deliberate delete (keep focused, arming delay), no eviction."""
+
     @classmethod
     def setUpClass(cls) -> None:
         # The Activity uses flat sibling imports (script style).
         sys.path.insert(0, str(_VOICE_DIR))
-        cls._saved_modules = {
-            name: sys.modules.pop(name)
-            for name in list(sys.modules)
-            if name in {"voice_app", "voice_content", "voice_renderer", "voice_services", "voice_audio", "voice_microphone"}
-        }
+        cls._saved_modules = {name: sys.modules.pop(name) for name in list(sys.modules) if name in _VOICE_MODULES}
         import voice_app
+        import voice_audio
         import voice_content
-        import voice_renderer
         import voice_services
 
         cls.voice_app = voice_app
+        cls.voice_audio = voice_audio
         cls.voice_content = voice_content
-        cls.voice_renderer = voice_renderer
         cls.voice_services = voice_services
 
     @classmethod
     def tearDownClass(cls) -> None:
         sys.path.remove(str(_VOICE_DIR))
-        for name in ("voice_app", "voice_content", "voice_renderer", "voice_services", "voice_audio", "voice_microphone"):
+        for name in _VOICE_MODULES:
             sys.modules.pop(name, None)
         sys.modules.update(cls._saved_modules)
 
     def make_app(self):
+        from greia_platform.pygame_canvas import PygameReferenceCanvas
+        from greia_platform.typography import GreiaTypography
+
         screen = _screen()
-        storage = self.voice_services.VoiceStorage.load(MemoryStorage())
-        scene_ids = [scene.scene_id for scene in self.voice_content.SCENES]
+        store = MemoryStorage()
+        services = self.voice_services
+        repo = services.VoiceStorage.load(store)
+        template = self.voice_content.STORIES[0]
         for index in range(3):
-            storage.save_story({scene_ids[0]: b"RIFF" + bytes([index])}, {scene_ids[0]: 1.0})
-        app = object.__new__(self.voice_app.VoiceApp)
-        app.screen = screen
-        app.storage = storage
-        app.renderer = self.voice_renderer.VoiceRenderer.build(screen)
-        app.phase = self.voice_app.Phase.LIBRARY
-        app.library_page = 0
-        app.creations = None
-        app.shared_scene_keys = set()
-        app.delete_confirm = None
-        app.current_channel = None
-        app.current_sound = None
-        return app
+            repo.save_story(template.story_id, template.card_ids, {template.card_ids[0]: b"RIFF" + bytes([index])}, {})
+        clock = _VoiceClock()
+        app = self.voice_app.StoryApp(
+            screen=screen,
+            canvas=PygameReferenceCanvas(screen),
+            typography=GreiaTypography(),
+            resources=None,
+            audio=self.voice_audio.StoryAudio(),
+            recorder=_SilentRecorder(),
+            storage=repo,
+            progress=services.StoryProgress.load(store),
+            clock=clock,
+        )
+        app.open_shelf()
+        return app, clock
+
+    def badge(self, app, slot: int):
+        return app.controls.badges[slot].rect.center
+
+    def sheet_button(self, app, control_id: str):
+        return app.sheet.layer.target(control_id).rect.center
 
     def test_single_tap_on_delete_does_not_delete(self) -> None:
-        app = self.make_app()
-        app._handle_click(app.renderer.library_delete_rect(0).center)
+        app, _ = self.make_app()
+        app.tap(self.badge(app, 0))
         self.assertIsNotNone(app.delete_confirm)
-        self.assertEqual(app.storage._library.count, 3)
+        self.assertEqual(len(app.storage.stories), 3)
 
     def test_dialog_defaults_to_keep_and_ignores_a_double_tap(self) -> None:
-        app = self.make_app()
-        app._handle_click(app.renderer.library_delete_rect(0).center)
+        app, _ = self.make_app()
+        app.tap(self.badge(app, 0))
         self.assertEqual(app.delete_confirm.focus, self.voice_services.DeleteConfirmation.KEEP)
-        app._handle_delete_key(pygame.K_SPACE)
+        self.assertEqual(app.sheet.layer.focused_id, "delete.keep")
+        app.press(pygame.K_SPACE)
         self.assertIsNone(app.delete_confirm)
-        self.assertEqual(app.storage._library.count, 3)
-        app._handle_click(app.renderer.library_delete_rect(0).center)
-        app._handle_click(app.renderer.delete_dialog_layout()["delete"].center)
+        self.assertEqual(len(app.storage.stories), 3)
+        app.tap(self.badge(app, 0))
+        app.tap(self.sheet_button(app, "delete.confirm"))  # before the dialog armed
         self.assertIsNotNone(app.delete_confirm)
-        self.assertEqual(app.storage._library.count, 3)
+        self.assertEqual(len(app.storage.stories), 3)
 
     def test_deliberate_confirmation_deletes_exactly_that_story(self) -> None:
-        app = self.make_app()
-        target = app.storage._library.stories[0].story_id
-        app._handle_click(app.renderer.library_delete_rect(0).center)
-        app.delete_confirm.opened_at -= 5.0
-        app._handle_click(app.renderer.delete_dialog_layout()["delete"].center)
+        app, clock = self.make_app()
+        target = app.storage.stories[0].story_id
+        app.tap(self.badge(app, 0))
+        clock.now += 1.0
+        app.tap(self.sheet_button(app, "delete.confirm"))
         self.assertIsNone(app.delete_confirm)
-        remaining = [story.story_id for story in app.storage._library.stories]
+        remaining = [story.story_id for story in app.storage.stories]
         self.assertEqual(len(remaining), 2)
         self.assertNotIn(target, remaining)
 
     def test_keyboard_path_matches_teatrino(self) -> None:
-        app = self.make_app()
-        app._handle_click(app.renderer.library_delete_rect(1).center)
-        app._handle_delete_key(pygame.K_RIGHT)
-        self.assertEqual(app.delete_confirm.focus, self.voice_services.DeleteConfirmation.DELETE)
-        app._handle_delete_key(pygame.K_ESCAPE)
-        self.assertEqual(app.storage._library.count, 3)
+        app, _ = self.make_app()
+        app.controls.layer.focus("card.1", visible=True)
+        app.controls.delete_focused.activate()
+        self.assertEqual(app.delete_confirm.target_id, app.storage.stories[1].story_id)
+        app.press(pygame.K_RIGHT)
+        self.assertEqual(app.sheet.layer.focused_id, "delete.confirm")
+        app.press(pygame.K_ESCAPE)
+        self.assertEqual(len(app.storage.stories), 3)
         self.assertIsNone(app.delete_confirm)
 
     def test_tapping_outside_the_dialog_keeps_the_story(self) -> None:
-        app = self.make_app()
-        app._handle_click(app.renderer.library_delete_rect(0).center)
-        app.delete_confirm.opened_at -= 5.0
-        app._handle_click((5, 5))
+        app, clock = self.make_app()
+        app.tap(self.badge(app, 0))
+        clock.now += 1.0
+        app.tap((60, 300))
         self.assertIsNone(app.delete_confirm)
-        self.assertEqual(app.storage._library.count, 3)
+        self.assertEqual(len(app.storage.stories), 3)
 
     def test_both_activities_share_the_same_arming_delay_and_default(self) -> None:
         self.assertEqual(
