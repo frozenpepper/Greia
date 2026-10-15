@@ -8,16 +8,22 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["play", "learn"]
-discovery_tags = ["puzzles"]
+discovery_tags = ["words", "puzzles"]
 
 [education]
-categories = ["spatial_reasoning", "language_concepts", "early_learning"]
+categories = ["language_concepts", "spatial_reasoning", "early_learning"]
 difficulty = 1
 recommended_age_min = 3
+recommended_age_max = 5
+difficulty_min = 1
+difficulty_max = 3
+adaptive_difficulty = true
 skills = [
+  { id = "language.vocabulary.concept_words", weight = 3 },
   { id = "cognition.spatial.opposites", weight = 3 },
-  { id = "cognition.dimensions.comparison", weight = 3 },
-  { id = "motor.pointer.selection", weight = 2 },
+  { id = "cognition.dimensions.comparison", weight = 2 },
+  { id = "language.listening.comprehension", weight = 2 },
+  { id = "motor.pointer.selection", weight = 1 },
 ]
 events = [
   { id = "mondo_contrari.opposite_explored", kind = "milestone" },
@@ -30,11 +36,11 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "pointer"
+profile = "hybrid"
 
 [requirements]
 required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["touch"]
+optional_capabilities = ["keyboard", "touch"]
 
 [permissions]
 requested = []

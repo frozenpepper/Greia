@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Mondo Contrari prop: gift box, OPEN, front layer (front face + loose ribbon). -->
+  <defs>
+    <!-- ocean light40 -> ocean -->
+    <linearGradient id="contrari_gift_open_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#92BDE8"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="gift_front">
+    <rect x="64" y="128" width="128" height="98" rx="8" fill="url(#contrari_gift_open_body)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="114" y="130" width="28" height="94" fill="#FFC234" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M64 196 C40 196 30 214 44 226 C52 232 60 224 54 216" fill="none" stroke="#FFC234" stroke-width="7" stroke-linecap="round"/>
+    <path d="M64 196 C40 196 30 214 44 226 C52 232 60 224 54 216" fill="none" stroke="#4B372F" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+    <ellipse cx="78" cy="140" rx="10" ry="4" fill="#FFFFFF" opacity="0.7"/>
+  </g>
+</svg>

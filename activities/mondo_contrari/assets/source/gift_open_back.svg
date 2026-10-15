@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Mondo Contrari prop: gift box, OPEN, back layer (popped lid + inside). A friend peeks between back and front. -->
+  <g id="shadow">
+    <ellipse cx="128" cy="230" rx="78" ry="13" fill="#6A5147" opacity="0.15"/>
+  </g>
+  <g id="lid" transform="rotate(22 150 46)">
+    <rect x="76" y="29" width="148" height="34" rx="8" fill="#92BDE8" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="136" y="30" width="28" height="32" fill="#FFC234" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <ellipse cx="98" cy="39" rx="12" ry="4" fill="#FFFFFF" opacity="0.7"/>
+  </g>
+  <g id="inside">
+    <path d="M64 130 L74 108 L182 108 L192 130 Z" fill="#4A6483" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M78 112 L178 112 L184 122 L72 122 Z" fill="#3D4E66" opacity="0.5"/>
+  </g>
+</svg>

@@ -14,7 +14,10 @@
     "opposite.open": "Open",
     "opposite.closed": "Closed",
     "opposite.fast": "Fast",
-    "opposite.slow": "Slow"
+    "opposite.slow": "Slow",
+    "button.play_again": "Play again",
+    "victory.title": "Opposites champion!",
+    "victory.subtitle": "You found every opposite with Flash!"
   },
   "audio": {
     "activity.title": {

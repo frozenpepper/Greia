@@ -14,7 +14,10 @@
     "opposite.open": "Abierto",
     "opposite.closed": "Cerrado",
     "opposite.fast": "Rápido",
-    "opposite.slow": "Lento"
+    "opposite.slow": "Lento",
+    "button.play_again": "Jugar otra vez",
+    "victory.title": "¡Campeón de los contrarios!",
+    "victory.subtitle": "¡Encontraste todos los contrarios con Flash!"
   },
   "audio": {}
 }

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Mondo Contrari prop: party balloon (airborne: the contact shadow is drawn on the grass at runtime). -->
+  <defs>
+    <!-- coral light40 -> coral -->
+    <linearGradient id="contrari_balloon_body" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="string">
+    <path d="M128 182 C116 196 140 208 128 222 C118 234 136 242 130 252" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g id="balloon">
+    <path d="M128 12 C176 12 204 50 204 94 C204 140 166 174 128 176 C90 174 52 140 52 94 C52 50 80 12 128 12 Z" fill="url(#contrari_balloon_body)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M150 160 C172 146 188 124 192 100 C186 128 170 150 150 160 Z" fill="#CF6356" opacity="0.55"/>
+    <path d="M116 174 L140 174 L146 188 C134 192 122 192 110 188 Z" fill="#CF6356" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="92" cy="60" rx="14" ry="24" fill="#FFFFFF" opacity="0.8" transform="rotate(28 92 60)"/>
+    <circle cx="104" cy="96" r="6" fill="#FFFFFF" opacity="0.6"/>
+  </g>
+</svg>

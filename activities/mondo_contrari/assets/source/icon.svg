@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Mondo Contrari Activity icon: a BIG balloon UP high, a small balloon DOWN on the grass (opposites). -->
+  <defs>
+    <!-- ocean light (mix 35% white) -> ocean: play Collection tile -->
+    <linearGradient id="contrari_icon_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+    <!-- leaf light40 -> leaf (grass) -->
+    <linearGradient id="contrari_icon_grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#93D19E"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+    <!-- coral light40 -> coral (big balloon) -->
+    <linearGradient id="contrari_icon_big" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+    <clipPath id="contrari_icon_clip"><rect width="256" height="256" rx="48"/></clipPath>
+  </defs>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#contrari_icon_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+    <path d="M190 64 C190 54 200 48 208 52 C212 44 226 44 228 54 C236 54 238 66 230 68 L194 68 C190 68 190 66 190 64 Z" fill="#FFFFFF" opacity="0.85"/>
+  </g>
+  <g id="ground" clip-path="url(#contrari_icon_clip)">
+    <path d="M-4 204 C56 182 196 182 260 200 L260 260 L-4 260 Z" fill="url(#contrari_icon_grass)" stroke="#51714A" stroke-width="4" stroke-linejoin="round"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="184" cy="214" rx="20" ry="4" fill="#28513A" opacity="0.2"/>
+  </g>
+  <g id="subject">
+    <path d="M94 128 C84 142 106 152 96 166 C88 176 102 184 98 192" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M94 22 C125 22 142 46 142 74 C142 103 118 124 94 126 C70 124 46 103 46 74 C46 46 63 22 94 22 Z" fill="url(#contrari_icon_big)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M86 125 L102 125 L106 135 C98 138 90 138 82 135 Z" fill="#CF6356" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="70" cy="52" rx="8" ry="15" fill="#FFFFFF" opacity="0.8" transform="rotate(28 70 52)"/>
+    <path d="M184 196 C178 202 190 206 184 212" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/>
+    <path d="M184 154 C198 154 206 165 206 177 C206 189 196 196 184 197 C172 196 162 189 162 177 C162 165 170 154 184 154 Z" fill="#FFC234" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M180 196 L188 196 L190 202 C186 204 182 204 178 202 Z" fill="#F59E0B" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <ellipse cx="174" cy="166" rx="4" ry="7" fill="#FFFFFF" opacity="0.8" transform="rotate(28 174 166)"/>
+  </g>
+  <g id="accent">
+    <path d="M150 44 L150 104 M138 58 L150 44 L162 58" fill="none" stroke="#FFFBEB" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M222 112 L222 150 M212 138 L222 150 L232 138" fill="none" stroke="#FFFBEB" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

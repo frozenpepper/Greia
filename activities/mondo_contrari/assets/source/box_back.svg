@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Mondo Contrari prop: open cardboard box, back layer (flaps + inside). A friend is drawn between box_back and box_front to sit INSIDE. -->
+  <defs>
+    <!-- orange light40 -> orange shade10 (cardboard) -->
+    <linearGradient id="contrari_box_flap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C288"/>
+      <stop offset="1" stop-color="#E3A05A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="230" rx="96" ry="14" fill="#6A5147" opacity="0.15"/>
+  </g>
+  <g id="box_back">
+    <path d="M62 100 L194 100 L208 64 L76 64 Z" fill="url(#contrari_box_flap)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M48 126 L62 100 L30 84 L14 112 Z" fill="url(#contrari_box_flap)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M208 126 L194 100 L226 84 L242 112 Z" fill="url(#contrari_box_flap)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M48 126 L62 100 L194 100 L208 126 Z" fill="#A76D34" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M66 104 L190 104 L196 116 L60 116 Z" fill="#8A5A2E" opacity="0.5"/>
+  </g>
+</svg>

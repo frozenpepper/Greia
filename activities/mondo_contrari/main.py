@@ -1,31 +1,32 @@
-"""Thin Greia composition root for Mondo Contrari."""
+"""Thin Greia composition root for Mondo Contrari (Flash's Opposite Game)."""
 
 from __future__ import annotations
 
 from pathlib import Path
+import random
+import time
 
 import pygame
 
-from greia_platform.localization import activity_resources
+from greia_platform.activity_api import get_profile_locale
+from greia_platform.localization import LocalizedResources, activity_resources
+from greia_platform.pygame_canvas import PygameReferenceCanvas
+from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .contrari_app import ContrariActivity
     from .contrari_audio import ContrariAudio
-    from .contrari_model import (
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        ContrariModel,
-    )
-    from .contrari_renderer import ContrariRenderer
+    from .contrari_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, ContrariRoundFactory, ContrariSession
+    from .contrari_services import GreiaContrariEvents, GreiaContrariProgress
 else:
     from contrari_app import ContrariActivity
     from contrari_audio import ContrariAudio
-    from contrari_model import (
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        ContrariModel,
-    )
-    from contrari_renderer import ContrariRenderer
+    from contrari_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, ContrariRoundFactory, ContrariSession
+    from contrari_services import GreiaContrariEvents, GreiaContrariProgress
+
+
+def _resources() -> LocalizedResources:
+    return activity_resources(Path(__file__).resolve().parent, requested_locale=get_profile_locale())
 
 
 def main() -> int:
@@ -35,26 +36,37 @@ def main() -> int:
         screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
     pygame.mouse.set_visible(True)
 
-    package_root = Path(__file__).resolve().parent
-    resources = activity_resources(package_root)
+    resources = _resources()
     pygame.display.set_caption(resources.text("activity.title"))
-
-    model = ContrariModel()
-    audio = ContrariAudio(
-        package_root, locale=resources.context.selected.language, resources=resources
-    )
-    renderer = ContrariRenderer(
-        locale=resources.context.selected.language,
-        resources=resources,
-    )
-
+    typography = GreiaTypography()
+    canvas = PygameReferenceCanvas(screen)
+    progress = GreiaContrariProgress()
+    saved = progress.load()
+    rng = random.Random()
+    factory = ContrariRoundFactory(rng)
+    session = ContrariSession(factory.build_visit(saved.level), level=saved.level, history=saved.history)
     app = ContrariActivity(
         screen=screen,
-        renderer=renderer,
-        audio=audio,
-        model=model,
+        canvas=canvas,
+        session=session,
+        factory=factory,
+        typography=typography,
+        resources=resources,
+        progress=progress,
+        events=GreiaContrariEvents(),
+        audio=ContrariAudio(
+            Path(__file__).resolve().parent,
+            locale=resources.context.selected.language,
+            resources=resources,
+            rng=rng,
+        ),
+        rng=rng,
+        session_id=f"{int(time.time())}-{rng.randrange(1_000_000):06d}",
     )
-    return app.run()
+    try:
+        return app.run()
+    finally:
+        pygame.quit()
 
 
 if __name__ == "__main__":

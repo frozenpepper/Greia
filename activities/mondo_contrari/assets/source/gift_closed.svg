@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Mondo Contrari prop: gift box, CLOSED (lid on, bow tied). -->
+  <defs>
+    <!-- ocean light40 -> ocean -->
+    <linearGradient id="contrari_gift_closed_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#92BDE8"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="230" rx="78" ry="13" fill="#6A5147" opacity="0.15"/>
+  </g>
+  <g id="gift">
+    <rect x="64" y="126" width="128" height="100" rx="8" fill="url(#contrari_gift_closed_body)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="114" y="128" width="28" height="96" fill="#FFC234" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="54" y="100" width="148" height="34" rx="8" fill="#92BDE8" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <rect x="114" y="101" width="28" height="32" fill="#FFC234" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M128 100 C112 70 80 72 88 92 C92 102 112 104 128 100 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M128 100 C144 70 176 72 168 92 C164 102 144 104 128 100 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="128" cy="99" r="9" fill="#F59E0B" stroke="#4B372F" stroke-width="3.5"/>
+    <ellipse cx="76" cy="110" rx="12" ry="4" fill="#FFFFFF" opacity="0.7"/>
+  </g>
+</svg>

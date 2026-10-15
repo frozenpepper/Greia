@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Mondo Contrari prop: open cardboard box, front layer (front face + front flap). -->
+  <defs>
+    <!-- orange light40 -> orange shade10 (cardboard) -->
+    <linearGradient id="contrari_box_face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C288"/>
+      <stop offset="1" stop-color="#E3A05A"/>
+    </linearGradient>
+  </defs>
+  <g id="box_front">
+    <rect x="48" y="124" width="160" height="104" rx="6" fill="url(#contrari_box_face)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M48 126 L208 126 L198 158 L58 158 Z" fill="#F8C288" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M110 158 L146 158 L146 172 L110 172 Z" fill="#EEDDBA" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M70 196 L104 196 M78 208 L96 208" fill="none" stroke="#A76D34" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="74" cy="138" rx="16" ry="4" fill="#FFFFFF" opacity="0.6"/>
+  </g>
+</svg>
