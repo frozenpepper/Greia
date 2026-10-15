@@ -250,6 +250,38 @@ def activity_resources(
 
 
 
+def shared_character_audio_path(
+    project_root: Path,
+    speaker: str,
+    cue_id: str,
+    locale: str,
+) -> Path | None:
+    """Resolve an accepted shared character recording with English fallback.
+
+    Character takes are shared OS resources, not per-Activity media, so this
+    method operates in Greia's shared v0.2 library instead of loading an
+    Activity localization bundle. No sound decoding or tamper verification.
+    """
+    speaker_id = _resource_key(speaker)
+    if any(ch in speaker_id for ch in "._") or "-" in speaker_id:
+        raise LocalizationError("speaker must be one simple character ID")
+    cue = _resource_key(cue_id)
+    preferred = LocaleTag.parse(locale).language
+    root = (
+        project_root / "assets" / "audio" / "characters" / "shared" / "v0.2"
+        / speaker_id
+    )
+    for language in dict.fromkeys((preferred, "en")):
+        folder = root / language
+        if not folder.is_dir():
+            continue
+        for file in sorted(folder.glob(f"{speaker_id}__{language}__{cue}__*.wav")):
+            if file.is_file():
+                return file
+    return None
+
+
+
 @dataclass(frozen=True, slots=True)
 class LocalizedAudioCue:
     path: Path
