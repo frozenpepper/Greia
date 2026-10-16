@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 200" width="220" height="200">
+  <!-- Piccola Serra: terracotta pot, front half (saucer, body, front lip), drawn over the
+       plant base. Pairs with pot_back.svg; saucer rests on the bench at y 184. -->
+  <defs>
+    <!-- terracotta light -> terracotta -->
+    <linearGradient id="pot_front_body" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#F8AF8B"/>
+      <stop offset="1" stop-color="#F4844C"/>
+    </linearGradient>
+    <!-- terracotta light -> terracotta (lip) -->
+    <linearGradient id="pot_front_lip" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8AF8B"/>
+      <stop offset="1" stop-color="#F4844C"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow"><ellipse cx="110" cy="188" rx="98" ry="10" fill="#6A5147" opacity="0.16"/></g>
+  <g id="saucer">
+    <path d="M14 168 C14 160 206 160 206 168 L198 182 C190 190 30 190 22 182 Z" fill="#CF7346" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="110" cy="166" rx="88" ry="9" fill="#F4844C" stroke="#4B372F" stroke-width="3"/>
+  </g>
+  <g id="body">
+    <path d="M28 60 L192 60 L174 162 C172 172 48 172 46 162 Z" fill="url(#pot_front_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M150 74 L182 74 L168 156 C162 162 150 164 140 165 Z" fill="#CF7346" opacity="0.55"/>
+    <path d="M46 84 L56 146" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g id="lip">
+    <path d="M14 46 C14 76 206 76 206 46 L206 66 C206 96 14 96 14 66 Z" fill="url(#pot_front_lip)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M30 70 C50 80 76 84 96 85" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+  </g>
+</svg>

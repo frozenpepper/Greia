@@ -1,30 +1,47 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Piccola Serra (Little Green Thumb) Activity icon: explore -> leaf tile; hero =
+       terracotta pot with a young bean plant; cues = a water drop and a sparkle.
+       Flat Greia vector (GREIA_SVG_AUTHORING_RULES §7). -->
   <defs>
-    <radialGradient id="glass" cx="50%" cy="40%" r="60%">
-      <stop offset="0%" stop-color="#E0F2F1" stop-opacity="0.9"/>
-      <stop offset="100%" stop-color="#80CBC4" stop-opacity="0.6"/>
-    </radialGradient>
+    <!-- leaf light (mix 35% white) -> leaf -->
+    <linearGradient id="serra_icon_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#97D1A1"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+    <!-- terracotta light -> terracotta -->
+    <linearGradient id="serra_icon_pot" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#F8AF8B"/>
+      <stop offset="1" stop-color="#F4844C"/>
+    </linearGradient>
+    <!-- sand light -> sand (seed leaves) -->
+    <linearGradient id="serra_icon_leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E2F4D6"/>
+      <stop offset="1" stop-color="#9BD4A6"/>
+    </linearGradient>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="serra_icon_drop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#92BDE8"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
   </defs>
-  <!-- Wooden Greenhouse Tray -->
-  <rect x="52" y="200" width="152" height="24" rx="8" fill="#8D6E63" stroke="#5D4037" stroke-width="5"/>
-  <!-- Glass Bell Dome -->
-  <path d="M68 200 L68 130 C68 70 188 70 188 130 L188 200 Z" fill="url(#glass)" stroke="#B2DFDB" stroke-width="6"/>
-  <circle cx="128" cy="56" r="14" fill="#80CBC4" stroke="#4DB6AC" stroke-width="4"/>
-  <!-- Glass Glare Highlight -->
-  <path d="M84 190 L84 130 C84 94 114 84 128 82" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity="0.8"/>
-  <!-- Terracotta Pot Inside -->
-  <polygon points="106,170 150,170 144,196 112,196" fill="#FF7043"/>
-  <rect x="102" y="162" width="52" height="10" rx="3" fill="#E64A19"/>
-  <!-- Growing Plant Stem & Leaves -->
-  <path d="M128 162 Q128 128 128 116" fill="none" stroke="#388E3C" stroke-width="6" stroke-linecap="round"/>
-  <!-- Leaves -->
-  <path d="M128 142 Q106 136 112 126 Q126 128 128 142" fill="#4CAF50"/>
-  <path d="M128 136 Q150 130 144 120 Q130 122 128 136" fill="#66BB6A"/>
-  <!-- Flower Blossom -->
-  <circle cx="128" cy="112" r="10" fill="#FFCA28"/>
-  <circle cx="128" cy="98" r="7" fill="#FF4081"/>
-  <circle cx="140" cy="106" r="7" fill="#FF4081"/>
-  <circle cx="136" cy="120" r="7" fill="#FF4081"/>
-  <circle cx="120" cy="120" r="7" fill="#FF4081"/>
-  <circle cx="116" cy="106" r="7" fill="#FF4081"/>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#serra_icon_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round">
+    <ellipse cx="128" cy="222" rx="60" ry="9" fill="#2F6B3D" stroke="none" opacity="0.18"/>
+    <path d="M128 160 C128 132 124 112 128 92" fill="none" stroke-width="13" stroke-linecap="round"/>
+    <path d="M128 160 C128 132 124 112 128 92" fill="none" stroke="#4E9E5D" stroke-width="7" stroke-linecap="round"/>
+    <path d="M126 104 C108 74 74 70 56 82 C68 112 102 120 126 104 Z" fill="url(#serra_icon_leaf)" stroke-width="5"/>
+    <path d="M130 96 C146 62 182 54 202 64 C192 96 158 108 130 96 Z" fill="url(#serra_icon_leaf)" stroke-width="5"/>
+    <path d="M118 102 C104 92 88 86 72 86 M140 92 C154 80 170 72 186 70" fill="none" stroke="#51714A" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M70 160 L186 160 L174 214 C172 222 84 222 82 214 Z" fill="url(#serra_icon_pot)" stroke-width="5"/>
+    <rect x="62" y="148" width="132" height="24" rx="10" fill="#F4844C" stroke-width="5"/>
+    <path d="M86 182 L92 206" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g id="accent" stroke="#4B372F" stroke-linejoin="round">
+    <path d="M196 104 C206 118 212 128 212 136 C212 148 180 148 180 136 C180 128 186 118 196 104 Z" fill="url(#serra_icon_drop)" stroke-width="4.5"/>
+    <ellipse cx="190" cy="128" rx="4" ry="6" fill="#FFFFFF" stroke="none" opacity="0.75"/>
+    <path d="M58 40 L64 56 L80 62 L64 68 L58 84 L52 68 L36 62 L52 56 Z" fill="#FFC234" stroke-width="3.5"/>
+  </g>
 </svg>

@@ -125,30 +125,23 @@ class FourLanguageRuntimeTextContract(unittest.TestCase):
         ):
             self.assertNotIn(obsolete, app)
 
-    def test_greenhouse_toolbar_consumes_semantic_locale_keys(self) -> None:
+    def test_greenhouse_is_word_free_and_completion_text_is_localized(self) -> None:
+        # The care tools, seed packets and stage cards are pictures only (pre-
+        # readers read the plant); child-visible words are just the completion
+        # title and replay label, resolved through the platform text API.
         activity = ROOT / "activities/piccola_serra"
-        tools = _items_from_module(activity / "serra_content.py", "TOOL_DEFS")
-        keys = {row[2] for row in tools}
-        self.assertEqual(
-            {"tool.seeds", "tool.water", "tool.sun", "tool.harvest"}, keys
-        )
         for language in LANGUAGES:
             with self.subTest(language=language):
                 labels = _strings(activity, language)
-                self.assertTrue(all(labels.get(key, "").strip() for key in keys))
-                self.assertTrue(all(
-                    labels.get(key, "").strip()
-                    for key in ("victory.title", "victory.subtitle", "btn.play_again")
-                ))
-        renderer = (activity / "serra_renderer.py").read_text(encoding="utf-8")
+                self.assertEqual(set(labels), {"activity.title", "victory.title", "btn.play_again"})
+                self.assertTrue(all(value.strip() for value in labels.values()))
         app = (activity / "serra_app.py").read_text(encoding="utf-8")
-        compile(renderer, str(activity / "serra_renderer.py"), "exec")
         compile(app, str(activity / "serra_app.py"), "exec")
-        self.assertIn("self._tool_labels.get(label_key", renderer)
-        self.assertIn("tool_labels={", app)
-        self.assertIn("for _, _, key, _ in TOOL_DEFS", app)
-        for wrong_language in ("Che magnifico raccolto", "La tua serra è un vero paradiso",
-                               "Coltiva Ancora!"):
+        self.assertIn('self._text("victory.title"', app)
+        self.assertIn('self._text("btn.play_again"', app)
+        for retired in ("tool.seeds", "tool.water", "tool.sun", "tool.harvest", "hud.harvest", "plant.sunflower"):
+            self.assertNotIn(retired, app)
+        for wrong_language in ("Che bel raccolto", "What a harvest", "Grow more"):
             self.assertNotIn(wrong_language, app)
 
     def test_victory_localization_uses_actual_platform_text_api(self) -> None:

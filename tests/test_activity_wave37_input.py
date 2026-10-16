@@ -16,8 +16,9 @@ from activities.nascondino_bosco.woodland_app import AppState, WoodlandApp
 from activities.nascondino_bosco.woodland_content import FINDS_PER_ROUND, SEASONS
 from activities.nascondino_bosco.woodland_model import HideRound, Pick
 from activities.nascondino_bosco.woodland_services import WoodlandProgress
-from activities.piccola_serra.serra_app import SerraApp
-from activities.piccola_serra.serra_model import SerraModel
+from activities.piccola_serra.serra_app import SerraActivity
+from activities.piccola_serra.serra_content import CURE
+from activities.piccola_serra.serra_model import Phase, SerraProgress, Visit
 from activities.acquario_magico.acquarium_app import (
     AquariumApp,
     CHEST_RECT,
@@ -33,6 +34,7 @@ import random
 
 AQUARIUM_DIR = Path(__file__).resolve().parents[1] / "activities" / "acquario_magico"
 WOODLAND_DIR = Path(__file__).resolve().parents[1] / "activities" / "nascondino_bosco"
+SERRA_DIR = Path(__file__).resolve().parents[1] / "activities" / "piccola_serra"
 
 
 class WoodlandKeyboardCycleTests(TestCase):
@@ -104,60 +106,77 @@ class WoodlandKeyboardCycleTests(TestCase):
 
 
 class GreenhouseKeyboardCycleTests(TestCase):
-    def build_app(self) -> SerraApp:
-        app = SerraApp.__new__(SerraApp)
-        app.model = SerraModel()
-        app.active_tool = 0
-        app.selected_plant_type = 0
-        app.selected_pot_index = 0
-        app.sounds = Mock()
-        return app
+    """Piccola Serra through the shared control kit: keys only, no window."""
 
-    def test_keyboard_only_full_harvest_and_tool_state(self) -> None:
-        app = self.build_app()
-        with patch("activities.piccola_serra.serra_app.emit_activity_event") as publish:
-            for harvest in range(app.model.target_harvest):
-                if harvest:
-                    app._handle_keydown(pygame.K_RIGHT)
-                for key in (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_2, pygame.K_4):
-                    app._handle_keydown(key)
-                    app._handle_keydown(pygame.K_RETURN)
-                self.assertEqual(app.model.harvest_count, harvest + 1)
-            self.assertTrue(app.model.is_victory)
-            self.assertEqual(
-                [c.args[0] for c in publish.call_args_list].count("greenhouse.harvest_completed"),
-                1,
-            )
-            app._handle_keydown(pygame.K_1)
-            app._handle_keydown(pygame.K_RETURN)
-            self.assertTrue(app.model.is_victory)
-            self.assertEqual(app.model.harvest_count, app.model.target_harvest)
-
-    def test_keyboard_plant_and_pot_selection_are_bounded(self) -> None:
-        app = self.build_app()
-        app._handle_keydown(pygame.K_LEFT)
-        self.assertEqual(app.selected_pot_index, 3)
-        app._handle_keydown(pygame.K_UP)
-        self.assertEqual(app.selected_pot_index, 1)
-        app._handle_keydown(pygame.K_TAB)
-        self.assertEqual(app.selected_plant_type, 1)
-
-    def test_touch_mouse_emulation_does_not_duplicate_growth(self) -> None:
-        app = self.build_app()
-        app._handle_pointer = Mock()
-        app.handle_event(
-            pygame.event.Event(
-                pygame.MOUSEBUTTONUP, button=1, pos=(200, 360), touch=True
-            )
+    def build_app(self) -> SerraActivity:
+        surface = pygame.Surface((1024, 600))
+        self.now = [500.0]
+        self.events = SimpleNamespace(seed_planted=Mock(), plant_finished=Mock(), visit_completed=Mock())
+        progress = SimpleNamespace(load=lambda: SerraProgress(), save=Mock())
+        return SerraActivity(
+            screen=surface,
+            canvas=PygameReferenceCanvas(surface),
+            visit=Visit(SerraProgress(), random.Random(7)),
+            typography=GreiaTypography(),
+            resources=activity_resources(SERRA_DIR, requested_locale="en"),
+            audio=Mock(),
+            progress=progress,
+            events=self.events,
+            clock=lambda: self.now[0],
         )
-        app._handle_pointer.assert_not_called()
 
-    def test_touch_normalizes_position_before_shared_pointer_path(self) -> None:
+    def settle(self, app: SerraActivity) -> None:
+        for _ in range(400):
+            if not app.busy and not app.timeline.busy and not app.motion.flights:
+                return
+            self.now[0] += 0.05
+            app.step()
+        self.fail("greenhouse never settled")
+
+    def focus_and_enter(self, app: SerraActivity, control_id: str) -> None:
+        self.settle(app)
+        layer = app.controls.layer
+        for _ in range(6):
+            app.press(pygame.K_LEFT)
+        for _ in range(6):
+            if layer.focused_id == control_id:
+                break
+            app.press(pygame.K_RIGHT)
+        self.assertEqual(layer.focused_id, control_id)
+        self.assertTrue(layer.focus_visible)
+        app.press(pygame.K_RETURN)
+
+    def test_keyboard_only_grows_harvests_and_orders_one_plant(self) -> None:
         app = self.build_app()
-        app.screen = pygame.Surface((800, 480))
-        app._handle_pointer = Mock()
-        app.handle_event(pygame.event.Event(pygame.FINGERDOWN, x=0.25, y=0.75))
-        app._handle_pointer.assert_called_once_with((200, 360))
+        self.focus_and_enter(app, "seed.bean")
+        self.events.seed_planted.assert_called_once()
+        while app.visit.phase is Phase.GROW:
+            self.focus_and_enter(app, f"care.{CURE[app.visit.cycle.need].value}")
+        sequence = app.visit.sequence
+        while not sequence.complete:
+            self.focus_and_enter(app, f"card.{sequence.expected.value}")
+        self.settle(app)
+        self.events.plant_finished.assert_called_once()
+        self.assertEqual(app.visit.completed, 1)
+        self.assertIs(app.visit.phase, Phase.CHOOSE)
+
+    def test_number_keys_pick_tiles_of_the_current_row(self) -> None:
+        app = self.build_app()
+        self.settle(app)
+        self.assertTrue(app.press(pygame.K_2))  # second packet: sunflower
+        self.assertEqual(app.visit.cycle.plant.plant_id, "sunflower")
+        self.assertFalse(app.press(pygame.K_9))
+
+    def test_touch_mouse_emulation_is_one_tap_not_two(self) -> None:
+        app = self.build_app()
+        self.settle(app)
+        x, y = app.physical_center("seed.carrot")
+        app.handle_event(pygame.event.Event(pygame.FINGERDOWN, x=x / 1024, y=y / 600, touch_id=1, finger_id=1))
+        app.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=(x, y), touch=True))
+        app.handle_event(pygame.event.Event(pygame.FINGERUP, x=x / 1024, y=y / 600, touch_id=1, finger_id=1))
+        app.handle_event(pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=(x, y), touch=True))
+        self.events.seed_planted.assert_called_once()
+        self.assertEqual(app.visit.cycle.plant.plant_id, "carrot")
 
 
 class AquariumKeyboardAndRecoveryTests(TestCase):

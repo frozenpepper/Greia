@@ -2,7 +2,7 @@
 id = "org.greia.piccola-serra"
 legacy_ids = []
 title_key = "activity.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
@@ -11,18 +11,36 @@ categories = ["explore", "create"]
 discovery_tags = ["nature", "making"]
 
 [education]
-categories = ["nature_cycles", "gardening", "cause_and_effect"]
-difficulty = 2
+# Early science in a greenhouse with Tito: what plants need and how they
+# grow. The child picks a seed (bean, sunflower, strawberry, carrot) and
+# grows it stage by stage (seed -> sprout -> young plant -> flower -> fruit;
+# carrots are pulled for their root before they flower). Each stage shows
+# one need through the plant and its surroundings -- dry cracked soil and a
+# droopy dull plant (water), the shade cloth down and a pale plant leaning to
+# the window (sun), water standing on the soil (wait), ripe fruit (harvest)
+# -- and the child chooses the care; nothing names the answer. A care that
+# does not help is shown honestly and the real cue glows; retries are kind
+# and unlimited. After each harvest the child puts the plant's stage
+# pictures in order (3, 4 or 5 cards). Three plants per visit end on the
+# shared completion scene. Three rungs: water + light with 3 cards -> too
+# much water appears with 4 cards -> the full 5-stage cycle; each visit
+# adapts from its misses.
+categories = ["nature_cycles", "science", "sequencing", "cause_and_effect"]
+difficulty = 1
 recommended_age_min = 4
-recommended_age_max = 9
+recommended_age_max = 6
+difficulty_min = 1
+difficulty_max = 3
+adaptive_difficulty = true
 skills = [
+  { id = "nature.plant_growth.needs", weight = 3 },
   { id = "nature.plant_growth.cycles", weight = 3 },
-  { id = "motor.pointer.target_selection", weight = 2 },
-  { id = "cognition.sequencing.care", weight = 2 },
+  { id = "cognition.sequencing.stages", weight = 2 },
+  { id = "science.observation.symptoms", weight = 2 },
 ]
 events = [
   { id = "greenhouse.seed_planted", kind = "milestone" },
-  { id = "greenhouse.flower_bloomed", kind = "milestone" },
+  { id = "greenhouse.plant_grown", kind = "milestone" },
   { id = "greenhouse.harvest_completed", kind = "completion" },
 ]
 
@@ -36,10 +54,10 @@ profile = "hybrid"
 
 [requirements]
 required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["keyboard", "touch"]
+optional_capabilities = ["keyboard", "touch", "controller"]
 
 [permissions]
 requested = []
 
 [storage]
-schema_version = 1
+schema_version = 2

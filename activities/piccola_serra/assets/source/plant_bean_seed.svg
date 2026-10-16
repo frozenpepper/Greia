@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.plant.bean_seed. Piccola Serra plant stage; flat Greia vector (GREIA_SVG_AUTHORING_RULES).
+       Base (soil mound top) at x128 y212 so every stage stacks on the same pot spot. -->
+  <defs>
+    <!-- peach -> peach shade (bean) -->
+    <linearGradient id="bean_seed_seed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F8D8BD"/><stop offset="1" stop-color="#DEC0A8"/></linearGradient>
+    <!-- soil (orange+ink 60%) light -> base -->
+    <linearGradient id="bean_seed_soil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B08460"/><stop offset="1" stop-color="#8E5F33"/></linearGradient>
+  </defs>
+  <g id="shadow"><ellipse cx="128" cy="230" rx="58" ry="9" fill="#6A5147" opacity="0.14"/></g>
+  <g id="soil"><path d="M74 226 C80 206 104 202 128 202 C152 202 176 206 182 226 Z" fill="url(#bean_seed_soil)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/><path d="M96 212 C104 208 112 207 120 207" fill="none" stroke="#D0B5A0" stroke-width="3" stroke-linecap="round" opacity="0.8"/></g>
+  <g id="front"><g transform="translate(128 196) rotate(-8)"><g><path d="M-38 4 C-42 -20 -16 -28 -2 -15 C10 -27 40 -22 38 2 C35 24 -33 28 -38 4 Z" fill="url(#bean_seed_seed)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/><ellipse cx="-2" cy="-10" rx="7" ry="3.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/><ellipse cx="-22" cy="-6" rx="8" ry="4.5" fill="#FFFFFF" opacity="0.7" transform="rotate(-20 -22 -6)"/></g></g></g>
+</svg>

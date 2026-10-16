@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 316 28" width="316" height="28">
+  <!-- Piccola Serra: rolled-up shade cloth on its wooden bar (top of the sunny pane). -->
+  <defs>
+    <!-- sand light -> sand -->
+    <linearGradient id="shade_roll_fabric" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F3E7CF"/>
+      <stop offset="1" stop-color="#E3CFA6"/>
+    </linearGradient>
+  </defs>
+  <g stroke="#4B372F" stroke-linejoin="round">
+    <rect x="2" y="2" width="312" height="10" rx="5" fill="#C98E58" stroke-width="3"/>
+    <rect x="12" y="8" width="292" height="18" rx="9" fill="url(#shade_roll_fabric)" stroke-width="3.5"/>
+  </g>
+  <path d="M24 14 L120 14" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.7"/>
+</svg>

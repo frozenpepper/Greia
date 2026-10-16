@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.plant.carrot_seed. Piccola Serra plant stage; flat Greia vector (GREIA_SVG_AUTHORING_RULES).
+       Base (soil mound top) at x128 y212 so every stage stacks on the same pot spot. -->
+  <defs>
+    <!-- sand shade -> tan (carrot seeds) -->
+    <linearGradient id="carrot_seed_seed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E2C29B"/><stop offset="1" stop-color="#C99A6A"/></linearGradient>
+    <!-- soil (orange+ink 60%) light -> base -->
+    <linearGradient id="carrot_seed_soil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B08460"/><stop offset="1" stop-color="#8E5F33"/></linearGradient>
+  </defs>
+  <g id="shadow"><ellipse cx="128" cy="230" rx="58" ry="9" fill="#6A5147" opacity="0.14"/></g>
+  <g id="soil"><path d="M74 226 C80 206 104 202 128 202 C152 202 176 206 182 226 Z" fill="url(#carrot_seed_soil)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/><path d="M96 212 C104 208 112 207 120 207" fill="none" stroke="#D0B5A0" stroke-width="3" stroke-linecap="round" opacity="0.8"/></g>
+  <g id="front"><g transform="translate(106 202)"><g transform="rotate(-60) scale(1.2)"><path d="M0 -15 C7 -11 8 9 4 14 C2 16 -2 16 -4 14 C-8 9 -7 -11 0 -15 Z" fill="url(#carrot_seed_seed)" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/><path d="M-2 -9 L-2 10 M2.5 -9 L2.5 10" stroke="#906D4F" stroke-width="1.8" stroke-linecap="round"/></g></g><g transform="translate(128 197)"><g transform="rotate(8) scale(1.2)"><path d="M0 -15 C7 -11 8 9 4 14 C2 16 -2 16 -4 14 C-8 9 -7 -11 0 -15 Z" fill="url(#carrot_seed_seed)" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/><path d="M-2 -9 L-2 10 M2.5 -9 L2.5 10" stroke="#906D4F" stroke-width="1.8" stroke-linecap="round"/></g></g><g transform="translate(152 203)"><g transform="rotate(66) scale(1.2)"><path d="M0 -15 C7 -11 8 9 4 14 C2 16 -2 16 -4 14 C-8 9 -7 -11 0 -15 Z" fill="url(#carrot_seed_seed)" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/><path d="M-2 -9 L-2 10 M2.5 -9 L2.5 10" stroke="#906D4F" stroke-width="1.8" stroke-linecap="round"/></g></g></g>
+</svg>

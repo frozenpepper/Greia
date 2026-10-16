@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 232" width="300" height="232">
+  <!-- Piccola Serra: shade cloth (roller blind) pulled down over the sunny pane
+       (greenhouse x36-332, y78-296). The Activity reveals it from the bottom edge up. -->
+  <defs>
+    <!-- sand light -> sand -->
+    <linearGradient id="shade_cloth_fabric" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#F3E7CF"/>
+      <stop offset="1" stop-color="#E3CFA6"/>
+    </linearGradient>
+  </defs>
+  <g id="cloth">
+    <path d="M6 0 L294 0 L294 206 L6 206 Z" fill="url(#shade_cloth_fabric)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M54 4 L54 202 M102 4 L102 202 M150 4 L150 202 M198 4 L198 202 M246 4 L246 202" stroke="#D9C59E" stroke-width="3"/>
+    <path d="M22 10 L22 120" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g id="hem" stroke="#4B372F" stroke-linejoin="round">
+    <rect x="0" y="200" width="300" height="16" rx="8" fill="#C98E58" stroke-width="3.5"/>
+    <path d="M150 216 L150 222" stroke-width="3"/>
+    <circle cx="150" cy="226" r="6" fill="#FFC234" stroke-width="3"/>
+  </g>
+</svg>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 200" width="220" height="200">
+  <!-- Piccola Serra: terracotta pot, back half (rim top + soil), drawn behind the plant.
+       Pairs with pot_front.svg at the same position; soil centre x110 y50. -->
+  <defs>
+    <!-- terracotta (orange+coral) light -> terracotta -->
+    <linearGradient id="pot_back_rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8AF8B"/>
+      <stop offset="1" stop-color="#F4844C"/>
+    </linearGradient>
+    <!-- soil shade -> soil -->
+    <linearGradient id="pot_back_soil" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6E4A2E"/>
+      <stop offset="1" stop-color="#8E5F33"/>
+    </linearGradient>
+  </defs>
+  <g id="rim">
+    <ellipse cx="110" cy="46" rx="96" ry="22" fill="url(#pot_back_rim)" stroke="#4B372F" stroke-width="3.5"/>
+    <ellipse cx="110" cy="50" rx="80" ry="15" fill="url(#pot_back_soil)" stroke="#975A3C" stroke-width="3"/>
+    <path d="M48 44 C66 38 88 36 110 36" fill="none" stroke="#5E3E26" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+  </g>
+</svg>

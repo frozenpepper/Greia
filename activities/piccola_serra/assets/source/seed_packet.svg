@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.garden.seed_packet - paper seed packet with an empty picture
+       window (x80-176, y70-170); the Activity places the plant picture in the window.
+       Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- cream -> sand (paper) -->
+    <linearGradient id="seed_packet_paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFBEB"/>
+      <stop offset="1" stop-color="#EEDDBA"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow"><ellipse cx="128" cy="236" rx="74" ry="9" fill="#6A5147" opacity="0.14"/></g>
+  <g id="packet" stroke="#4B372F" stroke-linejoin="round">
+    <path d="M62 44 L74 32 L86 44 L98 32 L110 44 L122 32 L134 44 L146 32 L158 44 L170 32 L182 44 L194 32 L194 222 C194 228 190 232 184 232 L72 232 C66 232 62 228 62 222 Z" fill="url(#seed_packet_paper)" stroke-width="4"/>
+    <path d="M62 56 L194 56" fill="none" stroke="#D9C59E" stroke-width="3"/>
+    <rect x="78" y="68" width="100" height="104" rx="14" fill="#FFFFFF" stroke-width="3"/>
+    <path d="M64 186 L192 186 L192 222 C192 227 188 230 184 230 L72 230 C68 230 64 227 64 222 Z" fill="#59B86A" stroke-width="3"/>
+    <path d="M98 208 C104 198 116 196 122 206 C128 196 142 198 148 208" fill="none" stroke="#FFFBEB" stroke-width="4.5" stroke-linecap="round"/>
+  </g>
+  <path d="M72 66 L72 158" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+</svg>

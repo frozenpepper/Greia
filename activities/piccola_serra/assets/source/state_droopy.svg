@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.plant.state_droopy - thirsty overlay: dry, cracked soil over the
+       plant-stage mound (same outline, base x128 y212) and one dry fallen leaf. Drawn over
+       a plant-stage picture. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sand light -> dry soil (sand + wood 30%) -->
+    <linearGradient id="state_droopy_soil" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F3E7CF"/>
+      <stop offset="1" stop-color="#E3C59D"/>
+    </linearGradient>
+  </defs>
+  <g id="soil">
+    <ellipse cx="128" cy="222" rx="68" ry="13" fill="#E3C59D" stroke="#977E66" stroke-width="2.5"/>
+    <path d="M72 227 C78 205 104 200 128 200 C152 200 178 205 184 227 Z" fill="url(#state_droopy_soil)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M90 222 L100 214 L98 207 M100 214 L112 216 M146 206 L150 214 L162 216 L168 224 M150 214 L146 222 M120 226 L126 219 L136 222" fill="none" stroke="#977E66" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g id="leaf" transform="translate(190 222) rotate(-18)">
+    <path d="M-22 0 C-14 -12 6 -12 18 -2 C8 8 -12 8 -22 0 Z" fill="#C9A15E" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M-16 0 L10 -2" stroke="#977E66" stroke-width="2" stroke-linecap="round"/>
+  </g>
+</svg>

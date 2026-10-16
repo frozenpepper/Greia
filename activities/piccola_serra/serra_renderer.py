@@ -1,307 +1,492 @@
-"""Piccola Serra — rendering helpers and bounded caches.
+"""Piccola Serra -- scene drawing and short-lived motion state.
 
-Owns draw helpers, text caching (bounded, invalidate on resize) and the
-full greenhouse scene. No storage or event IO. Text rendering uses
-GreiaTypography with a small bounded LRU cache; image decoding/scaling
-would be cached with convert() once if assets were used (kept bounded).
+``SceneView`` is what the child currently *sees* (it lags the model while a
+moment plays: the can pours, then the soil darkens, then the plant grows).
+``SerraMotion`` holds the bounded, time-stamped effects. ``SerraRenderer``
+only blits prepared surfaces from ``SerraArt``; per-frame work is blits,
+small alpha fades of sprite-sized surfaces and a few vector halos -- no
+decoding, scaling or text rendering.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass, field
 import math
-from typing import Any, Final, Mapping
 
 import pygame
 
-from greia_platform.system_chrome import ActivitySystemChromeLayout
-from greia_platform.typography import FontRole, GreiaTypography
+from greia_platform.activity_feedback import CastFeedback, CastPose
 
 if __package__:
-    from .serra_content import PLANTS, REFERENCE_HEIGHT, REFERENCE_WIDTH, POT_RECT_TUPLES, TOOL_DEFS
+    from .serra_art import SerraArt
+    from .serra_content import Care, Need, Stage
+    from .serra_layout import (
+        BASKET_MIDBOTTOM,
+        CAN_POUR_POS,
+        CLOCK_POS,
+        CLOTH_POS,
+        PANE_RECT,
+        PLANT_TOPLEFT,
+        POT_POS,
+        SAUCER_CENTER,
+        SUN_CENTER,
+        TITO_MIDBOTTOM,
+        slot_rects,
+    )
 else:
-    from serra_content import PLANTS, REFERENCE_HEIGHT, REFERENCE_WIDTH, POT_RECT_TUPLES, TOOL_DEFS
+    from serra_art import SerraArt
+    from serra_content import Care, Need, Stage
+    from serra_layout import (
+        BASKET_MIDBOTTOM,
+        CAN_POUR_POS,
+        CLOCK_POS,
+        CLOTH_POS,
+        PANE_RECT,
+        PLANT_TOPLEFT,
+        POT_POS,
+        SAUCER_CENTER,
+        SUN_CENTER,
+        TITO_MIDBOTTOM,
+        slot_rects,
+    )
 
-_MAX_TEXT_CACHE = 64
+MAX_FX = 8
+MAX_FLIGHTS = 6
+PLANT_FADE = 0.55
+OVERLAY_FADE = 0.6
+CLOTH_SECONDS = 0.8
+POUR_SECONDS = 1.1
+CLOCK_SECONDS = 1.3
+SUN_SECONDS = 1.0
+BASKET_SECONDS = 0.8
+HALO_SECONDS = 2.2
+FLIGHT_SECONDS = 0.7
+BASKET_SIZE = 96
+HARVEST_ITEM = 54
 
-# Pot rects as pygame.Rect for hit-testing/rendering reuse.
-POT_RECTS: list[pygame.Rect] = [pygame.Rect(*t) for t in POT_RECT_TUPLES]
+
+class Tween:
+    """A value moving from ``start`` to ``end`` over ``seconds`` (ease in-out)."""
+
+    __slots__ = ("start", "end", "begin", "seconds")
+
+    def __init__(self, value: float = 0.0) -> None:
+        self.start = self.end = float(value)
+        self.begin = 0.0
+        self.seconds = 0.0
+
+    def to(self, value: float, now: float, seconds: float) -> None:
+        self.start = self.value(now)
+        self.end = float(value)
+        self.begin = now
+        self.seconds = max(0.0, seconds)
+
+    def set(self, value: float) -> None:
+        self.start = self.end = float(value)
+        self.seconds = 0.0
+
+    def value(self, now: float) -> float:
+        if self.seconds <= 0 or now >= self.begin + self.seconds:
+            return self.end
+        t = max(0.0, (now - self.begin) / self.seconds)
+        t = t * t * (3 - 2 * t)
+        return self.start + (self.end - self.start) * t
+
+    def moving(self, now: float) -> bool:
+        return self.seconds > 0 and now < self.begin + self.seconds
 
 
-# Child-visible controls start clear of the trusted Home/Back region, which
-# the platform reserves in full (both slots) so layout never jumps by context.
-_CHROME_CLEAR_X: Final = ActivitySystemChromeLayout.for_surface(1024, 600).protected_region.right + 18
+@dataclass(slots=True)
+class PlantView:
+    """The plant picture on screen (stage + look) and its soil overlay."""
+
+    plant_id: str | None = None
+    stage: Stage = Stage.SEED
+    variant: str = "default"
+    overlay: Need | None = None
+
+
+@dataclass(slots=True)
+class SceneView:
+    plant: PlantView = field(default_factory=PlantView)
+    previous: PlantView | None = None
+    plant_fade_start: float = -10.0
+    overlay_previous: Need | None = None
+    overlay_fade_start: float = -10.0
+    cloth: Tween = field(default_factory=Tween)      # 0 = rolled up (sunny), 1 = down (shaded)
+    basket: list[str] = field(default_factory=list)  # harvested plant ids
+    board: bool = False
+    order: tuple[Stage, ...] = ()
+    placed: int = 0
+    plant_hop: float = -10.0
+
+
+@dataclass(slots=True)
+class Flight:
+    image: pygame.Surface
+    start: tuple[float, float]
+    end: tuple[float, float]
+    begin: float
+    seconds: float = FLIGHT_SECONDS
+    arc: float = 120.0
+    on_land: Callable[[], object] | None = None
+
+
+@dataclass(slots=True)
+class SerraMotion:
+    """Bounded time-stamped effects (all cleared between plants/visits)."""
+
+    fx: list[tuple[str, tuple[float, float], float, int]] = field(default_factory=list)
+    flights: list[Flight] = field(default_factory=list)
+    pour: float = -10.0
+    pour_seconds: float = POUR_SECONDS
+    clock: float = -10.0
+    sun: float = -10.0
+    basket_shake: float = -10.0
+    symptom: tuple[Need, float] | None = None
+    tool: tuple[str, float] | None = None
+    slot_pulse: float = -10.0
+
+    def add_fx(self, name: str, position: tuple[float, float], now: float, size: int) -> None:
+        if len(self.fx) >= MAX_FX:
+            self.fx.pop(0)
+        self.fx.append((name, position, now, int(size)))
+
+    def fly(self, flight: Flight) -> None:
+        if len(self.flights) >= MAX_FLIGHTS:
+            dropped = self.flights.pop(0)
+            if dropped.on_land is not None:
+                dropped.on_land()
+        self.flights.append(flight)
+
+    def land_due(self, now: float) -> None:
+        """Finish flights that arrived (their callbacks update the scene)."""
+
+        landed = [flight for flight in self.flights if now >= flight.begin + flight.seconds]
+        for flight in landed:
+            self.flights.remove(flight)
+            if flight.on_land is not None:
+                flight.on_land()
+
+    def busy(self, now: float) -> bool:
+        return bool(self.flights) or now < self.pour + self.pour_seconds or now < self.clock + CLOCK_SECONDS
+
+    def clear(self) -> None:
+        self.fx.clear()
+        self.flights.clear()
+        self.pour = self.clock = self.sun = self.basket_shake = self.slot_pulse = -10.0
+        self.symptom = None
+        self.tool = None
+
+
+class TitoCast:
+    """Tito in the greenhouse: shared cheer/think grammar plus a pointing pose."""
+
+    def __init__(self, feedback: CastFeedback, point: pygame.Surface | None, clock: Callable[[], float]) -> None:
+        self.feedback = feedback
+        self._point = point
+        self._clock = clock
+        self._point_until = 0.0
+
+    @property
+    def pointing(self) -> bool:
+        return self._point is not None and self._clock() < self._point_until
+
+    @property
+    def pose(self) -> str:
+        if self.feedback.pose is CastPose.IDLE and self.pointing:
+            return "point"
+        return self.feedback.pose.value
+
+    def point(self, seconds: float = 1.8) -> None:
+        self.feedback.reset()
+        self._point_until = self._clock() + seconds
+
+    def correct(self) -> None:
+        self._point_until = 0.0
+        self.feedback.correct()
+
+    def try_again(self) -> None:
+        self._point_until = 0.0
+        self.feedback.try_again()
+
+    def reset(self) -> None:
+        self._point_until = 0.0
+        self.feedback.reset()
+
+    def update(self) -> bool:
+        return self.feedback.update() or self.pointing
+
+    def draw(self, target: pygame.Surface, midbottom: tuple[int, int]) -> None:
+        if self.feedback.pose is CastPose.IDLE and self.pointing and self._point is not None:
+            target.blit(self._point, self._point.get_rect(midbottom=midbottom))
+            return
+        self.feedback.draw(target, midbottom)
+
+
+def _blit_faded(surface: pygame.Surface, image: pygame.Surface, center: tuple[int, int], strength: float) -> None:
+    """Blit a cached glow at ``strength`` (0..1) without allocating per frame."""
+
+    alpha = max(0, min(255, int(255 * strength)))
+    if alpha <= 0:
+        return
+    image.set_alpha(alpha)
+    surface.blit(image, image.get_rect(center=center))
+    image.set_alpha(255)
+
+
+def symptom_anchor(need: Need) -> pygame.Rect:
+    """Where a need shows (the halo of an idle/try-again hint)."""
+
+    if need is Need.DARK:
+        return PANE_RECT.inflate(30, 30)
+    if need is Need.RIPE:
+        return pygame.Rect(362, 70, 300, 240)
+    return pygame.Rect(412, 300, 200, 84)
 
 
 class SerraRenderer:
-    """Own greenhouse presentation: cached text and stateless draw helpers.
+    """Draw the greenhouse, the plant, Tito, effects and the ordering board."""
 
-    Caches are bounded and survive only for the locale/text they were built
-    for. ``invalidate`` clears text caches after a VIDEORESIZE or locale
-    change. Image/scale caches would follow the same pattern (convert once,
-    bounded) if runtime assets were added.
-    """
+    def __init__(self, art: SerraArt, cast: TitoCast) -> None:
+        self.art = art
+        self.cast = cast
+        self.board_rect = pygame.Rect(330, 96, 670, 360)
 
-    def __init__(
-        self,
-        typography: GreiaTypography,
-        tool_labels: Mapping[str, str] | None = None,
-    ) -> None:
-        self._typography = typography
-        # Renderer-only use remains icon-neutral; the Activity supplies locale
-        # text resolved once per launch, not during every animation frame.
-        self._tool_labels = dict(tool_labels or {
-            "tool.seeds": "🌱", "tool.water": "💧",
-            "tool.sun": "☀️", "tool.harvest": "🧺",
-        })
-        self._text_cache: dict[tuple[str, FontRole, int, tuple[int, int, int]], pygame.Surface] = {}
-        self._text_order: list[tuple[str, FontRole, int, tuple[int, int, int]]] = []
-        self._hud_value: int | None = None
-        self._hud_surface: pygame.Surface | None = None
+    # -- frame --------------------------------------------------------------
 
-    # -- cache management -----------------------------------------------
-
-    def invalidate(self) -> None:
-        """Clear scaled/text caches after the viewport changes size."""
-        self._text_cache.clear()
-        self._text_order.clear()
-        self._hud_surface = None
-        self._hud_value = None
-
-    def _cached_text(
-        self, text: str, role: FontRole, size: int, color: tuple[int, int, int]
-    ) -> pygame.Surface:
-        key = (text, role, size, color)
-        cached = self._text_cache.get(key)
-        if cached is not None:
-            return cached
-        rendered = self._typography.render(text, role, size, color)
-        if len(self._text_cache) >= _MAX_TEXT_CACHE:
-            oldest = self._text_order.pop(0)
-            self._text_cache.pop(oldest, None)
-        self._text_cache[key] = rendered
-        self._text_order.append(key)
-        return rendered
-
-    # -- high-level scene -----------------------------------------------
-
-    def render(
-        self,
-        surface: pygame.Surface,
-        model: Any,
-        active_tool: int,
-        t_now: float,
-    ) -> None:
-        """Render the complete greenhouse scene onto the reference canvas."""
-        self._draw_background(surface)
-        self._draw_pots_and_plants(surface, model, active_tool, t_now)
-        self._draw_particles(surface, model.particles)
-        self._draw_hud(surface, model.harvest_count, model.target_harvest)
-        self._draw_toolbar(surface, active_tool)
-
-    # -- background -----------------------------------------------------
-
-    def _draw_background(self, surface: pygame.Surface) -> None:
-        surface.fill((224, 242, 254))
-        pygame.draw.circle(surface, (187, 247, 208), (200, 360), 240)
-        pygame.draw.circle(surface, (134, 239, 172), (800, 380), 280)
-        for gx in range(0, REFERENCE_WIDTH, 200):
-            pygame.draw.line(surface, (255, 255, 255), (gx, 0), (gx, 340), 4)
-        pygame.draw.line(surface, (255, 255, 255), (0, 160), (REFERENCE_WIDTH, 160), 4)
-        pygame.draw.rect(surface, (180, 83, 9), (40, 330, REFERENCE_WIDTH - 80, 160), border_radius=12)
-        pygame.draw.rect(surface, (146, 64, 14), (40, 330, REFERENCE_WIDTH - 80, 20), border_radius=6)
-        pygame.draw.rect(surface, (254, 243, 199), (0, 480, REFERENCE_WIDTH, 120))
-
-    # -- pots and plants ------------------------------------------------
-
-    def _draw_pots_and_plants(
-        self, surface: pygame.Surface, model: Any, active_tool: int, t_now: float
-    ) -> None:
-        for idx, pot in enumerate(model.pots):
-            r_pot = POT_RECTS[idx]
-            px = r_pot.centerx
-            py = r_pot.bottom - 40
-
-            pygame.draw.polygon(
-                surface,
-                (194, 65, 12),
-                [(px - 45, py), (px + 45, py), (px + 36, py + 65), (px - 36, py + 65)],
-            )
-            pygame.draw.rect(surface, (234, 88, 12), (px - 50, py - 10, 100, 16), border_radius=4)
-            pygame.draw.ellipse(surface, (69, 26, 3), (px - 44, py - 8, 88, 12))
-            if pot.get("water_level", 0) > 0:
-                pygame.draw.ellipse(surface, (56, 189, 248), (px - 40, py - 6, 80, 8))
-
-            stage = int(pot["stage"])
-            plant = pot["plant"]
-            if stage == 1:
-                pygame.draw.circle(surface, (254, 240, 138), (px, py - 2), 4)
-            elif stage == 2:
-                pygame.draw.line(surface, (34, 197, 94), (px, py - 2), (px, py - 25), 4)
-                pygame.draw.ellipse(surface, (74, 222, 128), (px - 14, py - 30, 14, 8))
-                pygame.draw.ellipse(surface, (74, 222, 128), (px, py - 30, 14, 8))
-            elif stage == 3:
-                pygame.draw.line(surface, (34, 197, 94), (px, py - 2), (px, py - 55), 6)
-                pygame.draw.ellipse(surface, (74, 222, 128), (px - 20, py - 40, 20, 10))
-                pygame.draw.ellipse(surface, (74, 222, 128), (px, py - 48, 20, 10))
-                assert plant is not None
-                pygame.draw.circle(surface, plant["petal_color"], (px, py - 60), 12)
-            elif stage == 4:
-                assert plant is not None
-                pygame.draw.line(surface, (34, 197, 94), (px, py - 2), (px, py - 75), 7)
-                pygame.draw.ellipse(surface, (74, 222, 128), (px - 26, py - 50, 26, 12))
-                pygame.draw.ellipse(surface, (74, 222, 128), (px, py - 60, 26, 12))
-                fx = px
-                fy = py - 85
-                petal_r = 16
-                for ang in range(0, 360, 45):
-                    rad = math.radians(ang)
-                    ptx = fx + math.cos(rad) * 18
-                    pty = fy + math.sin(rad) * 18
-                    pygame.draw.circle(surface, plant["petal_color"], (int(ptx), int(pty)), petal_r)
-                pygame.draw.circle(surface, plant["center_color"], (fx, fy), 18)
-                pygame.draw.circle(surface, (255, 255, 255), (fx - 4, fy - 4), 4)
-
-            if not model.is_victory:
-                self._draw_thought_bubble(surface, px, idx, stage, active_tool, t_now)
-
-    def _draw_thought_bubble(
-        self, surface: pygame.Surface, px: int, idx: int, stage: int, active_tool: int, t_now: float
-    ) -> None:
-        # Keep single source of stage->tool truth without importing model
-        # at runtime (avoids circular/context issues); mirrors serra_model.
-        if stage == 0:
-            needed_tool = 0
-        elif stage == 1:
-            needed_tool = 1
-        elif stage == 2:
-            needed_tool = 2
-        elif stage == 3:
-            needed_tool = 1
+    def draw(self, surface: pygame.Surface, view: SceneView, motion: SerraMotion, now: float) -> None:
+        self._backdrop(surface, view, now)
+        self._sun(surface, motion, now)
+        self._cloth(surface, view, now)
+        self._symptom_halo(surface, motion, now)
+        self._basket(surface, view, motion, now)
+        self.cast.draw(surface, TITO_MIDBOTTOM)
+        if view.board:
+            self._board(surface, view, motion, now)
         else:
-            needed_tool = 3
-        is_matching = active_tool == needed_tool
-        bob = int(math.sin(t_now * 4.0 + idx) * 3.0)
-        bx = px
-        by = 130 + bob
-        dark = (30, 41, 59)
-        white = (255, 255, 255)
-        pygame.draw.circle(surface, white, (bx, by + 45), 5)
-        pygame.draw.circle(surface, dark, (bx, by + 45), 5, 2)
-        pygame.draw.circle(surface, white, (bx, by + 30), 7)
-        pygame.draw.circle(surface, dark, (bx, by + 30), 7, 2)
-        bubble_border = (34, 197, 94) if is_matching else (203, 213, 225)
-        border_w = 4 if is_matching else 2
-        for ox, oy, rad in [(-16, 0, 18), (16, 0, 18), (0, -10, 20), (0, 10, 18)]:
-            pygame.draw.circle(surface, white, (bx + ox, by + oy), rad)
-            pygame.draw.circle(surface, bubble_border, (bx + ox, by + oy), rad, border_w)
-        for ox, oy, rad in [(-16, 0, 16), (16, 0, 16), (0, -10, 18), (0, 10, 16)]:
-            pygame.draw.circle(surface, white, (bx + ox, by + oy), rad)
+            self._pot_and_plant(surface, view, now)
+            self._saucer_water(surface, view)
+            self._pour(surface, motion, now)
+            self._clock(surface, motion, now)
+        self._fx(surface, motion, now)
+        self._flights(surface, motion, now)
 
-        if needed_tool == 0:
-            pygame.draw.circle(surface, (180, 83, 9), (bx, by + 5), 7)
-            pygame.draw.circle(surface, dark, (bx, by + 5), 7, 2)
-            pygame.draw.ellipse(surface, (34, 197, 94), pygame.Rect(bx - 10, by - 12, 10, 7))
-            pygame.draw.ellipse(surface, (34, 197, 94), pygame.Rect(bx, by - 12, 10, 7))
-            pygame.draw.ellipse(surface, dark, pygame.Rect(bx - 10, by - 12, 10, 7), 1)
-            pygame.draw.ellipse(surface, dark, pygame.Rect(bx, by - 12, 10, 7), 1)
-        elif needed_tool == 1:
-            pygame.draw.circle(surface, (14, 165, 233), (bx, by + 4), 9)
-            pygame.draw.polygon(surface, (14, 165, 233), [(bx - 8, by + 2), (bx + 8, by + 2), (bx, by - 11)])
-            pygame.draw.circle(surface, dark, (bx, by + 4), 9, 2)
-            pygame.draw.circle(surface, (255, 255, 255), (bx - 3, by + 2), 3)
-        elif needed_tool == 2:
-            pygame.draw.circle(surface, (234, 179, 8), (bx, by), 10)
-            pygame.draw.circle(surface, dark, (bx, by), 10, 2)
-            for sang in (0, 45, 90, 135, 180, 225, 270, 315):
-                srad = math.radians(sang)
-                pygame.draw.line(
-                    surface,
-                    (217, 119, 6),
-                    (bx + int(math.cos(srad) * 11), by + int(math.sin(srad) * 11)),
-                    (bx + int(math.cos(srad) * 16), by + int(math.sin(srad) * 16)),
-                    3,
-                )
-        elif needed_tool == 3:
-            pygame.draw.circle(surface, (239, 68, 68), (bx, by + 3), 10)
-            pygame.draw.circle(surface, dark, (bx, by + 3), 10, 2)
-            pygame.draw.circle(surface, (255, 255, 255), (bx - 3, by), 3)
-            pygame.draw.ellipse(surface, (34, 197, 94), pygame.Rect(bx - 3, by - 11, 7, 5))
-            pygame.draw.ellipse(surface, dark, pygame.Rect(bx - 3, by - 11, 7, 5), 1)
+    # -- greenhouse ---------------------------------------------------------------
 
-    # -- particles, hud, toolbar ----------------------------------------
+    def _backdrop(self, surface: pygame.Surface, view: SceneView, now: float) -> None:
+        shade = view.cloth.value(now)
+        if shade <= 0.0:
+            surface.blit(self.art.backdrop(True), (0, 0))
+            return
+        if shade >= 1.0:
+            surface.blit(self.art.backdrop(False), (0, 0))
+            return
+        # Only while the cloth moves: cross-fade the two composed moods.
+        surface.blit(self.art.backdrop(False), (0, 0))
+        sunny = self.art.backdrop(True)
+        sunny.set_alpha(int(255 * (1.0 - shade)))
+        surface.blit(sunny, (0, 0))
+        sunny.set_alpha(255)
 
-    def _draw_particles(self, surface: pygame.Surface, particles: list[dict[str, Any]]) -> None:
-        for p in particles:
-            cur_sz = max(2.0, p["size"] * max(0.0, min(1.0, float(p["life"]))))
-            pygame.draw.circle(surface, p["color"], (int(p["x"]), int(p["y"])), int(cur_sz))
+    def _cloth(self, surface: pygame.Surface, view: SceneView, now: float) -> None:
+        shade = view.cloth.value(now)
+        cloth = self.art.cloth()
+        if cloth is None or shade <= 0.0:
+            return
+        height = max(1, int(cloth.get_height() * shade))
+        # Reveal from the hem upward so the hem always leads the cloth.
+        area = pygame.Rect(0, cloth.get_height() - height, cloth.get_width(), height)
+        surface.blit(cloth, CLOTH_POS, area)
 
-    def _draw_hud(self, surface: pygame.Surface, harvest_count: int, target_harvest: int) -> None:
-        star_pill = pygame.Rect(_CHROME_CLEAR_X, 16, 140, 56)
-        pygame.draw.rect(surface, (255, 255, 255), star_pill, border_radius=18)
-        pygame.draw.rect(surface, (234, 179, 8), star_pill, width=3, border_radius=18)
-        pygame.draw.circle(surface, (234, 179, 8), (star_pill.left + 30, star_pill.centery), 16)
-        # Cache the harvest text surface by value.
-        if self._hud_value != harvest_count or self._hud_surface is None:
-            self._hud_value = harvest_count
-            self._hud_surface = self._cached_text(
-                f"{harvest_count}/{target_harvest}", FontRole.DISPLAY, 28, (180, 83, 9)
-            )
-        assert self._hud_surface is not None
-        surface.blit(
-            self._hud_surface, (star_pill.left + 54, star_pill.centery - self._hud_surface.get_height() // 2)
-        )
+    def _sun(self, surface: pygame.Surface, motion: SerraMotion, now: float) -> None:
+        t = now - motion.sun
+        if not 0 <= t < SUN_SECONDS:
+            return
+        pulse = math.sin(math.pi * t / SUN_SECONDS)
+        _blit_faded(surface, self.art.halo((190, 190)), SUN_CENTER, pulse)
 
-    def _draw_toolbar(self, surface: pygame.Surface, active_tool: int) -> None:
-        tool_y = REFERENCE_HEIGHT - 85
-        for tx, t_idx, label_key, col in TOOL_DEFS:
-            b_rect = pygame.Rect(tx, tool_y, 180, 72)
-            is_sel = active_tool == t_idx
-            bg_col = col if is_sel else (255, 255, 255)
-            border_w = 5 if is_sel else 2
-            pygame.draw.rect(surface, bg_col, b_rect, border_radius=20)
-            pygame.draw.rect(surface, col, b_rect, width=border_w, border_radius=20)
-            cx = b_rect.centerx
-            cy = b_rect.top + 28
-            if t_idx == 0:
-                seed_col = (255, 255, 255) if is_sel else (22, 101, 52)
-                leaf_col = (220, 252, 231) if is_sel else (34, 197, 94)
-                pygame.draw.circle(surface, seed_col, (cx, cy + 6), 8)
-                pygame.draw.line(surface, leaf_col, (cx, cy + 6), (cx, cy - 8), 3)
-                pygame.draw.ellipse(surface, leaf_col, pygame.Rect(cx - 14, cy - 14, 14, 8))
-                pygame.draw.ellipse(surface, leaf_col, pygame.Rect(cx, cy - 14, 14, 8))
-            elif t_idx == 1:
-                can_col = (255, 255, 255) if is_sel else (2, 132, 199)
-                drop_col = (224, 242, 254) if is_sel else (56, 189, 248)
-                pygame.draw.rect(surface, can_col, pygame.Rect(cx - 14, cy - 8, 22, 18), border_radius=4)
-                pygame.draw.line(surface, can_col, (cx + 8, cy - 3), (cx + 20, cy - 11), 4)
-                pygame.draw.arc(surface, can_col, pygame.Rect(cx - 24, cy - 10, 14, 16), 1.5, 4.7, 3)
-                pygame.draw.circle(surface, drop_col, (cx + 22, cy - 1), 3)
-                pygame.draw.circle(surface, drop_col, (cx + 24, cy + 7), 4)
-            elif t_idx == 2:
-                sun_col = (255, 255, 255) if is_sel else (234, 179, 8)
-                ray_col = (254, 240, 138) if is_sel else (202, 138, 4)
-                pygame.draw.circle(surface, sun_col, (cx, cy), 13)
-                for ang in (0, 45, 90, 135, 180, 225, 270, 315):
-                    rad = math.radians(ang)
-                    pygame.draw.line(
-                        surface,
-                        ray_col,
-                        (cx + int(math.cos(rad) * 14), cy + int(math.sin(rad) * 14)),
-                        (cx + int(math.cos(rad) * 19), cy + int(math.sin(rad) * 19)),
-                        2,
-                    )
-            elif t_idx == 3:
-                bask_col = (255, 255, 255) if is_sel else (194, 65, 12)
-                pygame.draw.polygon(
-                    surface,
-                    bask_col,
-                    [(cx - 16, cy - 2), (cx + 16, cy - 2), (cx + 11, cy + 14), (cx - 11, cy + 14)],
-                )
-                pygame.draw.arc(surface, bask_col, pygame.Rect(cx - 13, cy - 16, 26, 20), 0, 3.14, 3)
-                pygame.draw.circle(surface, (239, 68, 68), (cx - 4, cy - 5), 5)
-                pygame.draw.circle(surface, (234, 179, 8), (cx + 5, cy - 5), 5)
-            lbl_surf = self._cached_text(self._tool_labels.get(label_key, "✦"), FontRole.DISPLAY, 18, (255, 255, 255) if is_sel else col)
-            surface.blit(lbl_surf, (cx - lbl_surf.get_width() // 2, b_rect.bottom - lbl_surf.get_height() - 4))
+    def _symptom_halo(self, surface: pygame.Surface, motion: SerraMotion, now: float) -> None:
+        if motion.symptom is None:
+            return
+        need, begin = motion.symptom
+        t = now - begin
+        if not 0 <= t < HALO_SECONDS:
+            return
+        rect = symptom_anchor(need)
+        pulse = 0.55 + 0.45 * math.sin(t * 2 * math.pi / 0.9)
+        _blit_faded(surface, self.art.halo(rect.size), rect.center, pulse)
+
+    def _basket(self, surface: pygame.Surface, view: SceneView, motion: SerraMotion, now: float) -> None:
+        basket = self.art.art.image("icon.hud.basket", BASKET_SIZE)
+        midbottom = BASKET_MIDBOTTOM
+        dx = 0
+        t = now - motion.basket_shake
+        if 0 <= t < BASKET_SECONDS:
+            dx = int(6 * math.sin(t * 2 * math.pi * 3.5) * (1 - t / BASKET_SECONDS))
+        # Harvest peeks out of the basket (up to three, fanned).
+        offsets = ((-22, -54), (20, -58), (0, -66))
+        for index, plant_id in enumerate(view.basket[-3:]):
+            item = self.art.harvest(plant_id, HARVEST_ITEM)
+            if item is not None:
+                ox, oy = offsets[index]
+                surface.blit(item, item.get_rect(center=(midbottom[0] + ox + dx, midbottom[1] + oy)))
+        if basket is not None:
+            surface.blit(basket, basket.get_rect(midbottom=(midbottom[0] + dx, midbottom[1])))
+
+    # -- the pot ------------------------------------------------------------------------
+
+    def _pot_and_plant(self, surface: pygame.Surface, view: SceneView, now: float) -> None:
+        art = self.art
+        back = art.pot(False)
+        if back is not None:
+            surface.blit(back, POT_POS)
+        hop = 0
+        t = now - view.plant_hop
+        if 0 <= t < 0.45:
+            hop = -int(10 * math.sin(math.pi * t / 0.45))
+        fade = min(1.0, max(0.0, (now - view.plant_fade_start) / PLANT_FADE))
+        if view.previous is not None and fade < 1.0:
+            self._plant_image(surface, view.previous, 255, hop)
+            self._plant_image(surface, view.plant, int(255 * fade), hop)
+        else:
+            self._plant_image(surface, view.plant, 255, hop)
+        self._overlay(surface, view, now)
+        front = art.pot(True)
+        if front is not None:
+            surface.blit(front, POT_POS)
+
+    def _plant_image(self, surface: pygame.Surface, plant: PlantView, alpha: int, hop: int) -> None:
+        if plant.plant_id is None or alpha <= 0:
+            return
+        image = self.art.plant(plant.plant_id, plant.stage, plant.variant)
+        if image is None:
+            return
+        position = (PLANT_TOPLEFT[0], PLANT_TOPLEFT[1] + hop)
+        if alpha >= 255:
+            surface.blit(image, position)
+            return
+        image.set_alpha(alpha)
+        surface.blit(image, position)
+        image.set_alpha(255)
+
+    def _overlay(self, surface: pygame.Surface, view: SceneView, now: float) -> None:
+        fade = min(1.0, max(0.0, (now - view.overlay_fade_start) / OVERLAY_FADE))
+        if view.overlay_previous is not None and fade < 1.0:
+            self._overlay_image(surface, view.overlay_previous, int(255 * (1 - fade)))
+        if view.plant.overlay is not None:
+            self._overlay_image(surface, view.plant.overlay, int(255 * fade))
+
+    def _overlay_image(self, surface: pygame.Surface, need: Need, alpha: int) -> None:
+        image = self.art.overlay(need)
+        if image is None or alpha <= 0:
+            return
+        if alpha >= 255:
+            surface.blit(image, PLANT_TOPLEFT)
+            return
+        image.set_alpha(alpha)
+        surface.blit(image, PLANT_TOPLEFT)
+        image.set_alpha(255)
+
+    def _saucer_water(self, surface: pygame.Surface, view: SceneView) -> None:
+        """Too much water also spills into the saucer (flat ocean ellipse)."""
+
+        if view.plant.overlay is not Need.SOGGY:
+            return
+        rect = pygame.Rect(0, 0, 176, 14)
+        rect.center = (SAUCER_CENTER[0], SAUCER_CENTER[1] - 2)
+        pygame.draw.ellipse(surface, (146, 189, 232), rect)
+        pygame.draw.ellipse(surface, (74, 125, 179), rect, 2)
+
+    def _pour(self, surface: pygame.Surface, motion: SerraMotion, now: float) -> None:
+        t = now - motion.pour
+        if not 0 <= t < motion.pour_seconds:
+            return
+        can = self.art.tilted_can(150)
+        if can is None:
+            return
+        lift = int(8 * math.sin(min(1.0, t / 0.25) * math.pi / 2))
+        surface.blit(can, can.get_rect(center=(CAN_POUR_POS[0], CAN_POUR_POS[1] - lift)))
+        drop = self.art.drop(22)
+        if drop is None:
+            return
+        spout = (CAN_POUR_POS[0] - 74, CAN_POUR_POS[1] + 36)
+        for index in range(5):
+            phase = (t * 2.2 + index / 5) % 1.0
+            x = spout[0] - 22 * phase + (index % 2) * 10 - 5
+            y = spout[1] + 130 * phase
+            surface.blit(drop, drop.get_rect(center=(int(x), int(y))))
+
+    def _clock(self, surface: pygame.Surface, motion: SerraMotion, now: float) -> None:
+        t = now - motion.clock
+        if not 0 <= t < CLOCK_SECONDS:
+            return
+        clock = self.art.care_icon(Care.WAIT, 120)
+        if clock is None:
+            return
+        hop = -int(8 * abs(math.sin(t * math.pi * 3)))
+        surface.blit(clock, clock.get_rect(center=(CLOCK_POS[0], CLOCK_POS[1] + hop)))
+
+    # -- effects -------------------------------------------------------------------------
+
+    def _fx(self, surface: pygame.Surface, motion: SerraMotion, now: float) -> None:
+        alive = []
+        for name, position, begin, size in motion.fx:
+            frames = self.art.fx_frames(name, size)
+            if not frames:
+                continue
+            elapsed = now - begin
+            index = int(elapsed / 0.16)
+            if index >= len(frames):
+                continue
+            alive.append((name, position, begin, size))
+            frame = frames[index]
+            surface.blit(frame, frame.get_rect(center=(int(position[0]), int(position[1]))))
+        motion.fx[:] = alive
+
+    def _flights(self, surface: pygame.Surface, motion: SerraMotion, now: float) -> None:
+        for flight in motion.flights:
+            t = min(1.0, max(0.0, (now - flight.begin) / flight.seconds))
+            x = flight.start[0] + (flight.end[0] - flight.start[0]) * t
+            y = flight.start[1] + (flight.end[1] - flight.start[1]) * t - flight.arc * math.sin(math.pi * t)
+            surface.blit(flight.image, flight.image.get_rect(center=(int(x), int(y))))
+
+    # -- ordering board --------------------------------------------------------------------
+
+    def board_slots(self, board: pygame.Rect, count: int) -> list[pygame.Rect]:
+        return slot_rects(board, count)
+
+    def _board(self, surface: pygame.Surface, view: SceneView, motion: SerraMotion, now: float) -> None:
+        slots = slot_rects(self.board_rect, len(view.order))
+        if not slots:
+            return
+        panel = slots[0].unionall(slots[1:]).inflate(56, 56)
+        surface.blit(self.art.board(panel.size), panel.topleft)
+        arrow = self.art.arrow(26)
+        for index, rect in enumerate(slots):
+            filled = index < view.placed
+            surface.blit(self.art.slot(rect.size, filled=filled), rect.topleft)
+            if filled and view.plant.plant_id is not None:
+                picture = self.art.stage_card(view.plant.plant_id, view.order[index], int(rect.width * 0.74))
+                if picture is not None:
+                    surface.blit(picture, picture.get_rect(center=(rect.centerx, rect.centery - 2)))
+            elif index == view.placed:
+                t = now - motion.slot_pulse
+                if 0 <= t < HALO_SECONDS:
+                    pulse = 0.55 + 0.45 * math.sin(t * 2 * math.pi / 0.9)
+                    _blit_faded(surface, self.art.halo((rect.width + 24, rect.height + 24)), rect.center, pulse)
+            if index < len(slots) - 1:
+                surface.blit(arrow, arrow.get_rect(center=(rect.right + 17, rect.centery)))
 
 
-__all__ = ["SerraRenderer", "POT_RECTS"]
+__all__ = [
+    "Flight",
+    "PlantView",
+    "SceneView",
+    "SerraMotion",
+    "SerraRenderer",
+    "TitoCast",
+    "Tween",
+    "symptom_anchor",
+]

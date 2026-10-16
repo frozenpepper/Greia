@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.plant.state_puddle - too much water: soggy dark soil on the
+       plant-stage mound (base x128 y212), water pooling over it and two drops.
+       Drawn over a plant-stage picture. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="state_puddle_water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B9D6F2"/>
+      <stop offset="1" stop-color="#92BDE8"/>
+    </linearGradient>
+    <!-- ocean light -> ocean (drops) -->
+    <linearGradient id="state_puddle_drop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#92BDE8"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="soil">
+    <path d="M72 227 C78 205 104 200 128 200 C152 200 178 205 184 227 Z" fill="#775132" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+  </g>
+  <g id="water">
+    <path d="M58 222 C58 206 92 204 128 204 C164 204 198 206 198 222 C198 236 58 236 58 222 Z" fill="url(#state_puddle_water)" stroke="#4A7DB3" stroke-width="3" stroke-linejoin="round" opacity="0.92"/>
+    <path d="M76 216 C90 211 106 210 120 210 M144 227 C160 227 174 226 186 222" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.8"/>
+    <ellipse cx="164" cy="215" rx="12" ry="3" fill="none" stroke="#FFFFFF" stroke-width="2.2" opacity="0.7"/>
+  </g>
+  <g id="drops" fill="url(#state_puddle_drop)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round">
+    <path d="M62 150 C70 162 74 170 74 176 C74 184 50 184 50 176 C50 170 54 162 62 150 Z"/>
+    <path d="M200 166 C206 175 209 181 209 186 C209 192 191 192 191 186 C191 181 194 175 200 166 Z"/>
+  </g>
+</svg>

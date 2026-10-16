@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.garden.watering_can - blue watering can, long spout with a rose
+       to the right, carry handle on top. Piccola Serra "water" care.
+       Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="watering_can_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#92BDE8"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow"><ellipse cx="118" cy="230" rx="90" ry="11" fill="#6A5147" opacity="0.14"/></g>
+  <g id="can" stroke="#4B372F" stroke-linejoin="round">
+    <path d="M58 104 C58 54 150 54 150 104" fill="none" stroke-width="18" stroke-linecap="round"/>
+    <path d="M58 104 C58 54 150 54 150 104" fill="none" stroke="#4A7DB3" stroke-width="10" stroke-linecap="round"/>
+    <path d="M150 176 L210 104 L222 114 L166 196 Z" fill="url(#watering_can_body)" stroke-width="4"/>
+    <path d="M200 96 L226 72 C236 66 248 78 242 88 L222 116 Z" fill="#4A7DB3" stroke-width="4"/>
+    <path d="M34 112 C34 100 174 100 174 112 L168 210 C168 222 40 222 40 210 Z" fill="url(#watering_can_body)" stroke-width="4.5"/>
+    <ellipse cx="104" cy="112" rx="70" ry="13" fill="#B9D6F2" stroke-width="4"/>
+    <path d="M42 174 C78 184 132 184 170 174" fill="none" stroke="#4A7DB3" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <g id="rose" fill="#FFFBEB">
+    <circle cx="232" cy="80" r="2.6"/><circle cx="238" cy="88" r="2.6"/><circle cx="228" cy="90" r="2.6"/>
+  </g>
+  <path d="M54 130 L58 196" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" opacity="0.6"/>
+</svg>

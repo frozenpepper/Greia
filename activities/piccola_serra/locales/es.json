@@ -4,18 +4,8 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Mi pequeño invernadero",
-    "hud.harvest": "Cosecha: 🧺 {count}",
-    "tool.seeds": "🌱 Semillas",
-    "tool.water": "💧 Regar",
-    "tool.sun": "☀️ Sol",
-    "tool.harvest": "🧺 Recoger",
-    "plant.sunflower": "Girasol 🌻",
-    "plant.strawberry": "Fresa 🍓",
-    "plant.tulip": "Tulipán 🌷",
-    "plant.carrot": "Zanahoria 🥕",
-    "victory.title": "¡Qué cosecha tan bonita! 🌻🍓🥕",
-    "victory.subtitle": "¡Tu invernadero es un paraíso!",
-    "btn.play_again": "🎉 ¡Planta más!"
+    "victory.title": "¡Qué buena cosecha!",
+    "btn.play_again": "Otra vez"
   },
   "audio": {}
 }

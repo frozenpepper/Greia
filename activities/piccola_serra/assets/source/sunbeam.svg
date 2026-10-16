@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- Piccola Serra: sunlight falling from the sunny pane onto the pot spot (transparent
+       overlay over the greenhouse; flat translucent shafts, no blur). -->
+  <g id="beams" fill="#FFF3C4">
+    <path d="M60 96 L196 96 L600 470 L404 470 Z" opacity="0.26"/>
+    <path d="M196 96 L300 96 L650 440 L560 470 Z" opacity="0.2"/>
+  </g>
+  <ellipse cx="512" cy="472" rx="150" ry="14" fill="#FFF3C4" opacity="0.45"/>
+</svg>

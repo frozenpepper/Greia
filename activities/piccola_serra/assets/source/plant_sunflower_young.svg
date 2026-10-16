@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Greia prop: prop.plant.sunflower_young. Piccola Serra plant stage; flat Greia vector (GREIA_SVG_AUTHORING_RULES).
+       Base (soil mound top) at x128 y212 so every stage stacks on the same pot spot. -->
+  <defs>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="sunflower_young_leaf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9BD4A6"/><stop offset="1" stop-color="#59B86A"/></linearGradient>
+    <!-- leaf light -> leaf (bud) -->
+    <linearGradient id="sunflower_young_bud" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9BD4A6"/><stop offset="1" stop-color="#59B86A"/></linearGradient>
+    <!-- soil (orange+ink 60%) light -> base -->
+    <linearGradient id="sunflower_young_soil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B08460"/><stop offset="1" stop-color="#8E5F33"/></linearGradient>
+  </defs>
+  <g id="shadow"><ellipse cx="128" cy="230" rx="58" ry="9" fill="#6A5147" opacity="0.14"/></g>
+  <g id="soil"><path d="M74 226 C80 206 104 202 128 202 C152 202 176 206 182 226 Z" fill="url(#sunflower_young_soil)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/><path d="M96 212 C104 208 112 207 120 207" fill="none" stroke="#D0B5A0" stroke-width="3" stroke-linecap="round" opacity="0.8"/></g>
+  <g id="stems" fill="none" stroke-linecap="round" stroke-linejoin="round"><g stroke="#4B372F"><path d="M128 212C128 209 128 201 128 195C128 189 128 183 128 178C128 172 128 166 128 160C128 154 128 149 128 144C128 138 128 133 128 127C128 121 128 118 128 110C128 102 128 87 128 82" stroke-width="14"/></g><g stroke="#57A963"><path d="M128 212C128 209 128 201 128 195C128 189 128 183 128 178C128 172 128 166 128 160C128 154 128 149 128 144C128 138 128 133 128 127C128 121 128 118 128 110C128 102 128 87 128 82" stroke-width="8"/></g></g>
+  <g id="leaves" fill="url(#sunflower_young_leaf)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"><path d="M128 190C117 162 155 152 181 166C175 196 141 217 128 190Z"/><path d="M135 187L165 174" fill="none" stroke="#537E4F" stroke-width="2.2" stroke-linecap="round"/><path d="M128 182C115 210 81 188 75 158C101 144 139 154 128 182Z"/><path d="M121 179L91 166" fill="none" stroke="#537E4F" stroke-width="2.2" stroke-linecap="round"/><path d="M128 156C120 130 155 124 177 138C170 164 138 182 128 156Z"/><path d="M135 154L162 144" fill="none" stroke="#537E4F" stroke-width="2.2" stroke-linecap="round"/><path d="M128 148C118 174 86 156 79 130C101 116 136 122 128 148Z"/><path d="M121 146L94 136" fill="none" stroke="#537E4F" stroke-width="2.2" stroke-linecap="round"/><path d="M128 122C123 101 151 97 168 110C161 131 135 143 128 122Z"/><path d="M134 120L156 114" fill="none" stroke="#537E4F" stroke-width="2.2" stroke-linecap="round"/><path d="M128 114C121 135 95 123 88 102C105 89 133 93 128 114Z"/><path d="M122 112L100 106" fill="none" stroke="#537E4F" stroke-width="2.2" stroke-linecap="round"/></g>
+  <g id="front"><g transform="translate(128 82)"><path d="M0 -13.0 C9 -10 11 4 0 8 C-11 4 -9 -10 0 -13 Z" fill="url(#sunflower_young_bud)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/><path d="M0 -11 L0 5" stroke="#537E4F" stroke-width="2" stroke-linecap="round"/></g></g>
+</svg>

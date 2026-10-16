@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- Piccola Serra: greenhouse interior (opaque base layer). Glass panes with the
+       sunny sky and meadow outside, sun in the left pane (light comes from the upper
+       left), cream frame, low plank wall, potting bench (top y 470) and tiled floor.
+       Recipe docs/design/GREIA_SVG_AUTHORING_RULES.md; interaction area x112-912 calm. -->
+  <defs>
+    <!-- sky light -> sky -->
+    <linearGradient id="greenhouse_sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EAF6FC"/>
+      <stop offset="1" stop-color="#CFEAF7"/>
+    </linearGradient>
+    <!-- sunshine glow (light source) -->
+    <radialGradient id="greenhouse_glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF3C4"/>
+      <stop offset="1" stop-color="#FFF3C4" stop-opacity="0"/>
+    </radialGradient>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="greenhouse_sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDF8A"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+    <!-- sand light -> sand (plank wall) -->
+    <linearGradient id="greenhouse_wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F6ECD6"/>
+      <stop offset="1" stop-color="#EEDDBA"/>
+    </linearGradient>
+    <!-- orange/sand light -> wood (orange mix ink 25%) -->
+    <linearGradient id="greenhouse_wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E2B07A"/>
+      <stop offset="1" stop-color="#C98E58"/>
+    </linearGradient>
+    <!-- peach -> peach shade (terracotta floor) -->
+    <linearGradient id="greenhouse_floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F3C7A2"/>
+      <stop offset="1" stop-color="#E6AC82"/>
+    </linearGradient>
+  </defs>
+  <g id="outside">
+    <rect width="1024" height="600" fill="url(#greenhouse_sky)"/>
+    <circle cx="160" cy="150" r="92" fill="url(#greenhouse_glow)"/>
+    <g stroke="#F39A38" stroke-width="7" stroke-linecap="round">
+      <path d="M160 86 L160 70 M160 214 L160 230 M96 150 L80 150 M224 150 L240 150 M115 105 L104 94 M205 195 L216 206 M205 105 L216 94 M115 195 L104 206"/>
+    </g>
+    <circle cx="160" cy="150" r="40" fill="url(#greenhouse_sun)" stroke="#4B372F" stroke-width="3.5"/>
+    <ellipse cx="146" cy="134" rx="12" ry="8" fill="#FFFFFF" opacity="0.7"/>
+    <path d="M430 150 C424 136 440 126 452 132 C458 116 482 114 490 128 C502 122 516 130 514 142 C524 144 524 156 512 156 L436 156 C426 156 424 150 430 150 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M790 128 C786 118 796 112 806 116 C812 104 830 104 836 114 C846 110 856 118 852 126 L798 128 Z" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M0 312 C90 284 180 280 270 300 C360 276 470 274 560 296 C660 272 760 272 850 294 C930 280 990 282 1024 292 L1024 420 L0 420 Z" fill="#C6E0CF"/>
+    <path d="M0 352 C120 330 250 328 380 344 C520 326 680 324 820 342 C900 332 970 334 1024 340 L1024 420 L0 420 Z" fill="#A6D6A6"/>
+    <g fill="#8FC793">
+      <circle cx="600" cy="338" r="12"/><circle cx="616" cy="332" r="15"/><circle cx="632" cy="339" r="11"/>
+      <circle cx="300" cy="342" r="10"/><circle cx="313" cy="337" r="12"/>
+    </g>
+  </g>
+  <g id="frame" fill="#FFF6E3" stroke="#4B372F" stroke-width="3" stroke-linejoin="round">
+    <path d="M-10 28 L1034 28 L1034 -10 L-10 -10 Z"/>
+    <path d="M60 28 L120 70 L130 70 L72 28 Z M330 28 L345 70 L355 70 L342 28 Z M682 28 L669 70 L679 70 L694 28 Z M952 28 L894 70 L904 70 L964 28 Z"/>
+    <path d="M-10 64 L1034 64 L1034 78 L-10 78 Z"/>
+    <path d="M18 78 L36 78 L36 410 L18 410 Z M332 78 L346 78 L346 410 L332 410 Z M678 78 L692 78 L692 410 L678 410 Z M988 78 L1006 78 L1006 410 L988 410 Z"/>
+    <path d="M176 78 L186 78 L186 410 L176 410 Z M838 78 L848 78 L848 410 L838 410 Z M505 78 L515 78 L515 300 L505 300 Z"/>
+    <path d="M-10 296 L1034 296 L1034 306 L-10 306 Z"/>
+    <path d="M38 96 L64 82 M352 96 L378 82 M698 96 L724 82" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.8"/>
+  </g>
+  <g id="glass" fill="#FFFFFF" opacity="0.35">
+    <path d="M60 110 L110 86 L110 104 L60 128 Z M380 110 L440 82 L440 98 L380 126 Z M720 110 L780 82 L780 98 L720 126 Z"/>
+  </g>
+  <g id="wall">
+    <path d="M-10 404 L1034 404 L1034 548 L-10 548 Z" fill="url(#greenhouse_wall)" stroke="#4B372F" stroke-width="3"/>
+    <path d="M-10 440 L1034 440 M-10 476 L1034 476 M-10 512 L1034 512" stroke="#D9C59E" stroke-width="2.5"/>
+    <path d="M-10 404 L1034 404 L1034 416 L-10 416 Z" fill="#FFF6E3" stroke="#4B372F" stroke-width="3"/>
+  </g>
+  <g id="shelf">
+    <ellipse cx="910" cy="352" rx="86" ry="6" fill="#6A5147" opacity="0.14"/>
+    <rect x="820" y="330" width="184" height="14" rx="5" fill="url(#greenhouse_wood)" stroke="#4B372F" stroke-width="3"/>
+    <path d="M838 344 L846 362 M986 344 L978 362" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/>
+    <path d="M848 288 C836 270 846 254 860 262 C866 246 886 248 888 264 C902 258 910 274 898 288 Z" fill="#7CC889" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M846 290 L900 290 L894 330 L852 330 Z" fill="#E9875C" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M842 286 L904 286 L904 296 L842 296 Z" fill="#F2A27A" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M938 300 C930 280 944 270 952 282 C956 266 974 266 974 282 C984 274 994 290 982 300 Z" fill="#59B86A" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="950" cy="286" r="5" fill="#F46F61" stroke="#4B372F" stroke-width="2"/><circle cx="968" cy="282" r="5" fill="#FFC234" stroke="#4B372F" stroke-width="2"/>
+    <path d="M934 300 L986 300 L980 330 L940 330 Z" fill="#E9875C" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M854 302 L860 322 M944 308 L948 324" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g id="floor">
+    <path d="M-10 540 L1034 540 L1034 610 L-10 610 Z" fill="url(#greenhouse_floor)" stroke="#4B372F" stroke-width="3"/>
+    <path d="M-10 572 L1034 572 M96 540 L80 572 M256 540 L248 572 M416 540 L414 572 M608 540 L610 572 M768 540 L776 572 M928 540 L944 572 M60 572 L40 600 M220 572 L206 600 M512 572 L512 600 M800 572 L816 600 M970 572 L990 600" stroke="#CF936B" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <g id="bench">
+    <ellipse cx="512" cy="552" rx="420" ry="10" fill="#6A5147" opacity="0.14"/>
+    <path d="M150 500 L176 500 L172 552 L154 552 Z M848 500 L874 500 L870 552 L852 552 Z" fill="#C98E58" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M100 486 L924 486 L920 508 L104 508 Z" fill="#C98E58" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="86" y="466" width="852" height="22" rx="8" fill="url(#greenhouse_wood)" stroke="#4B372F" stroke-width="3.5"/>
+    <path d="M110 472 L360 472" stroke="#F3D3A8" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>

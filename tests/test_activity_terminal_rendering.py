@@ -11,66 +11,28 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 class FirstPartyTerminalRenderingContractTests(unittest.TestCase):
     """Keep the Acer-sensitive terminal loops on the shared owner."""
 
-    SOURCES = {
-        "serra": (
-            PROJECT_ROOT / "activities" / "piccola_serra" / "main.py",
-            PROJECT_ROOT / "activities" / "piccola_serra" / "serra_app.py",
-            PROJECT_ROOT / "activities" / "piccola_serra" / "serra_renderer.py",
-            PROJECT_ROOT / "activities" / "piccola_serra" / "serra_model.py",
-        ),
-    }
+    def test_little_green_thumb_uses_the_shared_completion_overlay(self) -> None:
+        """Piccola Serra moved to the ADR 0037 kit (its old per-Activity
+        terminal loop and victory gate are retired): the shared cast
+        completion scene is a modal Overlay, gameplay drawing and hints stop
+        in the terminal state, and facts are published once each with
+        per-visit keys."""
 
-    def _source(self, activity: str) -> str:
-        return "\n".join(path.read_text(encoding="utf-8") for path in self.SOURCES[activity])
-
-    def test_all_affected_activities_use_prepared_terminal_owner_and_stable_action(self) -> None:
-        for activity in self.SOURCES:
-            with self.subTest(activity=activity):
-                source = self._source(activity)
-                self.assertIn("PygameCompletionScreen", source)
-                self.assertIn("completion.prepare", source)
-                self.assertIn("completion.draw", source)
-                self.assertIn("completion.primary_contains", source)
-                self.assertIn("clock.tick(25)", source)
-
-    def test_terminal_paths_have_no_frame_sized_alpha_modal(self) -> None:
-        frame_overlay = re.compile(
-            r"Surface\(\(REFERENCE_WIDTH,\s*REFERENCE_HEIGHT\),\s*pygame\.SRCALPHA\)"
+        root = PROJECT_ROOT / "activities" / "piccola_serra"
+        app = (root / "serra_app.py").read_text(encoding="utf-8")
+        services = (root / "serra_services.py").read_text(encoding="utf-8")
+        self.assertIn("CompletionOverlay(self.completion", app)
+        self.assertIn("CompletionScene(self.kit", app)
+        self.assertIn("self.completion.prepare(", app)
+        self.assertIn("if self.state is AppState.PLAYING:\n            self._maybe_hint(now)", app)
+        self.assertIn("if self.state is not AppState.TERMINAL:\n            self.renderer.draw(", app)
+        self.assertIsNone(
+            re.search(r"Surface\(\(REFERENCE_WIDTH,\s*REFERENCE_HEIGHT\),\s*pygame\.SRCALPHA\)", app)
         )
-        for activity in self.SOURCES:
-            with self.subTest(activity=activity):
-                self.assertIsNone(frame_overlay.search(self._source(activity)))
-
-    def test_active_simulation_is_structurally_after_terminal_gate(self) -> None:
-        serra = self._source("serra")
-        # Victory gate must be before the reference render marker.
-        # Monolith used `if is_victory:` while decomposed uses
-        # `if self.model.is_victory:` – accept either but require ordering.
-        victory_markers_serra = [
-            "if is_victory:\n            if not completion_presented:",
-            "if self.model.is_victory:\n                if not self.completion_presented:",
-            "if self.model.is_victory:",
-        ]
-        victory_idx_serra = min(
-            (serra.index(m) for m in victory_markers_serra if m in serra),
-            default=None,
-        )
-        self.assertIsNotNone(victory_idx_serra, "serra must contain victory gate")
-        assert victory_idx_serra is not None
-        # Render marker lives in serra_app._draw (`# RENDER TO CANVAS`)
-        self.assertIn("# RENDER TO CANVAS", serra)
-        self.assertLess(victory_idx_serra, serra.index("# RENDER TO CANVAS"))
-        # Active particle update must be gated behind victory check.
-        self.assertTrue(
-            "if not is_victory:\n            surviving = []" in serra
-            or "if not self.model.is_victory:\n            surviving = []" in serra,
-            "serra must gate particle update on non-victory",
-        )
-
-    def test_completion_facts_are_declared_and_once_only_terminal_transitions(self) -> None:
-        serra = self._source("serra")
-        # Harvest completion is emitted once; one-liner vs multi-line still counts once.
-        self.assertEqual(serra.count('"greenhouse.harvest_completed"'), 1)
+        self.assertEqual(services.count('"greenhouse.harvest_completed"'), 1)
+        self.assertEqual(services.count('"greenhouse.plant_grown"'), 1)
+        self.assertIn('f"piccola-serra:{visit_id}"', services)
+        self.assertEqual(app.count("self._visit_id = uuid4().hex"), 2)  # start + restart
 
     def test_magical_labyrinth_uses_the_shared_completion_overlay(self) -> None:
         """Il Labirinto Magico moved to the ADR 0037 kit: the shared cast

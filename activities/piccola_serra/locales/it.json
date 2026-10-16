@@ -4,18 +4,8 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "La Piccola Serra",
-    "hud.harvest": "Raccolto: 🧺 {count}",
-    "tool.seeds": "🌱 Semi",
-    "tool.water": "💧 Annaffia",
-    "tool.sun": "☀️ Sole",
-    "tool.harvest": "🧺 Raccogli",
-    "plant.sunflower": "Girasole 🌻",
-    "plant.strawberry": "Fragola 🍓",
-    "plant.tulip": "Tulipano 🌷",
-    "plant.carrot": "Carota 🥕",
-    "victory.title": "Che magnifico raccolto! 🌻🍓🥕",
-    "victory.subtitle": "La tua serra è un vero paradiso!",
-    "btn.play_again": "🎉 Coltiva Ancora!"
+    "victory.title": "Che bel raccolto!",
+    "btn.play_again": "Ancora"
   },
   "audio": {
     "activity.title": {
