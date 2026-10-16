@@ -98,6 +98,19 @@ SPARKLE_SECONDS = 0.6
 BUMP_SECONDS = 0.6
 KEY_SPEED = 520.0      # logical px/s while an arrow / D-pad is held
 STICK_SPEED = 600.0    # at full left-stick deflection
+# With no child input for this long the rain of letters rests (no new drops,
+# no more hints) so an unattended screen settles and stops presenting; the
+# next child input resumes it.  Without it the basket sat under a lucky letter
+# every so often, which counted as a catch and restarted the round forever.
+AWAY_SECONDS = 40.0
+_PRESENCE_EVENTS = frozenset(
+    getattr(pygame, name)
+    for name in (
+        "KEYDOWN", "MOUSEMOTION", "MOUSEBUTTONDOWN", "FINGERDOWN", "JOYAXISMOTION",
+        "JOYBUTTONDOWN", "JOYHATMOTION", "CONTROLLERAXISMOTION", "CONTROLLERBUTTONDOWN",
+    )
+    if hasattr(pygame, name)
+)
 
 
 COMPLETION_PALETTE = CompletionPalette(
@@ -165,6 +178,8 @@ class ForestaApp:
         self._ready_published = False
         self._full_frame = True  # next frame must repaint everything
         self._frame_key: tuple | None = None
+        self._signature: tuple | None = None
+        self._last_input = clock()
         self._last_tick = clock()
         self._quiet_since = clock()
         self._hints = IdleHintScheduler(now=self._quiet_since)
@@ -223,7 +238,9 @@ class ForestaApp:
 
     # -- main loop -------------------------------------------------------------------------
     def run(self) -> int:
-        # Falling letters animate while playing; the completion scene is ambient.
+        # Letters in the air, effects and Leo's moves animate at full rate; a
+        # static screen (sign pulse, speech glow, basket glide) only presents
+        # when its visual signature changes.  There is no decorative motion.
         frames = FrameGovernor(redraw_on_input=True)
         # Dirty rectangles: while only letters, basket, Leo and the sign move
         # over the cached glade, frames re-render and push just their
@@ -231,6 +248,8 @@ class ForestaApp:
         previous: list[pygame.Rect] | None = None
         while self._running and not activity_stop_requested():
             for event in frames.events():
+                if event.type in _PRESENCE_EVENTS:
+                    self._last_input = self.clock()
                 self._handle_event(event)
                 if event.type != pygame.MOUSEMOTION:
                     self._full_frame = True
@@ -239,7 +258,12 @@ class ForestaApp:
                 if repeat is not None:
                     self._dispatch(repeat)
             self.tick()
-            frame = frames.frame(animating=self.state is not AppState.TERMINAL, ambient=True)
+            if self._visual_changed():
+                frames.invalidate()
+            frame = frames.frame(
+                dirty=self.controls.layer.invalidation.should_draw,
+                animating=self._animating(),
+            )
             if frame is FrameKind.FULL:
                 previous = self._present(previous)
                 if not self._ready_published:
@@ -250,6 +274,55 @@ class ForestaApp:
             frames.wait(polling=self._input.repeating)
         self._save()
         return 0
+
+    def _animating(self) -> bool:
+        """True while something on screen moves on its own (full frame rate)."""
+
+        if self.state is AppState.TERMINAL:
+            return False
+        cast = self.renderer.cast
+        return bool(
+            self.field.letters
+            or self.state is AppState.FINALE
+            or self._sparkle is not None
+            or self._bump is not None
+            or (cast is not None and cast.animating)
+            or self.clock() < self._point_until
+        )
+
+    def _visual_changed(self) -> bool:
+        """True once per change of everything a static frame is drawn from."""
+
+        speaking = self.speech_queue.current_tag in {"prompt", "word"}
+        pointing = self.clock() < self._point_until
+        cast = self.renderer.cast
+        # The sign's glow pulses while it speaks or Leo points; afterwards it
+        # holds its last phase instead of pulsing for as long as the hint stays.
+        signature = (
+            self.state,
+            speaking,
+            self._hint,
+            self._pulse_phase % 2 if (speaking or (self._hint and pointing)) else 0,
+            pointing,
+            self._revealed,
+            self.round.done,
+            round(self.basket.x),
+            cast.pose if cast is not None else None,
+        )
+        if signature == self._signature:
+            return False
+        self._signature = signature
+        return True
+
+    def _away(self, now: float) -> bool:
+        """True when the child has walked away (no input for ``AWAY_SECONDS``)."""
+
+        return now - self._last_input >= AWAY_SECONDS
+
+    def _resting(self, now: float) -> bool:
+        """True while the letter rain pauses for an absent child."""
+
+        return self.state is AppState.PLAYING and self._away(now)
 
     def _present(self, previous: list[pygame.Rect] | None) -> list[pygame.Rect] | None:
         """Present one frame; return this frame's sprite regions (or None)."""
@@ -295,7 +368,7 @@ class ForestaApp:
             cast.update()
         self._move_basket(dt)
         if self.state in {AppState.INTRO, AppState.PLAYING, AppState.CAUGHT}:
-            for event in self.field.update(dt, self.basket.x):
+            for event in self.field.update(dt, self.basket.x, spawn=not self._resting(now)):
                 self._full_frame = True
                 self._on_field_event(event.kind, event.letter, now)
         self._advance_state(now)
@@ -376,7 +449,7 @@ class ForestaApp:
         return result is not UiEventResult.IGNORED
 
     def _note_input(self) -> None:
-        self._quiet_since = self.clock()
+        self._last_input = self._quiet_since = self.clock()
         self._hints.reset(self._quiet_since)
 
     def _move_basket(self, dt: float) -> None:
@@ -528,6 +601,7 @@ class ForestaApp:
                 self._quiet_since = now
             if (
                 not self.speech_queue.busy
+                and not self._away(now)
                 and self._hints.is_due(now, self._quiet_since)
             ):
                 self._give_idle_hint(now)

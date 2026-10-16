@@ -279,6 +279,19 @@ class OrchestraAppLoopTests(unittest.TestCase):
         self.assertIs(self.app.phase, Phase.LISTEN)
         self.assertGreaterEqual(self.app.session.current.hints, 2)
 
+    def test_hint_replays_do_not_restart_the_back_off_forever(self) -> None:
+        self.wait_for(Phase.ECHO)
+        self.advance(6.2 + 12.2 + 6.0)  # point, then the replay of the call
+        self.wait_for(Phase.ECHO)
+        hints = self.app.session.current.hints
+        self.assertEqual(hints, 2)
+        self.advance(24.5 + 6.0)  # third and last hint, its replay finished
+        self.wait_for(Phase.ECHO)
+        self.assertEqual(self.app.session.current.hints, 3)
+        self.advance(120.0)  # an absent child: no further hints or replays
+        self.assertIs(self.app.phase, Phase.ECHO)
+        self.assertEqual(self.app.session.current.hints, 3)
+
     def test_a_concert_plays_to_the_shared_completion_scene(self) -> None:
         for round_index in range(SESSION_ECHOES):
             self.wait_for(Phase.ECHO)

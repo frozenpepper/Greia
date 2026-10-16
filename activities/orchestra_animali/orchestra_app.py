@@ -257,6 +257,7 @@ class OrchestraApp:
         self._echo_since = clock()
         self._hints = IdleHintScheduler(now=self._last_input)
         self._last_sway = 0
+        self._hint_replay = False  # the call being replayed is an idle hint
         self.playalong.load_saved()
         self._start_concert()
 
@@ -537,6 +538,7 @@ class OrchestraApp:
         """A musician steps into the spotlight with a "copy my rhythm" call."""
 
         invitation = self.session.invite()
+        self._hint_replay = False
         now = self.clock()
         lead = invitation.lead
         self.motion.spotlight = lead
@@ -582,7 +584,11 @@ class OrchestraApp:
         self._judging = False
         self._echo_since = now
         self._last_input = now
-        self._hints.reset(now)
+        if not self._hint_replay:
+            # A hint's own replay must not restart the back-off, or the band
+            # would replay the call forever for a child who walked away.
+            self._hints.reset(now)
+        self._hint_replay = False
         self.motion.bubble = Bubble(invitation.lead, "echo", invitation.pattern.span)
         self.motion.borrow(invitation.lead, "pose_point", now + 1.4)
         self.audio.say(BAND[invitation.lead].character, "ready.go")
@@ -647,6 +653,7 @@ class OrchestraApp:
     def _try_again(self) -> None:
         invitation = self.session.current
         assert invitation is not None
+        self._hint_replay = False
         self.phase = Phase.LISTEN
         self.feedback[invitation.lead].try_again()
         self.audio.cue("boop")
@@ -674,6 +681,7 @@ class OrchestraApp:
             self.motion.ring((x, y - CAST_HEIGHT // 2), now)
             self.motion.ring((x, y - CAST_HEIGHT // 2), now + 0.35)
         else:
+            self._hint_replay = True
             self._play_call(invitation.pattern, 0.3, rings=True)
         self._dirty = True
 

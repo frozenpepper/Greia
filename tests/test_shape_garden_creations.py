@@ -9,7 +9,9 @@ from __future__ import annotations
 import hashlib
 import io
 import os
+import tempfile
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
@@ -23,6 +25,18 @@ from activities.shape_garden import garden_app
 from activities.shape_garden.garden_app import GardenApp
 from activities.shape_garden.garden_content import EXPORT_NAME, GARDEN_HEIGHT, GARDEN_WIDTH, SHAPE_KINDS
 from activities.shape_garden.garden_project_repository import GardenProjectRepository
+from greia_platform.activities import ActivityRegistry, RuntimeCatalogue
+from greia_platform.history import HistoryPolicy, ProfileHistoryStore, ProgressionPolicy
+from greia_platform.profiles import ProfileStore
+from greia_platform.trust import ActivitySource, PackageTrust
+
+import hermetic_volume
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def setUpModule() -> None:
+    hermetic_volume.install_for_module()
 
 
 class MemoryStorage:
@@ -201,6 +215,52 @@ class GardenCreationsTests(unittest.TestCase):
         self.assertFalse(self.app._accept_background("bad"))
         self.assertEqual(self.app.state, before)
         self.assertFalse(any(name.startswith("garden/backgrounds/") for name in self.storage.files))
+
+    def test_completion_event_key_fits_platform_limit_and_is_accepted_by_real_validator(self):
+        """The first-garden badge was lost to a 76-byte key vs the 64-byte limit."""
+        self.plant("heart", (300, 200))
+        with mock.patch.object(garden_app, "emit_activity_event") as emit:
+            self.app._publish_project()
+        key = emit.call_args.kwargs["idempotency_key"]
+        policy = HistoryPolicy.load(PROJECT_ROOT / "runtime" / "history-policy.toml")
+        self.assertLessEqual(len(key.encode("utf-8")), policy.max_idempotency_key_bytes)
+        # Stable for the same picture, different for another one.
+        digest = hashlib.sha256(b"a").hexdigest()
+        self.assertEqual(garden_app.composition_event_key(digest), garden_app.composition_event_key(digest))
+        self.assertNotEqual(
+            garden_app.composition_event_key(digest),
+            garden_app.composition_event_key(hashlib.sha256(b"b").hexdigest()),
+        )
+        runtime = RuntimeCatalogue.load(PROJECT_ROOT / "runtime" / "child-runtime.toml")
+        source = ActivitySource(PROJECT_ROOT / "activities", PackageTrust.BUILT_IN, "greia-system")
+        activities = ActivityRegistry([source], runtime).discover()
+        manifest = next(item for item in activities if item.activity_id == "org.greia.shape-garden")
+        progression = ProgressionPolicy.load(PROJECT_ROOT / "runtime" / "progression-policy.toml", activities)
+        with tempfile.TemporaryDirectory() as temporary:
+            profiles = ProfileStore.load(
+                PROJECT_ROOT / "runtime" / "profile-defaults.toml", Path(temporary) / "profiles"
+            )
+            context = profiles.context(profiles.ensure_initialized()[0].profile_id)
+            store = ProfileHistoryStore(context, policy, clock=lambda: 1000.0)
+            store.start_session(manifest, session_id="session-one", package_digest="a" * 64)
+            receipt = store.emit_event(
+                manifest,
+                progression,
+                session_id="session-one",
+                event_id=emit.call_args.args[0],
+                idempotency_key=key,
+                payload=emit.call_args.kwargs["payload"],
+            )
+        self.assertFalse(receipt.duplicate)
+        self.assertEqual(receipt.reward_deltas, (("star", 1),))
+
+    def test_rejected_completion_event_is_reported_not_silent(self):
+        self.plant("heart", (300, 200))
+        with mock.patch.object(garden_app, "emit_activity_event", return_value=None):
+            with mock.patch("builtins.print") as printed:
+                self.app._publish_project()
+        self.assertTrue(any("not accepted" in str(call.args[0]) for call in printed.call_args_list))
+        self.assertEqual(self.app.publish_state, "saved")
 
     def test_round_trip_shared_garden_comes_back_as_a_backdrop(self):
         for index, kind in enumerate(SHAPE_KINDS[:4]):

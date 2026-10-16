@@ -198,6 +198,7 @@ class SillabeActivity:
         self._ring: tuple[int, float] | None = None
         self._display: TrainChallenge | None = session.current_challenge
         self._pulse_phase = 0
+        self._pulse_due = False  # a decorative pulse step is due (ambient frame)
         self._activated = False
         self._opening = True
 
@@ -255,7 +256,8 @@ class SillabeActivity:
                 self._dispatch(repeat)
             if self.tick():
                 self._dirty = True
-            frame = frames.frame(dirty=self._dirty)
+            frame = frames.frame(dirty=self._dirty, ambient=self._pulse_due)
+            self._pulse_due = False
             if frame is FrameKind.FULL:
                 self._render()
                 self.canvas.present()
@@ -628,8 +630,12 @@ class SillabeActivity:
         phase = int(now * 4)
         if phase != self._pulse_phase:
             self._pulse_phase = phase
-            if self._hint_target is not None or now < self._point_until or self._has_pulsing_target():
-                changed = True
+            if now < self._point_until:
+                changed = True  # Leo's hint is essential motion (and short)
+            elif self._hint_target is not None or self._has_pulsing_target():
+                # Pulsing wagon/hint glows are decoration: ambient frames, which
+                # the frame governor freezes once the child has been idle.
+                self._pulse_due = True
         return changed
 
     def _has_pulsing_target(self) -> bool:

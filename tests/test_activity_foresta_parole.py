@@ -275,11 +275,11 @@ class ModelTests(unittest.TestCase):
             return pick
 
         field = ForestField(random.Random(4))
-        field.start(self._target(), stage_spec(1))
+        field.start(Target(catch_catalogue("en")[0], ("M", "S", "W")), stage_spec(1))
         self.assertIsNotNone(self._run_until(field, under(True), FieldEventKind.CAUGHT_TARGET))
-        field.start(self._target(), stage_spec(1))
+        field.start(Target(catch_catalogue("en")[0], ("M", "S", "W")), stage_spec(1))
         self.assertIsNotNone(self._run_until(field, under(False), FieldEventKind.CAUGHT_DECOY))
-        field.start(self._target(), stage_spec(1))
+        field.start(Target(catch_catalogue("en")[0], ("M", "S", "W")), stage_spec(1))
         self.assertIsNotNone(self._run_until(field, lambda f: -1000.0, FieldEventKind.MISSED_TARGET))
 
     def test_guide_sends_a_glowing_target_above_the_basket(self) -> None:
@@ -455,6 +455,38 @@ class AppLoopTests(unittest.TestCase):
         self.assertIn(app.round.current.card.prompt_cue, audio.spoken[spoken:])
         state = app.scene_state()
         self.assertTrue(state.hint or state.leo_pointing)
+
+    def test_an_absent_child_lets_the_screen_settle_and_input_resumes_the_rain(self) -> None:
+        from activities.foresta_parole.foresta_app import AWAY_SECONDS
+
+        app, clock, _, _, events = _make_app()
+        _step(app, clock, AWAY_SECONDS + 12.0)
+        # No input for a long time: no new drops, no more hints, nothing moving.
+        self.assertFalse(app.field.letters)
+        hints = app.round.hints
+        caught = len(events.caught)
+        app._visual_changed()  # absorb the last real change
+        for _ in range(60):
+            _step(app, clock, 0.5, fps=2)
+            self.assertFalse(app._animating())
+            self.assertFalse(app._visual_changed())
+        self.assertEqual(app.round.hints, hints)
+        self.assertEqual(len(events.caught), caught)
+        # The next input brings the letters back.
+        app._note_input()
+        _step(app, clock, 2.0)
+        self.assertTrue(app.field.letters)
+        self.assertTrue(app._animating())
+
+    def test_field_without_spawn_lets_letters_finish_but_drops_nothing_new(self) -> None:
+        field = ForestField(random.Random(3), FieldGeometry())
+        field.start(Target(catch_catalogue("en")[0], ("M", "S", "W")), stage_spec(1))
+        for _ in range(60):
+            field.update(1 / 30, 500.0, spawn=False)
+        self.assertFalse(field.letters)
+        for _ in range(30):
+            field.update(1 / 30, 500.0)
+        self.assertTrue(field.letters)
 
     def test_keyboard_controller_and_pointer_move_the_basket(self) -> None:
         app, clock, audio, _, _ = _make_app()

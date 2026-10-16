@@ -370,11 +370,14 @@ class ForestField:
         return max(candidates, key=lambda l: l.y) if candidates else None
 
     # -- simulation ---------------------------------------------------------------
-    def update(self, dt: float, basket_x: float) -> list[FieldEvent]:
+    def update(self, dt: float, basket_x: float, *, spawn: bool = True) -> list[FieldEvent]:
+        """Advance the simulation; ``spawn=False`` lets the letters in the air
+        finish while no new drop starts (the unattended screen rests)."""
+
         dt = max(0.0, min(0.1, float(dt)))
         self.time += dt
         events: list[FieldEvent] = []
-        if self.active:
+        if self.active and spawn:
             self._timer -= dt
             if self._timer <= 0.0 and self._can_spawn():
                 self._spawn(basket_x)

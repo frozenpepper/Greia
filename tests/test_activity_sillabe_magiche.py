@@ -605,6 +605,23 @@ class AppLoopTests(unittest.TestCase):
         self.assertTrue(app.scene_state().leo_pointing)
         self.assertEqual(app.scene_state().hint_target, "drum")
 
+    def test_idle_pulse_is_ambient_decoration_not_essential_motion(self) -> None:
+        """A pulsing wagon/hint glow must not keep asking for essential frames."""
+        app, now, _, _, queue = build_app(level=1, locale="it")
+        wait_for_input(app, now)
+        while queue.busy:
+            advance(app, now, 0.05)
+        app._hint_target = "drum"
+        app._point_until = 0.0
+        app._pulse_due = False
+        changed_frames = 0
+        for _ in range(8):  # stays inside the first 6 s hint gap
+            now[0] += 0.25
+            if app.tick():
+                changed_frames += 1
+        self.assertEqual(changed_frames, 0)
+        self.assertTrue(app._pulse_due)
+
     def test_vowel_keys_pick_vowel_tiles(self) -> None:
         from sillabe_app import AppState
 

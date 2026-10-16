@@ -180,6 +180,16 @@ class GardenCast:
             self.feedback.draw(target, midbottom)
 
 
+
+def composition_event_key(digest: str) -> str:
+    """Stable per-garden idempotency key that fits the platform's 64-byte limit.
+
+    A 128-bit prefix of the flattened PNG digest keeps the key unique per picture
+    and identical on retry (``composition-`` + 32 hex = 44 bytes).
+    """
+    return f"composition-{digest[:32]}"
+
+
 @dataclass(slots=True)
 class _Press:
     """One pointer press in progress (tray tile or garden shape)."""
@@ -1087,16 +1097,7 @@ class GardenApp:
                 name = self.repository.save_export(payload)
                 self.creations.publish_private_file(name, media_type="image/png", role="composition")
                 self._last_published_digest = digest
-                try:
-                    emit_activity_event(
-                        "creation.completed",
-                        idempotency_key=f"composition-{digest}",
-                        payload={"media_type": "image/png", "shape_count": len(self.state.shapes)},
-                    )
-                except Exception:  # noqa: BLE001
-                    # Progress telemetry must never make a successful child
-                    # creation publication fail or duplicate the Creation.
-                    pass
+                self._report_composition_completed(digest)
             self.publish_state = "saved"
             self.cast.correct()
             self.sounds.play("chime")
@@ -1105,6 +1106,28 @@ class GardenApp:
         except (GardenProjectError, PygamePngError, RuntimeError, ValueError, OSError):
             self.publish_state = "error"
         self.publish_feedback_until = self._clock() + FEEDBACK_SECONDS
+
+    def _report_composition_completed(self, digest: str) -> None:
+        """Report the shared garden as a platform fact; never fail the publication.
+
+        ``emit_activity_event`` returns ``None`` when the platform rejects or cannot
+        take the event. That used to vanish silently (a too-long key hid the first-garden
+        badge for good), so the refusal is printed to the Activity's output for diagnosis
+        (Activities may not import ``logging``; see runtime/child-runtime.toml).
+        """
+        try:
+            receipt = emit_activity_event(
+                "creation.completed",
+                idempotency_key=composition_event_key(digest),
+                payload={"media_type": "image/png", "shape_count": len(self.state.shapes)},
+            )
+        except Exception as exc:  # noqa: BLE001
+            # Progress telemetry must never make a successful child creation
+            # publication fail or duplicate the Creation.
+            print(f"shape_garden: creation.completed event raised: {exc!r}", flush=True)
+            return
+        if receipt is None:
+            print("shape_garden: creation.completed event was not accepted by the platform", flush=True)
 
     # -- per frame --------------------------------------------------------------------------------
 
