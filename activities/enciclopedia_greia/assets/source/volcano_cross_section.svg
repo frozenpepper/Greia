@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<!-- E4-A Volcano: a cut-open volcano. Ground surface at y 345; the conduit
+     (x 505) runs from the crater (y 186) to the magma chamber centred at
+     (505,392). Glow, lava, ash, smoke and pressure bubbles are live overlays. -->
+<defs>
+  <!-- sky light -> warm sand haze -->
+  <linearGradient id="volcano_sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B7DFEC"/><stop offset="1" stop-color="#F3E3C0"/></linearGradient>
+  <!-- cocoa/orange mix (cone) -->
+  <linearGradient id="volcano_cone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9C7560"/><stop offset="1" stop-color="#7A5847"/></linearGradient>
+  <!-- sand shade -> deep earth (underground) -->
+  <linearGradient id="volcano_earth" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B98B62"/><stop offset="1" stop-color="#7C5843"/></linearGradient>
+  <!-- sunshine -> coral (magma) -->
+  <linearGradient id="volcano_magma" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F9A23C"/><stop offset="1" stop-color="#E0573A"/></linearGradient>
+</defs>
+<rect width="1024" height="600" fill="url(#volcano_sky)"/>
+<g id="clouds" fill="#FFFFFF" opacity="0.85"><ellipse cx="250" cy="118" rx="46" ry="12"/><ellipse cx="270" cy="109" rx="24" ry="13"/><ellipse cx="790" cy="122" rx="40" ry="11"/><ellipse cx="808" cy="114" rx="22" ry="11"/></g>
+<g id="far_hills"><path d="M0 300 Q120 262 240 284 Q330 300 380 290 L380 345 H0Z" fill="#B7CFA4"/><path d="M640 292 Q760 258 880 280 Q960 292 1024 282 V345 H640Z" fill="#B7CFA4"/></g>
+<g id="ground_cut">
+  <rect x="0" y="345" width="1024" height="255" fill="url(#volcano_earth)"/>
+  <path d="M0 360 Q260 352 512 362 Q780 372 1024 358 V376 Q780 390 512 380 Q260 370 0 380Z" fill="#C79E70"/>
+  <path d="M0 448 Q200 432 420 444 Q620 456 820 440 Q940 432 1024 444 V470 Q900 460 760 470 Q560 482 360 468 Q160 456 0 474Z" fill="#8E6A52"/>
+  <path d="M0 540 Q240 524 512 536 Q780 548 1024 530 V600 H0Z" fill="#6E4F3D"/>
+  <g fill="#A27D63" stroke="#4B372F" stroke-width="2"><ellipse cx="120" cy="420" rx="16" ry="9"/><ellipse cx="880" cy="410" rx="18" ry="10"/><ellipse cx="200" cy="510" rx="12" ry="7"/><ellipse cx="820" cy="512" rx="14" ry="8"/><ellipse cx="660" cy="430" rx="10" ry="6"/></g>
+</g>
+<g id="grass_surface" stroke="#4B372F" stroke-width="3" stroke-linejoin="round">
+  <path d="M0 345 Q170 336 352 345 V354 Q170 346 0 356Z" fill="#79B865"/>
+  <path d="M658 345 Q840 336 1024 345 V356 Q840 346 658 354Z" fill="#79B865"/>
+</g>
+<g id="pines" stroke="#4B372F" stroke-width="3" stroke-linejoin="round">
+  <rect x="158" y="318" width="8" height="26" fill="#8A5A3C"/><path d="M162 262 L188 326 H136Z" fill="#4E9A62"/>
+  <rect x="856" y="318" width="8" height="26" fill="#8A5A3C"/><path d="M860 266 L884 326 H836Z" fill="#4E9A62"/>
+  <rect x="890" y="326" width="7" height="20" fill="#8A5A3C"/><path d="M893 284 L912 332 H874Z" fill="#5FAA6E"/>
+</g>
+<g id="cone" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+  <path d="M340 347 L466 190 Q505 176 544 190 L670 347Z" fill="url(#volcano_cone)"/>
+  <path d="M378 347 L472 228 Q505 216 538 228 L632 347Z" fill="#8C6553" stroke="none"/>
+  <path d="M418 347 L478 268 Q505 258 532 268 L592 347Z" fill="#A47B64" stroke="none"/>
+  <path d="M452 347 L484 304 Q505 296 526 304 L558 347Z" fill="#8C6553" stroke="none"/>
+  <path d="M362 318 Q382 300 396 284" fill="none" stroke="#C49C82" stroke-width="5" stroke-linecap="round"/>
+</g>
+<g id="crater" stroke="#4B372F" stroke-width="3"><ellipse cx="505" cy="188" rx="38" ry="11" fill="#5E3A2E"/><ellipse cx="505" cy="190" rx="22" ry="6" fill="#C2452D" stroke="none"/></g>
+<g id="conduit" stroke-linecap="round" fill="none">
+  <path d="M505 196 V372" stroke="#4B372F" stroke-width="22"/>
+  <path d="M505 196 V372" stroke="#A8543A" stroke-width="15"/>
+</g>
+<g id="chamber" stroke="#4B372F" stroke-width="3.5">
+  <ellipse cx="505" cy="392" rx="74" ry="32" fill="url(#volcano_magma)"/>
+  <ellipse cx="482" cy="380" rx="26" ry="8" fill="#FCC56A" stroke="none" opacity="0.8"/>
+</g>
+<g id="token_beds" fill="#4B372F" opacity="0.13">
+  <ellipse data-target="magma" data-center="260,205" cx="260" cy="252" rx="40" ry="6"/>
+  <ellipse data-target="vent" data-center="745,205" cx="745" cy="252" rx="40" ry="6"/>
+  <ellipse data-target="style" data-center="260,410" cx="260" cy="457" rx="40" ry="6"/>
+  <ellipse data-target="ash" data-center="745,410" cx="745" cy="457" rx="40" ry="6"/>
+</g>
+</svg>

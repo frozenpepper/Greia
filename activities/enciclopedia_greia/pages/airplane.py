@@ -12,6 +12,7 @@ from greia_platform.typography import FontRole
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        draw_authored_scene,
         draw_caption_ribbon,
         draw_machine_action_button,
         draw_navigation_arrows,
@@ -22,6 +23,7 @@ if __package__ and "." in __package__:
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        draw_authored_scene,
         draw_caption_ribbon,
         draw_machine_action_button,
         draw_navigation_arrows,
@@ -175,31 +177,16 @@ class AirplanePage(EncyclopediaPage):
         self.context.audio.play(item.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        # 1. Cheerful Sunny Sky Background
-        surface.fill((216, 238, 252))
-
-        t = self._time
-
-        # Warm Golden Sun in the upper left corner
-        sun_x, sun_y = 135, 105
-        # Soft glowing corona
-        pygame.draw.circle(surface, (255, 245, 185), (sun_x, sun_y), 38)
-        pygame.draw.circle(surface, (255, 218, 65), (sun_x, sun_y), 26)
-        # Cute smiley face on sun
-        pygame.draw.circle(surface, (180, 110, 20), (sun_x - 7, sun_y - 3), 2.5)
-        pygame.draw.circle(surface, (180, 110, 20), (sun_x + 7, sun_y - 3), 2.5)
-        pygame.draw.arc(surface, (180, 110, 20), (sun_x - 8, sun_y - 4, 16, 12), math.pi, math.tau, 2)
-
-        # Drifting Fluffy Clouds
-        for idx, (base_x, base_y, sz, speed) in enumerate([
-            (80, 220, 60, 8.0),
-            (420, 160, 75, 12.0),
-            (780, 240, 68, 9.0),
-            (260, 390, 55, 7.0),
-            (680, 410, 70, 11.0),
-        ]):
-            cx = int((base_x + t * speed) % 1160) - 80
-            self._draw_cloud(surface, cx, base_y, sz)
+        # 1. Authored sky (sun, high cirrus, low cumulus, world far below).
+        authored = draw_authored_scene(
+            surface,
+            self.context.visuals,
+            "encyclopedia.machines.airplane.sky",
+        )
+        if not authored:
+            self._draw_fallback_sky(surface)
+        else:
+            self._draw_wind_streaks(surface)
 
         # Title at the top
         draw_centered_text(
@@ -241,6 +228,42 @@ class AirplanePage(EncyclopediaPage):
             variant="happy",
             fallback_color=(235, 139, 70),
         )
+
+    # (start x, y, speed px/s): thin air streaks drifting past the flying plane.
+    _WIND_STREAKS = ((120, 262, 46.0), (420, 214, 60.0), (760, 300, 52.0), (300, 372, 40.0))
+
+    def _draw_wind_streaks(self, surface: pygame.Surface) -> None:
+        """Cheap live motion cue over the static authored sky (no allocation)."""
+        for base_x, y, speed in self._WIND_STREAKS:
+            x = int((base_x + self._time * speed) % 1100) - 40
+            pygame.draw.line(surface, (255, 255, 255), (x, y), (x + 30, y), 3)
+
+    def _draw_fallback_sky(self, surface: pygame.Surface) -> None:
+        """Contained procedural sky used only when the authored PNG is absent."""
+        surface.fill((216, 238, 252))
+
+        t = self._time
+
+        # Warm Golden Sun in the upper left corner
+        sun_x, sun_y = 135, 105
+        # Soft glowing corona
+        pygame.draw.circle(surface, (255, 245, 185), (sun_x, sun_y), 38)
+        pygame.draw.circle(surface, (255, 218, 65), (sun_x, sun_y), 26)
+        # Cute smiley face on sun
+        pygame.draw.circle(surface, (180, 110, 20), (sun_x - 7, sun_y - 3), 2.5)
+        pygame.draw.circle(surface, (180, 110, 20), (sun_x + 7, sun_y - 3), 2.5)
+        pygame.draw.arc(surface, (180, 110, 20), (sun_x - 8, sun_y - 4, 16, 12), math.pi, math.tau, 2)
+
+        # Drifting Fluffy Clouds
+        for idx, (base_x, base_y, sz, speed) in enumerate([
+            (80, 220, 60, 8.0),
+            (420, 160, 75, 12.0),
+            (780, 240, 68, 9.0),
+            (260, 390, 55, 7.0),
+            (680, 410, 70, 11.0),
+        ]):
+            cx = int((base_x + t * speed) % 1160) - 80
+            self._draw_cloud(surface, cx, base_y, sz)
 
     def _draw_cloud(self, surface: pygame.Surface, cx: int, cy: int, size: int) -> None:
         s = pygame.Surface((size * 2, size), pygame.SRCALPHA)

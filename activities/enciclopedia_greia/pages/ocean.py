@@ -12,25 +12,35 @@ from greia_platform.typography import FontRole
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_centered_text, draw_presenter, grid_step
+    from .storybook_ink import inked_circle, inked_ellipse, inked_polygon
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_centered_text, draw_presenter, grid_step
+    from pages.storybook_ink import inked_circle, inked_ellipse, inked_polygon
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,6 +88,7 @@ class OceanPage(EncyclopediaPage):
         self._caption_key = "ocean.intro"
         self._world_age = 0.0
         self._salt_age = 0.0
+        self._beam: pygame.Surface | None = None
         self._hotspots = tuple(
             pygame.Rect(cx - 43, cy - 43, 86, 86)
             for cx, cy in (item.center for item in DISCOVERIES)
@@ -181,18 +192,21 @@ class OceanPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        zone_colors = ((61, 155, 199), (39, 99, 151), (16, 38, 79))
-        surface.fill(zone_colors[self._depth.zone_index])
-        draw_centered_text(
+        authored = draw_authored_scene(surface, self.context.visuals, "encyclopedia.earth.ocean.depths")
+        if not authored:
+            # Procedural fallback while the authored runtime rendition is absent.
+            zone_colors = ((61, 155, 199), (39, 99, 151), (16, 38, 79))
+            surface.fill(zone_colors[self._depth.zone_index])
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("ocean.title"),
-            center=(500, 92),
-            size=40,
-            color=(244, 244, 225),
-            role=FontRole.DISPLAY,
+            self.context.palette.ink if authored else (244, 244, 225),
         )
-        self._draw_water_column(surface)
+        if authored:
+            self._draw_live_depths(surface)
+        else:
+            self._draw_water_column(surface)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -212,6 +226,50 @@ class OceanPage(EncyclopediaPage):
             variant="surprised",
             fallback_color=(247, 151, 77),
         )
+
+    # Vertical centre of each teaching zone in the authored cut-away sea.
+    _ZONE_CENTERS_Y = (201, 300, 410)
+
+    def _draw_live_depths(self, surface: pygame.Surface) -> None:
+        """Mark the chosen depth with a small explorer submarine."""
+
+        zone = self._depth.zone_index
+        bob = int(math.sin(self._time * 1.6) * 3)
+        sx, sy = 640, self._ZONE_CENTERS_Y[zone] + bob
+        if zone == OceanDepthModel.ZONE_COUNT - 1:
+            # Only the submarine's own lamp lights the midnight zone.
+            if self._beam is None:
+                # Built once; a translucent lamp cone reveals the deep life.
+                self._beam = pygame.Surface((110, 72), pygame.SRCALPHA)
+                pygame.draw.polygon(self._beam, (255, 240, 170, 70), [(110, 30), (0, 0), (0, 72)])
+            surface.blit(self._beam, (sx - 156, sy - 28))
+        inked_ellipse(surface, (255, 194, 52), (sx - 44, sy - 20, 88, 40))
+        inked_polygon(surface, (255, 194, 52), [(sx - 8, sy - 18), (sx - 4, sy - 34), (sx + 18, sy - 34), (sx + 20, sy - 18)])
+        pygame.draw.line(surface, (75, 55, 47), (sx + 6, sy - 34), (sx + 6, sy - 44), 3)
+        inked_polygon(surface, (243, 154, 56), [(sx + 40, sy - 4), (sx + 54, sy - 14), (sx + 54, sy + 14), (sx + 40, sy + 4)], outline=2)
+        for wx in (sx - 22, sx + 2):
+            inked_circle(surface, (176, 222, 245), (wx, sy), 7, outline=2)
+            pygame.draw.circle(surface, (255, 255, 255), (wx - 2, sy - 3), 2)
+        pygame.draw.ellipse(surface, (255, 236, 160), (sx - 30, sy - 16, 30, 7))
+        zone_labels = ("0–200m", "200–1000m", ">1000m")
+        label = self.context.typography.render(zone_labels[zone], FontRole.CONTROL, 17, (255, 251, 235))
+        surface.blit(label, label.get_rect(midtop=(sx, sy + 26)))
+
+        if self._salt_age > 0:
+            for index in range(24):
+                x = 340 + (index * 41) % 350
+                y = 170 + (index * 53) % 330
+                pygame.draw.circle(surface, (255, 251, 235), (x, y), 2 + (index % 2))
+            salt = self.context.typography.render("≈35‰", FontRole.CONTROL, 18, (255, 251, 235))
+            surface.blit(salt, salt.get_rect(center=(505, 360)))
+
+        if self._world_age > 0:
+            globe = (505, 311)
+            inked_circle(surface, (74, 145, 216), globe, 74)
+            inked_ellipse(surface, (101, 177, 99), (455, 268, 55, 34), outline=2)
+            inked_ellipse(surface, (101, 177, 99), (516, 321, 46, 29), outline=2)
+            inked_ellipse(surface, (101, 177, 99), (470, 340, 30, 18), outline=2)
+            pygame.draw.arc(surface, (255, 210, 94), (422, 228, 166, 166), 0.2, 5.9, 5)
 
     def _draw_water_column(self, surface: pygame.Surface) -> None:
         panel = pygame.Rect(385, 145, 240, 330)
@@ -290,32 +348,47 @@ class OceanPage(EncyclopediaPage):
         )
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (250, 247, 231), item.center, 37)
-            pygame.draw.circle(surface, (52, 61, 66), item.center, 37, 3)
-            cx, cy = item.center
-            if item.discovery_id == "water":
-                pygame.draw.circle(surface, (76, 145, 202), (cx, cy), 21)
-                pygame.draw.ellipse(surface, (103, 175, 101), (cx - 18, cy - 6, 22, 14))
-            elif item.discovery_id == "salt":
-                for ox, oy in ((-13, -9), (10, -10), (-5, 12), (16, 9)):
-                    pygame.draw.circle(surface, (103, 158, 194), (cx + ox, cy + oy), 5)
-            elif item.discovery_id == "light":
-                pygame.draw.circle(surface, (246, 204, 73), (cx - 12, cy - 12), 9)
-                for off in (-9, 2, 13):
-                    pygame.draw.line(surface, (94, 159, 196), (cx - 2 + off, cy), (cx - 8 + off, cy + 24), 3)
-            else:
-                pygame.draw.rect(surface, (20, 43, 79), (cx - 24, cy - 22, 48, 44), border_radius=12)
-                pygame.draw.circle(surface, (102, 224, 211), (cx + 4, cy), 4)
-                pygame.draw.ellipse(surface, (142, 155, 178), (cx - 16, cy + 5, 31, 11))
-            focus_ring(surface, rect, index == self._selected or index == self._hovered)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=item.caption_key == self._caption_key,
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+                token_shape=TOKEN_SHAPE_FELT_TAG,
+            )
+
+    def _draw_icon(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        discovery_id: str,
+    ) -> None:
+        cx, cy = center[0], center[1] + 4  # sit below the felt tag's pin
+        center = (cx, cy)
+        if discovery_id == "water":
+            pygame.draw.circle(surface, (76, 145, 202), (cx, cy), 21)
+            pygame.draw.ellipse(surface, (103, 175, 101), (cx - 18, cy - 6, 22, 14))
+        elif discovery_id == "salt":
+            for ox, oy in ((-13, -9), (10, -10), (-5, 12), (16, 9)):
+                pygame.draw.circle(surface, (103, 158, 194), (cx + ox, cy + oy), 5)
+        elif discovery_id == "light":
+            pygame.draw.circle(surface, (246, 204, 73), (cx - 12, cy - 12), 9)
+            for off in (-9, 2, 13):
+                pygame.draw.line(surface, (94, 159, 196), (cx - 2 + off, cy), (cx - 8 + off, cy + 24), 3)
+        else:
+            pygame.draw.rect(surface, (20, 43, 79), (cx - 24, cy - 22, 48, 44), border_radius=12)
+            pygame.draw.circle(surface, (102, 224, 211), (cx + 4, cy), 4)
+            pygame.draw.ellipse(surface, (142, 155, 178), (cx - 16, cy + 5, 31, 11))
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (250, 247, 231), panel, border_radius=22)
-        pygame.draw.rect(surface, (52, 61, 66), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (48, 54, 58))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (48, 54, 58))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )

@@ -13,6 +13,8 @@ if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
         draw_focus_patch,
         draw_history_action_button,
         draw_navigation_arrows,
@@ -24,6 +26,8 @@ else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
         draw_focus_patch,
         draw_history_action_button,
         draw_navigation_arrows,
@@ -162,9 +166,17 @@ class DinosaursPage(EncyclopediaPage):
         self.context.audio.play(item.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((239, 229, 198))
+        # Authored valley with all three dinosaur body plans side by side.
+        authored = draw_authored_scene(
+            surface,
+            self.context.visuals,
+            "encyclopedia.history.dinosaurs.valley",
+        )
+        if not authored:
+            # Contained procedural fallback when the runtime PNG is absent.
+            surface.fill((239, 229, 198))
         draw_centered_text(surface, self.context.typography, self.context.resources.text("dinosaurs.title"), center=(500, 92), size=40, color=self.context.palette.ink, role=FontRole.DISPLAY)
-        self._draw_scene(surface)
+        self._draw_scene(surface, authored=authored)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -177,7 +189,23 @@ class DinosaursPage(EncyclopediaPage):
         self._draw_caption(surface)
         draw_presenter(surface, self.context.visuals, "leo", position=(925, 565), height=142, variant="default")
 
-    def _draw_scene(self, surface: pygame.Surface) -> None:
+    # Where the authored valley shows each body plan, in silhouette order
+    # (two-legged meat eater, three-horn, long neck): the live "diversity"
+    # pointer bobs just above that dinosaur's head.
+    AUTHORED_POINTER_TIPS = ((468, 226), (562, 330), (656, 174))
+
+    def _draw_authored_pointer(self, surface: pygame.Surface) -> None:
+        tip_x, tip_y = self.AUTHORED_POINTER_TIPS[self._silhouette]
+        tip_y -= int((math.sin(self._time * 4.0) + 1.0) * 4)
+        points = [(tip_x, tip_y), (tip_x - 14, tip_y - 20), (tip_x + 14, tip_y - 20)]
+        pygame.draw.polygon(surface, (255, 211, 92), points)
+        pygame.draw.polygon(surface, (75, 55, 47), points, 3)
+
+    def _draw_scene(self, surface: pygame.Surface, *, authored: bool = False) -> None:
+        if authored:
+            self._draw_authored_pointer(surface)
+            self._draw_overlays(surface)
+            return
         # Ground with subtle texture
         pygame.draw.rect(surface, (177, 194, 126), (330, 365, 350, 92), border_radius=24)
         for gx in range(340, 670, 48):
@@ -205,7 +233,7 @@ class DinosaursPage(EncyclopediaPage):
             pygame.draw.ellipse(surface, color, (430, 300, 145, 62))
             pygame.draw.circle(surface, shadow_col, (586, 312), 34)
             pygame.draw.circle(surface, color, (586, 310), 34)
-            pygame.draw.circle(surface, (255, 255, 255, 16), (578, 296, 16))
+            pygame.draw.circle(surface, (255, 255, 255, 16), (578, 296), 16)
             pygame.draw.polygon(surface, shadow_col, [(573, 287), (607, 267), (603, 300)])
             pygame.draw.polygon(surface, color, [(573, 285), (607, 265), (603, 298)])
             for x in (455, 492, 535, 565):
@@ -218,13 +246,16 @@ class DinosaursPage(EncyclopediaPage):
             pygame.draw.line(surface, color, (545, 322), (595, 245), 25)
             pygame.draw.circle(surface, shadow_col, (602, 238), 16)
             pygame.draw.circle(surface, color, (602, 236), 16)
-            pygame.draw.circle(surface, (255, 255, 255, 14), (596, 228, 8))
+            pygame.draw.circle(surface, (255, 255, 255, 14), (596, 228), 8)
             pygame.draw.line(surface, shadow_col, (440, 327), (384, 294), 20)
             pygame.draw.line(surface, color, (438, 325), (382, 292), 20)
             for x in (450, 485, 530, 555):
                 pygame.draw.line(surface, shadow_col, (x, 347), (x - 3, 395), 13)
                 pygame.draw.line(surface, color, (x, 345), (x - 3, 393), 13)
+        self._draw_overlays(surface)
 
+    def _draw_overlays(self, surface: pygame.Surface) -> None:
+        """Time, bird and evidence discovery overlays (live in both modes)."""
         if self._time_age > 0.0:
             pygame.draw.line(surface, (92, 72, 55), (365, 230), (645, 230), 5)
             pygame.draw.circle(surface, (114, 149, 90), (405, 230), 12)
@@ -271,11 +302,9 @@ class DinosaursPage(EncyclopediaPage):
             focus_ring(surface, rect, index == self._selected or index == self._hovered)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (255, 248, 226), panel, border_radius=22)
-        pygame.draw.rect(surface, (91, 73, 57), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (61, 53, 46))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (61, 53, 46))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        # Shared adaptive ribbon: wraps long captions instead of overflowing.
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )

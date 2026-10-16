@@ -3,36 +3,45 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 import pygame
-from greia_platform.typography import FontRole
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
         draw_discover_button,
+        draw_discovery_token,
         draw_erupt_button,
-        draw_focus_patch,
         draw_navigation_arrows,
         draw_smoke_toggle,
         draw_speed_slider,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_presenter, grid_step
+    from .storybook_ink import inked_circle, inked_limb, inked_polygon
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
         draw_discover_button,
+        draw_discovery_token,
         draw_erupt_button,
-        draw_focus_patch,
         draw_navigation_arrows,
         draw_smoke_toggle,
         draw_speed_slider,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_presenter, grid_step
+    from pages.storybook_ink import inked_circle, inked_limb, inked_polygon
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,6 +138,7 @@ class VolcanoPage(EncyclopediaPage):
         self._selected = 0
         self._hovered: int | None = None
         self._caption_key = "volcano.intro"
+        self._frame: pygame.Surface | None = None
         self._hotspots = tuple(
             pygame.Rect(cx - 43, cy - 43, 86, 86)
             for cx, cy in (item.center for item in DISCOVERIES)
@@ -241,15 +251,25 @@ class VolcanoPage(EncyclopediaPage):
         if self._model.rumble_age > 0:
             shake_x = int(math.sin(self._time * 38) * 3 * min(1.0, self._model.rumble_age))
             shake_y = int(math.cos(self._time * 44) * 2 * min(1.0, self._model.rumble_age))
-        base = pygame.Surface(surface.get_size())
-        base.fill((187, 224, 235))
-        pygame.draw.rect(base, (153, 117, 82), (0, 345, 1024, 255))
-        pygame.draw.rect(base, (115, 83, 60), (0, 455, 1024, 145))
-        draw_centered_text(
-            base, self.context.typography, self.context.resources.text("volcano.title"),
-            center=(500, 92), size=40, color=self.context.palette.ink, role=FontRole.DISPLAY,
+        # One reusable frame surface lets the rumble shake offset the whole
+        # picture without allocating a full-screen surface every frame.
+        base = self._frame
+        if base is None or base.get_size() != surface.get_size():
+            base = self._frame = pygame.Surface(surface.get_size()).convert()
+        authored = draw_authored_scene(base, self.context.visuals, "encyclopedia.earth.volcano.cross_section")
+        if not authored:
+            # Procedural fallback while the authored runtime rendition is absent.
+            base.fill((187, 224, 235))
+            pygame.draw.rect(base, (153, 117, 82), (0, 345, 1024, 255))
+            pygame.draw.rect(base, (115, 83, 60), (0, 455, 1024, 145))
+        self._draw_cross_section(base, authored=authored)
+        # The title sits above a tall explosive column rather than under it.
+        draw_title(
+            base,
+            self.context.typography,
+            self.context.resources.text("volcano.title"),
+            self.context.palette.ink,
         )
-        self._draw_cross_section(base)
         self._draw_hotspots(base)
         self._draw_caption(base)
         # Standard navigation chrome — same grammar as section pages
@@ -290,9 +310,40 @@ class VolcanoPage(EncyclopediaPage):
         else:
             surface.blit(base, (0, 0))
 
-    def _draw_cross_section(self, surface: pygame.Surface) -> None:
+    def _draw_cross_section(self, surface: pygame.Surface, *, authored: bool) -> None:
         cx = 505
         crater_y = 205
+        if authored:
+            self._draw_live_magma(surface)
+        else:
+            self._draw_procedural_cone(surface, cx, crater_y)
+        self._draw_eruption(surface, cx)
+
+    def _draw_live_magma(self, surface: pygame.Surface) -> None:
+        """Pressure and vent glow over the authored cut-open volcano."""
+
+        breathe = math.sin(self._time * 1.6) * 0.5 + 0.5
+        chamber = pygame.Rect(431, 360, 148, 64)
+        glow = int((10 + breathe * 6) * (0.5 + self._model.pressure * 0.8))
+        pygame.draw.ellipse(surface, (249, 162, 60), chamber.inflate(glow, glow // 2), max(3, 8 - glow // 3))
+        if self._model.vent_age > 0 or self._model.eruption_age > 0:
+            pygame.draw.line(surface, (246, 119, 45), (505, 372), (505, 198), 15)
+            pygame.draw.line(surface, (252, 197, 106), (505, 366), (505, 204), 5)
+        # Pressure bubbles rise inside the chamber itself, so the always-on
+        # pressure reading stays visible above the page controls.
+        for index in range(4):
+            filled = (index + 1) / 4 <= self._model.pressure + 0.02
+            x = 457 + index * 32
+            y = 396 - int(math.sin(self._time * 2.2 + index) * 2)
+            if filled:
+                inked_circle(surface, (255, 222, 120), (x, y), 9, outline=2)
+                pygame.draw.circle(surface, (255, 248, 214), (x - 3, y - 3), 3)
+            else:
+                pygame.draw.circle(surface, (176, 72, 44), (x, y), 9, 3)
+
+    def _draw_procedural_cone(self, surface: pygame.Surface, cx: int, crater_y: int) -> None:
+        """Fallback cone used only when the authored scene is missing."""
+
         # Mountain silhouette — tactile storybook with soft shading and snow hint
         pygame.draw.polygon(surface, (92, 78, 68), [(355, 345), (470, 185), (540, 185), (655, 345)])
         # Light side
@@ -323,6 +374,9 @@ class VolcanoPage(EncyclopediaPage):
             color = (255, 190, 73) if filled else (102, 79, 65)
             pygame.draw.circle(surface, color, (455 + index * 34, 525), 11)
             pygame.draw.circle(surface, (80, 61, 53), (455 + index * 34, 525), 11, 2)
+
+    def _draw_eruption(self, surface: pygame.Surface, cx: int) -> None:
+        breathe = math.sin(self._time * 1.6) * 0.5 + 0.5
         # Ambient idle smoke wisp — sparse, not obscuring
         if self._model.smoke_enabled and self._model.eruption_age == 0 and self._model.rumble_age == 0:
             sway = int(math.sin(self._time * 0.9) * 4)
@@ -337,15 +391,20 @@ class VolcanoPage(EncyclopediaPage):
             strength = self._model.strength
             if self._model.eruption_style == _FLOW:
                 thick = 14 + strength * 5
-                pygame.draw.line(surface, (232, 86, 43), (520, 205), (585, 280), thick + 4)
-                pygame.draw.line(surface, (242, 112, 43), (585, 280), (625, 342), thick - 1)
+                inked_limb(
+                    surface,
+                    (232, 86, 43),
+                    [(520, 205), (585, 280), (625, 342)],
+                    [thick + 4, thick - 1],
+                )
+                pygame.draw.line(surface, (252, 160, 64), (526, 214), (586, 285), max(3, thick // 3))
                 # Extra lava tongue for strong
                 if strength == 2:
-                    pygame.draw.line(surface, (255, 180, 70), (520, 205), (600, 295), 6)
+                    pygame.draw.line(surface, (255, 200, 90), (520, 205), (600, 295), 6)
             else:
                 height = 70 + int((40 + strength * 28) * intensity)
                 width = 18 + strength * 6
-                pygame.draw.polygon(
+                inked_polygon(
                     surface,
                     (239, 89, 39),
                     [(cx - width, 195), (cx, 195 - height), (cx + width, 195)],
@@ -374,32 +433,45 @@ class VolcanoPage(EncyclopediaPage):
                     pygame.draw.circle(surface, (255, 170, 60), (x + 1, y - 1), 2)
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (255, 249, 229), item.center, 37)
-            pygame.draw.circle(surface, (75, 62, 53), item.center, 37, 3)
-            cx, cy = item.center
-            if item.discovery_id == "magma":
-                pygame.draw.ellipse(surface, (225, 79, 45), (cx - 23, cy - 13, 46, 26))
-                pygame.draw.circle(surface, (255, 184, 65), (cx, cy - 2), 8)
-            elif item.discovery_id == "vent":
-                pygame.draw.polygon(surface, (111, 92, 79), [(cx - 24, cy + 20), (cx, cy - 25), (cx + 24, cy + 20)])
-                pygame.draw.line(surface, (240, 100, 42), (cx, cy + 12), (cx, cy - 18), 7)
-            elif item.discovery_id == "style":
-                pygame.draw.line(surface, (232, 86, 43), (cx - 22, cy + 10), (cx - 2, cy - 12), 8)
-                pygame.draw.polygon(surface, (239, 89, 39), [(cx + 4, cy + 12), (cx + 16, cy - 22), (cx + 28, cy + 12)])
-            else:
-                for dx, dy, radius in ((-13, 5, 9), (0, -8, 12), (15, 5, 8), (4, 11, 10)):
-                    pygame.draw.circle(surface, (91, 87, 83), (cx + dx, cy + dy), radius)
-            # Unified halo — same grammar as section pages, with pulse
-            active = index == self._selected or index == self._hovered
-            draw_focus_patch(surface, rect, active=active, radius=18, time=self._time)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=item.caption_key == self._caption_key,
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+                token_shape=TOKEN_SHAPE_FELT_TAG,
+            )
+
+    def _draw_icon(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        discovery_id: str,
+    ) -> None:
+        cx, cy = center[0], center[1] + 4  # sit below the felt tag's pin
+        center = (cx, cy)
+        if discovery_id == "magma":
+            pygame.draw.ellipse(surface, (225, 79, 45), (cx - 23, cy - 13, 46, 26))
+            pygame.draw.circle(surface, (255, 184, 65), (cx, cy - 2), 8)
+        elif discovery_id == "vent":
+            pygame.draw.polygon(surface, (111, 92, 79), [(cx - 24, cy + 20), (cx, cy - 25), (cx + 24, cy + 20)])
+            pygame.draw.line(surface, (240, 100, 42), (cx, cy + 12), (cx, cy - 18), 7)
+        elif discovery_id == "style":
+            pygame.draw.line(surface, (232, 86, 43), (cx - 22, cy + 10), (cx - 2, cy - 12), 8)
+            pygame.draw.polygon(surface, (239, 89, 39), [(cx + 4, cy + 12), (cx + 16, cy - 22), (cx + 28, cy + 12)])
+        else:
+            for dx, dy, radius in ((-13, 5, 9), (0, -8, 12), (15, 5, 8), (4, 11, 10)):
+                pygame.draw.circle(surface, (91, 87, 83), (cx + dx, cy + dy), radius)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (255, 249, 229), panel, border_radius=22)
-        pygame.draw.rect(surface, (75, 62, 53), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (56, 49, 45))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (56, 49, 45))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )

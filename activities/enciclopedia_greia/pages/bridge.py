@@ -12,6 +12,7 @@ from greia_platform.typography import FontRole
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        draw_authored_scene,
         draw_caption_ribbon,
         draw_machine_action_button,
         draw_navigation_arrows,
@@ -22,6 +23,7 @@ if __package__ and "." in __package__:
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        draw_authored_scene,
         draw_caption_ribbon,
         draw_machine_action_button,
         draw_navigation_arrows,
@@ -232,19 +234,26 @@ class BridgePage(EncyclopediaPage):
         self.context.audio.play(item.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        # 1. Warm, soft sunny sky
-        surface.fill((230, 244, 252))
+        # 1. Authored river valley with the brick arch bridge at live geometry.
+        authored = draw_authored_scene(
+            surface,
+            self.context.visuals,
+            "encyclopedia.machines.bridge.river",
+        )
+        if not authored:
+            # Contained procedural fallback: warm, soft sunny sky
+            surface.fill((230, 244, 252))
 
-        # Distant soft rolling hills
-        pygame.draw.ellipse(surface, (196, 226, 185), (40, 230, 480, 160))
-        pygame.draw.ellipse(surface, (180, 216, 168), (480, 220, 520, 180))
+            # Distant soft rolling hills
+            pygame.draw.ellipse(surface, (196, 226, 185), (40, 230, 480, 160))
+            pygame.draw.ellipse(surface, (180, 216, 168), (480, 220, 520, 180))
 
-        # Drifting fluffy white clouds
-        t = self._time
-        cloud1_x = int((120 + t * 6) % 1100) - 80
-        cloud2_x = int((650 + t * 4) % 1100) - 80
-        self._draw_cloud(surface, cloud1_x, 110, 65)
-        self._draw_cloud(surface, cloud2_x, 135, 52)
+            # Drifting fluffy white clouds
+            t = self._time
+            cloud1_x = int((120 + t * 6) % 1100) - 80
+            cloud2_x = int((650 + t * 4) % 1100) - 80
+            self._draw_cloud(surface, cloud1_x, 110, 65)
+            self._draw_cloud(surface, cloud2_x, 135, 52)
 
         # Title at the top
         draw_centered_text(
@@ -258,7 +267,7 @@ class BridgePage(EncyclopediaPage):
         )
 
         # 2. Draw river, riverbanks, bridge, and cute vehicle
-        self._draw_bridge_scene(surface)
+        self._draw_bridge_scene(surface, authored=authored)
 
         # 3. Discovery Tokens
         self._draw_hotspots(surface)
@@ -294,21 +303,38 @@ class BridgePage(EncyclopediaPage):
         pygame.draw.circle(s, (255, 255, 255, 220), (size + size // 2, size // 2), size // 3)
         surface.blit(s, (cx - size, cy - size // 2))
 
-    def _draw_bridge_scene(self, surface: pygame.Surface) -> None:
+    AUTHORED_ARCH_RECT = pygame.Rect(420, 372, 184, 100)
+
+    @staticmethod
+    def _ripple_in_open_water(x: float, y: int) -> bool:
+        """Keep live ripples off the authored banks and brick piers."""
+        if x < 294 or x + 36 > 730:
+            return False
+        if y < 430 and any(x + 36 > left and x < left + 48 for left in (376, 600)):
+            return False
+        return True
+
+    def _draw_bridge_scene(self, surface: pygame.Surface, *, authored: bool = False) -> None:
+        """Live river/bridge layer; the authored scene owns the static bridge."""
         t = self._time
 
-        # River Water Base (flowing all the way down across the center)
-        river_points = [(260, 340), (764, 340), (780, 600), (244, 600)]
-        pygame.draw.polygon(surface, (68, 155, 208), river_points)
-        # Deep water stripe
-        pygame.draw.polygon(surface, (52, 138, 192), [(270, 380), (754, 380), (770, 600), (254, 600)])
+        if not authored:
+            # River Water Base (flowing all the way down across the center)
+            river_points = [(260, 340), (764, 340), (780, 600), (244, 600)]
+            pygame.draw.polygon(surface, (68, 155, 208), river_points)
+            # Deep water stripe
+            pygame.draw.polygon(surface, (52, 138, 192), [(270, 380), (754, 380), (770, 600), (254, 600)])
 
         # Animated sparkling water waves
         for row in range(5):
             y_base = 358 + row * 26
             offset_x = math.sin(t * 1.5 + row * 1.2) * 16
+            if authored and y_base < 400:
+                continue  # authored deck/arch occupy these rows
             for col in range(5):
                 wx = 300 + col * 90 + offset_x
+                if authored and not self._ripple_in_open_water(wx, y_base):
+                    continue
                 pygame.draw.arc(surface, (150, 220, 255), (wx, y_base, 36, 12), math.pi, math.tau, 3)
 
         # Cheerful yellow rubber duck swimming in the river!
@@ -320,32 +346,34 @@ class BridgePage(EncyclopediaPage):
         pygame.draw.circle(surface, (40, 30, 25), (duck_x + 11, duck_y - 8), 1.5)
         pygame.draw.ellipse(surface, (170, 230, 255), (duck_x - 14, duck_y + 6, 28, 6), 2)
 
-        # Grassy Riverbanks on left and right
-        left_bank_points = [(0, 600), (0, 340), (140, 335), (280, 350), (290, 420), (270, 520), (250, 600)]
-        pygame.draw.polygon(surface, (116, 182, 86), left_bank_points)
-        pygame.draw.polygon(surface, (142, 208, 108), [(0, 340), (140, 335), (280, 350), (285, 365), (140, 350), (0, 355)])
+        if not authored:
+            # Grassy Riverbanks on left and right
+            left_bank_points = [(0, 600), (0, 340), (140, 335), (280, 350), (290, 420), (270, 520), (250, 600)]
+            pygame.draw.polygon(surface, (116, 182, 86), left_bank_points)
+            pygame.draw.polygon(surface, (142, 208, 108), [(0, 340), (140, 335), (280, 350), (285, 365), (140, 350), (0, 355)])
 
-        right_bank_points = [(1024, 600), (1024, 340), (880, 335), (744, 350), (734, 420), (754, 520), (774, 600)]
-        pygame.draw.polygon(surface, (116, 182, 86), right_bank_points)
-        pygame.draw.polygon(surface, (142, 208, 108), [(1024, 340), (880, 335), (744, 350), (739, 365), (880, 350), (1024, 355)])
+            right_bank_points = [(1024, 600), (1024, 340), (880, 335), (744, 350), (734, 420), (754, 520), (774, 600)]
+            pygame.draw.polygon(surface, (116, 182, 86), right_bank_points)
+            pygame.draw.polygon(surface, (142, 208, 108), [(1024, 340), (880, 335), (744, 350), (739, 365), (880, 350), (1024, 355)])
 
-        # Flowers on grassy banks
-        for fx, fy, col in ((100, 370, (248, 86, 114)), (180, 385, (255, 222, 60)), (240, 375, (255, 255, 255)),
-                            (780, 375, (255, 255, 255)), (840, 385, (255, 222, 60)), (920, 370, (248, 86, 114))):
-            pygame.draw.circle(surface, col, (fx, fy), 4)
-            pygame.draw.circle(surface, (255, 200, 40), (fx, fy), 2)
+            # Flowers on grassy banks
+            for fx, fy, col in ((100, 370, (248, 86, 114)), (180, 385, (255, 222, 60)), (240, 375, (255, 255, 255)),
+                                (780, 375, (255, 255, 255)), (840, 385, (255, 222, 60)), (920, 370, (248, 86, 114))):
+                pygame.draw.circle(surface, col, (fx, fy), 4)
+                pygame.draw.circle(surface, (255, 200, 40), (fx, fy), 2)
 
         left_x, right_x = 310, 714
         deck_y = 350
 
         # Two Sturdy Warm Brick/Stone Pillars
         for tx in (left_x + 70, right_x - 110):
-            pygame.draw.ellipse(surface, (40, 105, 145), (tx - 6, deck_y + 68, 52, 16))
-            pygame.draw.rect(surface, (208, 92, 66), (tx, deck_y + 12, 40, 64), border_radius=4)
-            for my in (deck_y + 26, deck_y + 44, deck_y + 60):
-                pygame.draw.line(surface, (168, 64, 42), (tx + 2, my), (tx + 38, my), 2)
-            pygame.draw.rect(surface, (248, 240, 228), (tx - 4, deck_y + 8, 48, 10), border_radius=3)
-            pygame.draw.rect(surface, (168, 64, 42), (tx - 4, deck_y + 8, 48, 10), width=2, border_radius=3)
+            if not authored:
+                pygame.draw.ellipse(surface, (40, 105, 145), (tx - 6, deck_y + 68, 52, 16))
+                pygame.draw.rect(surface, (208, 92, 66), (tx, deck_y + 12, 40, 64), border_radius=4)
+                for my in (deck_y + 26, deck_y + 44, deck_y + 60):
+                    pygame.draw.line(surface, (168, 64, 42), (tx + 2, my), (tx + 38, my), 2)
+                pygame.draw.rect(surface, (248, 240, 228), (tx - 4, deck_y + 8, 48, 10), border_radius=3)
+                pygame.draw.rect(surface, (168, 64, 42), (tx - 4, deck_y + 8, 48, 10), width=2, border_radius=3)
 
             # Pillar water splashes if "forces" active
             if self._model.forces_age > 0.0:
@@ -354,8 +382,13 @@ class BridgePage(EncyclopediaPage):
 
         # Bridge Arch Underneath
         arch_rect = pygame.Rect(left_x + 50, deck_y - 10, (right_x - left_x) - 100, 90)
-        pygame.draw.arc(surface, (188, 76, 52), arch_rect, 0, math.pi, 14)
-        pygame.draw.arc(surface, (238, 228, 214), arch_rect, 0, math.pi, 3)
+        if authored:
+            # The authored central arch spans pier to pier (ellipse centred
+            # 512,422, rx 92, ry 50); the "shapes" glow follows that arch.
+            arch_rect = self.AUTHORED_ARCH_RECT
+        else:
+            pygame.draw.arc(surface, (188, 76, 52), arch_rect, 0, math.pi, 14)
+            pygame.draw.arc(surface, (238, 228, 214), arch_rect, 0, math.pi, 3)
 
         # If "shapes" (Arch Load Distribution) is active, show force spreading along the arch to banks!
         if self._model.shapes_age > 0.0:
@@ -375,22 +408,23 @@ class BridgePage(EncyclopediaPage):
             pygame.draw.polygon(surface, (238, 120, 34), [(left_x + 54, deck_y + 36), (left_x + 40, deck_y + 44), (left_x + 56, deck_y + 48)])
             pygame.draw.polygon(surface, (238, 120, 34), [(right_x - 54, deck_y + 36), (right_x - 40, deck_y + 44), (right_x - 56, deck_y + 48)])
 
-        # Bridge Road Deck
-        pygame.draw.line(surface, (178, 74, 52), (left_x, deck_y + 10), (right_x, deck_y + 10), 10)
-        pygame.draw.line(surface, (58, 65, 72), (left_x, deck_y), (right_x, deck_y), 12)
-        for rx in range(left_x + 10, right_x - 10, 24):
-            pygame.draw.line(surface, (255, 255, 255), (rx, deck_y), (rx + 14, deck_y), 2)
+        if not authored:
+            # Bridge Road Deck
+            pygame.draw.line(surface, (178, 74, 52), (left_x, deck_y + 10), (right_x, deck_y + 10), 10)
+            pygame.draw.line(surface, (58, 65, 72), (left_x, deck_y), (right_x, deck_y), 12)
+            for rx in range(left_x + 10, right_x - 10, 24):
+                pygame.draw.line(surface, (255, 255, 255), (rx, deck_y), (rx + 14, deck_y), 2)
 
-        # White picket railing
-        pygame.draw.line(surface, (248, 244, 236), (left_x, deck_y - 10), (right_x, deck_y - 10), 4)
-        for rx in range(left_x + 8, right_x, 16):
-            pygame.draw.line(surface, (248, 244, 236), (rx, deck_y + 2), (rx, deck_y - 10), 3)
+            # White picket railing
+            pygame.draw.line(surface, (248, 244, 236), (left_x, deck_y - 10), (right_x, deck_y - 10), 4)
+            for rx in range(left_x + 8, right_x, 16):
+                pygame.draw.line(surface, (248, 244, 236), (rx, deck_y + 2), (rx, deck_y - 10), 3)
 
-        # Golden Lamp Posts on the pillars
-        for lx in (left_x + 88, right_x - 92):
-            pygame.draw.line(surface, (68, 52, 40), (lx, deck_y - 10), (lx, deck_y - 28), 3)
-            pygame.draw.circle(surface, (255, 235, 120), (lx, deck_y - 30), 6)
-            pygame.draw.circle(surface, (255, 255, 255), (lx - 1, deck_y - 32), 2)
+            # Golden Lamp Posts on the pillars
+            for lx in (left_x + 88, right_x - 92):
+                pygame.draw.line(surface, (68, 52, 40), (lx, deck_y - 10), (lx, deck_y - 28), 3)
+                pygame.draw.circle(surface, (255, 235, 120), (lx, deck_y - 30), 6)
+                pygame.draw.circle(surface, (255, 255, 255), (lx - 1, deck_y - 32), 2)
 
         # If "forces" (Pillars & Bedrock) active, reveal underground bedrock anchors and downward load arrows!
         if self._model.forces_age > 0.0:

@@ -7,28 +7,34 @@ import math
 
 import pygame
 
-from greia_platform.typography import FontRole
-
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
-        draw_focus_patch,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
-        draw_focus_patch,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_presenter, grid_step
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,6 +51,9 @@ DISCOVERIES = (
     SensesDiscovery("flavor", "senses.flavor", "encyclopedia.body.senses.flavor", (250, 420)),
     SensesDiscovery("touch", "senses.touch", "encyclopedia.body.senses.touch", (755, 420)),
 )
+
+# E4 authored scene; a missing rendition fails soft to the procedural fallback.
+SCENE_ID = "encyclopedia.body.senses.mirror_room"
 
 
 class SensesPage(EncyclopediaPage):
@@ -148,17 +157,16 @@ class SensesPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((239, 237, 248))
-        draw_centered_text(
+        authored = draw_authored_scene(surface, self.context.visuals, SCENE_ID)
+        if not authored:
+            surface.fill((239, 237, 248))
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("senses.title"),
-            center=(500, 92),
-            size=40,
-            color=self.context.palette.ink,
-            role=FontRole.DISPLAY,
+            self.context.palette.ink,
         )
-        self._draw_sense_scene(surface)
+        self._draw_sense_scene(surface, authored=authored)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -176,37 +184,38 @@ class SensesPage(EncyclopediaPage):
             fallback_color=(229, 137, 183),
         )
 
-    def _draw_sense_scene(self, surface: pygame.Surface) -> None:
+    def _draw_sense_scene(self, surface: pygame.Surface, *, authored: bool) -> None:
         face = (505, 323)
-        skin = (234, 190, 162)
-        skin_light = (244, 210, 185)
-        skin_shadow = (210, 165, 138)
-        # Face with soft shadow and highlight
-        pygame.draw.circle(surface, skin_shadow, (face[0] + 3, face[1] + 3), 92)
-        pygame.draw.circle(surface, skin, face, 92)
-        pygame.draw.circle(surface, skin_light, (face[0] - 18, face[1] - 18), 28)
-        pygame.draw.circle(surface, (255, 255, 250), (474, 300), 15)
-        pygame.draw.circle(surface, (255, 255, 250), (536, 300), 15)
-        pygame.draw.circle(surface, (255, 255, 255, 90), (472, 298), 4)
-        pygame.draw.circle(surface, (255, 255, 255, 90), (534, 298), 4)
-        pygame.draw.circle(surface, (83, 94, 118), (474, 300), 7)
-        pygame.draw.circle(surface, (83, 94, 118), (536, 300), 7)
-        pygame.draw.circle(surface, (35, 45, 60), (474, 300), 3)
-        pygame.draw.circle(surface, (35, 45, 60), (536, 300), 3)
-        pygame.draw.arc(surface, (116, 74, 77), (475, 338, 60, 37), 0.15, math.pi - 0.15, 4)
-        pygame.draw.arc(surface, (180, 110, 115), (478, 340, 54, 32), 0.15, math.pi - 0.15, 2)
-        pygame.draw.arc(surface, (139, 94, 86), (402, 286, 30, 66), math.pi / 2, math.pi * 1.5, 5)
-        pygame.draw.arc(surface, (155, 115, 105), (404, 290, 26, 58), math.pi / 2, math.pi * 1.5, 2)
-        pygame.draw.arc(surface, (139, 94, 86), (578, 286, 30, 66), -math.pi / 2, math.pi / 2, 5)
-        pygame.draw.arc(surface, (155, 115, 105), (580, 290, 26, 58), -math.pi / 2, math.pi / 2, 2)
-        pygame.draw.circle(surface, (209, 126, 124), (505, 332), 7)
-        pygame.draw.circle(surface, (235, 160, 158), (505, 330), 4)
         brain_center = (505, 245)
-        for dx, dy in ((-16, 0), (0, -9), (16, 0), (-7, 13), (10, 14)):
-            pygame.draw.circle(surface, (185, 125, 165), (brain_center[0] + dx, brain_center[1] + dy), 17)
-            pygame.draw.circle(surface, (202, 141, 178), (brain_center[0] + dx - 2, brain_center[1] + dy - 2), 17)
-            pygame.draw.circle(surface, (220, 170, 195), (brain_center[0] + dx - 4, brain_center[1] + dy - 4), 8)
-
+        if not authored:
+            # The mirror scene bakes the child's face and brain badge.
+            skin = (234, 190, 162)
+            skin_light = (244, 210, 185)
+            skin_shadow = (210, 165, 138)
+            # Face with soft shadow and highlight
+            pygame.draw.circle(surface, skin_shadow, (face[0] + 3, face[1] + 3), 92)
+            pygame.draw.circle(surface, skin, face, 92)
+            pygame.draw.circle(surface, skin_light, (face[0] - 18, face[1] - 18), 28)
+            pygame.draw.circle(surface, (255, 255, 250), (474, 300), 15)
+            pygame.draw.circle(surface, (255, 255, 250), (536, 300), 15)
+            pygame.draw.circle(surface, (255, 255, 255, 90), (472, 298), 4)
+            pygame.draw.circle(surface, (255, 255, 255, 90), (534, 298), 4)
+            pygame.draw.circle(surface, (83, 94, 118), (474, 300), 7)
+            pygame.draw.circle(surface, (83, 94, 118), (536, 300), 7)
+            pygame.draw.circle(surface, (35, 45, 60), (474, 300), 3)
+            pygame.draw.circle(surface, (35, 45, 60), (536, 300), 3)
+            pygame.draw.arc(surface, (116, 74, 77), (475, 338, 60, 37), 0.15, math.pi - 0.15, 4)
+            pygame.draw.arc(surface, (180, 110, 115), (478, 340, 54, 32), 0.15, math.pi - 0.15, 2)
+            pygame.draw.arc(surface, (139, 94, 86), (402, 286, 30, 66), math.pi / 2, math.pi * 1.5, 5)
+            pygame.draw.arc(surface, (155, 115, 105), (404, 290, 26, 58), math.pi / 2, math.pi * 1.5, 2)
+            pygame.draw.arc(surface, (139, 94, 86), (578, 286, 30, 66), -math.pi / 2, math.pi / 2, 5)
+            pygame.draw.arc(surface, (155, 115, 105), (580, 290, 26, 58), -math.pi / 2, math.pi / 2, 2)
+            pygame.draw.circle(surface, (209, 126, 124), (505, 332), 7)
+            pygame.draw.circle(surface, (235, 160, 158), (505, 330), 4)
+            for dx, dy in ((-16, 0), (0, -9), (16, 0), (-7, 13), (10, 14)):
+                pygame.draw.circle(surface, (185, 125, 165), (brain_center[0] + dx, brain_center[1] + dy), 17)
+                pygame.draw.circle(surface, (202, 141, 178), (brain_center[0] + dx - 2, brain_center[1] + dy - 2), 17)
+                pygame.draw.circle(surface, (220, 170, 195), (brain_center[0] + dx - 4, brain_center[1] + dy - 4), 8)
         if self._sight_age > 0.0:
             object_center = (650, 284)
             pygame.draw.rect(surface, (95, 165, 95), (630, 264, 40, 40), border_radius=8)
@@ -310,19 +319,20 @@ class SensesPage(EncyclopediaPage):
             pygame.draw.line(surface, (92, 77, 83), (cx, cy - 24), (cx, cy + 24), 3)
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (253, 249, 239), item.center, 37)
-            pygame.draw.circle(surface, (91, 76, 93), item.center, 37, 3)
-            self._draw_hotspot_icon(surface, item)
-            if index == self._selected or index == self._hovered:
-                draw_focus_patch(surface, rect, active=True, radius=16, time=self._time)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=self._caption_key == item.caption_key,
+                icon=lambda target, _center, item=item: self._draw_hotspot_icon(target, item),
+                token_shape=TOKEN_SHAPE_FELT_TAG,
+            )
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (253, 249, 239), panel, border_radius=22)
-        pygame.draw.rect(surface, (91, 76, 93), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (57, 52, 62))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (57, 52, 62))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )

@@ -12,25 +12,33 @@ from greia_platform.typography import FontRole
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_TELESCOPE_CARD,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_centered_text, draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_TELESCOPE_CARD,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_centered_text, draw_presenter, grid_step
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +55,9 @@ DISCOVERIES = (
     JupiterDiscovery("storm", "jupiter.storm", "encyclopedia.space.jupiter.storm", (250, 420)),
     JupiterDiscovery("gas", "jupiter.gas", "encyclopedia.space.jupiter.gas", (755, 420)),
 )
+
+# E4 authored scene; a missing rendition fails soft to the procedural fallback.
+SCENE_ID = "encyclopedia.space.jupiter.observatory"
 
 
 class JupiterPage(EncyclopediaPage):
@@ -162,11 +173,18 @@ class JupiterPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((24, 27, 50))
-        for i in range(31):
-            pygame.draw.circle(surface, (226, 230, 239), ((i * 91 + 17) % 1000, 78 + (i * 53) % 468), 1)
-        draw_centered_text(surface, self.context.typography, self.context.resources.text("jupiter.title"), center=(500, 92), size=40, color=(246, 239, 220), role=FontRole.DISPLAY)
-        self._draw_jupiter(surface)
+        authored = draw_authored_scene(surface, self.context.visuals, SCENE_ID)
+        if not authored:
+            surface.fill((24, 27, 50))
+            for i in range(31):
+                pygame.draw.circle(surface, (226, 230, 239), ((i * 91 + 17) % 1000, 78 + (i * 53) % 468), 1)
+        draw_title(
+            surface,
+            self.context.typography,
+            self.context.resources.text("jupiter.title"),
+            (246, 239, 220),
+        )
+        self._draw_jupiter(surface, authored=authored)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -179,62 +197,65 @@ class JupiterPage(EncyclopediaPage):
         self._draw_caption(surface)
         draw_presenter(surface, self.context.visuals, "leo", position=(925, 565), height=142, variant="surprised", fallback_color=(227, 174, 87))
 
-    def _draw_jupiter(self, surface: pygame.Surface) -> None:
+    def _draw_jupiter(self, surface: pygame.Surface, *, authored: bool) -> None:
         center = (505, 326)
         radius = 100
-        # Soft contact shadow beneath the giant — shallow tactile depth
-        shadow = pygame.Surface((radius * 2 + 20, 28), pygame.SRCALPHA)
-        pygame.draw.ellipse(shadow, (40, 28, 20, 38), shadow.get_rect())
-        surface.blit(shadow, (center[0] - radius - 10, center[1] + radius + 8))
-        pygame.draw.circle(surface, (205, 169, 127), center, radius)
-        # Subtle limb shading for depth, not 3D gloss
-        highlight = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
-        pygame.draw.circle(highlight, (255, 245, 220, 18), (radius, radius), radius)
-        surface.blit(highlight, (center[0] - radius, center[1] - radius))
-        # Bands via circular-masked temp for clean limb (avoids square clip)
-        bands = (
-            (-70, 22, (245, 230, 205)),
-            (-48, 18, (205, 150, 110)),
-            (-30, 20, (250, 238, 215)),
-            (-10, 16, (225, 175, 135)),
-            (6, 18, (248, 235, 210)),
-            (24, 16, (190, 135, 95)),
-            (40, 20, (242, 225, 190)),
-            (60, 18, (200, 145, 105)),
-        )
-        drift = math.sin(self._time * (1.9 if self._day_age > 0 else 0.42)) * (10 if self._day_age > 0 else 4)
-        offset = int(drift)
-        mask = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
-        pygame.draw.circle(mask, (255, 255, 255, 255), (radius, radius), radius)
-        temp = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
-        for yoff, height, color in bands:
-            rect = pygame.Rect(radius - 118 + offset, radius + yoff, 236, height)
-            pygame.draw.rect(temp, color, rect, border_radius=3)
-            hl = pygame.Rect(rect.x + 4, rect.y + 2, rect.width - 8, height // 2)
-            pygame.draw.rect(temp, (255, 255, 255, 18), hl, border_radius=2)
-            pygame.draw.line(temp, (120, 85, 65, 42), (rect.x, rect.y + height), (rect.right, rect.y + height), 1)
-            for tx in range(0, 220, 38):
-                sx = rect.x + tx + int(4 * math.sin(self._time * 0.6 + yoff * 0.1 + tx * 0.02))
-                pygame.draw.line(temp, (255, 255, 255, 12), (sx, rect.y + 4), (sx + 12, rect.y + height - 4), 1)
-        temp.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
-        surface.blit(temp, (center[0] - radius, center[1] - radius))
-        pygame.draw.circle(surface, (90, 66, 55), center, radius, 3)
-        pygame.draw.circle(surface, (255, 245, 220, 22), center, radius - 6, 2)
+        if not authored:
+            # Soft contact shadow beneath the giant — shallow tactile depth
+            shadow = pygame.Surface((radius * 2 + 20, 28), pygame.SRCALPHA)
+            pygame.draw.ellipse(shadow, (40, 28, 20, 38), shadow.get_rect())
+            surface.blit(shadow, (center[0] - radius - 10, center[1] + radius + 8))
+            pygame.draw.circle(surface, (205, 169, 127), center, radius)
+            # Subtle limb shading for depth, not 3D gloss
+            highlight = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+            pygame.draw.circle(highlight, (255, 245, 220, 18), (radius, radius), radius)
+            surface.blit(highlight, (center[0] - radius, center[1] - radius))
+            # Bands via circular-masked temp for clean limb (avoids square clip)
+            bands = (
+                (-70, 22, (245, 230, 205)),
+                (-48, 18, (205, 150, 110)),
+                (-30, 20, (250, 238, 215)),
+                (-10, 16, (225, 175, 135)),
+                (6, 18, (248, 235, 210)),
+                (24, 16, (190, 135, 95)),
+                (40, 20, (242, 225, 190)),
+                (60, 18, (200, 145, 105)),
+            )
+            drift = math.sin(self._time * (1.9 if self._day_age > 0 else 0.42)) * (10 if self._day_age > 0 else 4)
+            offset = int(drift)
+            mask = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+            pygame.draw.circle(mask, (255, 255, 255, 255), (radius, radius), radius)
+            temp = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+            for yoff, height, color in bands:
+                rect = pygame.Rect(radius - 118 + offset, radius + yoff, 236, height)
+                pygame.draw.rect(temp, color, rect, border_radius=3)
+                hl = pygame.Rect(rect.x + 4, rect.y + 2, rect.width - 8, height // 2)
+                pygame.draw.rect(temp, (255, 255, 255, 18), hl, border_radius=2)
+                pygame.draw.line(temp, (120, 85, 65, 42), (rect.x, rect.y + height), (rect.right, rect.y + height), 1)
+                for tx in range(0, 220, 38):
+                    sx = rect.x + tx + int(4 * math.sin(self._time * 0.6 + yoff * 0.1 + tx * 0.02))
+                    pygame.draw.line(temp, (255, 255, 255, 12), (sx, rect.y + 4), (sx + 12, rect.y + height - 4), 1)
+            temp.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
+            surface.blit(temp, (center[0] - radius, center[1] - radius))
+            pygame.draw.circle(surface, (90, 66, 55), center, radius, 3)
+            pygame.draw.circle(surface, (255, 245, 220, 22), center, radius - 6, 2)
 
         storm_center = (544, 358)
         storm_w = 62 + (10 if self._storm_age > 0 else 0)
         storm_h = 34 + (6 if self._storm_age > 0 else 0)
-        # Storm with layered swirl when emphasized
-        pygame.draw.ellipse(
-            surface, (185, 95, 72), (storm_center[0] - storm_w // 2, storm_center[1] - storm_h // 2, storm_w, storm_h)
-        )
-        pygame.draw.ellipse(
-            surface, (205, 105, 82), (storm_center[0] - storm_w // 2 + 4, storm_center[1] - storm_h // 2 + 3, storm_w - 8, storm_h - 6)
-        )
-        # Central swirl
-        pygame.draw.ellipse(
-            surface, (225, 145, 110), (storm_center[0] - 18, storm_center[1] - 7, 36, 14)
-        )
+        if not authored:
+            # Storm with layered swirl when emphasized
+            pygame.draw.ellipse(
+                surface, (185, 95, 72), (storm_center[0] - storm_w // 2, storm_center[1] - storm_h // 2, storm_w, storm_h)
+            )
+            pygame.draw.ellipse(
+                surface, (205, 105, 82), (storm_center[0] - storm_w // 2 + 4, storm_center[1] - storm_h // 2 + 3, storm_w - 8, storm_h - 6)
+            )
+            # Central swirl
+            pygame.draw.ellipse(
+                surface, (225, 145, 110), (storm_center[0] - 18, storm_center[1] - 7, 36, 14)
+            )
+
         if self._storm_age > 0:
             for ring in range(3):
                 pygame.draw.ellipse(
@@ -243,6 +264,19 @@ class JupiterPage(EncyclopediaPage):
                     (storm_center[0] - 44 - ring * 7, storm_center[1] - 23 - ring * 4, 88 + ring * 14, 46 + ring * 8),
                     3,
                 )
+
+        if authored and self._day_age > 0:
+            # Baked bands cannot drift, so a fast spin arrow carries the
+            # "short day" payoff around the authored planet.
+            start = -self._time * 3.2
+            arc_rect = pygame.Rect(center[0] - 122, center[1] - 122, 244, 244)
+            pygame.draw.arc(surface, (250, 220, 104), arc_rect, start, start + 4.4, 6)
+            tip_angle = start + 4.4
+            tip = (
+                center[0] + int(math.cos(tip_angle) * 122),
+                center[1] - int(math.sin(tip_angle) * 122),
+            )
+            pygame.draw.circle(surface, (250, 220, 104), tip, 9)
 
         if self._scale_age > 0:
             for row in range(2):
@@ -258,30 +292,45 @@ class JupiterPage(EncyclopediaPage):
             pygame.draw.line(surface, (246, 220, 143), (605, 372), (650, 404), 4)
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (249, 244, 226), item.center, 37)
-            pygame.draw.circle(surface, (73, 60, 55), item.center, 37, 3)
-            cx, cy = item.center
-            if item.discovery_id == "scale":
-                pygame.draw.circle(surface, (205, 169, 127), (cx - 10, cy), 21)
-                pygame.draw.circle(surface, (73, 145, 214), (cx + 20, cy + 8), 7)
-            elif item.discovery_id == "day":
-                pygame.draw.arc(surface, (214, 176, 93), (cx - 24, cy - 24, 48, 48), 0.1, 5.2, 5)
-                pygame.draw.polygon(surface, (214, 176, 93), [(cx + 21, cy - 9), (cx + 29, cy + 3), (cx + 13, cy + 4)])
-            elif item.discovery_id == "storm":
-                pygame.draw.ellipse(surface, (178, 83, 64), (cx - 25, cy - 13, 50, 26))
-                pygame.draw.ellipse(surface, (228, 144, 101), (cx - 18, cy - 9, 36, 18), 3)
-            else:
-                for r in (21, 14, 7):
-                    pygame.draw.circle(surface, (205, 169 - r, 115), (cx, cy), r, 3)
-            focus_ring(surface, rect, index == self._selected or index == self._hovered)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=self._caption_key == item.caption_key,
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+                token_shape=TOKEN_SHAPE_TELESCOPE_CARD,
+            )
+
+    def _draw_icon(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        discovery_id: str,
+    ) -> None:
+        cx, cy = center
+        if discovery_id == "scale":
+            pygame.draw.circle(surface, (205, 169, 127), (cx - 10, cy), 21)
+            pygame.draw.circle(surface, (73, 145, 214), (cx + 20, cy + 8), 7)
+        elif discovery_id == "day":
+            pygame.draw.arc(surface, (214, 176, 93), (cx - 24, cy - 24, 48, 48), 0.1, 5.2, 5)
+            pygame.draw.polygon(surface, (214, 176, 93), [(cx + 21, cy - 9), (cx + 29, cy + 3), (cx + 13, cy + 4)])
+        elif discovery_id == "storm":
+            pygame.draw.ellipse(surface, (178, 83, 64), (cx - 25, cy - 13, 50, 26))
+            pygame.draw.ellipse(surface, (228, 144, 101), (cx - 18, cy - 9, 36, 18), 3)
+        else:
+            for r in (21, 14, 7):
+                pygame.draw.circle(surface, (205, 169 - r, 115), (cx, cy), r, 3)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (249, 244, 226), panel, border_radius=22)
-        pygame.draw.rect(surface, (73, 60, 55), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (55, 49, 56))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (55, 49, 56))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+            dark=True,
+        )

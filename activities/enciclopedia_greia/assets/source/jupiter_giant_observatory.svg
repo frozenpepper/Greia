@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<defs>
+  <!-- navy deep -> navy lifted -->
+  <linearGradient id="jupiter_sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#21304F"/><stop offset="1" stop-color="#33496F"/></linearGradient>
+  <!-- ink+orange 25% -> ink -->
+  <linearGradient id="jupiter_deck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#755031"/><stop offset="1" stop-color="#4B372F"/></linearGradient>
+  <!-- sand/orange light -> base -->
+  <linearGradient id="jupiter_body" x1="0.1" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#F5DEBD"/><stop offset="1" stop-color="#EFCC9A"/></linearGradient>
+  <!-- sand/orange light -> base -->
+  <linearGradient id="jupiter_ball" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F5DEBD"/><stop offset="1" stop-color="#EFCC9A"/></linearGradient>
+  <clipPath id="jupiter_disc"><circle cx="505" cy="326" r="98.5"/></clipPath>
+</defs>
+<g id="sky"><rect width="1024" height="600" fill="url(#jupiter_sky)"/><g fill="#FFFBEB" opacity="0.85"><circle cx="202.9" cy="375.2" r="1.4"/><circle cx="934" cy="380" r="1"/><circle cx="48.1" cy="412.8" r="1.4"/><circle cx="378.5" cy="38.4" r="1.6"/><circle cx="483.1" cy="57.8" r="1.4"/><circle cx="251.2" cy="145.9" r="1.4"/><circle cx="778" cy="251.5" r="1.2"/><circle cx="879.2" cy="113.4" r="2"/><circle cx="135.9" cy="363" r="1.2"/><circle cx="116.6" cy="35.5" r="2"/><circle cx="287.3" cy="372.8" r="1"/><circle cx="758" cy="213.4" r="1.2"/><circle cx="189.3" cy="422.8" r="1.2"/><circle cx="518.8" cy="96.6" r="1"/><circle cx="713.9" cy="430.8" r="1"/><circle cx="148.4" cy="454.5" r="1.2"/><circle cx="525.9" cy="16.6" r="1"/><circle cx="442.6" cy="49.8" r="2"/><circle cx="17.5" cy="402.4" r="2"/><circle cx="687.2" cy="252.9" r="2"/><circle cx="246.9" cy="201.1" r="1.4"/><circle cx="792.8" cy="207.9" r="2"/><circle cx="744.7" cy="169.4" r="1.4"/><circle cx="351.5" cy="27.5" r="1.2"/><circle cx="250.2" cy="91.8" r="1.4"/><circle cx="90.1" cy="254.1" r="2"/><circle cx="1011.8" cy="325.2" r="2"/><circle cx="978.4" cy="359.8" r="1"/><circle cx="895.8" cy="258.5" r="1"/><circle cx="187.2" cy="143.2" r="2"/><circle cx="863.7" cy="20.7" r="2"/><circle cx="279.2" cy="427.4" r="1.4"/><circle cx="859.9" cy="45.1" r="2"/><circle cx="168.6" cy="236.5" r="1.2"/><circle cx="199.5" cy="222.1" r="1"/><circle cx="851.5" cy="178.4" r="1.4"/><circle cx="719.7" cy="79.9" r="1"/><circle cx="921.4" cy="7" r="1.4"/><circle cx="977.8" cy="333.8" r="2"/><circle cx="100.5" cy="276.1" r="1.4"/><circle cx="144.2" cy="33.2" r="1.4"/><circle cx="125.2" cy="358.4" r="1.2"/><circle cx="842.7" cy="63.2" r="1.2"/><circle cx="926.7" cy="81.8" r="1"/><circle cx="166.8" cy="108.1" r="1.6"/><circle cx="928.5" cy="225.1" r="1.6"/></g><g fill="#BFD6F0" opacity="0.7"><circle cx="977.5" cy="405.3" r="1.2"/><circle cx="401.7" cy="9.1" r="1.2"/><circle cx="822.4" cy="13.7" r="1.2"/><circle cx="112.2" cy="73.4" r="1"/><circle cx="669.2" cy="157" r="1"/><circle cx="878.6" cy="272.3" r="1.6"/><circle cx="1003" cy="439.8" r="1.2"/><circle cx="641.9" cy="193.6" r="1.6"/><circle cx="456.7" cy="117.7" r="1.2"/><circle cx="878.1" cy="23.9" r="1"/></g></g>
+
+<g id="deck"><path d="M0 486H1024V600H0Z" fill="url(#jupiter_deck)"/><path d="M0 486H1024" stroke="#A76D34" stroke-width="5"/><path d="M0 490H1024" stroke="#B18B66" stroke-width="1.8" opacity="0.6"/><g stroke="#4B372F" stroke-width="2" opacity="0.35"><path d="M180 492L120 600M380 492L350 600M512 492V600M644 492L674 600M844 492L904 600"/></g></g>
+<g id="dome_ribs" fill="none" stroke-linecap="round"><path d="M-6 -10Q60 230 22 486M1030 -10Q964 230 1002 486" stroke="#8B5D32" stroke-width="24"/><path d="M4 6Q64 230 30 478M1020 6Q960 230 994 478" stroke="#C17C35" stroke-width="3" opacity="0.7"/></g>
+<g id="jupiter" data-target="jupiter" data-center="505,326">
+<circle cx="505" cy="326" r="100" fill="url(#jupiter_body)"/>
+<g clip-path="url(#jupiter_disc)">
+<g opacity="0.85"><path d="M401 248C455 245 495 251 535 248S585 245 609 248V264C565 267 515 261 475 264S425 267 401 264Z" fill="#F5EBD6"/><path d="M401 268C455 271 495 265 535 268S585 271 609 268V282C565 279 515 285 475 282S425 279 401 282Z" fill="#F1B66E"/><path d="M401 286C455 283 495 289 535 286S585 283 609 286V298C565 301 515 295 475 298S425 301 401 298Z" fill="#F5EBD6"/><path d="M401 302C455 305 495 299 535 302S585 305 609 302V318C565 315 515 321 475 318S425 315 401 318Z" fill="#B87735"/><path d="M401 322C455 319 495 325 535 322S585 319 609 322V340C565 343 515 337 475 340S425 343 401 340Z" fill="#F5EBD6"/><path d="M401 342C455 345 495 339 535 342S585 345 609 342V356C565 353 515 359 475 356S425 353 401 356Z" fill="#F1B66E"/><path d="M401 360C455 357 495 363 535 360S585 357 609 360V376C565 379 515 373 475 376S425 379 401 376Z" fill="#B87735"/><path d="M401 380C455 383 495 377 535 380S585 383 609 380V392C565 389 515 395 475 392S425 389 401 392Z" fill="#F5EBD6"/><path d="M401 396C455 393 495 399 535 396S585 393 609 396V410C565 413 515 407 475 410S425 413 401 410Z" fill="#F1B66E"/></g>
+<path d="M420 300Q440 296 460 300M470 340Q500 336 520 342M560 288Q580 284 598 290" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+<ellipse cx="544" cy="358" rx="31" ry="17" fill="#F47C55" stroke="#A8564A" stroke-width="2.5"/>
+<ellipse cx="544" cy="358" rx="19" ry="9" fill="#F8A198"/><path d="M532 358Q544 350 556 358" fill="none" stroke="#C15E52" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M533 226A100 100 0 0 1 533 426A68.0 100 0 0 0 533 226Z" fill="#767573" opacity="0.3"/>
+</g>
+<circle cx="505" cy="326" r="100" fill="none" stroke="#957A5F" stroke-width="3.5"/>
+<path d="M429 282Q445 248 481 234" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.55"/>
+</g>
+<g id="galilean_moons" stroke="#4B372F" stroke-width="2">
+<circle cx="372" cy="236" r="6" fill="#F3D27A"/><circle cx="394" cy="226" r="5" fill="#E9E4D6"/>
+<circle cx="624" cy="210" r="7" fill="#C9B9A2"/><circle cx="650" cy="198" r="6" fill="#A99D8E"/></g>
+<g id="size_toys">
+<ellipse cx="128" cy="582" rx="86" ry="9" fill="#6A5147" opacity="0.3"/>
+<circle cx="118" cy="530" r="48" fill="url(#jupiter_ball)" stroke="#957A5F" stroke-width="3.5"/>
+<path d="M76 514Q118 508 160 514" fill="none" stroke="#B87735" stroke-width="7"/><path d="M73 530Q118 534 163 530" fill="none" stroke="#F5EBD6" stroke-width="6"/><path d="M77 546Q118 554 159 546" fill="none" stroke="#F1B66E" stroke-width="7"/>
+<ellipse cx="136" cy="558" rx="9" ry="5" fill="#F46F61" stroke="#A8564A" stroke-width="2"/>
+<circle cx="118" cy="530" r="48" fill="none" stroke="#957A5F" stroke-width="3.5"/>
+<path d="M88 506Q98 492 114 488" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.6"/>
+<circle cx="190" cy="572" r="6" fill="#4A91D8" stroke="#4B607B" stroke-width="2"/><path d="M187 570Q190 567 193 569" fill="none" stroke="#59B86A" stroke-width="2.5" stroke-linecap="round"/>
+</g>
+</svg>

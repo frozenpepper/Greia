@@ -7,17 +7,32 @@ against the committed runtime pack. A CairoSVG/toolchain change that alters the
 build product therefore requires an intentional rebuild and commit.
 
 The visual migration is deliberately tranche-based. ``golden`` owns the six
-accepted golden-master renditions and ``sections`` owns the five E3 section
-worlds. The default ``all`` group produces both tranches together. A full
-``--check --group all`` additionally requires the runtime directory to contain
-exactly those eleven PNGs, preventing stale or abandoned renditions from being
-silently carried into exact-SHA Simulator evidence.
+accepted golden-master renditions, ``sections`` owns the five E3 section
+worlds and each ``e4_*`` group owns one E4 entry-migration batch. The default
+``all`` group produces every tranche together. A full ``--check --group all``
+additionally requires the runtime directory to contain exactly those PNGs,
+preventing stale or abandoned renditions from being silently carried into
+exact-SHA Simulator evidence.
 
 Every Encyclopedia scene is a flattened full-screen backdrop and must therefore
 build as an opaque RGB PNG. Transparent character sprites remain separate shared
 assets. Rejecting alpha-bearing scene renditions here keeps the low-resource
 runtime free to use display-optimized opaque surfaces without silently flattening
 an unintended transparent master.
+
+Canonical rasterization environment (byte-reproducibility contract)
+-------------------------------------------------------------------
+The committed PNGs are reproduced byte-for-byte only by the **Homebrew**
+libcairo (1.18.x at ``/opt/homebrew/lib``) through CairoSVG/cairocffi. Other
+libcairo builds (for example MacPorts at ``/opt/local/lib``) differ in
+anti-aliasing for some masters, so ``--check`` would report false BUILD-DRIFT.
+On macOS run, for both build and ``--check``::
+
+    DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib \\
+        python3 tools/build_encyclopedia_visual_assets.py --check --group all
+
+If libcairo cannot be loaded the tool exits with a clear message instead of a
+traceback.
 """
 from __future__ import annotations
 
@@ -29,9 +44,14 @@ from tempfile import TemporaryDirectory
 
 try:
     import cairosvg
-except ImportError as exc:  # pragma: no cover - maintainer setup guard
+except (ImportError, OSError) as exc:  # pragma: no cover - maintainer setup guard
+    # cairocffi raises OSError (not ImportError) when libcairo is not found.
     raise SystemExit(
-        "CairoSVG is required only to rebuild Encyclopedia visual assets"
+        "CairoSVG and a loadable libcairo are required only to rebuild "
+        "Encyclopedia visual assets (the committed PNGs are reproduced by the "
+        "Homebrew libcairo; on macOS run with "
+        "DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib). "
+        f"Load error: {str(exc).splitlines()[0]}"
     ) from exc
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,7 +72,55 @@ SECTION_NAMES = (
     "machines_gallery_workbench",
     "history_gallery_time_trail",
 )
-NAMES = GOLDEN_MASTER_NAMES + SECTION_NAMES
+# E4 entry-migration batches. Each batch is its own all-or-nothing tranche
+# (a partial batch pack is forbidden) and is selectable with ``--group``.
+# Parallel batches append their own key; never reorder or rename existing keys.
+E4_GROUPS: dict[str, tuple[str, ...]] = {
+    "e4_machines": (
+        "magnet_lab",
+        "bicycle_park",
+        "airplane_sky",
+        "bridge_river",
+    ),
+    "e4_history": (
+        "dinosaurs_valley",
+        "fossils_dig_site",
+        "mammoth_tundra",
+        "cave_paintings_wall",
+    ),
+    "e4_nature": (
+        "elephant_waterhole",
+        "octopus_reef",
+        "bee_meadow",
+        "penguin_ice_shore",
+        "frog_pond",
+        "volcano_cross_section",
+        "rain_water_cycle",
+        "ocean_depths",
+        "tree_hillside",
+        "rainbow_shower",
+    ),
+    "e4_space": (
+        "sun_solar_observatory",
+        "mercury_sunside_observatory",
+        "venus_cloud_observatory",
+        "earth_home_observatory",
+        "moon_night_observatory",
+        "mars_red_observatory",
+        "jupiter_giant_observatory",
+        "uranus_tilted_observatory",
+        "neptune_windy_observatory",
+    ),
+    "e4_body": (
+        "heart_discovery_room",
+        "lungs_discovery_room",
+        "bones_xray_room",
+        "teeth_dental_room",
+        "senses_mirror_room",
+    ),
+}
+E4_NAMES = tuple(name for names in E4_GROUPS.values() for name in names)
+NAMES = GOLDEN_MASTER_NAMES + SECTION_NAMES + E4_NAMES
 REFERENCE_SIZE = (1024, 600)
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 PNG_COLOR_TYPE_RGB = 2
@@ -99,6 +167,8 @@ def _selected_names(group: str) -> tuple[str, ...]:
         return GOLDEN_MASTER_NAMES
     if group == "sections":
         return SECTION_NAMES
+    if group in E4_GROUPS:
+        return E4_GROUPS[group]
     return NAMES
 
 
@@ -163,7 +233,9 @@ def check(names: tuple[str, ...]) -> int:
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument(
         "--check",
         action="store_true",
@@ -171,9 +243,12 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--group",
-        choices=("all", "golden", "sections"),
+        choices=("all", "golden", "sections") + tuple(E4_GROUPS),
         default="all",
-        help="build/check all art, only the six golden masters, or only the five E3 section worlds",
+        help=(
+            "build/check all art, only the six golden masters, only the five E3 "
+            "section worlds, or one E4 entry batch"
+        ),
     )
     return parser.parse_args()
 

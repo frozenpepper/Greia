@@ -12,25 +12,33 @@ from greia_platform.typography import FontRole
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_TELESCOPE_CARD,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_centered_text, draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_TELESCOPE_CARD,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_centered_text, draw_presenter, grid_step
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +55,9 @@ DISCOVERIES = (
     NeptuneDiscovery("winds", "neptune.winds", "encyclopedia.space.neptune.winds", (250, 420)),
     NeptuneDiscovery("blue", "neptune.blue", "encyclopedia.space.neptune.blue", (755, 420)),
 )
+
+# E4 authored scene; a missing rendition fails soft to the procedural fallback.
+SCENE_ID = "encyclopedia.space.neptune.observatory"
 
 
 class NeptunePage(EncyclopediaPage):
@@ -161,11 +172,18 @@ class NeptunePage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((17, 24, 53))
-        for i in range(33):
-            pygame.draw.circle(surface, (226, 232, 243), ((i * 107 + 11) % 1000, 77 + (i * 51) % 470), 1)
-        draw_centered_text(surface, self.context.typography, self.context.resources.text("neptune.title"), center=(500, 92), size=40, color=(244, 241, 222), role=FontRole.DISPLAY)
-        self._draw_neptune(surface)
+        authored = draw_authored_scene(surface, self.context.visuals, SCENE_ID)
+        if not authored:
+            surface.fill((17, 24, 53))
+            for i in range(33):
+                pygame.draw.circle(surface, (226, 232, 243), ((i * 107 + 11) % 1000, 77 + (i * 51) % 470), 1)
+        draw_title(
+            surface,
+            self.context.typography,
+            self.context.resources.text("neptune.title"),
+            (244, 241, 222),
+        )
+        self._draw_neptune(surface, authored=authored)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -178,27 +196,36 @@ class NeptunePage(EncyclopediaPage):
         self._draw_caption(surface)
         draw_presenter(surface, self.context.visuals, "leo", position=(925, 565), height=142, variant="default", fallback_color=(227, 174, 87))
 
-    def _draw_neptune(self, surface: pygame.Surface) -> None:
+    def _draw_neptune(self, surface: pygame.Surface, *, authored: bool) -> None:
         center = (505, 326)
         radius = 90
-        if self._rings_visible:
+        if self._rings_visible and not authored:
             for inset, alpha in ((0, 90), (7, 70), (14, 45)):
                 pygame.draw.ellipse(surface, (113, 125, 149, alpha), (center[0] - 132 + inset, center[1] - 33 + inset // 2, 264 - inset * 2, 66 - inset), 2)
                 pygame.draw.ellipse(surface, (255, 255, 255, 18), (center[0] - 130 + inset, center[1] - 31 + inset // 2, 260 - inset * 2, 62 - inset), 1)
-        # Soft shadow + highlight for depth
-        shadow = pygame.Surface((radius * 2 + 12, radius * 2 + 12), pygame.SRCALPHA)
-        pygame.draw.circle(shadow, (0, 0, 0, 24), (radius + 6, radius + 6), radius)
-        surface.blit(shadow, (center[0] - radius - 6, center[1] - radius - 6))
-        pygame.draw.circle(surface, (75, 112, 194), center, radius)
-        hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
-        pygame.draw.ellipse(hl, (255, 255, 255, 20), (radius // 2, 8, radius, radius // 3))
-        surface.blit(hl, (center[0] - radius, center[1] - radius))
-        pygame.draw.circle(surface, (45, 67, 122), center, radius, 3)
-        for yoff in (-47, -19, 14, 46):
-            wave = int(math.sin(self._time * 0.45 + yoff) * 7)
-            wobble = int(math.cos(self._time * 0.33 + yoff * 0.08) * 2)
-            pygame.draw.arc(surface, (110, 148, 218), (center[0] - 80 + wave, center[1] + yoff - 9 + wobble, 160, 22), 0.15, 3.0, 4)
-            pygame.draw.arc(surface, (255, 255, 255, 14), (center[0] - 78 + wave, center[1] + yoff - 7 + wobble, 156, 18), 0.15, 3.0, 2)
+        if not authored:
+            # Soft shadow + highlight for depth
+            shadow = pygame.Surface((radius * 2 + 12, radius * 2 + 12), pygame.SRCALPHA)
+            pygame.draw.circle(shadow, (0, 0, 0, 24), (radius + 6, radius + 6), radius)
+            surface.blit(shadow, (center[0] - radius - 6, center[1] - radius - 6))
+            pygame.draw.circle(surface, (75, 112, 194), center, radius)
+            hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+            pygame.draw.ellipse(hl, (255, 255, 255, 20), (radius // 2, 8, radius, radius // 3))
+            surface.blit(hl, (center[0] - radius, center[1] - radius))
+            pygame.draw.circle(surface, (45, 67, 122), center, radius, 3)
+            for yoff in (-47, -19, 14, 46):
+                wave = int(math.sin(self._time * 0.45 + yoff) * 7)
+                wobble = int(math.cos(self._time * 0.33 + yoff * 0.08) * 2)
+                pygame.draw.arc(surface, (110, 148, 218), (center[0] - 80 + wave, center[1] + yoff - 9 + wobble, 160, 22), 0.15, 3.0, 4)
+                pygame.draw.arc(surface, (255, 255, 255, 14), (center[0] - 78 + wave, center[1] + yoff - 7 + wobble, 156, 18), 0.15, 3.0, 2)
+        elif self._rings_visible:
+            # The planet is baked into the scene, so the far half of each ring
+            # is only drawn where it clears the disc; the near half crosses it.
+            for inset in (0, 7, 14):
+                rect = pygame.Rect(center[0] - 132 + inset, center[1] - 33 + inset // 2, 264 - inset * 2, 66 - inset)
+                pygame.draw.arc(surface, (150, 166, 196), rect, math.pi, math.tau, 2)
+                pygame.draw.arc(surface, (150, 166, 196), rect, 0.0, 0.85, 2)
+                pygame.draw.arc(surface, (150, 166, 196), rect, math.pi - 0.85, math.pi, 2)
 
         if self._wind_age > 0:
             speed = 155
@@ -219,6 +246,11 @@ class NeptunePage(EncyclopediaPage):
             draw_centered_text(surface, self.context.typography, "≈4h", center=(505, 446), size=18, color=(237, 228, 194), role=FontRole.CONTROL)
 
         if self._year_age > 0:
+            if authored:
+                # Zoomed-out viewing lens over the baked planet for the orbit.
+                pygame.draw.circle(surface, (36, 50, 84), center, 132)
+                pygame.draw.circle(surface, (154, 112, 62), center, 132, 6)
+                pygame.draw.circle(surface, (236, 199, 120), center, 125, 2)
             orbit = pygame.Rect(392, 245, 226, 164)
             pygame.draw.circle(surface, (250, 204, 68), (505, 327), 19)
             pygame.draw.ellipse(surface, (75, 84, 117), orbit, 2)
@@ -228,31 +260,46 @@ class NeptunePage(EncyclopediaPage):
             draw_centered_text(surface, self.context.typography, "165y / 16h", center=(505, 450), size=18, color=(237, 228, 194), role=FontRole.CONTROL)
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (248, 245, 228), item.center, 37)
-            pygame.draw.circle(surface, (66, 60, 60), item.center, 37, 3)
-            cx, cy = item.center
-            if item.discovery_id == "distance":
-                pygame.draw.circle(surface, (249, 202, 67), (cx - 19, cy), 8)
-                pygame.draw.circle(surface, (75, 112, 194), (cx + 22, cy), 9)
-                pygame.draw.line(surface, (178, 184, 194), (cx - 8, cy), (cx + 10, cy), 3)
-            elif item.discovery_id == "year":
-                pygame.draw.ellipse(surface, (115, 124, 153), (cx - 27, cy - 18, 54, 36), 3)
-                pygame.draw.circle(surface, (75, 112, 194), (cx + 24, cy), 7)
-            elif item.discovery_id == "winds":
-                for off in (-11, 0, 11):
-                    pygame.draw.line(surface, (96, 145, 211), (cx - 24, cy + off), (cx + 22, cy + off - 5), 4)
-            else:
-                pygame.draw.circle(surface, (75, 112, 194), (cx, cy), 20)
-                pygame.draw.ellipse(surface, (119, 130, 151), (cx - 28, cy - 9, 56, 18), 3)
-            focus_ring(surface, rect, index == self._selected or index == self._hovered)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=self._caption_key == item.caption_key,
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+                token_shape=TOKEN_SHAPE_TELESCOPE_CARD,
+            )
+
+    def _draw_icon(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        discovery_id: str,
+    ) -> None:
+        cx, cy = center
+        if discovery_id == "distance":
+            pygame.draw.circle(surface, (249, 202, 67), (cx - 19, cy), 8)
+            pygame.draw.circle(surface, (75, 112, 194), (cx + 22, cy), 9)
+            pygame.draw.line(surface, (178, 184, 194), (cx - 8, cy), (cx + 10, cy), 3)
+        elif discovery_id == "year":
+            pygame.draw.ellipse(surface, (115, 124, 153), (cx - 27, cy - 18, 54, 36), 3)
+            pygame.draw.circle(surface, (75, 112, 194), (cx + 24, cy), 7)
+        elif discovery_id == "winds":
+            for off in (-11, 0, 11):
+                pygame.draw.line(surface, (96, 145, 211), (cx - 24, cy + off), (cx + 22, cy + off - 5), 4)
+        else:
+            pygame.draw.circle(surface, (75, 112, 194), (cx, cy), 20)
+            pygame.draw.ellipse(surface, (119, 130, 151), (cx - 28, cy - 9, 56, 18), 3)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (248, 245, 228), panel, border_radius=22)
-        pygame.draw.rect(surface, (66, 60, 60), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (54, 49, 58))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (54, 49, 58))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+            dark=True,
+        )

@@ -28,10 +28,32 @@ SECTION_STEMS = {
     "machines_gallery_workbench",
     "history_gallery_time_trail",
 }
-EXPECTED_STEMS = GOLDEN_MASTER_STEMS | SECTION_STEMS
+
+
+def _build_tool_e4_groups() -> dict[str, tuple[str, ...]]:
+    """E4 entry batches as declared by the authoring build tool."""
+
+    tree = ast.parse(BUILD_TOOL.read_text(encoding="utf-8"))
+    for node in tree.body:
+        targets = (
+            node.targets
+            if isinstance(node, ast.Assign)
+            else [node.target]
+            if isinstance(node, ast.AnnAssign)
+            else []
+        )
+        if any(isinstance(target, ast.Name) and target.id == "E4_GROUPS" for target in targets):
+            return dict(ast.literal_eval(node.value))
+    return {}
+
+
+E4_GROUPS = _build_tool_e4_groups()
+E4_STEMS = {stem for stems in E4_GROUPS.values() for stem in stems}
+EXPECTED_STEMS = GOLDEN_MASTER_STEMS | SECTION_STEMS | E4_STEMS
 GOLDEN_MASTER_ART = {f"{stem}.png" for stem in GOLDEN_MASTER_STEMS}
 SECTION_ART = {f"{stem}.png" for stem in SECTION_STEMS}
-EXPECTED_ART = GOLDEN_MASTER_ART | SECTION_ART
+E4_ART = {f"{stem}.png" for stem in E4_STEMS}
+EXPECTED_ART = GOLDEN_MASTER_ART | SECTION_ART | E4_ART
 
 
 class EncyclopediaVisualFoundationTests(unittest.TestCase):
@@ -134,7 +156,13 @@ class EncyclopediaVisualFoundationTests(unittest.TestCase):
         sections = set(ast.literal_eval(self._assignment(tree, "SECTION_NAMES")))
         self.assertEqual(golden, GOLDEN_MASTER_STEMS)
         self.assertEqual(sections, SECTION_STEMS)
-        self.assertEqual(golden | sections, EXPECTED_STEMS)
+        self.assertEqual(golden | sections | E4_STEMS, EXPECTED_STEMS)
+        self.assertTrue(all(group.startswith("e4_") for group in E4_GROUPS))
+        self.assertEqual(
+            sum(len(stems) for stems in E4_GROUPS.values()),
+            len(E4_STEMS),
+            "an E4 rendition may belong to exactly one batch",
+        )
         self.assertIn("cairosvg.svg2png", source)
         self.assertIn("output_width=REFERENCE_SIZE[0]", source)
         self.assertIn("output_height=REFERENCE_SIZE[1]", source)
@@ -254,6 +282,119 @@ class EncyclopediaVisualFoundationTests(unittest.TestCase):
             self._svg_target_centers(SOURCE / "history_gallery_time_trail.svg"),
         )
 
+    # E4-D machines + E4-E history: page module -> (semantic scene id, source stem).
+    E4_MACHINES_HISTORY_SCENES = {
+        "magnet.py": ("encyclopedia.machines.magnet.lab", "magnet_lab"),
+        "bicycle.py": ("encyclopedia.machines.bicycle.park", "bicycle_park"),
+        "airplane.py": ("encyclopedia.machines.airplane.sky", "airplane_sky"),
+        "bridge.py": ("encyclopedia.machines.bridge.river", "bridge_river"),
+        "dinosaurs.py": ("encyclopedia.history.dinosaurs.valley", "dinosaurs_valley"),
+        "fossils.py": ("encyclopedia.history.fossils.dig_site", "fossils_dig_site"),
+        "mammoth.py": ("encyclopedia.history.mammoth.tundra", "mammoth_tundra"),
+        "cave_paintings.py": (
+            "encyclopedia.history.cave_paintings.wall",
+            "cave_paintings_wall",
+        ),
+    }
+
+    def test_e4_machines_history_entries_use_authored_scenes_with_fallbacks(self) -> None:
+        self.assertEqual(
+            set(E4_GROUPS.get("e4_machines", ())) | set(E4_GROUPS.get("e4_history", ())),
+            {stem for _, stem in self.E4_MACHINES_HISTORY_SCENES.values()},
+        )
+        for filename, (semantic_id, stem) in self.E4_MACHINES_HISTORY_SCENES.items():
+            page = ACTIVITY / "pages" / filename
+            text = page.read_text(encoding="utf-8")
+            with self.subTest(filename=filename):
+                self.assertIn("draw_authored_scene", text)
+                self.assertIn(semantic_id, text)
+                self.assertIn("fallback", text.lower())
+                # Authored discovery beds sit exactly under the semantic targets.
+                self.assertEqual(
+                    self._dataclass_target_centers(page, "DISCOVERIES", center_arg=3),
+                    self._svg_target_centers(SOURCE / f"{stem}.svg"),
+                )
+
+    # E4-A organic/nature: page module -> (semantic scene id, source stem).
+    # Lion stays the accepted golden master and is not part of this batch.
+    E4_NATURE_SCENES = {
+        "elephant.py": ("encyclopedia.animals.elephant.waterhole", "elephant_waterhole"),
+        "octopus.py": ("encyclopedia.animals.octopus.reef", "octopus_reef"),
+        "bee.py": ("encyclopedia.animals.bee.meadow", "bee_meadow"),
+        "penguin.py": ("encyclopedia.animals.penguin.ice_shore", "penguin_ice_shore"),
+        "frog.py": ("encyclopedia.animals.frog.pond", "frog_pond"),
+        "volcano.py": ("encyclopedia.earth.volcano.cross_section", "volcano_cross_section"),
+        "rain.py": ("encyclopedia.earth.rain.water_cycle", "rain_water_cycle"),
+        "ocean.py": ("encyclopedia.earth.ocean.depths", "ocean_depths"),
+        "tree.py": ("encyclopedia.earth.tree.hillside", "tree_hillside"),
+        "rainbow.py": ("encyclopedia.earth.rainbow.shower", "rainbow_shower"),
+    }
+
+    def test_e4_nature_entries_use_authored_scenes_with_fallbacks(self) -> None:
+        self.assertEqual(
+            set(E4_GROUPS.get("e4_nature", ())),
+            {stem for _, stem in self.E4_NATURE_SCENES.values()},
+        )
+        for filename, (semantic_id, stem) in self.E4_NATURE_SCENES.items():
+            page = ACTIVITY / "pages" / filename
+            text = page.read_text(encoding="utf-8")
+            with self.subTest(filename=filename):
+                self.assertIn("draw_authored_scene", text)
+                self.assertIn(semantic_id, text)
+                self.assertIn("fallback", text.lower())
+                # Authored discovery beds sit exactly under the semantic targets.
+                self.assertEqual(
+                    self._dataclass_target_centers(page, "DISCOVERIES", center_arg=3),
+                    self._svg_target_centers(SOURCE / f"{stem}.svg"),
+                )
+
+    def test_e4_nature_live_puppet_ink_never_allocates_surfaces(self) -> None:
+        """Live puppet parts are drawn straight onto the frame every update."""
+
+        text = (ACTIVITY / "pages" / "storybook_ink.py").read_text(encoding="utf-8")
+        self.assertNotIn("pygame.Surface(", text)
+        self.assertIn("INK = (75, 55, 47)", text)
+
+    # E4-B space + E4-C body: page module -> (scene id, source stem, hero
+    # target, overlay anchor). Saturn stays the accepted golden master. The
+    # discovery tokens stay live; the authored scene bakes the hero, so the
+    # procedural reveal overlays must keep the same anchor in source and SVG.
+    E4_SPACE_BODY_SCENES = {
+        "sun.py": ("encyclopedia.space.sun.observatory", "sun_solar_observatory", "sun", (505, 326)),
+        "mercury.py": ("encyclopedia.space.mercury.observatory", "mercury_sunside_observatory", "mercury", (505, 326)),
+        "venus.py": ("encyclopedia.space.venus.observatory", "venus_cloud_observatory", "venus", (505, 326)),
+        "planet_earth.py": ("encyclopedia.space.earth.observatory", "earth_home_observatory", "earth", (505, 326)),
+        "moon.py": ("encyclopedia.space.moon.observatory", "moon_night_observatory", "moon", (505, 326)),
+        "mars.py": ("encyclopedia.space.mars.observatory", "mars_red_observatory", "mars", (505, 326)),
+        "jupiter.py": ("encyclopedia.space.jupiter.observatory", "jupiter_giant_observatory", "jupiter", (505, 326)),
+        "uranus.py": ("encyclopedia.space.uranus.observatory", "uranus_tilted_observatory", "uranus", (505, 326)),
+        "neptune.py": ("encyclopedia.space.neptune.observatory", "neptune_windy_observatory", "neptune", (505, 326)),
+        "heart.py": ("encyclopedia.body.heart.discovery_room", "heart_discovery_room", "heart", (505, 350)),
+        "lungs.py": ("encyclopedia.body.lungs.discovery_room", "lungs_discovery_room", "airway_split", (505, 282)),
+        "bones.py": ("encyclopedia.body.bones.xray_room", "bones_xray_room", "left_elbow", (430, 325)),
+        "teeth.py": ("encyclopedia.body.teeth.dental_room", "teeth_dental_room", "job_demo", (505, 335)),
+        "senses.py": ("encyclopedia.body.senses.mirror_room", "senses_mirror_room", "face", (505, 323)),
+    }
+
+    def test_e4_space_body_entries_use_authored_scenes_with_fallbacks(self) -> None:
+        self.assertEqual(
+            set(E4_GROUPS.get("e4_space", ())) | set(E4_GROUPS.get("e4_body", ())),
+            {entry[1] for entry in self.E4_SPACE_BODY_SCENES.values()},
+        )
+        self.assertNotIn("saturn_observatory", E4_STEMS)
+        for filename, (semantic_id, stem, hero, anchor) in self.E4_SPACE_BODY_SCENES.items():
+            text = (ACTIVITY / "pages" / filename).read_text(encoding="utf-8")
+            with self.subTest(filename=filename):
+                self.assertIn("draw_authored_scene", text)
+                self.assertIn(f'SCENE_ID = "{semantic_id}"', text)
+                self.assertIn("fallback", text.lower())
+                self.assertIn("draw_discovery_token", text)
+                self.assertIn(str(anchor), text)
+                self.assertEqual(
+                    self._svg_target_centers(SOURCE / f"{stem}.svg"),
+                    {hero: anchor},
+                )
+
     def test_space_live_solar_system_stays_inside_authored_stage(self) -> None:
         space_path = ACTIVITY / "pages" / "space.py"
         tree = ast.parse(space_path.read_text(encoding="utf-8"))
@@ -316,6 +457,12 @@ class EncyclopediaVisualFoundationTests(unittest.TestCase):
         self.assertIn(len(section_present), (0, len(SECTION_ART)))
 
         expected_present = GOLDEN_MASTER_ART | section_present
+        for group, stems in E4_GROUPS.items():
+            batch_art = {f"{stem}.png" for stem in stems}
+            batch_present = present.intersection(batch_art)
+            with self.subTest(e4_group=group):
+                self.assertIn(len(batch_present), (0, len(batch_art)))
+            expected_present |= batch_present
         total = 0
         for name in expected_present:
             data = (RUNTIME / name).read_bytes()

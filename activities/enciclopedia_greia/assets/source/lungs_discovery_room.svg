@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<defs>
+  <!-- cream light -> peach/sand -->
+  <linearGradient id="lungs_wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FAF2DD"/><stop offset="1" stop-color="#F3DABC"/></linearGradient>
+  <!-- orange+ink 38% -> orange+ink 58% -->
+  <linearGradient id="lungs_floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B37435"/><stop offset="1" stop-color="#926133"/></linearGradient>
+  <!-- rose/raspberry light -> lung -->
+  <linearGradient id="lungs_tissue" x1="0.1" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#F1C4D3"/><stop offset="1" stop-color="#EAA5BC"/></linearGradient>
+  <!-- white -> sky (glass) -->
+  <linearGradient id="lungs_glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EAF6FB"/><stop offset="1" stop-color="#CFEAF7"/></linearGradient>
+  <!-- sky light -> sky -->
+  <linearGradient id="lungs_window" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#DDF0F9"/><stop offset="1" stop-color="#CFEAF7"/></linearGradient>
+</defs>
+<g id="room"><rect width="1024" height="600" fill="url(#lungs_wall)"/><path d="M0 350H1024V470H0Z" fill="#D9EEF9" opacity="0.22"/><path d="M0 350H1024" stroke="#CDB09A" stroke-width="4" opacity="0.45"/><path d="M0 356H1024" stroke="#FFFFFF" stroke-width="2" opacity="0.5"/><path d="M0 470H1024V600H0Z" fill="url(#lungs_floor)"/><path d="M0 470H1024" stroke="#865A32" stroke-width="6"/><g stroke="#4B372F" stroke-width="2" opacity="0.25"><path d="M0 510H1024M0 556H1024"/><path d="M210 470V510M640 470V510M90 510V556M430 510V556M820 510V556"/></g><path d="M112 0V66" stroke="#8E5F33" stroke-width="4"/><circle cx="112" cy="100" r="46" fill="#FFF3C4" opacity="0.35"/><path d="M88 88Q112 58 136 88L128 102Q112 110 96 102Z" fill="#F4D58A" stroke="#A37B2A" stroke-width="3" stroke-linejoin="round"/><path d="M912 0V66" stroke="#8E5F33" stroke-width="4"/><circle cx="912" cy="100" r="46" fill="#FFF3C4" opacity="0.35"/><path d="M888 88Q912 58 936 88L928 102Q912 110 896 102Z" fill="#F4D58A" stroke="#A37B2A" stroke-width="3" stroke-linejoin="round"/></g>
+<g id="bell_jar">
+<ellipse cx="505" cy="470" rx="112" ry="11" fill="#6A5147" opacity="0.3"/>
+<path d="M412 452H598L590 470H420Z" fill="#D18636" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+<path d="M424 452V250Q424 168 505 168Q586 168 586 250V452" fill="url(#lungs_glass)" stroke="#8D9093" stroke-width="4" opacity="0.38"/>
+<path d="M424 452V250Q424 168 505 168Q586 168 586 250V452" fill="none" stroke="#8D9093" stroke-width="4"/>
+<path d="M505 380V452" stroke="#CF9D27" stroke-width="8" stroke-linecap="round"/>
+<rect x="495" y="154" width="20" height="16" rx="6" fill="#FCCC50" stroke="#A37B2A" stroke-width="3"/>
+<path d="M440 260Q440 196 488 184" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.7"/>
+<path d="M572 300V420" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.5"/>
+</g><g id="lungs" data-target="airway_split" data-center="505,282">
+<path d="M505 196V284" stroke="#7F6E79" stroke-width="20" stroke-linecap="round"/>
+<path d="M505 196V284" stroke="#A293AA" stroke-width="13" stroke-linecap="round"/>
+<g stroke="#C7BECC" stroke-width="3" stroke-linecap="round"><path d="M499 212H511M499 228H511M499 244H511M499 260H511"/></g>
+<path d="M500 280C470 262 444 280 444 318C444 352 452 374 474 380C490 384 500 372 501 352Z" fill="url(#lungs_tissue)" stroke="#9A6E76" stroke-width="4" stroke-linejoin="round"/>
+<path d="M510 280C540 262 566 280 566 318C566 352 558 374 536 380C520 384 510 372 509 352Z" fill="url(#lungs_tissue)" stroke="#9A6E76" stroke-width="4" stroke-linejoin="round"/>
+<path d="M452 316Q448 300 462 290M558 316Q562 300 548 290" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.6"/>
+<path d="M505 282L486 300L474 318M486 300L490 326M505 282L524 300L536 318M524 300L520 326" fill="none" stroke="#918191" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
+<path d="M460 352Q470 346 476 352M534 352Q540 346 550 352" fill="none" stroke="#C28A99" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+</g><g id="window">
+<rect x="830" y="138" width="138" height="112" rx="10" fill="url(#lungs_window)" stroke="#A76D34" stroke-width="6"/>
+<path d="M836 222Q872 206 904 218T962 214V244H836Z" fill="#7AC688"/>
+<path d="M876 226V200" stroke="#51714A" stroke-width="5"/><circle cx="876" cy="192" r="16" fill="#59B86A" stroke="#51714A" stroke-width="3"/>
+<path d="M904 166q8 -10 18 -4q10 -6 16 4q8 2 4 10h-42q-6 -6 4 -10Z" fill="#FFFFFF" stroke="#A7B4BB" stroke-width="2"/>
+<path d="M899 140V248M832 194H966" stroke="#A76D34" stroke-width="5"/>
+</g><g id="plant">
+<ellipse cx="112" cy="584" rx="64" ry="9" fill="#6A5147" opacity="0.3"/>
+<path d="M78 534H146L138 580H86Z" fill="#F38948" stroke="#975C3A" stroke-width="3.5" stroke-linejoin="round"/>
+<rect x="72" y="526" width="80" height="14" rx="5" fill="#F59B63" stroke="#975C3A" stroke-width="3.5"/>
+<g fill="#59B86A" stroke="#51714A" stroke-width="3" stroke-linejoin="round">
+<path d="M112 526C96 500 80 486 62 490C70 510 90 524 112 526Z"/><path d="M112 526C126 496 146 482 166 486C158 508 136 522 112 526Z"/>
+<path d="M112 526C104 494 106 468 118 452C128 474 124 504 112 526Z"/></g>
+<path d="M86 496Q96 506 108 518M140 492Q128 506 116 518" fill="none" stroke="#9BD4A6" stroke-width="2.5" stroke-linecap="round"/>
+<g fill="#FFFFFF" stroke="#A7B4BB" stroke-width="2" opacity="0.85"><circle cx="150" cy="458" r="6"/><circle cx="166" cy="440" r="4"/><circle cx="136" cy="434" r="3"/></g>
+</g>
+</svg>

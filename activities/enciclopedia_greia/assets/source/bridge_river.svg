@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- Encyclopedia E4-D entry scene: The Bridge. Flattened opaque 1024x600 backdrop.
+       A brick arch bridge over a river valley, authored at the page's live
+       geometry so every overlay lands on the right part: deck y 350 between
+       x 310-714, piers at x 380 and 604 (40 wide, y 362-426), central arch =
+       upper half of the ellipse centred 512,422 (rx 92, ry 50), lamp posts
+       x 398/622 (the page's authored-mode arch glow follows this arch).
+       The car, duck, ripples and force overlays stay live. Discovery beds sit
+       exactly under the four semantic targets.
+       Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md (scene). -->
+  <defs>
+    <!-- sky light -> sky -->
+    <linearGradient id="bridge_river_sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#CFEAF7"/>
+      <stop offset="1" stop-color="#EAF6FB"/>
+    </linearGradient>
+    <!-- ocean light -> ocean (river) -->
+    <linearGradient id="bridge_river_water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7DB2E3"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+    <!-- leaf light -> leaf (banks) -->
+    <linearGradient id="bridge_river_grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8DCB86"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+    <!-- coral light -> coral shade (brick) -->
+    <linearGradient id="bridge_river_brick" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E9806C"/>
+      <stop offset="1" stop-color="#C95B4B"/>
+    </linearGradient>
+  </defs>
+
+  <g id="sky">
+    <rect width="1024" height="600" fill="url(#bridge_river_sky)"/>
+    <g fill="#FFFDF6" stroke="#B9CBD8" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M380 146 C374 132 391 121 405 129 C411 112 439 110 448 126 C461 118 481 126 478 141 C490 144 489 160 475 160 L389 160 C374 160 370 150 380 146 Z"/>
+      <path d="M560 120 C556 110 568 102 578 108 C583 96 603 95 609 106 C619 101 632 108 629 118 C638 121 636 132 626 132 L566 132 C556 132 552 125 560 120 Z" opacity="0.9"/>
+    </g>
+  </g>
+
+  <g id="hills">
+    <path d="M0 300 C80 250 180 236 280 262 C360 232 440 236 512 268 C590 230 700 226 800 258 C880 236 960 240 1024 262 L1024 360 L0 360 Z" fill="#C8E6C0" stroke="#9CC394" stroke-width="2"/>
+    <path d="M0 330 C120 300 230 300 300 318 L320 360 L0 360 Z" fill="#B5DDA6" stroke="#7FA877" stroke-width="2"/>
+    <path d="M1024 326 C900 296 800 300 724 318 L704 360 L1024 360 Z" fill="#B5DDA6" stroke="#7FA877" stroke-width="2"/>
+    <!-- distant trees -->
+    <g fill="#6EC07C" stroke="#51714A" stroke-width="2">
+      <circle cx="170" cy="296" r="16"/><circle cx="196" cy="300" r="12"/><circle cx="850" cy="292" r="16"/><circle cx="874" cy="298" r="12"/>
+    </g>
+  </g>
+
+  <g id="river">
+    <path d="M260 340 L764 340 L780 600 L244 600 Z" fill="url(#bridge_river_water)"/>
+    <path d="M300 520 C340 516 380 518 420 514 M600 540 C640 536 680 538 720 534" fill="none" stroke="#CFEAF7" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+  </g>
+
+  <g id="banks" stroke="#51714A" stroke-width="3" stroke-linejoin="round">
+    <path d="M0 600 L0 340 L140 335 L280 350 L290 420 L270 520 L250 600 Z" fill="url(#bridge_river_grass)"/>
+    <path d="M1024 600 L1024 340 L880 335 L744 350 L734 420 L754 520 L774 600 Z" fill="url(#bridge_river_grass)"/>
+    <path d="M10 346 C60 342 110 340 150 342" fill="none" stroke="#B4E2B4" stroke-width="4" stroke-linecap="round"/>
+    <path d="M884 342 C930 340 980 342 1014 346" fill="none" stroke="#B4E2B4" stroke-width="4" stroke-linecap="round"/>
+    <!-- reeds and flowers -->
+    <g fill="none" stroke="#3F6E3A" stroke-width="2.5" stroke-linecap="round">
+      <path d="M276 470 q-4 -18 2 -30"/><path d="M284 474 q2 -20 -2 -32"/><path d="M748 470 q4 -18 -2 -30"/><path d="M740 474 q-2 -20 2 -32"/>
+    </g>
+    <g stroke="#4B372F" stroke-width="2">
+      <circle cx="100" cy="372" r="5" fill="#F5D6DF"/><circle cx="170" cy="392" r="5" fill="#FFD35C"/><circle cx="60" cy="560" r="5" fill="#FFFBEB"/>
+      <circle cx="850" cy="388" r="5" fill="#FFFBEB"/><circle cx="910" cy="372" r="5" fill="#F5D6DF"/>
+    </g>
+  </g>
+
+  <g id="abutments" stroke="#4B372F" stroke-width="3" stroke-linejoin="round">
+    <!-- stone ends where the deck lands on each bank -->
+    <path d="M284 344 L330 344 L330 372 L290 380 Z" fill="#D8CDB8"/>
+    <path d="M740 344 L694 344 L694 372 L734 380 Z" fill="#D8CDB8"/>
+  </g>
+
+  <g id="bridge">
+    <ellipse cx="400" cy="426" rx="26" ry="8" fill="#2F5F8F" opacity="0.35"/>
+    <ellipse cx="624" cy="426" rx="26" ry="8" fill="#2F5F8F" opacity="0.35"/>
+    <!-- brick arch spanning between the piers: upper half of the ellipse
+         centred 512,422 (rx 92, ry 50), 14 thick; open spandrel posts -->
+    <g stroke="#4B372F" stroke-width="2.5">
+      <rect x="432" y="362" width="9" height="38" fill="#C95B4B"/>
+      <rect x="458" y="362" width="9" height="24" fill="#C95B4B"/>
+      <rect x="557" y="362" width="9" height="24" fill="#C95B4B"/>
+      <rect x="583" y="362" width="9" height="38" fill="#C95B4B"/>
+    </g>
+    <path d="M420 422 A92 50 0 0 1 604 422 L590 422 A78 36 0 0 0 434 422 Z" fill="url(#bridge_river_brick)" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <g stroke="#9E4337" stroke-width="2" stroke-linecap="round">
+      <path d="M440 396 l8 6"/><path d="M466 380 l5 8"/><path d="M512 374 v10"/><path d="M558 380 l-5 8"/><path d="M584 396 l-8 6"/>
+    </g>
+    <!-- piers with stone caps -->
+    <rect x="380" y="362" width="40" height="64" rx="4" fill="url(#bridge_river_brick)" stroke="#4B372F" stroke-width="3"/>
+    <rect x="604" y="362" width="40" height="64" rx="4" fill="url(#bridge_river_brick)" stroke="#4B372F" stroke-width="3"/>
+    <g stroke="#9E4337" stroke-width="2">
+      <path d="M382 382 H418 M382 400 H418 M400 382 V400 M392 400 V424 M410 362 V382"/>
+      <path d="M606 382 H642 M606 400 H642 M624 382 V400 M616 400 V424 M634 362 V382"/>
+    </g>
+    <rect x="376" y="358" width="48" height="10" rx="3" fill="#F6ECD2" stroke="#4B372F" stroke-width="2.5"/>
+    <rect x="600" y="358" width="48" height="10" rx="3" fill="#F6ECD2" stroke="#4B372F" stroke-width="2.5"/>
+    <!-- red girder under the road, then the road deck -->
+    <rect x="306" y="354" width="412" height="12" rx="3" fill="#D85E4C" stroke="#4B372F" stroke-width="2.5"/>
+    <rect x="304" y="343" width="416" height="14" rx="4" fill="#4E5660" stroke="#4B372F" stroke-width="2.5"/>
+    <g stroke="#FFFBEB" stroke-width="2.5" stroke-linecap="round">
+      <path d="M326 350 h12"/><path d="M362 350 h12"/><path d="M398 350 h12"/><path d="M434 350 h12"/><path d="M470 350 h12"/><path d="M506 350 h12"/><path d="M542 350 h12"/><path d="M578 350 h12"/><path d="M614 350 h12"/><path d="M650 350 h12"/><path d="M686 350 h12"/>
+    </g>
+    <!-- railing -->
+    <g stroke="#4B372F" stroke-linecap="round">
+      <path d="M310 340 H714" stroke-width="7"/>
+      <path d="M318 343 V338 M334 343 V338 M350 343 V338 M366 343 V338 M382 343 V338 M414 343 V338 M430 343 V338 M446 343 V338 M462 343 V338 M478 343 V338 M494 343 V338 M510 343 V338 M526 343 V338 M542 343 V338 M558 343 V338 M574 343 V338 M590 343 V338 M606 343 V338 M638 343 V338 M654 343 V338 M670 343 V338 M686 343 V338 M702 343 V338" stroke-width="5"/>
+    </g>
+    <path d="M310 340 H714" stroke="#FFFBEB" stroke-width="3" stroke-linecap="round"/>
+    <!-- lamp posts on the piers -->
+    <g stroke-linecap="round">
+      <path d="M398 340 V322 M622 340 V322" stroke="#4B372F" stroke-width="4"/>
+      <circle cx="398" cy="318" r="7" fill="#FFD35C" stroke="#4B372F" stroke-width="2.5"/>
+      <circle cx="622" cy="318" r="7" fill="#FFD35C" stroke="#4B372F" stroke-width="2.5"/>
+      <circle cx="396" cy="316" r="2" fill="#FFFFFF"/>
+      <circle cx="620" cy="316" r="2" fill="#FFFFFF"/>
+    </g>
+  </g>
+
+  <g id="discovery_beds" stroke-linejoin="round">
+    <!-- sky tokens rest on clouds, bank tokens on round stepping stones -->
+    <g data-target="load" data-center="240,185" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="2.5">
+      <path d="M180 210 C166 210 162 192 176 188 C174 164 202 152 218 164 C230 142 266 144 272 166 C294 162 308 182 298 196 C312 202 308 218 292 218 L186 218 C180 218 178 214 180 210 Z"/>
+    </g>
+    <g data-target="shapes" data-center="765,185" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="2.5">
+      <path d="M705 210 C691 210 687 192 701 188 C699 164 727 152 743 164 C755 142 791 144 797 166 C819 162 833 182 823 196 C837 202 833 218 817 218 L711 218 C705 218 703 214 705 210 Z"/>
+    </g>
+    <g data-target="forces" data-center="240,420" fill="#D8CDB8" stroke="#4B372F" stroke-width="3">
+      <ellipse cx="240" cy="424" rx="48" ry="45"/>
+    </g>
+    <g data-target="path" data-center="765,420" fill="#D8CDB8" stroke="#4B372F" stroke-width="3">
+      <ellipse cx="765" cy="424" rx="48" ry="45"/>
+    </g>
+  </g>
+</svg>

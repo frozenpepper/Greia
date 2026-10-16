@@ -7,30 +7,36 @@ import math
 
 import pygame
 
-from greia_platform.typography import FontRole
-
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
+        draw_authored_scene,
         draw_breathe_button,
-        draw_focus_patch,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
+        draw_authored_scene,
         draw_breathe_button,
-        draw_focus_patch,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_presenter, grid_step
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +53,9 @@ DISCOVERIES = (
     LungsDiscovery("exchange", "lungs.exchange", "encyclopedia.body.lungs.exchange", (250, 420)),
     LungsDiscovery("exercise", "lungs.exercise", "encyclopedia.body.lungs.exercise", (755, 420)),
 )
+
+# E4 authored scene; a missing rendition fails soft to the procedural fallback.
+SCENE_ID = "encyclopedia.body.lungs.discovery_room"
 
 
 class BreathingModel:
@@ -201,17 +210,16 @@ class LungsPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((237, 242, 246))
-        draw_centered_text(
+        authored = draw_authored_scene(surface, self.context.visuals, SCENE_ID)
+        if not authored:
+            surface.fill((237, 242, 246))
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("lungs.title"),
-            center=(500, 92),
-            size=40,
-            color=self.context.palette.ink,
-            role=FontRole.DISPLAY,
+            self.context.palette.ink,
         )
-        self._draw_body_and_lungs(surface)
+        self._draw_body_and_lungs(surface, authored=authored)
         self._draw_hotspots(surface)
         # Standard navigation for discovery
         can_left = self._selected > 0
@@ -236,37 +244,46 @@ class LungsPage(EncyclopediaPage):
             fallback_color=(229, 137, 183),
         )
 
-    def _draw_body_and_lungs(self, surface: pygame.Surface) -> None:
-        skin = (235, 190, 161)
-        skin_light = (245, 210, 185)
-        skin_shadow = (210, 165, 138)
-        # Head with highlight
-        pygame.draw.circle(surface, skin, (505, 178), 40)
-        pygame.draw.circle(surface, skin_light, (494, 166), 10)
-        pygame.draw.circle(surface, skin, (505, 178), 40, 2)
-        # Torso with soft shadow and rib hint
-        torso = pygame.Rect(442, 222, 126, 235)
-        pygame.draw.rect(surface, skin_shadow, torso.move(3, 5), border_radius=48)
-        pygame.draw.rect(surface, skin, torso, border_radius=48)
-        pygame.draw.rect(surface, skin_light, torso.inflate(-12, -12), border_radius=42, width=3)
-        for ry in (240, 258, 276):
-            pygame.draw.arc(surface, (218, 175, 160), (450, ry, 90, 16), 0.30, 2.84, 2)
+    def _draw_body_and_lungs(self, surface: pygame.Surface, *, authored: bool) -> None:
+        if not authored:
+            skin = (235, 190, 161)
+            skin_light = (245, 210, 185)
+            skin_shadow = (210, 165, 138)
+            # Head with highlight
+            pygame.draw.circle(surface, skin, (505, 178), 40)
+            pygame.draw.circle(surface, skin_light, (494, 166), 10)
+            pygame.draw.circle(surface, skin, (505, 178), 40, 2)
+            # Torso with soft shadow and rib hint
+            torso = pygame.Rect(442, 222, 126, 235)
+            pygame.draw.rect(surface, skin_shadow, torso.move(3, 5), border_radius=48)
+            pygame.draw.rect(surface, skin, torso, border_radius=48)
+            pygame.draw.rect(surface, skin_light, torso.inflate(-12, -12), border_radius=42, width=3)
+            for ry in (240, 258, 276):
+                pygame.draw.arc(surface, (218, 175, 160), (450, ry, 90, 16), 0.30, 2.84, 2)
         expansion = self._model.expansion
         lung_width = 46 + int(5 * expansion)
         lung_height = 96 + int(8 * expansion)
         left = pygame.Rect(505 - lung_width - 4, 265, lung_width, lung_height)
         right = pygame.Rect(509, 265, lung_width, lung_height)
-        # Lung shadow + highlight for depth
-        for rect in (left, right):
-            shadow = pygame.Surface((rect.width + 10, rect.height + 10), pygame.SRCALPHA)
-            pygame.draw.ellipse(shadow, (0, 0, 0, 22), shadow.get_rect())
-            surface.blit(shadow, (rect.x - 3, rect.y + 4))
-        pygame.draw.ellipse(surface, (210, 135, 145), left)
-        pygame.draw.ellipse(surface, (210, 135, 145), right)
-        pygame.draw.ellipse(surface, (221, 151, 161), left.inflate(-4, -4))
-        pygame.draw.ellipse(surface, (221, 151, 161), right.inflate(-4, -4))
-        pygame.draw.ellipse(surface, (235, 175, 182), left.inflate(-12, -12))
-        pygame.draw.ellipse(surface, (235, 175, 182), right.inflate(-12, -12))
+        if authored:
+            # The lungs model is baked into the bell-jar scene; breathing is
+            # shown by a soft outline that swells on each inhale.
+            if expansion > 0.1:
+                grow = int(14 * expansion)
+                for lobe in (pygame.Rect(444, 262, 58, 122), pygame.Rect(508, 262, 58, 122)):
+                    pygame.draw.ellipse(surface, (246, 178, 196), lobe.inflate(grow, grow), 3)
+        else:
+            # Lung shadow + highlight for depth
+            for rect in (left, right):
+                shadow = pygame.Surface((rect.width + 10, rect.height + 10), pygame.SRCALPHA)
+                pygame.draw.ellipse(shadow, (0, 0, 0, 22), shadow.get_rect())
+                surface.blit(shadow, (rect.x - 3, rect.y + 4))
+            pygame.draw.ellipse(surface, (210, 135, 145), left)
+            pygame.draw.ellipse(surface, (210, 135, 145), right)
+            pygame.draw.ellipse(surface, (221, 151, 161), left.inflate(-4, -4))
+            pygame.draw.ellipse(surface, (221, 151, 161), right.inflate(-4, -4))
+            pygame.draw.ellipse(surface, (235, 175, 182), left.inflate(-12, -12))
+            pygame.draw.ellipse(surface, (235, 175, 182), right.inflate(-12, -12))
 
         diaphragm_y = 382 + int(9 * expansion)
         pygame.draw.arc(
@@ -357,19 +374,20 @@ class LungsPage(EncyclopediaPage):
             pygame.draw.line(surface, (74, 70, 70), (cx + 6, cy + 4), (cx + 25, cy + 14), 7)
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (253, 249, 239), item.center, 37)
-            pygame.draw.circle(surface, (87, 68, 73), item.center, 37, 3)
-            self._draw_hotspot_icon(surface, item)
-            if index == self._selected or index == self._hovered:
-                draw_focus_patch(surface, rect, active=True, radius=16, time=self._time)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=self._caption_key == item.caption_key,
+                icon=lambda target, _center, item=item: self._draw_hotspot_icon(target, item),
+                token_shape=TOKEN_SHAPE_FELT_TAG,
+            )
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (253, 249, 239), panel, border_radius=22)
-        pygame.draw.rect(surface, (87, 68, 73), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (57, 51, 55))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (57, 51, 55))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )

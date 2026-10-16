@@ -13,6 +13,8 @@ if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
         draw_focus_patch,
         draw_history_action_button,
         draw_navigation_arrows,
@@ -24,6 +26,8 @@ else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
         draw_focus_patch,
         draw_history_action_button,
         draw_navigation_arrows,
@@ -65,6 +69,8 @@ class CavePaintingsPage(EncyclopediaPage):
         self._hands_age = 0.0
         self._uncertainty_age = 0.0
         self._child_mark_age = 0.0
+        # One cached additive lamp-light disc (authored mode), built on first draw.
+        self._lamp_glow: pygame.Surface | None = None
         self._hotspots = tuple(
             pygame.Rect(cx - 43, cy - 43, 86, 86)
             for cx, cy in (item.center for item in DISCOVERIES)
@@ -164,9 +170,20 @@ class CavePaintingsPage(EncyclopediaPage):
         self.context.audio.play(item.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((79, 68, 59))
+        # Authored cave: a dim painted wall that the live lamp lights up.
+        authored = draw_authored_scene(
+            surface,
+            self.context.visuals,
+            "encyclopedia.history.cave_paintings.wall",
+        )
+        if not authored:
+            # Contained procedural fallback when the runtime PNG is absent.
+            surface.fill((79, 68, 59))
         draw_centered_text(surface, self.context.typography, self.context.resources.text("cave_paintings.title"), center=(500, 92), size=40, color=(246, 228, 189), role=FontRole.DISPLAY)
-        self._draw_cave(surface)
+        if authored:
+            self._draw_lit_wall(surface)
+        else:
+            self._draw_cave(surface)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -178,6 +195,50 @@ class CavePaintingsPage(EncyclopediaPage):
         )
         self._draw_caption(surface)
         draw_presenter(surface, self.context.visuals, "leo", position=(925, 565), height=142, variant="default")
+
+    LAMP_POSITIONS = ((395, 410), (505, 390), (615, 410))
+    LAMP_GLOW_RADIUS = 112
+
+    def _lamp_glow_surface(self) -> pygame.Surface:
+        """Build the warm additive lamp-light disc once (bounded, reused)."""
+        glow = self._lamp_glow
+        if glow is None:
+            radius = self.LAMP_GLOW_RADIUS
+            glow = pygame.Surface((radius * 2, radius * 2))
+            glow.fill((0, 0, 0))
+            for r in range(radius, 0, -4):
+                k = (1.0 - r / radius) ** 1.2
+                glow_color = (int(118 * k), int(84 * k), int(34 * k))
+                pygame.draw.circle(glow, glow_color, (radius, radius), r)
+            self._lamp_glow = glow
+        return glow
+
+    def _draw_lit_wall(self, surface: pygame.Surface) -> None:
+        """Light one authored painting with the moving lamp; overlays stay live."""
+        reveal_center = (505 + (self._lamp_step - 1) * 78, 315)
+        glow = self._lamp_glow_surface()
+        surface.blit(
+            glow,
+            glow.get_rect(center=reveal_center),
+            special_flags=pygame.BLEND_RGB_ADD,
+        )
+        lamp = self.LAMP_POSITIONS[self._lamp_step]
+        # Small stone oil lamp with a flickering flame.
+        flicker = int(math.sin(self._time * 9.0) * 2)
+        pygame.draw.ellipse(surface, (122, 93, 76), (lamp[0] - 20, lamp[1] - 4, 40, 16))
+        pygame.draw.ellipse(surface, (63, 46, 38), (lamp[0] - 20, lamp[1] - 4, 40, 16), 3)
+        flame = [
+            (lamp[0], lamp[1] - 26 - flicker),
+            (lamp[0] - 8, lamp[1] - 6),
+            (lamp[0] + 8, lamp[1] - 6),
+        ]
+        pygame.draw.polygon(surface, (246, 190, 79), flame)
+        pygame.draw.polygon(surface, (255, 236, 160), [
+            (lamp[0], lamp[1] - 16 - flicker),
+            (lamp[0] - 4, lamp[1] - 6),
+            (lamp[0] + 4, lamp[1] - 6),
+        ])
+        self._draw_overlays(surface)
 
     def _draw_cave(self, surface: pygame.Surface) -> None:
         wall = pygame.Rect(350, 225, 320, 235)
@@ -211,7 +272,10 @@ class CavePaintingsPage(EncyclopediaPage):
         pygame.draw.line(surface, color, (ax + 15, ay - 4), (ax + 42, ay - 26), 5)
         pygame.draw.circle(surface, color, (ax + 42, ay - 28), 8, 3)
         pygame.draw.polygon(surface, (183, 83, 51), [(ax - 80, ay + 56), (ax - 57, ay + 24), (ax - 34, ay + 56)], 4)
+        self._draw_overlays(surface)
 
+    def _draw_overlays(self, surface: pygame.Surface) -> None:
+        """Pigment, hand, uncertainty and child-mark overlays (live in both modes)."""
         if self._pigment_age > 0.0:
             for i, pigment in enumerate(((156, 62, 42), (201, 143, 67), (71, 58, 51), (186, 177, 144))):
                 pygame.draw.circle(surface, pigment, (395 + i * 48, 445), 15)
@@ -259,11 +323,9 @@ class CavePaintingsPage(EncyclopediaPage):
             focus_ring(surface, rect, index == self._selected or index == self._hovered)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (247, 232, 196), panel, border_radius=22)
-        pygame.draw.rect(surface, (72, 61, 53), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (55, 47, 42))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (55, 47, 42))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        # Shared adaptive ribbon: wraps long captions instead of overflowing.
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )

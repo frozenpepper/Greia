@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<defs>
+  <!-- navy deep -> navy lifted -->
+  <linearGradient id="earth_sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#21304F"/><stop offset="1" stop-color="#33496F"/></linearGradient>
+  <!-- ink+orange 25% -> ink -->
+  <linearGradient id="earth_deck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#755031"/><stop offset="1" stop-color="#4B372F"/></linearGradient>
+  <!-- ocean light -> ocean -->
+  <linearGradient id="earth_sea" x1="0.1" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#92BDE8"/><stop offset="1" stop-color="#4A91D8"/></linearGradient>
+  <!-- leaf light -> leaf -->
+  <linearGradient id="earth_land" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#82CA8F"/><stop offset="1" stop-color="#59B86A"/></linearGradient>
+  <!-- cream -> sand/charcoal step -->
+  <linearGradient id="earth_moon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F1E8"/><stop offset="1" stop-color="#BDB8AC"/></linearGradient>
+  <!-- ocean light -> ocean -->
+  <linearGradient id="earth_globe_sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#80B2E4"/><stop offset="1" stop-color="#4A91D8"/></linearGradient>
+  <clipPath id="earth_disc"><circle cx="505" cy="326" r="106.5"/></clipPath>
+</defs>
+<g id="sky"><rect width="1024" height="600" fill="url(#earth_sky)"/><g fill="#FFFBEB" opacity="0.85"><circle cx="252.4" cy="236" r="1.2"/><circle cx="255" cy="461.1" r="2"/><circle cx="264.9" cy="403.2" r="2"/><circle cx="985.5" cy="341" r="2"/><circle cx="535.8" cy="162.8" r="1.4"/><circle cx="397.4" cy="133.2" r="1"/><circle cx="868.8" cy="19" r="1.4"/><circle cx="39" cy="315.6" r="1.2"/><circle cx="357.4" cy="143.3" r="1.6"/><circle cx="801.1" cy="430.3" r="1.2"/><circle cx="779.5" cy="19.5" r="1.2"/><circle cx="1004" cy="383.5" r="2"/><circle cx="114.9" cy="257.6" r="1.6"/><circle cx="949.1" cy="319" r="1.6"/><circle cx="928.5" cy="453.8" r="1.4"/><circle cx="119.4" cy="420.1" r="2"/><circle cx="793.1" cy="276" r="1.6"/><circle cx="451.2" cy="10.7" r="1.6"/><circle cx="845.9" cy="366" r="1.6"/><circle cx="949.1" cy="300.9" r="2"/><circle cx="106.8" cy="376.4" r="1.4"/><circle cx="942.4" cy="386.4" r="1"/><circle cx="337.5" cy="248.1" r="2"/><circle cx="879.4" cy="193.2" r="1.4"/><circle cx="233.6" cy="339.8" r="2"/><circle cx="552.9" cy="153.8" r="1.4"/><circle cx="999.8" cy="258.6" r="1.4"/><circle cx="261.8" cy="363" r="2"/><circle cx="800.3" cy="57.5" r="1.6"/><circle cx="894.4" cy="343.7" r="1.2"/><circle cx="691.6" cy="338.4" r="2"/><circle cx="965.3" cy="271.1" r="2"/><circle cx="682.5" cy="339.6" r="1.6"/><circle cx="702.1" cy="70" r="1.6"/><circle cx="396.5" cy="152.6" r="2"/><circle cx="1003.3" cy="452.2" r="1.4"/><circle cx="757.5" cy="154.6" r="2"/><circle cx="132.1" cy="436.9" r="1.6"/><circle cx="883.9" cy="104.7" r="1.6"/><circle cx="270" cy="185" r="2"/><circle cx="338.4" cy="28.4" r="1.4"/><circle cx="39.5" cy="154.5" r="1"/><circle cx="298.9" cy="213" r="2"/><circle cx="798.7" cy="70.8" r="1.4"/><circle cx="86.5" cy="228.3" r="2"/><circle cx="603.2" cy="6.8" r="1.6"/></g><g fill="#BFD6F0" opacity="0.7"><circle cx="593.7" cy="100.2" r="1.2"/><circle cx="47.7" cy="211.8" r="1.4"/><circle cx="960.7" cy="374.9" r="1.4"/><circle cx="984.3" cy="374.2" r="1.6"/><circle cx="293.3" cy="271.6" r="1"/><circle cx="80.3" cy="259.5" r="1.6"/><circle cx="673.8" cy="34.3" r="1.2"/><circle cx="311.5" cy="90.5" r="1.4"/><circle cx="320" cy="286.3" r="1.2"/><circle cx="776.4" cy="424.3" r="1.2"/></g></g>
+
+<g id="deck"><path d="M0 486H1024V600H0Z" fill="url(#earth_deck)"/><path d="M0 486H1024" stroke="#A76D34" stroke-width="5"/><path d="M0 490H1024" stroke="#B18B66" stroke-width="1.8" opacity="0.6"/><g stroke="#4B372F" stroke-width="2" opacity="0.35"><path d="M180 492L120 600M380 492L350 600M512 492V600M644 492L674 600M844 492L904 600"/></g></g>
+<g id="dome_ribs" fill="none" stroke-linecap="round"><path d="M-6 -10Q60 230 22 486M1030 -10Q964 230 1002 486" stroke="#8B5D32" stroke-width="24"/><path d="M4 6Q64 230 30 478M1020 6Q960 230 994 478" stroke="#C17C35" stroke-width="3" opacity="0.7"/></g>
+<g id="earth" data-target="earth" data-center="505,326">
+<circle cx="505" cy="326" r="120" fill="none" stroke="#B7D3EF" stroke-width="8" opacity="0.22"/>
+<circle cx="505" cy="326" r="108" fill="url(#earth_sea)"/>
+<g clip-path="url(#earth_disc)">
+<path d="M478 296C492 282 528 280 548 290C566 298 572 312 586 316C594 330 588 344 576 356C566 372 562 392 548 414C540 424 530 420 528 406C524 388 516 374 506 366C494 354 478 352 470 336C464 322 468 306 478 296ZM486 270C490 252 512 244 528 248C540 236 560 238 566 252C572 264 560 274 548 276C536 282 516 284 500 282C490 280 484 276 486 270ZM584 304C596 302 608 314 610 328C604 336 594 338 588 330C584 322 582 312 584 304ZM402 326C414 314 434 318 442 332C448 350 440 368 430 388C422 404 412 418 404 426L384 420L384 330ZM424 256C436 248 452 252 456 262C454 272 440 276 430 272C424 268 420 262 424 256Z" fill="url(#earth_land)" stroke="#516B47" stroke-width="2.5" stroke-linejoin="round"/>
+<ellipse cx="514" cy="306" rx="34" ry="12" fill="#EEDDBA" opacity="0.75"/>
+<ellipse cx="591" cy="391" rx="5" ry="10" fill="#59B86A" stroke="#516B47" stroke-width="2"/>
+<ellipse cx="505" cy="224" rx="70" ry="20" fill="#FFFFFF" stroke="#6EA7E0" stroke-width="2"/>
+<g fill="none" stroke="#FFFFFF" stroke-linecap="round" opacity="0.85">
+<path d="M440 300Q468 288 494 296" stroke-width="7"/><path d="M548 340Q576 330 604 342" stroke-width="6"/>
+<path d="M454 392Q482 382 506 394" stroke-width="7"/><path d="M560 262Q584 254 604 266" stroke-width="5"/></g>
+<path d="M535 218A108 108 0 0 1 535 434A71.28 108 0 0 0 535 218Z" fill="#2C4C72" opacity="0.32"/>
+</g>
+<circle cx="505" cy="326" r="108" fill="none" stroke="#4B607B" stroke-width="3.5"/>
+<path d="M425 286Q441 250 477 234" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.55"/>
+</g>
+<g id="moon"><circle cx="655" cy="222" r="17" fill="url(#earth_moon)" stroke="#7E7167" stroke-width="2.5"/>
+<circle cx="650" cy="217" r="4" fill="#A9A396"/><circle cx="661" cy="228" r="3" fill="#A9A396"/></g>
+<g id="desk_globe">
+<ellipse cx="118" cy="580" rx="70" ry="9" fill="#6A5147" opacity="0.3"/>
+<path d="M88 578Q118 566 148 578Z" fill="#A76D34" stroke="#4B372F" stroke-width="3"/>
+<path d="M118 568V548" stroke="#A76D34" stroke-width="7" stroke-linecap="round"/>
+<circle cx="118" cy="514" r="34" fill="url(#earth_globe_sea)" stroke="#4B607B" stroke-width="3"/>
+<path d="M104 494C114 488 128 490 132 500C136 512 128 520 124 532C120 540 112 538 110 528C106 518 98 512 98 504C98 498 100 496 104 494Z" fill="#59B86A" stroke="#516B47" stroke-width="2"/>
+<path d="M136 476A42 42 0 0 1 136 552" fill="none" stroke="#CF9D27" stroke-width="5" stroke-linecap="round"/>
+<path d="M98 500Q102 490 112 486" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+</g>
+</svg>

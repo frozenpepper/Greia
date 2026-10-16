@@ -96,6 +96,43 @@ class VisualLibrary:
         "encyclopedia.body.gallery.discovery_room": "body_gallery_discovery_room.png",
         "encyclopedia.machines.gallery.workbench": "machines_gallery_workbench.png",
         "encyclopedia.history.gallery.time_trail": "history_gallery_time_trail.png",
+        # E4-D machines entry batch (build group ``e4_machines``).
+        "encyclopedia.machines.magnet.lab": "magnet_lab.png",
+        "encyclopedia.machines.bicycle.park": "bicycle_park.png",
+        "encyclopedia.machines.airplane.sky": "airplane_sky.png",
+        "encyclopedia.machines.bridge.river": "bridge_river.png",
+        # E4-E history entry batch (build group ``e4_history``).
+        "encyclopedia.history.dinosaurs.valley": "dinosaurs_valley.png",
+        "encyclopedia.history.fossils.dig_site": "fossils_dig_site.png",
+        "encyclopedia.history.mammoth.tundra": "mammoth_tundra.png",
+        "encyclopedia.history.cave_paintings.wall": "cave_paintings_wall.png",
+        # E4-A organic/nature entry batch (build group ``e4_nature``).
+        "encyclopedia.animals.elephant.waterhole": "elephant_waterhole.png",
+        "encyclopedia.animals.octopus.reef": "octopus_reef.png",
+        "encyclopedia.animals.bee.meadow": "bee_meadow.png",
+        "encyclopedia.animals.penguin.ice_shore": "penguin_ice_shore.png",
+        "encyclopedia.animals.frog.pond": "frog_pond.png",
+        "encyclopedia.earth.volcano.cross_section": "volcano_cross_section.png",
+        "encyclopedia.earth.rain.water_cycle": "rain_water_cycle.png",
+        "encyclopedia.earth.ocean.depths": "ocean_depths.png",
+        "encyclopedia.earth.tree.hillside": "tree_hillside.png",
+        "encyclopedia.earth.rainbow.shower": "rainbow_shower.png",
+        # E4-B space entry batch (build group ``e4_space``; Saturn stays golden).
+        "encyclopedia.space.sun.observatory": "sun_solar_observatory.png",
+        "encyclopedia.space.mercury.observatory": "mercury_sunside_observatory.png",
+        "encyclopedia.space.venus.observatory": "venus_cloud_observatory.png",
+        "encyclopedia.space.earth.observatory": "earth_home_observatory.png",
+        "encyclopedia.space.moon.observatory": "moon_night_observatory.png",
+        "encyclopedia.space.mars.observatory": "mars_red_observatory.png",
+        "encyclopedia.space.jupiter.observatory": "jupiter_giant_observatory.png",
+        "encyclopedia.space.uranus.observatory": "uranus_tilted_observatory.png",
+        "encyclopedia.space.neptune.observatory": "neptune_windy_observatory.png",
+        # E4-C body entry batch (build group ``e4_body``).
+        "encyclopedia.body.heart.discovery_room": "heart_discovery_room.png",
+        "encyclopedia.body.lungs.discovery_room": "lungs_discovery_room.png",
+        "encyclopedia.body.bones.xray_room": "bones_xray_room.png",
+        "encyclopedia.body.teeth.dental_room": "teeth_dental_room.png",
+        "encyclopedia.body.senses.mirror_room": "senses_mirror_room.png",
     }
     # Small planet sprites — transparent, cached, not full-screen
     PLANET_ASSETS = {

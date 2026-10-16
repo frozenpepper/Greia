@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- Encyclopedia E4-E entry scene: Cave Paintings. Flattened opaque 1024x600
+       backdrop. Inside a cave: a smooth limestone wall (x ~300-720,
+       y ~170-470) painted long ago with a bison (left, under lamp spot 427,315),
+       a horse (centre, under 505,315) and hand stencils with dots (right,
+       under 583,315 where the live hand overlay traces one). The wall is kept
+       a little dim so the live lamp glow visibly lights each painting. Pigment
+       stones and a shell palette rest on the floor. Discovery beds (stone
+       ledges) sit exactly under the four semantic targets.
+       Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md (scene). -->
+  <defs>
+    <!-- cave rock: warm ink light -> ink -->
+    <linearGradient id="cave_paintings_wall_rock" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6B5143"/>
+      <stop offset="1" stop-color="#4B372F"/>
+    </linearGradient>
+    <!-- sand shade -> dim limestone (painted wall) -->
+    <linearGradient id="cave_paintings_wall_stone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#AE8B67"/>
+      <stop offset="1" stop-color="#93714F"/>
+    </linearGradient>
+  </defs>
+
+  <g id="cave">
+    <rect width="1024" height="600" fill="url(#cave_paintings_wall_rock)"/>
+    <!-- rock bulges framing the chamber -->
+    <g fill="#5E4536" stroke="#3F2E26" stroke-width="3" stroke-linejoin="round">
+      <path d="M-10 150 C30 128 76 140 104 132 C140 124 176 150 178 186 C182 214 160 230 166 252 C150 276 92 270 60 282 C30 292 6 280 -10 284 Z"/>
+      <path d="M1034 156 C996 134 950 146 918 138 C880 132 846 160 846 194 C846 220 866 232 860 256 C878 278 936 272 966 284 C996 294 1020 284 1034 288 Z"/>
+      <path d="M-10 600 L-10 470 C80 450 200 452 300 474 C420 496 600 496 720 474 C820 456 940 450 1034 470 L1034 600 Z"/>
+    </g>
+    <path d="M24 162 C52 150 86 154 110 146 M878 152 C904 148 940 158 970 152" fill="none" stroke="#7A5D4C" stroke-width="4" stroke-linecap="round"/>
+    <!-- stalactites -->
+    <g fill="#6B5143" stroke="#3F2E26" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M140 0 L170 0 L156 58 Z"/><path d="M230 0 L262 0 L248 40 Z"/><path d="M770 0 L804 0 L788 52 Z"/><path d="M860 0 L884 0 L874 34 Z"/>
+      <path d="M330 150 L356 150 L344 186 Z"/><path d="M660 150 L690 150 L676 192 Z"/>
+    </g>
+  </g>
+
+  <g id="painted_wall">
+    <path d="M318 196 C360 158 460 148 520 150 C600 152 680 166 714 204 C740 240 736 330 724 400 C716 446 690 470 640 474 C560 482 450 480 380 472 C330 466 304 440 300 396 C294 330 290 236 318 196 Z" fill="url(#cave_paintings_wall_stone)" stroke="#3F2E26" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M340 206 C380 180 450 170 510 170" fill="none" stroke="#C7A47F" stroke-width="5" stroke-linecap="round"/>
+    <g fill="none" stroke="#9C7A5A" stroke-width="2.5" stroke-linecap="round">
+      <path d="M330 260 C350 270 352 290 340 300"/><path d="M690 230 C676 246 680 262 694 270"/><path d="M640 440 C620 432 600 436 590 446"/>
+    </g>
+
+    <!-- bison, red ochre, left (lit by the left lamp spot) -->
+    <g stroke="#7A2E25" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M372 334 C370 312 384 294 404 292 C414 278 438 274 452 284 C466 288 474 304 470 318 C468 330 458 336 448 336 L446 360 L438 360 L436 340 L398 342 L396 362 L388 362 L386 342 C378 342 372 340 372 334 Z" fill="#A8473A"/>
+      <path d="M452 290 C458 284 466 284 470 290 M404 292 C398 286 396 278 400 272" fill="none"/>
+    </g>
+    <path d="M462 300 l8 -12 M372 320 C362 318 358 326 362 334" fill="none" stroke="#7A2E25" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- horse, charcoal and ochre, centre -->
+    <g stroke="#3F2E26" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M470 306 C472 290 488 282 506 284 L528 284 C534 270 544 258 556 256 C564 256 568 262 566 270 C562 278 554 282 550 292 C548 304 544 314 536 318 L534 344 L527 344 L526 322 L494 324 L490 346 L483 346 L482 322 C474 318 470 314 470 306 Z" fill="#D08A45"/>
+      <path d="M528 284 C534 270 544 258 556 256 C552 266 544 276 536 288 Z" fill="#3F2E26"/>
+    </g>
+    <path d="M470 304 C462 304 456 312 458 322 M483 340 v6 M490 340 v6 M527 338 v6 M534 338 v6" fill="none" stroke="#3F2E26" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- hand stencils (sprayed ochre around a hand), right -->
+    <g fill="#C27A52">
+      <circle cx="583" cy="318" r="30"/>
+      <circle cx="630" cy="372" r="22"/>
+    </g>
+    <g fill="#C7A47F" stroke="#9C5A3A" stroke-width="1.8" stroke-linejoin="round">
+      <path d="M572 336 C568 326 570 316 574 312 L571 292 C571 288 577 288 578 292 L580 308 L581 288 C581 284 587 284 587 288 L587 308 L590 292 C591 288 596 289 596 293 L593 312 L599 302 C601 298 606 300 604 305 L596 328 C594 336 586 340 580 340 C576 340 573 339 572 336 Z"/>
+      <path d="M624 384 C621 378 622 371 625 368 L623 355 C623 352 627 352 628 355 L629 365 L630 352 C630 349 634 349 634 352 L634 365 L636 355 C637 352 640 353 640 356 L638 368 L642 362 C643 359 647 361 645 364 L640 380 C638 385 632 388 628 388 C626 388 625 387 624 384 Z"/>
+    </g>
+    <!-- dots and lines: signs nobody can fully read -->
+    <g fill="#A8473A">
+      <circle cx="420" cy="390" r="5"/><circle cx="438" cy="392" r="5"/><circle cx="456" cy="390" r="5"/><circle cx="474" cy="392" r="5"/><circle cx="636" cy="262" r="4.5"/><circle cx="652" cy="266" r="4.5"/>
+    </g>
+    <path d="M500 392 l10 -12 l10 12 l10 -12 l10 12" fill="none" stroke="#3F2E26" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M396 230 l14 0 M402 222 l0 16 M612 210 C622 200 636 200 646 210" fill="none" stroke="#A8473A" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <g id="pigments_floor">
+    <!-- the paint box: red and yellow ochre lumps, charcoal and a shell palette -->
+    <ellipse cx="190" cy="532" rx="70" ry="8" fill="#2E211B" opacity="0.35"/>
+    <path d="M140 528 C146 510 172 506 182 520 C186 530 176 538 160 538 C148 538 138 536 140 528 Z" fill="#A8473A" stroke="#3F2E26" stroke-width="2.5"/>
+    <path d="M186 530 C190 514 212 512 220 524 C222 534 214 538 202 538 C192 538 184 536 186 530 Z" fill="#E0A63E" stroke="#3F2E26" stroke-width="2.5"/>
+    <path d="M222 534 L246 520 L254 528 L230 540 Z" fill="#30343A" stroke="#3F2E26" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M778 534 C780 512 818 508 830 526 C822 540 788 544 778 534 Z" fill="#F6ECD2" stroke="#3F2E26" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M792 528 C800 522 812 522 818 528" fill="none" stroke="#C96A3E" stroke-width="5" stroke-linecap="round"/>
+  </g>
+
+  <g id="discovery_beds" fill="#7A5D4C" stroke="#3F2E26" stroke-width="3">
+    <!-- smooth stone ledges carry the four discovery tokens -->
+    <g data-target="images" data-center="250,190"><ellipse cx="250" cy="194" rx="50" ry="46"/></g>
+    <g data-target="pigments" data-center="755,190"><ellipse cx="755" cy="194" rx="50" ry="46"/></g>
+    <g data-target="hands" data-center="250,420"><ellipse cx="250" cy="424" rx="50" ry="46"/></g>
+    <g data-target="uncertainty" data-center="755,420"><ellipse cx="755" cy="424" rx="50" ry="46"/></g>
+  </g>
+</svg>

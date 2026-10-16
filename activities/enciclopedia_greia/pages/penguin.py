@@ -6,31 +6,40 @@ from dataclasses import dataclass
 import math
 
 import pygame
-
-from greia_platform.typography import FontRole
+import pygame.gfxdraw
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
         draw_animal_action_button,
-        draw_focus_patch,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_presenter, grid_step
+    from .storybook_ink import inked_circle, inked_ellipse, inked_limb, inked_polygon
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
         draw_animal_action_button,
-        draw_focus_patch,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_presenter, grid_step
+    from pages.storybook_ink import inked_circle, inked_ellipse, inked_limb, inked_polygon
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +58,17 @@ DISCOVERIES = (
 )
 
 _WORLD_SCENES = ("ice", "temperate", "warm")
+
+
+def _mound(x0: int, base: int, width: int, height: int) -> list[tuple[int, int]]:
+    """Rounded island/headland outline that hides a baked iceberg site."""
+
+    points = []
+    for step in range(13):
+        t = step / 12
+        lift = math.sin(math.pi * t) ** 0.6
+        points.append((x0 + int(width * t), base - int(height * lift)))
+    return points
 
 
 class PenguinPage(EncyclopediaPage):
@@ -172,15 +192,21 @@ class PenguinPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        self._draw_environment(surface)
-        draw_centered_text(
+        authored = draw_authored_scene(
+            surface,
+            self.context.visuals,
+            "encyclopedia.animals.penguin.ice_shore",
+        )
+        if authored:
+            self._draw_habitat_overlay(surface)
+        else:
+            # Procedural fallback while the authored runtime rendition is absent.
+            self._draw_environment(surface)
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("penguin.title"),
-            center=(500, 92),
-            size=40,
-            color=self.context.palette.ink,
-            role=FontRole.DISPLAY,
+            self.context.palette.ink,
         )
         self._draw_penguin(surface)
         self._draw_feather_reveal(surface)
@@ -204,6 +230,40 @@ class PenguinPage(EncyclopediaPage):
             variant="happy",
             fallback_color=(247, 151, 77),
         )
+
+    def _draw_habitat_overlay(self, surface: pygame.Surface) -> None:
+        """Repaint the authored ice shore for the cooler-rock and warm habitats.
+
+        Only the foreground shore and the two small iceberg sites change; sky,
+        sea and the penguin stay put so the child sees the same animal living
+        in a different place.
+        """
+
+        scene = _WORLD_SCENES[self._world_state]
+        if scene == "ice":
+            return
+        if scene == "temperate":
+            ground, ground_light, ink = (150, 141, 120), (184, 176, 156), (75, 55, 47)
+            for x0 in (160, 712):
+                inked_polygon(surface, (96, 150, 92), _mound(x0, 322, 150, 70), ink=(63, 110, 58))
+            inked_circle(surface, (89, 150, 86), (95, 380), 34, ink=(63, 110, 58))
+            pygame.draw.rect(surface, (120, 84, 56), (89, 405, 12, 30))
+        else:
+            ground, ground_light, ink = (238, 214, 166), (247, 232, 199), (156, 120, 74)
+            pygame.gfxdraw.filled_circle(surface, 865, 130, 40, (255, 210, 94))
+            pygame.gfxdraw.aacircle(surface, 865, 130, 40, (255, 210, 94))
+            for x0 in (160, 712):
+                inked_polygon(surface, (238, 214, 166), _mound(x0, 322, 150, 66), ink=ink)
+            # One palm on the outer island edge, clear of the discovery tags.
+            inked_limb(surface, (150, 108, 70), [(842, 292), (848, 268), (856, 246)], [8, 7], outline=2)
+            for dx, dy in ((-36, 12), (36, 10), (-22, -12), (26, -14), (0, -18)):
+                inked_limb(surface, (89, 160, 90), [(856, 246), (856 + dx, 246 + dy)], [8], outline=2)
+        shore = [(0, 430), (140, 420), (300, 428), (512, 418), (700, 426), (880, 418), (1024, 428), (1024, 600), (0, 600)]
+        inked_polygon(surface, ground, shore, ink=ink)
+        pygame.draw.lines(surface, ground_light, False, [(20, 448), (300, 444), (700, 446), (1004, 446)], 4)
+        if scene == "temperate":
+            for x, y, r in ((70, 470, 26), (140, 480, 18), (880, 468, 28), (950, 482, 18)):
+                inked_ellipse(surface, (124, 118, 104), (x - r, y - r // 2, r * 2, r), ink=ink)
 
     def _draw_environment(self, surface: pygame.Surface) -> None:
         scene = _WORLD_SCENES[self._world_state]
@@ -230,53 +290,47 @@ class PenguinPage(EncyclopediaPage):
             pygame.draw.circle(surface, (249, 210, 88), (865, 130), 44)
 
     def _draw_penguin(self, surface: pygame.Surface) -> None:
+        dark = (48, 52, 58)
+        belly = (255, 251, 235)
+        beak = (243, 154, 56)
         if self._swimming:
             cx = 510 + int(math.sin(self._time * 1.0) * 55)
             cy = 330 + int(math.sin(self._time * 1.7) * 18)
-            body = pygame.Rect(cx - 72, cy - 34, 144, 68)
-            # Soft shadow for depth
-            shadow = pygame.Surface((150, 18), pygame.SRCALPHA)
-            pygame.draw.ellipse(shadow, (0, 0, 0, 22), shadow.get_rect())
-            surface.blit(shadow, (cx - 75, cy + 34))
-            pygame.draw.ellipse(surface, (43, 52, 62), body)
-            pygame.draw.ellipse(surface, (243, 243, 235), (cx - 48, cy - 25, 83, 50))
-            pygame.draw.ellipse(surface, (255, 255, 255, 18), (cx - 38, cy - 18, 40, 20))
             flap = int(math.sin(self._time * 5.0) * 18)
-            pygame.draw.line(surface, (43, 52, 62), (cx - 18, cy), (cx - 68, cy - 37 - flap), 17)
-            pygame.draw.line(surface, (43, 52, 62), (cx + 3, cy), (cx + 55, cy + 34 + flap), 17)
-            pygame.draw.line(surface, (65, 72, 82), (cx - 16, cy - 2), (cx - 62, cy - 33 - flap), 6)
-            pygame.draw.polygon(surface, (236, 156, 53), [(cx + 70, cy), (cx + 92, cy - 7), (cx + 70, cy + 8)])
-            pygame.draw.polygon(surface, (255, 200, 90, 60), [(cx + 72, cy - 2), (cx + 86, cy - 5), (cx + 72, cy + 4)])
-            pygame.draw.line(surface, (236, 156, 53), (cx - 68, cy + 10), (cx - 91, cy + 22), 7)
-            pygame.draw.line(surface, (236, 156, 53), (cx - 68, cy - 3), (cx - 90, cy - 15), 7)
+            # Trailing bubbles show the penguin is moving through water.
+            for index in range(4):
+                bx = cx - 90 - index * 22
+                by = cy - 6 + int(math.sin(self._time * 3 + index) * 6)
+                pygame.draw.circle(surface, (221, 240, 250), (bx, by), 6 - index, 2)
+            inked_limb(surface, beak, [(cx - 68, cy + 10), (cx - 91, cy + 22)], [7], outline=2)
+            inked_limb(surface, beak, [(cx - 68, cy - 3), (cx - 90, cy - 15)], [7], outline=2)
+            inked_limb(surface, dark, [(cx + 3, cy), (cx + 55, cy + 34 + flap)], [17, 12])
+            inked_ellipse(surface, dark, (cx - 72, cy - 34, 144, 68))
+            pygame.draw.ellipse(surface, belly, (cx - 48, cy - 8, 92, 36))
+            inked_polygon(surface, beak, [(cx + 70, cy - 2), (cx + 94, cy + 2), (cx + 70, cy + 8)], outline=2)
+            pygame.draw.circle(surface, (255, 255, 255), (cx + 50, cy - 10), 7)
+            pygame.draw.circle(surface, (52, 44, 53), (cx + 52, cy - 10), 4)
+            inked_limb(surface, dark, [(cx - 18, cy), (cx - 68, cy - 37 - flap)], [17, 12])
             return
         cx, cy = 510, 340
         waddle = int(math.sin(self._time * 2.1) * 4)
-        # Ground shadow
-        shadow = pygame.Surface((110, 16), pygame.SRCALPHA)
-        pygame.draw.ellipse(shadow, (0, 0, 0, 20), shadow.get_rect())
-        surface.blit(shadow, (cx - 55 + waddle, 428))
-        pygame.draw.ellipse(surface, (43, 52, 62), (cx - 50 + waddle, cy - 105, 100, 190))
-        pygame.draw.ellipse(surface, (244, 244, 237), (cx - 35 + waddle, cy - 58, 70, 120))
-        pygame.draw.ellipse(surface, (255, 255, 255, 16), (cx - 28 + waddle, cy - 48, 40, 28))
-        pygame.draw.circle(surface, (43, 52, 62), (cx + waddle, cy - 98), 48)
-        pygame.draw.ellipse(surface, (244, 244, 237), (cx - 27 + waddle, cy - 96, 54, 45))
-        pygame.draw.ellipse(surface, (255, 255, 255, 14), (cx - 22 + waddle, cy - 92, 28, 18))
-        pygame.draw.circle(surface, (247, 247, 238), (cx - 15 + waddle, cy - 108), 8)
-        pygame.draw.circle(surface, (247, 247, 238), (cx + 15 + waddle, cy - 108), 8)
-        pygame.draw.circle(surface, (44, 44, 43), (cx - 14 + waddle, cy - 108), 3)
-        pygame.draw.circle(surface, (44, 44, 43), (cx + 14 + waddle, cy - 108), 3)
-        pygame.draw.circle(surface, (255, 255, 255, 90), (cx - 13 + waddle, cy - 109), 2)
-        pygame.draw.polygon(surface, (236, 156, 53), [(cx + waddle, cy - 87), (cx + 22 + waddle, cy - 80), (cx + waddle, cy - 73)])
-        pygame.draw.polygon(surface, (255, 200, 90, 40), [(cx + 2 + waddle, cy - 85), (cx + 18 + waddle, cy - 80), (cx + 2 + waddle, cy - 75)])
-        pygame.draw.line(surface, (43, 52, 62), (cx - 43 + waddle, cy - 35), (cx - 80 + waddle, cy + 30), 17)
-        pygame.draw.line(surface, (65, 72, 82), (cx - 41 + waddle, cy - 30), (cx - 74 + waddle, cy + 22), 6)
-        pygame.draw.line(surface, (43, 52, 62), (cx + 43 + waddle, cy - 35), (cx + 80 + waddle, cy + 30), 17)
-        pygame.draw.line(surface, (65, 72, 82), (cx + 41 + waddle, cy - 30), (cx + 74 + waddle, cy + 22), 6)
-        pygame.draw.ellipse(surface, (236, 156, 53), (cx - 45 + waddle, cy + 68, 38, 18))
-        pygame.draw.ellipse(surface, (255, 200, 90, 50), (cx - 38 + waddle, cy + 72, 22, 8))
-        pygame.draw.ellipse(surface, (236, 156, 53), (cx + 7 + waddle, cy + 68, 38, 18))
-        pygame.draw.ellipse(surface, (255, 200, 90, 50), (cx + 14 + waddle, cy + 72, 22, 8))
+        x = cx + waddle
+        pygame.draw.ellipse(surface, (106, 81, 71), (x - 58, 418, 116, 16))
+        for fx in (x - 26, x + 26):
+            inked_ellipse(surface, beak, (fx - 19, cy + 70, 38, 16), outline=2)
+        inked_limb(surface, dark, [(x - 43, cy - 35), (x - 80, cy + 30)], [17, 12])
+        inked_limb(surface, dark, [(x + 43, cy - 35), (x + 80, cy + 30)], [17, 12])
+        inked_ellipse(surface, dark, (x - 50, cy - 105, 100, 190))
+        pygame.draw.ellipse(surface, belly, (x - 35, cy - 58, 70, 120))
+        inked_circle(surface, dark, (x, cy - 98), 48)
+        pygame.draw.ellipse(surface, belly, (x - 27, cy - 96, 54, 45))
+        pygame.draw.ellipse(surface, (106, 112, 122), (x - 30, cy - 132, 24, 12))
+        for ex in (-15, 15):
+            pygame.draw.circle(surface, (52, 44, 53), (x + ex, cy - 100), 6)
+            pygame.draw.circle(surface, (255, 255, 255), (x + ex + 2, cy - 102), 2)
+        inked_polygon(surface, beak, [(x - 11, cy - 86), (x + 11, cy - 86), (x, cy - 72)], outline=2)
+        pygame.draw.circle(surface, (253, 164, 175), (x - 22, cy - 80), 5)
+        pygame.draw.circle(surface, (253, 164, 175), (x + 22, cy - 80), 5)
 
     def _draw_feather_reveal(self, surface: pygame.Surface) -> None:
         if self._feather_age <= 0:
@@ -314,33 +368,48 @@ class PenguinPage(EncyclopediaPage):
             pygame.draw.line(surface, (236, 156, 53), (x + 19, y + 30), (x + 5, y + 20), 6)
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (255, 250, 231), item.center, 37)
-            pygame.draw.circle(surface, (66, 67, 66), item.center, 37, 3)
-            cx, cy = item.center
-            if item.discovery_id == "swim":
-                pygame.draw.ellipse(surface, (52, 86, 108), (cx - 25, cy - 9, 50, 22))
-                pygame.draw.line(surface, (52, 86, 108), (cx - 5, cy), (cx - 26, cy - 20), 7)
-                pygame.draw.line(surface, (52, 86, 108), (cx + 5, cy), (cx + 26, cy + 20), 7)
-            elif item.discovery_id == "feathers":
-                for offset in (-16, 0, 16):
-                    pygame.draw.ellipse(surface, (50, 58, 64), (cx + offset - 9, cy - 20, 18, 40))
-            elif item.discovery_id == "world":
-                pygame.draw.circle(surface, (93, 163, 198), (cx, cy), 22)
-                pygame.draw.arc(surface, (115, 153, 83), (cx - 15, cy - 15, 30, 30), 0.2, 2.7, 6)
-                pygame.draw.line(surface, (247, 205, 72), (cx - 26, cy + 4), (cx + 26, cy + 4), 3)
-            else:
-                pygame.draw.ellipse(surface, (248, 241, 210), (cx - 11, cy - 8, 22, 29))
-                pygame.draw.line(surface, (236, 156, 53), (cx - 20, cy + 20), (cx - 5, cy + 7), 5)
-                pygame.draw.line(surface, (236, 156, 53), (cx + 20, cy + 20), (cx + 5, cy + 7), 5)
-            focus_ring(surface, rect, index == self._selected or index == self._hovered)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=item.caption_key == self._caption_key,
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+                token_shape=TOKEN_SHAPE_FELT_TAG,
+            )
+
+    def _draw_icon(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        discovery_id: str,
+    ) -> None:
+        cx, cy = center[0], center[1] + 4  # sit below the felt tag's pin
+        center = (cx, cy)
+        if discovery_id == "swim":
+            pygame.draw.ellipse(surface, (52, 86, 108), (cx - 25, cy - 9, 50, 22))
+            pygame.draw.line(surface, (52, 86, 108), (cx - 5, cy), (cx - 26, cy - 20), 7)
+            pygame.draw.line(surface, (52, 86, 108), (cx + 5, cy), (cx + 26, cy + 20), 7)
+        elif discovery_id == "feathers":
+            for offset in (-16, 0, 16):
+                pygame.draw.ellipse(surface, (50, 58, 64), (cx + offset - 9, cy - 20, 18, 40))
+        elif discovery_id == "world":
+            pygame.draw.circle(surface, (93, 163, 198), (cx, cy), 22)
+            pygame.draw.arc(surface, (115, 153, 83), (cx - 15, cy - 15, 30, 30), 0.2, 2.7, 6)
+            pygame.draw.line(surface, (247, 205, 72), (cx - 26, cy + 4), (cx + 26, cy + 4), 3)
+        else:
+            pygame.draw.ellipse(surface, (248, 241, 210), (cx - 11, cy - 8, 22, 29))
+            pygame.draw.line(surface, (236, 156, 53), (cx - 20, cy + 20), (cx - 5, cy + 7), 5)
+            pygame.draw.line(surface, (236, 156, 53), (cx + 20, cy + 20), (cx + 5, cy + 7), 5)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (255, 250, 231), panel, border_radius=22)
-        pygame.draw.rect(surface, (66, 67, 66), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (53, 53, 51))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (53, 53, 51))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )

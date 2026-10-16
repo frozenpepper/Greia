@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- Encyclopedia E4-E entry scene: Fossils. Flattened opaque 1024x600 backdrop.
+       A desert dig site below striped cliffs (rock forms in layers). The
+       excavation pit floor (dig grid x 370-640, y 180-450) holds the fossils
+       the child brushes free: ammonite shell at 455,275 and dinosaur footprint
+       at 565,365 (both highlighted by the live "types" overlay), plus a fern
+       print, a small clam and a fish skeleton. The 12 sediment cells, falling
+       grains and clue lines stay live. Discovery beds sit exactly under the
+       four semantic targets.
+       Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md (scene). -->
+  <defs>
+    <!-- sky light -> peach light -->
+    <linearGradient id="fossils_dig_site_sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D7EEF8"/>
+      <stop offset="1" stop-color="#FBE6D2"/>
+    </linearGradient>
+    <!-- sand light -> sand (ground) -->
+    <linearGradient id="fossils_dig_site_sand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F3E6C8"/>
+      <stop offset="1" stop-color="#E6CFA3"/>
+    </linearGradient>
+    <!-- sand shade -> deeper earth (pit floor) -->
+    <linearGradient id="fossils_dig_site_floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B98F66"/>
+      <stop offset="1" stop-color="#A47A55"/>
+    </linearGradient>
+  </defs>
+
+  <g id="sky">
+    <rect width="1024" height="600" fill="url(#fossils_dig_site_sky)"/>
+    <path d="M664 64 C660 54 672 46 682 52 C687 40 707 39 713 50 C723 45 736 52 733 62 C742 65 740 76 730 76 L670 76 C660 76 656 69 664 64 Z" fill="#FFFDF6" stroke="#C9C0B8" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M268 84 C265 76 274 70 282 74 C286 65 300 64 305 72 C313 69 322 75 319 82 C326 84 325 92 317 92 L274 92 C266 92 263 87 268 84 Z" fill="#FFFDF6" stroke="#C9C0B8" stroke-width="2.5" stroke-linejoin="round" opacity="0.9"/>
+  </g>
+
+  <g id="cliffs" stroke="#9C7356" stroke-width="2.5" stroke-linejoin="round">
+    <!-- striped cliffs: each band is an older layer of rock -->
+    <path d="M-10 230 L-10 120 L60 112 L90 128 L180 122 L230 140 L300 150 L330 230 Z" fill="#E7B98A"/>
+    <path d="M-10 160 L70 152 L180 156 L262 168 L300 178 L312 196 L-10 200 Z" fill="#D49A62"/>
+    <path d="M-10 206 L120 198 L250 204 L318 214 L326 230 L-10 230 Z" fill="#F0CBA0"/>
+    <path d="M1034 230 L1034 104 L960 98 L920 114 L840 110 L780 132 L720 150 L700 230 Z" fill="#E7B98A"/>
+    <path d="M1034 150 L950 142 L850 148 L770 164 L726 176 L716 194 L1034 194 Z" fill="#D49A62"/>
+    <path d="M1034 202 L900 196 L780 202 L712 214 L706 230 L1034 230 Z" fill="#F0CBA0"/>
+  </g>
+
+  <g id="ground">
+    <path d="M0 214 C180 206 340 210 512 212 C690 214 850 206 1024 212 L1024 600 L0 600 Z" fill="url(#fossils_dig_site_sand)" stroke="#B8976C" stroke-width="2.5"/>
+    <g fill="#D9BF92" stroke="#B8976C" stroke-width="2">
+      <ellipse cx="150" cy="300" rx="16" ry="6"/><ellipse cx="880" cy="290" rx="14" ry="5"/><ellipse cx="320" cy="520" rx="12" ry="5"/><ellipse cx="760" cy="540" rx="12" ry="5"/>
+    </g>
+  </g>
+
+  <g id="dirt_piles" fill="#D4B184" stroke="#9C7356" stroke-width="2.5" stroke-linejoin="round">
+    <path d="M286 318 C292 296 314 286 334 290 C348 294 354 306 354 318 Z"/>
+    <path d="M664 338 C668 316 690 306 710 312 C722 318 726 328 724 338 Z"/>
+  </g>
+
+  <g id="pit">
+    <!-- the hole, its earthy walls, and the fossil floor beneath the cells -->
+    <rect x="356" y="166" width="298" height="298" rx="26" fill="#8A6446" stroke="#4B372F" stroke-width="3.5"/>
+    <rect x="370" y="180" width="270" height="270" rx="20" fill="url(#fossils_dig_site_floor)"/>
+    <g fill="none" stroke="#96704E" stroke-width="2.5" stroke-linecap="round">
+      <path d="M384 226 C450 220 520 230 626 222"/><path d="M384 318 C460 312 540 322 626 314"/><path d="M384 410 C460 404 540 414 626 406"/>
+    </g>
+    <!-- ammonite (spiral shell), centred 455,275 -->
+    <g fill="none" stroke="#4B372F" stroke-linecap="round">
+      <circle cx="455" cy="275" r="38" fill="#FFF0D2" stroke-width="3"/>
+      <path d="M455 275 m0 -6 a6 6 0 1 1 -6 6 a12 12 0 0 1 12 -12 a18 18 0 0 1 18 18 a24 24 0 0 1 -24 24 a30 30 0 0 1 -30 -30" stroke="#B98F66" stroke-width="5"/>
+      <path d="M455 275 m0 -6 a6 6 0 1 1 -6 6 a12 12 0 0 1 12 -12 a18 18 0 0 1 18 18 a24 24 0 0 1 -24 24 a30 30 0 0 1 -30 -30" stroke="#4B372F" stroke-width="2"/>
+      <path d="M429 255 l8 6 M442 243 l4 9 M462 239 l-1 9 M480 248 l-6 7 M490 268 l-8 3" stroke="#B98F66" stroke-width="2.5"/>
+    </g>
+    <!-- dinosaur footprint, heel centred 565,385 with three toes -->
+    <g fill="#7A5A3F" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M548 398 C544 380 552 366 566 366 C580 366 588 380 584 398 C580 412 552 412 548 398 Z"/>
+      <path d="M552 370 C540 352 536 336 542 326 C550 332 558 350 560 366 Z"/>
+      <path d="M560 364 C560 344 562 326 568 318 C574 326 574 346 572 364 Z"/>
+      <path d="M572 366 C576 350 586 334 594 330 C598 340 590 356 580 370 Z"/>
+    </g>
+    <!-- fern print, top right cell -->
+    <g fill="none" stroke="#FFF0D2" stroke-width="3" stroke-linecap="round">
+      <path d="M606 252 C604 230 600 212 590 196"/>
+      <path d="M604 240 l14 -6 M602 228 l12 -8 M598 216 l10 -8 M604 240 l-12 -8 M602 228 l-12 -10 M598 216 l-9 -9"/>
+    </g>
+    <!-- small clam -->
+    <path d="M520 222 C522 204 548 204 550 222 C544 230 526 230 520 222 Z" fill="#FFF0D2" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M528 222 l3 -12 M535 224 v-14 M542 222 l-3 -12" stroke="#B98F66" stroke-width="2" stroke-linecap="round"/>
+    <!-- fish skeleton, bottom left cells -->
+    <g fill="none" stroke="#FFF0D2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M396 404 H470"/>
+      <path d="M470 404 L486 392 L486 416 Z"/>
+      <path d="M408 396 l4 8 l-4 8 M422 394 l4 10 l-4 10 M436 394 l4 10 l-4 10 M450 396 l4 8 l-4 8"/>
+      <circle cx="398" cy="404" r="9"/>
+    </g>
+    <circle cx="396" cy="402" r="2.5" fill="#FFF0D2"/>
+  </g>
+
+  <g id="grid_stakes">
+    <!-- corner stakes with the dig string -->
+    <path d="M356 172 H654 M356 458 H654 M356 172 V458 M654 172 V458" fill="none" stroke="#F46F61" stroke-width="2" stroke-dasharray="10 8" opacity="0.9"/>
+    <g fill="#C8956A" stroke="#4B372F" stroke-width="2.5">
+      <rect x="350" y="158" width="12" height="24" rx="3"/><rect x="648" y="158" width="12" height="24" rx="3"/>
+      <rect x="350" y="448" width="12" height="24" rx="3"/><rect x="648" y="448" width="12" height="24" rx="3"/>
+    </g>
+  </g>
+
+  <g id="tools">
+    <!-- bucket with trowel, left -->
+    <ellipse cx="136" cy="544" rx="44" ry="7" fill="#6A5147" opacity="0.18"/>
+    <path d="M102 484 H170 L162 540 C160 546 150 548 136 548 C122 548 112 546 110 540 Z" fill="#4A91D8" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <ellipse cx="136" cy="484" rx="34" ry="7" fill="#7A5A3F" stroke="#4B372F" stroke-width="3"/>
+    <path d="M104 484 C104 456 168 456 168 484" fill="none" stroke="#4B372F" stroke-width="3"/>
+    <path d="M112 496 V530" stroke="#9CC6EC" stroke-width="4" stroke-linecap="round"/>
+    <path d="M146 478 L168 436" stroke="#9C6B43" stroke-width="6" stroke-linecap="round"/>
+    <path d="M140 482 L150 470 L156 478 Z" fill="#B8C2CC" stroke="#4B372F" stroke-width="2" stroke-linejoin="round"/>
+    <!-- sieve and brush, right -->
+    <ellipse cx="826" cy="532" rx="52" ry="7" fill="#6A5147" opacity="0.18"/>
+    <ellipse cx="826" cy="512" rx="48" ry="16" fill="#C8956A" stroke="#4B372F" stroke-width="3"/>
+    <ellipse cx="826" cy="508" rx="38" ry="10" fill="#E6CFA3" stroke="#9C7356" stroke-width="2"/>
+    <path d="M800 508 H852 M812 502 V514 M826 499 V517 M840 502 V514" stroke="#9C7356" stroke-width="1.8"/>
+    <path d="M760 548 L800 560" stroke="#9C6B43" stroke-width="6" stroke-linecap="round"/>
+    <path d="M800 554 L820 560 L816 572 L796 566 Z" fill="#FBBF24" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
+
+  <g id="discovery_beds" fill="#E6CFA3" stroke="#4B372F" stroke-width="3">
+    <!-- flat sandstone slabs carry the four discovery tokens -->
+    <g data-target="brush" data-center="260,190"><ellipse cx="260" cy="194" rx="50" ry="46"/></g>
+    <g data-target="types" data-center="745,190"><ellipse cx="745" cy="194" rx="50" ry="46"/></g>
+    <g data-target="burial" data-center="260,420"><ellipse cx="260" cy="424" rx="50" ry="46"/></g>
+    <g data-target="clues" data-center="745,420"><ellipse cx="745" cy="424" rx="50" ry="46"/></g>
+  </g>
+</svg>

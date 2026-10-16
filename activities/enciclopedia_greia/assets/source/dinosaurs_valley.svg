@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- Encyclopedia E4-E entry scene: Dinosaurs. Flattened opaque 1024x600 backdrop.
+       A prehistoric valley showing three very different dinosaurs together:
+       a two-legged meat eater (front left, feet ~y 420), a horned three-horn
+       plant eater (front right, feet ~y 428) and a long-neck giant behind
+       (feet ~y 405). The page's "diversity" discovery highlights one of them
+       live; time / bird / evidence overlays stay live. Discovery beds sit
+       exactly under the four semantic targets.
+       Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md (scene). -->
+  <defs>
+    <!-- sky light -> peach light (warm hazy sky) -->
+    <linearGradient id="dinosaurs_valley_sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D7EEF8"/>
+      <stop offset="1" stop-color="#FCE9D6"/>
+    </linearGradient>
+    <!-- leaf light -> olive leaf (valley floor) -->
+    <linearGradient id="dinosaurs_valley_ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BFD98F"/>
+      <stop offset="1" stop-color="#93BF68"/>
+    </linearGradient>
+    <!-- leaf light -> leaf (meat eater) -->
+    <linearGradient id="dinosaurs_valley_rex" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8FD09C"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+    <!-- turquoise light -> turquoise (long neck) -->
+    <linearGradient id="dinosaurs_valley_neck" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#86D3CC"/>
+      <stop offset="1" stop-color="#44B8AE"/>
+    </linearGradient>
+    <!-- orange light -> orange (three-horn) -->
+    <linearGradient id="dinosaurs_valley_horn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8BE7D"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+
+  <g id="sky">
+    <rect width="1024" height="600" fill="url(#dinosaurs_valley_sky)"/>
+  </g>
+
+  <g id="far">
+    <!-- volcano with a calm smoke puff, distant hills -->
+    <path d="M40 330 L150 196 C160 186 186 186 196 196 L310 330 Z" fill="#C9B6A6" stroke="#9C8574" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M150 196 C160 210 186 210 196 196 L188 222 C178 230 164 228 158 220 Z" fill="#F39A38" stroke="#9C8574" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M160 176 C150 164 160 150 174 154 C178 138 200 136 206 150 C220 148 228 162 220 172 C214 180 168 182 160 176 Z" fill="#F4EEE6" stroke="#B9AFA6" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M600 330 C680 280 760 268 840 290 C900 270 970 272 1024 290 L1024 340 L600 340 Z" fill="#C8E3C2" stroke="#9CC394" stroke-width="2"/>
+  </g>
+
+  <g id="ground">
+    <path d="M0 326 C160 316 320 320 512 326 C700 332 860 318 1024 324 L1024 600 L0 600 Z" fill="url(#dinosaurs_valley_ground)" stroke="#6F8F4A" stroke-width="2.5"/>
+    <!-- small pond -->
+    <ellipse cx="140" cy="512" rx="78" ry="20" fill="#7DB2E3" stroke="#4B372F" stroke-width="2.5"/>
+    <path d="M100 506 H140" stroke="#CFEAF7" stroke-width="3" stroke-linecap="round"/>
+    <g fill="none" stroke="#6F8F4A" stroke-width="2.5" stroke-linecap="round">
+      <path d="M310 470 q8 -10 16 0"/><path d="M700 480 q8 -10 16 0"/><path d="M820 520 q8 -10 16 0"/><path d="M420 520 q8 -10 16 0"/>
+    </g>
+  </g>
+
+  <g id="plants">
+    <!-- cycad palm, left -->
+    <path d="M128 420 C124 380 124 330 130 290" fill="none" stroke="#4B372F" stroke-width="12" stroke-linecap="round"/>
+    <path d="M128 420 C124 380 124 330 130 290" fill="none" stroke="#9C6B43" stroke-width="7" stroke-linecap="round"/>
+    <g fill="#59B86A" stroke="#3F6E3A" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M130 290 C110 270 80 268 58 282 C84 280 108 288 130 296 Z"/>
+      <path d="M130 290 C126 262 106 244 84 242 C106 256 120 272 128 296 Z"/>
+      <path d="M130 290 C144 262 168 252 192 256 C170 262 150 276 134 296 Z"/>
+      <path d="M130 290 C154 278 182 282 200 298 C178 290 154 292 132 298 Z"/>
+    </g>
+    <!-- cycad palm, right -->
+    <path d="M872 400 C870 360 872 320 880 284" fill="none" stroke="#4B372F" stroke-width="12" stroke-linecap="round"/>
+    <path d="M872 400 C870 360 872 320 880 284" fill="none" stroke="#9C6B43" stroke-width="7" stroke-linecap="round"/>
+    <g fill="#59B86A" stroke="#3F6E3A" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M880 284 C860 264 830 262 808 276 C834 274 858 282 880 290 Z"/>
+      <path d="M880 284 C876 256 856 238 834 236 C856 250 870 266 878 290 Z"/>
+      <path d="M880 284 C894 256 918 246 942 250 C920 256 900 270 884 290 Z"/>
+      <path d="M880 284 C904 272 932 276 950 292 C928 284 904 286 882 292 Z"/>
+    </g>
+    <!-- ferns -->
+    <g fill="#6EC07C" stroke="#3F6E3A" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M300 440 C290 410 300 392 312 384 C312 404 318 420 316 440 Z"/>
+      <path d="M318 440 C324 414 340 402 356 400 C346 414 336 428 330 442 Z"/>
+      <path d="M690 446 C696 420 712 408 728 406 C718 420 708 434 702 448 Z"/>
+    </g>
+  </g>
+
+  <g id="long_neck">
+    <!-- plant-eating giant with a very long neck (behind) -->
+    <ellipse cx="572" cy="408" rx="92" ry="8" fill="#6A5147" opacity="0.15"/>
+    <g fill="#36A397" stroke="#4B372F" stroke-width="3">
+      <rect x="512" y="340" width="22" height="66" rx="9"/>
+      <rect x="598" y="340" width="22" height="66" rx="9"/>
+    </g>
+    <path d="M488 330 C470 318 452 316 432 322 C452 306 478 298 500 302 C520 284 580 278 616 292 C626 266 624 236 628 214 C632 200 642 190 656 188 C674 186 684 196 680 206 C676 214 664 212 658 218 C650 236 648 266 660 300 C668 318 664 344 640 356 C600 370 520 368 496 352 C488 346 486 338 488 330 Z" fill="url(#dinosaurs_valley_neck)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <g fill="#44B8AE" stroke="#4B372F" stroke-width="3">
+      <rect x="532" y="344" width="24" height="64" rx="10"/>
+      <rect x="616" y="344" width="24" height="64" rx="10"/>
+    </g>
+    <path d="M520 300 C540 290 568 288 590 292" fill="none" stroke="#C3ECE7" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="662" cy="198" r="3.5" fill="#342C35"/>
+    <path d="M668 207 q4 3 8 -1" fill="none" stroke="#342C35" stroke-width="2" stroke-linecap="round"/>
+    <path d="M634 226 C632 246 632 266 636 284" fill="none" stroke="#C3ECE7" stroke-width="4" stroke-linecap="round"/>
+    <g fill="#2E8C82"><circle cx="560" cy="318" r="7"/><circle cx="586" cy="330" r="5"/><circle cx="536" cy="326" r="5"/></g>
+  </g>
+
+  <g id="meat_eater">
+    <!-- two-legged meat eater, front left -->
+    <ellipse cx="398" cy="422" rx="66" ry="8" fill="#6A5147" opacity="0.18"/>
+    <path d="M352 330 C370 318 392 330 390 352 C388 370 380 386 380 402 L392 418 L358 418 L362 400 C356 380 342 352 352 330 Z" fill="#4E9A5C" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M300 350 C330 330 350 300 380 292 C400 286 418 282 430 268 C432 246 452 236 476 240 C496 242 508 252 508 266 L506 278 C504 284 498 288 490 288 L464 290 C456 302 448 318 434 334 C422 352 402 362 380 360 C356 358 328 356 300 350 Z" fill="url(#dinosaurs_valley_rex)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M392 322 C414 312 436 328 432 352 C430 372 420 388 418 404 L432 420 L396 420 L398 402 C392 380 380 344 392 322 Z" fill="#59B86A" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M400 330 C408 324 418 324 424 330" fill="none" stroke="#A8DCA5" stroke-width="4" stroke-linecap="round"/>
+    <path d="M452 304 C460 306 466 312 466 320" fill="none" stroke="#4B372F" stroke-width="7" stroke-linecap="round"/>
+    <path d="M452 304 C460 306 466 312 466 320" fill="none" stroke="#59B86A" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M454 252 C462 246 474 244 484 246" fill="none" stroke="#C6EBCB" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="482" cy="258" r="6" fill="#FFFFFF" stroke="#4B372F" stroke-width="2"/>
+    <circle cx="484" cy="258" r="3.5" fill="#342C35"/>
+    <path d="M478 280 C488 284 498 282 504 276" fill="none" stroke="#4B372F" stroke-width="2.5" stroke-linecap="round"/>
+    <g fill="#3F8F4E"><circle cx="372" cy="306" r="6"/><circle cx="350" cy="320" r="5"/><circle cx="394" cy="300" r="4"/></g>
+  </g>
+
+  <g id="three_horn">
+    <!-- horned plant eater with a big neck frill, front right (faces left) -->
+    <ellipse cx="626" cy="430" rx="78" ry="8" fill="#6A5147" opacity="0.18"/>
+    <g fill="#D97F28" stroke="#4B372F" stroke-width="3">
+      <rect x="664" y="396" width="20" height="32" rx="8"/>
+      <rect x="590" y="398" width="20" height="30" rx="8"/>
+    </g>
+    <path d="M590 366 C610 346 664 344 692 360 C704 368 712 378 726 390 C712 392 704 392 700 398 C690 412 620 418 596 408 C584 398 582 380 590 366 Z" fill="url(#dinosaurs_valley_horn)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <g fill="#F39A38" stroke="#4B372F" stroke-width="3">
+      <rect x="682" y="398" width="20" height="30" rx="8"/>
+      <rect x="610" y="400" width="20" height="28" rx="8"/>
+    </g>
+    <path d="M610 360 C630 352 656 352 672 356" fill="none" stroke="#FCDDB5" stroke-width="5" stroke-linecap="round"/>
+    <!-- frill, face, horns -->
+    <path d="M598 384 C590 352 566 336 546 344 C532 350 534 372 548 394 Z" fill="#F46F61" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <g fill="#F7A097"><circle cx="572" cy="356" r="4"/><circle cx="586" cy="366" r="4"/><circle cx="560" cy="350" r="3.5"/></g>
+    <path d="M574 384 C566 368 546 366 532 376 C522 384 520 396 528 404 C540 412 566 410 576 400 Z" fill="#F8BE7D" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M556 374 L528 354 L558 368 Z M570 372 L548 346 L574 366 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M530 386 L520 378 L534 382 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="550" cy="384" r="3.5" fill="#342C35"/>
+    <path d="M532 398 C538 402 546 402 552 398" fill="none" stroke="#4B372F" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+
+  <g id="discovery_beds" stroke-linejoin="round">
+    <!-- sky tokens on clouds, ground tokens on smooth river stones -->
+    <g data-target="diversity" data-center="250,190" fill="#FFFDF6" stroke="#C9C0B8" stroke-width="2.5">
+      <path d="M190 215 C176 215 172 197 186 193 C184 169 212 157 228 169 C240 147 276 149 282 171 C304 167 318 187 308 201 C322 207 318 223 302 223 L196 223 C190 223 188 219 190 215 Z"/>
+    </g>
+    <g data-target="time" data-center="755,190" fill="#FFFDF6" stroke="#C9C0B8" stroke-width="2.5">
+      <path d="M695 215 C681 215 677 197 691 193 C689 169 717 157 733 169 C745 147 781 149 787 171 C809 167 823 187 813 201 C827 207 823 223 807 223 L701 223 C695 223 693 219 695 215 Z"/>
+    </g>
+    <g data-target="birds" data-center="250,420" fill="#D8CDB8" stroke="#4B372F" stroke-width="3">
+      <ellipse cx="250" cy="424" rx="49" ry="45"/>
+    </g>
+    <g data-target="evidence" data-center="755,420" fill="#D8CDB8" stroke="#4B372F" stroke-width="3">
+      <ellipse cx="755" cy="424" rx="49" ry="45"/>
+    </g>
+  </g>
+</svg>

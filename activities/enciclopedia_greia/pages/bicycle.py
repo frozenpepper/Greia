@@ -13,6 +13,8 @@ if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
         draw_focus_patch,
         draw_machine_action_button,
         draw_navigation_arrows,
@@ -24,6 +26,8 @@ else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
         draw_focus_patch,
         draw_machine_action_button,
         draw_navigation_arrows,
@@ -199,7 +203,16 @@ class BicyclePage(EncyclopediaPage):
         self.context.audio.play(item.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((237, 244, 232))
+        # Authored park lane with the bicycle frame and tyres baked in at the
+        # live drivetrain geometry; spokes, rings, chain and pedals stay live.
+        authored = draw_authored_scene(
+            surface,
+            self.context.visuals,
+            "encyclopedia.machines.bicycle.park",
+        )
+        if not authored:
+            # Contained procedural fallback when the runtime PNG is absent.
+            surface.fill((237, 244, 232))
         draw_centered_text(
             surface,
             self.context.typography,
@@ -209,7 +222,7 @@ class BicyclePage(EncyclopediaPage):
             color=self.context.palette.ink,
             role=FontRole.DISPLAY,
         )
-        self._draw_bicycle(surface)
+        self._draw_bicycle(surface, authored=authored)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -230,18 +243,26 @@ class BicyclePage(EncyclopediaPage):
             fallback_color=(235, 139, 70),
         )
 
-    def _draw_bicycle(self, surface: pygame.Surface) -> None:
+    def _draw_bicycle(self, surface: pygame.Surface, *, authored: bool = False) -> None:
+        """Draw the live drivetrain; the authored scene already owns frame and tyres."""
         rear = (410, 360)
         front = (620, 360)
         wheel_r = 76
         for center in (rear, front):
-            pygame.draw.circle(surface, (58, 64, 66), center, wheel_r, 5)
+            if not authored:
+                pygame.draw.circle(surface, (58, 64, 66), center, wheel_r, 5)
             for spoke in range(8):
                 angle = self._model.wheel_angle + spoke * math.tau / 8
                 end = (center[0] + int(math.cos(angle) * (wheel_r - 7)), center[1] + int(math.sin(angle) * (wheel_r - 7)))
                 pygame.draw.line(surface, (154, 160, 160), center, end, 2)
+            if authored:
+                pygame.draw.circle(surface, (75, 55, 47), center, 7)
+                pygame.draw.circle(surface, (184, 194, 204), center, 4)
 
         crank = (505, 348)
+        if authored:
+            self._draw_drivetrain(surface, rear, crank)
+            return
         frame = (76, 135, 181)
         frame_dark = (58, 108, 145)
         # Frame with highlight and shadow
@@ -259,7 +280,15 @@ class BicyclePage(EncyclopediaPage):
         pygame.draw.line(surface, (90, 86, 82), (462, 257), (490, 257), 2)
         pygame.draw.line(surface, (73, 69, 65), (578, 272), (592, 226), 6)
         pygame.draw.line(surface, (73, 69, 65), (574, 226), (615, 226), 5)
+        self._draw_drivetrain(surface, rear, crank)
 
+    def _draw_drivetrain(
+        self,
+        surface: pygame.Surface,
+        rear: tuple[int, int],
+        crank: tuple[int, int],
+    ) -> None:
+        """Chainrings, chain, pedals and discovery overlays (always live)."""
         front_ring = 29 if self._model.ratio_index == 1 else 22
         rear_ring = 16 if self._model.ratio_index == 1 else 24
         pygame.draw.circle(surface, (225, 173, 65), crank, front_ring, 4)
@@ -320,11 +349,9 @@ class BicyclePage(EncyclopediaPage):
             focus_ring(surface, rect, index == self._selected or index == self._hovered)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (252, 249, 233), panel, border_radius=22)
-        pygame.draw.rect(surface, (71, 69, 64), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (53, 52, 49))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (53, 52, 49))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        # Shared adaptive ribbon: wraps long captions instead of overflowing.
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )

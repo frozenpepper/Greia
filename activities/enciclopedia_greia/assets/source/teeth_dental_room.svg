@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<defs>
+  <!-- cream light -> peach/sand -->
+  <linearGradient id="teeth_wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FAF2DD"/><stop offset="1" stop-color="#F3DABC"/></linearGradient>
+  <!-- orange+ink 38% -> orange+ink 58% -->
+  <linearGradient id="teeth_floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B37435"/><stop offset="1" stop-color="#926133"/></linearGradient>
+  <!-- coral/raspberry light -> lip -->
+  <linearGradient id="teeth_lip" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F09499"/><stop offset="1" stop-color="#EA666D"/></linearGradient>
+  <!-- plum/raspberry -> plum shade -->
+  <linearGradient id="teeth_inside" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#84446F"/><stop offset="1" stop-color="#533957"/></linearGradient>
+  <!-- white -> cream (enamel) -->
+  <linearGradient id="teeth_enamel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F6EED8"/></linearGradient>
+  <!-- turquoise light -> turquoise -->
+  <linearGradient id="teeth_cup" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7CCDC6"/><stop offset="1" stop-color="#44B8AE"/></linearGradient>
+</defs>
+<g id="room"><rect width="1024" height="600" fill="url(#teeth_wall)"/><path d="M0 350H1024V470H0Z" fill="#D4EFE9" opacity="0.22"/><path d="M0 350H1024" stroke="#CDB09A" stroke-width="4" opacity="0.45"/><path d="M0 356H1024" stroke="#FFFFFF" stroke-width="2" opacity="0.5"/><path d="M0 470H1024V600H0Z" fill="url(#teeth_floor)"/><path d="M0 470H1024" stroke="#865A32" stroke-width="6"/><g stroke="#4B372F" stroke-width="2" opacity="0.25"><path d="M0 510H1024M0 556H1024"/><path d="M210 470V510M640 470V510M90 510V556M430 510V556M820 510V556"/></g><path d="M112 0V66" stroke="#8E5F33" stroke-width="4"/><circle cx="112" cy="100" r="46" fill="#FFF3C4" opacity="0.35"/><path d="M88 88Q112 58 136 88L128 102Q112 110 96 102Z" fill="#F4D58A" stroke="#A37B2A" stroke-width="3" stroke-linejoin="round"/><path d="M912 0V66" stroke="#8E5F33" stroke-width="4"/><circle cx="912" cy="100" r="46" fill="#FFF3C4" opacity="0.35"/><path d="M888 88Q912 58 936 88L928 102Q912 110 896 102Z" fill="#F4D58A" stroke="#A37B2A" stroke-width="3" stroke-linejoin="round"/></g>
+<g id="stand"><ellipse cx="505" cy="476" rx="98" ry="11" fill="#6A5147" opacity="0.3"/>
+<path d="M505 420V462" stroke="#CF9D27" stroke-width="12" stroke-linecap="round"/>
+<path d="M432 460H578L566 476H444Z" fill="#D18636" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/></g><g id="mouth_model" data-target="job_demo" data-center="505,335">
+<path d="M390 330C390 262 440 232 505 232C570 232 620 262 620 330C620 392 572 426 505 426C438 426 390 392 390 330Z" fill="url(#teeth_lip)" stroke="#9A4E4E" stroke-width="4"/>
+<path d="M404 330C404 274 446 250 505 250C564 250 606 274 606 330C606 384 566 410 505 410C444 410 404 384 404 330Z" fill="url(#teeth_inside)"/>
+<path d="M404 300C404 268 446 250 505 250C564 250 606 268 606 300C590 284 560 276 505 276C450 276 420 284 404 300Z" fill="#EBA9BF" stroke="#AB7B85" stroke-width="2.5"/>
+<path d="M410 368C424 376 452 382 505 382C558 382 586 376 600 368C590 394 556 410 505 410C454 410 420 394 410 368Z" fill="#EBA9BF" stroke="#AB7B85" stroke-width="2.5"/>
+<path d="M452 362C452 332 476 318 505 318C534 318 558 332 558 362Z" fill="#F49D9A" stroke="#A86F6A" stroke-width="3"/>
+<path d="M505 326V354" stroke="#C17E7A" stroke-width="3" stroke-linecap="round"/>
+<path d="M404.5 258H421.5V276Q421.5 282 413 282Q404.5 282 404.5 276ZM424.9 258H441.9V276Q441.9 282 433.4 282Q424.9 282 424.9 276ZM446.4 258H461.4V276Q461.4 282 453.9 282Q446.4 282 446.4 276ZM466.8 258H481.8V276Q481.8 282 474.3 282Q466.8 282 466.8 276ZM487.3 258H502.3V276Q502.3 282 494.8 282Q487.3 282 487.3 276ZM507.7 258H522.7V276Q522.7 282 515.2 282Q507.7 282 507.7 276ZM528.2 258H543.2V276Q543.2 282 535.7 282Q528.2 282 528.2 276ZM548.6 258H563.6V276Q563.6 282 556.1 282Q548.6 282 548.6 276ZM568.1 258H585.1V276Q585.1 282 576.6 282Q568.1 282 568.1 276ZM588.5 258H605.5V276Q605.5 282 597 282Q588.5 282 588.5 276Z" fill="url(#teeth_enamel)" stroke="#A5927B" stroke-width="2.5" stroke-linejoin="round"/><path d="M404.5 364H421.5V346Q421.5 340 413 340Q404.5 340 404.5 346ZM424.9 364H441.9V346Q441.9 340 433.4 340Q424.9 340 424.9 346ZM446.4 364H461.4V346Q461.4 340 453.9 340Q446.4 340 446.4 346ZM466.8 364H481.8V346Q481.8 340 474.3 340Q466.8 340 466.8 346ZM487.3 364H502.3V346Q502.3 340 494.8 340Q487.3 340 487.3 346ZM507.7 364H522.7V346Q522.7 340 515.2 340Q507.7 340 507.7 346ZM528.2 364H543.2V346Q543.2 340 535.7 340Q528.2 340 528.2 346ZM548.6 364H563.6V346Q563.6 340 556.1 340Q548.6 340 548.6 346ZM568.1 364H585.1V346Q585.1 340 576.6 340Q568.1 340 568.1 346ZM588.5 364H605.5V346Q605.5 340 597 340Q588.5 340 588.5 346Z" fill="url(#teeth_enamel)" stroke="#A5927B" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M420 248Q450 236 486 236" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.55"/>
+</g>
+<g id="brush_cup">
+<ellipse cx="118" cy="584" rx="92" ry="9" fill="#6A5147" opacity="0.3"/>
+<rect x="40" y="514" width="156" height="16" rx="6" fill="#CE8436" stroke="#4B372F" stroke-width="3.5"/>
+<path d="M58 530V580M178 530V580" stroke="#926133" stroke-width="8" stroke-linecap="round"/>
+<path d="M90 470L84 434" stroke="#4A91D8" stroke-width="8" stroke-linecap="round"/><rect x="74" y="420" width="18" height="14" rx="4" fill="#FFFFFF" stroke="#4B607B" stroke-width="2.5"/>
+<path d="M76 420V412M82 420V410M88 420V412" stroke="#80B2E4" stroke-width="3" stroke-linecap="round"/>
+<path d="M104 470L114 440" stroke="#F46F61" stroke-width="8" stroke-linecap="round"/><rect x="108" y="426" width="18" height="14" rx="4" fill="#FFFFFF" stroke="#975046" stroke-width="2.5" transform="rotate(18 117 433)"/>
+<path d="M72 466H124L118 514H78Z" fill="url(#teeth_cup)" stroke="#487168" stroke-width="3.5" stroke-linejoin="round"/>
+<path d="M80 476V504" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+<path d="M136 512L140 486Q156 480 174 486L178 512Z" fill="#FFFFFF" stroke="#4B607B" stroke-width="3" stroke-linejoin="round"/>
+<path d="M140 498H176" stroke="#4A91D8" stroke-width="5"/><rect x="148" y="474" width="20" height="12" rx="3" fill="#F46F61" stroke="#975046" stroke-width="2.5"/>
+</g><g id="tooth_chart">
+<rect x="830" y="146" width="140" height="96" rx="10" fill="#FFFBEB" stroke="#A76D34" stroke-width="5"/>
+<path d="M852 174H872V198Q872 208 862 208Q852 208 852 198Z" fill="#FFFFFF" stroke="#A5927B" stroke-width="3" stroke-linejoin="round"/><path d="M888 174H910V192L899 210L888 192Z" fill="#FFFFFF" stroke="#A5927B" stroke-width="3" stroke-linejoin="round"/><path d="M925 174H955V198Q955 208 946 208L940 200L934 208Q925 208 925 198Z" fill="#FFFFFF" stroke="#A5927B" stroke-width="3" stroke-linejoin="round"/>
+<path d="M852 226H872M889 226H909M928 226H952" stroke="#44B8AE" stroke-width="4" stroke-linecap="round"/>
+</g>
+</svg>

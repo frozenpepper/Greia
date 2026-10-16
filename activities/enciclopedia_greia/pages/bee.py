@@ -7,30 +7,38 @@ import math
 
 import pygame
 
-from greia_platform.typography import FontRole
-
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
         draw_animal_action_button,
-        draw_focus_patch,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_presenter, grid_step
+    from .storybook_ink import inked_circle, inked_ellipse
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
         draw_animal_action_button,
-        draw_focus_patch,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_presenter, grid_step
+    from pages.storybook_ink import inked_circle, inked_ellipse
 
 
 @dataclass(frozen=True, slots=True)
@@ -235,19 +243,19 @@ class BeePage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((224, 239, 199))
-        pygame.draw.rect(surface, (135, 183, 99), (0, 445, 1024, 155))
-        pygame.draw.circle(surface, (252, 218, 89), (870, 125), 42)
-        draw_centered_text(
+        authored = draw_authored_scene(surface, self.context.visuals, "encyclopedia.animals.bee.meadow")
+        if not authored:
+            # Procedural fallback while the authored runtime rendition is absent.
+            surface.fill((224, 239, 199))
+            pygame.draw.rect(surface, (135, 183, 99), (0, 445, 1024, 155))
+            pygame.draw.circle(surface, (252, 218, 89), (870, 125), 42)
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("bee.title"),
-            center=(500, 92),
-            size=40,
-            color=self.context.palette.ink,
-            role=FontRole.DISPLAY,
+            self.context.palette.ink,
         )
-        self._draw_flowers(surface)
+        self._draw_flowers(surface, authored=authored)
         self._draw_bee(surface)
         self._draw_home_demo(surface)
         self._draw_hotspots(surface)
@@ -270,9 +278,17 @@ class BeePage(EncyclopediaPage):
             fallback_color=(247, 151, 77),
         )
 
-    def _draw_flowers(self, surface: pygame.Surface) -> None:
+    def _draw_flowers(self, surface: pygame.Surface, *, authored: bool) -> None:
         colors = ((223, 108, 133), (125, 137, 220))
         for index, ((cx, cy), petal_color) in enumerate(zip(_FLOWER_POSITIONS, colors)):
+            if authored:
+                # The authored meadow bakes both flowers; only the second
+                # flower's centre ripens live once it has been pollinated.
+                if index == 1 and self._model.pollinated:
+                    inked_circle(surface, (246, 205, 68), (cx, cy), 21, outline=2)
+                    pygame.draw.ellipse(surface, (255, 243, 196), (cx - 14, cy - 12, 14, 9))
+                self._draw_food(surface, cx, cy)
+                continue
             # Soft shadow for depth
             shadow = pygame.Surface((36, 10), pygame.SRCALPHA)
             pygame.draw.ellipse(shadow, (40, 30, 20, 28), shadow.get_rect())
@@ -291,55 +307,55 @@ class BeePage(EncyclopediaPage):
             pygame.draw.circle(surface, center_color, (cx, cy), 22)
             pygame.draw.circle(surface, (255, 245, 180, 60), (cx - 6, cy - 6), 8)
 
-            if self._model.food_age > 0:
-                for grain in range(8):
-                    angle = grain * math.pi / 4
-                    px = cx + int(math.cos(angle) * 13)
-                    py = cy + int(math.sin(angle) * 13)
-                    pygame.draw.circle(surface, (245, 177, 53), (px, py), 3)
-                    # Pollen glow
-                    pygame.draw.circle(surface, (255, 230, 120, 40), (px, py), 6, 1)
-                pygame.draw.circle(surface, (106, 177, 223), (cx + 36, cy - 28), 7)
-                pygame.draw.circle(surface, (135, 200, 240, 60), (cx + 36, cy - 28), 10, 2)
+            self._draw_food(surface, cx, cy)
 
         if self._model.pollination_age > 0 or self._model.pollinated:
             for index in range(4):
                 x = 600 + index * 17
-                # Young shoot with highlight
-                pygame.draw.ellipse(surface, (103, 161, 82), (x, 415 - index * 4, 11, 18))
-                pygame.draw.ellipse(surface, (145, 200, 120, 60), (x + 2, 418 - index * 4, 5, 8))
+                # Young shoot: seeds grow once pollen reached the flower.
+                inked_ellipse(surface, (89, 184, 106), (x, 415 - index * 4, 11, 18), outline=2)
+                pygame.draw.ellipse(surface, (143, 208, 154), (x + 2, 418 - index * 4, 5, 8))
+
+    def _draw_food(self, surface: pygame.Surface, cx: int, cy: int) -> None:
+        """Pollen grains and a nectar drop on one flower while food is shown."""
+
+        if self._model.food_age <= 0:
+            return
+        for grain in range(8):
+            angle = grain * math.pi / 4
+            px = cx + int(math.cos(angle) * 13)
+            py = cy + int(math.sin(angle) * 13)
+            pygame.draw.circle(surface, (196, 120, 30), (px, py), 4)
+            pygame.draw.circle(surface, (245, 177, 53), (px, py), 3)
+        inked_circle(surface, (106, 177, 223), (cx + 36, cy - 28), 7, outline=2)
+        pygame.draw.circle(surface, (225, 243, 252), (cx + 34, cy - 30), 2)
 
     def _draw_bee(self, surface: pygame.Surface) -> None:
         cx, cy = self._model.bee_position()
         wing_bob = int(math.sin(self._time * 16.0) * 5)
-        # Wings with vein, shadow, and translucent edge
+        # Translucent-looking wings: pale fill, ink rim, one vein.
         for wx, wy in ((-30, -26 - wing_bob), (2, -26 + wing_bob)):
-            shadow = pygame.Surface((30, 28), pygame.SRCALPHA)
-            pygame.draw.ellipse(shadow, (0, 0, 0, 18), shadow.get_rect())
-            surface.blit(shadow, (cx + wx + 1, cy + wy + 2))
-            pygame.draw.ellipse(surface, (218, 239, 247), (cx + wx, cy + wy, 28, 26))
-            pygame.draw.ellipse(surface, (235, 245, 250, 70), (cx + wx + 4, cy + wy + 4, 18, 14))
-        pygame.draw.line(surface, (180, 200, 215), (cx - 16, cy - 14 - wing_bob), (cx - 8, cy - 6 - wing_bob), 1)
-        pygame.draw.line(surface, (180, 200, 215), (cx + 16, cy - 14 + wing_bob), (cx + 8, cy - 6 + wing_bob), 1)
-        # Body with gradient and highlight
-        body_rect = pygame.Rect(cx - 28, cy - 16, 56, 32)
-        pygame.draw.ellipse(surface, (55, 49, 43, 30), body_rect.move(2, 3))
-        pygame.draw.ellipse(surface, (247, 204, 63), body_rect)
-        pygame.draw.ellipse(surface, (255, 235, 120, 70), (cx - 20, cy - 12, 30, 14))
-        pygame.draw.ellipse(surface, (255, 245, 180, 40), (cx - 16, cy - 8, 18, 8))
-        for x in (cx - 12, cx + 5):
-            pygame.draw.line(surface, (35, 33, 30), (x, cy - 13), (x, cy + 13), 6)
-            pygame.draw.line(surface, (55, 49, 43), (x, cy - 13), (x, cy + 13), 5)
-        # Head with eye highlight
-        pygame.draw.circle(surface, (35, 33, 30), (cx + 22, cy - 2), 5)
-        pygame.draw.circle(surface, (255, 255, 255), (cx + 20, cy - 4), 2)
-        pygame.draw.circle(surface, (255, 255, 255, 90), (cx + 21, cy - 3), 1)
+            inked_ellipse(surface, (226, 242, 250), (cx + wx, cy + wy, 28, 26), outline=2)
+            pygame.draw.line(surface, (170, 196, 214), (cx + wx + 14, cy + wy + 22), (cx + wx + 14, cy + wy + 8), 2)
+        # Stinger, then striped body with one highlight.
+        pygame.draw.polygon(surface, (75, 55, 47), [(cx - 26, cy - 5), (cx - 38, cy + 1), (cx - 26, cy + 6)])
+        inked_ellipse(surface, (251, 191, 36), (cx - 28, cy - 16, 56, 32))
+        for x in (cx - 12, cx + 4):
+            pygame.draw.line(surface, (75, 55, 47), (x, cy - 14), (x, cy + 14), 7)
+        pygame.draw.ellipse(surface, (255, 236, 160), (cx - 20, cy - 12, 22, 8))
+        # Head, eye and antennae.
+        inked_circle(surface, (75, 55, 47), (cx + 25, cy - 3), 10, outline=1)
+        pygame.draw.circle(surface, (255, 255, 255), (cx + 28, cy - 6), 3)
+        pygame.draw.line(surface, (75, 55, 47), (cx + 27, cy - 12), (cx + 33, cy - 25), 2)
+        pygame.draw.circle(surface, (75, 55, 47), (cx + 34, cy - 26), 3)
+        pygame.draw.line(surface, (75, 55, 47), (cx + 22, cy - 12), (cx + 22, cy - 26), 2)
+        pygame.draw.circle(surface, (75, 55, 47), (cx + 22, cy - 27), 3)
+        pygame.draw.circle(surface, (253, 164, 175), (cx + 21, cy + 3), 3)
         if self._model.carrying_pollen:
             for dx, dy in ((-22, 13), (-10, 17), (5, 16), (18, 10)):
-                pygame.draw.circle(surface, (231, 145, 35), (cx + dx, cy + dy), 5)
-                pygame.draw.circle(surface, (241, 158, 44), (cx + dx, cy + dy), 4)
-                pygame.draw.circle(surface, (255, 210, 90, 70), (cx + dx, cy + dy), 7, 1)
-                pygame.draw.circle(surface, (255, 255, 200, 50), (cx + dx, cy + dy), 3)
+                pygame.draw.circle(surface, (196, 120, 30), (cx + dx, cy + dy), 6)
+                pygame.draw.circle(surface, (241, 158, 44), (cx + dx, cy + dy), 5)
+                pygame.draw.circle(surface, (255, 220, 120), (cx + dx - 1, cy + dy - 2), 2)
 
     def _draw_home_demo(self, surface: pygame.Surface) -> None:
         if self._model.home_age <= 0:
@@ -375,32 +391,47 @@ class BeePage(EncyclopediaPage):
                 pygame.draw.circle(surface, (55, 49, 43), (x, 230 + (x % 3) * 8), 5)
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (255, 250, 230), item.center, 37)
-            pygame.draw.circle(surface, (70, 68, 51), item.center, 37, 3)
-            cx, cy = item.center
-            if item.discovery_id == "food":
-                pygame.draw.circle(surface, (246, 205, 68), (cx - 10, cy), 12)
-                pygame.draw.circle(surface, (106, 177, 223), (cx + 14, cy - 4), 8)
-            elif item.discovery_id == "pollen":
-                pygame.draw.ellipse(surface, (247, 204, 63), (cx - 24, cy - 12, 48, 24))
-                for dx in (-16, -4, 8, 18):
-                    pygame.draw.circle(surface, (241, 158, 44), (cx + dx, cy + 14), 4)
-            elif item.discovery_id == "pollination":
-                pygame.draw.circle(surface, (223, 108, 133), (cx - 14, cy), 13)
-                pygame.draw.line(surface, (241, 158, 44), (cx - 1, cy), (cx + 20, cy), 5)
-                pygame.draw.circle(surface, (125, 137, 220), (cx + 22, cy), 11)
-            else:
-                pygame.draw.circle(surface, (142, 107, 72), (cx - 14, cy + 8), 10)
-                pygame.draw.polygon(surface, (232, 177, 63), [(cx + 4, cy + 14), (cx + 14, cy - 15), (cx + 25, cy + 14)])
-            focus_ring(surface, rect, index == self._selected or index == self._hovered)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=item.caption_key == self._caption_key,
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+                token_shape=TOKEN_SHAPE_FELT_TAG,
+            )
+
+    def _draw_icon(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        discovery_id: str,
+    ) -> None:
+        cx, cy = center[0], center[1] + 4  # sit below the felt tag's pin
+        center = (cx, cy)
+        if discovery_id == "food":
+            pygame.draw.circle(surface, (246, 205, 68), (cx - 10, cy), 12)
+            pygame.draw.circle(surface, (106, 177, 223), (cx + 14, cy - 4), 8)
+        elif discovery_id == "pollen":
+            pygame.draw.ellipse(surface, (247, 204, 63), (cx - 24, cy - 12, 48, 24))
+            for dx in (-16, -4, 8, 18):
+                pygame.draw.circle(surface, (241, 158, 44), (cx + dx, cy + 14), 4)
+        elif discovery_id == "pollination":
+            pygame.draw.circle(surface, (223, 108, 133), (cx - 14, cy), 13)
+            pygame.draw.line(surface, (241, 158, 44), (cx - 1, cy), (cx + 20, cy), 5)
+            pygame.draw.circle(surface, (125, 137, 220), (cx + 22, cy), 11)
+        else:
+            pygame.draw.circle(surface, (142, 107, 72), (cx - 14, cy + 8), 10)
+            pygame.draw.polygon(surface, (232, 177, 63), [(cx + 4, cy + 14), (cx + 14, cy - 15), (cx + 25, cy + 14)])
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (255, 250, 230), panel, border_radius=22)
-        pygame.draw.rect(surface, (70, 68, 51), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (54, 52, 44))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (54, 52, 44))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )

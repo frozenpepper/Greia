@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- Encyclopedia E4-D entry scene: Magnets. Flattened opaque 1024x600 backdrop.
+       A bright science corner: felt test board standing on the workbench (live
+       magnets/materials/compass demos are drawn over x 310-714, y 157-417),
+       a horseshoe magnet holding a paper-clip chain, an Earth-field poster and
+       steel / wood / aluminium samples. Cork rings sit exactly under the four
+       semantic discovery targets (data-center). Title band y 20-90 stays calm.
+       Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md (scene). -->
+  <defs>
+    <!-- peach light -> peach (wall) -->
+    <linearGradient id="magnet_lab_wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FCEBDA"/>
+      <stop offset="1" stop-color="#F8D8BD"/>
+    </linearGradient>
+    <!-- orange light -> orange shade (bench wood) -->
+    <linearGradient id="magnet_lab_wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E2A869"/>
+      <stop offset="1" stop-color="#C47F41"/>
+    </linearGradient>
+    <!-- cream -> sand (felt test board) -->
+    <linearGradient id="magnet_lab_felt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFBEB"/>
+      <stop offset="1" stop-color="#F6ECD2"/>
+    </linearGradient>
+    <!-- sunshine glow (window light on the board) -->
+    <radialGradient id="magnet_lab_glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF4D6" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFF4D6" stop-opacity="0"/>
+    </radialGradient>
+    <!-- sky light -> ocean light (poster Earth sea) -->
+    <linearGradient id="magnet_lab_sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9CC6EC"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+
+  <g id="wall">
+    <rect width="1024" height="600" fill="url(#magnet_lab_wall)"/>
+    <ellipse cx="512" cy="280" rx="360" ry="210" fill="url(#magnet_lab_glow)"/>
+    <!-- wainscot band + rail -->
+    <rect x="0" y="318" width="1024" height="120" fill="#EEDDBA"/>
+    <path d="M0 318 H1024" stroke="#C9A57C" stroke-width="6"/>
+    <path d="M0 322 H1024" stroke="#FFF6E3" stroke-width="2" opacity="0.7"/>
+    <g stroke="#DCC59E" stroke-width="2.5">
+      <path d="M150 330 V430"/><path d="M874 330 V430"/>
+    </g>
+  </g>
+
+  <g id="poster_earth_field">
+    <!-- Earth with its magnetic field lines and a compass that points north -->
+    <rect x="828" y="112" width="124" height="148" rx="10" fill="#FFF6E3" stroke="#4B372F" stroke-width="3"/>
+    <circle cx="890" cy="96" r="5" fill="#E8574A" stroke="#4B372F" stroke-width="2"/>
+    <g fill="none" stroke="#7DB2E3" stroke-width="2.5" stroke-linecap="round">
+      <path d="M890 154 C846 150 846 214 890 210"/>
+      <path d="M890 154 C934 150 934 214 890 210"/>
+      <path d="M890 154 C824 136 822 232 890 210"/>
+      <path d="M890 154 C956 136 958 232 890 210"/>
+    </g>
+    <circle cx="890" cy="182" r="24" fill="url(#magnet_lab_sea)" stroke="#2F5F8F" stroke-width="2.5"/>
+    <path d="M876 172 C882 164 894 166 896 174 C898 182 888 184 884 190 C878 188 872 180 876 172 Z" fill="#59B86A" stroke="#3F6E3A" stroke-width="1.8"/>
+    <path d="M896 192 C902 188 908 192 906 198 C902 202 896 200 896 192 Z" fill="#59B86A" stroke="#3F6E3A" stroke-width="1.8"/>
+    <path d="M882 166 C886 162 892 161 896 162" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+    <!-- north and south pole caps -->
+    <path d="M884 150 L890 140 L896 150 Z" fill="#E8574A" stroke="#4B372F" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M884 214 L890 224 L896 214 Z" fill="#4A91D8" stroke="#4B372F" stroke-width="1.8" stroke-linejoin="round"/>
+    <!-- small compass under the globe -->
+    <circle cx="890" cy="240" r="13" fill="#FBBF24" stroke="#4B372F" stroke-width="2.5"/>
+    <circle cx="890" cy="240" r="9" fill="#FFFBEB"/>
+    <path d="M890 231 L893.5 240 L886.5 240 Z" fill="#E8574A"/>
+    <path d="M890 249 L893.5 240 L886.5 240 Z" fill="#B8C2CC"/>
+  </g>
+
+  <g id="horseshoe_magnet">
+    <!-- wall hook -->
+    <circle cx="160" cy="214" r="6" fill="#B8C2CC" stroke="#4B372F" stroke-width="2.5"/>
+    <path d="M160 220 V232" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/>
+    <!-- U body: red bend, steel pole tips at the bottom -->
+    <path d="M128 252 C128 222 192 222 192 252 L192 290 L170 290 L170 254 C170 244 150 244 150 254 L150 290 L128 290 Z" fill="#E8574A" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="128" y="290" width="22" height="18" rx="3" fill="#E9EEF2" stroke="#4B372F" stroke-width="3"/>
+    <rect x="170" y="290" width="22" height="18" rx="3" fill="#E9EEF2" stroke="#4B372F" stroke-width="3"/>
+    <path d="M134 256 C134 240 146 232 158 230" fill="none" stroke="#F7A097" stroke-width="4" stroke-linecap="round"/>
+    <!-- paper-clip chain hanging from the steel poles -->
+    <g fill="none" stroke="#7D8C99" stroke-width="2.5" stroke-linejoin="round">
+      <rect x="133" y="306" width="12" height="26" rx="6"/>
+      <rect x="135" y="326" width="12" height="26" rx="6"/>
+      <rect x="133" y="346" width="12" height="26" rx="6"/>
+      <rect x="175" y="306" width="12" height="26" rx="6"/>
+      <rect x="177" y="326" width="12" height="26" rx="6"/>
+    </g>
+    <g stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round">
+      <path d="M119 286 l-8 -3"/><path d="M118 296 l-9 2"/><path d="M201 286 l8 -3"/><path d="M202 296 l9 2"/>
+    </g>
+  </g>
+
+  <g id="bench">
+    <!-- bench top surface and front face -->
+    <rect x="-8" y="430" width="1040" height="24" fill="url(#magnet_lab_wood)" stroke="#4B372F" stroke-width="3"/>
+    <rect x="-8" y="454" width="1040" height="44" fill="#B57339" stroke="#4B372F" stroke-width="3"/>
+    <path d="M0 436 H1024" stroke="#F3C891" stroke-width="2.5" opacity="0.8"/>
+    <path d="M0 476 H1024" stroke="#9C5F2E" stroke-width="2"/>
+    <rect x="0" y="498" width="1024" height="102" fill="#8A5A3A"/>
+    <rect x="40" y="498" width="34" height="102" fill="#6F4630" stroke="#4B372F" stroke-width="2.5"/>
+    <rect x="950" y="498" width="34" height="102" fill="#6F4630" stroke="#4B372F" stroke-width="2.5"/>
+    <path d="M0 503 H1024" stroke="#6A5147" stroke-width="10" opacity="0.35"/>
+    <!-- floor -->
+    <rect x="0" y="566" width="1024" height="34" fill="#C9A57C"/>
+    <path d="M0 566 H1024" stroke="#4B372F" stroke-width="2.5"/>
+  </g>
+
+  <g id="toolbox">
+    <!-- toolbox under the bench with a red bar magnet poking out -->
+    <ellipse cx="150" cy="570" rx="62" ry="7" fill="#4B372F" opacity="0.25"/>
+    <path d="M140 528 L214 512 L218 524 L144 540 Z" fill="#E8574A" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M178 520 L214 512 L218 524 L182 532 Z" fill="#4A91D8" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="96" y="532" width="112" height="38" rx="6" fill="#F39A38" stroke="#4B372F" stroke-width="3"/>
+    <path d="M132 532 V522 C132 516 172 516 172 522 V532" fill="none" stroke="#4B372F" stroke-width="4" stroke-linecap="round"/>
+    <path d="M96 546 H208" stroke="#C9772A" stroke-width="3"/>
+    <path d="M104 538 H140" stroke="#FFD49A" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <g id="test_board">
+    <!-- contact shadow, easel feet, wooden frame, felt -->
+    <ellipse cx="512" cy="440" rx="236" ry="8" fill="#6A5147" opacity="0.16"/>
+    <rect x="314" y="418" width="34" height="20" rx="4" fill="#C47F41" stroke="#4B372F" stroke-width="3"/>
+    <rect x="676" y="418" width="34" height="20" rx="4" fill="#C47F41" stroke="#4B372F" stroke-width="3"/>
+    <rect x="295" y="142" width="434" height="290" rx="22" fill="url(#magnet_lab_wood)" stroke="#4B372F" stroke-width="3.5"/>
+    <rect x="310" y="157" width="404" height="260" rx="16" fill="url(#magnet_lab_felt)" stroke="#A9794C" stroke-width="2.5"/>
+    <path d="M318 168 C360 160 420 158 470 160" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+    <g fill="#F3C891" stroke="#4B372F" stroke-width="2">
+      <circle cx="304" cy="151" r="4"/><circle cx="720" cy="151" r="4"/><circle cx="304" cy="423" r="4"/><circle cx="720" cy="423" r="4"/>
+    </g>
+  </g>
+
+  <g id="samples_left">
+    <!-- glass jar of steel clips and nails (steel sticks to magnets) -->
+    <ellipse cx="128" cy="446" rx="34" ry="5" fill="#6A5147" opacity="0.18"/>
+    <path d="M100 392 H156 V434 C156 442 148 446 140 446 H116 C108 446 100 442 100 434 Z" fill="#DDF0F2" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="96" y="384" width="64" height="10" rx="4" fill="#B8C2CC" stroke="#4B372F" stroke-width="2.5"/>
+    <g fill="none" stroke="#7D8C99" stroke-width="2.5" stroke-linecap="round">
+      <path d="M108 430 l14 -14"/><path d="M118 436 l20 -4"/><path d="M132 424 l14 8"/><path d="M144 412 l-6 18"/>
+      <rect x="110" y="404" width="9" height="18" rx="4.5" transform="rotate(-20 114 413)"/>
+      <rect x="134" y="398" width="9" height="18" rx="4.5" transform="rotate(25 138 407)"/>
+    </g>
+    <path d="M106 398 V428" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+  </g>
+
+  <g id="samples_right">
+    <!-- wooden block and aluminium can (neither sticks to a magnet) -->
+    <ellipse cx="836" cy="447" rx="34" ry="5" fill="#6A5147" opacity="0.18"/>
+    <rect x="806" y="414" width="34" height="30" rx="5" fill="#D9A066" stroke="#4B372F" stroke-width="3"/>
+    <path d="M812 424 C820 421 828 427 836 424" fill="none" stroke="#A9794C" stroke-width="2" stroke-linecap="round"/>
+    <rect x="844" y="398" width="22" height="46" rx="6" fill="#D5DCE2" stroke="#4B372F" stroke-width="3"/>
+    <path d="M850 404 V438" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+  </g>
+
+  <g id="discovery_beds" fill="#D49A62" stroke="#4B372F" stroke-width="3">
+    <!-- cork rings: each discovery token rests exactly on one -->
+    <g data-target="poles" data-center="240,185"><circle cx="240" cy="185" r="46"/><circle cx="240" cy="185" r="40" fill="#E7B98A" stroke="none"/></g>
+    <g data-target="materials" data-center="765,185"><circle cx="765" cy="185" r="46"/><circle cx="765" cy="185" r="40" fill="#E7B98A" stroke="none"/></g>
+    <g data-target="distance" data-center="240,420"><circle cx="240" cy="420" r="46"/><circle cx="240" cy="420" r="40" fill="#E7B98A" stroke="none"/></g>
+    <g data-target="field" data-center="765,420"><circle cx="765" cy="420" r="46"/><circle cx="765" cy="420" r="40" fill="#E7B98A" stroke="none"/></g>
+  </g>
+</svg>

@@ -7,28 +7,34 @@ import math
 
 import pygame
 
-from greia_platform.typography import FontRole
-
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
-        draw_focus_patch,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
-        draw_focus_patch,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_presenter, grid_step
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,6 +51,9 @@ DISCOVERIES = (
     BonesDiscovery("living", "bones.living", "encyclopedia.body.bones.living", (250, 420)),
     BonesDiscovery("marrow", "bones.marrow", "encyclopedia.body.bones.marrow", (755, 420)),
 )
+
+# E4 authored scene; a missing rendition fails soft to the procedural fallback.
+SCENE_ID = "encyclopedia.body.bones.xray_room"
 
 
 class BonesPage(EncyclopediaPage):
@@ -149,17 +158,16 @@ class BonesPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((244, 238, 228))
-        draw_centered_text(
+        authored = draw_authored_scene(surface, self.context.visuals, SCENE_ID)
+        if not authored:
+            surface.fill((244, 238, 228))
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("bones.title"),
-            center=(500, 92),
-            size=40,
-            color=self.context.palette.ink,
-            role=FontRole.DISPLAY,
+            self.context.palette.ink,
         )
-        self._draw_body_and_skeleton(surface)
+        self._draw_body_and_skeleton(surface, authored=authored)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -177,63 +185,68 @@ class BonesPage(EncyclopediaPage):
             fallback_color=(229, 137, 183),
         )
 
-    def _draw_body_and_skeleton(self, surface: pygame.Surface) -> None:
-        skin = (234, 190, 162)
-        skin_light = (245, 210, 185)
-        skin_shadow = (210, 165, 138)
-        bone = (245, 239, 211)
-        bone_light = (252, 247, 228)
-        bone_shadow = (210, 200, 170)
-        outline = (112, 100, 91)
-        # Head with highlight
-        pygame.draw.circle(surface, skin, (505, 178), 45)
-        pygame.draw.circle(surface, skin_light, (494, 166), 12)
-        pygame.draw.circle(surface, skin, (505, 178), 45, 2)
-        # Torso with soft shadow
-        torso = pygame.Rect(442, 220, 126, 235)
-        pygame.draw.rect(surface, skin_shadow, torso.move(3, 4), border_radius=48)
-        pygame.draw.rect(surface, skin, torso, border_radius=48)
-        pygame.draw.rect(surface, skin_light, torso.inflate(-12, -12), border_radius=44, width=3)
-        # Limbs with highlight
-        for x1, y1, x2, y2 in ((454, 256, 386, 410), (556, 256, 624, 410), (478, 430, 453, 545), (532, 430, 557, 545)):
-            pygame.draw.line(surface, skin_shadow, (x1 + 2, y1 + 2), (x2 + 2, y2 + 2), 29)
-            pygame.draw.line(surface, skin, (x1, y1), (x2, y2), 27)
-            pygame.draw.line(surface, skin_light, (x1, y1), (x2, y2), 12)
-        # Friendly schematic skeleton
-        pygame.draw.circle(surface, bone_shadow, (505, 178), 31)
-        pygame.draw.circle(surface, bone, (505, 176), 31)
-        pygame.draw.circle(surface, bone_light, (496, 168), 10)
-        pygame.draw.circle(surface, outline, (505, 178), 31, 3)
-        pygame.draw.line(surface, bone_shadow, (505, 215), (505, 390), 12)
-        pygame.draw.line(surface, bone, (505, 215), (505, 390), 10)
-        pygame.draw.line(surface, bone_light, (505, 215), (505, 390), 4)
-        pygame.draw.line(surface, outline, (505, 215), (505, 390), 2)
-        for y, width in ((248, 46), (267, 52), (286, 55), (305, 51)):
-            pygame.draw.arc(surface, bone_shadow, (505 - width, y - 13, width * 2, 42), 0.15, math.pi - 0.15, 9)
-            pygame.draw.arc(surface, bone, (505 - width, y - 15, width * 2, 42), 0.15, math.pi - 0.15, 7)
-            pygame.draw.arc(surface, bone_light, (505 - width + 4, y - 13, width * 2 - 8, 36), 0.15, math.pi - 0.15, 3)
+    def _draw_body_and_skeleton(self, surface: pygame.Surface, *, authored: bool) -> None:
+        if authored:
+            # The X-ray lightbox scene bakes every bone except the left
+            # forearm, which bends when the child explores joints.
+            self._draw_forearm(surface)
+        else:
+            skin = (234, 190, 162)
+            skin_light = (245, 210, 185)
+            skin_shadow = (210, 165, 138)
+            bone = (245, 239, 211)
+            bone_light = (252, 247, 228)
+            bone_shadow = (210, 200, 170)
+            outline = (112, 100, 91)
+            # Head with highlight
+            pygame.draw.circle(surface, skin, (505, 178), 45)
+            pygame.draw.circle(surface, skin_light, (494, 166), 12)
+            pygame.draw.circle(surface, skin, (505, 178), 45, 2)
+            # Torso with soft shadow
+            torso = pygame.Rect(442, 220, 126, 235)
+            pygame.draw.rect(surface, skin_shadow, torso.move(3, 4), border_radius=48)
+            pygame.draw.rect(surface, skin, torso, border_radius=48)
+            pygame.draw.rect(surface, skin_light, torso.inflate(-12, -12), border_radius=44, width=3)
+            # Limbs with highlight
+            for x1, y1, x2, y2 in ((454, 256, 386, 410), (556, 256, 624, 410), (478, 430, 453, 545), (532, 430, 557, 545)):
+                pygame.draw.line(surface, skin_shadow, (x1 + 2, y1 + 2), (x2 + 2, y2 + 2), 29)
+                pygame.draw.line(surface, skin, (x1, y1), (x2, y2), 27)
+                pygame.draw.line(surface, skin_light, (x1, y1), (x2, y2), 12)
+            # Friendly schematic skeleton
+            pygame.draw.circle(surface, bone_shadow, (505, 178), 31)
+            pygame.draw.circle(surface, bone, (505, 176), 31)
+            pygame.draw.circle(surface, bone_light, (496, 168), 10)
+            pygame.draw.circle(surface, outline, (505, 178), 31, 3)
+            pygame.draw.line(surface, bone_shadow, (505, 215), (505, 390), 12)
+            pygame.draw.line(surface, bone, (505, 215), (505, 390), 10)
+            pygame.draw.line(surface, bone_light, (505, 215), (505, 390), 4)
+            pygame.draw.line(surface, outline, (505, 215), (505, 390), 2)
+            for y, width in ((248, 46), (267, 52), (286, 55), (305, 51)):
+                pygame.draw.arc(surface, bone_shadow, (505 - width, y - 13, width * 2, 42), 0.15, math.pi - 0.15, 9)
+                pygame.draw.arc(surface, bone, (505 - width, y - 15, width * 2, 42), 0.15, math.pi - 0.15, 7)
+                pygame.draw.arc(surface, bone_light, (505 - width + 4, y - 13, width * 2 - 8, 36), 0.15, math.pi - 0.15, 3)
 
-        shoulder_left = (475, 245)
-        elbow_left = (430, 325)
-        hand_left = (390, 405)
-        pygame.draw.line(surface, bone, shoulder_left, elbow_left, 9)
-        if self._arm_bent:
-            hand_left = (485, 350)
-        pygame.draw.line(surface, bone, elbow_left, hand_left, 8)
-        pygame.draw.circle(surface, (226, 188, 92), elbow_left, 8)
+            shoulder_left = (475, 245)
+            elbow_left = (430, 325)
+            hand_left = (390, 405)
+            pygame.draw.line(surface, bone, shoulder_left, elbow_left, 9)
+            if self._arm_bent:
+                hand_left = (485, 350)
+            pygame.draw.line(surface, bone, elbow_left, hand_left, 8)
+            pygame.draw.circle(surface, (226, 188, 92), elbow_left, 8)
 
-        shoulder_right = (535, 245)
-        elbow_right = (580, 325)
-        pygame.draw.line(surface, bone, shoulder_right, elbow_right, 9)
-        pygame.draw.line(surface, bone, elbow_right, (620, 405), 8)
-        pygame.draw.circle(surface, (226, 188, 92), elbow_right, 8)
+            shoulder_right = (535, 245)
+            elbow_right = (580, 325)
+            pygame.draw.line(surface, bone, shoulder_right, elbow_right, 9)
+            pygame.draw.line(surface, bone, elbow_right, (620, 405), 8)
+            pygame.draw.circle(surface, (226, 188, 92), elbow_right, 8)
 
-        hip_left = (489, 391)
-        hip_right = (521, 391)
-        pygame.draw.line(surface, bone, hip_left, (470, 470), 10)
-        pygame.draw.line(surface, bone, (470, 470), (453, 540), 8)
-        pygame.draw.line(surface, bone, hip_right, (540, 470), 10)
-        pygame.draw.line(surface, bone, (540, 470), (557, 540), 8)
+            hip_left = (489, 391)
+            hip_right = (521, 391)
+            pygame.draw.line(surface, bone, hip_left, (470, 470), 10)
+            pygame.draw.line(surface, bone, (470, 470), (453, 540), 8)
+            pygame.draw.line(surface, bone, hip_right, (540, 470), 10)
+            pygame.draw.line(surface, bone, (540, 470), (557, 540), 8)
 
         if self._protect_age > 0.0:
             pygame.draw.circle(surface, (218, 159, 176), (505, 178), 18)
@@ -250,6 +263,18 @@ class BonesPage(EncyclopediaPage):
 
         if self._marrow_age > 0.0:
             self._draw_bone_cutaway(surface)
+
+    def _draw_forearm(self, surface: pygame.Surface) -> None:
+        bone = (255, 246, 223)
+        outline = (148, 130, 110)
+        elbow = (430, 325)
+        hand = (485, 350) if self._arm_bent else (390, 405)
+        pygame.draw.line(surface, outline, elbow, hand, 17)
+        pygame.draw.line(surface, bone, elbow, hand, 11)
+        pygame.draw.circle(surface, bone, hand, 11)
+        pygame.draw.circle(surface, outline, hand, 11, 3)
+        pygame.draw.circle(surface, bone, elbow, 8)
+        pygame.draw.circle(surface, outline, elbow, 8, 3)
 
     @staticmethod
     def _draw_bone_cutaway(surface: pygame.Surface) -> None:
@@ -272,29 +297,35 @@ class BonesPage(EncyclopediaPage):
             pygame.draw.line(surface, (226, 188, 92), (cx, cy), (cx + 20, cy + 18), 8)
             pygame.draw.circle(surface, (118, 101, 86), (cx, cy), 7)
         elif item.discovery_id == "protect":
+            # Bone-cream skull and ribs with a warm outline for the cream tag.
             pygame.draw.circle(surface, (238, 228, 194), (cx, cy - 6), 19)
+            pygame.draw.circle(surface, (148, 130, 110), (cx, cy - 6), 19, 2)
+            pygame.draw.arc(surface, (148, 130, 110), (cx - 25, cy + 2, 50, 34), 0.1, math.pi - 0.1, 8)
             pygame.draw.arc(surface, (238, 228, 194), (cx - 24, cy + 3, 48, 32), 0.1, math.pi - 0.1, 5)
         elif item.discovery_id == "living":
             pygame.draw.rect(surface, (238, 228, 194), (cx - 9, cy - 25, 18, 50), border_radius=8)
+            pygame.draw.rect(surface, (148, 130, 110), (cx - 9, cy - 25, 18, 50), 2, border_radius=8)
             pygame.draw.circle(surface, (214, 100, 95), (cx + 19, cy), 8)
         else:
             pygame.draw.rect(surface, (238, 228, 194), (cx - 18, cy - 27, 36, 54), border_radius=16)
+            pygame.draw.rect(surface, (148, 130, 110), (cx - 18, cy - 27, 36, 54), 2, border_radius=16)
             pygame.draw.rect(surface, (198, 104, 114), (cx - 8, cy - 18, 16, 36), border_radius=7)
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (253, 249, 238), item.center, 37)
-            pygame.draw.circle(surface, (93, 80, 73), item.center, 37, 3)
-            self._draw_hotspot_icon(surface, item)
-            if index == self._selected or index == self._hovered:
-                draw_focus_patch(surface, rect, active=True, radius=16, time=self._time)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=self._caption_key == item.caption_key,
+                icon=lambda target, _center, item=item: self._draw_hotspot_icon(target, item),
+                token_shape=TOKEN_SHAPE_FELT_TAG,
+            )
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (253, 249, 238), panel, border_radius=22)
-        pygame.draw.rect(surface, (93, 80, 73), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (57, 52, 49))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (57, 52, 49))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )

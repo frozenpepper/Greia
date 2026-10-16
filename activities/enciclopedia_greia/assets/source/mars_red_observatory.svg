@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<defs>
+  <!-- navy deep -> navy lifted -->
+  <linearGradient id="mars_sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#21304F"/><stop offset="1" stop-color="#33496F"/></linearGradient>
+  <!-- ink+orange 25% -> ink -->
+  <linearGradient id="mars_deck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#755031"/><stop offset="1" stop-color="#4B372F"/></linearGradient>
+  <!-- rust light -> rust shade -->
+  <linearGradient id="mars_soil" x1="0.1" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#E49F80"/><stop offset="1" stop-color="#D9764A"/></linearGradient>
+  <!-- sand -> sand+ink -->
+  <linearGradient id="mars_moonlet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9CBB8"/><stop offset="1" stop-color="#9C8A78"/></linearGradient>
+  <!-- cream -> sand light -->
+  <linearGradient id="mars_rover" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFBEB"/><stop offset="1" stop-color="#E3D9C3"/></linearGradient>
+  <clipPath id="mars_disc"><circle cx="505" cy="326" r="92.5"/></clipPath>
+</defs>
+<g id="sky"><rect width="1024" height="600" fill="url(#mars_sky)"/><g fill="#FFFBEB" opacity="0.85"><circle cx="95.8" cy="179.3" r="1"/><circle cx="969.6" cy="103.2" r="1.2"/><circle cx="318.7" cy="380.9" r="1"/><circle cx="421.6" cy="167.6" r="2"/><circle cx="827.3" cy="223.8" r="1.2"/><circle cx="837.2" cy="448.2" r="1"/><circle cx="797" cy="15.1" r="1.6"/><circle cx="359.4" cy="269" r="1.2"/><circle cx="887.3" cy="394.1" r="1.6"/><circle cx="238.9" cy="423.1" r="1.6"/><circle cx="642.2" cy="260" r="2"/><circle cx="135" cy="175.1" r="1.2"/><circle cx="670.7" cy="290.2" r="1"/><circle cx="281.7" cy="123.4" r="1.4"/><circle cx="82.5" cy="54.6" r="1.6"/><circle cx="591.2" cy="37.3" r="1.4"/><circle cx="820.7" cy="219.7" r="1.4"/><circle cx="684.2" cy="195.2" r="1.2"/><circle cx="581.7" cy="162" r="2"/><circle cx="258" cy="271.3" r="1.4"/><circle cx="923.9" cy="405.1" r="1"/><circle cx="603.4" cy="218.1" r="1"/><circle cx="83.2" cy="187.1" r="1"/><circle cx="445.6" cy="71.2" r="1.6"/><circle cx="389.5" cy="139.4" r="1.4"/><circle cx="390.6" cy="109.5" r="1"/><circle cx="943.9" cy="294" r="1"/><circle cx="970" cy="302" r="2"/><circle cx="954.2" cy="445.7" r="1.4"/><circle cx="54.3" cy="205.5" r="1"/><circle cx="601.2" cy="113.7" r="2"/><circle cx="431.9" cy="197.4" r="1"/><circle cx="786" cy="257.8" r="2"/><circle cx="898.1" cy="136.3" r="1.2"/><circle cx="516.4" cy="119.1" r="1.6"/><circle cx="824.2" cy="251.9" r="1"/><circle cx="347.3" cy="110.5" r="1.4"/><circle cx="862.8" cy="209.9" r="2"/><circle cx="940.2" cy="173.3" r="1"/><circle cx="729.1" cy="246.9" r="1.4"/><circle cx="1007.9" cy="331" r="1.6"/><circle cx="137.2" cy="282.1" r="1.2"/><circle cx="298.6" cy="107.1" r="1.4"/><circle cx="672.2" cy="75.2" r="1.6"/><circle cx="358.2" cy="195.5" r="1"/><circle cx="669.2" cy="321.6" r="1"/></g><g fill="#BFD6F0" opacity="0.7"><circle cx="212.1" cy="48.5" r="2"/><circle cx="365.1" cy="212.7" r="1.4"/><circle cx="273.9" cy="131" r="1"/><circle cx="559.4" cy="71.9" r="1.6"/><circle cx="139" cy="358.5" r="1.2"/><circle cx="61" cy="41.3" r="1"/><circle cx="221.4" cy="53.1" r="1.6"/><circle cx="81.6" cy="7.7" r="1.2"/><circle cx="665" cy="457" r="1"/><circle cx="825.7" cy="205.3" r="1"/></g></g>
+
+<g id="deck"><path d="M0 486H1024V600H0Z" fill="url(#mars_deck)"/><path d="M0 486H1024" stroke="#A76D34" stroke-width="5"/><path d="M0 490H1024" stroke="#B18B66" stroke-width="1.8" opacity="0.6"/><g stroke="#4B372F" stroke-width="2" opacity="0.35"><path d="M180 492L120 600M380 492L350 600M512 492V600M644 492L674 600M844 492L904 600"/></g></g>
+<g id="dome_ribs" fill="none" stroke-linecap="round"><path d="M-6 -10Q60 230 22 486M1030 -10Q964 230 1002 486" stroke="#8B5D32" stroke-width="24"/><path d="M4 6Q64 230 30 478M1020 6Q960 230 994 478" stroke="#C17C35" stroke-width="3" opacity="0.7"/></g>
+<g id="mars" data-target="mars" data-center="505,326">
+<circle cx="505" cy="326" r="94" fill="url(#mars_soil)"/>
+<g clip-path="url(#mars_disc)">
+<path d="M420 300C440 290 470 296 488 290C510 284 532 300 556 296C576 292 592 302 600 312L600 332C580 322 560 320 540 326C516 334 494 322 470 326C450 330 432 320 420 322Z" fill="#A35E40" opacity="0.45"/>
+<path d="M452 336C470 330 496 340 522 334C540 330 556 336 566 344" fill="none" stroke="#92563C" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+<circle cx="467" cy="298" r="16" fill="#B66643" stroke="#995A3E" stroke-width="2"/><path d="M482 292.6A16 16 0 0 1 461.6 313" fill="none" stroke="#EAB49B" stroke-width="2.2" stroke-linecap="round"/><circle cx="532" cy="284" r="11" fill="#B66643" stroke="#995A3E" stroke-width="2"/><path d="M542.3 280.3A11 11 0 0 1 528.3 294.3" fill="none" stroke="#EAB49B" stroke-width="2.2" stroke-linecap="round"/><circle cx="548" cy="344" r="18" fill="#B66643" stroke="#995A3E" stroke-width="2"/><path d="M564.9 337.9A18 18 0 0 1 541.9 360.9" fill="none" stroke="#EAB49B" stroke-width="2.2" stroke-linecap="round"/><circle cx="487" cy="370" r="13" fill="#B66643" stroke="#995A3E" stroke-width="2"/><path d="M499.2 365.6A13 13 0 0 1 482.6 382.2" fill="none" stroke="#EAB49B" stroke-width="2.2" stroke-linecap="round"/><circle cx="517" cy="348" r="9" fill="#B66643" stroke="#995A3E" stroke-width="2"/><path d="M525.5 344.9A9 9 0 0 1 513.9 356.5" fill="none" stroke="#EAB49B" stroke-width="2.2" stroke-linecap="round"/><circle cx="463" cy="338" r="12" fill="#B66643" stroke="#995A3E" stroke-width="2"/><path d="M474.3 333.9A12 12 0 0 1 458.9 349.3" fill="none" stroke="#EAB49B" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="450" cy="364" r="15" fill="#E29877" stroke="#995A3E" stroke-width="2.2"/><circle cx="450" cy="364" r="5" fill="#AE6342"/>
+<ellipse cx="505" cy="236" rx="46" ry="16" fill="#FFFFFF" stroke="#E8AD92" stroke-width="2"/>
+<ellipse cx="511" cy="416" rx="34" ry="11" fill="#FFF6EE" stroke="#E8AD92" stroke-width="2"/>
+<path d="M531 232A94 94 0 0 1 531 420A63.92 94 0 0 0 531 232Z" fill="#5B4D54" opacity="0.3"/>
+</g>
+<circle cx="505" cy="326" r="94" fill="none" stroke="#8B533B" stroke-width="3.5"/>
+<path d="M433 286Q447 254 481 240" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.5"/>
+</g>
+<g id="moonlets" stroke="#7C695B" stroke-width="2.2" stroke-linejoin="round">
+<path d="M630 252C636 242 652 242 658 250C664 258 656 268 646 268C636 268 626 262 630 252Z" fill="url(#mars_moonlet)"/>
+<path d="M368 232C372 226 382 226 386 232C388 238 382 242 376 242C370 242 366 238 368 232Z" fill="url(#mars_moonlet)"/></g>
+<g id="toy_rover">
+<ellipse cx="122" cy="580" rx="80" ry="9" fill="#6A5147" opacity="0.32"/>
+<path d="M70 556L96 540L148 540L174 556" fill="none" stroke="#383537" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="70" cy="566" r="10" fill="#383537" stroke="#4B372F" stroke-width="2.5"/><circle cx="70" cy="566" r="3.5" fill="#BDB8AC"/><circle cx="122" cy="566" r="10" fill="#383537" stroke="#4B372F" stroke-width="2.5"/><circle cx="122" cy="566" r="3.5" fill="#BDB8AC"/><circle cx="174" cy="566" r="10" fill="#383537" stroke="#4B372F" stroke-width="2.5"/><circle cx="174" cy="566" r="3.5" fill="#BDB8AC"/>
+<rect x="80" y="514" width="86" height="30" rx="7" fill="url(#mars_rover)" stroke="#88786A" stroke-width="3"/>
+<rect x="88" y="506" width="52" height="10" rx="3" fill="#4A91D8" stroke="#4B607B" stroke-width="2.5"/>
+<path d="M150 514V482" stroke="#88786A" stroke-width="4" stroke-linecap="round"/>
+<rect x="138" y="468" width="28" height="16" rx="5" fill="url(#mars_rover)" stroke="#88786A" stroke-width="3"/>
+<circle cx="160" cy="476" r="4" fill="#253B59"/>
+<path d="M98 530H126" stroke="#D9764A" stroke-width="4" stroke-linecap="round"/>
+</g>
+</svg>

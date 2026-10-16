@@ -7,30 +7,38 @@ import math
 
 import pygame
 
-from greia_platform.typography import FontRole
-
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
         draw_animal_action_button,
-        draw_focus_patch,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_presenter, grid_step
+    from .storybook_ink import inked_ellipse, inked_limb
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
         draw_animal_action_button,
-        draw_focus_patch,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_presenter, grid_step
+    from pages.storybook_ink import inked_ellipse, inked_limb
 
 
 @dataclass(frozen=True, slots=True)
@@ -177,25 +185,23 @@ class OctopusPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((77, 156, 184))
-        pygame.draw.rect(surface, (46, 116, 145), (0, 470, 1024, 130))
-        pygame.draw.ellipse(surface, (198, 177, 130), (-40, 505, 1110, 150))
-        for x in (95, 155, 850, 905):
-            sway = int(math.sin(self._time * 1.4 + x) * 7)
-            pygame.draw.line(surface, (74, 139, 89), (x, 550), (x + sway, 360), 12)
-
-        draw_centered_text(
+        if not draw_authored_scene(surface, self.context.visuals, "encyclopedia.animals.octopus.reef"):
+            # Procedural fallback while the authored runtime rendition is absent.
+            surface.fill((77, 156, 184))
+            pygame.draw.rect(surface, (46, 116, 145), (0, 470, 1024, 130))
+            pygame.draw.ellipse(surface, (198, 177, 130), (-40, 505, 1110, 150))
+            for x in (95, 155, 850, 905):
+                sway = int(math.sin(self._time * 1.4 + x) * 7)
+                pygame.draw.line(surface, (74, 139, 89), (x, 550), (x + sway, 360), 12)
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("octopus.title"),
-            center=(500, 100),
-            size=40,
-            color=(255, 250, 236),
-            role=FontRole.DISPLAY,
+            self.context.palette.ink,
         )
 
         self._draw_octopus(surface)
-        self._draw_discovery_hotspots(surface)
+        self._draw_hotspots(surface)
         # Unified focus chrome
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -235,27 +241,23 @@ class OctopusPage(EncyclopediaPage):
             ((485, 335), (420, 350), (365, 345), (320, 325)),
             ((520, 335), (585, 350), (645, 345), (695, 320)),
         )
+        light = tuple(min(255, channel + 48) for channel in color)
         for path in arm_paths:
-            pygame.draw.lines(surface, color, False, path, 22)
-            for point in (path[1], path[2], path[3]):
-                pygame.draw.circle(surface, color, point, 11)
-                # Subtle sucker hint even without activation — tactile
-                pygame.draw.circle(surface, (color[0] + 20, color[1] + 18, color[2] + 15), (point[0], point[1] + 4), 4, 2)
-        # Head with soft highlight for polish
-        pygame.draw.ellipse(surface, color, (445, 215, 120, 145))
-        highlight = pygame.Surface((120, 145), pygame.SRCALPHA)
-        pygame.draw.ellipse(highlight, (255, 255, 255, 18), (10, 10, 100, 60))
-        surface.blit(highlight, (445, 215))
-        pygame.draw.ellipse(surface, (color[0] + 30, color[1] + 30, color[2] + 30), (445, 215, 120, 145), 3)
-        pygame.draw.circle(surface, (248, 238, 215), (482, 270), 14)
-        pygame.draw.circle(surface, (248, 238, 215), (528, 270), 14)
-        pygame.draw.circle(surface, (255, 255, 255), (478, 266), 4)
-        pygame.draw.circle(surface, (255, 255, 255), (524, 266), 4)
-        pygame.draw.circle(surface, (49, 44, 52), (484, 272), 6)
-        pygame.draw.circle(surface, (49, 44, 52), (526, 272), 6)
-        # Cheek blush for warmth, not babyish
-        pygame.draw.circle(surface, (220, 160, 170, 60), (470, 295), 7)
-        pygame.draw.circle(surface, (220, 160, 170, 60), (540, 295), 7)
+            inked_limb(surface, color, path, (22, 19, 15))
+            # Subtle sucker hint even without activation — tactile
+            for point in (path[2], path[3]):
+                pygame.draw.circle(surface, light, (point[0], point[1] + 3), 3)
+        # Head (mantle) with one highlight, then a friendly face.
+        inked_ellipse(surface, color, (445, 215, 120, 145))
+        pygame.draw.ellipse(surface, light, (462, 228, 40, 22))
+        for ex in (482, 528):
+            pygame.draw.circle(surface, (255, 251, 235), (ex, 270), 14)
+            pygame.draw.circle(surface, (75, 55, 47), (ex, 270), 14, 2)
+            pygame.draw.circle(surface, (52, 44, 53), (ex + 2, 273), 7)
+            pygame.draw.circle(surface, (255, 255, 255), (ex - 1, 268), 3)
+        pygame.draw.arc(surface, (75, 55, 47), (493, 290, 24, 14), math.pi + 0.4, 2 * math.pi - 0.4, 3)
+        pygame.draw.ellipse(surface, (253, 164, 175), (458, 290, 18, 10))
+        pygame.draw.ellipse(surface, (253, 164, 175), (534, 290, 18, 10))
 
         if self._sucker_age > 0:
             for arm in arm_paths[:6]:
@@ -295,79 +297,83 @@ class OctopusPage(EncyclopediaPage):
                 pygame.draw.circle(surface, (65, 68, 85), (x - 2, y - 2), max(1, size // 3))
                 pygame.draw.circle(surface, (85, 88, 105, 70), (x - 3, y - 3), max(1, size // 4))
 
-    def _draw_discovery_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            active = index == self._selected
-            hover = index == self._hovered
-            pygame.draw.circle(surface, (255, 250, 236), item.center, 38)
-            pygame.draw.circle(surface, (54, 72, 82), item.center, 38, 3)
-            if item.discovery_id == "arms":
-                pygame.draw.line(
+    def _draw_hotspots(self, surface: pygame.Surface) -> None:
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=item.caption_key == self._caption_key,
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+                token_shape=TOKEN_SHAPE_FELT_TAG,
+            )
+
+    def _draw_icon(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        discovery_id: str,
+    ) -> None:
+        cx, cy = center[0], center[1] + 4  # sit below the felt tag's pin
+        center = (cx, cy)
+        if discovery_id == "arms":
+            pygame.draw.line(
+                surface,
+                (183, 103, 173),
+                (center[0] - 20, center[1] + 15),
+                (center[0] + 20, center[1] - 15),
+                10,
+            )
+            for n in range(4):
+                pygame.draw.circle(
                     surface,
-                    (183, 103, 173),
-                    (item.center[0] - 20, item.center[1] + 15),
-                    (item.center[0] + 20, item.center[1] - 15),
+                    (227, 170, 204),
+                    (center[0] - 14 + n * 10, center[1] + 5 - n * 7),
+                    4,
+                )
+        elif discovery_id == "camouflage":
+            for n, swatch in enumerate(_BODY_COLORS):
+                pygame.draw.circle(
+                    surface,
+                    swatch,
+                    (
+                        center[0] - 16 + (n % 2) * 32,
+                        center[1] - 16 + (n // 2) * 32,
+                    ),
                     10,
                 )
-                for n in range(4):
-                    pygame.draw.circle(
-                        surface,
-                        (227, 170, 204),
-                        (item.center[0] - 14 + n * 10, item.center[1] + 5 - n * 7),
-                        4,
-                    )
-            elif item.discovery_id == "camouflage":
-                for n, swatch in enumerate(_BODY_COLORS):
-                    pygame.draw.circle(
-                        surface,
-                        swatch,
-                        (
-                            item.center[0] - 16 + (n % 2) * 32,
-                            item.center[1] - 16 + (n // 2) * 32,
-                        ),
-                        10,
-                    )
-            elif item.discovery_id == "ink":
-                for dx, dy, radius in (
-                    (0, 0, 14),
-                    (-13, 8, 9),
-                    (14, 9, 10),
-                    (6, -12, 8),
-                ):
-                    pygame.draw.circle(
-                        surface,
-                        (35, 38, 55),
-                        (item.center[0] + dx, item.center[1] + dy),
-                        radius,
-                    )
-            else:
-                for dx, dy in ((-14, 6), (0, -8), (14, 6)):
-                    self._draw_heart(
-                        surface,
-                        (item.center[0] + dx, item.center[1] + dy),
-                        7,
-                    )
-            focus_ring(surface, rect, active or hover)
+        elif discovery_id == "ink":
+            for dx, dy, radius in (
+                (0, 0, 14),
+                (-13, 8, 9),
+                (14, 9, 10),
+                (6, -12, 8),
+            ):
+                pygame.draw.circle(
+                    surface,
+                    (35, 38, 55),
+                    (center[0] + dx, center[1] + dy),
+                    radius,
+                )
+        else:
+            for dx, dy in ((-14, 6), (0, -8), (14, 6)):
+                self._draw_heart(
+                    surface,
+                    (center[0] + dx, center[1] + dy),
+                    7,
+                )
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (255, 250, 236), panel, border_radius=22)
-        pygame.draw.rect(surface, (54, 72, 82), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(
-            text,
-            FontRole.BODY,
-            18,
-            (54, 57, 61),
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
         )
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(
-                text,
-                FontRole.BODY,
-                15,
-                (54, 57, 61),
-            )
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
 
     @staticmethod
     def _draw_heart(

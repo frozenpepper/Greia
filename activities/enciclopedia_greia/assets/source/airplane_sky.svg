@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- Encyclopedia E4-D entry scene: The Airplane. Flattened opaque 1024x600 backdrop.
+       High in the sky: thin cirrus wisps up high, puffy cumulus down low, and
+       the patchwork world far below with a little airfield (runway, tower,
+       windsock). The live airplane flies through the calm centre
+       (x 380-650, y 220-400). The four discovery tokens rest on clouds whose
+       centres equal the semantic targets (data-center).
+       Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md (scene). -->
+  <defs>
+    <!-- sky -> sky light (higher = deeper blue) -->
+    <linearGradient id="airplane_sky_air" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A9D6F0"/>
+      <stop offset="1" stop-color="#E7F5FB"/>
+    </linearGradient>
+    <!-- mint -> leaf light (land far below, hazy) -->
+    <linearGradient id="airplane_sky_land" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#CFE8D6"/>
+      <stop offset="1" stop-color="#9BD4A6"/>
+    </linearGradient>
+    <!-- sunshine glow -->
+    <radialGradient id="airplane_sky_sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFE7A6" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#FFE7A6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <g id="sky">
+    <rect width="1024" height="600" fill="url(#airplane_sky_air)"/>
+    <circle cx="846" cy="140" r="62" fill="url(#airplane_sky_sun)"/>
+    <circle cx="846" cy="140" r="28" fill="#FFD35C" stroke="#E9A93B" stroke-width="3"/>
+    <path d="M831 131 C835 124 842 120 850 120" fill="none" stroke="#FFF1C2" stroke-width="5" stroke-linecap="round"/>
+  </g>
+
+  <g id="cirrus_high" fill="none" stroke="#FFFFFF" stroke-linecap="round" opacity="0.9">
+    <!-- thin, wispy clouds that live very high up -->
+    <path d="M300 136 C340 124 380 128 420 120" stroke-width="5"/>
+    <path d="M330 150 C362 142 394 146 430 140" stroke-width="3.5"/>
+    <path d="M600 128 C640 118 680 124 724 114" stroke-width="5"/>
+    <path d="M624 142 C656 136 690 140 716 134" stroke-width="3.5"/>
+    <path d="M150 104 C176 96 204 100 232 94" stroke-width="3.5"/>
+  </g>
+
+  <g id="birds" fill="none" stroke="#4B372F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M318 236 q7 -7 14 0 q7 -7 14 0"/>
+    <path d="M344 258 q5 -5 10 0 q5 -5 10 0"/>
+  </g>
+
+  <g id="world_below">
+    <!-- distant patchwork land seen from high up -->
+    <path d="M0 474 C200 466 420 470 620 466 C800 462 920 468 1024 466 L1024 600 L0 600 Z" fill="url(#airplane_sky_land)" stroke="#7FA877" stroke-width="2"/>
+    <g stroke="#7FA877" stroke-width="2" stroke-linejoin="round">
+      <path d="M300 486 L380 482 L384 504 L298 508 Z" fill="#F6E7A8"/>
+      <path d="M394 482 L470 480 L474 500 L396 504 Z" fill="#B5DDA6"/>
+      <path d="M560 480 L640 478 L646 500 L562 502 Z" fill="#FBE3B0"/>
+      <path d="M654 478 L728 476 L734 498 L660 500 Z" fill="#B5DDA6"/>
+      <path d="M760 486 L846 484 L852 510 L764 512 Z" fill="#F6E7A8"/>
+    </g>
+    <!-- river -->
+    <path d="M500 468 C520 486 470 500 494 520 C520 540 470 566 500 600" fill="none" stroke="#7DB2E3" stroke-width="9" stroke-linecap="round"/>
+    <path d="M500 468 C520 486 470 500 494 520 C520 540 470 566 500 600" fill="none" stroke="#CFEAF7" stroke-width="3" stroke-linecap="round"/>
+    <!-- tiny trees -->
+    <g fill="#59B86A" stroke="#3F6E3A" stroke-width="1.8">
+      <circle cx="560" cy="520" r="7"/><circle cx="576" cy="526" r="6"/><circle cx="430" cy="524" r="6"/><circle cx="880" cy="500" r="7"/><circle cx="896" cy="506" r="6"/>
+    </g>
+  </g>
+
+  <g id="airfield">
+    <!-- runway with dashed centre line, control tower and windsock -->
+    <path d="M24 540 L236 512 L250 532 L40 562 Z" fill="#B8C2CC" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <g stroke="#FFFBEB" stroke-width="3" stroke-linecap="round">
+      <path d="M52 545 L72 542"/><path d="M96 539 L116 536"/><path d="M140 533 L160 530"/><path d="M184 527 L204 524"/>
+    </g>
+    <rect x="70" y="482" width="16" height="34" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5"/>
+    <path d="M62 482 L94 482 L90 470 L66 470 Z" fill="#9CC6EC" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M64 470 H92" stroke="#F46F61" stroke-width="4" stroke-linecap="round"/>
+    <path d="M208 512 V482" stroke="#4B372F" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M208 483 L232 487 L232 495 L208 497 Z" fill="#F39A38" stroke="#4B372F" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M220 485 V496" stroke="#FFFBEB" stroke-width="3"/>
+  </g>
+
+  <g id="cumulus_low" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="2.5" stroke-linejoin="round">
+    <!-- puffy clouds float lower down, just above the land -->
+    <path d="M336 452 C322 452 318 436 332 432 C330 412 356 402 372 412 C384 394 414 396 420 414 C438 410 450 426 442 438 C454 442 452 456 438 456 L342 456 C336 456 334 454 336 452 Z"/>
+    <path d="M610 446 C598 446 594 432 606 428 C606 412 628 404 640 412 C650 398 674 400 678 414 C694 410 704 424 696 434 C706 438 704 450 692 450 L616 450 C610 450 608 448 610 446 Z"/>
+  </g>
+
+  <g id="discovery_beds" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="2.5" stroke-linejoin="round">
+    <!-- one cloud under each discovery token -->
+    <g data-target="lift" data-center="240,185">
+      <path d="M180 210 C166 210 162 192 176 188 C174 164 202 152 218 164 C230 142 266 144 272 166 C294 162 308 182 298 196 C312 202 308 218 292 218 L186 218 C180 218 178 214 180 210 Z"/>
+    </g>
+    <g data-target="myth" data-center="765,185">
+      <path d="M705 210 C691 210 687 192 701 188 C699 164 727 152 743 164 C755 142 791 144 797 166 C819 162 833 182 823 196 C837 202 833 218 817 218 L711 218 C705 218 703 214 705 210 Z"/>
+    </g>
+    <g data-target="forces" data-center="240,420">
+      <path d="M180 445 C166 445 162 427 176 423 C174 399 202 387 218 399 C230 377 266 379 272 401 C294 397 308 417 298 431 C312 437 308 453 292 453 L186 453 C180 453 178 449 180 445 Z"/>
+    </g>
+    <g data-target="thrust" data-center="765,420">
+      <path d="M705 445 C691 445 687 427 701 423 C699 399 727 387 743 399 C755 377 791 379 797 401 C819 397 833 417 823 431 C837 437 833 453 817 453 L711 453 C705 453 703 449 705 445 Z"/>
+    </g>
+  </g>
+</svg>

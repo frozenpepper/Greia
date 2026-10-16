@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<!-- E4-A Rain: one readable water journey. Sun warms the lake (left), vapour
+     rises, the live cloud (centre 570,225) grows, rain falls on the hill
+     (right), and water runs back to the lake or soaks into the soil cut. -->
+<defs>
+  <!-- sky light -> pale aqua -->
+  <linearGradient id="rain_sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A9D8EC"/><stop offset="1" stop-color="#E6F3EC"/></linearGradient>
+  <!-- leaf light -> leaf (hill) -->
+  <linearGradient id="rain_hill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#93CC80"/><stop offset="1" stop-color="#5DA35A"/></linearGradient>
+  <!-- ocean light -> ocean (lake) -->
+  <linearGradient id="rain_lake" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#86C4E6"/><stop offset="1" stop-color="#4A86C0"/></linearGradient>
+  <!-- sand shade -> cocoa (soil cut) -->
+  <linearGradient id="rain_soil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B98C62"/><stop offset="1" stop-color="#8A6249"/></linearGradient>
+  <radialGradient id="rain_sun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFE7A3" stop-opacity="0.95"/><stop offset="1" stop-color="#FFE7A3" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1024" height="600" fill="url(#rain_sky)"/>
+<g id="far_mountains">
+  <path d="M0 330 L90 270 L160 300 L250 240 L330 300 L420 262 L520 310 L620 250 L700 296 L800 236 L900 290 L1024 258 V380 H0Z" fill="#C6DCE6"/>
+  <path d="M250 240 L270 254 L254 258 L238 252Z M800 236 L820 250 L806 254 L790 248Z" fill="#F4FAFC"/>
+</g>
+<path id="meadow" d="M0 400 Q200 384 420 398 Q640 410 1024 392 V600 H0Z" fill="#9CCF86"/>
+<g id="sun"><circle cx="380" cy="196" r="74" fill="url(#rain_sun)"/><circle cx="380" cy="196" r="34" fill="#FFD25E" stroke="#E0A93A" stroke-width="3"/><ellipse cx="370" cy="185" rx="12" ry="7" fill="#FFF3C4" opacity="0.85"/></g>
+<g id="soil_cut" stroke="#4B372F" stroke-width="3" stroke-linejoin="round">
+  <path d="M540 458 H720 V520 Q630 534 540 520Z" fill="url(#rain_soil)"/>
+  <g fill="#A27D63" stroke-width="2"><ellipse cx="572" cy="500" rx="9" ry="5"/><ellipse cx="690" cy="490" rx="8" ry="5"/></g>
+</g>
+<g id="lake" stroke="#3F6E8F" stroke-width="3">
+  <ellipse cx="430" cy="458" rx="112" ry="36" fill="#9C7A55" stroke="none"/>
+  <ellipse cx="430" cy="455" rx="104" ry="30" fill="url(#rain_lake)"/>
+  <g fill="none" stroke="#E2F2FA" stroke-width="3" stroke-linecap="round" opacity="0.85"><path d="M360 448 Q384 442 408 448"/><path d="M440 466 Q466 460 492 466"/></g>
+</g>
+<g id="hill" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+  <path d="M520 460 Q546 400 584 344 Q600 324 616 344 Q660 400 720 460Z" fill="url(#rain_hill)"/>
+  <path d="M566 380 Q580 358 594 346" fill="none" stroke="#C3E5B4" stroke-width="5" stroke-linecap="round"/>
+</g>
+<g id="hill_tree" stroke="#4B372F" stroke-width="3" stroke-linejoin="round">
+  <rect x="648" y="384" width="10" height="34" rx="4" fill="#8A5A3C"/>
+  <circle cx="653" cy="372" r="24" fill="#4E9A62"/><circle cx="645" cy="364" r="8" fill="#7DBA80" stroke="none"/>
+</g>
+<g id="journey_arrows" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M396 244 Q404 292 412 330" stroke="#E0A93A" stroke-width="5" stroke-dasharray="2 12"/>
+  <path d="M404 322 L412 338 L424 324" stroke="#E0A93A" stroke-width="5"/>
+  <path d="M482 330 Q500 296 518 274" stroke="#6E9FC0" stroke-width="4" stroke-dasharray="2 11"/>
+  <path d="M506 274 L520 270 L520 286" stroke="#6E9FC0" stroke-width="4"/>
+</g>
+<g id="reeds" stroke="#4E8A55" stroke-width="3.5" stroke-linecap="round" fill="none"><path d="M318 456 Q312 430 316 408"/><path d="M326 458 Q326 436 334 418"/><path d="M542 452 Q546 432 554 420"/></g>
+<g id="flowers" stroke="#4B372F" stroke-width="2"><circle cx="150" cy="470" r="6" fill="#F7B7C8"/><circle cx="168" cy="478" r="5" fill="#FFFBEB"/><circle cx="860" cy="468" r="6" fill="#FFFBEB"/><circle cx="878" cy="476" r="5" fill="#F7B7C8"/></g>
+<g id="token_beds" fill="#2F5A55" opacity="0.13">
+  <ellipse data-target="evaporation" data-center="250,190" cx="250" cy="237" rx="40" ry="6"/>
+  <ellipse data-target="condensation" data-center="755,190" cx="755" cy="237" rx="40" ry="6"/>
+  <ellipse data-target="precipitation" data-center="250,420" cx="250" cy="467" rx="40" ry="6"/>
+  <ellipse data-target="ground" data-center="755,420" cx="755" cy="467" rx="40" ry="6"/>
+</g>
+</svg>

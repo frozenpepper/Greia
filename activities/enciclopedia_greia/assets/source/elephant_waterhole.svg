@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<!-- E4-A Elephant: afternoon savanna waterhole. The front ear and trunk are
+     live page puppets (they flap / curl / spray), so the baked elephant stops
+     at the head; flat body fills let the live parts match exactly. -->
+<defs>
+  <!-- sky light -> warm sand haze -->
+  <linearGradient id="elephant_sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A9D9E6"/><stop offset="1" stop-color="#F3E3B6"/></linearGradient>
+  <!-- sand light -> sand/orange mix (dry grass plain) -->
+  <linearGradient id="elephant_plain" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9D394"/><stop offset="1" stop-color="#D5B068"/></linearGradient>
+  <!-- orange shade -> deeper earth -->
+  <linearGradient id="elephant_ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CFA261"/><stop offset="1" stop-color="#B98A50"/></linearGradient>
+  <!-- ocean light -> ocean shade (waterhole) -->
+  <linearGradient id="elephant_water" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8CC6E4"/><stop offset="1" stop-color="#4C88BE"/></linearGradient>
+  <radialGradient id="elephant_sun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFE7A3" stop-opacity="0.9"/><stop offset="1" stop-color="#FFE7A3" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1024" height="600" fill="url(#elephant_sky)"/>
+<g id="sun"><circle cx="352" cy="112" r="70" fill="url(#elephant_sun)"/><circle cx="352" cy="112" r="31" fill="#FFD25E"/><ellipse cx="343" cy="102" rx="11" ry="7" fill="#FFF3C4" opacity="0.8"/></g>
+<g id="clouds" fill="#FFFDF4" opacity="0.85">
+  <ellipse cx="610" cy="132" rx="46" ry="13"/><ellipse cx="632" cy="122" rx="26" ry="14"/>
+  <ellipse cx="166" cy="168" rx="40" ry="11"/><ellipse cx="184" cy="160" rx="22" ry="12"/>
+</g>
+<g id="far_hills">
+  <path d="M0 286 Q90 248 190 262 Q300 276 380 252 Q470 226 560 254 Q660 284 760 250 Q860 222 1024 258 V330 H0Z" fill="#C9D6AE"/>
+  <path d="M0 304 Q140 280 260 294 Q420 312 560 290 Q720 268 860 290 Q950 302 1024 292 V340 H0Z" fill="#B8C998"/>
+</g>
+<g id="far_acacias" fill="#8EA77A">
+  <path d="M146 300 L150 268 L155 268 L159 300Z"/><ellipse cx="152" cy="264" rx="46" ry="10"/><ellipse cx="140" cy="258" rx="24" ry="7"/>
+  <path d="M884 306 L887 280 L891 280 L894 306Z"/><ellipse cx="889" cy="277" rx="36" ry="8"/>
+  <path d="M676 296 L678 282 L681 282 L683 296Z"/><ellipse cx="680" cy="280" rx="20" ry="5"/>
+</g>
+<path id="plain" d="M0 312 Q160 300 330 310 Q520 322 700 306 Q870 294 1024 306 V600 H0Z" fill="url(#elephant_plain)"/>
+<g id="plain_grass" stroke="#B9934E" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.7">
+  <path d="M60 352 l-4 -12 M66 352 l2 -14 M72 352 l6 -10"/>
+  <path d="M330 340 l-3 -10 M336 340 l1 -12 M342 340 l5 -9"/>
+  <path d="M690 336 l-3 -10 M696 336 l1 -12 M702 336 l5 -9"/>
+  <path d="M960 350 l-4 -12 M966 350 l2 -14 M972 350 l6 -10"/>
+</g>
+<path id="ground" d="M0 420 Q200 404 420 416 Q640 428 820 410 Q930 400 1024 408 V600 H0Z" fill="url(#elephant_ground)"/>
+<g id="waterhole">
+  <ellipse cx="822" cy="478" rx="176" ry="48" fill="#9C7449"/>
+  <ellipse cx="822" cy="474" rx="164" ry="40" fill="url(#elephant_water)" stroke="#6E5139" stroke-width="3"/>
+  <g fill="none" stroke="#D7EEF6" stroke-width="3" stroke-linecap="round" opacity="0.8"><path d="M712 462 Q740 455 768 462"/><path d="M820 488 Q850 481 880 488"/><path d="M890 458 Q910 453 930 458"/></g>
+  <g stroke="#5E8F52" stroke-width="3" stroke-linecap="round" fill="none"><path d="M660 470 Q656 444 648 430"/><path d="M668 470 Q668 440 672 424"/><path d="M676 472 Q682 450 692 438"/></g>
+</g>
+<g id="rocks">
+  <ellipse cx="96" cy="492" rx="58" ry="8" fill="#6A5147" opacity="0.16"/>
+  <path d="M52 490 Q56 458 92 452 Q132 450 140 488Z" fill="#B7A48C" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M66 470 Q78 460 96 460" fill="none" stroke="#E2D5C0" stroke-width="4" stroke-linecap="round"/>
+</g>
+<g id="token_beds" fill="#6A5147" opacity="0.12">
+  <ellipse data-target="trunk" data-center="260,205" cx="260" cy="252" rx="40" ry="6"/>
+  <ellipse data-target="water" data-center="745,205" cx="745" cy="252" rx="40" ry="6"/>
+  <ellipse data-target="ears" data-center="260,410" cx="260" cy="457" rx="40" ry="6"/>
+  <ellipse data-target="social" data-center="745,410" cx="745" cy="457" rx="40" ry="6"/>
+</g>
+<g id="elephant" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+  <ellipse cx="490" cy="458" rx="142" ry="14" fill="#6A5147" stroke="none" opacity="0.2"/>
+  <path d="M394 318 Q372 336 370 370" fill="none" stroke-width="7" stroke="#7C8794"/>
+  <path d="M362 368 Q366 384 376 380 Q380 370 372 362Z" fill="#5C5257" stroke-width="2.5"/>
+  <g fill="#86929F" stroke-width="3">
+    <rect x="430" y="336" width="42" height="120" rx="15"/>
+    <rect x="520" y="336" width="42" height="120" rx="15"/>
+  </g>
+  <path d="M388 330 Q386 266 450 254 Q520 244 566 276 Q588 300 584 340 Q578 398 488 406 Q396 402 388 330Z" fill="#A3AEBA" stroke-width="3.5"/>
+  <path d="M410 372 Q480 404 566 366 Q556 398 488 404 Q424 402 410 372Z" fill="#8E99A6" stroke="none"/>
+  <path d="M418 290 Q440 266 488 262" fill="none" stroke="#D3DBE2" stroke-width="7" opacity="0.8"/>
+  <g fill="#A3AEBA" stroke="none">
+    <path d="M465 352 H511 V440 Q511 456 495 456 H481 Q465 456 465 440Z"/>
+    <path d="M555 344 H601 V440 Q601 456 585 456 H571 Q555 456 555 440Z"/>
+  </g>
+  <g fill="none" stroke-width="3.5">
+    <path d="M465 378 V440 Q465 456 481 456 H495 Q511 456 511 440 V384"/>
+    <path d="M555 384 V440 Q555 456 571 456 H585 Q601 456 601 440 V318"/>
+  </g>
+  <path d="M474 404 q14 5 28 0 M564 404 q14 5 28 0" fill="none" stroke="#7C8794" stroke-width="2.5"/>
+  <g fill="#FFFBEB" stroke-width="2"><ellipse cx="476" cy="452" rx="6" ry="4.5"/><ellipse cx="488" cy="453" rx="6" ry="4.5"/><ellipse cx="500" cy="452" rx="6" ry="4.5"/><ellipse cx="566" cy="452" rx="6" ry="4.5"/><ellipse cx="578" cy="453" rx="6" ry="4.5"/><ellipse cx="590" cy="452" rx="6" ry="4.5"/></g>
+  <ellipse cx="535" cy="258" rx="24" ry="43" fill="#86929F" stroke-width="3"/>
+  <circle cx="575" cy="275" r="58" fill="#A3AEBA" stroke-width="3.5"/>
+  <path d="M538 248 Q552 226 580 222" fill="none" stroke="#D3DBE2" stroke-width="7" opacity="0.8"/>
+  <path d="M602 302 Q626 312 641 322 Q637 329 628 325 Q612 317 598 311Z" fill="#FFFBEB" stroke-width="2.5"/>
+  <ellipse cx="606" cy="288" rx="11" ry="7" fill="#FDA4AF" stroke="none" opacity="0.55"/>
+  <path d="M588 244 Q597 238 606 244" fill="none" stroke-width="3"/>
+  <ellipse cx="597" cy="263" rx="7" ry="9" fill="#342C35" stroke="none"/>
+  <circle cx="599.5" cy="259" r="2.8" fill="#FFFFFF" stroke="none"/>
+</g>
+<g id="foreground_tufts" stroke="#7E8B4B" stroke-width="3" stroke-linecap="round" fill="none">
+  <path d="M168 520 l-6 -18 M176 520 l0 -22 M184 520 l7 -16"/>
+  <path d="M822 560 l-6 -18 M830 560 l0 -22 M838 560 l7 -16"/>
+  <path d="M30 560 l-5 -16 M37 560 l1 -20 M44 560 l6 -14"/>
+</g>
+</svg>

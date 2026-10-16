@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<defs>
+  <!-- cream light -> peach/sand -->
+  <linearGradient id="heart_wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FAF2DD"/><stop offset="1" stop-color="#F3DABC"/></linearGradient>
+  <!-- orange+ink 38% -> orange+ink 58% -->
+  <linearGradient id="heart_floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B37435"/><stop offset="1" stop-color="#926133"/></linearGradient>
+  <!-- coral/raspberry light -> muscle -->
+  <linearGradient id="heart_muscle" x1="0.1" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#EE919C"/><stop offset="1" stop-color="#E66272"/></linearGradient>
+  <!-- coral light -> coral shade -->
+  <linearGradient id="heart_artery" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F68C81"/><stop offset="1" stop-color="#E3695C"/></linearGradient>
+  <!-- plum/raspberry light -> base -->
+  <linearGradient id="heart_vein" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9C6185"/><stop offset="1" stop-color="#8A4570"/></linearGradient>
+  <!-- gold light -> gold shade -->
+  <linearGradient id="heart_brass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FCD266"/><stop offset="1" stop-color="#C69627"/></linearGradient>
+</defs>
+<g id="room"><rect width="1024" height="600" fill="url(#heart_wall)"/><path d="M0 350H1024V470H0Z" fill="#F7DEE5" opacity="0.22"/><path d="M0 350H1024" stroke="#CDB09A" stroke-width="4" opacity="0.45"/><path d="M0 356H1024" stroke="#FFFFFF" stroke-width="2" opacity="0.5"/><path d="M0 470H1024V600H0Z" fill="url(#heart_floor)"/><path d="M0 470H1024" stroke="#865A32" stroke-width="6"/><g stroke="#4B372F" stroke-width="2" opacity="0.25"><path d="M0 510H1024M0 556H1024"/><path d="M210 470V510M640 470V510M90 510V556M430 510V556M820 510V556"/></g><path d="M112 0V66" stroke="#8E5F33" stroke-width="4"/><circle cx="112" cy="100" r="46" fill="#FFF3C4" opacity="0.35"/><path d="M88 88Q112 58 136 88L128 102Q112 110 96 102Z" fill="#F4D58A" stroke="#A37B2A" stroke-width="3" stroke-linejoin="round"/><path d="M912 0V66" stroke="#8E5F33" stroke-width="4"/><circle cx="912" cy="100" r="46" fill="#FFF3C4" opacity="0.35"/><path d="M888 88Q912 58 936 88L928 102Q912 110 896 102Z" fill="#F4D58A" stroke="#A37B2A" stroke-width="3" stroke-linejoin="round"/></g>
+<g id="shelf"><path d="M38 248L50 270M178 248L166 270" stroke="#926133" stroke-width="6" stroke-linecap="round"/><rect x="24" y="236" width="168" height="14" rx="5" fill="#C17C35" stroke="#4B372F" stroke-width="3.5"/><path d="M32 240H184" stroke="#D4A372" stroke-width="2.5" stroke-linecap="round"/></g>
+<g id="healthy_things">
+<path d="M62 236C40 236 38 204 52 196C60 192 66 196 70 198C74 196 80 192 88 196C102 204 98 236 76 236Z" fill="#EE6A68" stroke="#944E49" stroke-width="3" stroke-linejoin="round"/>
+<path d="M70 198Q70 188 76 182" stroke="#4B372F" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M74 188Q86 180 92 188Q82 194 74 188Z" fill="#59B86A" stroke="#51714A" stroke-width="2"/>
+<path d="M54 206Q58 200 64 200" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7"/>
+<path d="M112 236L108 190H140L136 236Z" fill="#CFEAF7" stroke="#4B607B" stroke-width="3" stroke-linejoin="round" opacity="0.95"/>
+<path d="M110 206H138L136 236H112Z" fill="#89B8E6"/>
+<path d="M150 236C150 214 186 214 186 236" fill="none" stroke="#FBBF24" stroke-width="5" stroke-linecap="round"/>
+<rect x="146" y="220" width="10" height="18" rx="4" fill="#F46F61" stroke="#975046" stroke-width="2"/><rect x="180" y="220" width="10" height="18" rx="4" fill="#F46F61" stroke="#975046" stroke-width="2"/>
+</g><g id="stand"><ellipse cx="505" cy="500" rx="96" ry="12" fill="#6A5147" opacity="0.3"/>
+<path d="M505 418V486" stroke="url(#heart_brass)" stroke-width="12" stroke-linecap="round"/>
+<path d="M505 418V486" stroke="#A37B2A" stroke-width="2" opacity="0.5"/>
+<path d="M436 486H574L562 504H448Z" fill="#D18636" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/></g><g id="vessels" stroke-linecap="round" fill="none">
+<path d="M496 300C494 262 520 246 546 252C566 258 574 276 568 298" stroke="#A05348" stroke-width="27"/>
+<path d="M496 300C494 262 520 246 546 252C566 258 574 276 568 298" stroke="url(#heart_artery)" stroke-width="20"/>
+<path d="M520 254V226M540 252L548 228M556 258L572 238" stroke="#A05348" stroke-width="13"/>
+<path d="M520 254V226M540 252L548 228M556 258L572 238" stroke="url(#heart_artery)" stroke-width="7"/>
+<path d="M466 310C460 284 448 270 430 266" stroke="#713F56" stroke-width="22"/>
+<path d="M466 310C460 284 448 270 430 266" stroke="url(#heart_vein)" stroke-width="15"/>
+<path d="M590 330C606 318 622 316 638 320" stroke="#713F56" stroke-width="18"/>
+<path d="M590 330C606 318 622 316 638 320" stroke="url(#heart_vein)" stroke-width="11"/>
+<path d="M512 262Q526 252 540 254" stroke="#FFFFFF" stroke-width="4" opacity="0.55"/></g><g id="heart" data-target="heart" data-center="505,350">
+<path d="M440.2 326.4Q456.4 280.4 496.9 306.1Q511.8 268.3 549.5 287.2Q596.8 308.8 572.5 361.4Q555 400.6 498.2 431.6Q446.9 400.6 425.4 361.4Q414.6 339.9 440.2 326.4Z" fill="url(#heart_muscle)" stroke="#984C50" stroke-width="4" stroke-linejoin="round"/>
+<path d="M506 316C500 346 504 380 520 420" fill="none" stroke="#B8555E" stroke-width="5" stroke-linecap="round" opacity="0.8"/>
+<path d="M462 336Q476 318 496 326" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.55"/>
+<path d="M532 410Q556 396 572 372" fill="none" stroke="#BF5761" stroke-width="6" stroke-linecap="round" opacity="0.45"/>
+<path d="M548 306C556 328 566 336 584 340" fill="none" stroke="#FBBF24" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+<path d="M470 368C480 384 496 392 512 394" fill="none" stroke="#FBBF24" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/>
+</g>
+<g id="stethoscope_table">
+<ellipse cx="118" cy="584" rx="92" ry="9" fill="#6A5147" opacity="0.3"/>
+<path d="M50 526H186" stroke="#4B372F" stroke-width="3"/>
+<rect x="40" y="514" width="156" height="16" rx="6" fill="#CE8436" stroke="#4B372F" stroke-width="3.5"/>
+<path d="M58 530V580M178 530V580" stroke="#926133" stroke-width="8" stroke-linecap="round"/>
+<path d="M80 496C64 470 76 440 96 444M120 496C136 470 124 440 104 444" fill="none" stroke="#4B607B" stroke-width="9" stroke-linecap="round"/>
+<path d="M80 496C64 470 76 440 96 444M120 496C136 470 124 440 104 444" fill="none" stroke="#4A91D8" stroke-width="5" stroke-linecap="round"/>
+<path d="M100 496Q100 512 132 508Q160 504 164 490" fill="none" stroke="#4B607B" stroke-width="9" stroke-linecap="round"/>
+<path d="M100 496Q100 512 132 508Q160 504 164 490" fill="none" stroke="#4A91D8" stroke-width="5" stroke-linecap="round"/>
+<circle cx="166" cy="490" r="14" fill="#E6E1D3" stroke="#84786E" stroke-width="3.5"/><circle cx="166" cy="490" r="7" fill="#BDB8AC"/>
+<circle cx="96" cy="444" r="5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/><circle cx="104" cy="444" r="5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/>
+</g><g id="pulse_poster">
+<rect x="836" y="150" width="126" height="92" rx="10" fill="#FFFBEB" stroke="#A76D34" stroke-width="5"/>
+<path d="M850 202H878L888 176L900 226L910 196L918 202H948" fill="none" stroke="#F46F61" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+</g>
+</svg>

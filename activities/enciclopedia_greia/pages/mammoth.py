@@ -13,6 +13,8 @@ if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
         draw_focus_patch,
         draw_history_action_button,
         draw_navigation_arrows,
@@ -24,6 +26,8 @@ else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
         draw_focus_patch,
         draw_history_action_button,
         draw_navigation_arrows,
@@ -163,9 +167,17 @@ class MammothPage(EncyclopediaPage):
         self.context.audio.play(item.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((219, 232, 234))
+        # Authored ice-age steppe with the woolly mammoth at live geometry.
+        authored = draw_authored_scene(
+            surface,
+            self.context.visuals,
+            "encyclopedia.history.mammoth.tundra",
+        )
+        if not authored:
+            # Contained procedural fallback when the runtime PNG is absent.
+            surface.fill((219, 232, 234))
         draw_centered_text(surface, self.context.typography, self.context.resources.text("mammoth.title"), center=(500, 92), size=40, color=self.context.palette.ink, role=FontRole.DISPLAY)
-        self._draw_scene(surface)
+        self._draw_scene(surface, authored=authored)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -178,17 +190,19 @@ class MammothPage(EncyclopediaPage):
         self._draw_caption(surface)
         draw_presenter(surface, self.context.visuals, "leo", position=(925, 565), height=142, variant="default")
 
-    def _draw_scene(self, surface: pygame.Surface) -> None:
-        pygame.draw.rect(surface, (236, 242, 241), (325, 370, 365, 90), border_radius=30)
-        # Mammoth body.
-        body = (131, 91, 64)
+    def _draw_scene(self, surface: pygame.Surface, *, authored: bool = False) -> None:
+        """Live discovery overlays; the authored scene owns the mammoth itself."""
         fur = (105, 72, 52)
-        pygame.draw.ellipse(surface, body, (425, 275, 170, 100))
-        pygame.draw.circle(surface, body, (590, 300), 53)
-        pygame.draw.line(surface, body, (610, 320), (635, 385), 24)
-        for x in (455, 505, 555):
-            pygame.draw.line(surface, body, (x, 345), (x - 3, 410), 20)
-        pygame.draw.arc(surface, (233, 220, 188), (584, 305, 76, 90), 0.25, math.pi * 1.35, 7)
+        if not authored:
+            pygame.draw.rect(surface, (236, 242, 241), (325, 370, 365, 90), border_radius=30)
+            # Mammoth body.
+            body = (131, 91, 64)
+            pygame.draw.ellipse(surface, body, (425, 275, 170, 100))
+            pygame.draw.circle(surface, body, (590, 300), 53)
+            pygame.draw.line(surface, body, (610, 320), (635, 385), 24)
+            for x in (455, 505, 555):
+                pygame.draw.line(surface, body, (x, 345), (x - 3, 410), 20)
+            pygame.draw.arc(surface, (233, 220, 188), (584, 305, 76, 90), 0.25, math.pi * 1.35, 7)
         if self._coat_age > 0.0:
             # Fur with layered depth and highlight
             for row in range(5):
@@ -247,11 +261,9 @@ class MammothPage(EncyclopediaPage):
             focus_ring(surface, rect, index == self._selected or index == self._hovered)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (253, 249, 233), panel, border_radius=22)
-        pygame.draw.rect(surface, (81, 74, 65), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (55, 51, 47))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (55, 51, 47))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        # Shared adaptive ribbon: wraps long captions instead of overflowing.
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )

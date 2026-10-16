@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- Encyclopedia E4-E entry scene: The Woolly Mammoth. Flattened opaque
+       1024x600 backdrop. An ice-age steppe: snowy peaks, a glacier, a distant
+       herd and the hero woolly mammoth authored at the page's live geometry
+       (body around 510,325, domed head around 590,300, small ear at 578,305,
+       trunk down to ~640,395, long curved tusks, legs reaching y ~412). The
+       coat / ear / elephant / timeline overlays stay live. Discovery beds sit
+       exactly under the four semantic targets.
+       Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md (scene). -->
+  <defs>
+    <!-- lavender light -> sky (cold pale sky) -->
+    <linearGradient id="mammoth_tundra_sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D3E7F4"/>
+      <stop offset="1" stop-color="#EEF3F6"/>
+    </linearGradient>
+    <!-- aqua light -> sage (frosty steppe) -->
+    <linearGradient id="mammoth_tundra_ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E4EEDF"/>
+      <stop offset="1" stop-color="#C7D9BC"/>
+    </linearGradient>
+    <!-- orange shade light -> fur brown (mix orange 45% ink) -->
+    <linearGradient id="mammoth_tundra_fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B98258"/>
+      <stop offset="1" stop-color="#8E5C3B"/>
+    </linearGradient>
+  </defs>
+
+  <g id="sky">
+    <rect width="1024" height="600" fill="url(#mammoth_tundra_sky)"/>
+    <g fill="#FFFFFF" opacity="0.9">
+      <circle cx="330" cy="150" r="3"/><circle cx="420" cy="120" r="2.5"/><circle cx="640" cy="140" r="3"/><circle cx="700" cy="110" r="2.5"/><circle cx="380" cy="230" r="2.5"/><circle cx="160" cy="250" r="3"/><circle cx="860" cy="250" r="3"/>
+    </g>
+  </g>
+
+  <g id="mountains" stroke-linejoin="round">
+    <path d="M-10 300 L120 170 L190 228 L290 128 L420 270 L470 300 Z" fill="#B9C8DA" stroke="#8A9CB3" stroke-width="2.5"/>
+    <path d="M120 170 L144 194 L130 200 L112 186 Z M290 128 L322 162 L300 168 L276 146 Z" fill="#FFFFFF" stroke="#8A9CB3" stroke-width="2"/>
+    <path d="M560 300 L700 158 L770 214 L860 136 L1034 300 Z" fill="#C6D3E2" stroke="#8A9CB3" stroke-width="2.5"/>
+    <path d="M700 158 L728 188 L708 194 L688 172 Z M860 136 L896 172 L870 178 L848 150 Z" fill="#FFFFFF" stroke="#8A9CB3" stroke-width="2"/>
+    <!-- glacier tongue -->
+    <path d="M716 300 C744 276 762 244 772 214 L792 210 C806 244 846 276 912 300 Z" fill="#E6F4FA" stroke="#9CC6EC" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M760 292 L776 262 M800 294 L796 254 M846 294 L818 262" stroke="#9CC6EC" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <g id="ground">
+    <path d="M0 296 C170 286 340 292 512 296 C700 300 860 288 1024 294 L1024 600 L0 600 Z" fill="url(#mammoth_tundra_ground)" stroke="#9FB394" stroke-width="2.5"/>
+    <!-- snow drifts -->
+    <g fill="#FFFFFF" stroke="#B9CBD8" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M40 470 C70 446 130 444 170 464 C180 470 176 480 160 480 L52 480 C38 480 32 476 40 470 Z"/>
+      <path d="M700 520 C730 500 790 500 820 516 C830 524 824 532 810 532 L712 532 C698 532 692 528 700 520 Z"/>
+      <path d="M300 352 C320 340 356 340 372 350 C376 356 370 360 360 360 L310 360 C298 360 294 358 300 352 Z"/>
+    </g>
+    <!-- grass tufts poking through the frost -->
+    <g fill="none" stroke="#7F9A6E" stroke-width="2.5" stroke-linecap="round">
+      <path d="M118 400 l-4 -12 M124 400 l0 -14 M130 400 l4 -12"/>
+      <path d="M760 420 l-4 -12 M766 420 l0 -14 M772 420 l4 -12"/>
+      <path d="M380 500 l-4 -12 M386 500 l0 -14 M392 500 l4 -12"/>
+    </g>
+  </g>
+
+  <g id="distant_herd" fill="#9C7A62" stroke="#6F5848" stroke-width="2" stroke-linejoin="round">
+    <!-- two small mammoths far away on the steppe -->
+    <path d="M148 300 C148 288 160 280 176 282 C186 276 200 280 202 292 C206 300 204 310 200 314 L198 322 L192 322 L190 312 L162 312 L160 322 L154 322 L152 312 C148 310 148 304 148 300 Z"/>
+    <path d="M216 304 C216 294 226 288 238 290 C246 286 256 290 258 300 C260 306 258 314 256 316 L254 322 L250 322 L248 314 L228 314 L226 322 L222 322 L220 314 C216 312 216 308 216 304 Z"/>
+    <path d="M202 296 C208 300 210 308 206 314 M258 302 C262 306 263 312 260 316" fill="none" stroke="#6F5848"/>
+  </g>
+
+  <g id="mammoth">
+    <ellipse cx="530" cy="414" rx="120" ry="10" fill="#6A5147" opacity="0.2"/>
+    <!-- far legs -->
+    <g fill="#7A4D31" stroke="#4B372F" stroke-width="3">
+      <rect x="470" y="350" width="30" height="62" rx="12"/>
+      <rect x="568" y="350" width="28" height="60" rx="12"/>
+    </g>
+    <!-- tail tuft -->
+    <path d="M432 318 C420 326 416 340 420 352" fill="none" stroke="#4B372F" stroke-width="6" stroke-linecap="round"/>
+    <path d="M418 350 C412 356 414 366 422 366 C428 362 428 354 422 348 Z" fill="#6E452C" stroke="#4B372F" stroke-width="2.5"/>
+    <!-- body + domed head (one shaggy mass) -->
+    <path d="M434 344 C424 304 448 274 490 266 C518 260 538 248 556 244 C584 236 620 246 636 270 C648 288 650 308 642 326 C636 338 628 348 618 356 C604 364 584 366 570 364 C560 372 548 380 534 380 C500 384 466 382 446 372 C438 364 436 354 434 344 Z" fill="url(#mammoth_tundra_fur)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <!-- long shaggy fringe hanging below the belly -->
+    <path d="M444 366 L452 392 L462 372 L472 396 L484 376 L496 398 L508 378 L520 398 L532 378 L544 394 L552 372 L566 388 L572 364" fill="#8E5C3B" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <!-- near legs with toenails -->
+    <g fill="#8E5C3B" stroke="#4B372F" stroke-width="3">
+      <rect x="440" y="352" width="32" height="62" rx="12"/>
+      <rect x="540" y="356" width="32" height="58" rx="12"/>
+    </g>
+    <g fill="#FFF0D2" stroke="#4B372F" stroke-width="1.8">
+      <circle cx="449" cy="410" r="3.5"/><circle cx="462" cy="410" r="3.5"/><circle cx="549" cy="410" r="3.5"/><circle cx="562" cy="410" r="3.5"/>
+    </g>
+    <!-- fur strands and one highlight -->
+    <g fill="none" stroke="#6E452C" stroke-width="2.5" stroke-linecap="round">
+      <path d="M470 290 l-4 18 M492 284 l-3 20 M516 280 l-2 20 M540 272 l-1 20 M470 324 l-4 18 M498 320 l-3 20 M526 318 l-2 20 M552 310 l-2 18"/>
+    </g>
+    <path d="M468 280 C490 268 520 262 548 254" fill="none" stroke="#D9A97C" stroke-width="5" stroke-linecap="round"/>
+    <path d="M572 252 C590 246 610 250 622 260" fill="none" stroke="#D9A97C" stroke-width="5" stroke-linecap="round"/>
+    <!-- small furry ear (cold-proof) -->
+    <ellipse cx="578" cy="305" rx="13" ry="17" fill="#7A4D31" stroke="#4B372F" stroke-width="3"/>
+    <!-- trunk -->
+    <path d="M628 336 C644 356 648 376 640 392 C636 400 626 400 624 392" fill="none" stroke="#4B372F" stroke-width="24" stroke-linecap="round"/>
+    <path d="M628 336 C644 356 648 376 640 392 C636 400 626 400 624 392" fill="none" stroke="#9E6A45" stroke-width="17" stroke-linecap="round"/>
+    <!-- long curved tusks -->
+    <path d="M606 346 C614 384 650 396 676 362" fill="none" stroke="#4B372F" stroke-width="13" stroke-linecap="round"/>
+    <path d="M606 346 C614 384 650 396 676 362" fill="none" stroke="#FFF6E3" stroke-width="7.5" stroke-linecap="round"/>
+    <path d="M620 344 C630 376 662 384 684 352" fill="none" stroke="#4B372F" stroke-width="13" stroke-linecap="round"/>
+    <path d="M620 344 C630 376 662 384 684 352" fill="none" stroke="#FFF6E3" stroke-width="7.5" stroke-linecap="round"/>
+    <!-- eye -->
+    <circle cx="612" cy="300" r="5" fill="#342C35"/>
+    <circle cx="610.5" cy="298.5" r="1.8" fill="#FFFFFF"/>
+    <path d="M603 290 q8 -5 16 0" fill="none" stroke="#4B372F" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+
+  <g id="discovery_beds" stroke-linejoin="round">
+    <!-- snow clouds carry the upper tokens, snow mounds carry the lower ones -->
+    <g data-target="coat" data-center="250,190" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="2.5">
+      <path d="M190 215 C176 215 172 197 186 193 C184 169 212 157 228 169 C240 147 276 149 282 171 C304 167 318 187 308 201 C322 207 318 223 302 223 L196 223 C190 223 188 219 190 215 Z"/>
+    </g>
+    <g data-target="ears" data-center="755,190" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="2.5">
+      <path d="M695 215 C681 215 677 197 691 193 C689 169 717 157 733 169 C745 147 781 149 787 171 C809 167 823 187 813 201 C827 207 823 223 807 223 L701 223 C695 223 693 219 695 215 Z"/>
+    </g>
+    <g data-target="elephants" data-center="250,420" fill="#FFFFFF" stroke="#9CB4C8" stroke-width="3">
+      <ellipse cx="250" cy="424" rx="50" ry="46"/>
+    </g>
+    <g data-target="time" data-center="755,420" fill="#FFFFFF" stroke="#9CB4C8" stroke-width="3">
+      <ellipse cx="755" cy="424" rx="50" ry="46"/>
+    </g>
+  </g>
+</svg>

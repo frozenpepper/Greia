@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<!-- E4-A Rainbow: a child (seen from behind, feet ~y 406 at x 505) watches a
+     rain shower. The sun moves and the rainbow appears live only when sun,
+     rain and observer line up; the shower stays inside x 410-610. -->
+<defs>
+  <!-- sky light -> pale aqua -->
+  <linearGradient id="rainbow_sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A9D6EE"/><stop offset="1" stop-color="#E4F3F0"/></linearGradient>
+  <!-- leaf light -> leaf (meadow) -->
+  <linearGradient id="rainbow_meadow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ACF83"/><stop offset="1" stop-color="#5FA25A"/></linearGradient>
+  <!-- charcoal light -> sky shade (rain cloud) -->
+  <linearGradient id="rainbow_cloud" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9D2DB"/><stop offset="1" stop-color="#9CAAB8"/></linearGradient>
+  <!-- sunshine -> orange (raincoat) -->
+  <linearGradient id="rainbow_coat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC234"/><stop offset="1" stop-color="#F39A38"/></linearGradient>
+</defs>
+<rect width="1024" height="600" fill="url(#rainbow_sky)"/>
+<g id="white_clouds" fill="#FFFFFF" opacity="0.85"><ellipse cx="180" cy="120" rx="44" ry="12"/><ellipse cx="200" cy="111" rx="24" ry="12"/><ellipse cx="850" cy="150" rx="40" ry="11"/><ellipse cx="868" cy="142" rx="22" ry="11"/></g>
+<g id="far_hills">
+  <path d="M0 330 Q120 290 250 306 Q360 320 440 312 Q520 304 600 314 Q720 326 820 300 Q920 278 1024 300 V420 H0Z" fill="#B5D6A0"/>
+  <path d="M0 352 Q170 330 350 342 Q520 352 700 336 Q880 322 1024 340 V420 H0Z" fill="#A2CB8C"/>
+</g>
+<g id="rain_cloud" stroke="#6F7E8E" stroke-width="3.5">
+  <g fill="url(#rainbow_cloud)"><ellipse cx="452" cy="172" rx="48" ry="26"/><ellipse cx="506" cy="156" rx="56" ry="34"/><ellipse cx="562" cy="170" rx="50" ry="27"/><ellipse cx="508" cy="186" rx="96" ry="22"/></g>
+  <path d="M440 168 Q470 150 500 146" fill="none" stroke="#E4EAF0" stroke-width="5" stroke-linecap="round"/>
+</g>
+<g id="rain" stroke="#4A91D8" stroke-width="3.5" stroke-linecap="round" opacity="0.9">
+  <path d="M424 214 l-4 13"/><path d="M450 236 l-4 13"/><path d="M478 210 l-4 13"/><path d="M504 240 l-4 13"/><path d="M532 214 l-4 13"/><path d="M560 238 l-4 13"/><path d="M588 212 l-4 13"/>
+  <path d="M436 262 l-4 13"/><path d="M464 284 l-4 13"/><path d="M492 266 l-4 13"/><path d="M520 290 l-4 13"/><path d="M548 264 l-4 13"/><path d="M576 288 l-4 13"/><path d="M600 262 l-4 13"/>
+</g>
+<path id="meadow" d="M0 396 Q200 386 420 396 Q640 408 1024 390 V600 H0Z" fill="url(#rainbow_meadow)"/>
+<g id="puddles" stroke="#3F6E8F" stroke-width="2.5"><ellipse cx="640" cy="440" rx="40" ry="9" fill="#9CCDE8"/><ellipse cx="380" cy="452" rx="30" ry="7" fill="#9CCDE8"/><path d="M624 438 Q640 434 656 438" fill="none" stroke="#E8F5FB" stroke-width="2.5"/></g>
+<g id="flowers" stroke="#4B372F" stroke-width="2"><circle cx="150" cy="430" r="6" fill="#F7B7C8"/><circle cx="168" cy="438" r="5" fill="#FFFBEB"/><circle cx="870" cy="426" r="6" fill="#FFD25E"/><circle cx="888" cy="434" r="5" fill="#F7B7C8"/><circle cx="96" cy="470" r="5" fill="#FFFBEB"/></g>
+<g id="grass_blades" stroke="#4F8F55" stroke-width="3" stroke-linecap="round" fill="none"><path d="M60 410 l-4 -12 M66 410 l2 -14 M72 410 l6 -10"/><path d="M940 412 l-4 -12 M946 412 l2 -14"/><path d="M700 470 l-4 -12 M706 470 l2 -14"/></g>
+<g id="observer" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+  <ellipse cx="505" cy="408" rx="26" ry="5" fill="#6A5147" stroke="none" opacity="0.2"/>
+  <path d="M493 392 V406 H501 V392Z M509 392 V406 H517 V392Z" fill="#D85683"/>
+  <path d="M486 394 Q484 372 492 366 Q505 360 518 366 Q526 372 524 394Z" fill="url(#rainbow_coat)"/>
+  <path d="M488 372 Q480 380 482 390 M522 372 Q530 380 528 390" fill="none" stroke-width="7"/>
+  <path d="M488 372 Q480 380 482 390 M522 372 Q530 380 528 390" fill="none" stroke="#F8B53A" stroke-width="3.5"/>
+  <circle cx="505" cy="352" r="13" fill="#8A5A3C"/>
+  <path d="M494 346 Q505 336 516 346" fill="none" stroke="#B57A4E" stroke-width="3"/>
+</g>
+<g id="token_beds" fill="#2F5A35" opacity="0.13">
+  <ellipse data-target="position" data-center="250,190" cx="250" cy="237" rx="40" ry="6"/>
+  <ellipse data-target="droplet" data-center="755,190" cx="755" cy="237" rx="40" ry="6"/>
+  <ellipse data-target="colors" data-center="250,420" cx="250" cy="467" rx="40" ry="6"/>
+  <ellipse data-target="circle" data-center="755,420" cx="755" cy="467" rx="40" ry="6"/>
+</g>
+</svg>

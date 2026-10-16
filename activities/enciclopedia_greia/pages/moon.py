@@ -12,25 +12,33 @@ from greia_platform.typography import FontRole
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_TELESCOPE_CARD,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_centered_text, draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_TELESCOPE_CARD,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_centered_text, draw_presenter, grid_step
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +55,9 @@ DISCOVERIES = (
     MoonDiscovery("surface", "moon.surface", "encyclopedia.space.moon.surface", (250, 420)),
     MoonDiscovery("gravity", "moon.gravity", "encyclopedia.space.moon.gravity", (755, 420)),
 )
+
+# E4 authored scene; a missing rendition fails soft to the procedural fallback.
+SCENE_ID = "encyclopedia.space.moon.observatory"
 
 
 class MoonPhaseModel:
@@ -88,6 +99,7 @@ class MoonPage(EncyclopediaPage):
 
         self._focus_audio = FocusAudioTracker()
         self._model = MoonPhaseModel()
+        self._phase_shades: dict[int, pygame.Surface] = {}
         self._time = 0.0
         self._selected = 0
         self._hovered: int | None = None
@@ -191,21 +203,20 @@ class MoonPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((18, 24, 52))
-        for index in range(34):
-            x = (index * 101 + 19) % 1000
-            y = 78 + (index * 59) % 470
-            pygame.draw.circle(surface, (227, 233, 245), (x, y), 1)
-        draw_centered_text(
+        authored = draw_authored_scene(surface, self.context.visuals, SCENE_ID)
+        if not authored:
+            surface.fill((18, 24, 52))
+            for index in range(34):
+                x = (index * 101 + 19) % 1000
+                y = 78 + (index * 59) % 470
+                pygame.draw.circle(surface, (227, 233, 245), (x, y), 1)
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("moon.title"),
-            center=(500, 92),
-            size=40,
-            color=(245, 241, 221),
-            role=FontRole.DISPLAY,
+            (245, 241, 221),
         )
-        self._draw_moon(surface)
+        self._draw_moon(surface, authored=authored)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -226,11 +237,17 @@ class MoonPage(EncyclopediaPage):
             fallback_color=(227, 174, 87),
         )
 
-    def _draw_moon(self, surface: pygame.Surface) -> None:
+    def _draw_moon(self, surface: pygame.Surface, *, authored: bool) -> None:
         center = (505, 326)
         radius = 92
 
         if self._model.orbit_demo_age > 0.0:
+            if authored:
+                # The authored Moon is baked into the scene; the orbit demo is
+                # shown in a zoomed-out viewing lens laid over it.
+                pygame.draw.circle(surface, (36, 50, 84), center, 140)
+                pygame.draw.circle(surface, (154, 112, 62), center, 140, 6)
+                pygame.draw.circle(surface, (236, 199, 120), center, 133, 2)
             earth = center
             orbit = pygame.Rect(385, 243, 240, 166)
             pygame.draw.circle(surface, (69, 143, 214), earth, 35)
@@ -253,12 +270,19 @@ class MoonPage(EncyclopediaPage):
             pygame.draw.circle(surface, (251, 204, 70), (330, 326), 24)
             return
 
-        pygame.draw.circle(surface, (67, 68, 75), center, radius)
-        # Subtle terminator highlight for depth
-        hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
-        pygame.draw.ellipse(hl, (255, 255, 255, 18), (radius // 2, 6, radius, radius // 3))
-        surface.blit(hl, (center[0] - radius, center[1] - radius))
-        self._draw_phase(surface, center, radius, self._model.phase_index)
+        if authored:
+            # The scene bakes a full Moon; other phases lay a cached night-side
+            # shade over it so the authored craters still glimmer through.
+            shade = self._phase_shade(self._model.phase_index, radius)
+            if shade is not None:
+                surface.blit(shade, shade.get_rect(center=center))
+        else:
+            pygame.draw.circle(surface, (67, 68, 75), center, radius)
+            # Subtle terminator highlight for depth
+            hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+            pygame.draw.ellipse(hl, (255, 255, 255, 18), (radius // 2, 6, radius, radius // 3))
+            surface.blit(hl, (center[0] - radius, center[1] - radius))
+            self._draw_phase(surface, center, radius, self._model.phase_index)
         if self._model.surface_age > 0.0:
             for dx, dy, crater_radius in (
                 (-38, -28, 17),
@@ -270,6 +294,11 @@ class MoonPage(EncyclopediaPage):
                 (18, 38, 11),
             ):
                 x, y = center[0] + dx, center[1] + dy
+                if authored:
+                    # The authored craters sit at these exact centers; ring
+                    # them instead of repainting the illustrated surface.
+                    pygame.draw.circle(surface, (255, 214, 102), (x, y), crater_radius + 4, 3)
+                    continue
                 # Crater with inner shadow and highlight
                 pygame.draw.circle(surface, (126, 125, 122), (x, y), crater_radius)
                 pygame.draw.circle(surface, (95, 95, 92), (x, y), crater_radius, 2)
@@ -280,6 +309,9 @@ class MoonPage(EncyclopediaPage):
                 pygame.Rect(510, 345, 55, 31),
                 pygame.Rect(493, 270, 37, 21),
             ):
+                if authored:
+                    pygame.draw.ellipse(surface, (255, 236, 170), rect.inflate(10, 8), 2)
+                    continue
                 pygame.draw.ellipse(surface, (105, 106, 109), rect)
                 pygame.draw.ellipse(surface, (135, 136, 139), rect.inflate(-4, -4), 1)
 
@@ -312,20 +344,43 @@ class MoonPage(EncyclopediaPage):
                 role=FontRole.CONTROL,
             )
 
+    def _phase_shade(self, phase_index: int, radius: int) -> pygame.Surface | None:
+        """Return the bounded (at most eight) cached night-side overlay."""
+
+        if phase_index == 4:
+            return None
+        cached = self._phase_shades.get(phase_index)
+        if cached is None:
+            size = radius * 2 + 2
+            cached = pygame.Surface((size, size), pygame.SRCALPHA)
+            # Reuse the schematic phase geometry: "lit" pixels stay
+            # transparent and "dark" pixels become the translucent night side.
+            self._draw_phase(
+                cached,
+                (size // 2, size // 2),
+                radius,
+                phase_index,
+                lit=(0, 0, 0, 0),
+                dark=(30, 40, 70, 214),
+            )
+            self._phase_shades[phase_index] = cached
+        return cached
+
     @staticmethod
     def _draw_phase(
         surface: pygame.Surface,
         center: tuple[int, int],
         radius: int,
         phase_index: int,
+        *,
+        lit: tuple[int, ...] = (214, 213, 207),
+        dark: tuple[int, ...] = (67, 68, 75),
     ) -> None:
         """Draw one of eight deterministic phase silhouettes.
 
         This is a child-readable schematic, not a photometric lunar renderer.
         The lit fraction changes across a single fixed circular Moon.
         """
-        lit = (214, 213, 207)
-        dark = (67, 68, 75)
         pygame.draw.circle(surface, lit if phase_index == 4 else dark, center, radius)
         if phase_index == 0:
             return
@@ -352,36 +407,51 @@ class MoonPage(EncyclopediaPage):
             )
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (248, 245, 228), item.center, 37)
-            pygame.draw.circle(surface, (70, 61, 58), item.center, 37, 3)
-            cx, cy = item.center
-            if item.discovery_id == "phases":
-                pygame.draw.circle(surface, (76, 77, 83), (cx, cy), 20)
-                previous_clip = surface.get_clip()
-                surface.set_clip(pygame.Rect(cx, cy - 20, 20, 40))
-                pygame.draw.circle(surface, (214, 213, 207), (cx, cy), 20)
-                surface.set_clip(previous_clip)
-            elif item.discovery_id == "rotation":
-                pygame.draw.circle(surface, (69, 143, 214), (cx - 5, cy), 10)
-                pygame.draw.ellipse(surface, (143, 146, 155), (cx - 28, cy - 20, 56, 40), 3)
-                pygame.draw.circle(surface, (190, 188, 182), (cx + 25, cy), 7)
-            elif item.discovery_id == "surface":
-                pygame.draw.circle(surface, (187, 185, 179), (cx, cy), 21)
-                pygame.draw.circle(surface, (120, 119, 116), (cx - 7, cy - 5), 7)
-                pygame.draw.ellipse(surface, (103, 104, 108), (cx + 4, cy + 3, 16, 9))
-            else:
-                pygame.draw.circle(surface, (69, 143, 214), (cx - 13, cy), 12)
-                pygame.draw.circle(surface, (190, 188, 182), (cx + 17, cy), 8)
-                pygame.draw.line(surface, (239, 198, 77), (cx - 13, cy + 19), (cx + 17, cy + 30), 4)
-            focus_ring(surface, rect, index == self._selected or index == self._hovered)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=self._caption_key == item.caption_key,
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+                token_shape=TOKEN_SHAPE_TELESCOPE_CARD,
+            )
+
+    def _draw_icon(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        discovery_id: str,
+    ) -> None:
+        cx, cy = center
+        if discovery_id == "phases":
+            pygame.draw.circle(surface, (76, 77, 83), (cx, cy), 20)
+            previous_clip = surface.get_clip()
+            surface.set_clip(pygame.Rect(cx, cy - 20, 20, 40))
+            pygame.draw.circle(surface, (214, 213, 207), (cx, cy), 20)
+            surface.set_clip(previous_clip)
+        elif discovery_id == "rotation":
+            pygame.draw.circle(surface, (69, 143, 214), (cx - 5, cy), 10)
+            pygame.draw.ellipse(surface, (143, 146, 155), (cx - 28, cy - 20, 56, 40), 3)
+            pygame.draw.circle(surface, (190, 188, 182), (cx + 25, cy), 7)
+        elif discovery_id == "surface":
+            pygame.draw.circle(surface, (187, 185, 179), (cx, cy), 21)
+            pygame.draw.circle(surface, (120, 119, 116), (cx - 7, cy - 5), 7)
+            pygame.draw.ellipse(surface, (103, 104, 108), (cx + 4, cy + 3, 16, 9))
+        else:
+            pygame.draw.circle(surface, (69, 143, 214), (cx - 13, cy), 12)
+            pygame.draw.circle(surface, (190, 188, 182), (cx + 17, cy), 8)
+            pygame.draw.line(surface, (239, 198, 77), (cx - 13, cy + 19), (cx + 17, cy + 30), 4)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (248, 245, 228), panel, border_radius=22)
-        pygame.draw.rect(surface, (70, 61, 58), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (54, 49, 58))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (54, 49, 58))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+            dark=True,
+        )

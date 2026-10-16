@@ -7,30 +7,36 @@ import math
 
 import pygame
 
-from greia_platform.typography import FontRole
-
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_TELESCOPE_CARD,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_TELESCOPE_CARD,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_presenter, grid_step
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +54,9 @@ DISCOVERIES = (
     MercuryDiscovery("craters", "mercury.craters", "encyclopedia.space.mercury.craters", (755, 420)),
 )
 
+# E4 authored scene; a missing rendition fails soft to the procedural fallback.
+SCENE_ID = "encyclopedia.space.mercury.observatory"
+
 _CRATERS = (
     (-48, -31, 17),
     (36, -42, 12),
@@ -56,6 +65,14 @@ _CRATERS = (
     (9, 10, 9),
     (-63, 17, 8),
 )
+
+
+def _draw_view_lens(surface: pygame.Surface, center: tuple[int, int], radius: int) -> None:
+    """Brass-rimmed zoomed-out viewing lens over the authored planet."""
+
+    pygame.draw.circle(surface, (36, 50, 84), center, radius)
+    pygame.draw.circle(surface, (154, 112, 62), center, radius, 6)
+    pygame.draw.circle(surface, (236, 199, 120), center, radius - 7, 2)
 
 
 class MercuryPage(EncyclopediaPage):
@@ -177,21 +194,20 @@ class MercuryPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((26, 31, 53))
-        for index in range(30):
-            x = (index * 91 + 31) % 1000
-            y = 78 + (index * 61) % 465
-            pygame.draw.circle(surface, (222, 229, 239), (x, y), 1)
-        draw_centered_text(
+        authored = draw_authored_scene(surface, self.context.visuals, SCENE_ID)
+        if not authored:
+            surface.fill((26, 31, 53))
+            for index in range(30):
+                x = (index * 91 + 31) % 1000
+                y = 78 + (index * 61) % 465
+                pygame.draw.circle(surface, (222, 229, 239), (x, y), 1)
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("mercury.title"),
-            center=(500, 92),
-            size=40,
-            color=(244, 239, 220),
-            role=FontRole.DISPLAY,
+            (244, 239, 220),
         )
-        self._draw_mercury(surface)
+        self._draw_mercury(surface, authored=authored)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -212,11 +228,15 @@ class MercuryPage(EncyclopediaPage):
             fallback_color=(227, 174, 87),
         )
 
-    def _draw_mercury(self, surface: pygame.Surface) -> None:
+    def _draw_mercury(self, surface: pygame.Surface, *, authored: bool) -> None:
         center = (505, 326)
         radius = 92
 
         if self._orbit_age > 0:
+            if authored:
+                # The authored planet is baked into the scene; the orbit demo
+                # appears in a zoomed-out viewing lens laid over it.
+                _draw_view_lens(surface, center, 132)
             sun = (385, 326)
             orbit_rect = pygame.Rect(392, 245, 226, 162)
             pygame.draw.circle(surface, (249, 199, 58), sun, 25)
@@ -229,12 +249,13 @@ class MercuryPage(EncyclopediaPage):
             pygame.draw.circle(surface, (172, 166, 154), moving, 10)
             return
 
-        pygame.draw.circle(surface, (177, 170, 157), center, radius)
-        # Subtle terminator highlight for depth
-        hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
-        pygame.draw.ellipse(hl, (255, 255, 255, 20), (radius // 2, 6, radius, radius // 3))
-        hl.set_alpha(70)
-        surface.blit(hl, (center[0] - radius, center[1] - radius))
+        if not authored:
+            pygame.draw.circle(surface, (177, 170, 157), center, radius)
+            # Subtle terminator highlight for depth
+            hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+            pygame.draw.ellipse(hl, (255, 255, 255, 20), (radius // 2, 6, radius, radius // 3))
+            hl.set_alpha(70)
+            surface.blit(hl, (center[0] - radius, center[1] - radius))
         # One circle, two clipped hemispheres: the comparison stays visually a
         # single world and does not allocate a temporary surface in the hot loop.
         if self._temperature_age > 0:
@@ -247,13 +268,14 @@ class MercuryPage(EncyclopediaPage):
             pygame.draw.line(surface, (237, 215, 165), (505, 235), (505, 417), 3)
             pygame.draw.circle(surface, (250, 202, 73), (420, 253), 14)
             pygame.draw.circle(surface, (191, 222, 244), (585, 395), 12)
-        for dx, dy, crater_radius in _CRATERS:
-            x, y = center[0] + dx, center[1] + dy
-            # Crater with inner shadow and highlight
-            pygame.draw.circle(surface, (127, 121, 113), (x, y), crater_radius)
-            pygame.draw.circle(surface, (95, 90, 84), (x, y), crater_radius, 2)
-            pygame.draw.circle(surface, (201, 194, 179), (x - 3, y - 3), max(3, crater_radius - 5), 2)
-            pygame.draw.circle(surface, (255, 255, 255, 18), (x - 4, y - 4), max(2, crater_radius // 3))
+        if not authored or self._temperature_age > 0:
+            for dx, dy, crater_radius in _CRATERS:
+                x, y = center[0] + dx, center[1] + dy
+                # Crater with inner shadow and highlight
+                pygame.draw.circle(surface, (127, 121, 113), (x, y), crater_radius)
+                pygame.draw.circle(surface, (95, 90, 84), (x, y), crater_radius, 2)
+                pygame.draw.circle(surface, (201, 194, 179), (x - 3, y - 3), max(3, crater_radius - 5), 2)
+                pygame.draw.circle(surface, (255, 255, 255, 18), (x - 4, y - 4), max(2, crater_radius // 3))
 
         if self._crater_age > 0:
             for dx, dy, crater_radius in _CRATERS[:3]:
@@ -273,32 +295,47 @@ class MercuryPage(EncyclopediaPage):
             pygame.draw.line(surface, (245, 226, 151), (649, 393), (649, 407), 4)
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (248, 244, 226), item.center, 37)
-            pygame.draw.circle(surface, (72, 62, 57), item.center, 37, 3)
-            cx, cy = item.center
-            if item.discovery_id == "place":
-                pygame.draw.circle(surface, (174, 167, 154), (cx - 12, cy), 13)
-                pygame.draw.circle(surface, (73, 145, 213), (cx + 17, cy + 5), 20)
-            elif item.discovery_id == "orbit":
-                pygame.draw.circle(surface, (247, 196, 59), (cx - 6, cy), 10)
-                pygame.draw.ellipse(surface, (143, 135, 125), (cx - 25, cy - 18, 50, 36), 3)
-                pygame.draw.circle(surface, (174, 167, 154), (cx + 22, cy), 6)
-            elif item.discovery_id == "temperature":
-                pygame.draw.circle(surface, (224, 141, 71), (cx - 12, cy), 15)
-                pygame.draw.circle(surface, (124, 163, 201), (cx + 14, cy), 15)
-            else:
-                pygame.draw.circle(surface, (151, 145, 134), (cx, cy), 21)
-                pygame.draw.circle(surface, (101, 96, 90), (cx - 7, cy - 4), 7)
-                pygame.draw.circle(surface, (190, 222, 241), (cx + 11, cy - 12), 5)
-            focus_ring(surface, rect, index == self._selected or index == self._hovered)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=self._caption_key == item.caption_key,
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+                token_shape=TOKEN_SHAPE_TELESCOPE_CARD,
+            )
+
+    def _draw_icon(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        discovery_id: str,
+    ) -> None:
+        cx, cy = center
+        if discovery_id == "place":
+            pygame.draw.circle(surface, (174, 167, 154), (cx - 12, cy), 13)
+            pygame.draw.circle(surface, (73, 145, 213), (cx + 17, cy + 5), 20)
+        elif discovery_id == "orbit":
+            pygame.draw.circle(surface, (247, 196, 59), (cx - 6, cy), 10)
+            pygame.draw.ellipse(surface, (143, 135, 125), (cx - 25, cy - 18, 50, 36), 3)
+            pygame.draw.circle(surface, (174, 167, 154), (cx + 22, cy), 6)
+        elif discovery_id == "temperature":
+            pygame.draw.circle(surface, (224, 141, 71), (cx - 12, cy), 15)
+            pygame.draw.circle(surface, (124, 163, 201), (cx + 14, cy), 15)
+        else:
+            pygame.draw.circle(surface, (151, 145, 134), (cx, cy), 21)
+            pygame.draw.circle(surface, (101, 96, 90), (cx - 7, cy - 4), 7)
+            pygame.draw.circle(surface, (190, 222, 241), (cx + 11, cy - 12), 5)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (248, 244, 226), panel, border_radius=22)
-        pygame.draw.rect(surface, (72, 62, 57), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (55, 50, 57))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (55, 50, 57))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+            dark=True,
+        )

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<defs>
+  <!-- navy deep -> navy lifted -->
+  <linearGradient id="venus_sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#21304F"/><stop offset="1" stop-color="#33496F"/></linearGradient>
+  <!-- ink+orange 25% -> ink -->
+  <linearGradient id="venus_deck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#755031"/><stop offset="1" stop-color="#4B372F"/></linearGradient>
+  <!-- thick bright atmosphere glow (reflected sunlight) -->
+  <radialGradient id="venus_haze"><stop offset="0" stop-color="#FFD471" stop-opacity="0.55"/><stop offset="1" stop-color="#FFD471" stop-opacity="0"/></radialGradient>
+  <!-- cloud light -> cloud -->
+  <linearGradient id="venus_cloud" x1="0.1" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#FBE4B0"/><stop offset="1" stop-color="#F7CE70"/></linearGradient>
+  <!-- peach -> coral evening sky -->
+  <linearGradient id="venus_dusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F8D8BD"/><stop offset="1" stop-color="#F46F61"/></linearGradient>
+</defs>
+<g id="sky"><rect width="1024" height="600" fill="url(#venus_sky)"/><g fill="#FFFBEB" opacity="0.85"><circle cx="696.2" cy="48" r="2"/><circle cx="679.4" cy="348" r="2"/><circle cx="41.9" cy="456.5" r="1.6"/><circle cx="540.4" cy="55.4" r="1.6"/><circle cx="613.9" cy="135.1" r="1.6"/><circle cx="990.7" cy="199.8" r="1.2"/><circle cx="977.1" cy="450.8" r="1"/><circle cx="98.1" cy="40.4" r="1.4"/><circle cx="946.9" cy="302.9" r="1.6"/><circle cx="842.8" cy="263.7" r="2"/><circle cx="988.1" cy="375.6" r="2"/><circle cx="221.8" cy="197" r="1"/><circle cx="13.7" cy="239.6" r="1.4"/><circle cx="75.4" cy="271.7" r="1"/><circle cx="333.8" cy="247.6" r="1"/><circle cx="742.8" cy="416.6" r="1.2"/><circle cx="750.7" cy="148.7" r="1.2"/><circle cx="638.4" cy="135.5" r="1.2"/><circle cx="493" cy="103.6" r="2"/><circle cx="648.3" cy="206.9" r="1"/><circle cx="569.4" cy="7.2" r="1.2"/><circle cx="95.3" cy="303.6" r="1.4"/><circle cx="360.9" cy="50.8" r="1.2"/><circle cx="70.9" cy="77.6" r="2"/><circle cx="671.6" cy="380.5" r="1.4"/><circle cx="556.2" cy="140.8" r="1.2"/><circle cx="119.3" cy="82" r="2"/><circle cx="14.6" cy="133" r="2"/><circle cx="852.5" cy="108.7" r="1.2"/><circle cx="412.2" cy="150.9" r="1.2"/><circle cx="98.2" cy="148.2" r="1.2"/><circle cx="837.3" cy="328.7" r="2"/><circle cx="715.7" cy="164.9" r="2"/><circle cx="289.1" cy="280.1" r="2"/><circle cx="687.5" cy="96.2" r="1.4"/><circle cx="653.4" cy="441.7" r="2"/><circle cx="527.3" cy="18.7" r="2"/><circle cx="982.9" cy="106.7" r="2"/><circle cx="367.3" cy="99.9" r="1.4"/><circle cx="950.3" cy="395.3" r="1.6"/><circle cx="985" cy="425.4" r="2"/><circle cx="633" cy="450" r="2"/><circle cx="731.4" cy="135.9" r="1.4"/><circle cx="43.4" cy="71.7" r="1"/><circle cx="749" cy="149.9" r="1.6"/><circle cx="607.4" cy="46.1" r="1.2"/></g><g fill="#BFD6F0" opacity="0.7"><circle cx="878.4" cy="86.9" r="1.2"/><circle cx="299" cy="108.9" r="2"/><circle cx="14.9" cy="77.8" r="2"/><circle cx="703.1" cy="144.8" r="1.6"/><circle cx="684.1" cy="170.1" r="1.4"/><circle cx="857.6" cy="288.7" r="1"/><circle cx="279.2" cy="150.5" r="1.4"/><circle cx="41.4" cy="182.7" r="1.6"/><circle cx="487.8" cy="93.3" r="1.2"/><circle cx="267.4" cy="119.6" r="1"/></g></g>
+
+<g id="deck"><path d="M0 486H1024V600H0Z" fill="url(#venus_deck)"/><path d="M0 486H1024" stroke="#A76D34" stroke-width="5"/><path d="M0 490H1024" stroke="#B18B66" stroke-width="1.8" opacity="0.6"/><g stroke="#4B372F" stroke-width="2" opacity="0.35"><path d="M180 492L120 600M380 492L350 600M512 492V600M644 492L674 600M844 492L904 600"/></g></g>
+<g id="dome_ribs" fill="none" stroke-linecap="round"><path d="M-6 -10Q60 230 22 486M1030 -10Q964 230 1002 486" stroke="#8B5D32" stroke-width="24"/><path d="M4 6Q64 230 30 478M1020 6Q960 230 994 478" stroke="#C17C35" stroke-width="3" opacity="0.7"/></g>
+<g id="venus" data-target="venus" data-center="505,326">
+<circle cx="505" cy="326" r="140" fill="url(#venus_haze)"/>
+<circle cx="505" cy="326" r="96" fill="url(#venus_cloud)" stroke="#987B4C" stroke-width="3.5"/>
+<path d="M440.1 266C479 274 511.5 255.6 514.7 266S557 274 569.9 266" fill="none" stroke="#FCEECD" stroke-width="13" stroke-linecap="round" opacity="0.7"/><path d="M425.2 292C473.1 280 513 307.6 517 292S568.8 280 584.8 292" fill="none" stroke="#F6BC5C" stroke-width="10" stroke-linecap="round" opacity="0.35"/><path d="M419.3 318C470.7 328 513.6 305 517.8 318S573.5 328 590.7 318" fill="none" stroke="#FCEECD" stroke-width="16" stroke-linecap="round" opacity="0.65"/><path d="M421.1 346C471.4 333 513.4 362.9 517.6 346S572.1 333 588.9 346" fill="none" stroke="#F6BC5C" stroke-width="10" stroke-linecap="round" opacity="0.35"/><path d="M430.7 372C475.3 381 512.4 360.3 516.1 372S564.4 381 579.3 372" fill="none" stroke="#FCEBC6" stroke-width="14" stroke-linecap="round" opacity="0.6"/><path d="M447.2 394C481.9 388 510.8 401.8 513.7 394S551.2 388 562.8 394" fill="none" stroke="#F6BE5F" stroke-width="8" stroke-linecap="round" opacity="0.3"/><path d="M556 296C584 296 590 326 570 334C556 340 544 328 552 318" fill="none" stroke="#FCEECD" stroke-width="7" stroke-linecap="round" opacity="0.7"/>
+<path d="M529 233A96 96 0 0 1 529 419A67.19999999999999 96 0 0 0 529 233Z" fill="#BB9959" opacity="0.35"/>
+<path d="M433 288Q447 256 481 242" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.6"/>
+</g>
+<g id="evening_star_card">
+<ellipse cx="124" cy="578" rx="78" ry="9" fill="#6A5147" opacity="0.3"/>
+<path d="M84 560L66 588M164 560L182 588M124 560V586" stroke="#8E5F33" stroke-width="5" stroke-linecap="round"/>
+<rect x="62" y="488" width="124" height="80" rx="8" fill="#A76D34" stroke="#4B372F" stroke-width="3.5"/>
+<rect x="72" y="498" width="104" height="60" rx="5" fill="url(#venus_dusk)"/>
+<path d="M72 540Q100 524 126 538T176 532V558H72Z" fill="#3C7361"/>
+<path d="M140 503L142.3 509.7L149 512L142.3 514.3L140 521L137.7 514.3L131 512L137.7 509.7Z" fill="#FFFBEB" opacity="1"/>
+<circle cx="140" cy="512" r="3" fill="#FFFFFF"/>
+</g>
+</svg>

@@ -12,6 +12,7 @@ from greia_platform.typography import FontRole
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        draw_authored_scene,
         draw_caption_ribbon,
         draw_machine_action_button,
         draw_navigation_arrows,
@@ -22,6 +23,7 @@ if __package__ and "." in __package__:
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        draw_authored_scene,
         draw_caption_ribbon,
         draw_machine_action_button,
         draw_navigation_arrows,
@@ -29,6 +31,12 @@ else:
     )
     from enciclopedia_focus_audio import FocusAudioTracker
     from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+
+
+# The page engine currently delivers only pointer move/press. Referencing a
+# missing POINTER_RELEASE member raised AttributeError on every pointer event,
+# so tolerate its absence; a future engine release event still ends the drag.
+_POINTER_RELEASE = getattr(PageInputKind, "POINTER_RELEASE", None)
 
 
 @dataclass(frozen=True, slots=True)
@@ -175,7 +183,7 @@ class MagnetPage(EncyclopediaPage):
         if event.position is not None and event.kind in {
             PageInputKind.POINTER_MOVE,
             PageInputKind.POINTER_PRESS,
-            PageInputKind.POINTER_RELEASE,
+            _POINTER_RELEASE,
         }:
             point = (int(event.position[0]), int(event.position[1]))
 
@@ -197,7 +205,7 @@ class MagnetPage(EncyclopediaPage):
                     self._drag_offset_x = int(self._right_x) - point[0]
                     return
 
-            elif event.kind is PageInputKind.POINTER_RELEASE:
+            elif _POINTER_RELEASE is not None and event.kind is _POINTER_RELEASE:
                 if self._dragging:
                     self._dragging = False
                     return
@@ -257,7 +265,16 @@ class MagnetPage(EncyclopediaPage):
         self.context.audio.play(item.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((246, 243, 234))
+        # Authored science-corner scene (felt test board, horseshoe magnet,
+        # Earth-field poster). The live magnet demos draw over its board.
+        authored = draw_authored_scene(
+            surface,
+            self.context.visuals,
+            "encyclopedia.machines.magnet.lab",
+        )
+        if not authored:
+            # Contained procedural fallback when the runtime PNG is absent.
+            surface.fill((246, 243, 234))
 
         draw_centered_text(
             surface,
@@ -269,7 +286,8 @@ class MagnetPage(EncyclopediaPage):
             role=FontRole.DISPLAY,
         )
 
-        self._draw_workbench_table(surface)
+        if not authored:
+            self._draw_workbench_table(surface)
 
         disc = DISCOVERIES[self._selected]
         if disc.discovery_id == "field":

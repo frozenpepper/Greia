@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<!-- E4-A Tree: one broadleaf tree with the ground cut open below y 405 so
+     roots can be revealed. Trunk and branches are baked; the seasonal crown,
+     roots and the water/light/vapour journeys are live page overlays. -->
+<defs>
+  <!-- sky light -> mint haze -->
+  <linearGradient id="tree_sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B3DDEE"/><stop offset="1" stop-color="#E6F2D8"/></linearGradient>
+  <!-- sand shade -> cocoa (soil cut) -->
+  <linearGradient id="tree_soil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A97C56"/><stop offset="1" stop-color="#7A5741"/></linearGradient>
+  <!-- cocoa/orange mix (bark) -->
+  <linearGradient id="tree_bark" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9A6A45"/><stop offset="1" stop-color="#7A5034"/></linearGradient>
+</defs>
+<rect width="1024" height="600" fill="url(#tree_sky)"/>
+<g id="clouds" fill="#FFFFFF" opacity="0.85"><ellipse cx="140" cy="110" rx="44" ry="12"/><ellipse cx="160" cy="101" rx="24" ry="12"/><ellipse cx="880" cy="128" rx="40" ry="11"/><ellipse cx="898" cy="120" rx="22" ry="11"/></g>
+<g id="far_hills">
+  <path d="M0 330 Q130 286 270 306 Q380 320 460 300 Q600 270 740 302 Q880 330 1024 296 V410 H0Z" fill="#BCD9A8"/>
+  <path d="M0 360 Q160 334 330 350 Q520 368 700 344 Q880 324 1024 346 V410 H0Z" fill="#A6CE92"/>
+</g>
+<g id="far_trees" fill="#8DBE7E"><circle cx="120" cy="336" r="20"/><circle cx="146" cy="330" r="16"/><circle cx="880" cy="332" r="22"/><circle cx="906" cy="340" r="15"/></g>
+<rect id="soil" x="0" y="405" width="1024" height="195" fill="url(#tree_soil)"/>
+<g id="soil_layers" fill="none" stroke-linecap="round">
+  <path d="M0 470 Q260 458 512 468 Q760 478 1024 462" stroke="#946A4D" stroke-width="10"/>
+  <path d="M0 548 Q260 536 512 546 Q760 556 1024 540" stroke="#6E4E3B" stroke-width="12"/>
+</g>
+<g id="pebbles" fill="#C2A68A" stroke="#4B372F" stroke-width="2"><ellipse cx="90" cy="440" rx="12" ry="7"/><ellipse cx="340" cy="500" rx="9" ry="6"/><ellipse cx="700" cy="508" rx="11" ry="6"/><ellipse cx="930" cy="436" rx="13" ry="7"/><ellipse cx="610" cy="560" rx="8" ry="5"/></g>
+<g id="worm" fill="none" stroke-linecap="round"><path d="M820 500 q10 -8 20 0 t20 0 t18 -2" stroke="#4B372F" stroke-width="9"/><path d="M820 500 q10 -8 20 0 t20 0 t18 -2" stroke="#E79AA6" stroke-width="5"/></g>
+<g id="grass" stroke="#4B372F" stroke-width="3" stroke-linejoin="round">
+  <path d="M0 392 Q256 384 512 390 Q768 396 1024 388 V412 H0Z" fill="#79B865"/>
+</g>
+<g id="grass_blades" stroke="#4F8F55" stroke-width="3" stroke-linecap="round" fill="none"><path d="M60 390 l-4 -12 M66 390 l2 -14 M72 390 l6 -10"/><path d="M380 388 l-4 -12 M386 388 l2 -14"/><path d="M640 392 l-4 -12 M646 392 l2 -14 M652 392 l6 -10"/><path d="M960 388 l-4 -12 M966 388 l2 -14"/></g>
+<g id="flowers" stroke="#4B372F" stroke-width="2"><circle cx="150" cy="384" r="6" fill="#F7B7C8"/><circle cx="168" cy="388" r="5" fill="#FFFBEB"/><circle cx="860" cy="384" r="6" fill="#FFD25E"/><circle cx="878" cy="388" r="5" fill="#F7B7C8"/></g>
+<ellipse id="tree_shadow" cx="503" cy="400" rx="110" ry="10" fill="#6A5147" opacity="0.16"/>
+<g id="tree" stroke-linejoin="round" stroke-linecap="round">
+  <g fill="none" stroke="#4B372F" stroke-width="22"><path d="M493 312 Q462 284 430 255"/><path d="M514 320 Q546 290 577 260"/></g>
+  <g fill="none" stroke="#8A5A3C" stroke-width="15"><path d="M493 312 Q462 284 430 255"/><path d="M514 320 Q546 290 577 260"/></g>
+  <path d="M478 262 Q482 330 474 394 Q470 406 460 410 H546 Q536 406 532 394 Q524 330 528 262Z" fill="url(#tree_bark)" stroke="#4B372F" stroke-width="3.5"/>
+  <path d="M492 290 Q490 330 488 380" fill="none" stroke="#B88A62" stroke-width="5"/>
+  <path d="M512 336 q6 6 0 12 M506 370 q-5 5 0 10" fill="none" stroke="#5E3E2A" stroke-width="2.5"/>
+</g>
+<g id="token_beds" fill="#2F5A35" opacity="0.13">
+  <ellipse data-target="roots" data-center="220,185" cx="220" cy="232" rx="40" ry="6"/>
+  <ellipse data-target="water" data-center="500,165" cx="500" cy="212" rx="40" ry="6"/>
+  <ellipse data-target="photosynthesis" data-center="780,185" cx="780" cy="232" rx="40" ry="6"/>
+  <ellipse data-target="transpiration" data-center="300,425" cx="300" cy="472" rx="40" ry="6"/>
+  <ellipse data-target="seasons" data-center="700,425" cx="700" cy="472" rx="40" ry="6"/>
+</g>
+</svg>

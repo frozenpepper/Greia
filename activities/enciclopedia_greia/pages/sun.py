@@ -12,25 +12,33 @@ from greia_platform.typography import FontRole
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_TELESCOPE_CARD,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_centered_text, draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_TELESCOPE_CARD,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_centered_text, draw_presenter, grid_step
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +55,13 @@ DISCOVERIES = (
     SunDiscovery("fusion", "sun.fusion", "encyclopedia.space.sun.fusion", (250, 420)),
     SunDiscovery("rotation", "sun.rotation", "encyclopedia.space.sun.rotation", (755, 420)),
 )
+
+# E4-B authored observatory scene. The Sun disc/corona is baked at the same
+# center/radius the reveal overlays use; a missing rendition fails soft to the
+# procedural star field and Sun below.
+SCENE_ID = "encyclopedia.space.sun.observatory"
+SUN_CENTER = (505, 326)
+SUN_RADIUS = 112
 
 
 class SunPage(EncyclopediaPage):
@@ -166,21 +181,20 @@ class SunPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((18, 25, 57))
-        for index in range(34):
-            x = (index * 97 + 23) % 1000
-            y = 80 + (index * 53) % 470
-            pygame.draw.circle(surface, (229, 235, 246), (x, y), 1)
-        draw_centered_text(
+        authored = draw_authored_scene(surface, self.context.visuals, SCENE_ID)
+        if not authored:
+            surface.fill((18, 25, 57))
+            for index in range(34):
+                x = (index * 97 + 23) % 1000
+                y = 80 + (index * 53) % 470
+                pygame.draw.circle(surface, (229, 235, 246), (x, y), 1)
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("sun.title"),
-            center=(500, 92),
-            size=40,
-            color=(248, 240, 207),
-            role=FontRole.DISPLAY,
+            (248, 240, 207),
         )
-        self._draw_sun(surface)
+        self._draw_sun(surface, authored=authored)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -201,9 +215,16 @@ class SunPage(EncyclopediaPage):
             fallback_color=(227, 174, 87),
         )
 
-    def _draw_sun(self, surface: pygame.Surface) -> None:
-        center = (505, 326)
-        radius = 112
+    def _draw_sun(self, surface: pygame.Surface, *, authored: bool) -> None:
+        center = SUN_CENTER
+        radius = SUN_RADIUS
+        if not authored:
+            self._draw_fallback_sun(surface)
+        self._draw_reveals(surface, center, radius)
+
+    def _draw_fallback_sun(self, surface: pygame.Surface) -> None:
+        center = SUN_CENTER
+        radius = SUN_RADIUS
         pulse = int(4 * math.sin(self._time * 2.0))
         # Corona with soft glow
         glow = pygame.Surface((radius * 2 + 40, radius * 2 + 40), pygame.SRCALPHA)
@@ -232,6 +253,12 @@ class SunPage(EncyclopediaPage):
             )
             pygame.draw.line(surface, (255, 231, 120), start, end, 4)
 
+    def _draw_reveals(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        radius: int,
+    ) -> None:
         if self._plasma_age > 0:
             pygame.draw.circle(surface, (255, 242, 156), center, radius - 8, 5)
             for index in range(6):
@@ -285,30 +312,45 @@ class SunPage(EncyclopediaPage):
             )
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (250, 244, 218), item.center, 37)
-            pygame.draw.circle(surface, (73, 61, 57), item.center, 37, 3)
-            cx, cy = item.center
-            if item.discovery_id == "plasma":
-                pygame.draw.circle(surface, (247, 167, 49), (cx, cy), 19)
-                pygame.draw.arc(surface, (230, 102, 36), (cx - 22, cy - 15, 44, 30), 0.2, 2.9, 4)
-            elif item.discovery_id == "scale":
-                pygame.draw.circle(surface, (247, 167, 49), (cx - 11, cy), 18)
-                pygame.draw.circle(surface, (73, 146, 214), (cx + 21, cy + 7), 6)
-            elif item.discovery_id == "fusion":
-                pygame.draw.circle(surface, (255, 218, 81), (cx, cy), 19)
-                pygame.draw.circle(surface, (255, 247, 194), (cx, cy), 8)
-            else:
-                pygame.draw.arc(surface, (231, 127, 45), (cx - 23, cy - 23, 46, 46), 0.2, 5.0, 5)
-                pygame.draw.circle(surface, (73, 61, 57), (cx + 19, cy - 10), 4)
-            focus_ring(surface, rect, index == self._selected or index == self._hovered)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=self._caption_key == item.caption_key,
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+                token_shape=TOKEN_SHAPE_TELESCOPE_CARD,
+            )
+
+    def _draw_icon(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        discovery_id: str,
+    ) -> None:
+        cx, cy = center
+        if discovery_id == "plasma":
+            pygame.draw.circle(surface, (247, 167, 49), (cx, cy), 19)
+            pygame.draw.arc(surface, (230, 102, 36), (cx - 22, cy - 15, 44, 30), 0.2, 2.9, 4)
+        elif discovery_id == "scale":
+            pygame.draw.circle(surface, (247, 167, 49), (cx - 11, cy), 18)
+            pygame.draw.circle(surface, (73, 146, 214), (cx + 21, cy + 7), 6)
+        elif discovery_id == "fusion":
+            pygame.draw.circle(surface, (255, 218, 81), (cx, cy), 19)
+            pygame.draw.circle(surface, (255, 247, 194), (cx, cy), 8)
+        else:
+            pygame.draw.arc(surface, (231, 127, 45), (cx - 23, cy - 23, 46, 46), 0.2, 5.0, 5)
+            pygame.draw.circle(surface, (73, 61, 57), (cx + 19, cy - 10), 4)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (250, 244, 218), panel, border_radius=22)
-        pygame.draw.rect(surface, (73, 61, 57), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (55, 49, 59))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (55, 49, 59))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+            dark=True,
+        )

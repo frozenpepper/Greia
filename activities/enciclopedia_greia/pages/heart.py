@@ -7,32 +7,38 @@ import math
 
 import pygame
 
-from greia_platform.typography import FontRole
-
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_heart_button,
-        draw_focus_patch,
         draw_navigation_arrows,
         draw_smoke_toggle,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_heart_button,
-        draw_focus_patch,
         draw_navigation_arrows,
         draw_smoke_toggle,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_presenter, grid_step
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +55,9 @@ DISCOVERIES = (
     HeartDiscovery("beat", "heart.beat", "encyclopedia.body.heart.beat", (260, 410)),
     HeartDiscovery("exercise", "heart.exercise", "encyclopedia.body.heart.exercise", (745, 410)),
 )
+
+# E4 authored scene; a missing rendition fails soft to the procedural fallback.
+SCENE_ID = "encyclopedia.body.heart.discovery_room"
 
 
 class HeartModel:
@@ -201,17 +210,16 @@ class HeartPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((248, 230, 225))
-        draw_centered_text(
+        authored = draw_authored_scene(surface, self.context.visuals, SCENE_ID)
+        if not authored:
+            surface.fill((248, 230, 225))
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("heart.title"),
-            center=(500, 92),
-            size=40,
-            color=self.context.palette.ink,
-            role=FontRole.DISPLAY,
+            self.context.palette.ink,
         )
-        self._draw_body_and_heart(surface)
+        self._draw_body_and_heart(surface, authored=authored)
         self._draw_hotspots(surface)
         # Standard navigation for discovery
         can_left = self._selected > 0
@@ -235,43 +243,49 @@ class HeartPage(EncyclopediaPage):
             fallback_color=(229, 137, 183),
         )
 
-    def _draw_body_and_heart(self, surface: pygame.Surface) -> None:
-        # More child-friendly torso with subtle shading and rib hint
-        skin = (235, 189, 160)
-        skin_light = (245, 210, 185)
-        skin_shadow = (210, 165, 138)
-        # Head with highlight
-        pygame.draw.circle(surface, skin, (505, 184), 42)
-        pygame.draw.circle(surface, skin_light, (494, 172), 12)
-        pygame.draw.circle(surface, skin, (505, 184), 42, 2)
-        # Torso with rounded top and soft shadow
-        torso = pygame.Rect(445, 225, 120, 230)
-        pygame.draw.rect(surface, skin_shadow, torso.move(4, 6), border_radius=48)
-        pygame.draw.rect(surface, skin, torso, border_radius=48)
-        pygame.draw.rect(surface, skin_light, torso.inflate(-12, -12), border_radius=40, width=4)
-        # Arms
-        pygame.draw.line(surface, skin_shadow, (458, 264), (393, 409), 26)
-        pygame.draw.line(surface, skin, (455, 260), (390, 405), 24)
-        pygame.draw.line(surface, skin_shadow, (558, 264), (623, 409), 26)
-        pygame.draw.line(surface, skin, (555, 260), (620, 405), 24)
-        # Ribs hint
-        for ry in (268, 285, 302, 320):
-            pygame.draw.arc(surface, (218, 175, 160), (462, ry, 80, 18), 0.25, 2.9, 2)
-        # Lungs
-        pygame.draw.ellipse(surface, (224, 155, 163), (456, 266, 48, 82))
-        pygame.draw.ellipse(surface, (235, 175, 182), (462, 273, 36, 68))
-        pygame.draw.ellipse(surface, (224, 155, 163), (506, 266, 48, 82))
-        pygame.draw.ellipse(surface, (235, 175, 182), (512, 273, 36, 68))
-        pygame.draw.ellipse(surface, (210, 135, 145), (456, 266, 48, 82), 2)
-        pygame.draw.ellipse(surface, (210, 135, 145), (506, 266, 48, 82), 2)
+    def _draw_body_and_heart(self, surface: pygame.Surface, *, authored: bool) -> None:
+        if not authored:
+            # More child-friendly torso with subtle shading and rib hint
+            skin = (235, 189, 160)
+            skin_light = (245, 210, 185)
+            skin_shadow = (210, 165, 138)
+            # Head with highlight
+            pygame.draw.circle(surface, skin, (505, 184), 42)
+            pygame.draw.circle(surface, skin_light, (494, 172), 12)
+            pygame.draw.circle(surface, skin, (505, 184), 42, 2)
+            # Torso with rounded top and soft shadow
+            torso = pygame.Rect(445, 225, 120, 230)
+            pygame.draw.rect(surface, skin_shadow, torso.move(4, 6), border_radius=48)
+            pygame.draw.rect(surface, skin, torso, border_radius=48)
+            pygame.draw.rect(surface, skin_light, torso.inflate(-12, -12), border_radius=40, width=4)
+            # Arms
+            pygame.draw.line(surface, skin_shadow, (458, 264), (393, 409), 26)
+            pygame.draw.line(surface, skin, (455, 260), (390, 405), 24)
+            pygame.draw.line(surface, skin_shadow, (558, 264), (623, 409), 26)
+            pygame.draw.line(surface, skin, (555, 260), (620, 405), 24)
+            # Ribs hint
+            for ry in (268, 285, 302, 320):
+                pygame.draw.arc(surface, (218, 175, 160), (462, ry, 80, 18), 0.25, 2.9, 2)
+            # Lungs
+            pygame.draw.ellipse(surface, (224, 155, 163), (456, 266, 48, 82))
+            pygame.draw.ellipse(surface, (235, 175, 182), (462, 273, 36, 68))
+            pygame.draw.ellipse(surface, (224, 155, 163), (506, 266, 48, 82))
+            pygame.draw.ellipse(surface, (235, 175, 182), (512, 273, 36, 68))
+            pygame.draw.ellipse(surface, (210, 135, 145), (456, 266, 48, 82), 2)
+            pygame.draw.ellipse(surface, (210, 135, 145), (506, 266, 48, 82), 2)
 
         beat = self._model.beat_phase
         double_pulse = max(0.0, math.sin(beat * math.pi * 2.0)) + 0.45 * max(
             0.0,
             math.sin((beat - 0.18) * math.pi * 2.0),
         )
-        scale = 1.0 + (0.10 + (0.08 if self._model.beat_age > 0 else 0.0)) * min(1.0, double_pulse)
-        self._draw_heart(surface, (505, 350), int(42 * scale))
+        if authored:
+            # The heart model is baked into the discovery-room scene; each
+            # beat sends a soft pulse ring and "thump" marks around it.
+            self._draw_pulse(surface, min(1.0, double_pulse))
+        else:
+            scale = 1.0 + (0.10 + (0.08 if self._model.beat_age > 0 else 0.0)) * min(1.0, double_pulse)
+            self._draw_heart(surface, (505, 350), int(42 * scale))
 
         if self._model.chambers_age > 0:
             self._draw_chambers(surface, (505, 350))
@@ -281,6 +295,25 @@ class HeartPage(EncyclopediaPage):
             for index in range(4):
                 y = 245 + index * 28
                 pygame.draw.line(surface, (228, 104, 92), (585, y), (600 + index * 8, y), 5)
+
+    def _draw_pulse(self, surface: pygame.Surface, pulse: float) -> None:
+        if pulse < 0.05:
+            return
+        center = (505, 345)
+        strong = self._model.beat_age > 0 or self._model.exercise_age > 0
+        radius = int(96 + (16 + (10 if strong else 0)) * pulse)
+        pygame.draw.circle(surface, (236, 120, 132), center, radius, 3)
+        if pulse > 0.55:
+            for side in (-1, 1):
+                x = center[0] + side * (radius + 12)
+                for dy, length in ((-22, 14), (0, 20), (22, 14)):
+                    pygame.draw.line(
+                        surface,
+                        (214, 86, 110),
+                        (x, center[1] + dy),
+                        (x + side * length, center[1] + dy + (dy // 3)),
+                        5,
+                    )
 
     @staticmethod
     def _draw_heart(surface: pygame.Surface, center: tuple[int, int], size: int) -> None:
@@ -352,32 +385,45 @@ class HeartPage(EncyclopediaPage):
         return x1 + (x2 - x1) * local, y1 + (y2 - y1) * local
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (255, 248, 235), item.center, 37)
-            pygame.draw.circle(surface, (85, 58, 59), item.center, 37, 3)
-            cx, cy = item.center
-            if item.discovery_id == "chambers":
-                for dx, dy in ((-12, -12), (12, -12), (-12, 12), (12, 12)):
-                    pygame.draw.rect(surface, (196, 72, 86), (cx + dx - 8, cy + dy - 8, 16, 16), border_radius=5)
-            elif item.discovery_id == "circulation":
-                pygame.draw.arc(surface, (211, 73, 79), (cx - 24, cy - 24, 48, 48), 0, math.pi * 1.4, 5)
-                pygame.draw.polygon(surface, (211, 73, 79), [(cx + 22, cy - 10), (cx + 28, cy + 3), (cx + 14, cy + 2)])
-            elif item.discovery_id == "beat":
-                self._draw_heart(surface, (cx, cy - 2), 16)
-            else:
-                pygame.draw.circle(surface, (231, 108, 87), (cx - 12, cy - 2), 12)
-                pygame.draw.line(surface, (83, 65, 62), (cx + 3, cy + 14), (cx + 16, cy - 14), 7)
-                pygame.draw.line(surface, (83, 65, 62), (cx + 5, cy + 3), (cx + 22, cy + 13), 7)
-            # Unified halo — pulse
-            if index == self._selected or index == self._hovered:
-                draw_focus_patch(surface, rect, active=True, radius=16, time=self._time)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=self._caption_key == item.caption_key,
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+                token_shape=TOKEN_SHAPE_FELT_TAG,
+            )
+
+    def _draw_icon(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        discovery_id: str,
+    ) -> None:
+        cx, cy = center
+        if discovery_id == "chambers":
+            for dx, dy in ((-12, -12), (12, -12), (-12, 12), (12, 12)):
+                pygame.draw.rect(surface, (196, 72, 86), (cx + dx - 8, cy + dy - 8, 16, 16), border_radius=5)
+        elif discovery_id == "circulation":
+            pygame.draw.arc(surface, (211, 73, 79), (cx - 24, cy - 24, 48, 48), 0, math.pi * 1.4, 5)
+            pygame.draw.polygon(surface, (211, 73, 79), [(cx + 22, cy - 10), (cx + 28, cy + 3), (cx + 14, cy + 2)])
+        elif discovery_id == "beat":
+            self._draw_heart(surface, (cx, cy - 2), 16)
+        else:
+            pygame.draw.circle(surface, (231, 108, 87), (cx - 12, cy - 2), 12)
+            pygame.draw.line(surface, (83, 65, 62), (cx + 3, cy + 14), (cx + 16, cy - 14), 7)
+            pygame.draw.line(surface, (83, 65, 62), (cx + 5, cy + 3), (cx + 22, cy + 13), 7)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (255, 248, 235), panel, border_radius=22)
-        pygame.draw.rect(surface, (85, 58, 59), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (62, 49, 49))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (62, 49, 49))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+            dark=False,
+        )

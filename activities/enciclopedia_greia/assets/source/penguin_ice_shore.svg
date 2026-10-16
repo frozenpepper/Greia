@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<!-- E4-A Penguin: a cold southern shore. The penguin is a live puppet that
+     stands on the foreground ice (feet ~y 426) or swims in the open sea band
+     (y 300-440). Habitat-variety states repaint the shore live, so the two
+     icebergs stay small and inside x 150-330 / 700-880. -->
+<defs>
+  <!-- sky light -> pale aqua -->
+  <linearGradient id="penguin_sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BFE2F2"/><stop offset="1" stop-color="#EEF7F6"/></linearGradient>
+  <!-- ocean light -> ocean shade (sea band) -->
+  <linearGradient id="penguin_sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#78B9DD"/><stop offset="1" stop-color="#3F7FB2"/></linearGradient>
+  <!-- white -> sky shade (ice) -->
+  <linearGradient id="penguin_ice" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBFEFF"/><stop offset="1" stop-color="#D5E8F1"/></linearGradient>
+</defs>
+<rect width="1024" height="600" fill="url(#penguin_sky)"/>
+<g id="clouds" fill="#FFFFFF" opacity="0.85"><ellipse cx="300" cy="126" rx="48" ry="12"/><ellipse cx="322" cy="117" rx="26" ry="13"/><ellipse cx="720" cy="104" rx="40" ry="10"/><ellipse cx="738" cy="96" rx="22" ry="11"/></g>
+<g id="far_mountains">
+  <path d="M0 300 L70 236 L120 262 L190 196 L260 250 L330 214 L400 270 L470 232 L540 280 L620 222 L690 258 L770 200 L850 252 L930 218 L1024 268 V310 H0Z" fill="#DCE8F3"/>
+  <path d="M190 196 L214 218 L200 222 L184 214Z M770 200 L796 224 L780 226 L764 216Z M620 222 L640 240 L626 242Z" fill="#FFFFFF"/>
+</g>
+<rect id="sea" x="0" y="296" width="1024" height="150" fill="url(#penguin_sea)"/>
+<g id="sea_glints" fill="none" stroke="#DDF0FA" stroke-width="3" stroke-linecap="round" opacity="0.75"><path d="M60 330 Q90 324 120 330"/><path d="M400 318 Q430 312 460 318"/><path d="M600 352 Q636 346 672 352"/><path d="M900 336 Q930 330 960 336"/><path d="M380 392 Q410 386 440 392"/></g>
+<g id="icebergs" stroke="#7FA6BE" stroke-width="3" stroke-linejoin="round">
+  <path d="M168 318 L196 268 L232 258 L262 280 L300 318Z" fill="#F6FBFE"/><path d="M232 258 L262 280 L300 318 L248 318Z" fill="#D2E6F1" stroke="none"/>
+  <path d="M720 316 L742 280 L776 270 L810 286 L846 316Z" fill="#F6FBFE"/><path d="M776 270 L810 286 L846 316 L796 316Z" fill="#D2E6F1" stroke="none"/>
+  <path d="M168 318 H300 M720 316 H846" stroke="#5E9CC6" stroke-width="4"/>
+</g>
+<g id="ice_shelf" stroke="#7FA6BE" stroke-width="3.5" stroke-linejoin="round">
+  <path d="M0 448 Q120 424 260 430 Q380 418 512 424 Q660 416 780 428 Q900 420 1024 432 V600 H0Z" fill="url(#penguin_ice)"/>
+  <path d="M0 470 Q140 452 300 458 Q520 446 760 456 Q900 450 1024 460" fill="none" stroke="#B9D6E6" stroke-width="3"/>
+</g>
+<g id="ice_cracks" fill="none" stroke="#A9CADB" stroke-width="2.5" stroke-linecap="round"><path d="M120 500 l30 12 l22 -8"/><path d="M820 510 l26 -10 l30 14"/><path d="M640 560 l24 8"/></g>
+<g id="snow_mounds" stroke="#7FA6BE" stroke-width="3" stroke-linejoin="round" fill="#FFFFFF">
+  <path d="M40 470 Q70 438 110 446 Q140 440 160 470Z"/><path d="M870 476 Q900 446 940 452 Q972 448 990 476Z"/>
+</g>
+<g id="distant_penguins">
+  <g transform="translate(96 438)"><ellipse cx="0" cy="12" rx="12" ry="3" fill="#6A5147" opacity="0.14"/><ellipse cx="0" cy="0" rx="7" ry="12" fill="#30343A"/><ellipse cx="1.5" cy="2" rx="4" ry="8" fill="#FFFBEB"/><circle cx="0" cy="-12" r="5" fill="#30343A"/></g>
+  <g transform="translate(118 442)"><ellipse cx="0" cy="10" rx="10" ry="3" fill="#6A5147" opacity="0.14"/><ellipse cx="0" cy="0" rx="6" ry="10" fill="#30343A"/><ellipse cx="1.5" cy="2" rx="3.5" ry="6.5" fill="#FFFBEB"/><circle cx="0" cy="-10" r="4.5" fill="#30343A"/></g>
+</g>
+<g id="token_beds" fill="#3F6E8F" opacity="0.13">
+  <ellipse data-target="swim" data-center="255,200" cx="255" cy="247" rx="40" ry="6"/>
+  <ellipse data-target="feathers" data-center="750,200" cx="750" cy="247" rx="40" ry="6"/>
+  <ellipse data-target="world" data-center="255,415" cx="255" cy="462" rx="40" ry="6"/>
+  <ellipse data-target="breeding" data-center="750,415" cx="750" cy="462" rx="40" ry="6"/>
+</g>
+</svg>

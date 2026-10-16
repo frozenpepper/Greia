@@ -5,31 +5,39 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import pygame
+import pygame.gfxdraw
 
-from greia_platform.typography import FontRole
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_presenter, grid_step
 
 
 @dataclass(frozen=True, slots=True)
@@ -191,17 +199,20 @@ class RainPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((176, 220, 238))
-        draw_centered_text(
+        authored = draw_authored_scene(surface, self.context.visuals, "encyclopedia.earth.rain.water_cycle")
+        if not authored:
+            # Procedural fallback while the authored runtime rendition is absent.
+            surface.fill((176, 220, 238))
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("rain.title"),
-            center=(500, 92),
-            size=40,
-            color=(53, 66, 72),
-            role=FontRole.DISPLAY,
+            self.context.palette.ink,
         )
-        self._draw_cycle(surface)
+        if authored:
+            self._draw_live_cycle(surface)
+        else:
+            self._draw_cycle(surface)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -221,6 +232,54 @@ class RainPage(EncyclopediaPage):
             variant="surprised",
             fallback_color=(247, 151, 77),
         )
+
+    def _draw_live_cycle(self, surface: pygame.Surface) -> None:
+        """Animate the water journey over the authored lake, sky and hill."""
+
+        time = getattr(self, "_time", 0.0)
+        vapor_count = int(round(self._model.vapor * 12))
+        for index in range(vapor_count):
+            x = 384 + (index % 4) * 27
+            y = 420 - (index // 4) * 38 - int((time * 18 + index * 7) % 18)
+            pygame.draw.arc(surface, (255, 255, 255), (x, y, 20, 28), 0.4, 2.7, 4)
+
+        cloud_center = (570, 225)
+        cloud_scale = 0.72 + self._model.cloud * 0.38
+        blobs = ((-54, 8, 33), (-18, -11, 39), (22, -5, 42), (58, 10, 30), (3, 18, 45))
+        for fill_pass in (False, True):
+            for dx, dy, radius in blobs:
+                rr = max(10, int(radius * cloud_scale))
+                center = (cloud_center[0] + dx, cloud_center[1] + dy)
+                if fill_pass:
+                    pygame.gfxdraw.filled_circle(surface, center[0], center[1], rr, (250, 252, 252))
+                else:
+                    pygame.gfxdraw.filled_circle(surface, center[0], center[1], rr + 3, (117, 133, 150))
+        pygame.draw.ellipse(surface, (226, 234, 240), (cloud_center[0] - 60, cloud_center[1] + 20, 120, 14))
+        # Tiny droplets inside the cloud are deliberately visible only as a
+        # teaching magnification, preventing the cloud from reading as vapor.
+        if self._model.cloud > 0.5:
+            for index in range(9):
+                x = 523 + (index % 3) * 28
+                y = 210 + (index // 3) * 17
+                pygame.draw.circle(surface, (74, 145, 216), (x, y), 3)
+
+        if self._model.rain_age > 0:
+            for index in range(16):
+                x = 512 + (index % 8) * 19
+                # Each drop stops where it meets the authored hill.
+                ground = 334 + int(abs(x - 600) * 1.26) - 12
+                span = max(20, ground - 265)
+                y = 265 + int((time * 115 + index * 27) % span)
+                pygame.draw.line(surface, (74, 145, 216), (x, y), (x - 5, y + 15), 4)
+
+        if self._model.ground_age > 0:
+            # Runoff follows the slope back to the lake while infiltration
+            # soaks down into the soil cut beneath the hill.
+            pygame.draw.lines(surface, (63, 127, 190), False, [(588, 352), (564, 390), (546, 424), (526, 448)], 7)
+            pygame.draw.polygon(surface, (63, 127, 190), [(518, 456), (520, 440), (534, 448)])
+            for x in (586, 616, 646):
+                pygame.draw.line(surface, (63, 127, 190), (x, 462), (x, 496), 4)
+                pygame.draw.polygon(surface, (63, 127, 190), [(x, 504), (x - 7, 492), (x + 7, 492)])
 
     def _draw_cycle(self, surface: pygame.Surface) -> None:
         sun = (395, 210)
@@ -283,34 +342,49 @@ class RainPage(EncyclopediaPage):
         pygame.draw.line(surface, (110, 157, 180), (492, 300), (533, 263), 3)
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (255, 249, 232), item.center, 37)
-            pygame.draw.circle(surface, (73, 71, 60), item.center, 37, 3)
-            cx, cy = item.center
-            if item.discovery_id == "evaporation":
-                pygame.draw.circle(surface, (246, 201, 68), (cx - 12, cy - 6), 12)
-                for off in (-9, 6, 21):
-                    pygame.draw.arc(surface, (91, 163, 190), (cx + off - 9, cy - 1, 18, 28), 0.4, 2.7, 3)
-            elif item.discovery_id == "condensation":
-                for ox, oy, rr in ((-14, 4, 14), (3, -7, 17), (18, 5, 13)):
-                    pygame.draw.circle(surface, (211, 225, 231), (cx + ox, cy + oy), rr)
-                pygame.draw.circle(surface, (87, 157, 194), (cx, cy + 13), 4)
-            elif item.discovery_id == "precipitation":
-                pygame.draw.ellipse(surface, (211, 225, 231), (cx - 24, cy - 17, 48, 25))
-                for off in (-14, 0, 14):
-                    pygame.draw.line(surface, (69, 143, 199), (cx + off, cy + 9), (cx + off - 4, cy + 24), 3)
-            else:
-                pygame.draw.line(surface, (112, 157, 84), (cx - 25, cy - 2), (cx + 25, cy - 2), 5)
-                pygame.draw.line(surface, (70, 142, 190), (cx - 17, cy + 3), (cx - 17, cy + 25), 4)
-                pygame.draw.line(surface, (70, 142, 190), (cx + 6, cy + 3), (cx + 25, cy + 18), 4)
-            focus_ring(surface, rect, index == self._selected or index == self._hovered)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=item.caption_key == self._caption_key,
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+                token_shape=TOKEN_SHAPE_FELT_TAG,
+            )
+
+    def _draw_icon(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        discovery_id: str,
+    ) -> None:
+        cx, cy = center[0], center[1] + 4  # sit below the felt tag's pin
+        center = (cx, cy)
+        if discovery_id == "evaporation":
+            pygame.draw.circle(surface, (246, 201, 68), (cx - 12, cy - 6), 12)
+            for off in (-9, 6, 21):
+                pygame.draw.arc(surface, (91, 163, 190), (cx + off - 9, cy - 1, 18, 28), 0.4, 2.7, 3)
+        elif discovery_id == "condensation":
+            for ox, oy, rr in ((-14, 4, 14), (3, -7, 17), (18, 5, 13)):
+                pygame.draw.circle(surface, (211, 225, 231), (cx + ox, cy + oy), rr)
+            pygame.draw.circle(surface, (87, 157, 194), (cx, cy + 13), 4)
+        elif discovery_id == "precipitation":
+            pygame.draw.ellipse(surface, (211, 225, 231), (cx - 24, cy - 17, 48, 25))
+            for off in (-14, 0, 14):
+                pygame.draw.line(surface, (69, 143, 199), (cx + off, cy + 9), (cx + off - 4, cy + 24), 3)
+        else:
+            pygame.draw.line(surface, (112, 157, 84), (cx - 25, cy - 2), (cx + 25, cy - 2), 5)
+            pygame.draw.line(surface, (70, 142, 190), (cx - 17, cy + 3), (cx - 17, cy + 25), 4)
+            pygame.draw.line(surface, (70, 142, 190), (cx + 6, cy + 3), (cx + 25, cy + 18), 4)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (255, 249, 232), panel, border_radius=22)
-        pygame.draw.rect(surface, (73, 71, 60), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (55, 55, 53))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (55, 55, 53))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )

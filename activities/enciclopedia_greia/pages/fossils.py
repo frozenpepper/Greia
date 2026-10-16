@@ -13,6 +13,8 @@ if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
         draw_focus_patch,
         draw_history_action_button,
         draw_navigation_arrows,
@@ -24,6 +26,8 @@ else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
         draw_focus_patch,
         draw_history_action_button,
         draw_navigation_arrows,
@@ -249,8 +253,17 @@ class FossilsPage(EncyclopediaPage):
         return row * _COLUMNS + col
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((237, 218, 177))
-        pygame.draw.rect(surface, (154, 112, 73), (0, 470, 1024, 130))
+        # Authored dig site: striped cliffs, staked pit and a fossil floor
+        # waiting under the live sediment cells.
+        authored = draw_authored_scene(
+            surface,
+            self.context.visuals,
+            "encyclopedia.history.fossils.dig_site",
+        )
+        if not authored:
+            # Contained procedural fallback when the runtime PNG is absent.
+            surface.fill((237, 218, 177))
+            pygame.draw.rect(surface, (154, 112, 73), (0, 470, 1024, 130))
         draw_centered_text(
             surface,
             self.context.typography,
@@ -260,7 +273,7 @@ class FossilsPage(EncyclopediaPage):
             color=self.context.palette.ink,
             role=FontRole.DISPLAY,
         )
-        self._draw_dig(surface)
+        self._draw_dig(surface, authored=authored)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -281,15 +294,17 @@ class FossilsPage(EncyclopediaPage):
             fallback_color=(205, 155, 83),
         )
 
-    def _draw_dig(self, surface: pygame.Surface) -> None:
-        # Dig pit with subtle inner shadow and sediment layers
-        pygame.draw.rect(surface, (206, 174, 124), _DIG_RECT, border_radius=20)
-        # Inner bevel
-        pygame.draw.rect(surface, (225, 190, 145), _DIG_RECT.inflate(-6, -6), border_radius=16, width=3)
-        # Sediment strata lines
-        for sy in (_DIG_RECT.y + 45, _DIG_RECT.y + 120, _DIG_RECT.y + 195):
-            pygame.draw.line(surface, (190, 158, 110), (_DIG_RECT.x + 12, sy), (_DIG_RECT.right - 12, sy + 2), 2)
-        self._draw_hidden_fossils(surface)
+    def _draw_dig(self, surface: pygame.Surface, *, authored: bool = False) -> None:
+        """Live sediment cells; the authored scene owns the pit and its fossils."""
+        if not authored:
+            # Dig pit with subtle inner shadow and sediment layers
+            pygame.draw.rect(surface, (206, 174, 124), _DIG_RECT, border_radius=20)
+            # Inner bevel
+            pygame.draw.rect(surface, (225, 190, 145), _DIG_RECT.inflate(-6, -6), border_radius=16, width=3)
+            # Sediment strata lines
+            for sy in (_DIG_RECT.y + 45, _DIG_RECT.y + 120, _DIG_RECT.y + 195):
+                pygame.draw.line(surface, (190, 158, 110), (_DIG_RECT.x + 12, sy), (_DIG_RECT.right - 12, sy + 2), 2)
+            self._draw_hidden_fossils(surface)
         for index in range(_COLUMNS * _ROWS):
             if self._model.is_cleared(index):
                 continue
@@ -311,7 +326,8 @@ class FossilsPage(EncyclopediaPage):
                 pygame.draw.circle(surface, (148, 113, 82), (px, py), r)
                 pygame.draw.circle(surface, (180, 145, 110), (px - 1, py - 1), max(1, r - 2))
 
-        pygame.draw.rect(surface, (92, 71, 55), _DIG_RECT, 4, border_radius=20)
+        if not authored:
+            pygame.draw.rect(surface, (92, 71, 55), _DIG_RECT, 4, border_radius=20)
 
         if self._model.burial_age > 0:
             for index in range(9):
@@ -371,11 +387,9 @@ class FossilsPage(EncyclopediaPage):
             focus_ring(surface, rect, index == self._selected or index == self._hovered)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (255, 247, 222), panel, border_radius=22)
-        pygame.draw.rect(surface, (88, 67, 52), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (58, 47, 40))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (58, 47, 40))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        # Shared adaptive ribbon: wraps long captions instead of overflowing.
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )

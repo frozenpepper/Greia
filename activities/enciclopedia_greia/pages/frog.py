@@ -7,30 +7,38 @@ import math
 
 import pygame
 
-from greia_platform.typography import FontRole
-
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
         draw_animal_action_button,
-        draw_focus_patch,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_presenter, grid_step
+    from .storybook_ink import inked_circle, inked_ellipse, inked_limb, inked_polygon
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
         draw_animal_action_button,
-        draw_focus_patch,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_presenter, grid_step
+    from pages.storybook_ink import inked_circle, inked_ellipse, inked_limb, inked_polygon
 
 
 @dataclass(frozen=True, slots=True)
@@ -201,20 +209,19 @@ class FrogPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((201, 231, 204))
-        pygame.draw.rect(surface, (91, 169, 183), (0, 425, 1024, 175))
-        pygame.draw.ellipse(surface, (128, 188, 102), (-80, 380, 650, 140))
-        for index in range(7):
-            x = 80 + index * 135
-            pygame.draw.ellipse(surface, (95, 158, 88), (x, 430 + (index % 2) * 24, 95, 28))
-        draw_centered_text(
+        if not draw_authored_scene(surface, self.context.visuals, "encyclopedia.animals.frog.pond"):
+            # Procedural fallback while the authored runtime rendition is absent.
+            surface.fill((201, 231, 204))
+            pygame.draw.rect(surface, (91, 169, 183), (0, 425, 1024, 175))
+            pygame.draw.ellipse(surface, (128, 188, 102), (-80, 380, 650, 140))
+            for index in range(7):
+                x = 80 + index * 135
+                pygame.draw.ellipse(surface, (95, 158, 88), (x, 430 + (index % 2) * 24, 95, 28))
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("frog.title"),
-            center=(500, 92),
-            size=40,
-            color=self.context.palette.ink,
-            role=FontRole.DISPLAY,
+            self.context.palette.ink,
         )
         self._draw_stage(surface)
         self._draw_skin_reveal(surface)
@@ -246,17 +253,23 @@ class FrogPage(EncyclopediaPage):
             self._draw_metamorphosis(surface, cx, cy)
             return
         if stage == 0:
+            # Frogspawn: clear jelly beads, each with a dark embryo.
             for index in range(7):
                 angle = index * math.pi * 2 / 7
                 x = cx + int(math.cos(angle) * 43)
                 y = cy + int(math.sin(angle) * 30)
-                pygame.draw.circle(surface, (235, 243, 220), (x, y), 15)
-                pygame.draw.circle(surface, (72, 92, 62), (x, y), 6)
+                inked_circle(surface, (226, 240, 230), (x, y), 15, ink=(81, 113, 74), outline=2)
+                pygame.draw.circle(surface, (52, 44, 53), (x, y), 6)
+                pygame.draw.circle(surface, (255, 255, 255), (x - 6, y - 6), 3)
         elif stage == 1:
             self._draw_tadpole(surface, (cx, cy), legs=0, tail_scale=1.0)
         elif stage == 2:
             self._draw_tadpole(surface, (cx, cy), legs=4, tail_scale=0.45)
         else:
+            # The adult rests on a lily pad rather than floating in mid-water.
+            pad = pygame.Rect(cx - 98, cy + 30, 196, 52)
+            inked_ellipse(surface, (95, 168, 96), pad, ink=(63, 110, 58))
+            pygame.draw.polygon(surface, (63, 110, 58), [(cx + 60, cy + 56), (cx + 98, cy + 48), (cx + 96, cy + 62)])
             self._draw_frog(surface, (cx, cy), scale=1.0)
 
         for index in range(_STAGE_COUNT):
@@ -283,50 +296,66 @@ class FrogPage(EncyclopediaPage):
         tail_scale: float,
     ) -> None:
         cx, cy = center
-        body = (91, 151, 82)
-        pygame.draw.ellipse(surface, body, (cx - 48, cy - 35, 96, 70))
+        body = (110, 132, 86)
         tail_length = int(105 * tail_scale)
-        pygame.draw.polygon(
+        inked_polygon(
             surface,
-            (82, 137, 76),
-            [(cx + 38, cy - 12), (cx + 45 + tail_length, cy), (cx + 38, cy + 12)],
+            (128, 150, 104),
+            [
+                (cx + 34, cy - 13),
+                (cx + 40 + tail_length // 2, cy - 15),
+                (cx + 45 + tail_length, cy - 3),
+                (cx + 45 + tail_length, cy + 3),
+                (cx + 40 + tail_length // 2, cy + 15),
+                (cx + 34, cy + 13),
+            ],
         )
-        pygame.draw.circle(surface, (37, 45, 34), (cx - 20, cy - 10), 5)
-        pygame.draw.circle(surface, (37, 45, 34), (cx + 2, cy - 10), 5)
         if legs >= 2:
-            pygame.draw.line(surface, body, (cx + 5, cy + 25), (cx - 22, cy + 63), 12)
-            pygame.draw.line(surface, body, (cx + 25, cy + 22), (cx + 48, cy + 58), 12)
+            inked_limb(surface, body, [(cx + 5, cy + 25), (cx - 22, cy + 63)], [12])
+            inked_limb(surface, body, [(cx + 25, cy + 22), (cx + 48, cy + 58)], [12])
         if legs >= 4:
-            pygame.draw.line(surface, body, (cx - 18, cy + 8), (cx - 48, cy + 30), 9)
-            pygame.draw.line(surface, body, (cx + 13, cy + 8), (cx + 48, cy + 28), 9)
+            inked_limb(surface, body, [(cx - 18, cy + 8), (cx - 48, cy + 30)], [9])
+            inked_limb(surface, body, [(cx + 13, cy + 8), (cx + 48, cy + 28)], [9])
+        inked_ellipse(surface, body, (cx - 48, cy - 35, 96, 70))
+        pygame.draw.ellipse(surface, (150, 170, 120), (cx - 34, cy - 26, 36, 16))
+        for ex in (-20, 2):
+            pygame.draw.circle(surface, (255, 251, 235), (cx + ex, cy - 10), 8)
+            pygame.draw.circle(surface, (52, 44, 53), (cx + ex + 1, cy - 9), 5)
+            pygame.draw.circle(surface, (255, 255, 255), (cx + ex - 1, cy - 12), 2)
 
     @staticmethod
     def _draw_frog(surface: pygame.Surface, center: tuple[int, int], *, scale: float) -> None:
         cx, cy = center
-        body = (93, 173, 86)
-        body_light = (118, 190, 110)
-        body_shadow = (68, 138, 62)
+        body = (89, 184, 106)
+        body_light = (143, 208, 154)
         body_w = int(110 * scale)
         body_h = int(70 * scale)
-        # Body with shadow and highlight
-        pygame.draw.ellipse(surface, (0, 0, 0, 22), (cx - body_w // 2 + 3, cy - body_h // 2 + 4, body_w, body_h))
-        pygame.draw.ellipse(surface, body, (cx - body_w // 2, cy - body_h // 2, body_w, body_h))
-        pygame.draw.ellipse(surface, body_light, (cx - body_w // 2 + 8, cy - body_h // 2 + 6, body_w - 16, body_h // 2))
-        pygame.draw.ellipse(surface, body_shadow, (cx - body_w // 2, cy + 4, body_w, body_h // 2))
-        eye_offset = int(34 * scale)
-        eye_radius = max(8, int(15 * scale))
+        # Folded back legs sit behind the body; front legs in front.
+        for side in (-1, 1):
+            inked_limb(
+                surface,
+                body,
+                [(cx + side * 35, cy + 14), (cx + side * 77, cy + 40), (cx + side * 52, cy + 56)],
+                [max(8, int(16 * scale)), max(7, int(12 * scale))],
+            )
+        inked_ellipse(surface, body, (cx - body_w // 2, cy - body_h // 2, body_w, body_h))
+        pygame.draw.ellipse(surface, (255, 251, 235), (cx - body_w // 3, cy - 2, body_w * 2 // 3, body_h // 2))
+        pygame.draw.ellipse(surface, body_light, (cx - body_w // 2 + 14, cy - body_h // 2 + 8, body_w // 3, body_h // 5))
+        eye_offset = int(30 * scale)
+        eye_radius = max(8, int(16 * scale))
         for ex in (-eye_offset, eye_offset):
-            pygame.draw.circle(surface, body_shadow, (cx + ex, cy - body_h // 2 + 2), eye_radius)
-            pygame.draw.circle(surface, body, (cx + ex, cy - body_h // 2), eye_radius)
-            pygame.draw.circle(surface, (247, 247, 229), (cx + ex, cy - body_h // 2), max(5, int(8 * scale)))
-            pygame.draw.circle(surface, (255, 255, 255, 90), (cx + ex - 2, cy - body_h // 2 - 2), max(2, int(3 * scale)))
-            pygame.draw.circle(surface, (38, 48, 36), (cx + ex, cy - body_h // 2), max(2, int(4 * scale)))
-            pygame.draw.circle(surface, (255, 255, 255, 40), (cx + ex - 1, cy - body_h // 2 - 1), 1)
-        # Legs with highlight
-        for lx, ly, rx, ry in ((-35, 18, -77, 55), (35, 18, 77, 55), (-28, 5, -62, 18), (28, 5, 62, 18)):
-            pygame.draw.line(surface, body_shadow, (cx + lx, cy + ly + 1), (cx + rx, cy + ry + 1), max(8, int(13 * scale)))
-            pygame.draw.line(surface, body, (cx + lx, cy + ly), (cx + rx, cy + ry), max(7, int(12 * scale)))
-            pygame.draw.line(surface, body_light, (cx + lx, cy + ly), (cx + (lx + rx) // 2, cy + (ly + ry) // 2), max(3, int(6 * scale)))
+            ey = cy - body_h // 2 + 2
+            inked_circle(surface, body, (cx + ex, ey), eye_radius)
+            pygame.draw.circle(surface, (255, 251, 235), (cx + ex, ey), max(5, int(10 * scale)))
+            pygame.draw.circle(surface, (52, 44, 53), (cx + ex, ey + 1), max(3, int(6 * scale)))
+            pygame.draw.circle(surface, (255, 255, 255), (cx + ex - 2, ey - 2), max(1, int(2.5 * scale)))
+        pygame.draw.arc(surface, (75, 55, 47), (cx - 22, cy - 10, 44, 20), math.pi + 0.5, 2 * math.pi - 0.5, 3)
+        for side in (-1, 1):
+            inked_limb(surface, body, [(cx + side * 26, cy + 18), (cx + side * 38, cy + 44)], [max(7, int(10 * scale))])
+            pygame.draw.ellipse(surface, (75, 55, 47), (cx + side * 38 - 9, cy + 42, 18, 9))
+            pygame.draw.ellipse(surface, body, (cx + side * 38 - 7, cy + 43, 14, 6))
+        pygame.draw.circle(surface, (253, 164, 175), (cx - 30, cy + 2), 6)
+        pygame.draw.circle(surface, (253, 164, 175), (cx + 30, cy + 2), 6)
 
     def _draw_skin_reveal(self, surface: pygame.Surface) -> None:
         if self._model.skin_age <= 0:
@@ -361,34 +390,49 @@ class FrogPage(EncyclopediaPage):
                 pygame.draw.circle(surface, (224, 235, 212), (548 + index * 12, 230 + (index % 2) * 7), 8)
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (247, 250, 229), item.center, 37)
-            pygame.draw.circle(surface, (66, 75, 56), item.center, 37, 3)
-            cx, cy = item.center
-            if item.discovery_id == "cycle":
-                for offset, radius in ((-20, 7), (0, 10), (21, 13)):
-                    pygame.draw.circle(surface, (91, 169, 83), (cx + offset, cy), radius)
-                pygame.draw.line(surface, (75, 112, 68), (cx - 13, cy), (cx - 5, cy), 4)
-                pygame.draw.line(surface, (75, 112, 68), (cx + 10, cy), (cx + 14, cy), 4)
-            elif item.discovery_id == "metamorphosis":
-                pygame.draw.ellipse(surface, (91, 151, 82), (cx - 25, cy - 13, 42, 26))
-                pygame.draw.line(surface, (91, 151, 82), (cx + 14, cy), (cx + 29, cy + 18), 7)
-                pygame.draw.line(surface, (91, 151, 82), (cx - 4, cy + 11), (cx - 20, cy + 28), 6)
-            elif item.discovery_id == "skin":
-                pygame.draw.circle(surface, (93, 173, 86), (cx, cy + 4), 20)
-                for dx, dy in ((-18, -18), (4, -24), (20, -10)):
-                    pygame.draw.circle(surface, (125, 197, 221), (cx + dx, cy + dy), 5)
-            else:
-                pygame.draw.ellipse(surface, (91, 169, 183), (cx - 29, cy + 4, 26, 14))
-                pygame.draw.polygon(surface, (123, 181, 95), [(cx + 2, cy + 15), (cx + 14, cy - 15), (cx + 28, cy + 15)])
-            focus_ring(surface, rect, index == self._selected or index == self._hovered)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=item.caption_key == self._caption_key,
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+                token_shape=TOKEN_SHAPE_FELT_TAG,
+            )
+
+    def _draw_icon(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        discovery_id: str,
+    ) -> None:
+        cx, cy = center[0], center[1] + 4  # sit below the felt tag's pin
+        center = (cx, cy)
+        if discovery_id == "cycle":
+            for offset, radius in ((-20, 7), (0, 10), (21, 13)):
+                pygame.draw.circle(surface, (91, 169, 83), (cx + offset, cy), radius)
+            pygame.draw.line(surface, (75, 112, 68), (cx - 13, cy), (cx - 5, cy), 4)
+            pygame.draw.line(surface, (75, 112, 68), (cx + 10, cy), (cx + 14, cy), 4)
+        elif discovery_id == "metamorphosis":
+            pygame.draw.ellipse(surface, (91, 151, 82), (cx - 25, cy - 13, 42, 26))
+            pygame.draw.line(surface, (91, 151, 82), (cx + 14, cy), (cx + 29, cy + 18), 7)
+            pygame.draw.line(surface, (91, 151, 82), (cx - 4, cy + 11), (cx - 20, cy + 28), 6)
+        elif discovery_id == "skin":
+            pygame.draw.circle(surface, (93, 173, 86), (cx, cy + 4), 20)
+            for dx, dy in ((-18, -18), (4, -24), (20, -10)):
+                pygame.draw.circle(surface, (125, 197, 221), (cx + dx, cy + dy), 5)
+        else:
+            pygame.draw.ellipse(surface, (91, 169, 183), (cx - 29, cy + 4, 26, 14))
+            pygame.draw.polygon(surface, (123, 181, 95), [(cx + 2, cy + 15), (cx + 14, cy - 15), (cx + 28, cy + 15)])
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (247, 250, 229), panel, border_radius=22)
-        pygame.draw.rect(surface, (66, 75, 56), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (51, 57, 47))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (51, 57, 47))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )

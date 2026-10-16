@@ -6,31 +6,40 @@ from dataclasses import dataclass
 import math
 
 import pygame
-
-from greia_platform.typography import FontRole
+import pygame.gfxdraw
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_presenter, grid_step
+    from .storybook_ink import inked_circle
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_presenter, grid_step
+    from pages.storybook_ink import inked_circle
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,6 +65,34 @@ _COLORS = (
     (72, 136, 204),
     (133, 103, 187),
 )
+
+
+def _draw_band(
+    surface: pygame.Surface,
+    color: tuple[int, int, int],
+    center: tuple[int, int],
+    radius_x: int,
+    radius_y: int,
+    thickness: int,
+) -> None:
+    """Fill one upper-half rainbow band as a single anti-aliased polygon."""
+
+    cx, cy = center
+    steps = 36
+    outer = [
+        (cx + math.cos(math.pi * i / steps) * radius_x, cy - math.sin(math.pi * i / steps) * radius_y)
+        for i in range(steps + 1)
+    ]
+    inner = [
+        (
+            cx + math.cos(math.pi * i / steps) * (radius_x - thickness),
+            cy - math.sin(math.pi * i / steps) * (radius_y - thickness),
+        )
+        for i in range(steps, -1, -1)
+    ]
+    points = [(int(round(x)), int(round(y))) for x, y in outer + inner]
+    pygame.draw.polygon(surface, color, points)
+    pygame.gfxdraw.aapolygon(surface, points, color)
 
 
 class RainbowPage(EncyclopediaPage):
@@ -178,17 +215,17 @@ class RainbowPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((176, 221, 240))
-        draw_centered_text(
+        authored = draw_authored_scene(surface, self.context.visuals, "encyclopedia.earth.rainbow.shower")
+        if not authored:
+            # Procedural fallback while the authored runtime rendition is absent.
+            surface.fill((176, 221, 240))
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("rainbow.title"),
-            center=(500, 92),
-            size=40,
-            color=(58, 63, 68),
-            role=FontRole.DISPLAY,
+            self.context.palette.ink,
         )
-        self._draw_rainbow_scene(surface)
+        self._draw_rainbow_scene(surface, authored=authored)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -209,21 +246,22 @@ class RainbowPage(EncyclopediaPage):
             fallback_color=(247, 151, 77),
         )
 
-    def _draw_rainbow_scene(self, surface: pygame.Surface) -> None:
-        pygame.draw.rect(surface, (104, 173, 91), (0, 405, 1024, 195))
-        viewer = (505, 390)
-        pygame.draw.circle(surface, (238, 198, 151), (viewer[0], viewer[1] - 33), 12)
-        pygame.draw.line(surface, (74, 70, 68), (viewer[0], viewer[1] - 20), (viewer[0], viewer[1] + 16), 5)
-        pygame.draw.line(surface, (74, 70, 68), (viewer[0], viewer[1] - 4), (viewer[0] - 15, viewer[1] + 6), 4)
-        pygame.draw.line(surface, (74, 70, 68), (viewer[0], viewer[1] - 4), (viewer[0] + 15, viewer[1] + 6), 4)
-        for index in range(18):
-            x = 420 + (index * 37) % 180
-            y = 188 + (index * 53) % 115
-            pygame.draw.line(surface, (78, 151, 201), (x, y), (x - 4, y + 13), 3)
+    def _draw_rainbow_scene(self, surface: pygame.Surface, *, authored: bool) -> None:
+        if not authored:
+            # Fallback meadow, observer and shower (baked in the authored scene).
+            pygame.draw.rect(surface, (104, 173, 91), (0, 405, 1024, 195))
+            viewer = (505, 390)
+            pygame.draw.circle(surface, (238, 198, 151), (viewer[0], viewer[1] - 33), 12)
+            pygame.draw.line(surface, (74, 70, 68), (viewer[0], viewer[1] - 20), (viewer[0], viewer[1] + 16), 5)
+            for index in range(18):
+                x = 420 + (index * 37) % 180
+                y = 188 + (index * 53) % 115
+                pygame.draw.line(surface, (78, 151, 201), (x, y), (x - 4, y + 13), 3)
 
         sun_positions = ((370, 310), (650, 260), (505, 475))
         sun = sun_positions[self._alignment_step]
-        pygame.draw.circle(surface, (251, 210, 66), sun, 27)
+        inked_circle(surface, (255, 210, 94), sun, 27)
+        pygame.draw.ellipse(surface, (255, 243, 196), (sun[0] - 15, sun[1] - 16, 14, 9))
         for index in range(8):
             angle = index * math.tau / 8
             pygame.draw.line(
@@ -242,13 +280,8 @@ class RainbowPage(EncyclopediaPage):
             # Rainbow with soft outer glow and inner highlight
             for index, color in enumerate(_COLORS):
                 inset = index * 7
-                # Outer glow
-                glow = pygame.Surface((310, 245), pygame.SRCALPHA)
-                pygame.draw.arc(glow, (color[0], color[1], color[2], 28), (inset, inset, 310 - inset * 2, 245 - inset * 2), 0, math.pi, 10)
-                surface.blit(glow, (350, 190))
-                pygame.draw.arc(surface, color, (350 + inset, 190 + inset, 310 - inset * 2, 245 - inset * 2), 0, math.pi, 6)
-                # Inner highlight
-                pygame.draw.arc(surface, (255, 255, 255, 38), (350 + inset + 2, 190 + inset + 2, 310 - inset * 2 - 4, 245 - inset * 2 - 4), 0.15, 2.95, 2)
+                # Solid polygon bands avoid the moire gaps of thick arcs.
+                _draw_band(surface, color, (505, 312), 155 - inset, 122 - inset, 8)
 
         if self._droplet_age > 0:
             center = (505, 285)
@@ -269,11 +302,25 @@ class RainbowPage(EncyclopediaPage):
 
         if self._circle_age > 0:
             main_center = (505, 292)
-            for index, color in enumerate(_COLORS):
-                radius = 105 - index * 8
-                pygame.draw.circle(surface, color, main_center, radius, 5)
-            # Ground masks the lower half in the ordinary ground-level view.
-            pygame.draw.rect(surface, (104, 173, 91), (355, 292, 300, 135))
+            if authored:
+                # From the ground only the top half shows; the hidden lower
+                # half is hinted with faint dots instead of masking the child.
+                for index, color in enumerate(_COLORS):
+                    radius = 105 - index * 8
+                    _draw_band(surface, color, main_center, radius, radius, 7)
+                    for step in range(1, 12):
+                        angle = math.pi + step * math.pi / 12
+                        dot = (
+                            main_center[0] + int(math.cos(angle) * radius),
+                            main_center[1] - int(math.sin(angle) * radius),
+                        )
+                        pygame.draw.circle(surface, color, dot, 2)
+            else:
+                for index, color in enumerate(_COLORS):
+                    radius = 105 - index * 8
+                    pygame.draw.circle(surface, color, main_center, radius, 5)
+                # Ground masks the lower half in the ordinary ground-level view.
+                pygame.draw.rect(surface, (104, 173, 91), (355, 292, 300, 135))
             pygame.draw.line(surface, (75, 110, 78), (355, 292), (655, 292), 3)
             # A separate elevated-view inset explicitly shows the full circle.
             inset_center = (682, 330)
@@ -285,39 +332,54 @@ class RainbowPage(EncyclopediaPage):
             pygame.draw.line(surface, (90, 119, 153), (653, 371), (711, 289), 2)
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (255, 249, 232), item.center, 37)
-            pygame.draw.circle(surface, (72, 66, 59), item.center, 37, 3)
-            cx, cy = item.center
-            if item.discovery_id == "position":
-                pygame.draw.circle(surface, (248, 204, 65), (cx - 17, cy + 9), 9)
-                pygame.draw.circle(surface, (235, 198, 151), (cx + 1, cy + 8), 6)
-                for off in (-8, 7, 22):
-                    pygame.draw.line(surface, (81, 151, 199), (cx + 12 + off, cy - 18), (cx + 8 + off, cy - 5), 3)
-            elif item.discovery_id == "droplet":
-                pygame.draw.circle(surface, (211, 237, 246), (cx, cy), 22)
-                pygame.draw.line(surface, (245, 221, 112), (cx - 27, cy - 9), (cx + 19, cy + 13), 4)
-            elif item.discovery_id == "colors":
-                for off, color in enumerate(_COLORS):
-                    pygame.draw.line(surface, color, (cx - 25, cy - 15 + off * 6), (cx + 24, cy - 15 + off * 6), 4)
-            else:
-                for off, color in enumerate(_COLORS):
-                    pygame.draw.arc(
-                        surface,
-                        color,
-                        (cx - 26 + off * 2, cy - 24 + off * 2, 52 - off * 4, 48 - off * 4),
-                        0,
-                        math.tau,
-                        3,
-                    )
-            focus_ring(surface, rect, index == self._selected or index == self._hovered)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=item.caption_key == self._caption_key,
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+                token_shape=TOKEN_SHAPE_FELT_TAG,
+            )
+
+    def _draw_icon(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        discovery_id: str,
+    ) -> None:
+        cx, cy = center[0], center[1] + 4  # sit below the felt tag's pin
+        center = (cx, cy)
+        if discovery_id == "position":
+            pygame.draw.circle(surface, (248, 204, 65), (cx - 17, cy + 9), 9)
+            pygame.draw.circle(surface, (235, 198, 151), (cx + 1, cy + 8), 6)
+            for off in (-8, 7, 22):
+                pygame.draw.line(surface, (81, 151, 199), (cx + 12 + off, cy - 18), (cx + 8 + off, cy - 5), 3)
+        elif discovery_id == "droplet":
+            pygame.draw.circle(surface, (211, 237, 246), (cx, cy), 22)
+            pygame.draw.line(surface, (245, 221, 112), (cx - 27, cy - 9), (cx + 19, cy + 13), 4)
+        elif discovery_id == "colors":
+            for off, color in enumerate(_COLORS):
+                pygame.draw.line(surface, color, (cx - 25, cy - 15 + off * 6), (cx + 24, cy - 15 + off * 6), 4)
+        else:
+            for off, color in enumerate(_COLORS):
+                pygame.draw.arc(
+                    surface,
+                    color,
+                    (cx - 26 + off * 2, cy - 24 + off * 2, 52 - off * 4, 48 - off * 4),
+                    0,
+                    math.tau,
+                    3,
+                )
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (255, 249, 232), panel, border_radius=22)
-        pygame.draw.rect(surface, (72, 66, 59), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (54, 53, 53))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (54, 53, 53))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )

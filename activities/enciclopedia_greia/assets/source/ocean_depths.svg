@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<!-- E4-A Ocean: a full-width cut through the sea. The three teaching depth
+     zones share the page's band edges: sunlit 150-252, twilight 252-348,
+     midnight 348-600 (dashed edges). A live submarine marks the chosen zone. -->
+<defs>
+  <!-- sky light -> pale -->
+  <linearGradient id="ocean_sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B5E0F1"/><stop offset="1" stop-color="#E8F5F3"/></linearGradient>
+  <!-- turquoise light -> ocean (sunlit zone) -->
+  <linearGradient id="ocean_sunlit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FCBDD"/><stop offset="1" stop-color="#4A9FCF"/></linearGradient>
+  <!-- ocean -> ocean/navy (twilight zone) -->
+  <linearGradient id="ocean_twilight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3F86BD"/><stop offset="1" stop-color="#2F5F92"/></linearGradient>
+  <!-- navy -> deep navy (midnight zone) -->
+  <linearGradient id="ocean_midnight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#284F7C"/><stop offset="1" stop-color="#1C2F4D"/></linearGradient>
+  <linearGradient id="ocean_ray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF6CF" stop-opacity="0.5"/><stop offset="1" stop-color="#FFF6CF" stop-opacity="0"/></linearGradient>
+</defs>
+<rect width="1024" height="152" fill="url(#ocean_sky)"/>
+<g id="clouds" fill="#FFFFFF" opacity="0.9"><ellipse cx="300" cy="96" rx="44" ry="12"/><ellipse cx="320" cy="88" rx="24" ry="12"/><ellipse cx="770" cy="110" rx="36" ry="10"/></g>
+<g id="sailboat" stroke="#4B372F" stroke-width="3" stroke-linejoin="round">
+  <path d="M800 140 H860 L850 152 H810Z" fill="#F46F61"/><path d="M828 138 V92" stroke-width="3"/><path d="M831 96 L856 134 H831Z" fill="#FFFBEB"/>
+</g>
+<rect id="sunlit" y="150" width="1024" height="102" fill="url(#ocean_sunlit)"/>
+<rect id="twilight" y="252" width="1024" height="96" fill="url(#ocean_twilight)"/>
+<rect id="midnight" y="348" width="1024" height="252" fill="url(#ocean_midnight)"/>
+<path id="surface" d="M0 150 Q32 144 64 150 T128 150 T192 150 T256 150 T320 150 T384 150 T448 150 T512 150 T576 150 T640 150 T704 150 T768 150 T832 150 T896 150 T960 150 T1024 150" fill="none" stroke="#E6F6FA" stroke-width="4"/>
+<g id="light_rays" fill="url(#ocean_ray)"><path d="M400 152 L440 152 L470 300 L410 300Z"/><path d="M520 152 L548 152 L586 286 L540 286Z"/><path d="M640 152 L660 152 L700 260 L666 260Z"/></g>
+<g id="zone_edges" fill="none" stroke="#D7ECF5" stroke-width="2.5" stroke-dasharray="12 10" opacity="0.55"><path d="M0 252 H1024"/><path d="M0 348 H1024"/></g>
+<g id="sunlit_life" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round">
+  <g fill="#F39A38"><path d="M430 212 q10 -9 22 0 q-12 9 -22 0Z M430 212 l-9 -6 v12Z"/><path d="M506 231 q9 -8 18 0 q-9 8 -18 0Z M506 231 l-8 -5 v10Z"/><path d="M556 192 q11 -9 22 0 q-11 9 -22 0Z M556 192 l-9 -6 v12Z"/></g>
+  <g fill="#FFFFFF" stroke="none"><circle cx="447" cy="210" r="1.8"/><circle cx="520" cy="229" r="1.6"/><circle cx="573" cy="190" r="1.8"/></g>
+  <g id="turtle"><ellipse cx="120" cy="206" rx="34" ry="21" fill="#7DAE6A"/><path d="M98 200 Q120 186 142 200" fill="none" stroke="#4E7A44"/><ellipse cx="160" cy="204" rx="11" ry="9" fill="#9FCB86"/><path d="M100 188 l-14 -12 l16 4Z M104 222 l-16 10 l18 -2Z M140 222 l10 12 l-14 -4Z" fill="#9FCB86"/><circle cx="164" cy="201" r="1.8" fill="#342C35" stroke="none"/></g>
+</g>
+<g id="twilight_life" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round">
+  <path d="M462 300 q22 -14 44 0 q-22 14 -44 0Z M462 300 l-14 -9 v18Z" fill="#9DBCD4"/>
+  <g id="jellyfish"><path d="M860 284 Q860 258 884 258 Q908 258 908 284Z" fill="#E8A6D8"/><path d="M866 284 q-4 14 2 26 M878 284 q-4 16 2 30 M890 284 q-4 14 2 26 M902 284 q-4 12 2 22" fill="none" stroke="#C77FB7" stroke-width="3"/></g>
+  <path d="M200 312 q30 -20 76 -6 q20 6 36 -2 l-6 10 l8 10 q-16 -8 -38 0 q-46 14 -76 -12Z" fill="#5C83A6"/>
+</g>
+<g id="midnight_life" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round">
+  <g id="anglerfish"><path d="M524 404 Q530 382 556 382 Q584 384 590 404 Q584 424 556 426 Q530 424 524 404Z" fill="#6E6F98"/><path d="M590 404 l14 -10 v20Z" fill="#6E6F98"/><path d="M530 396 Q520 372 506 368" fill="none" stroke="#9E9FC4" stroke-width="2.5"/><circle cx="504" cy="367" r="5" fill="#6DE3D5" stroke="none"/><path d="M526 410 l6 -4 l4 5 l4 -5 l4 4" fill="none" stroke="#FFFBEB" stroke-width="2"/><circle cx="542" cy="396" r="3" fill="#E8F7F4" stroke="none"/></g>
+  <g fill="#6DE3D5" stroke="none" opacity="0.9"><circle cx="447" cy="383" r="4"/><circle cx="488" cy="424" r="4"/><circle cx="592" cy="370" r="4"/><circle cx="160" cy="400" r="3"/><circle cx="880" cy="380" r="3"/><circle cx="930" cy="430" r="3"/><circle cx="90" cy="470" r="3"/></g>
+</g>
+<path id="seafloor" d="M0 548 Q120 528 260 540 Q400 552 512 538 Q650 524 800 540 Q920 552 1024 536 V600 H0Z" fill="#3B3E57"/>
+<g id="seafloor_rocks" fill="#4D5170" stroke="#262838" stroke-width="2.5"><ellipse cx="120" cy="552" rx="26" ry="10"/><ellipse cx="880" cy="548" rx="30" ry="11"/></g>
+<g id="token_beds" fill="#0F2238" opacity="0.18">
+  <ellipse data-target="water" data-center="250,190" cx="250" cy="237" rx="40" ry="6"/>
+  <ellipse data-target="salt" data-center="755,190" cx="755" cy="237" rx="40" ry="6"/>
+  <ellipse data-target="light" data-center="250,420" cx="250" cy="467" rx="40" ry="6"/>
+  <ellipse data-target="deep" data-center="755,420" cx="755" cy="467" rx="40" ry="6"/>
+</g>
+</svg>

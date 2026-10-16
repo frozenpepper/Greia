@@ -7,28 +7,34 @@ import math
 
 import pygame
 
-from greia_platform.typography import FontRole
-
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
-        draw_focus_patch,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         announce_focus_name,
-        draw_focus_patch,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_presenter, grid_step
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,6 +51,9 @@ DISCOVERIES = (
     TeethDiscovery("layers", "teeth.layers", "encyclopedia.body.teeth.layers", (250, 420)),
     TeethDiscovery("care", "teeth.care", "encyclopedia.body.teeth.care", (755, 420)),
 )
+
+# E4 authored scene; a missing rendition fails soft to the procedural fallback.
+SCENE_ID = "encyclopedia.body.teeth.dental_room"
 
 
 class TeethPage(EncyclopediaPage):
@@ -148,17 +157,16 @@ class TeethPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((248, 236, 232))
-        draw_centered_text(
+        authored = draw_authored_scene(surface, self.context.visuals, SCENE_ID)
+        if not authored:
+            surface.fill((248, 236, 232))
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("teeth.title"),
-            center=(500, 92),
-            size=40,
-            color=self.context.palette.ink,
-            role=FontRole.DISPLAY,
+            self.context.palette.ink,
         )
-        self._draw_mouth(surface)
+        self._draw_mouth(surface, authored=authored)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -176,15 +184,16 @@ class TeethPage(EncyclopediaPage):
             fallback_color=(229, 137, 183),
         )
 
-    def _draw_mouth(self, surface: pygame.Surface) -> None:
-        mouth = pygame.Rect(390, 238, 230, 185)
-        # Lips with highlight and shadow
-        pygame.draw.ellipse(surface, (92, 50, 58), mouth.move(2, 3))
-        pygame.draw.ellipse(surface, (172, 75, 91), mouth)
-        pygame.draw.ellipse(surface, (200, 95, 115), (mouth.x + 8, mouth.y + 8, mouth.width - 16, mouth.height - 24))
-        pygame.draw.ellipse(surface, (92, 50, 58), mouth, 4)
-        pygame.draw.ellipse(surface, (230, 127, 142), (413, 310, 184, 82))
-        pygame.draw.ellipse(surface, (245, 160, 175), (420, 316, 170, 68))
+    def _draw_mouth(self, surface: pygame.Surface, *, authored: bool) -> None:
+        if not authored:
+            mouth = pygame.Rect(390, 238, 230, 185)
+            # Lips with highlight and shadow
+            pygame.draw.ellipse(surface, (92, 50, 58), mouth.move(2, 3))
+            pygame.draw.ellipse(surface, (172, 75, 91), mouth)
+            pygame.draw.ellipse(surface, (200, 95, 115), (mouth.x + 8, mouth.y + 8, mouth.width - 16, mouth.height - 24))
+            pygame.draw.ellipse(surface, (92, 50, 58), mouth, 4)
+            pygame.draw.ellipse(surface, (230, 127, 142), (413, 310, 184, 82))
+            pygame.draw.ellipse(surface, (245, 160, 175), (420, 316, 170, 68))
         # A complete primary set has 20 teeth; the permanent comparison has 32.
         # The rows are schematic and evenly spaced for readability, not a dental chart.
         per_row = 16 if self._show_permanent else 10
@@ -192,6 +201,13 @@ class TeethPage(EncyclopediaPage):
         width = 184
         start_x = 413
         gap = width / max(1, per_row - 1)
+        if authored and not self._show_permanent:
+            # The authored dental model already shows the 20 primary teeth.
+            per_row = 0
+        elif authored:
+            # Cover the baked primary rows with gum before the larger set.
+            for row_y in (270, 352):
+                pygame.draw.rect(surface, (235, 169, 191), (406, row_y - 14, 198, 28), border_radius=12)
         for row_y in (270, 352):
             for index in range(per_row):
                 x = int(start_x + index * gap)
@@ -250,35 +266,49 @@ class TeethPage(EncyclopediaPage):
     @staticmethod
     def _draw_hotspot_icon(surface: pygame.Surface, item: TeethDiscovery) -> None:
         cx, cy = item.center
+        # Enamel-white icons get a warm outline so they read on the cream tag.
+        enamel = (255, 252, 240)
+        edge = (148, 130, 110)
         if item.discovery_id == "jobs":
-            pygame.draw.rect(surface, (250, 246, 224), (cx - 26, cy - 20, 18, 40), border_radius=6)
-            pygame.draw.polygon(surface, (250, 246, 224), [(cx - 2, cy - 20), (cx + 16, cy - 20), (cx + 7, cy + 20)])
-            pygame.draw.rect(surface, (250, 246, 224), (cx + 19, cy - 20, 20, 40), border_radius=8)
+            incisor = pygame.Rect(cx - 26, cy - 20, 18, 40)
+            canine = [(cx - 2, cy - 20), (cx + 16, cy - 20), (cx + 7, cy + 20)]
+            molar = pygame.Rect(cx + 19, cy - 20, 20, 40)
+            pygame.draw.rect(surface, enamel, incisor, border_radius=6)
+            pygame.draw.rect(surface, edge, incisor, 2, border_radius=6)
+            pygame.draw.polygon(surface, enamel, canine)
+            pygame.draw.polygon(surface, edge, canine, 2)
+            pygame.draw.rect(surface, enamel, molar, border_radius=8)
+            pygame.draw.rect(surface, edge, molar, 2, border_radius=8)
         elif item.discovery_id == "sets":
             for x in (cx - 18, cx - 6, cx + 6, cx + 18):
-                pygame.draw.circle(surface, (250, 246, 224), (x, cy - 8), 7)
-                pygame.draw.circle(surface, (250, 246, 224), (x, cy + 10), 7)
+                for y in (cy - 8, cy + 10):
+                    pygame.draw.circle(surface, enamel, (x, y), 7)
+                    pygame.draw.circle(surface, edge, (x, y), 7, 2)
         elif item.discovery_id == "layers":
-            pygame.draw.polygon(surface, (250, 246, 224), [(cx - 20, cy - 22), (cx + 20, cy - 22), (cx + 8, cy + 26), (cx, cy + 13), (cx - 8, cy + 26)])
+            outline = [(cx - 20, cy - 22), (cx + 20, cy - 22), (cx + 8, cy + 26), (cx, cy + 13), (cx - 8, cy + 26)]
+            pygame.draw.polygon(surface, enamel, outline)
+            pygame.draw.polygon(surface, edge, outline, 2)
             pygame.draw.circle(surface, (211, 113, 122), (cx, cy), 8)
         else:
             pygame.draw.line(surface, (78, 147, 194), (cx - 24, cy - 10), (cx + 25, cy + 15), 8)
             pygame.draw.rect(surface, (245, 244, 231), (cx - 28, cy - 17, 24, 12), border_radius=3)
+            pygame.draw.rect(surface, edge, (cx - 28, cy - 17, 24, 12), 2, border_radius=3)
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (254, 249, 237), item.center, 37)
-            pygame.draw.circle(surface, (94, 70, 72), item.center, 37, 3)
-            self._draw_hotspot_icon(surface, item)
-            if index == self._selected or index == self._hovered:
-                draw_focus_patch(surface, rect, active=True, radius=16, time=self._time)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=self._caption_key == item.caption_key,
+                icon=lambda target, _center, item=item: self._draw_hotspot_icon(target, item),
+                token_shape=TOKEN_SHAPE_FELT_TAG,
+            )
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (254, 249, 237), panel, border_radius=22)
-        pygame.draw.rect(surface, (94, 70, 72), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (60, 50, 51))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (60, 50, 51))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )

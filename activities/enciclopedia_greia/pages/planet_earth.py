@@ -7,30 +7,36 @@ import math
 
 import pygame
 
-from greia_platform.typography import FontRole
-
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_TELESCOPE_CARD,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_TELESCOPE_CARD,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_presenter, grid_step
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +53,9 @@ DISCOVERIES = (
     EarthDiscovery("seasons", "planet_earth.seasons", "encyclopedia.space.earth.seasons", (250, 420)),
     EarthDiscovery("life", "planet_earth.life", "encyclopedia.space.earth.life", (755, 420)),
 )
+
+# E4 authored scene; a missing rendition fails soft to the procedural fallback.
+SCENE_ID = "encyclopedia.space.earth.observatory"
 
 
 class EarthPlanetPage(EncyclopediaPage):
@@ -169,21 +178,20 @@ class EarthPlanetPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((17, 28, 60))
-        for index in range(34):
-            x = (index * 79 + 37) % 1000
-            y = 78 + (index * 67) % 470
-            pygame.draw.circle(surface, (224, 231, 244), (x, y), 1)
-        draw_centered_text(
+        authored = draw_authored_scene(surface, self.context.visuals, SCENE_ID)
+        if not authored:
+            surface.fill((17, 28, 60))
+            for index in range(34):
+                x = (index * 79 + 37) % 1000
+                y = 78 + (index * 67) % 470
+                pygame.draw.circle(surface, (224, 231, 244), (x, y), 1)
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("planet_earth.title"),
-            center=(500, 92),
-            size=40,
-            color=(245, 241, 219),
-            role=FontRole.DISPLAY,
+            (245, 241, 219),
         )
-        self._draw_earth(surface)
+        self._draw_earth(surface, authored=authored)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -204,80 +212,83 @@ class EarthPlanetPage(EncyclopediaPage):
             fallback_color=(227, 174, 87),
         )
 
-    def _draw_earth(self, surface: pygame.Surface) -> None:
+    def _draw_earth(self, surface: pygame.Surface, *, authored: bool) -> None:
         center = (505, 326)
         radius = 108
         angle = self._time * (1.15 if self._rotation_age > 0 else 0.20)
 
-        # VisualLibrary owns package lookup, decode, scaling, and its bounded
-        # cache. Test/dummy visual providers may omit planet(); in that case
-        # use the existing procedural renderer rather than touching disk here.
-        diam = radius * 2 + 8
-        planet_loader = getattr(self.context.visuals, "planet", None)
-        sprite = planet_loader("earth", diam) if callable(planet_loader) else None
-        if sprite is not None:
-            # Soft atmospheric glow behind the sprite
-            glow_surf = pygame.Surface((diam + 18, diam + 18), pygame.SRCALPHA)
-            pygame.draw.circle(glow_surf, (128, 203, 242, 55), (diam // 2 + 9, diam // 2 + 9), radius + 12, 7)
-            surface.blit(glow_surf, (center[0] - diam // 2 - 9, center[1] - diam // 2 - 9))
-            surface.blit(sprite, sprite.get_rect(center=center))
-            # Subtle terminator / highlight for depth when not in rotation demo
-            if self._rotation_age == 0:
-                highlight = pygame.Surface((diam, diam), pygame.SRCALPHA)
-                pygame.draw.ellipse(highlight, (255, 255, 255, 18), (radius // 2, 6, radius, radius - 12))
-                surface.blit(highlight, (center[0] - radius, center[1] - radius))
-            inner_shadow = pygame.Surface((diam, diam), pygame.SRCALPHA)
-            pygame.draw.circle(inner_shadow, (0, 0, 0, 0), (radius, radius), radius)
-            pygame.draw.circle(inner_shadow, (20, 40, 90, 22), (radius, radius), radius, 4)
-            surface.blit(inner_shadow, (center[0] - radius, center[1] - radius))
-        else:
-            # Fallback procedural — more continents, clouds, depth
-            pygame.draw.circle(surface, (128, 203, 242), center, radius + 7, 5)
-            pygame.draw.circle(surface, (63, 137, 210), center, radius)
-            # Volumetric highlight
-            hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
-            pygame.draw.ellipse(hl, (255, 255, 255, 26), (radius // 2, 10, radius, radius // 2))
-            surface.blit(hl, (center[0] - radius, center[1] - radius))
-            land_color = (96, 168, 92)
-            land_dark = (76, 142, 71)
-            land_light = (122, 192, 118)
-            # Eight continents with varied sizes, slowly rotating — more realistic distribution
-            for base_angle, spread, phase, jitter in (
-                (0.18, 0.52, 0.14, 0.0),
-                (0.95, 0.44, -0.18, 0.22),
-                (1.88, 0.58, 0.09, -0.15),
-                (2.75, 0.42, -0.10, 0.30),
-                (3.55, 0.48, 0.16, -0.18),
-                (4.42, 0.40, -0.06, 0.25),
-                (5.15, 0.46, 0.20, -0.28),
-                (5.95, 0.36, -0.09, 0.12),
-            ):
-                theta = base_angle + angle * (0.90 + phase * 0.12)
-                r = 50 + 10 * math.sin(theta * 1.6 + jitter)
-                x = center[0] + int(math.cos(theta) * r)
-                y = center[1] + int(math.sin(theta) * (r * 0.66))
-                w = int(38 * spread + 12 * math.cos(theta + jitter))
-                h = int(26 * spread + 10 * math.sin(theta + jitter))
-                # Base land with subtle variation
-                pygame.draw.ellipse(surface, land_color, (x - w // 2, y - h // 2, w, h))
-                # Lighter edge for relief
-                pygame.draw.ellipse(surface, land_light, (x - w // 3, y - h // 3 - 2, w // 2, h // 3))
-                # Darker core
-                pygame.draw.ellipse(surface, land_dark, (x - w // 4, y - h // 4 + 1, w // 3, h // 3))
-            # Cloud veil — layered, subtle, slowly drifting
-            cloud = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
-            for ca, cr, alpha in ((0.75, 0.56, 36), (2.55, 0.50, 30), (4.65, 0.53, 34), (1.60, 0.48, 26)):
-                ct = ca + angle * 0.28
-                cx = radius + int(math.cos(ct) * (42 + 6 * math.sin(ct)))
-                cy = radius + int(math.sin(ct) * (28 + 4 * math.cos(ct)))
-                w, h = 48 + int(8 * math.cos(ct)), 22 + int(6 * math.sin(ct))
-                pygame.draw.ellipse(cloud, (255, 255, 255, alpha), (cx - w // 2, cy - h // 2, w, h))
-                pygame.draw.ellipse(cloud, (255, 255, 255, alpha - 8), (cx - w // 3, cy - h // 3, w // 2, h // 2))
-            surface.blit(cloud, (center[0] - radius, center[1] - radius))
-            # Subtle ocean texture — faint wave lines
-            for wy in range(-radius + 18, radius - 12, 22):
-                y = center[1] + wy + int(2 * math.sin(angle + wy * 0.04))
-                pygame.draw.arc(surface, (71, 158, 221, 18), (center[0] - radius + 14, y, radius * 2 - 28, 14), 0.15, 3.0, 2)
+        # The authored observatory scene bakes the planet; only the fallback
+        # draws the sprite/procedural globe.
+        if not authored:
+            # VisualLibrary owns package lookup, decode, scaling, and its bounded
+            # cache. Test/dummy visual providers may omit planet(); in that case
+            # use the existing procedural renderer rather than touching disk here.
+            diam = radius * 2 + 8
+            planet_loader = getattr(self.context.visuals, "planet", None)
+            sprite = planet_loader("earth", diam) if callable(planet_loader) else None
+            if sprite is not None:
+                # Soft atmospheric glow behind the sprite
+                glow_surf = pygame.Surface((diam + 18, diam + 18), pygame.SRCALPHA)
+                pygame.draw.circle(glow_surf, (128, 203, 242, 55), (diam // 2 + 9, diam // 2 + 9), radius + 12, 7)
+                surface.blit(glow_surf, (center[0] - diam // 2 - 9, center[1] - diam // 2 - 9))
+                surface.blit(sprite, sprite.get_rect(center=center))
+                # Subtle terminator / highlight for depth when not in rotation demo
+                if self._rotation_age == 0:
+                    highlight = pygame.Surface((diam, diam), pygame.SRCALPHA)
+                    pygame.draw.ellipse(highlight, (255, 255, 255, 18), (radius // 2, 6, radius, radius - 12))
+                    surface.blit(highlight, (center[0] - radius, center[1] - radius))
+                inner_shadow = pygame.Surface((diam, diam), pygame.SRCALPHA)
+                pygame.draw.circle(inner_shadow, (0, 0, 0, 0), (radius, radius), radius)
+                pygame.draw.circle(inner_shadow, (20, 40, 90, 22), (radius, radius), radius, 4)
+                surface.blit(inner_shadow, (center[0] - radius, center[1] - radius))
+            else:
+                # Fallback procedural — more continents, clouds, depth
+                pygame.draw.circle(surface, (128, 203, 242), center, radius + 7, 5)
+                pygame.draw.circle(surface, (63, 137, 210), center, radius)
+                # Volumetric highlight
+                hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+                pygame.draw.ellipse(hl, (255, 255, 255, 26), (radius // 2, 10, radius, radius // 2))
+                surface.blit(hl, (center[0] - radius, center[1] - radius))
+                land_color = (96, 168, 92)
+                land_dark = (76, 142, 71)
+                land_light = (122, 192, 118)
+                # Eight continents with varied sizes, slowly rotating — more realistic distribution
+                for base_angle, spread, phase, jitter in (
+                    (0.18, 0.52, 0.14, 0.0),
+                    (0.95, 0.44, -0.18, 0.22),
+                    (1.88, 0.58, 0.09, -0.15),
+                    (2.75, 0.42, -0.10, 0.30),
+                    (3.55, 0.48, 0.16, -0.18),
+                    (4.42, 0.40, -0.06, 0.25),
+                    (5.15, 0.46, 0.20, -0.28),
+                    (5.95, 0.36, -0.09, 0.12),
+                ):
+                    theta = base_angle + angle * (0.90 + phase * 0.12)
+                    r = 50 + 10 * math.sin(theta * 1.6 + jitter)
+                    x = center[0] + int(math.cos(theta) * r)
+                    y = center[1] + int(math.sin(theta) * (r * 0.66))
+                    w = int(38 * spread + 12 * math.cos(theta + jitter))
+                    h = int(26 * spread + 10 * math.sin(theta + jitter))
+                    # Base land with subtle variation
+                    pygame.draw.ellipse(surface, land_color, (x - w // 2, y - h // 2, w, h))
+                    # Lighter edge for relief
+                    pygame.draw.ellipse(surface, land_light, (x - w // 3, y - h // 3 - 2, w // 2, h // 3))
+                    # Darker core
+                    pygame.draw.ellipse(surface, land_dark, (x - w // 4, y - h // 4 + 1, w // 3, h // 3))
+                # Cloud veil — layered, subtle, slowly drifting
+                cloud = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+                for ca, cr, alpha in ((0.75, 0.56, 36), (2.55, 0.50, 30), (4.65, 0.53, 34), (1.60, 0.48, 26)):
+                    ct = ca + angle * 0.28
+                    cx = radius + int(math.cos(ct) * (42 + 6 * math.sin(ct)))
+                    cy = radius + int(math.sin(ct) * (28 + 4 * math.cos(ct)))
+                    w, h = 48 + int(8 * math.cos(ct)), 22 + int(6 * math.sin(ct))
+                    pygame.draw.ellipse(cloud, (255, 255, 255, alpha), (cx - w // 2, cy - h // 2, w, h))
+                    pygame.draw.ellipse(cloud, (255, 255, 255, alpha - 8), (cx - w // 3, cy - h // 3, w // 2, h // 2))
+                surface.blit(cloud, (center[0] - radius, center[1] - radius))
+                # Subtle ocean texture — faint wave lines
+                for wy in range(-radius + 18, radius - 12, 22):
+                    y = center[1] + wy + int(2 * math.sin(angle + wy * 0.04))
+                    pygame.draw.arc(surface, (71, 158, 221, 18), (center[0] - radius + 14, y, radius * 2 - 28, 14), 0.15, 3.0, 2)
 
         if self._rotation_age > 0:
             # Fixed Sun at left; clipped shade on the opposite half makes the
@@ -326,31 +337,46 @@ class EarthPlanetPage(EncyclopediaPage):
                 pygame.draw.line(surface, (77, 124, 70), (x, y), (x + 8 * flip, y - 12), 2)
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (249, 245, 226), item.center, 37)
-            pygame.draw.circle(surface, (70, 60, 57), item.center, 37, 3)
-            cx, cy = item.center
-            if item.discovery_id == "rotation":
-                pygame.draw.circle(surface, (65, 139, 210), (cx, cy), 18)
-                pygame.draw.arc(surface, (240, 194, 63), (cx - 25, cy - 25, 50, 50), 0.2, 4.9, 5)
-            elif item.discovery_id == "water":
-                pygame.draw.circle(surface, (65, 139, 210), (cx, cy), 20)
-                pygame.draw.arc(surface, (162, 222, 245), (cx - 18, cy - 4, 36, 20), 0.2, 2.9, 4)
-            elif item.discovery_id == "seasons":
-                pygame.draw.circle(surface, (65, 139, 210), (cx, cy), 18)
-                pygame.draw.line(surface, (239, 196, 72), (cx - 10, cy + 24), (cx + 10, cy - 24), 5)
-            else:
-                pygame.draw.circle(surface, (65, 139, 210), (cx, cy), 20)
-                pygame.draw.ellipse(surface, (111, 181, 100), (cx - 12, cy - 8, 24, 16))
-                pygame.draw.arc(surface, (159, 218, 244), (cx - 25, cy - 25, 50, 50), 0, math.tau, 4)
-            focus_ring(surface, rect, index == self._selected or index == self._hovered)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=self._caption_key == item.caption_key,
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+                token_shape=TOKEN_SHAPE_TELESCOPE_CARD,
+            )
+
+    def _draw_icon(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        discovery_id: str,
+    ) -> None:
+        cx, cy = center
+        if discovery_id == "rotation":
+            pygame.draw.circle(surface, (65, 139, 210), (cx, cy), 18)
+            pygame.draw.arc(surface, (240, 194, 63), (cx - 25, cy - 25, 50, 50), 0.2, 4.9, 5)
+        elif discovery_id == "water":
+            pygame.draw.circle(surface, (65, 139, 210), (cx, cy), 20)
+            pygame.draw.arc(surface, (162, 222, 245), (cx - 18, cy - 4, 36, 20), 0.2, 2.9, 4)
+        elif discovery_id == "seasons":
+            pygame.draw.circle(surface, (65, 139, 210), (cx, cy), 18)
+            pygame.draw.line(surface, (239, 196, 72), (cx - 10, cy + 24), (cx + 10, cy - 24), 5)
+        else:
+            pygame.draw.circle(surface, (65, 139, 210), (cx, cy), 20)
+            pygame.draw.ellipse(surface, (111, 181, 100), (cx - 12, cy - 8, 24, 16))
+            pygame.draw.arc(surface, (159, 218, 244), (cx - 25, cy - 25, 50, 50), 0, math.tau, 4)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (249, 245, 226), panel, border_radius=22)
-        pygame.draw.rect(surface, (70, 60, 57), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (54, 49, 58))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (54, 49, 58))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+            dark=True,
+        )

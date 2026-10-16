@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<!-- E4-A Octopus: a sunlit reef. The octopus is a live page puppet (it
+     changes colour), so the reef offers a matching patch for each of its four
+     camouflage colours: purple fan, teal sponge, orange coral, blue-grey rock. -->
+<defs>
+  <!-- sky/aqua light -> ocean shade (water column) -->
+  <linearGradient id="octopus_water" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A6DCE8"/><stop offset="1" stop-color="#3C86B4"/></linearGradient>
+  <!-- sand light -> sand -->
+  <linearGradient id="octopus_sand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F1E2BE"/><stop offset="1" stop-color="#D9BF8C"/></linearGradient>
+  <!-- navy/ocean mix (rock ledge) -->
+  <linearGradient id="octopus_rock" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8E92B5"/><stop offset="1" stop-color="#6E7199"/></linearGradient>
+  <linearGradient id="octopus_ray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.45"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+</defs>
+<rect width="1024" height="600" fill="url(#octopus_water)"/>
+<g id="light_rays" fill="url(#octopus_ray)">
+  <path d="M260 0 L330 0 L250 420 L170 420Z"/><path d="M560 0 L610 0 L640 380 L560 380Z"/><path d="M760 0 L800 0 L880 360 L820 360Z"/>
+</g>
+<g id="surface_ripples" fill="none" stroke="#E6F6FA" stroke-width="3" stroke-linecap="round" opacity="0.7"><path d="M140 22 Q170 14 200 22"/><path d="M640 18 Q672 10 704 18"/><path d="M380 30 Q404 24 428 30"/></g>
+<g id="far_reef" fill="#78AFC9"><path d="M0 380 Q60 320 120 352 Q170 300 230 340 Q300 310 340 360 L340 420 H0Z"/><path d="M680 360 Q730 310 790 340 Q850 296 910 336 Q970 312 1024 344 V420 H680Z"/></g>
+<g id="far_fish" fill="#5E9CC0"><path d="M150 230 q14 -8 28 0 q-14 8 -28 0Z M150 230 l-8 -6 v12Z"/><path d="M196 252 q12 -7 24 0 q-12 7 -24 0Z M196 252 l-7 -5 v10Z"/><path d="M880 210 q-14 -8 -28 0 q14 8 28 0Z M880 210 l8 -6 v12Z"/></g>
+<path id="sand" d="M0 470 Q220 444 512 456 Q800 468 1024 446 V600 H0Z" fill="url(#octopus_sand)"/>
+<g id="sand_ripples" fill="none" stroke="#C9AD78" stroke-width="2.5" stroke-linecap="round" opacity="0.8"><path d="M60 520 Q90 512 120 520"/><path d="M200 560 Q236 552 272 560"/><path d="M760 540 Q796 532 832 540"/><path d="M880 510 Q906 503 932 510"/></g>
+<g id="rock_ledge" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+  <path d="M330 470 Q326 404 380 386 Q420 330 500 334 Q590 330 632 382 Q690 398 690 470Z" fill="url(#octopus_rock)"/>
+  <path d="M378 400 Q410 360 470 352" fill="none" stroke="#B9BCD6" stroke-width="6" stroke-linecap="round"/>
+  <g fill="#5F6290" stroke="none" opacity="0.7"><ellipse cx="420" cy="440" rx="16" ry="9"/><ellipse cx="610" cy="430" rx="14" ry="8"/><ellipse cx="560" cy="456" rx="10" ry="6"/></g>
+</g>
+<g id="purple_fan" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+  <path d="M352 470 Q300 410 316 350 Q348 330 372 372 Q392 410 372 470Z" fill="#B767AD"/>
+  <path d="M362 466 Q340 410 334 366 M362 466 Q362 420 356 380" fill="none" stroke="#E2A6D8" stroke-width="3"/>
+</g>
+<g id="orange_coral" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" fill="none">
+  <path d="M664 470 V420 M664 436 Q686 420 690 392 M664 444 Q640 428 636 400 M690 404 Q706 396 708 380" stroke="#4B372F" stroke-width="15"/>
+  <path d="M664 470 V420 M664 436 Q686 420 690 392 M664 444 Q640 428 636 400 M690 404 Q706 396 708 380" stroke="#C07F4B" stroke-width="9"/>
+</g>
+<g id="teal_sponges" stroke="#4B372F" stroke-width="3" stroke-linejoin="round">
+  <path d="M160 486 Q154 430 176 422 Q198 430 194 486Z" fill="#629B96"/><ellipse cx="176" cy="426" rx="11" ry="4" fill="#3E6E6A"/>
+  <path d="M196 488 Q194 448 212 442 Q228 448 228 488Z" fill="#6FAAA4"/><ellipse cx="212" cy="446" rx="9" ry="3.5" fill="#3E6E6A"/>
+  <path d="M840 488 Q836 444 856 436 Q876 444 874 488Z" fill="#629B96"/><ellipse cx="856" cy="440" rx="10" ry="4" fill="#3E6E6A"/>
+</g>
+<g id="seaweed" fill="none" stroke-linecap="round">
+  <g stroke="#4B372F" stroke-width="15"><path d="M95 560 Q80 500 100 440 Q118 390 100 340"/><path d="M140 560 Q156 500 140 450 Q126 410 144 370"/><path d="M890 560 Q874 490 894 430 Q910 380 892 330"/><path d="M936 560 Q950 500 934 450"/></g>
+  <g stroke="#59A86A" stroke-width="9"><path d="M95 560 Q80 500 100 440 Q118 390 100 340"/><path d="M140 560 Q156 500 140 450 Q126 410 144 370"/><path d="M890 560 Q874 490 894 430 Q910 380 892 330"/><path d="M936 560 Q950 500 934 450"/></g>
+</g>
+<g id="shells" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round">
+  <path d="M60 586 Q60 566 76 566 Q92 566 92 586Z" fill="#F5D6DF"/><path d="M68 584 V572 M76 584 V568 M84 584 V572" fill="none" stroke-width="2"/>
+  <path d="M780 576 l10 -14 l10 14 l-10 6Z" fill="#F39A38"/>
+</g>
+<g id="bubbles" fill="none" stroke="#E6F6FA" stroke-width="2.5" opacity="0.85"><circle cx="118" cy="300" r="7"/><circle cx="126" cy="272" r="5"/><circle cx="114" cy="252" r="3.5"/><circle cx="904" cy="290" r="6"/><circle cx="912" cy="264" r="4"/></g>
+<g id="token_beds" fill="#1F4A66" opacity="0.15">
+  <ellipse data-target="camouflage" data-center="300,215" cx="300" cy="262" rx="40" ry="6"/>
+  <ellipse data-target="ink" data-center="735,230" cx="735" cy="277" rx="40" ry="6"/>
+  <ellipse data-target="arms" data-center="265,405" cx="265" cy="452" rx="40" ry="6"/>
+  <ellipse data-target="hearts" data-center="740,405" cx="740" cy="452" rx="40" ry="6"/>
+</g>
+</svg>

@@ -7,30 +7,36 @@ import math
 
 import pygame
 
-from greia_platform.typography import FontRole
-
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_TELESCOPE_CARD,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from ..enciclopedia_focus_audio import FocusAudioTracker
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from .common import draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_TELESCOPE_CARD,
         announce_focus_name,
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
         draw_entry_action_button,
-        draw_focus_patch,
         draw_navigation_arrows,
+        draw_title,
         encyclopedia_focus_cue,
     )
     from enciclopedia_focus_audio import FocusAudioTracker
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from pages.common import draw_presenter, grid_step
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +53,9 @@ DISCOVERIES = (
     VenusDiscovery("clouds", "venus.clouds", "encyclopedia.space.venus.clouds", (250, 420)),
     VenusDiscovery("rotation", "venus.rotation", "encyclopedia.space.venus.rotation", (755, 420)),
 )
+
+# E4 authored scene; a missing rendition fails soft to the procedural fallback.
+SCENE_ID = "encyclopedia.space.venus.observatory"
 
 
 class VenusPage(EncyclopediaPage):
@@ -165,21 +174,20 @@ class VenusPage(EncyclopediaPage):
         self.context.audio.play(discovery.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((27, 30, 58))
-        for index in range(32):
-            x = (index * 89 + 17) % 1000
-            y = 78 + (index * 57) % 470
-            pygame.draw.circle(surface, (228, 231, 242), (x, y), 1)
-        draw_centered_text(
+        authored = draw_authored_scene(surface, self.context.visuals, SCENE_ID)
+        if not authored:
+            surface.fill((27, 30, 58))
+            for index in range(32):
+                x = (index * 89 + 17) % 1000
+                y = 78 + (index * 57) % 470
+                pygame.draw.circle(surface, (228, 231, 242), (x, y), 1)
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("venus.title"),
-            center=(500, 92),
-            size=40,
-            color=(246, 239, 215),
-            role=FontRole.DISPLAY,
+            (246, 239, 215),
         )
-        self._draw_venus(surface)
+        self._draw_venus(surface, authored=authored)
         self._draw_hotspots(surface)
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
@@ -200,54 +208,15 @@ class VenusPage(EncyclopediaPage):
             fallback_color=(227, 174, 87),
         )
 
-    def _draw_venus(self, surface: pygame.Surface) -> None:
+    def _draw_venus(self, surface: pygame.Surface, *, authored: bool) -> None:
         center = (505, 326)
         radius = 96
 
-        # Rocky base exists in both modes; the opaque cloud layer normally hides it.
-        pygame.draw.circle(surface, (168, 104, 66), center, radius)
-        for dx, dy, width, height in (
-            (-42, -24, 54, 21),
-            (18, -42, 46, 18),
-            (-15, 24, 63, 22),
-            (40, 36, 30, 15),
-        ):
-            pygame.draw.ellipse(
-                surface,
-                (130, 82, 62),
-                (center[0] + dx, center[1] + dy, width, height),
-                3,
-            )
-        pygame.draw.polygon(
-            surface,
-            (119, 73, 59),
-            [(470, 355), (490, 305), (510, 355)],
-        )
-        pygame.draw.polygon(
-            surface,
-            (119, 73, 59),
-            [(532, 365), (551, 318), (570, 365)],
-        )
-
-        if not self._clouds_hidden:
-            pygame.draw.circle(surface, (222, 185, 103), center, radius)
-            # Volumetric highlight
-            hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
-            pygame.draw.ellipse(hl, (255, 235, 190, 32), (radius // 2, 8, radius, radius // 3))
-            surface.blit(hl, (center[0] - radius, center[1] - radius))
-            for index in range(8):
-                y = center[1] - 65 + index * 19
-                wave = int(math.sin(self._time * 0.45 + index) * 8)
-                wobble = int(math.cos(self._time * 0.33 + index * 0.7) * 3)
-                pygame.draw.arc(
-                    surface,
-                    (242, 218, 154),
-                    (center[0] - 82 + wave, y - 8 + wobble, 164, 30),
-                    0.05,
-                    3.05,
-                    5,
-                )
-                pygame.draw.arc(surface, (255, 245, 210, 22), (center[0] - 78 + wave, y - 6 + wobble, 156, 24), 0.05, 3.05, 2)
+        # The authored scene bakes the cloud-covered planet. The rocky surface
+        # is drawn only when needed: always in the fallback (under procedural
+        # clouds) and over the authored clouds when the child lifts them.
+        if not authored or self._clouds_hidden:
+            self._draw_rocky_surface_and_clouds(surface, center, radius, authored=authored)
 
         if self._heat_age > 0:
             for ring in range(4):
@@ -304,32 +273,99 @@ class VenusPage(EncyclopediaPage):
             ]
             pygame.draw.polygon(surface, (250, 220, 104), points)
 
+    def _draw_rocky_surface_and_clouds(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        radius: int,
+        *,
+        authored: bool,
+    ) -> None:
+        pygame.draw.circle(surface, (168, 104, 66), center, radius)
+        for dx, dy, width, height in (
+            (-42, -24, 54, 21),
+            (18, -42, 46, 18),
+            (-15, 24, 63, 22),
+            (40, 36, 30, 15),
+        ):
+            pygame.draw.ellipse(
+                surface,
+                (130, 82, 62),
+                (center[0] + dx, center[1] + dy, width, height),
+                3,
+            )
+        pygame.draw.polygon(
+            surface,
+            (119, 73, 59),
+            [(470, 355), (490, 305), (510, 355)],
+        )
+        pygame.draw.polygon(
+            surface,
+            (119, 73, 59),
+            [(532, 365), (551, 318), (570, 365)],
+        )
+
+        if not self._clouds_hidden and not authored:
+            pygame.draw.circle(surface, (222, 185, 103), center, radius)
+            # Volumetric highlight
+            hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+            pygame.draw.ellipse(hl, (255, 235, 190, 32), (radius // 2, 8, radius, radius // 3))
+            surface.blit(hl, (center[0] - radius, center[1] - radius))
+            for index in range(8):
+                y = center[1] - 65 + index * 19
+                wave = int(math.sin(self._time * 0.45 + index) * 8)
+                wobble = int(math.cos(self._time * 0.33 + index * 0.7) * 3)
+                pygame.draw.arc(
+                    surface,
+                    (242, 218, 154),
+                    (center[0] - 82 + wave, y - 8 + wobble, 164, 30),
+                    0.05,
+                    3.05,
+                    5,
+                )
+                pygame.draw.arc(surface, (255, 245, 210, 22), (center[0] - 78 + wave, y - 6 + wobble, 156, 24), 0.05, 3.05, 2)
+
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (249, 244, 224), item.center, 37)
-            pygame.draw.circle(surface, (74, 62, 57), item.center, 37, 3)
-            cx, cy = item.center
-            if item.discovery_id == "compare":
-                pygame.draw.circle(surface, (219, 181, 101), (cx - 13, cy), 18)
-                pygame.draw.circle(surface, (72, 145, 215), (cx + 18, cy + 4), 17)
-            elif item.discovery_id == "heat":
-                pygame.draw.circle(surface, (219, 181, 101), (cx, cy), 17)
-                for ring in (22, 28):
-                    pygame.draw.arc(surface, (232, 99, 51), (cx - ring, cy - ring, ring * 2, ring * 2), 0.3, 2.6, 3)
-            elif item.discovery_id == "clouds":
-                pygame.draw.circle(surface, (169, 104, 66), (cx, cy + 4), 20)
-                pygame.draw.arc(surface, (232, 210, 155), (cx - 25, cy - 17, 50, 24), 0.1, 3.0, 6)
-            else:
-                pygame.draw.arc(surface, (219, 181, 101), (cx - 23, cy - 23, 46, 46), 0.2, 4.9, 5)
-                pygame.draw.polygon(surface, (219, 181, 101), [(cx - 20, cy - 8), (cx - 29, cy + 2), (cx - 13, cy + 3)])
-            focus_ring(surface, rect, index == self._selected or index == self._hovered)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=self._caption_key == item.caption_key,
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+                token_shape=TOKEN_SHAPE_TELESCOPE_CARD,
+            )
+
+    def _draw_icon(
+        self,
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        discovery_id: str,
+    ) -> None:
+        cx, cy = center
+        if discovery_id == "compare":
+            pygame.draw.circle(surface, (219, 181, 101), (cx - 13, cy), 18)
+            pygame.draw.circle(surface, (72, 145, 215), (cx + 18, cy + 4), 17)
+        elif discovery_id == "heat":
+            pygame.draw.circle(surface, (219, 181, 101), (cx, cy), 17)
+            for ring in (22, 28):
+                pygame.draw.arc(surface, (232, 99, 51), (cx - ring, cy - ring, ring * 2, ring * 2), 0.3, 2.6, 3)
+        elif discovery_id == "clouds":
+            pygame.draw.circle(surface, (169, 104, 66), (cx, cy + 4), 20)
+            pygame.draw.arc(surface, (232, 210, 155), (cx - 25, cy - 17, 50, 24), 0.1, 3.0, 6)
+        else:
+            pygame.draw.arc(surface, (219, 181, 101), (cx - 23, cy - 23, 46, 46), 0.2, 4.9, 5)
+            pygame.draw.polygon(surface, (219, 181, 101), [(cx - 20, cy - 8), (cx - 29, cy + 2), (cx - 13, cy + 3)])
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (249, 244, 224), panel, border_radius=22)
-        pygame.draw.rect(surface, (74, 62, 57), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (56, 50, 58))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (56, 50, 58))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+            dark=True,
+        )

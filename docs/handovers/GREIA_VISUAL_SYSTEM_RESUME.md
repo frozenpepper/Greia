@@ -219,6 +219,8 @@ python3 tools/build_encyclopedia_visual_assets.py --group all
 
 The corresponding `--check` path validates size/color type and verifies committed renditions byte-for-byte against rebuilt masters.
 
+**Canonical rasterization environment (2026-10-16).** Byte-for-byte reproduction of every committed PNG (golden, sections and the `e4_*` batches, 43 total) requires the **Homebrew** libcairo 1.18.x through CairoSVG/cairocffi; the MacPorts libcairo (`/opt/local/lib`) anti-aliases some masters differently (e.g. `saturn_observatory`, `machines_gallery_workbench`, `bicycle_park`) and yields false `BUILD-DRIFT`. On macOS run both build and check as `DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib python3 tools/build_encyclopedia_visual_assets.py --check --group all`. The tool exits with an explanatory message if libcairo cannot be loaded. The 43-PNG pack is about 2.5 MiB, under the 4 MiB runtime-pack test cap.
+
 Runtime-pack contract:
 
 ```text

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<defs>
+  <!-- navy deep -> navy lifted -->
+  <linearGradient id="uranus_sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#21304F"/><stop offset="1" stop-color="#33496F"/></linearGradient>
+  <!-- ink+orange 25% -> ink -->
+  <linearGradient id="uranus_deck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#755031"/><stop offset="1" stop-color="#4B372F"/></linearGradient>
+  <!-- ice light -> ice (turquoise + sky) -->
+  <linearGradient id="uranus_body" x1="0.1" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#B5E2E2"/><stop offset="1" stop-color="#83CECF"/></linearGradient>
+  <!-- coral light -> coral -->
+  <linearGradient id="uranus_top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F79388"/><stop offset="1" stop-color="#F46F61"/></linearGradient>
+  <clipPath id="uranus_disc"><circle cx="505" cy="326" r="86.5"/></clipPath>
+</defs>
+<g id="sky"><rect width="1024" height="600" fill="url(#uranus_sky)"/><g fill="#FFFBEB" opacity="0.85"><circle cx="36.9" cy="403.4" r="1.4"/><circle cx="24.1" cy="257.9" r="1.2"/><circle cx="447.7" cy="20.3" r="1"/><circle cx="311.3" cy="280.1" r="1.6"/><circle cx="969.5" cy="144.6" r="1.4"/><circle cx="969.5" cy="340.7" r="1"/><circle cx="532.6" cy="85.4" r="2"/><circle cx="776" cy="283.7" r="1.6"/><circle cx="698.5" cy="81.3" r="1.6"/><circle cx="682.6" cy="318.3" r="1.2"/><circle cx="703.5" cy="22.3" r="1.2"/><circle cx="40.6" cy="267.1" r="1.4"/><circle cx="137.4" cy="19.2" r="1.2"/><circle cx="771.9" cy="369.9" r="2"/><circle cx="102.1" cy="310" r="1"/><circle cx="223.2" cy="254.6" r="2"/><circle cx="317.4" cy="29.3" r="1.6"/><circle cx="112.6" cy="433.4" r="2"/><circle cx="676.7" cy="428.8" r="1.2"/><circle cx="485" cy="54.8" r="1.2"/><circle cx="810.5" cy="281.8" r="1.4"/><circle cx="247.3" cy="36.1" r="1.2"/><circle cx="894.7" cy="352.1" r="1.6"/><circle cx="165.2" cy="279.8" r="1.4"/><circle cx="293" cy="356.2" r="1"/><circle cx="34.1" cy="99.9" r="1.6"/><circle cx="418.1" cy="90.1" r="1.2"/><circle cx="385.1" cy="439" r="1.6"/><circle cx="915.1" cy="266.3" r="1.6"/><circle cx="175.8" cy="395" r="1.2"/><circle cx="169" cy="99" r="1.6"/><circle cx="853.8" cy="232.8" r="1.4"/><circle cx="284.2" cy="441.7" r="1.6"/><circle cx="923.6" cy="169.1" r="2"/><circle cx="633.1" cy="442.6" r="2"/><circle cx="902.6" cy="383.2" r="1.2"/><circle cx="971.4" cy="418.6" r="1.4"/><circle cx="628" cy="215.7" r="1.4"/><circle cx="109.3" cy="463.5" r="1.2"/><circle cx="650.2" cy="22.1" r="1.4"/><circle cx="151.8" cy="305.8" r="2"/><circle cx="301" cy="274.7" r="1"/><circle cx="364" cy="387.4" r="1.4"/><circle cx="289.3" cy="456.4" r="1.4"/><circle cx="618.6" cy="157.7" r="1.2"/><circle cx="783" cy="273.3" r="1.2"/></g><g fill="#BFD6F0" opacity="0.7"><circle cx="527.1" cy="92.4" r="2"/><circle cx="685" cy="217.8" r="1.4"/><circle cx="808.4" cy="108.2" r="1.4"/><circle cx="737.6" cy="177.6" r="1.2"/><circle cx="958.6" cy="329.5" r="1.4"/><circle cx="308.8" cy="135.2" r="1.4"/><circle cx="226.2" cy="236" r="2"/><circle cx="753.7" cy="200.6" r="1.2"/><circle cx="715.4" cy="49.5" r="1.6"/><circle cx="894.7" cy="186.9" r="2"/></g></g>
+
+<g id="deck"><path d="M0 486H1024V600H0Z" fill="url(#uranus_deck)"/><path d="M0 486H1024" stroke="#A76D34" stroke-width="5"/><path d="M0 490H1024" stroke="#B18B66" stroke-width="1.8" opacity="0.6"/><g stroke="#4B372F" stroke-width="2" opacity="0.35"><path d="M180 492L120 600M380 492L350 600M512 492V600M644 492L674 600M844 492L904 600"/></g></g>
+<g id="dome_ribs" fill="none" stroke-linecap="round"><path d="M-6 -10Q60 230 22 486M1030 -10Q964 230 1002 486" stroke="#8B5D32" stroke-width="24"/><path d="M4 6Q64 230 30 478M1020 6Q960 230 994 478" stroke="#C17C35" stroke-width="3" opacity="0.7"/></g>
+<g id="uranus" data-target="uranus" data-center="505,326">
+<circle cx="505" cy="326" r="97" fill="none" stroke="#C1E6E7" stroke-width="6" opacity="0.18"/>
+<circle cx="505" cy="326" r="88" fill="url(#uranus_body)"/>
+<g clip-path="url(#uranus_disc)"><path d="M417 280Q505 286 593 280" fill="none" stroke="#C1E6E7" stroke-width="10" opacity="0.6"/><path d="M417 308Q505 314 593 308" fill="none" stroke="#7FC2C2" stroke-width="8" opacity="0.35"/><path d="M417 338Q505 344 593 338" fill="none" stroke="#BBE4E5" stroke-width="12" opacity="0.5"/><path d="M417 370Q505 376 593 370" fill="none" stroke="#7DBFBF" stroke-width="8" opacity="0.35"/>
+<ellipse cx="501" cy="248" rx="38" ry="14" fill="#CDEBEC" opacity="0.7"/>
+<path d="M531 238A88 88 0 0 1 531 414A59.84 88 0 0 0 531 238Z" fill="#466E82" opacity="0.3"/>
+</g>
+<circle cx="505" cy="326" r="88" fill="none" stroke="#647B77" stroke-width="3.5"/>
+<path d="M439 290Q453 260 485 246" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.6"/>
+</g>
+<g id="tipped_top">
+<ellipse cx="122" cy="578" rx="76" ry="9" fill="#6A5147" opacity="0.3"/>
+<g transform="translate(122 538) rotate(-76)">
+<rect x="-6" y="-58" width="12" height="22" rx="4" fill="#A05348" stroke="#4B372F" stroke-width="3"/>
+<path d="M-44 -30Q0 -48 44 -30Q50 -6 24 16L5 40Q0 45 -5 40L-24 16Q-50 -6 -44 -30Z" fill="url(#uranus_top)" stroke="#975046" stroke-width="3.5" stroke-linejoin="round"/>
+<path d="M-41 -16Q0 -1 41 -16" fill="none" stroke="#FFCB52" stroke-width="8" stroke-linecap="round"/>
+<path d="M-30 -30Q-10 -38 10 -38" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+</g>
+<path d="M66 486A40 40 0 0 0 66 560M52 496A30 30 0 0 0 52 548" fill="none" stroke="#A8DDDD" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+</g>
+</svg>

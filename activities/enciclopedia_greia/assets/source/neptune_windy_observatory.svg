@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<defs>
+  <!-- navy deep -> navy lifted -->
+  <linearGradient id="neptune_sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#21304F"/><stop offset="1" stop-color="#33496F"/></linearGradient>
+  <!-- ink+orange 25% -> ink -->
+  <linearGradient id="neptune_deck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#755031"/><stop offset="1" stop-color="#4B372F"/></linearGradient>
+  <!-- ocean/navy light -> deep blue -->
+  <linearGradient id="neptune_body" x1="0.1" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#84AAD1"/><stop offset="1" stop-color="#417CB8"/></linearGradient>
+  <clipPath id="neptune_disc"><circle cx="505" cy="326" r="88.5"/></clipPath>
+</defs>
+<g id="sky"><rect width="1024" height="600" fill="url(#neptune_sky)"/><g fill="#FFFBEB" opacity="0.85"><circle cx="325.2" cy="358.6" r="1"/><circle cx="403.6" cy="13.8" r="1"/><circle cx="358.3" cy="278" r="1"/><circle cx="724.5" cy="107.7" r="2"/><circle cx="697.1" cy="448.4" r="1.6"/><circle cx="763.4" cy="439.5" r="2"/><circle cx="57.5" cy="82.9" r="1.6"/><circle cx="741.4" cy="365.8" r="1.2"/><circle cx="656.5" cy="379.5" r="1"/><circle cx="14.9" cy="412.7" r="1.6"/><circle cx="273.6" cy="300.3" r="1.2"/><circle cx="791.7" cy="81.8" r="2"/><circle cx="1002.3" cy="291.3" r="1.2"/><circle cx="973" cy="289.5" r="1.6"/><circle cx="815.8" cy="19.4" r="1.2"/><circle cx="466" cy="135.1" r="1"/><circle cx="448.4" cy="160" r="1"/><circle cx="822.8" cy="293.6" r="2"/><circle cx="832.7" cy="36.8" r="1.2"/><circle cx="931.3" cy="240.8" r="1.6"/><circle cx="833.7" cy="71.1" r="1.4"/><circle cx="664.1" cy="124.7" r="1"/><circle cx="720.9" cy="401.2" r="1.4"/><circle cx="44.7" cy="51.2" r="1.4"/><circle cx="464.8" cy="68.9" r="1.4"/><circle cx="164" cy="197.5" r="2"/><circle cx="163.4" cy="302.8" r="1"/><circle cx="531.1" cy="127.2" r="1.2"/><circle cx="239.6" cy="26.2" r="2"/><circle cx="916.3" cy="98.2" r="1.4"/><circle cx="913" cy="61.3" r="1.4"/><circle cx="716.6" cy="151.4" r="2"/><circle cx="809.8" cy="375.3" r="1.2"/><circle cx="803.6" cy="152" r="1.6"/><circle cx="788.9" cy="78.9" r="1.2"/><circle cx="730.9" cy="415.4" r="1"/><circle cx="717" cy="73.5" r="2"/><circle cx="854.3" cy="178.5" r="2"/><circle cx="253.6" cy="282.8" r="1.4"/><circle cx="884.9" cy="379.2" r="2"/><circle cx="104.9" cy="247.9" r="1"/><circle cx="1013.3" cy="138" r="2"/><circle cx="692" cy="66.1" r="1.4"/><circle cx="115.2" cy="430.5" r="2"/><circle cx="378.6" cy="52.4" r="2"/><circle cx="670.8" cy="440" r="1.2"/></g><g fill="#BFD6F0" opacity="0.7"><circle cx="201.8" cy="212.1" r="1.4"/><circle cx="216.7" cy="401" r="1.2"/><circle cx="193.3" cy="378.3" r="1.2"/><circle cx="351.1" cy="334.7" r="1.2"/><circle cx="979.4" cy="326.1" r="1.6"/><circle cx="864.7" cy="395.7" r="1"/><circle cx="142.2" cy="108.6" r="1.4"/><circle cx="26.9" cy="299" r="1.4"/><circle cx="896.3" cy="30.6" r="1.4"/><circle cx="669.6" cy="142.1" r="2"/></g></g>
+
+<g id="deck"><path d="M0 486H1024V600H0Z" fill="url(#neptune_deck)"/><path d="M0 486H1024" stroke="#A76D34" stroke-width="5"/><path d="M0 490H1024" stroke="#B18B66" stroke-width="1.8" opacity="0.6"/><g stroke="#4B372F" stroke-width="2" opacity="0.35"><path d="M180 492L120 600M380 492L350 600M512 492V600M644 492L674 600M844 492L904 600"/></g></g>
+<g id="dome_ribs" fill="none" stroke-linecap="round"><path d="M-6 -10Q60 230 22 486M1030 -10Q964 230 1002 486" stroke="#8B5D32" stroke-width="24"/><path d="M4 6Q64 230 30 478M1020 6Q960 230 994 478" stroke="#C17C35" stroke-width="3" opacity="0.7"/></g>
+<g id="neptune" data-target="neptune" data-center="505,326">
+<circle cx="505" cy="326" r="99" fill="none" stroke="#A4C8EC" stroke-width="6" opacity="0.18"/>
+<circle cx="505" cy="326" r="90" fill="url(#neptune_body)"/>
+<g clip-path="url(#neptune_disc)"><path d="M415 276Q505 284 595 276" fill="none" stroke="#7AA3CD" stroke-width="9" opacity="0.5"/><path d="M415 304Q505 312 595 304" fill="none" stroke="#4272A3" stroke-width="10" opacity="0.45"/><path d="M415 342Q505 350 595 342" fill="none" stroke="#76A1CC" stroke-width="11" opacity="0.45"/><path d="M415 374Q505 382 595 374" fill="none" stroke="#4272A3" stroke-width="9" opacity="0.4"/>
+<ellipse cx="565" cy="357" rx="30" ry="15" fill="#30557F" stroke="#465D7A" stroke-width="2.2"/>
+<path d="M545 348Q565 340 586 350" fill="none" stroke="#A0BEDC" stroke-width="3" stroke-linecap="round"/>
+<path d="M452 290q20.0 -5 40 0" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.85"/><path d="M520 266q17.0 -5 34 0" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.85"/><path d="M470 384q23.0 -5 46 0" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.85"/><path d="M548 322q13.0 -5 26 0" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<path d="M531 236A90 90 0 0 1 531 416A61.2 90 0 0 0 531 236Z" fill="#2D4E76" opacity="0.3"/>
+</g>
+<circle cx="505" cy="326" r="90" fill="none" stroke="#46566D" stroke-width="3.5"/>
+<path d="M437 288Q451 258 485 244" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.55"/>
+</g>
+<g id="pinwheel">
+<ellipse cx="118" cy="582" rx="56" ry="8" fill="#6A5147" opacity="0.3"/>
+<path d="M118 512V580" stroke="#A76D34" stroke-width="7" stroke-linecap="round"/>
+<path d="M118 506L156.2 517.8Q142.8 540.9 110.9 528.9Z" fill="#F46F61" stroke="#975046" stroke-width="3" stroke-linejoin="round"/><path d="M118 506L106.2 544.2Q83.1 530.8 95.1 498.9Z" fill="#FFC234" stroke="#9C7631" stroke-width="3" stroke-linejoin="round"/><path d="M118 506L79.8 494.2Q93.2 471.1 125.1 483.1Z" fill="#4A91D8" stroke="#4B607B" stroke-width="3" stroke-linejoin="round"/><path d="M118 506L129.8 467.8Q152.9 481.2 140.9 513.1Z" fill="#59B86A" stroke="#51714A" stroke-width="3" stroke-linejoin="round"/>
+<circle cx="118" cy="506" r="6" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5"/>
+<path d="M176 470Q190 476 196 490M186 456Q206 464 214 484M60 548Q48 540 46 524" fill="none" stroke="#A4C8EC" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+</g>
+</svg>

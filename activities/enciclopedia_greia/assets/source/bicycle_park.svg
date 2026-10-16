@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- Encyclopedia E4-D entry scene: The Bicycle. Flattened opaque 1024x600 backdrop.
+       A park cycle lane: uphill path on the left (low gear), flat lane with
+       distance posts on the right (high gear). The bicycle FRAME, saddle, bars
+       and tyres are authored here at the live drivetrain geometry
+       (rear hub 410,360 / front hub 620,360 / crank 505,348 / tyre r 76);
+       spokes, chainrings, chain and pedals stay live so they can turn.
+       Discovery beds sit exactly under the four semantic targets.
+       Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md (scene). -->
+  <defs>
+    <!-- sky light -> sky -->
+    <linearGradient id="bicycle_park_sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E7F5FB"/>
+      <stop offset="1" stop-color="#CFEAF7"/>
+    </linearGradient>
+    <!-- leaf light (mix 40% white) -> leaf (lawn) -->
+    <linearGradient id="bicycle_park_lawn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#6EC07C"/>
+    </linearGradient>
+    <!-- sky light -> mint (far hills haze) -->
+    <linearGradient id="bicycle_park_far" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C9E4E6"/>
+      <stop offset="1" stop-color="#D9F2D0"/>
+    </linearGradient>
+    <!-- sunshine glow -->
+    <radialGradient id="bicycle_park_sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFE7A6" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#FFE7A6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <g id="sky">
+    <rect width="1024" height="600" fill="url(#bicycle_park_sky)"/>
+    <circle cx="664" cy="122" r="66" fill="url(#bicycle_park_sun)"/>
+    <circle cx="664" cy="122" r="28" fill="#FFD35C" stroke="#E9A93B" stroke-width="3"/>
+    <path d="M649 113 C653 106 660 102 668 102" fill="none" stroke="#FFF1C2" stroke-width="5" stroke-linecap="round"/>
+  </g>
+
+  <g id="far">
+    <path d="M0 318 C90 290 190 286 280 304 C370 284 470 286 560 306 C650 288 760 284 860 302 C930 292 990 294 1024 300 L1024 380 L0 380 Z" fill="url(#bicycle_park_far)"/>
+  </g>
+
+  <g id="uphill">
+    <!-- the gentle hill a rider climbs in an easy (small) gear -->
+    <path d="M-10 380 C40 300 110 218 190 214 C260 210 320 280 372 380 Z" fill="#B5DDA6" stroke="#7FA877" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M60 380 C96 352 150 330 160 296 C168 270 200 250 210 232" fill="none" stroke="#F7EBCB" stroke-width="10" stroke-linecap="round"/>
+    <path d="M150 230 C168 222 186 220 200 222" fill="none" stroke="#DDF2D5" stroke-width="4" stroke-linecap="round"/>
+    <!-- flag at the top of the climb -->
+    <path d="M206 214 V178" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/>
+    <path d="M206 179 L230 186 L206 194 Z" fill="#F46F61" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
+
+  <g id="trees">
+    <rect x="872" y="268" width="14" height="80" fill="#9C6B43" stroke="#4B372F" stroke-width="2.5"/>
+    <path d="M832 268 C820 236 846 206 876 214 C888 188 932 192 936 220 C962 224 966 262 944 276 C932 292 846 292 832 268 Z" fill="#59B86A" stroke="#3F6E3A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M852 236 C858 226 870 220 882 222" fill="none" stroke="#A8DCA5" stroke-width="5" stroke-linecap="round"/>
+    <rect x="732" y="284" width="10" height="52" fill="#9C6B43" stroke="#4B372F" stroke-width="2.5"/>
+    <circle cx="737" cy="272" r="26" fill="#6EC07C" stroke="#3F6E3A" stroke-width="3"/>
+    <path d="M722 262 C726 254 734 250 742 251" fill="none" stroke="#B4E2B4" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <g id="lawn">
+    <path d="M0 360 C150 344 300 346 460 352 C640 358 820 344 1024 350 L1024 600 L0 600 Z" fill="url(#bicycle_park_lawn)" stroke="#51714A" stroke-width="2.5"/>
+    <g fill="none" stroke="#4E9A5C" stroke-width="2.5" stroke-linecap="round">
+      <path d="M90 520 q8 -10 16 0"/><path d="M300 380 q8 -10 16 0"/><path d="M780 512 q8 -10 16 0"/><path d="M700 382 q8 -10 16 0"/>
+    </g>
+    <g stroke="#4B372F" stroke-width="2">
+      <circle cx="120" cy="396" r="5" fill="#FFFBEB"/><circle cx="160" cy="512" r="5" fill="#F5D6DF"/>
+      <circle cx="840" cy="388" r="5" fill="#FFD35C"/><circle cx="702" cy="540" r="5" fill="#FFFBEB"/>
+    </g>
+  </g>
+
+  <g id="cycle_lane">
+    <!-- straight lane the bicycle rides on; tyres touch y 436 -->
+    <path d="M0 410 H1024 V470 H0 Z" fill="#EEDDBA" stroke="#A88B62" stroke-width="3"/>
+    <path d="M0 418 H1024" stroke="#F7EBCB" stroke-width="3"/>
+    <g stroke="#FFFBEB" stroke-width="5" stroke-linecap="round">
+      <path d="M24 452 H64"/><path d="M110 452 H150"/><path d="M196 452 H236"/><path d="M790 452 H830"/><path d="M876 452 H916"/><path d="M962 452 H1002"/>
+    </g>
+    <!-- distance posts: equal steps along the flat lane -->
+    <g stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round">
+      <rect x="796" y="376" width="10" height="36" rx="3" fill="#FFFBEB"/>
+      <rect x="796" y="376" width="10" height="10" rx="3" fill="#F46F61"/>
+      <rect x="856" y="376" width="10" height="36" rx="3" fill="#FFFBEB"/>
+      <rect x="856" y="376" width="10" height="10" rx="3" fill="#F46F61"/>
+      <rect x="916" y="376" width="10" height="36" rx="3" fill="#FFFBEB"/>
+      <rect x="916" y="376" width="10" height="10" rx="3" fill="#F46F61"/>
+    </g>
+  </g>
+
+  <g id="bicycle">
+    <ellipse cx="515" cy="440" rx="176" ry="8" fill="#6A5147" opacity="0.18"/>
+    <!-- tyres (spokes are live) -->
+    <g fill="none">
+      <circle cx="410" cy="360" r="76" stroke="#30343A" stroke-width="11"/>
+      <circle cx="620" cy="360" r="76" stroke="#30343A" stroke-width="11"/>
+      <circle cx="410" cy="360" r="69" stroke="#B8C2CC" stroke-width="3"/>
+      <circle cx="620" cy="360" r="69" stroke="#B8C2CC" stroke-width="3"/>
+      <path d="M352 316 C364 302 380 294 396 290" stroke="#6B7078" stroke-width="3" stroke-linecap="round"/>
+      <path d="M562 316 C574 302 590 294 606 290" stroke="#6B7078" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <!-- frame: ink contour stroke under ocean fill stroke -->
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M410 360 L470 265 L505 348 Z M505 348 L578 272 L470 265 M578 272 L620 360 M470 265 L476 250 M578 272 L590 230" stroke="#4B372F" stroke-width="12"/>
+      <path d="M410 360 L470 265 L505 348 Z M505 348 L578 272 L470 265 M578 272 L620 360 M470 265 L476 250 M578 272 L590 230" stroke="#4A91D8" stroke-width="6.5"/>
+      <path d="M476 268 L500 324 M512 336 L568 280" stroke="#9CC6EC" stroke-width="2.5"/>
+    </g>
+    <!-- saddle -->
+    <path d="M456 250 C462 242 486 242 496 248 C498 254 490 257 476 257 C462 257 454 256 456 250 Z" fill="#9C6B43" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <!-- handlebar and grips -->
+    <path d="M590 230 C596 224 606 222 616 226" fill="none" stroke="#4B372F" stroke-width="6" stroke-linecap="round"/>
+    <path d="M608 224 L622 228" stroke="#F46F61" stroke-width="8" stroke-linecap="round"/>
+    <!-- bell -->
+    <circle cx="598" cy="222" r="5" fill="#FBBF24" stroke="#4B372F" stroke-width="2"/>
+    <!-- mudguard over the front tyre -->
+    <path d="M574 300 C590 280 616 276 640 284" fill="none" stroke="#4B372F" stroke-width="6" stroke-linecap="round"/>
+    <path d="M574 300 C590 280 616 276 640 284" fill="none" stroke="#F46F61" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+
+  <g id="discovery_beds" stroke-linejoin="round">
+    <!-- two soft clouds carry the upper tokens; two lane stones carry the lower ones -->
+    <g data-target="drive" data-center="250,190" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="2.5">
+      <path d="M190 214 C176 214 172 196 186 192 C184 168 212 156 228 168 C240 146 276 148 282 170 C304 166 318 186 308 200 C322 206 318 222 302 222 L196 222 C190 222 188 218 190 214 Z"/>
+    </g>
+    <g data-target="ratio" data-center="755,190" fill="#FFFDF6" stroke="#B9CBD8" stroke-width="2.5">
+      <path d="M695 214 C681 214 677 196 691 192 C689 168 717 156 733 168 C745 146 781 148 787 170 C809 166 823 186 813 200 C827 206 823 222 807 222 L701 222 C695 222 693 218 695 214 Z"/>
+    </g>
+    <g data-target="travel" data-center="250,420" fill="#C9B48E" stroke="#4B372F" stroke-width="3">
+      <ellipse cx="250" cy="424" rx="50" ry="46"/>
+    </g>
+    <g data-target="energy" data-center="755,420" fill="#C9B48E" stroke="#4B372F" stroke-width="3">
+      <ellipse cx="755" cy="424" rx="50" ry="46"/>
+    </g>
+  </g>
+</svg>

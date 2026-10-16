@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+<defs>
+  <!-- navy deep -> navy lifted -->
+  <linearGradient id="moon_sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#21304F"/><stop offset="1" stop-color="#33496F"/></linearGradient>
+  <!-- ink+orange 25% -> ink -->
+  <linearGradient id="moon_deck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#755031"/><stop offset="1" stop-color="#4B372F"/></linearGradient>
+  <!-- moonlight glow (reflected light source) -->
+  <radialGradient id="moon_glow"><stop offset="0" stop-color="#FFFBEB" stop-opacity="0.35"/><stop offset="1" stop-color="#FFFBEB" stop-opacity="0"/></radialGradient>
+  <!-- cream -> stone -->
+  <linearGradient id="moon_face" x1="0.1" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#FBF8EE"/><stop offset="1" stop-color="#D8D4C8"/></linearGradient>
+  <!-- white -> stone light -->
+  <linearGradient id="moon_rocket" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E6E1D3"/></linearGradient>
+  <clipPath id="moon_disc"><circle cx="505" cy="326" r="90.5"/></clipPath>
+</defs>
+<g id="sky"><rect width="1024" height="600" fill="url(#moon_sky)"/><g fill="#FFFBEB" opacity="0.85"><circle cx="81.7" cy="356.8" r="1.6"/><circle cx="936.5" cy="99.3" r="1"/><circle cx="679.4" cy="137.9" r="1.2"/><circle cx="450.7" cy="62.3" r="1"/><circle cx="503.1" cy="117.9" r="2"/><circle cx="18.9" cy="303.7" r="1.2"/><circle cx="989.8" cy="451.9" r="2"/><circle cx="12.6" cy="449.8" r="1.2"/><circle cx="664.6" cy="457.9" r="1.6"/><circle cx="828.9" cy="409.2" r="1.2"/><circle cx="8.9" cy="398" r="1.4"/><circle cx="244.7" cy="68.6" r="1"/><circle cx="888.8" cy="284.4" r="1.6"/><circle cx="84.6" cy="428" r="1.4"/><circle cx="888.5" cy="269.3" r="1.2"/><circle cx="752.9" cy="249.1" r="1"/><circle cx="706.7" cy="441.5" r="1.6"/><circle cx="309" cy="61.1" r="1.6"/><circle cx="69.7" cy="446.2" r="1.6"/><circle cx="782.5" cy="114.1" r="1"/><circle cx="854.5" cy="70.9" r="1.6"/><circle cx="870" cy="118.4" r="1"/><circle cx="493.5" cy="145.2" r="2"/><circle cx="513.4" cy="183.5" r="2"/><circle cx="822.4" cy="369.5" r="1.4"/><circle cx="43.5" cy="51.7" r="1.4"/><circle cx="81.3" cy="314.7" r="1.6"/><circle cx="130.5" cy="290" r="1.4"/><circle cx="679.5" cy="252.4" r="1.6"/><circle cx="613.3" cy="13.7" r="1.4"/><circle cx="64.8" cy="322" r="1.2"/><circle cx="169.2" cy="211.1" r="1"/><circle cx="830.4" cy="444.8" r="1.4"/><circle cx="157.7" cy="57.2" r="1.4"/><circle cx="700.4" cy="382.5" r="1"/><circle cx="969.9" cy="170.4" r="1"/><circle cx="364.2" cy="445.9" r="1.2"/><circle cx="881" cy="56.1" r="1.6"/><circle cx="107.2" cy="49.5" r="2"/><circle cx="38" cy="138.4" r="2"/><circle cx="318.1" cy="435.5" r="1"/><circle cx="848.1" cy="319.3" r="1.6"/><circle cx="319.4" cy="266.8" r="1.2"/><circle cx="407.6" cy="87.3" r="1.4"/><circle cx="757.9" cy="6.8" r="1.2"/><circle cx="730.6" cy="38.5" r="1.4"/></g><g fill="#BFD6F0" opacity="0.7"><circle cx="876" cy="242" r="1"/><circle cx="329.1" cy="372.4" r="1.2"/><circle cx="891.9" cy="433.6" r="1.4"/><circle cx="127.5" cy="373.2" r="2"/><circle cx="941.2" cy="210.3" r="1.4"/><circle cx="288.5" cy="292.1" r="2"/><circle cx="50.9" cy="439.4" r="1.2"/><circle cx="431.1" cy="129.3" r="1.6"/><circle cx="6" cy="456" r="1.2"/><circle cx="730.5" cy="158.8" r="1"/></g></g>
+
+<g id="deck"><path d="M0 486H1024V600H0Z" fill="url(#moon_deck)"/><path d="M0 486H1024" stroke="#A76D34" stroke-width="5"/><path d="M0 490H1024" stroke="#B18B66" stroke-width="1.8" opacity="0.6"/><g stroke="#4B372F" stroke-width="2" opacity="0.35"><path d="M180 492L120 600M380 492L350 600M512 492V600M644 492L674 600M844 492L904 600"/></g></g>
+<g id="dome_ribs" fill="none" stroke-linecap="round"><path d="M-6 -10Q60 230 22 486M1030 -10Q964 230 1002 486" stroke="#8B5D32" stroke-width="24"/><path d="M4 6Q64 230 30 478M1020 6Q960 230 994 478" stroke="#C17C35" stroke-width="3" opacity="0.7"/></g>
+<g id="moon" data-target="moon" data-center="505,326">
+<circle cx="505" cy="326" r="152" fill="url(#moon_glow)"/>
+<circle cx="505" cy="326" r="92" fill="url(#moon_face)"/>
+<g clip-path="url(#moon_disc)">
+<g stroke="#FFFFFF" stroke-width="3" opacity="0.45" stroke-linecap="round"><path d="M485 369L527 382"/><path d="M485 369L492.5 412.4"/><path d="M485 369L447.3 391.7"/><path d="M485 369L447.7 345.7"/><path d="M485 369L493.2 325.8"/></g>
+<path d="M447 312C450 300 470 296 486 302C498 308 496 324 484 328C470 334 450 326 447 312ZM510 356C512 344 534 340 552 346C566 352 566 370 552 376C536 382 512 372 510 356ZM494 276C498 268 516 266 526 272C532 280 524 290 512 290C502 290 492 284 494 276ZM540 300C548 292 562 296 566 306C564 316 552 318 544 312C540 308 538 304 540 300Z" fill="#A9A7A0" opacity="0.7"/>
+<circle cx="467" cy="298" r="17" fill="#BCB5A9" stroke="#A0958B" stroke-width="2"/><path d="M483 292.2A17 17 0 0 1 461.2 314" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" opacity="0.8"/><circle cx="535" cy="283" r="12" fill="#BCB5A9" stroke="#A0958B" stroke-width="2"/><path d="M546.3 278.9A12 12 0 0 1 530.9 294.3" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" opacity="0.8"/><circle cx="549" cy="344" r="18" fill="#BCB5A9" stroke="#A0958B" stroke-width="2"/><path d="M565.9 337.9A18 18 0 0 1 542.9 360.9" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" opacity="0.8"/><circle cx="485" cy="369" r="13" fill="#BCB5A9" stroke="#A0958B" stroke-width="2"/><path d="M497.2 364.6A13 13 0 0 1 480.6 381.2" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" opacity="0.8"/><circle cx="509" cy="330" r="9" fill="#BCB5A9" stroke="#A0958B" stroke-width="2"/><path d="M517.5 326.9A9 9 0 0 1 505.9 338.5" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" opacity="0.8"/><circle cx="493" cy="288" r="10" fill="#BCB5A9" stroke="#A0958B" stroke-width="2"/><path d="M502.4 284.6A10 10 0 0 1 489.6 297.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" opacity="0.8"/><circle cx="523" cy="364" r="11" fill="#BCB5A9" stroke="#A0958B" stroke-width="2"/><path d="M533.3 360.3A11 11 0 0 1 519.3 374.3" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" opacity="0.8"/>
+<path d="M531 234A92 92 0 0 1 531 418A62.56 92 0 0 0 531 234Z" fill="#76808B" opacity="0.28"/>
+</g>
+<circle cx="505" cy="326" r="92" fill="none" stroke="#92867C" stroke-width="3.5"/>
+<path d="M435 286Q449 256 483 242" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.7"/>
+</g>
+<g id="toy_rocket">
+<ellipse cx="116" cy="580" rx="70" ry="9" fill="#6A5147" opacity="0.3"/>
+<rect x="70" y="562" width="92" height="16" rx="8" fill="#A76D34" stroke="#4B372F" stroke-width="3"/>
+<path d="M98 540L80 566L100 562Z M134 540L152 566L132 562Z" fill="#F46F61" stroke="#975046" stroke-width="3" stroke-linejoin="round"/>
+<path d="M116 462C134 478 140 506 136 548H96C92 506 98 478 116 462Z" fill="url(#moon_rocket)" stroke="#897B71" stroke-width="3.5" stroke-linejoin="round"/>
+<path d="M116 462C126 470 132 480 135 490H97C100 480 106 470 116 462Z" fill="#F46F61" stroke="#975046" stroke-width="3" stroke-linejoin="round"/>
+<circle cx="116" cy="512" r="11" fill="#80B2E4" stroke="#4B607B" stroke-width="3"/>
+<path d="M110 508Q112 503 117 502" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+<path d="M108 548H124V560H108Z" fill="#95948F" stroke="#897B71" stroke-width="2.5"/>
+<path d="M104 486Q103 500 104 530" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+</g>
+</svg>
