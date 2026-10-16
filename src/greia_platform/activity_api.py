@@ -497,6 +497,23 @@ def import_wallpaper(candidate: WallpaperCandidate) -> Path:
     return WallpaperImporter(_theme_store(), _media_scanner()).import_image(candidate.path)
 
 
+def set_curated_wallpaper(asset_id: str) -> Path:
+    """Make one curated shared ``bg.wallpaper.*`` scene this profile's wallpaper.
+
+    Trusted customization only. The image is resolved semantically from the
+    read-only shared visual catalogue (role ``wallpaper``), never from a
+    caller-supplied path, and normalized into the managed wallpaper file.
+    """
+
+    _require_capability("customization.manage")
+    visual = _catalogue().get_visual(str(asset_id))
+    if visual.role != "wallpaper":
+        raise ValueError(f"not a curated wallpaper: {asset_id}")
+    return WallpaperImporter(_theme_store(), _media_scanner()).install_curated(
+        visual.path_for("default")
+    )
+
+
 def disable_wallpaper() -> ThemePreferences:
     _require_capability("customization.manage")
     return _theme_store().clear_wallpaper()

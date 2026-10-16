@@ -1,94 +1,73 @@
-"""Thin Greia composition root for workshop_settings.
+"""Thin Greia composition root for My Greia (``workshop_settings``).
 
-The historical ``main.py`` was a 707-line monolith that mixed constants,
-domain state, rendering and the event loop. Real work now lives in
-:mod:`workshop_content`, :mod:`workshop_model`, :mod:`workshop_renderer`
-and :mod:`workshop_app`. This module only re-exports the historical API
-surface and composes the lifecycle owned by :class:`WorkshopApp`.
-
-The surface remains parent-only (not a child Activity), R7.3-migrated:
-it does not own trusted Greia Home/Back chrome and respects the
-protected viewport through the shared ``ActivityViewport`` seam.
+My Greia is the child's own space: a live miniature of their Home and big
+picture choices (friend avatar, room and sparkle colours, Home pictures,
+big/small letters). Every choice saves immediately through the trusted
+customization services. Work lives in ``workshop_app`` (lifecycle/input),
+``workshop_model`` (pure state), ``workshop_services`` (platform port),
+``workshop_controls`` (shared control kit), ``workshop_preview`` (Home
+miniature), ``workshop_art`` (bounded pictures), ``workshop_audio`` and
+``workshop_renderer``. Removable-media wallpaper import is not part of the
+child flow; the platform capability remains for a parent-reviewed route.
 """
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pygame
 
-from greia_platform.activity_api import get_theme
+from greia_platform.activity_api import get_profile_locale
+from greia_platform.localization import LocalizedResources, activity_resources
+from greia_platform.pygame_canvas import PygameReferenceCanvas
+from greia_platform.typography import GreiaTypography
 
-# Support both Greia runtime/script and repository/package contexts
-# without importing forbidden modules. When loaded via
-# importlib.spec_from_file_location (tests) __package__ is falsy; we
-# set it to the canonical package so relative imports succeed. For
-# direct script execution ``python main.py`` bare imports remain the
-# fallback because sys.path[0] is the Activity directory itself.
+# Support both Greia runtime/script and repository/package contexts. When
+# loaded via importlib.spec_from_file_location (tests) __package__ is falsy;
+# set it to the canonical package so relative imports succeed. For direct
+# script execution bare imports remain the fallback.
 if not __package__:
     __package__ = "activities.workshop_settings"  # type: ignore[assignment]
 
 try:
-    from .workshop_app import WorkshopApp
-    from .workshop_content import (
-        MAX_THUMBNAIL_CACHE,
-        MAX_THUMBNAIL_PIXELS,
-        MODE_ICONS,
-        MODES,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        SCAN_INTERVAL_SECONDS,
-    )
-    from .workshop_model import WorkshopModel
-    from .workshop_renderer import HitTarget, WorkshopRenderer, _mix, settings_safe_ui_rect
+    from .workshop_app import MyGreiaApp
+    from .workshop_audio import MyGreiaAudio
+    from .workshop_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from .workshop_services import GreiaCustomization
 except ImportError:
-    from workshop_app import WorkshopApp  # type: ignore[no-redef]
-    from workshop_content import (  # type: ignore[no-redef]
-        MAX_THUMBNAIL_CACHE,
-        MAX_THUMBNAIL_PIXELS,
-        MODE_ICONS,
-        MODES,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        SCAN_INTERVAL_SECONDS,
-    )
-    from workshop_model import WorkshopModel  # type: ignore[no-redef]
-    from workshop_renderer import HitTarget, WorkshopRenderer, _mix, settings_safe_ui_rect  # type: ignore[no-redef]
+    from workshop_app import MyGreiaApp  # type: ignore[no-redef]
+    from workshop_audio import MyGreiaAudio  # type: ignore[no-redef]
+    from workshop_content import REFERENCE_HEIGHT, REFERENCE_WIDTH  # type: ignore[no-redef]
+    from workshop_services import GreiaCustomization  # type: ignore[no-redef]
 
-# Re-export compatibility surface (tests/tools may import these from main).
-MyGreiaSettings = WorkshopApp
+# Historical name kept for tools/tests that import it from ``main``.
+MyGreiaSettings = MyGreiaApp
 
-__all__ = [
-    "main",
-    "MyGreiaSettings",
-    "WorkshopApp",
-    "WorkshopModel",
-    "WorkshopRenderer",
-    "HitTarget",
-    "settings_safe_ui_rect",
-    "_mix",
-    "SCAN_INTERVAL_SECONDS",
-    "MAX_THUMBNAIL_CACHE",
-    "MAX_THUMBNAIL_PIXELS",
-    "MODES",
-    "MODE_ICONS",
-    "REFERENCE_WIDTH",
-    "REFERENCE_HEIGHT",
-]
+__all__ = ["main", "MyGreiaApp", "MyGreiaSettings"]
+
+
+def _resources() -> LocalizedResources:
+    return activity_resources(Path(__file__).resolve().parent, requested_locale=get_profile_locale())
 
 
 def main() -> int:
-    """Thin composition root: build Greia context and run the app."""
     pygame.init()
     try:
         screen = pygame.display.get_surface()
         if screen is None:
-            screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+            screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
+        # The Greia pointer is drawn by the canvas on every presented frame.
         pygame.mouse.set_visible(False)
-        # Warm theme cache so first frame has correct colors.
-        try:
-            get_theme()
-        except Exception:
-            pass
-        app = WorkshopApp(screen)
+        resources = _resources()
+        typography = GreiaTypography()
+        app = MyGreiaApp(
+            screen=screen,
+            canvas=PygameReferenceCanvas(screen),
+            typography=typography,
+            resources=resources,
+            services=GreiaCustomization(),
+            audio=MyGreiaAudio(resources),
+        )
         return app.run()
     finally:
         try:

@@ -1,277 +1,316 @@
-"""Lifecycle owner for workshop_settings.
+"""Lifecycle owner for My Greia.
 
-Owns screen/canvas/metrics, domain model, renderer and input
-routing. Delegates rules to the pure model and presentation to
-the renderer. Publishes READY after the first flip in the same loop.
-Keeps the experience parent-only, fast and bounded.
+Composes the model, the customization port, shared control kit, art,
+live Home preview, audio and renderer; routes pointer/keyboard/controller
+input through the kit; persists every choice immediately through the
+platform services; and publishes READY after the first presented frame.
+Redraw is event-driven (dirty flag) with a short animation window for the
+friend's cheer and the sparkle burst.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import time
-from pathlib import Path
 
 import pygame
 
-from greia_platform.activity_api import (
-    activity_stop_requested,
-    disable_wallpaper,
-    get_active_profile,
-    get_profile_avatar_choices,
-    get_theme,
-    get_theme_palette,
-    get_ui_preferences,
-    import_wallpaper,
-    list_wallpaper_candidates,
-    mark_activity_ready,
-    set_active_profile_avatar,
-    set_interface_size,
-    set_theme_color,
+from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.activity_controls import (
+    ControlKit,
+    ControlLayout,
+    ControlTheme,
+    KitPointer,
+    PointerPhase,
+    PygameControlInput,
 )
-from greia_platform.ui_preferences import InterfaceSize
+from greia_platform.input_core import InputEdge, SemanticAction, SemanticInputEvent
+from greia_platform.localization import LocalizationError, LocalizedResources
+from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
+from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 
 if not __package__:
     __package__ = "activities.workshop_settings"  # type: ignore[assignment]
 
 try:
-    from .workshop_content import (
-        MAX_THUMBNAIL_CACHE,
-        MAX_THUMBNAIL_PIXELS,
-        MODE_ICONS,
-        MODES,
-        SCAN_INTERVAL_SECONDS,
-    )
-    from .workshop_model import WorkshopModel
-    from .workshop_renderer import HitTarget, WorkshopRenderer
+    from .workshop_art import MyGreiaArt
+    from .workshop_audio import MyGreiaAudio
+    from .workshop_content import HOME_PORTALS, TABS, Tab
+    from .workshop_controls import MyGreiaControls
+    from .workshop_model import ChoiceKind, MyGreiaModel, Transition
+    from .workshop_preview import HomePreview, greeter_for
+    from .workshop_renderer import MyGreiaRenderer
+    from .workshop_services import CustomizationPort
 except ImportError:
-    from workshop_content import (  # type: ignore[no-redef]
-        MAX_THUMBNAIL_CACHE,
-        MAX_THUMBNAIL_PIXELS,
-        MODE_ICONS,
-        MODES,
-        SCAN_INTERVAL_SECONDS,
-    )
-    from workshop_model import WorkshopModel  # type: ignore[no-redef]
-    from workshop_renderer import HitTarget, WorkshopRenderer  # type: ignore[no-redef]
+    from workshop_art import MyGreiaArt  # type: ignore[no-redef]
+    from workshop_audio import MyGreiaAudio  # type: ignore[no-redef]
+    from workshop_content import HOME_PORTALS, TABS, Tab  # type: ignore[no-redef]
+    from workshop_controls import MyGreiaControls  # type: ignore[no-redef]
+    from workshop_model import ChoiceKind, MyGreiaModel, Transition  # type: ignore[no-redef]
+    from workshop_preview import HomePreview, greeter_for  # type: ignore[no-redef]
+    from workshop_renderer import MyGreiaRenderer  # type: ignore[no-redef]
+    from workshop_services import CustomizationPort  # type: ignore[no-redef]
 
 
-class WorkshopApp:
-    """Coordinate workshop lifecycle without owning rendering details."""
+def _safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
+    viewport = activity_viewport_for_surface(surface)
+    x, y = position
+    if not (0 <= x < viewport.surface.width and 0 <= y < viewport.surface.height):
+        return False
+    for protected in viewport.protected_regions:
+        if protected.x <= x < protected.right and protected.y <= y < protected.bottom:
+            return False
+    return True
 
-    SCAN_INTERVAL_SECONDS = SCAN_INTERVAL_SECONDS
-    MAX_THUMBNAIL_CACHE = MAX_THUMBNAIL_CACHE
-    MAX_THUMBNAIL_PIXELS = MAX_THUMBNAIL_PIXELS
-    MODES = MODES
-    MODE_ICONS = MODE_ICONS
+
+class MyGreiaApp:
+    """Coordinate My Greia: choices in, saved look + live Home preview out."""
 
     def __init__(
         self,
+        *,
         screen: pygame.Surface,
-        model: WorkshopModel | None = None,
-        renderer: WorkshopRenderer | None = None,
+        canvas: PygameReferenceCanvas,
+        typography,
+        resources: LocalizedResources,
+        services: CustomizationPort,
+        audio: MyGreiaAudio | None = None,
+        clock: Callable[[], float] = time.monotonic,
+        kit: ControlKit | None = None,
+        art: MyGreiaArt | None = None,
     ) -> None:
         self.screen = screen
-        self.clock = pygame.time.Clock()
-        if model is None:
-            # Composition fallback: build model from Greia platform.
-            model = WorkshopModel(
-                profile=get_active_profile(),
-                avatar_choices=get_profile_avatar_choices(),
-                palette=get_theme_palette(),
-                theme=get_theme(),
-                ui_preferences=get_ui_preferences(),
-            )
-        self.model = model
-        # Ensure palette/theme are current even if model was injected.
-        try:
-            self.model.palette = get_theme_palette()
-        except Exception:
-            pass
-        try:
-            self.model.theme = get_theme()
-        except Exception:
-            pass
-        try:
-            self.model.ui_preferences = get_ui_preferences()
-        except Exception:
-            pass
-        if renderer is None:
-            renderer = WorkshopRenderer(screen, tuple(self.model.avatar_choices))
-        else:
-            renderer.screen = screen
-        self.renderer = renderer
-        self.targets: list[HitTarget] = []
-        self.running = True
+        self.canvas = canvas
+        self.typography = typography
+        self.resources = resources
+        self.services = services
+        self.clock = clock
+        state = services.load()
+        self.choices = state.choices
+        self.text_color = state.text_color
+        self.custom_path = state.custom_wallpaper
+        self.model = MyGreiaModel(state.look, custom_available=state.custom_wallpaper is not None)
+        self.kit = kit if kit is not None else ControlKit(typography, self._control_theme())
+        self.art = art if art is not None else MyGreiaArt(self.kit, typography)
+        self.audio = audio if audio is not None else MyGreiaAudio(resources, clock=clock)
+        self.preview = HomePreview(self.kit, self.art, typography, self._home_labels(), clock=clock)
+        self.controls = MyGreiaControls(
+            self.kit,
+            self.art,
+            ControlLayout.for_canvas(canvas, screen.get_size()),
+            self.choices,
+            on_tab=self._on_tab,
+            on_choice=self._on_choice,
+            on_undo=self._on_undo,
+        )
+        self.controls.custom_path = self.custom_path
+        self.controls.show(self.model.tab, self.model.look, custom=self.model.custom_available)
+        self.renderer = MyGreiaRenderer(self.kit, self.art, self.preview, self.controls)
+        self._surfaces = SurfaceNavigator(self.controls.layer)
+        self._input = PygameControlInput(to_logical=canvas.pointer, is_safe=lambda pos: _safe_point(self.screen, pos))
+        self._running = True
+        self._ready_published = False
+        self._dirty = True
+        self._activated = False
+        self.last_feedback: str | None = None
 
-    # -- lifecycle ---------------------------------------------------------
+    # -- composition helpers ------------------------------------------------------
+
+    def _control_theme(self) -> ControlTheme:
+        return ControlTheme(accent=self.choices.accent(self.model.look.accent), text=self.text_color)
+
+    def _home_labels(self) -> dict[str, str]:
+        labels: dict[str, str] = {}
+        for collection, _hue, _icon, _box in HOME_PORTALS:
+            try:
+                labels[collection] = self.resources.text(f"home.{collection}")
+            except LocalizationError:
+                labels[collection] = ""
+        return labels
+
+    # -- main loop ------------------------------------------------------------------
 
     def run(self) -> int:
-        ready_published = False
-        while self.running and not activity_stop_requested():
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                elif event.type == pygame.KEYDOWN:
-                    self.handle_key(event.key)
-                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    self.handle_click(event.pos)
-                elif event.type == pygame.MOUSEWHEEL and self.model.mode == "wallpapers":
-                    self.change_wallpaper_page(-event.y)
-                elif event.type == pygame.VIDEORESIZE:
-                    self.handle_resize(event)
-            self._step_frame()
-            self._draw()
-            pygame.display.flip()
-            if not ready_published:
-                # READY means Greia can actually present a usable parent frame,
-                # not merely that pygame initialized successfully.
-                mark_activity_ready()
-                ready_published = True
-            self.clock.tick(30)
-        pygame.quit()
+        ticker = pygame.time.Clock()
+        self.audio.welcome()
+        try:
+            while self._running and not activity_stop_requested():
+                for event in pygame.event.get():
+                    self._handle_event(event)
+                repeat = self._input.poll()
+                if repeat is not None:
+                    self._dispatch(repeat)
+                animating = self.step()
+                if self._dirty or animating:
+                    self.render()
+                    self.present()
+                    pygame.display.flip()
+                    self._dirty = False
+                    if not self._ready_published:
+                        # READY means a usable child frame is on screen.
+                        mark_activity_ready()
+                        self._ready_published = True
+                ticker.tick(30 if animating else 20)
+        finally:
+            self.audio.stop_speech()
+            self.typography.clear()
         return 0
 
-    def _step_frame(self) -> None:
-        if self.model.mode == "wallpapers":
-            self._rescan_media()
+    def step(self) -> bool:
+        if self.preview.update(self.model.look):
+            self._dirty = True
+        if self.controls.layer.invalidation.should_draw:
+            self._dirty = True
+        return self.preview.animating
 
-    # -- input routing -----------------------------------------------------
+    def render(self) -> None:
+        self.renderer.draw(self.canvas.surface, self.model, self.choices, custom=self.custom_path)
 
-    def handle_key(self, key: int) -> None:
-        if key in {pygame.K_ESCAPE, pygame.K_BACKSPACE}:
-            self.running = False
-        elif key == pygame.K_TAB:
-            index = MODES.index(self.model.mode)
-            self.model.mode = MODES[(index + 1) % len(MODES)]
-        elif self.model.mode == "wallpapers" and key in {pygame.K_LEFT, pygame.K_PAGEUP}:
-            self.change_wallpaper_page(-1)
-        elif self.model.mode == "wallpapers" and key in {pygame.K_RIGHT, pygame.K_PAGEDOWN}:
-            self.change_wallpaper_page(1)
-        elif self.model.mode == "size" and key in {pygame.K_LEFT, pygame.K_RIGHT}:
-            sizes = tuple(InterfaceSize)
-            current = sizes.index(self.model.ui_preferences.interface_size)  # type: ignore[union-attr]
-            delta = -1 if key == pygame.K_LEFT else 1
-            self._apply_size(sizes[(current + delta) % len(sizes)])
+    def present(self) -> None:
+        """Show the reference canvas; bars (if any) take the room colour."""
 
-    def handle_click(self, position: tuple[int, int]) -> None:
-        for target in reversed(self.targets):
-            if not target.rect.collidepoint(position):
-                continue
-            try:
-                if target.action == "mode":
-                    self.model.mode = str(target.value)
-                elif target.action == "color":
-                    kind, swatch_id = target.value  # type: ignore[misc]
-                    set_theme_color(str(kind), str(swatch_id))
-                    self.model.theme = get_theme()
-                    self.model.success()
-                elif target.action == "size":
-                    self._apply_size(target.value)  # type: ignore[arg-type]
-                elif target.action == "avatar":
-                    self.model.profile = set_active_profile_avatar(str(target.value))
-                    self.model.success()
-                elif target.action == "wallpaper":
-                    candidate = target.value
-                    if candidate is None:
-                        disable_wallpaper()
-                        self.model.selected_wallpaper_source = None
-                    else:
-                        import_wallpaper(candidate)  # type: ignore[arg-type]
-                        self.model.selected_wallpaper_source = candidate.path  # type: ignore[union-attr]
-                    self.model.theme = get_theme()
-                    self.model.success()
-                elif target.action == "wallpaper_page":
-                    self.change_wallpaper_page(int(target.value))
-            except (OSError, PermissionError, RuntimeError, ValueError):
-                self.model.error()
+        room = self.choices.background(self.model.look.background)
+        self.canvas.present(clear=room, smooth=True)
+
+    # -- input ----------------------------------------------------------------------
+
+    def _handle_event(self, event: pygame.event.Event) -> None:
+        if event.type == pygame.QUIT:
+            self._running = False
             return
-
-    def handle_resize(self, event: pygame.event.Event) -> None:
-        self.screen = pygame.display.get_surface() or self.screen
-        self.renderer.on_resize(self.screen)
-
-    def change_wallpaper_page(self, delta: int) -> None:
-        maximum = self.renderer._maximum_wallpaper_page(tuple(self.model.candidates))  # type: ignore[arg-type]
-        self.model.change_wallpaper_page(delta, maximum)
-
-    # -- internal helpers --------------------------------------------------
-
-    def _apply_size(self, size: InterfaceSize) -> None:
-        self.model.ui_preferences = set_interface_size(size)
-        self.model.success()
-
-    def _rescan_media(self) -> None:
-        now = time.monotonic()
-        if not self.model.should_rescan(now):
+        if event.type == pygame.VIDEORESIZE:
+            self.resize(pygame.display.get_surface() or self.screen)
             return
-        self.model.note_scanned(now)
-        try:
-            updated = list_wallpaper_candidates()
-        except (OSError, PermissionError, RuntimeError, ValueError):
-            updated = ()
-        previous_paths = {candidate.path for candidate in self.model.candidates}  # type: ignore[union-attr]
-        self.model.candidates = tuple(updated)
-        current_paths = {candidate.path for candidate in self.model.candidates}  # type: ignore[union-attr]
-        if self.model.selected_wallpaper_source not in current_paths:
-            self.model.selected_wallpaper_source = None
-        if current_paths != previous_paths:
-            maximum = self.renderer._maximum_wallpaper_page(tuple(self.model.candidates))  # type: ignore[arg-type]
-            self.model.clamp_wallpaper_page(maximum)
-            self.renderer.prune_thumbnails(current_paths)
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_TAB:
+            step = -1 if event.mod & pygame.KMOD_SHIFT else 1
+            self._on_tab(self._neighbour_tab(step), from_keyboard=True)
+            return
+        if event.type == pygame.MOUSEMOTION:
+            self._dirty = True  # the Greia pointer is drawn with each frame
+        translated = self._input.translate(event)
+        if translated is not None:
+            self._dispatch(translated)
 
-    def _draw(self) -> None:
-        # Keep theme live so external changes are visible without restart.
-        try:
-            self.model.theme = get_theme()
-        except Exception:
-            pass
-        try:
-            self.model.ui_preferences = get_ui_preferences()
-        except Exception:
-            pass
-        self.renderer.draw(self.model, self.targets)
+    def resize(self, screen: pygame.Surface) -> None:
+        self.screen = screen
+        self.canvas = PygameReferenceCanvas(self.screen)
+        self._input = PygameControlInput(to_logical=self.canvas.pointer, is_safe=lambda pos: _safe_point(self.screen, pos))
+        self.controls.relayout(ControlLayout.for_canvas(self.canvas, self.screen.get_size()))
+        self._dirty = True
 
-    # Compatibility for tests that instantiate via object.__new__(MyGreiaSettings)
-    # and expect _thumbnail / thumbnail_cache without a full renderer.
-    def _thumbnail(self, candidate, size):
-        # Prefer renderer when available (normal lifecycle).
-        if hasattr(self, "renderer") and hasattr(self.renderer, "_thumbnail"):
-            try:
-                return self.renderer._thumbnail(candidate, size)
-            except Exception:
-                pass
-        # Fallback pure logic for bare-instance tests (removable media gone).
-        width, height = max(1, size[0]), max(1, size[1])
-        try:
-            mtime = candidate.path.stat().st_mtime_ns
-        except OSError:
-            return None
-        key = (candidate.path, mtime, width, height)
-        cache = self.__dict__.get("_fallback_thumbnail_cache")
-        if cache is None and "thumbnail_cache" not in self.__dict__:
-            return None
-        fb = self.__dict__.get("_fallback_thumbnail_cache", {})
-        if key in fb:
-            return fb[key]
-        return None
+    def _dispatch(self, kit_input) -> bool:
+        if (
+            isinstance(kit_input, SemanticInputEvent)
+            and kit_input.edge is InputEdge.PRESSED
+            and kit_input.action is SemanticAction.CANCEL
+        ):
+            self._on_cancel()
+            return True
+        result = self._surfaces.dispatch(kit_input)
+        if self.controls.layer.invalidation.should_draw:
+            self._dirty = True
+        return result is not UiEventResult.IGNORED
 
-    @property
-    def thumbnail_cache(self):
-        if hasattr(self, "renderer") and hasattr(self.renderer, "thumbnail_cache"):
-            fb = self.__dict__.get("_fallback_thumbnail_cache")
-            if fb is not None and fb is not self.renderer.thumbnail_cache:
-                self.renderer.thumbnail_cache = fb
-            return self.renderer.thumbnail_cache
-        return self.__dict__.get("_fallback_thumbnail_cache", {})
+    def _on_cancel(self) -> None:
+        """Back out of the choices to the tabs; from the tabs, leave."""
 
-    @thumbnail_cache.setter
-    def thumbnail_cache(self, value):
-        self.__dict__["_fallback_thumbnail_cache"] = value
-        if hasattr(self, "renderer") and hasattr(self.renderer, "thumbnail_cache"):
-            try:
-                self.renderer.thumbnail_cache = value
-            except Exception:
-                pass
+        if self.controls.focus_in_tiles():
+            self.controls.focus_current_tab()
+            self._dirty = True
+        else:
+            self._running = False
+
+    def tap(self, raw_pos: tuple[int, int]) -> bool:
+        """Deliver one complete tap at a physical position (tests/tools)."""
+
+        if not _safe_point(self.screen, raw_pos):
+            return False
+        logical = self.canvas.pointer(raw_pos)
+        if logical is None:
+            return False
+        point = (int(logical[0]), int(logical[1]))
+        self._activated = False
+        self._dispatch(KitPointer(PointerPhase.DOWN, point))
+        self._dispatch(KitPointer(PointerPhase.UP, point))
+        return self._activated
+
+    def tap_control(self, control_id: str) -> bool:
+        """Tap the centre of a kit control (tests/tools; physical == logical at 1024x600)."""
+
+        rect = self.controls.layer.target(control_id).rect
+        transform = self.canvas.mapper.transform
+        x, y = transform.logical_to_physical((rect.centerx, rect.centery))
+        return self.tap((int(round(x)), int(round(y))))
+
+    def press(self, key: int) -> bool:
+        """Deliver one key press (tests/tools)."""
+
+        self._activated = False
+        event = pygame.event.Event(pygame.KEYDOWN, key=key, mod=0, unicode="")
+        self._handle_event(event)
+        return self._activated
+
+    # -- choices --------------------------------------------------------------------
+
+    def _neighbour_tab(self, step: int) -> Tab:
+        index = TABS.index(self.model.tab)
+        return TABS[(index + step) % len(TABS)]
+
+    def _on_tab(self, tab: Tab, *, from_keyboard: bool = False) -> None:
+        self._activated = True
+        if self.model.set_tab(tab):
+            self.controls.show(tab, self.model.look, custom=self.model.custom_available)
+            self.audio.play("tab")
+        if from_keyboard:
+            self.controls.focus_current_tab()
+        self._dirty = True
+
+    def _on_choice(self, kind: ChoiceKind, value: str) -> None:
+        self._activated = True
+        transition = self.model.propose(kind, value)
+        if transition is None:
+            # Already chosen: the friend still waves back.
+            self.preview.celebrate(self.model.look, (kind,))
+            self.audio.play("pick")
+            self.last_feedback = "same"
+            self._dirty = True
+            return
+        self._apply(transition, undo=False)
+
+    def _on_undo(self) -> None:
+        self._activated = True
+        transition = self.model.propose_undo()
+        if transition is None:
+            return
+        self._apply(transition, undo=True)
+
+    def _apply(self, transition: Transition, *, undo: bool) -> None:
+        applied = self.services.apply(transition.before, transition.after)
+        if undo:
+            self.model.commit_undo(applied)
+        else:
+            self.model.commit(transition, applied)
+        look = self.model.look
+        changed = look.changed_kinds(transition.before)
+        if not changed:
+            # The platform refused (e.g. storage full): gentle think, no loss.
+            self.preview.think(look)
+            self.last_feedback = "refused"
+            self._dirty = True
+            return
+        if ChoiceKind.ACCENT in changed:
+            self.kit.painter.set_theme(self._control_theme())
+        if self.custom_path is not None and not self.model.custom_available:
+            self.custom_path = None
+            self.controls.custom_path = None
+            if self.model.tab is Tab.PICTURES:
+                self.controls.show(Tab.PICTURES, look, custom=False, keep_focus=True)
+        self.controls.sync(look, can_undo=self.model.can_undo)
+        self.preview.celebrate(look, changed)
+        self.audio.play("undo" if undo else "pick")
+        self.audio.react(greeter_for(look.avatar), avatar_changed=ChoiceKind.AVATAR in changed)
+        self.last_feedback = "undo" if undo else "changed"
+        self._dirty = True
 
 
-__all__ = ["WorkshopApp"]
+__all__ = ["MyGreiaApp"]

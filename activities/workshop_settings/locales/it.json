@@ -3,13 +3,14 @@
   "locale": "it",
   "direction": "ltr",
   "strings": {
-    "My Greia": "La Mia Greia",
     "activity.workshop_settings.title": "La Mia Greia",
     "activity.title": "La Mia Greia",
-    "section.avatar": "Scegli Avatar",
-    "section.color": "Colore Preferito",
-    "section.wallpaper": "Sfondo Schermo",
-    "section.size": "Dimensione Icone"
+    "home.create": "Crea",
+    "home.my_creations": "Le mie creazioni",
+    "home.play": "Gioca",
+    "home.learn": "Impara",
+    "home.explore": "Esplora",
+    "home.my_greia": "Mio Greia"
   },
   "audio": {
     "activity.title": {

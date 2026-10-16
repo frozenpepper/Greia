@@ -14,9 +14,10 @@ class MyGreiaSettingsContractTests(unittest.TestCase):
         with (ACTIVITY_ROOT / "activity.toml").open("rb") as handle:
             raw = tomllib.load(handle)
         self.assertEqual(raw["activity"]["id"], "org.greia.workshop-settings")
-        self.assertEqual(raw["activity"]["title_key"], "My Greia")
+        self.assertEqual(raw["activity"]["title_key"], "activity.workshop_settings.title")
         self.assertEqual(raw["presentation"]["categories"], ["my_greia"])
-        self.assertEqual(raw["input"]["profile"], "pointer")
+        self.assertEqual(raw["input"]["profile"], "navigation")
+        self.assertEqual(raw["requirements"]["required_capabilities"], ["display"])
         self.assertEqual(
             set(raw["permissions"]["requested"]),
             {

@@ -420,7 +420,22 @@ class WallpaperImporter:
         self.scanner = scanner
 
     def import_image(self, source: Path) -> Path:
-        source = self.scanner.validate_path(source)
+        return self._install(self.scanner.validate_path(source))
+
+    def install_curated(self, source: Path) -> Path:
+        """Install one Greia-owned curated scene (never removable media).
+
+        Callers resolve ``source`` from the read-only shared visual catalogue
+        (``bg.wallpaper.*``); it receives the same bounded normalization as a
+        removable-media import, so the Shell consumes one managed file shape.
+        """
+
+        resolved = Path(source).resolve(strict=True)
+        if not resolved.is_file() or resolved.suffix.lower() not in {".png", ".jpg", ".jpeg"}:
+            raise CustomizationError("curated wallpaper must be a regular PNG/JPEG file")
+        return self._install(resolved)
+
+    def _install(self, source: Path) -> Path:
         try:
             from PIL import Image, ImageOps, UnidentifiedImageError
         except ImportError as exc:
