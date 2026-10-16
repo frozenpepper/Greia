@@ -417,6 +417,32 @@ class AquariumLayoutTests(AquariumTestCase):
                 self.assertFalse(target.rect.colliderect(protected), (size, target.control_id))
                 self.assertTrue(pygame.Rect(0, 0, 1024, 600).contains(target.rect), (size, target.control_id))
 
+    def test_keyboard_hint_rests_above_the_bar_end_and_lights_the_pressed_key(self) -> None:
+        from greia_platform.activity_keyboard_hint import KeyCap
+
+        for size in ((1024, 600), (800, 480)):
+            app = self.make_app(size=size)
+            controls = app._controls
+            keys = controls.keys
+            self.assertTrue(keys.visible, "shown at start")
+            self.assertEqual(keys.active, {KeyCap.UP, KeyCap.DOWN, KeyCap.LEFT, KeyCap.RIGHT, KeyCap.SPACE})
+            day = controls.day_night.rect
+            self.assertEqual(keys.rect.right, day.right, "at the right end of the bottom bar")
+            self.assertLessEqual(day.top - keys.rect.bottom, 10)
+            self.assertGreaterEqual(day.top - keys.rect.bottom, 0)
+            self.assertFalse(keys.rect.colliderect(CHEST_RECT))
+            self.assertFalse(keys.rect.colliderect(controls._layout.protected))
+            for target in controls.layer.targets:
+                if target.control_id != TANK_ID and target.visible:
+                    self.assertFalse(keys.rect.colliderect(target.rect), target.control_id)
+            self.assertNotIn(keys, list(controls.layer.targets), "display-only, never a focus target")
+            smallest = min(r.height for r in keys.key_rects().values()) * controls._layout.scale
+            self.assertGreaterEqual(smallest, 25, "legible keycaps")
+        app.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE, mod=0, unicode="", scancode=0))
+        self.assertIn(KeyCap.SPACE, keys.lit)
+        app.handle_event(pygame.event.Event(pygame.KEYUP, key=pygame.K_SPACE, mod=0, unicode="", scancode=0))
+        app._draw()
+
     def test_it_and_en_render_every_state(self) -> None:
         for locale in ("en", "it"):
             app = self.make_app(locale=locale)

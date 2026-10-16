@@ -323,6 +323,76 @@ class SottomarinoAppTests(unittest.TestCase):
         _step(app, 8.0)
         self.assertEqual(get_biome(app.model.depth), BiomeType.MIDNIGHT_ABYSS)
 
+    def test_piloting_buttons_form_one_cluster_with_the_keyboard_hint(self):
+        from greia_platform.activity_controls import ControlLayout
+        from greia_platform.activity_keyboard_hint import KeyCap
+        from sub_cockpit_view import (
+            BUTTON_RECTS,
+            DASHBOARD_TOP,
+            LEVER_HIT_RECT,
+            PILOT_BUTTONS,
+            PORTHOLE_VIEW,
+            WHEEL_CENTER,
+            WHEEL_HIT_RADIUS,
+        )
+
+        pilot = [BUTTON_RECTS[name] for name in PILOT_BUTTONS]
+        block = pilot[0].unionall(pilot[1:])
+        self.assertLessEqual(block.width, 240, "one compact block, not three areas")
+        self.assertLessEqual(block.height, 260)
+        self.assertGreater(block.left, PORTHOLE_VIEW.right, "the cluster is on the right panel")
+        # D-pad: surface above dive, left / right either side.
+        self.assertEqual(BUTTON_RECTS["surface"].centerx, BUTTON_RECTS["dive"].centerx)
+        self.assertLess(BUTTON_RECTS["surface"].bottom, BUTTON_RECTS["dive"].top)
+        self.assertLess(BUTTON_RECTS["steer_left"].right, BUTTON_RECTS["steer_right"].left)
+        for name, rect in BUTTON_RECTS.items():
+            for other_name, other in BUTTON_RECTS.items():
+                if name < other_name:
+                    self.assertFalse(rect.colliderect(other), f"{name} overlaps {other_name}")
+        # The helm station (wheel + lever) stays draggable and clear of the buttons.
+        self.assertFalse(LEVER_HIT_RECT.colliderect(block))
+        self.assertLess(WHEEL_CENTER[1] + WHEEL_HIT_RADIUS, LEVER_HIT_RECT.top)
+        for size in ((1024, 600), (800, 480)):
+            with self.subTest(size=size):
+                pygame.display.set_mode(size)
+                app = _make_app()
+                keys = app.controls.keys
+                self.assertTrue(keys.visible, "the keys are shown at start")
+                self.assertEqual(keys.active, {KeyCap.UP, KeyCap.DOWN, KeyCap.LEFT, KeyCap.RIGHT, KeyCap.SPACE})
+                rect = keys.rect
+                self.assertGreaterEqual(rect.top, block.bottom)
+                self.assertLess(rect.top - block.bottom, 24, "the hint sits right under the cluster")
+                self.assertLessEqual(rect.bottom, DASHBOARD_TOP)
+                self.assertTrue(block.left <= rect.left and rect.right <= block.right)
+                layout = ControlLayout.for_canvas(app.canvas, size)
+                self.assertFalse(rect.colliderect(layout.protected))
+                scale = layout.scale
+                self.assertGreaterEqual(min(r.height for r in keys.key_rects().values()) * scale, 26, "legible keycaps")
+                app.draw()
+        pygame.display.set_mode((1024, 600))
+
+    def test_keyboard_hint_lights_the_pressed_key_and_returns_with_an_order_hint(self):
+        from greia_platform.activity_keyboard_hint import KeyCap
+
+        app = _make_app()
+        keys = app.controls.keys
+        app.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_DOWN, mod=0, unicode="", scancode=0))
+        self.assertIn(KeyCap.DOWN, keys.lit)
+        app.draw()
+        app.handle_event(pygame.event.Event(pygame.KEYUP, key=pygame.K_DOWN, mod=0, unicode="", scancode=0))
+        _step(app, 0.5)
+        self.assertNotIn(KeyCap.DOWN, keys.lit)
+        keys.hide()
+        app.model._encounter_cooldown = 999
+        app.model._order_cooldown = 0.0
+        for _ in range(int((ORDER_HINT_SECONDS + 2.0) * 30)):
+            _step(app, 1 / 30)
+            if app.model.current_order.hinted:
+                break
+        self.assertTrue(app.model.current_order.hinted)
+        self.assertTrue(keys.visible, "Captain Leo's order hint shows the keys again")
+        self.assertTrue(keys.animating, "lighting them one after another")
+
     def test_space_sounds_the_alarm_unless_the_focus_ring_is_shown(self):
         from greia_platform.pygame_input import CONTROLLER_BUTTON_A, CONTROLLER_BUTTON_RIGHTSHOULDER
 

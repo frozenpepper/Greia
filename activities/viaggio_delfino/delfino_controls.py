@@ -7,7 +7,8 @@
   south choose, pointer and touch tap.
 * **Swim HUD:** ``ProgressDots`` (one dot per stretch of the course) and a
   ``HudChip`` pearl counter in the top bar beside the protected Home/Back
-  region; a second ``HudChip`` shows the count-up at the finish.
+  region; a second ``HudChip`` shows the count-up at the finish; a
+  display-only ``KeyboardHint`` (↑ ↓ + Space) sits on the sand bottom-right.
 
 The app owns what each control does; every control stays outside the
 protected Home/Back region and is display-only while swimming, so the
@@ -17,6 +18,8 @@ arrows keep steering the dolphin.
 from __future__ import annotations
 
 from collections.abc import Callable
+import math
+import time
 
 import pygame
 
@@ -29,13 +32,15 @@ from greia_platform.activity_controls import (
     IconButton,
     ProgressDots,
 )
+from greia_platform.activity_keyboard_hint import KeyboardHint, KeyCap
+from greia_platform.pygame_blit import PreparedSurfaces
 
 try:
     from delfino_art import DelfinoArt
-    from delfino_content import JOURNEYS, REFERENCE_WIDTH, JourneySpec
+    from delfino_content import JOURNEYS, REFERENCE_HEIGHT, REFERENCE_WIDTH, JourneySpec
 except ImportError:  # repository/package import context
     from .delfino_art import DelfinoArt
-    from .delfino_content import JOURNEYS, REFERENCE_WIDTH, JourneySpec
+    from .delfino_content import JOURNEYS, REFERENCE_HEIGHT, REFERENCE_WIDTH, JourneySpec
 
 CONTROL_ACCENT = "ocean"
 
@@ -105,12 +110,35 @@ class PickerControls:
         return self.cards[journey_id].rect
 
 
-class SwimHud:
-    """Display-only swim HUD: stretch dots, pearl counter, count-up chip."""
+# ↑ ↓ steer the dolphin, Space leaps (delfino_input); ← → do nothing (dimmed).
+KEY_HINT_KEYS = frozenset({KeyCap.UP, KeyCap.DOWN, KeyCap.SPACE})
+KEY_HINT_KEY = 32  # logical keycap height (legible for 4-7 year olds)
+KEY_HINT_MIN_PHYSICAL = 26  # never drawn smaller than this on screen
+KEY_HINT_BOTTOM_MARGIN = 6  # on the sand, below the deepest pearl row
 
-    def __init__(self, kit: ControlKit, art: DelfinoArt, layout: ControlLayout, spec: JourneySpec) -> None:
+
+class SwimHud:
+    """Display-only swim HUD: stretch dots, pearl counter, count-up chip, keyboard hint.
+
+    The ``KeyboardHint`` (↑ ↓ + Space keycaps, ← → dimmed) sits on the sand in
+    the bottom-right corner, below every pearl row and away from the dolphin;
+    it teaches the keys and lights the drawn key while the real key is held
+    (ADR 0037 §4b). It is not a layer target.
+    """
+
+    def __init__(
+        self,
+        kit: ControlKit,
+        art: DelfinoArt,
+        layout: ControlLayout,
+        spec: JourneySpec,
+        *,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
         self._kit = kit
         self._art = art
+        self.keys: KeyboardHint = kit.keyboard_hint("keys", pygame.Rect(0, 0, 10, 10), active=KEY_HINT_KEYS, clock=clock)
+        self._fast = PreparedSurfaces(max_entries=12, max_pixels=12 * 260 * 100)
         self.pearls: HudChip = kit.hud_chip("swim.pearls", pygame.Rect(0, 0, 120, 52), icon=art.pearl(36), value=0)
         self.count: HudChip = kit.hud_chip("count.pearls", pygame.Rect(0, 0, 150, 64), icon=art.pearl(46), value=0)
         self.count.visible = False
@@ -141,7 +169,19 @@ class SwimHud:
         self.count.rect = pygame.Rect(0, 0, 10, count_h)
         count_w = self.count.preferred_width(digits=2)
         self.count.rect = pygame.Rect(REFERENCE_WIDTH // 2 - count_w // 2, 146, count_w, count_h)
+        key = max(KEY_HINT_KEY, math.ceil(KEY_HINT_MIN_PHYSICAL / max(0.01, layout.scale)))
+        width, height = KeyboardHint.preferred_size(KEY_HINT_KEYS, key=key)
+        self.keys.rect = pygame.Rect(
+            REFERENCE_WIDTH - layout.margin - width, REFERENCE_HEIGHT - KEY_HINT_BOTTOM_MARGIN - height, width, height
+        )
+        self._fast.clear()
         self.layer.invalidation.invalidate()
+
+    def draw_keys(self, surface: pygame.Surface) -> None:
+        """The keyboard hint, one RLE blit per look (no per-frame alpha work)."""
+
+        if self.keys.visible:
+            surface.blit(self._fast(self.keys.render()), self.keys.rect.topleft)
 
     @property
     def top_bar_bottom(self) -> int:

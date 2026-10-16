@@ -401,6 +401,37 @@ class VoloAppLoopTests(unittest.TestCase):
         app._on_look("crown")
         self.assertEqual(self.store.data[STORAGE_KEY]["look"], "crown")
 
+    def test_keyboard_hint_sits_under_the_flight_band_and_lights_the_pressed_key(self) -> None:
+        from greia_platform.activity_controls import ControlLayout
+        from greia_platform.activity_keyboard_hint import KeyCap
+
+        try:
+            from dragon_model import MAX_Y
+        except ImportError:  # pragma: no cover - package import path
+            from activities.volo_draghetto.dragon_model import MAX_Y
+
+        app = self.app
+        app.start_course(0)
+        keys = app.hud.keys
+        self.assertTrue(keys.visible, "shown at the start of a flight")
+        self.assertEqual(keys.active, {KeyCap.UP, KeyCap.DOWN, KeyCap.LEFT, KeyCap.RIGHT, KeyCap.SPACE})
+        self.assertGreater(keys.rect.top, MAX_Y + 16, "below every pickup and the dragon's path")
+        self.assertGreater(keys.rect.left, REFERENCE_WIDTH // 2, "bottom-right corner")
+        self.assertFalse(keys.rect.colliderect(ControlLayout.for_canvas(app.canvas, self.screen.get_size()).protected))
+        self.assertGreaterEqual(min(r.height for r in keys.key_rects().values()), 30, "legible keycaps")
+        self._key(pygame.K_SPACE, True)
+        self.assertIn(KeyCap.SPACE, keys.lit)
+        app.render()
+        self._key(pygame.K_SPACE, False)
+        for _ in range(int(0.5 / STEP)):
+            self._tick()
+        self.assertNotIn(KeyCap.SPACE, keys.lit)
+        keys.hide()
+        for _ in range(int(7 / STEP)):
+            self._tick()
+        self.assertTrue(keys.visible, "the idle hint shows the keys again")
+        app.render()
+
     def test_controller_flap_and_hint_after_idle(self) -> None:
         app = self.app
         app.start_course(0)

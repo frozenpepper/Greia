@@ -11,12 +11,17 @@ protected Home/Back region:
   the nearest berry.
 
 Arrow keys / D-pad / stick steer Momo (gameplay, not focus moves); pointer
-input the layer ignores is gameplay too (tap or drag in the garden).
+input the layer ignores is gameplay too (tap or drag in the garden). A
+display-only ``KeyboardHint`` (arrows + Space keycaps) sits in the bottom-right
+corner beside the garden: it teaches that the arrows walk Momo and Space
+waits, and the drawn key lights while the real key is held (ADR 0037 §4b).
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
+import math
+import time
 
 import pygame
 
@@ -30,6 +35,8 @@ from greia_platform.activity_controls import (
     IconButton,
     ProgressDots,
 )
+from greia_platform.activity_keyboard_hint import KeyboardHint, KeyCap
+from greia_platform.pygame_blit import PreparedSurfaces
 
 if __package__:
     from .corsa_layout import garden_area
@@ -39,6 +46,16 @@ else:
 HINT_GLYPH_SHARE = 0.62
 FADED_ALPHA = 70
 MAX_SLOT_SHARE = 0.62
+# Arrows walk Momo, Space waits (corsa_app).
+KEY_HINT_KEYS = frozenset({KeyCap.UP, KeyCap.DOWN, KeyCap.LEFT, KeyCap.RIGHT, KeyCap.SPACE})
+KEY_HINT_KEY = 34  # logical keycap height (legible for 4-7 year olds)
+KEY_HINT_MIN_PHYSICAL = 28  # never drawn smaller than this on screen
+KEY_HINT_SMALLEST = 28  # logical keycap height a wide garden may shrink the hint to
+KEY_HINT_CLEARANCE = 14  # free space kept between the hint and the garden
+
+
+def key_hint_key(scale: float) -> int:
+    return max(KEY_HINT_KEY, math.ceil(KEY_HINT_MIN_PHYSICAL / max(0.01, scale)))
 
 
 class CorsaControls:
@@ -52,8 +69,12 @@ class CorsaControls:
         *,
         berry_icon: Callable[[str, int], pygame.Surface | None],
         on_hint: Callable[[], object],
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._kit = kit
+        # Display-only (not a layer target): drawn by ``draw_keys``.
+        self.keys: KeyboardHint = kit.keyboard_hint("keys", pygame.Rect(0, 0, 10, 10), active=KEY_HINT_KEYS, clock=clock)
+        self._fast = PreparedSurfaces(max_entries=12, max_pixels=12 * 260 * 100)
         self._berry_icon = berry_icon
         self.basket: HudChip = kit.hud_chip("hud.basket", pygame.Rect(0, 0, 10, 10), icon=None, value="")
         self.progress: ProgressDots = kit.progress_dots("progress", pygame.Rect(0, 0, 10, 10), total=gardens)
@@ -87,7 +108,37 @@ class CorsaControls:
         self._faded.clear()
         top = max(bar.bottom, layout.protected.bottom) + 6
         self.area = garden_area(top)
+        self.key_size = key_hint_key(layout.scale)
+        self.place_keys(self.key_size)
         self.layer.invalidation.invalidate()
+
+    def place_keys(self, key: int) -> None:
+        """Put the keyboard hint, ``key`` px keycaps, in the bottom-right corner."""
+
+        width, height = KeyboardHint.preferred_size(KEY_HINT_KEYS, key=key)
+        rect = pygame.Rect(self.area.right - width, self.area.bottom - height, width, height)
+        if rect != self.keys.rect:
+            self.keys.rect = rect
+            self._fast.clear()
+
+    def garden_room(self) -> pygame.Rect:
+        """The garden area with the keyboard hint's corner column taken off.
+
+        Used only when a wide garden would otherwise run under the hint.
+        """
+
+        room = self.area.copy()
+        room.width = self.keys.rect.left - KEY_HINT_CLEARANCE - room.left
+        return room
+
+    def keys_clear_of(self, panel: pygame.Rect) -> bool:
+        return not self.keys.rect.inflate(2 * KEY_HINT_CLEARANCE, 2 * KEY_HINT_CLEARANCE).colliderect(panel)
+
+    def draw_keys(self, surface: pygame.Surface) -> None:
+        """The keyboard hint, one RLE blit per look (no per-frame alpha work)."""
+
+        if self.keys.visible:
+            surface.blit(self._fast(self.keys.render()), self.keys.rect.topleft)
 
     # -- state mirroring -----------------------------------------------------
 

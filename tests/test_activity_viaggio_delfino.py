@@ -558,6 +558,30 @@ class AppLoopTests(unittest.TestCase):
         app.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=(500, 450), button=1))
         self.assertTrue(app.run_state.dolphin.leap_pending)
 
+    def test_keyboard_hint_sits_on_the_sand_below_every_pearl_and_lights_the_pressed_key(self) -> None:
+        from greia_platform.activity_controls import ControlLayout
+        from greia_platform.activity_keyboard_hint import KeyCap
+
+        app = self.app
+        app.start_journey("bay")
+        keys = app.hud.keys
+        self.assertTrue(keys.visible, "shown at the start of a journey")
+        self.assertEqual(keys.active, {KeyCap.UP, KeyCap.DOWN, KeyCap.SPACE})
+        lowest = max(p.y for p in app.run_state.course.pearls)
+        self.assertGreater(keys.rect.top, lowest + 20, "below the deepest pearl")
+        self.assertGreater(keys.rect.left, app.run_state.dolphin.x + 200, "far from the dolphin")
+        self.assertLessEqual(keys.rect.bottom, 600)
+        self.assertFalse(keys.rect.colliderect(ControlLayout.for_canvas(app.canvas, app.screen.get_size()).protected))
+        self.assertGreaterEqual(min(r.height for r in keys.key_rects().values()), 28, "legible keycaps")
+        self._key(pygame.K_DOWN)
+        self.assertIn(KeyCap.DOWN, keys.lit)
+        self._step()
+        self._key(pygame.K_DOWN, up=True)
+        self._step(15)
+        self.assertNotIn(KeyCap.DOWN, keys.lit)
+        app._begin_count()
+        self.assertFalse(keys.visible, "the count-up hides the hint")
+
     def test_missed_group_brings_tito_and_a_demonstration(self) -> None:
         app = self.app
         app.start_journey("bay")

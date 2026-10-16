@@ -61,6 +61,7 @@ if __package__:
         CAPTAIN_MIDBOTTOM,
         DASHBOARD_TOP,
         LEVER_HIT_RECT,
+        LEVER_TRAVEL,
         WHEEL_CENTER,
         WHEEL_HIT_RADIUS,
         CockpitPresenter,
@@ -87,6 +88,7 @@ else:
         CAPTAIN_MIDBOTTOM,
         DASHBOARD_TOP,
         LEVER_HIT_RECT,
+        LEVER_TRAVEL,
         WHEEL_CENTER,
         WHEEL_HIT_RADIUS,
         CockpitPresenter,
@@ -138,6 +140,7 @@ _ENCOUNTER_CUES = {
 _UNDERSCORE_NAME_CUES = frozenset({"coral", "kelp", "krill"})
 CONTROL_ACCENT = "ocean"
 SAVE_INTERVAL_SECONDS = 10.0
+KEY_HINT_START_SECONDS = 8.0  # keyboard hint shown at start (ADR 0037 §4b)
 _MAX_FX = 6
 
 
@@ -200,7 +203,12 @@ class SubmarineApp:
             on_button=self.press,
             on_porthole=self._porthole_action,
             on_replay=self._replay,
+            clock=clock,
         )
+        # Keyboard hint (arrows + Space) under the pilot cluster: shown at start.
+        self.controls.keys.show(KEY_HINT_START_SECONDS)
+        self._keys_changed = True
+        self._seen_order_hint: Optional[str] = None
         self._surfaces = SurfaceNavigator(self.controls.layer)
         self._input = self._make_input()
         # Physical shoulder buttons only (translated by the platform; no device access).
@@ -455,6 +463,8 @@ class SubmarineApp:
         if event.type == pygame.QUIT:
             self._running = False
             return
+        if self.controls.keys.observe_event(event):
+            self._keys_changed = True
         if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION) and getattr(event, "touch", False):
             # SDL mirrors touch as synthetic mouse input; the FINGER* event is used.
             return
@@ -584,7 +594,7 @@ class SubmarineApp:
                 self._check_order_state("right")
         if self._dragging_lever:
             # Top of the slot = full ahead, bottom = stop.
-            frac = 1.0 - max(0.0, min(1.0, (point[1] - 150) / 120.0))
+            frac = 1.0 - max(0.0, min(1.0, (point[1] - (LEVER_HIT_RECT.top + 10)) / LEVER_TRAVEL))
             self.model.set_speed(frac)
             if frac > 0.4:
                 self._check_order_state("ahead")
@@ -630,6 +640,14 @@ class SubmarineApp:
                 self.audio.play("alert")
                 self._speak_cue(cue[0], SpeechPriority.URGENT)
 
+        # Captain Leo's order hint (~6 s idle) also shows which keys fly the sub.
+        hinted_order = order.order_id if order.waiting and order.hinted else None
+        if hinted_order is not None and hinted_order != self._seen_order_hint:
+            self.controls.keys.demonstrate()
+            self._keys_changed = True
+        self._seen_order_hint = hinted_order
+        if self.controls.keys.update():
+            self._keys_changed = True
         self.captain.present(order.waiting or model.encounter_waiting(), pointing=order.waiting and order.hinted)
         self.captain.update(dt)
         self.speech.update(dt, self.audio.is_voice_busy(), self._speak_now)
@@ -730,7 +748,11 @@ class SubmarineApp:
             if not self._running:
                 break
             self.advance(dt)
-            frame = frames.frame(ambient=True)
+            key_deadline = self.controls.keys.deadline()
+            if key_deadline is not None:
+                frames.wake_at(key_deadline)
+            frame = frames.frame(dirty=self._keys_changed, ambient=True)
+            self._keys_changed = False
             if frame is FrameKind.FULL:
                 self.draw()
                 pygame.display.flip()

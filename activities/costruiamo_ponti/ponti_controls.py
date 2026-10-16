@@ -10,9 +10,10 @@ The play screen follows Tito's Marble Run (same build -> GO -> watch pattern):
   each river rock is one too (stand the pillar there): they join keyboard /
   D-pad / stick focus and get the shared focus ring, while pointer and touch
   on the river stay with the Activity (tap, drag and drop);
-* GO is the big primary pill at the start of the top bar (shared ``go`` glyph
-  + the short localized GO label); hint is a round button (shared ``hint``
-  glyph) beside ``ProgressDots`` at the end of the bar.
+* GO is the big primary pill at the right end of the tray it confirms
+  (shared ``go`` glyph + the short localized GO label), so planks and GO form
+  one mouse-first cluster (ADR 0037 §4a); hint is a round button (shared
+  ``hint`` glyph) beside ``ProgressDots`` at the end of the top bar.
 
 There is no other text on the play screen.
 """
@@ -140,7 +141,7 @@ class BridgeControls:
         self.progress.rect = pygame.Rect(dots.x, dots.centery - dots_h // 2, dots_w, dots_h)
         self.hint.rect = hint
         self.hint.icon = self._kit.glyph("hint", int(height * GLYPH_SHARE))
-        self.go.icon = self._kit.glyph("go", int(screen.go.height * 0.62))
+        self.go.icon = self._kit.glyph("go", int(screen.go.height * 0.56))
         self.go.rect = screen.go
         preferred = self.go.preferred_width()
         if preferred <= screen.go.width + 40:
@@ -153,10 +154,13 @@ class BridgeControls:
 
     def set_crossing(self, crossing: Crossing) -> None:
         self._crossing = crossing
-        rects = self.screen.tray_rects(crossing)
+        go_width = self.go.rect.width
+        rects = self.screen.tray_rects(crossing, go_width)
         for index, button in enumerate(self.tray):
             if index < len(rects):
                 button.rect = rects[index]
+        # GO confirms the tray: it sits at the tray's right end (ADR 0037 §4a).
+        self.go.rect = self.screen.go_rect(rects, go_width)
         self._icon_state = None
 
     # -- state mirroring -----------------------------------------------------------

@@ -11,7 +11,12 @@
   a hint button), its ``ProgressDots`` and ``HudChip`` counters;
 * the water joins focus traversal through ``BayCursor``: keyboard and
   controller users steer a cursor and press Space/Enter/south to act there,
-  exactly like a tap.
+  exactly like a tap;
+* a display-only ``KeyboardHint`` (arrows + Space keycaps) sits in the sky
+  under the counters (top-right, above the water the orcas swim in): it
+  teaches that the arrows move the cursor and Space acts, and the drawn key
+  lights while the real key is held (ADR 0037 §4b). It is drawn into the
+  app's cached HUD overlay and is not a focus or touch target.
 
 The app owns what each control does; every control stays outside the
 protected Home/Back region.
@@ -20,6 +25,8 @@ protected Home/Back region.
 from __future__ import annotations
 
 from collections.abc import Callable
+import math
+import time
 
 import pygame
 
@@ -36,6 +43,7 @@ from greia_platform.activity_controls import (
     PromptBanner,
     ToolStrip,
 )
+from greia_platform.activity_keyboard_hint import KeyboardHint, KeyCap
 from greia_platform.localization import LocalizationError
 
 try:
@@ -75,6 +83,11 @@ _TOOLBAR_LEFT = 132
 _ICON = 40
 _ROUND_ICON = 46
 _FOOD_TILE = 64
+# Arrows move the water cursor, Space acts there (orca_app).
+KEY_HINT_KEYS = frozenset({KeyCap.UP, KeyCap.DOWN, KeyCap.LEFT, KeyCap.RIGHT, KeyCap.SPACE})
+KEY_HINT_KEY = 32  # logical keycap height (legible for 4-7 year olds, still unobtrusive)
+KEY_HINT_MIN_PHYSICAL = 26  # never drawn smaller than this on screen
+KEY_HINT_GAP = 10  # under the top bar
 
 
 class BayCursor:
@@ -132,8 +145,10 @@ class OrcaControls:
         on_tito: Callable[[], object],
         on_bay: Callable[[], object],
         on_hint: Callable[[], object],
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._kit = kit
+        self.keys: KeyboardHint = kit.keyboard_hint("keys", pygame.Rect(0, 0, 10, 10), active=KEY_HINT_KEYS, clock=clock)
         self._resources = resources
         self._assets = assets
         self._on_mode = on_mode
@@ -285,12 +300,22 @@ class OrcaControls:
         self.mission.rect = pygame.Rect(top.left, top.top, banner_w, top_h)
         self.dots.rect = pygame.Rect(self.mission.rect.right + 12, top.centery - dots_h // 2, dots_w, dots_h)
 
+        key = max(KEY_HINT_KEY, math.ceil(KEY_HINT_MIN_PHYSICAL / max(0.01, layout.scale)))
+        width, height = KeyboardHint.preferred_size(KEY_HINT_KEYS, key=key)
+        self.keys.rect = pygame.Rect(top.right - width, top.bottom + KEY_HINT_GAP, width, height)
+
         tile = layout.control_height(_FOOD_TILE, maximum=86)
         tray_w = tile * len(self.foods.slots) + 12 * (len(self.foods.slots) - 1)
         tray_top = top.bottom + 14
         for index, slot in enumerate(self.foods.slots):
             slot.rect = pygame.Rect(REFERENCE_WIDTH // 2 - tray_w // 2 + index * (tile + 12), tray_top, tile, tile)
         self.layer.invalidation.invalidate()
+
+    @property
+    def keys_look(self) -> tuple:
+        """What the keyboard hint shows (part of the cached HUD overlay key)."""
+
+        return (self.keys.visible, self.keys.lit if self.keys.visible else frozenset())
 
     @property
     def toolbar_top(self) -> int:

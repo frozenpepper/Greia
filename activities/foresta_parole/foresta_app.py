@@ -103,6 +103,7 @@ STICK_SPEED = 600.0    # at full left-stick deflection
 # next child input resumes it.  Without it the basket sat under a lucky letter
 # every so often, which counted as a catch and restarted the round forever.
 AWAY_SECONDS = 40.0
+KEY_HINT_START_SECONDS = 8.0  # keyboard hint shown at start (ADR 0037 §4b)
 _PRESENCE_EVENTS = frozenset(
     getattr(pygame, name)
     for name in (
@@ -207,7 +208,10 @@ class ForestaApp:
             ControlLayout.for_canvas(canvas, screen.get_size()),
             task_total=self.round.total,
             on_listen=self._on_listen,
+            clock=clock,
         )
+        # Keyboard hint (ADR 0037 §4b): shown at the start of a visit.
+        self.controls.keys.show(KEY_HINT_START_SECONDS)
         self.field = ForestField(rng, self.controls.geometry.field)
         self.basket = Basket(self.controls.geometry.field)
         self._surfaces = SurfaceNavigator(self.controls.layer)
@@ -260,6 +264,9 @@ class ForestaApp:
             self.tick()
             if self._visual_changed():
                 frames.invalidate()
+            key_deadline = self.controls.keys.deadline()
+            if key_deadline is not None:
+                frames.wake_at(key_deadline)
             frame = frames.frame(
                 dirty=self.controls.layer.invalidation.should_draw,
                 animating=self._animating(),
@@ -308,6 +315,7 @@ class ForestaApp:
             self.round.done,
             round(self.basket.x),
             cast.pose if cast is not None else None,
+            self.controls.keys_look,
         )
         if signature == self._signature:
             return False
@@ -359,6 +367,8 @@ class ForestaApp:
         now = self.clock()
         dt = max(0.0, min(0.1, now - self._last_tick))
         self._last_tick = now
+        if self.controls.keys.update():
+            self._full_frame = True
         was_busy = self.speech_queue.busy
         self.speech_queue.update(dt)
         if was_busy and not self.speech_queue.busy:
@@ -394,6 +404,8 @@ class ForestaApp:
             if isinstance(translated, KitPointer):
                 self._pointer(translated)
             return
+        if self.controls.keys.observe_event(event):
+            self._full_frame = True
         semantic = self._game_input.digital(event)
         if semantic is not None:
             self._game_action(semantic)
@@ -629,6 +641,8 @@ class ForestaApp:
         self._point_until = now + self._hints.animation_seconds(POINT_SECONDS)
         self._quiet_since = now
         self._hint = True
+        self.controls.keys.demonstrate()
+        self._full_frame = True
         for letter in self.field.falling:
             letter.glow = letter.is_target
         self._say_prompt(clear=True)
@@ -717,8 +731,12 @@ class ForestaApp:
             self.canvas.surface,
             self.controls.geometry,
             self.scene_state(),
-            draw_controls=self._surfaces.draw,
+            draw_controls=self._draw_controls,
         )
+
+    def _draw_controls(self, surface: pygame.Surface) -> None:
+        self.controls.draw_keys(surface)
+        self._surfaces.draw(surface)
 
 
 def _safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:

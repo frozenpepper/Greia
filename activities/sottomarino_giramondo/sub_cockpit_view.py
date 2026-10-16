@@ -2,7 +2,11 @@
 
 Renders the ocean through the brass porthole, the radar sweep, the depth
 dial, the helm wheel, the throttle telegraph and the chunky cockpit buttons
-(the Activity's own cockpit look, kept from the original). Static cockpit
+(the Activity's own cockpit look, kept from the original). The left panel
+is the helm station (wheel above the throttle telegraph, both draggable);
+every piloting button sits in one compact cluster on the right panel
+(ADR 0037 §4a): a Surface / Left / Right / Dive D-pad, the Ahead / Stop pair
+under it and the keyboard hint under that. Static cockpit
 parts are baked once into one colour-keyed layer; buttons are cached per
 state; creatures are blitted from the art owner's bounded perspective cache.
 Kit controls (prompt banner, stars, focus ring) are drawn by the app's
@@ -72,16 +76,41 @@ DEPTH_CENTER_X = 884
 DEPTH_CENTER_Y = 490
 DEPTH_RADIUS = 65
 
-# Helm wheel and throttle telegraph (pointer drag affordances)
-WHEEL_CENTER = (135, 235)
+# Helm station (left panel): the helm wheel above the throttle telegraph,
+# the two pointer-drag instruments.
+WHEEL_CENTER = (135, 165)
 WHEEL_RADIUS = 58
 WHEEL_HIT_RADIUS = 72
-LEVER_CENTER = (890, 215)
-LEVER_HIT_RECT = pygame.Rect(845, 140, 90, 150)
+LEVER_CENTER = (135, 330)
+LEVER_HIT_RECT = pygame.Rect(90, 255, 90, 150)
+LEVER_TRAVEL = 120  # px of drag from full ahead (top) to stop
 
 # Captain Leo stands on the dashboard edge, left of the porthole.
 CAPTAIN_MIDBOTTOM = (304, DASHBOARD_TOP + 6)
 CAPTAIN_HEIGHT = 150
+
+# Pilot cluster (right panel, ADR 0037 §4a): every piloting button in one
+# compact block, so a mouse or touchpad travels a few centimetres between
+# them. The four direction buttons form a D-pad that matches the arrow keys
+# (up = surface, down = dive, left / right steer), the engine pair sits right
+# under it and the keyboard hint (arrows + Space keycaps) under that.
+PILOT_LEFT = 788
+PILOT_TOP = 70
+PILOT_CELL = (72, 56)
+PILOT_GAP = 4
+_STEP_X = PILOT_CELL[0] + PILOT_GAP
+_STEP_Y = PILOT_CELL[1] + PILOT_GAP
+PILOT_WIDTH = 3 * PILOT_CELL[0] + 2 * PILOT_GAP
+ENGINE_TOP = PILOT_TOP + 3 * _STEP_Y + 6
+ENGINE_SIZE = (85, 56)
+_ENGINE_LEFT = PILOT_LEFT + (PILOT_WIDTH - 2 * ENGINE_SIZE[0] - 6) // 2
+KEY_HINT_TOP = ENGINE_TOP + ENGINE_SIZE[1] + 14
+KEY_HINT_BOTTOM = DASHBOARD_TOP - 10
+
+
+def _cell(column: int, row: int) -> pygame.Rect:
+    return pygame.Rect(PILOT_LEFT + column * _STEP_X, PILOT_TOP + row * _STEP_Y, *PILOT_CELL)
+
 
 # Chunky cockpit buttons: (x, y, w, h)
 BUTTON_RECTS = {
@@ -91,16 +120,16 @@ BUTTON_RECTS = {
     "action": pygame.Rect(466, 464, 92, 86),  # central alarm beacon
     "bubbles": pygame.Rect(578, 464, 102, 86),
     "horn": pygame.Rect(700, 464, 102, 86),
-    # Steering (under the helm wheel)
-    "steer_left": pygame.Rect(45, 335, 80, 56),
-    "steer_right": pygame.Rect(145, 335, 80, 56),
-    # Engine telegraph (under the throttle lever)
-    "ahead": pygame.Rect(795, 335, 85, 56),
-    "stop": pygame.Rect(895, 335, 85, 56),
-    # Depth: Surface (up) and Dive (down), above the lever
-    "surface": pygame.Rect(795, 66, 85, 56),
-    "dive": pygame.Rect(895, 66, 85, 56),
+    # Pilot D-pad: Surface (up), Left, Right, Dive (down)
+    "surface": _cell(1, 0),
+    "steer_left": _cell(0, 1),
+    "steer_right": _cell(2, 1),
+    "dive": _cell(1, 2),
+    # Engine telegraph pair, right under the D-pad
+    "ahead": pygame.Rect(_ENGINE_LEFT, ENGINE_TOP, *ENGINE_SIZE),
+    "stop": pygame.Rect(_ENGINE_LEFT + ENGINE_SIZE[0] + 6, ENGINE_TOP, *ENGINE_SIZE),
 }
+PILOT_BUTTONS = ("surface", "steer_left", "steer_right", "dive", "ahead", "stop")
 
 PORTHOLE_VIEW = pygame.Rect(
     PORTHOLE_CENTER_X - PORTHOLE_RADIUS,

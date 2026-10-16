@@ -533,6 +533,42 @@ class AppLoopTests(unittest.TestCase):
         _step(app, clock, 0.3)
         self.assertEqual(app.basket.x, x)
 
+    def test_keyboard_hint_hangs_above_the_sign_and_lights_the_pressed_key(self) -> None:
+        from greia_platform.activity_keyboard_hint import KeyCap
+
+        for size in ((1024, 600), (800, 480), (480, 320)):
+            with self.subTest(size=size):
+                app, clock, _, _, _ = _make_app(size=size)
+                geometry = app.controls.geometry
+                keys = app.controls.keys
+                layout = ControlLayout.for_canvas(app.canvas, app.screen.get_size())
+                self.assertTrue(keys.visible, "shown at start")
+                self.assertEqual(keys.active, {KeyCap.LEFT, KeyCap.RIGHT, KeyCap.SPACE})
+                self.assertFalse(layout.overlaps_chrome(keys.rect))
+                self.assertFalse(keys.rect.colliderect(geometry.sign))
+                self.assertFalse(keys.rect.colliderect(geometry.listen))
+                self.assertLessEqual(keys.rect.bottom, geometry.sign.top)
+                field = geometry.field
+                self.assertLess(keys.rect.right, field.lanes[0] - field.token // 2, "clear of the letter rain")
+                if size != (480, 320):
+                    smallest = min(r.height for r in keys.key_rects().values())
+                    self.assertGreaterEqual(smallest * layout.scale, 26, "legible keycaps")
+                pygame.display.quit()
+        app, clock, _, _, _ = _make_app()
+        keys = app.controls.keys
+        _step(app, clock, 3.0)
+        app._handle_event(_key(pygame.K_LEFT))
+        self.assertIn(KeyCap.LEFT, keys.lit)
+        app._handle_event(_key(pygame.K_LEFT, down=False))
+        _step(app, clock, 0.5)
+        self.assertNotIn(KeyCap.LEFT, keys.lit)
+        app._visual_changed()
+        self.assertFalse(app._visual_changed())
+        keys.hide()
+        self.assertTrue(app._visual_changed(), "the hint's look is part of the frame signature")
+        app._render()
+        pygame.display.quit()
+
     def test_renders_at_reference_sizes_in_both_languages(self) -> None:
         for size in ((1024, 600), (800, 480), (480, 320)):
             for locale in ("en", "it"):

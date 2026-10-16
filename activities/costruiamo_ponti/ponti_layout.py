@@ -2,9 +2,11 @@
 
 Everything is laid out on the 1024x600 logical canvas (``PygameReferenceCanvas``
 scales it to the display). The HUD bar sits beside -- never inside -- the
-protected Home/Back region and holds the big GO pill (left) plus progress and
-hint (right), exactly like Tito's Marble Run. The river runs across the
-middle; the tray of planks lies along the bottom.
+protected Home/Back region and holds progress and hint (right). The river
+runs across the middle; the tray of planks lies along the bottom with the big
+GO pill at its right end, so choosing planks and pressing GO is one compact
+mouse-first cluster (ADR 0037 §4a), never a trip back to the top bar beside
+Home.
 
 One **unit** (one plank board) is ``UNIT`` logical pixels everywhere: on the
 river, on the standing planks and on the tray tiles, so the child can compare
@@ -39,6 +41,8 @@ TRAY_MIN_TILE: Final = 112
 TRAY_GAP: Final = 14
 CAST_HEIGHT: Final = 124
 GO_WIDTH: Final = 190
+GO_TRAY_GAP: Final = 24  # GO sits this far right of the last tray tile
+GO_TRAY_INSET: Final = 10  # GO is a little shorter than the tray tiles
 WOOD_THICKNESS: Final = 20
 STONE_THICKNESS: Final = 30
 PILLAR_DEPTH: Final = WATER_TOP + 34 - BANK_TOP  # pillar height (logical px)
@@ -132,7 +136,11 @@ def tray_widths(crossing: Crossing) -> list[int]:
 
 @dataclass(frozen=True, slots=True)
 class ScreenLayout:
-    """Where the HUD bar, GO button and tray sit (logical px)."""
+    """Where the HUD bar, GO button and tray sit (logical px).
+
+    ``go`` holds GO's size; its position comes from ``tray_rects`` (GO sits at
+    the right end of the tray it confirms).
+    """
 
     bar: pygame.Rect
     go: pygame.Rect
@@ -143,20 +151,38 @@ class ScreenLayout:
     def build(cls, layout: ControlLayout) -> "ScreenLayout":
         bar_h = layout.control_height(60, maximum=80)
         bar = layout.top_bar(bar_h)
-        go = pygame.Rect(bar.left, bar.top, GO_WIDTH, bar_h)
         tray_h = max(layout.control_height(TRAY_HEIGHT, maximum=TRAY_HEIGHT), TRAY_HEIGHT)
         tray_band = pygame.Rect(layout.margin, REFERENCE_HEIGHT - 8 - tray_h, REFERENCE_WIDTH - 2 * layout.margin, tray_h)
+        go_h = max(bar_h, tray_h - 2 * GO_TRAY_INSET)
+        go = pygame.Rect(0, 0, GO_WIDTH, go_h)
+        go.midleft = (tray_band.right - GO_WIDTH, tray_band.centery)
         return cls(bar, go, tray_band, layout.protected)
 
-    def tray_rects(self, crossing: Crossing) -> tuple[pygame.Rect, ...]:
+    def tray_rects(self, crossing: Crossing, go_width: int | None = None) -> tuple[pygame.Rect, ...]:
+        """Tray tiles, centred as one group with GO (``go_width``) at their right."""
+
         widths = tray_widths(crossing)[:MAX_TRAY]
         total = sum(widths) + TRAY_GAP * (len(widths) - 1)
-        x = self.tray_band.centerx - total // 2
+        go_w = self.go.width if go_width is None else int(go_width)
+        group = total + GO_TRAY_GAP + go_w
+        band = self.tray_band
+        x = band.centerx - group // 2
+        x = max(band.left, min(x, band.right - group))
         rects = []
         for width in widths:
-            rects.append(pygame.Rect(x, self.tray_band.top, width, self.tray_band.height))
+            rects.append(pygame.Rect(x, band.top, width, band.height))
             x += width + TRAY_GAP
         return tuple(rects)
+
+    def go_rect(self, tiles: tuple[pygame.Rect, ...], go_width: int | None = None) -> pygame.Rect:
+        """GO at the right end of ``tiles`` (vertically centred on the tray)."""
+
+        go = self.go.copy()
+        if go_width is not None:
+            go.width = int(go_width)
+        left = tiles[-1].right + GO_TRAY_GAP if tiles else self.tray_band.centerx - go.width // 2
+        go.midleft = (min(left, self.tray_band.right - go.width), self.tray_band.centery)
+        return go
 
 
 __all__ = [

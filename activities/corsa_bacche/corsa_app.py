@@ -19,7 +19,9 @@ critter: a soft "boing", Momo bounces back one cell and thinks
 bump Momo shows a way to the next berry around the critters. A critter that
 meets a still Momo just turns around. Sleeping hedgehogs (eyes closed) are
 safe to pass. Idle for ~6 s: Momo points and the nearest berry hops; later
-nudges draw a dotted trail. The last berry: a full basket, confetti and
+nudges draw a dotted trail. Arrows + Space keycaps in the bottom-right corner
+show that the keyboard works too: shown at the start of a visit, lit while a
+real key is held and played through with each idle nudge (ADR 0037 §4b). The last berry: a full basket, confetti and
 praise; the next garden's rung follows how this one went, and after three
 gardens the shared cast completion scene appears. Nothing is timed.
 """
@@ -70,17 +72,17 @@ from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 if __package__:
     from .corsa_art import MOMO_SHARE, Biome, CorsaArt, biome_for_garden, fruit_for
     from .corsa_audio import CorsaAudio
-    from .corsa_controls import CorsaControls
+    from .corsa_controls import KEY_HINT_SMALLEST, CorsaControls
     from .corsa_layout import REFERENCE_HEIGHT, REFERENCE_WIDTH, GardenGeometry
-    from .corsa_model import DOWN, LEFT, RIGHT, UP, Direction, Garden, GardenEvent, GardenEventKind, StepResult, Visit
+    from .corsa_model import DOWN, LEFT, RIGHT, UP, Direction, Garden, GardenEvent, GardenEventKind, GardenLayout, StepResult, Visit
     from .corsa_renderer import CorsaMotion, CorsaRenderer, HintTrail, MomoCast
     from .corsa_services import EventPort, ProgressPort
 else:
     from corsa_art import MOMO_SHARE, Biome, CorsaArt, biome_for_garden, fruit_for
     from corsa_audio import CorsaAudio
-    from corsa_controls import CorsaControls
+    from corsa_controls import KEY_HINT_SMALLEST, CorsaControls
     from corsa_layout import REFERENCE_HEIGHT, REFERENCE_WIDTH, GardenGeometry
-    from corsa_model import DOWN, LEFT, RIGHT, UP, Direction, Garden, GardenEvent, GardenEventKind, StepResult, Visit
+    from corsa_model import DOWN, LEFT, RIGHT, UP, Direction, Garden, GardenEvent, GardenEventKind, GardenLayout, StepResult, Visit
     from corsa_renderer import CorsaMotion, CorsaRenderer, HintTrail, MomoCast
     from corsa_services import EventPort, ProgressPort
 
@@ -89,6 +91,7 @@ DEMO_LEAD_SECONDS = 0.6
 RETRY_VOICE_GAP = 8.0
 MAX_SCHEDULED = 32
 CHEER_SECONDS = 0.9
+KEY_HINT_START_SECONDS = 8.0  # keyboard hint shown at the start of a visit (ADR 0037 §4b)
 
 _MOVES: dict[SemanticAction, Direction] = {
     SemanticAction.MOVE_UP: UP,
@@ -175,7 +178,9 @@ class CorsaActivity:
             visit.total,
             berry_icon=self.art.berry_icon,
             on_hint=self._on_hint,
+            clock=clock,
         )
+        self._keys_changed = False
         self._surfaces = SurfaceNavigator(self.controls.layer)
         self._input = self._make_input()
         self._game_input = PygameInputTranslator(InteractionProfile.DIRECTIONAL)
@@ -237,7 +242,11 @@ class CorsaActivity:
                 if frames.ambient_frozen and self._garden_resting():
                     dt = 0.0
                 animating = self.step(dt)
-                frame = frames.frame(animating=animating, ambient=True)
+                key_deadline = self.controls.keys.deadline()
+                if key_deadline is not None:
+                    frames.wake_at(key_deadline)
+                frame = frames.frame(dirty=self._keys_changed, animating=animating, ambient=True)
+                self._keys_changed = False
                 if frame is FrameKind.FULL:
                     previous = self._present(previous)
                     if not self._ready_published:
@@ -281,6 +290,8 @@ class CorsaActivity:
         now = self.clock()
         if self.timeline.run_due():
             self._full_frame = True
+        if self.controls.keys.update():
+            self._keys_changed = self._full_frame = True
         if self.cast is not None:
             self.cast.update()
         self.motion.prune(now)
@@ -312,6 +323,7 @@ class CorsaActivity:
         surface = self.canvas.surface
         if self.state is not AppState.TERMINAL and self.renderer is not None:
             self.renderer.draw(surface, self.scene, self.garden, self.geometry, self.motion, self.clock())
+            self.controls.draw_keys(surface)
         self._surfaces.draw(surface)
 
     # -- input ------------------------------------------------------------------
@@ -333,6 +345,8 @@ class CorsaActivity:
             self._pointer_held = False
             self._release_all()
             return
+        if self.state is not AppState.TERMINAL and self.controls.keys.observe_event(event):
+            self._keys_changed = self._full_frame = True
         if self.state is AppState.TERMINAL:
             translated = self._input.translate(event)
             if translated is not None:
@@ -473,6 +487,9 @@ class CorsaActivity:
         self.motion.clear()
         self._pointer_target = None
         self.biome = biome_for_garden(self.visit.completed)
+        if self.visit.completed == 0:
+            self.controls.keys.show(KEY_HINT_START_SECONDS)
+            self._keys_changed = self._full_frame = True
         self._prepare_art()
         assert self.cast is not None
         self.cast.reset()
@@ -486,7 +503,7 @@ class CorsaActivity:
 
     def _prepare_art(self) -> None:
         layout = self.garden.layout
-        self.geometry = GardenGeometry.fit(layout, self.controls.area)
+        self.geometry = self._fit_garden(layout)
         self.scene = self.art.compose_scene(layout, self.geometry, self.biome)
         height = int(self.geometry.cell * MOMO_SHARE)
         if self.cast is None or height != self._cast_height:
@@ -501,6 +518,25 @@ class CorsaActivity:
             )
             self.renderer = CorsaRenderer(self.art, self.cast)
             self._cast_height = height
+
+    def _fit_garden(self, layout: GardenLayout) -> GardenGeometry:
+        """Fit the garden; keep the keyboard hint's corner free of it.
+
+        Most gardens leave the bottom-right corner free. A wide one is fitted
+        beside the hint instead, with slightly smaller keycaps if that keeps
+        the garden's cells (nearly) as big as without the hint.
+        """
+
+        controls = self.controls
+        geometry = GardenGeometry.fit(layout, controls.area)
+        for key in range(controls.key_size, KEY_HINT_SMALLEST - 1, -2):
+            controls.place_keys(key)
+            if controls.keys_clear_of(_panel(geometry)):
+                return geometry
+            beside = GardenGeometry.fit(layout, controls.garden_room())
+            if beside.cell >= geometry.cell * 0.96 or key - 2 < KEY_HINT_SMALLEST:
+                return beside
+        return geometry
 
     def _sync_hud(self) -> None:
         garden = self.garden
@@ -663,6 +699,8 @@ class CorsaActivity:
             return
         assert self.cast is not None
         self.cast.point(self._hints.animation_seconds(1.8))
+        self.controls.keys.demonstrate()
+        self._keys_changed = self._full_frame = True
         target = garden.next_berry()
         if target is not None:
             self.motion.pulse([target], now)
@@ -680,6 +718,14 @@ class CorsaActivity:
             return self.resources.text(key) or default
         except Exception:
             return default
+
+
+def _panel(geometry: GardenGeometry) -> pygame.Rect:
+    """The garden panel as painted (rim + the hedges' front faces)."""
+
+    rect = geometry.rect
+    gap = geometry.gap
+    return pygame.Rect(rect.left - gap // 2, rect.top - gap // 2, rect.width + gap, rect.height + gap + geometry.depth)
 
 
 def _safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:

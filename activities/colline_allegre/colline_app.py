@@ -14,6 +14,10 @@ picnic where a friend waits (Leo, Lilli, Momo, Dani, Flash):
   the buggy goes head over heels. After such a tumble the sign glows and the
   BRAKE pedal pulses when the buggy comes back (demonstration); after two
   tumbles on one course the buggy slows itself at the signs (assist);
+* the pedals sit side by side at the bottom-right with a keyboard hint
+  (arrows + Space keycaps) beside them: shown at the start of a set, lit
+  while a real key is held, and its keys light one after another with each
+  idle hint (ADR 0037 §4a/§4b);
 * idle ~6 s: Tito points ahead and the GO pedal pulses;
 * at the finish arch the friend cheers, the course's stars pop in over the
   picnic, and the next course starts. After five courses the shared cast
@@ -70,7 +74,7 @@ if __package__:
     )
     from .colline_controls import CollineControls
     from .colline_input import DriveInput
-    from .colline_layout import BRAKE_RECT, FRIEND_OFFSET, GO_RECT, pedal_hit
+    from .colline_layout import FRIEND_OFFSET, pedal_at
     from .colline_model import Controls, CourseRun, CourseSet, RunEvent, adapt_rung, bounded_history
     from .colline_renderer import CELEBRATE_SECONDS, FLAG_BEHIND, Camera, CollineRenderer, DriverCast, SceneMotion, SceneView
     from .colline_services import CollineProgress, EventPort, ProgressPort
@@ -86,7 +90,7 @@ else:
     )
     from colline_controls import CollineControls
     from colline_input import DriveInput
-    from colline_layout import BRAKE_RECT, FRIEND_OFFSET, GO_RECT, pedal_hit
+    from colline_layout import FRIEND_OFFSET, pedal_at
     from colline_model import Controls, CourseRun, CourseSet, RunEvent, adapt_rung, bounded_history
     from colline_renderer import CELEBRATE_SECONDS, FLAG_BEHIND, Camera, CollineRenderer, DriverCast, SceneMotion, SceneView
     from colline_services import CollineProgress, EventPort, ProgressPort
@@ -95,6 +99,7 @@ TUMBLE_SECONDS = 1.4
 NEXT_COURSE_SECONDS = CELEBRATE_SECONDS + 0.6
 SIGN_HINT_SECONDS = 7.0
 SPEECH_GAP_SECONDS = 4.0
+KEY_HINT_START_SECONDS = 8.0  # keyboard hint shown at the start of a set (ADR 0037 §4b)
 MAX_FRAME_SECONDS = 0.1
 MAX_SCHEDULED = 32
 MEADOW_DUSK = (58, 92, 128)  # deep ocean ("play" Collection hue, darkened)
@@ -179,7 +184,8 @@ class CollineActivity:
         self.motion = SceneMotion()
         self.timeline = Timeline(clock)
         self.drive = DriveInput()
-        self.controls = CollineControls(self.kit, self.art, typography, on_listen=self._listen)
+        self.controls = CollineControls(self.kit, self.art, typography, on_listen=self._listen, clock=clock)
+        self._keys_changed = False
         self._surfaces = SurfaceNavigator(self.controls.layer)
         self._input = PygameControlInput(to_logical=canvas.pointer, is_safe=lambda pos: _safe_point(self.screen, pos))
         self.controls.place(ControlLayout.for_canvas(canvas, screen.get_size()))
@@ -214,7 +220,11 @@ class CollineActivity:
                     self._surfaces.dispatch(repeat)
                 self.step()
                 riding = self.state in (AppState.DRIVING, AppState.TUMBLE, AppState.FINISH)
-                frame = frames.frame(animating=riding, ambient=True)
+                key_deadline = self.controls.keys.deadline()
+                if key_deadline is not None:
+                    frames.wake_at(key_deadline)
+                frame = frames.frame(dirty=self._keys_changed, animating=riding, ambient=True)
+                self._keys_changed = False
                 if frame is FrameKind.FULL:
                     self.render()
                     self.canvas.present()
@@ -239,6 +249,8 @@ class CollineActivity:
         dt = max(0.0, min(MAX_FRAME_SECONDS, now - self._last_tick))
         self._last_tick = now
         self.timeline.run_due()
+        if self.controls.keys.update():
+            self._keys_changed = True
         self.driver.update()
         self.motion.prune(now)
         ride = self.ride
@@ -303,6 +315,8 @@ class CollineActivity:
         if event.type == pygame.WINDOWFOCUSLOST:
             self.drive.release_all()
             return
+        if self.state is not AppState.TERMINAL and self.controls.keys.observe_event(event):
+            self._keys_changed = True
         if self.state is AppState.TERMINAL:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 self._running = False
@@ -340,12 +354,12 @@ class CollineActivity:
         if sample.phase is not PointerPhase.DOWN or result is not UiEventResult.IGNORED:
             return
         self._note_input()
-        point = sample.position
-        if pedal_hit(GO_RECT).collidepoint(point):
+        pedal = pedal_at(sample.position, self.controls.go.rect, self.controls.brake.rect)
+        if pedal == "go":
             self.drive.touch_go = True
             if self.state is AppState.READY:
                 self._start_driving()
-        elif pedal_hit(BRAKE_RECT).collidepoint(point):
+        elif pedal == "brake":
             self.drive.touch_brake = True
 
     def _resize(self) -> None:
@@ -366,6 +380,8 @@ class CollineActivity:
         self._sets_played += 1
         self.session_id = f"{self._session_prefix}-{self._sets_played}-{self.rng.randrange(1_000_000):06d}"
         self.controls.set_playing(True)
+        self.controls.keys.show(KEY_HINT_START_SECONDS)
+        self._keys_changed = True
         self._begin_course()
 
     def _begin_course(self) -> None:
@@ -539,6 +555,7 @@ class CollineActivity:
             )
         )
         self.controls.set_playing(False)
+        self.controls.keys.hide()
         self._surfaces.push_overlay(CompletionOverlay(self.completion, on_primary=self._restart))
         self.timeline.clear()
         self.drive.release_all()
@@ -571,6 +588,8 @@ class CollineActivity:
         step = self._hint_schedule.poll(now, self._last_input)
         if step:
             self.driver.point(self._hint_schedule.animation_seconds(1.8))
+            self.controls.keys.demonstrate()
+            self._keys_changed = True
             if step == 1 or self.state is AppState.READY:
                 self._say("ready.go")
 

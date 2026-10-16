@@ -7,7 +7,11 @@
 
 The basket is gameplay, not a control: arrows / D-pad / left stick move it and
 Space / the south face button replay the word (``directional`` profile), while
-pointer and touch pull it along the forest floor. Nothing is placed in the
+pointer and touch pull it along the forest floor. A display-only
+``KeyboardHint`` (← → + Space keycaps, ↑ ↓ dimmed) hangs above the picture
+sign, outside the letter rain and the basket's path: it teaches that the
+arrows move the basket and Space says the word again (like the sign), and the
+drawn key lights while the real key is held (ADR 0037 §4b). Nothing is placed in the
 protected Home/Back region: the top row starts after ``ControlLayout.protected``
 and the sign hangs below it.
 """
@@ -16,6 +20,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import math
+import time
 
 import pygame
 
@@ -27,6 +33,8 @@ from greia_platform.activity_controls import (
     IconButton,
     ProgressDots,
 )
+from greia_platform.activity_keyboard_hint import KeyboardHint, KeyCap
+from greia_platform.pygame_blit import PreparedSurfaces
 
 if __package__:
     from .foresta_model import FieldGeometry
@@ -40,6 +48,26 @@ BASKET_SIZE = (220, 138)
 FRUIT_SIZE = 104
 # Basket mouth (top of the rim) measured on the 256×160 master.
 BASKET_MOUTH = 34 / 160
+# ← → move the basket, Space says the word again (foresta_app).
+KEY_HINT_KEYS = frozenset({KeyCap.LEFT, KeyCap.RIGHT, KeyCap.SPACE})
+KEY_HINT_KEY = 34  # logical keycap height (legible for 4-7 year olds)
+KEY_HINT_MIN_PHYSICAL = 28  # never drawn smaller than this on screen (when it fits)
+
+
+def _key_hint_rect(layout: ControlLayout, top: int, sign: pygame.Rect) -> pygame.Rect:
+    """The hint's slot: centred over the sign, between the top bar and the sign."""
+
+    key = max(KEY_HINT_KEY, math.ceil(KEY_HINT_MIN_PHYSICAL / max(0.01, layout.scale)))
+    room_h = sign.top - 8 - top
+    room_w = sign.width + 16
+    width, height = KeyboardHint.preferred_size(KEY_HINT_KEYS, key=key)
+    while key > 16 and (width > room_w or height > room_h):
+        key -= 1
+        width, height = KeyboardHint.preferred_size(KEY_HINT_KEYS, key=key)
+    rect = pygame.Rect(0, 0, width, height)
+    rect.midbottom = (sign.centerx, sign.top - 8)
+    rect.left = max(layout.margin, rect.left)
+    return rect
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,6 +82,7 @@ class ForestLayout:
     word: pygame.Rect
     field: FieldGeometry
     basket_bottom: int
+    keys: pygame.Rect       # keyboard hint, above the sign
 
     @classmethod
     def build(cls, layout: ControlLayout) -> "ForestLayout":
@@ -76,7 +105,9 @@ class ForestLayout:
             basket_min_x=sign.right + BASKET_SIZE[0] // 2 - 30,
             basket_max_x=layout.width - BASKET_SIZE[0] // 2 - 4,
         )
-        return cls(listen, dots_bar, sign, inner, picture, word, field, basket_bottom)
+        keys_top = max(bar.bottom, layout.protected.bottom) + 8
+        keys = _key_hint_rect(layout, keys_top, sign)
+        return cls(listen, dots_bar, sign, inner, picture, word, field, basket_bottom, keys)
 
 
 class ForestControls:
@@ -89,10 +120,14 @@ class ForestControls:
         *,
         task_total: int,
         on_listen: Callable[[], object],
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._kit = kit
         self._on_listen = on_listen
         self.geometry = ForestLayout.build(layout)
+        # Display-only (not a layer target): drawn by ``draw_keys``.
+        self.keys: KeyboardHint = kit.keyboard_hint("keys", self.geometry.keys, active=KEY_HINT_KEYS, clock=clock)
+        self._fast = PreparedSurfaces(max_entries=12, max_pixels=12 * 260 * 100)
         self.listen: IconButton = kit.icon_button(
             "listen",
             self.geometry.listen,
@@ -113,6 +148,8 @@ class ForestControls:
 
     def relayout(self, layout: ControlLayout) -> None:
         self.geometry = ForestLayout.build(layout)
+        self.keys.rect = self.geometry.keys
+        self._fast.clear()
         self.listen.rect = self.geometry.listen
         self.listen.icon = self._kit.glyph("listen", int(self.geometry.listen.height * 0.56))
         self.dots.rect = self._dots_rect(self.dots.total)
@@ -129,6 +166,18 @@ class ForestControls:
     def set_progress(self, done: int) -> None:
         self.dots.set_progress(done)
         self.layer.invalidation.invalidate()
+
+    @property
+    def keys_look(self) -> tuple:
+        """What the keyboard hint shows (part of the static-frame signature)."""
+
+        return (self.keys.visible, self.keys.lit if self.keys.visible else frozenset())
+
+    def draw_keys(self, surface: pygame.Surface) -> None:
+        """The keyboard hint, one RLE blit per look (no per-frame alpha work)."""
+
+        if self.keys.visible:
+            surface.blit(self._fast(self.keys.render()), self.keys.rect.topleft)
 
 
 __all__ = [

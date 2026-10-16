@@ -9,7 +9,9 @@ carries the key. A star, the key or the tent: Tito cheers (``pose_cheer``) with
 library FX. A dead end, the closed tent or a locked door: Tito thinks
 (``pose_think``) and the firefly demonstrates the first steps of the way.
 Idle for ~6 s: Tito points and the next thing to fetch pulses, then the
-firefly flies ahead. The next maze's size follows how this one went, and the
+firefly flies ahead. Arrows + Space keycaps in the bottom-right corner show
+that the keyboard works too: shown at the start of a visit, lit while a real
+key is held and played through with each idle nudge (ADR 0037 §4b). The next maze's size follows how this one went, and the
 visit ends on the shared cast completion scene. Nothing is ever timed.
 """
 
@@ -59,7 +61,7 @@ from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 if __package__:
     from .maze_art import Biome, MazeArt, biome_for_visit
     from .maze_audio import LabyrinthAudio
-    from .maze_controls import MazeControls
+    from .maze_controls import KEY_HINT_SMALLEST, MazeControls
     from .maze_layout import REFERENCE_HEIGHT, REFERENCE_WIDTH, MazeGeometry
     from .maze_model import Cell, Maze, MazeEvent, MazeEventKind, Visit, Walker, is_cell, level_spec
     from .maze_renderer import TITO_SCALE, FireflyFlight, MazeCast, MazeMotion, MazeRenderer
@@ -67,7 +69,7 @@ if __package__:
 else:
     from maze_art import Biome, MazeArt, biome_for_visit
     from maze_audio import LabyrinthAudio
-    from maze_controls import MazeControls
+    from maze_controls import KEY_HINT_SMALLEST, MazeControls
     from maze_layout import REFERENCE_HEIGHT, REFERENCE_WIDTH, MazeGeometry
     from maze_model import Cell, Maze, MazeEvent, MazeEventKind, Visit, Walker, is_cell, level_spec
     from maze_renderer import TITO_SCALE, FireflyFlight, MazeCast, MazeMotion, MazeRenderer
@@ -78,6 +80,7 @@ DEMO_LEAD_SECONDS = 0.6
 HINT_CELLS = 3
 RETRY_VOICE_GAP = 8.0
 MAX_SCHEDULED = 32
+KEY_HINT_START_SECONDS = 8.0  # keyboard hint shown at the start of a visit (ADR 0037 §4b)
 
 _MOVES = {
     SemanticAction.MOVE_UP: (-1, 0),
@@ -158,8 +161,9 @@ class LabyrinthActivity:
         self.kit = kit if kit is not None else ControlKit(typography, ControlTheme.for_accent("ocean"))
         self.art = art if art is not None else MazeArt(self.kit)
         self.controls = MazeControls(
-            self.kit, ControlLayout.for_canvas(canvas, screen.get_size()), visit.total, on_hint=self._on_hint
+            self.kit, ControlLayout.for_canvas(canvas, screen.get_size()), visit.total, on_hint=self._on_hint, clock=clock
         )
+        self._keys_changed = False
         self._surfaces = SurfaceNavigator(self.controls.layer)
         self._input = self._make_input()
         self._game_input = PygameInputTranslator(InteractionProfile.DIRECTIONAL)
@@ -210,7 +214,11 @@ class LabyrinthActivity:
                 now = self.clock()
                 animating = self.step(min(0.05, now - last))
                 last = now
-                frame = frames.frame(animating=animating, ambient=True)
+                key_deadline = self.controls.keys.deadline()
+                if key_deadline is not None:
+                    frames.wake_at(key_deadline)
+                frame = frames.frame(dirty=self._keys_changed, animating=animating, ambient=True)
+                self._keys_changed = False
                 if frame is FrameKind.FULL:
                     self.render()
                     self.canvas.present()
@@ -231,6 +239,8 @@ class LabyrinthActivity:
 
         now = self.clock()
         self.timeline.run_due()
+        if self.controls.keys.update():
+            self._keys_changed = True
         if self.cast is not None:
             self.cast.update()
         self.motion.prune(now)
@@ -273,6 +283,7 @@ class LabyrinthActivity:
                 self.clock(),
                 show_arrows=arrows,
             )
+            self.controls.draw_keys(surface)
         self._surfaces.draw(surface)
 
     # -- input ------------------------------------------------------------------
@@ -295,6 +306,8 @@ class LabyrinthActivity:
             if translated is not None:
                 self._surfaces.dispatch(translated)
             return
+        if self.controls.keys.observe_event(event):
+            self._keys_changed = True
         if event.type in {pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP}:
             translated = self._input.translate(event)
             if isinstance(translated, KitPointer):
@@ -397,6 +410,9 @@ class LabyrinthActivity:
         self._pointer_target = None
         self._busy = False
         self._stars_this_maze = 0
+        if self.visit.completed == 0:
+            self.controls.keys.show(KEY_HINT_START_SECONDS)
+            self._keys_changed = True
         self._prepare_maze_art()
         assert self.cast is not None
         self.cast.reset()
@@ -406,9 +422,28 @@ class LabyrinthActivity:
         self.controls.sync(self.maze, self.visit.completed)
         self._note_activity()
 
+    def _fit_maze(self, layout) -> MazeGeometry:
+        """Fit the maze; keep the keyboard hint's corner free of it.
+
+        Most mazes leave the bottom-right corner free. A wide one is fitted
+        beside the hint instead, with slightly smaller keycaps if that keeps
+        the maze's cells (nearly) as big as without the hint.
+        """
+
+        controls = self.controls
+        geometry = MazeGeometry.fit(layout, controls.area)
+        for key in range(controls.key_size, KEY_HINT_SMALLEST - 1, -2):
+            controls.place_keys(key)
+            if controls.keys_clear_of(_panel(geometry)):
+                return geometry
+            beside = MazeGeometry.fit(layout, controls.maze_room())
+            if beside.cell >= geometry.cell * 0.96 or key - 2 < KEY_HINT_SMALLEST:
+                return beside
+        return geometry
+
     def _prepare_maze_art(self) -> None:
         layout = self.maze.layout
-        self.geometry = MazeGeometry.fit(layout, self.controls.area)
+        self.geometry = self._fit_maze(layout)
         self.scene = self.art.compose_scene(layout, self.geometry, self.biome)
         height = int(self.geometry.cell * TITO_SCALE)
         if self.cast is None or height != self._cast_height:
@@ -652,6 +687,8 @@ class LabyrinthActivity:
             return
         assert self.cast is not None
         self.cast.point(self._hints.animation_seconds(1.8))
+        self.controls.keys.demonstrate()
+        self._keys_changed = True
         self.motion.pulse([self.maze.next_target()], now)
         if step == 1:
             self.audio.say("nudge")
@@ -659,6 +696,14 @@ class LabyrinthActivity:
         # Later nudges show the first steps of the way (counted for adaptation).
         self.maze.summary.hints += 1
         self._send_firefly(HINT_CELLS + step - 2)
+
+
+def _panel(geometry: MazeGeometry) -> pygame.Rect:
+    """The maze's garden panel as painted (rim + the hedges' front faces)."""
+
+    rect = geometry.rect
+    gap = geometry.gap
+    return pygame.Rect(rect.left - gap // 2, rect.top - gap // 2, rect.width + gap, rect.height + gap + geometry.depth)
 
 
 def _safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:

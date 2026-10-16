@@ -6,7 +6,11 @@
   hint button), its ``ProgressDots`` and a stars ``HudChip``;
 * the tank itself joins focus traversal through ``TankCursor``: keyboard and
   controller users steer a cursor in the water and press Space/Enter/south
-  to act there, exactly like a tap.
+  to act there, exactly like a tap;
+* a display-only ``KeyboardHint`` (arrows + Space keycaps) rests on the sand
+  just above the right end of the bottom bar: it teaches that the arrows move
+  the water cursor and Space acts there, and the drawn key lights while the
+  real key is held (ADR 0037 §4b). It is not a focus or touch target.
 
 Rules stay in the session/mission director; the app owns what each control
 does. Every control lives outside the protected Home/Back region.
@@ -15,6 +19,8 @@ does. Every control lives outside the protected Home/Back region.
 from __future__ import annotations
 
 from collections.abc import Callable
+import math
+import time
 
 import pygame
 
@@ -30,6 +36,8 @@ from greia_platform.activity_controls import (
     PromptBanner,
     ToolStrip,
 )
+from greia_platform.activity_keyboard_hint import KeyboardHint, KeyCap
+from greia_platform.pygame_blit import PreparedSurfaces
 from greia_platform.localization import LocalizationError
 
 if __package__:
@@ -62,6 +70,11 @@ CAST_MIDBOTTOM = (66, REFERENCE_HEIGHT)
 # Tito stands in the bottom-left corner; the toolbar starts to his right.
 _TOOLBAR_LEFT = 128
 _ICON = 40
+# Arrows move the water cursor, Space acts there (acquarium_app).
+KEY_HINT_KEYS = frozenset({KeyCap.UP, KeyCap.DOWN, KeyCap.LEFT, KeyCap.RIGHT, KeyCap.SPACE})
+KEY_HINT_KEY = 32  # logical keycap height (legible for 4-7 year olds, still unobtrusive)
+KEY_HINT_MIN_PHYSICAL = 26  # never drawn smaller than this on screen
+KEY_HINT_GAP = 8  # between the hint and the bottom bar under it
 
 
 class TankCursor:
@@ -116,9 +129,12 @@ class AquariumControls:
         on_day_night: Callable[[], object],
         on_tank: Callable[[], object],
         on_hint: Callable[[], object],
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._kit = kit
         self._resources = resources
+        self.keys: KeyboardHint = kit.keyboard_hint("keys", pygame.Rect(0, 0, 10, 10), active=KEY_HINT_KEYS, clock=clock)
+        self._fast = PreparedSurfaces(max_entries=12, max_pixels=12 * 260 * 100)
         self._assets = assets
         self._on_tool = on_tool
         self._glow_mode: bool | None = None
@@ -229,7 +245,20 @@ class AquariumControls:
         banner_w = max(160, min(600, right - dots_w - 12 - top.left))
         self.mission.rect = pygame.Rect(top.left, top.top, banner_w, top_h)
         self.dots.rect = pygame.Rect(self.mission.rect.right + 12, top.centery - dots_h // 2, dots_w, dots_h)
+        key = max(KEY_HINT_KEY, math.ceil(KEY_HINT_MIN_PHYSICAL / max(0.01, layout.scale)))
+        width, height = KeyboardHint.preferred_size(KEY_HINT_KEYS, key=key)
+        anchor = self.day_night.rect
+        keys = pygame.Rect(anchor.right - width, anchor.top - KEY_HINT_GAP - height, width, height)
+        if keys != self.keys.rect:
+            self.keys.rect = keys
+            self._fast.clear()
         self.layer.invalidation.invalidate()
+
+    def draw_keys(self, surface: pygame.Surface) -> None:
+        """The keyboard hint, one RLE blit per look (no per-frame alpha work)."""
+
+        if self.keys.visible:
+            surface.blit(self._fast(self.keys.render()), self.keys.rect.topleft)
 
     @property
     def tank_bounds(self) -> pygame.Rect:

@@ -11,7 +11,11 @@ Kit-drawn controls:
 
 * top centre: a ``PromptBanner`` for Captain Leo's order, a visitor at the
   glass, or the creature being named, always with a replay-voice button;
-* top right: ``ProgressDots`` (three followed orders) and a star ``HudChip``.
+* top right: ``ProgressDots`` (three followed orders) and a star ``HudChip``;
+* under the pilot cluster (right panel): a display-only ``KeyboardHint``
+  (arrow keys + Space) that teaches the arrows fly the sub (↑ surface,
+  ↓ dive, ← → steer) and Space sounds the alarm; the drawn key lights while
+  the real key is held (ADR 0037 §4b). It is not a focus or touch target.
 
 The app owns what each control does; nothing enters the protected
 Home/Back region.
@@ -21,6 +25,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import math
+import time
 from typing import Optional
 
 import pygame
@@ -34,14 +40,16 @@ from greia_platform.activity_controls import (
     ProgressDots,
     PromptBanner,
 )
+from greia_platform.activity_keyboard_hint import KeyboardHint, KeyCap
+from greia_platform.pygame_blit import PreparedSurfaces
 
 try:
     from sub_art import PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y, PORTHOLE_RADIUS
-    from sub_cockpit_view import BUTTON_RECTS
+    from sub_cockpit_view import BUTTON_RECTS, KEY_HINT_BOTTOM, KEY_HINT_TOP, PILOT_LEFT, PILOT_WIDTH
     from sub_model import ORDERS_PER_STAR
 except ImportError:
     from .sub_art import PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y, PORTHOLE_RADIUS
-    from .sub_cockpit_view import BUTTON_RECTS
+    from .sub_cockpit_view import BUTTON_RECTS, KEY_HINT_BOTTOM, KEY_HINT_TOP, PILOT_LEFT, PILOT_WIDTH
     from .sub_model import ORDERS_PER_STAR
 
 PORTHOLE_ID = "porthole"
@@ -51,6 +59,21 @@ BANNER_MAX_WIDTH = 540
 BANNER_TOP = 12
 _REPLAY_GLYPH = 34
 _CHIP_HEIGHT = 42
+# Arrows fly the sub, Space sounds the alarm (sub_app._pilot).
+KEY_HINT_KEYS = frozenset({KeyCap.UP, KeyCap.DOWN, KeyCap.LEFT, KeyCap.RIGHT, KeyCap.SPACE})
+KEY_HINT_KEY = 34  # logical keycap height (legible for 4-7 year olds)
+KEY_HINT_MIN_PHYSICAL = 28  # never drawn smaller than this on screen
+
+
+def key_hint_rect(scale: float) -> pygame.Rect:
+    """The keyboard hint's slot under the pilot cluster, keycaps legible at ``scale``."""
+
+    key = max(KEY_HINT_KEY, math.ceil(KEY_HINT_MIN_PHYSICAL / max(0.01, scale)))
+    width, height = KeyboardHint.preferred_size(KEY_HINT_KEYS, key=key)
+    while key > 20 and (width > PILOT_WIDTH or height > KEY_HINT_BOTTOM - KEY_HINT_TOP):
+        key -= 1
+        width, height = KeyboardHint.preferred_size(KEY_HINT_KEYS, key=key)
+    return pygame.Rect(PILOT_LEFT + (PILOT_WIDTH - width) // 2, KEY_HINT_TOP, width, height)
 
 
 class PortholeTarget:
@@ -109,9 +132,12 @@ class SubmarineControls:
         on_button: Callable[[str], object],
         on_porthole: Callable[[], object],
         on_replay: Callable[[], object],
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._kit = kit
         self._layout = layout
+        self.keys: KeyboardHint = kit.keyboard_hint("keys", key_hint_rect(layout.scale), active=KEY_HINT_KEYS, clock=clock)
+        self._fast = PreparedSurfaces(max_entries=12, max_pixels=12 * 240 * 90)
         self.buttons = {
             name: ExternalTarget(name, rect, (lambda n=name: on_button(n)), focus_radius=14)
             for name, rect in BUTTON_RECTS.items()
@@ -167,6 +193,8 @@ class SubmarineControls:
 
     def relayout(self, layout: ControlLayout) -> None:
         self._layout = layout
+        self.keys.rect = key_hint_rect(layout.scale)
+        self._fast.clear()
         self._place_hud()
 
     def _place_hud(self) -> None:
@@ -223,4 +251,7 @@ class SubmarineControls:
         return self.stars.rect.collidepoint(point) or self.dots.rect.collidepoint(point)
 
     def draw(self, surface: pygame.Surface) -> None:
+        if self.keys.visible:
+            # One RLE blit per look (the kit caches each lit state once).
+            surface.blit(self._fast(self.keys.render()), self.keys.rect.topleft)
         self.layer.draw(surface)

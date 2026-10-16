@@ -85,6 +85,7 @@ except ImportError:
 # Keyboard/controller cursor bounds in the bay (logical px).
 CURSOR_MIN = (60, 190)
 CURSOR_STEP = 48
+KEY_HINT_START_SECONDS = 8.0  # keyboard hint shown at start (ADR 0037 §4b)
 _DIRECTIONS = {
     SemanticAction.NAV_LEFT: (-1, 0),
     SemanticAction.NAV_RIGHT: (1, 0),
@@ -161,7 +162,11 @@ class OrcaBayActivity:
             on_tito=lambda: self.handle_tool_click(Tool.TITO),
             on_bay=self._act_at_cursor,
             on_hint=self._request_hint,
+            clock=clock,
         )
+        # Keyboard hint (ADR 0037 §4b): shown for a few seconds at start.
+        self._controls.keys.show(KEY_HINT_START_SECONDS)
+        self._keys_changed = False
         self._surfaces = SurfaceNavigator(self._controls.layer)
         # The kit controls are composed once into an RLE overlay and re-composed
         # only when the layer is invalidated (greia_platform.pygame_blit).
@@ -433,6 +438,7 @@ class OrcaBayActivity:
             return
         if outcome is MissionOutcome.HINT:
             self._show_hint()
+            self._controls.keys.demonstrate()
         elif outcome is MissionOutcome.NOT_YET:
             # Kind try-again: the orca still enjoyed it; Tito thinks gently.
             self._cast.think()
@@ -513,6 +519,7 @@ class OrcaBayActivity:
         if event.type == pygame.QUIT:
             self._running = False
             return
+        self._controls.keys.observe_event(event)  # its look keys the cached HUD
         if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION) and getattr(event, "touch", False):
             # SDL duplicates touch as synthetic mouse input on some devices;
             # the FINGER* event is the one acted on.
@@ -654,6 +661,8 @@ class OrcaBayActivity:
             if cue in ("splash", "whistle", "clicks", "nibble", "purr", "bubble", "bounce"):
                 self.audio.play(cue)
         self._advance_missions(dt)
+        if self._controls.keys.update():
+            self._keys_changed = True
         self._cast.update(dt)
         self._controls.set_counters(self.pod.total_fed, self.pod.total_cuddled, self.pod.stars)
         now = self._clock()
@@ -693,8 +702,19 @@ class OrcaBayActivity:
         if self._surfaces.overlays:
             self._surfaces.draw(surface)
         else:
-            self._hud.draw(surface, None, self._surfaces.draw, stale=self._controls.layer.invalidation.should_draw)
+            self._hud.draw(
+                surface,
+                self._controls.keys_look,
+                self._draw_hud,
+                stale=self._controls.layer.invalidation.should_draw,
+            )
         self.canvas.present()
+
+    def _draw_hud(self, surface: pygame.Surface) -> None:
+        """Everything the cached HUD overlay holds: the keyboard hint, then the kit layer."""
+
+        self._controls.keys.draw(surface)
+        self._surfaces.draw(surface)
 
     def _save(self) -> None:
         try:
@@ -717,6 +737,12 @@ class OrcaBayActivity:
             if not self._running:
                 break
             self.advance(0.033)
+            if self._keys_changed:
+                frames.invalidate()  # a lit key went out or the hint hid
+                self._keys_changed = False
+            deadline = self._controls.keys.deadline()
+            if deadline is not None:
+                frames.wake_at(deadline)
             frame = frames.frame(ambient=True)
             if frame is FrameKind.FULL:
                 self.draw()

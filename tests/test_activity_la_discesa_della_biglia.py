@@ -620,6 +620,25 @@ class AppLoopTests(unittest.TestCase):
                 self.assertGreaterEqual(MARBLE_RADIUS * 2 * app.view.scale * layout.scale, 12)
                 app.render()
 
+    def test_go_sits_right_under_the_tray_pieces_it_confirms(self) -> None:
+        for size in ((1024, 600), (800, 480), (480, 320)):
+            app, now, _ = self._app(size=size)
+            with self.subTest(size=size):
+                controls = app.controls
+                count = len(app.board_state.board.pieces)
+                last = controls.tray[count - 1].rect
+                go = controls.go.rect
+                self.assertEqual(go.left, last.left)
+                self.assertGreater(go.top, last.bottom)
+                self.assertLessEqual(go.top - last.bottom, 12, "GO directly under the last piece")
+                self.assertLessEqual(go.right, app.view.frame.left, "GO never reaches over the board")
+                self.assertGreater(go.top, controls.screen.bar.bottom, "GO is no longer in the top bar")
+                for count in (1, 2, 3):
+                    rect = controls.screen.go_after(count)
+                    self.assertEqual(rect.top - controls.tray[count - 1].rect.bottom, go.top - last.bottom)
+                cast_top = controls.screen.cast_midbottom[1] - controls.screen.cast_height
+                self.assertLessEqual(controls.screen.go_after(3).bottom, cast_top + 12, "Tito stays under GO")
+
     def test_pointer_in_the_protected_region_is_ignored(self) -> None:
         app, now, _ = self._app()
         before = list(app.board_state.slot_of)

@@ -11,6 +11,7 @@ logical pixels; the top bar starts after it (``ControlLayout.top_bar``).
 
 from __future__ import annotations
 
+import math
 from typing import Final
 
 import pygame
@@ -28,13 +29,18 @@ CAMERA_Y_MAX: Final = 70
 CAMERA_Y_FOLLOW: Final = 4.0  # 1/s
 
 # Pedals (round kit buttons; the hit area is a little larger than the art).
+# They are placed by ``ControlLayout.cluster`` (``CollineControls.place``);
+# the rects below are the 1024x600 result, kept for tools and docs.
 PEDAL_SIZE: Final = 132
 PEDAL_MARGIN: Final = 22
+PEDAL_GAP: Final = 16
 PEDAL_HIT_SLOP: Final = 26
-BRAKE_RECT: Final = pygame.Rect(PEDAL_MARGIN, REFERENCE_HEIGHT - PEDAL_MARGIN - PEDAL_SIZE, PEDAL_SIZE, PEDAL_SIZE)
+KEY_HINT_KEY: Final = 34  # keycap height of the keyboard hint (legible for 4-7)
+KEY_HINT_MIN_PHYSICAL: Final = 28  # keycaps never drawn smaller than this on screen
 GO_RECT: Final = pygame.Rect(
     REFERENCE_WIDTH - PEDAL_MARGIN - PEDAL_SIZE, REFERENCE_HEIGHT - PEDAL_MARGIN - PEDAL_SIZE, PEDAL_SIZE, PEDAL_SIZE
 )
+BRAKE_RECT: Final = GO_RECT.move(-(PEDAL_SIZE + PEDAL_GAP), 0)
 
 TOP_BAR_HEIGHT: Final = 56
 LISTEN_SIZE: Final = 60
@@ -51,8 +57,28 @@ FRIEND_OFFSET: Final = 740
 FRIEND_HEIGHT: Final = 150
 
 
+def key_hint_key(scale: float) -> int:
+    """Logical keycap size: ``KEY_HINT_KEY``, raised so small screens keep it legible."""
+
+    return max(KEY_HINT_KEY, math.ceil(KEY_HINT_MIN_PHYSICAL / max(0.01, scale)))
+
+
 def pedal_hit(rect: pygame.Rect) -> pygame.Rect:
     return rect.inflate(2 * PEDAL_HIT_SLOP, 2 * PEDAL_HIT_SLOP)
+
+
+def pedal_at(point: tuple[int, int], go: pygame.Rect, brake: pygame.Rect) -> str | None:
+    """``"go"``/``"brake"`` for a press on (or just around) a pedal, else None.
+
+    The pedals sit side by side, so their slop areas overlap in the gap: the
+    nearer pedal centre wins there.
+    """
+
+    hits = [(name, rect) for name, rect in (("go", go), ("brake", brake)) if pedal_hit(rect).collidepoint(point)]
+    if not hits:
+        return None
+    x, y = point
+    return min(hits, key=lambda item: (item[1].centerx - x) ** 2 + (item[1].centery - y) ** 2)[0]
 
 
 __all__ = [
@@ -67,11 +93,16 @@ __all__ = [
     "FRIEND_HEIGHT",
     "FRIEND_OFFSET",
     "GO_RECT",
+    "KEY_HINT_KEY",
     "LISTEN_SIZE",
+    "PEDAL_GAP",
+    "PEDAL_MARGIN",
     "PEDAL_SIZE",
     "PICNIC_OFFSET",
     "ROAD_WIDTH",
     "STARS_WIDTH",
     "TOP_BAR_HEIGHT",
+    "key_hint_key",
+    "pedal_at",
     "pedal_hit",
 ]

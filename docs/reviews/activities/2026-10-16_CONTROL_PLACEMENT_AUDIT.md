@@ -4,6 +4,7 @@
 **Rules audited:** `docs/product/ACTIVITY_INPUT_STANDARDS.md` § *Mouse-first control placement* and § *Keyboard affordance (drawn keys)*; ADR 0037 §4a/§4b.
 **Owner direction:** Greia is used with a mouse or touchpad; controls used together must sit close together (Colline Allegre's GO and BRAKE in opposite corners is the counter-example); Activities controllable by keyboard should show a simple drawing of the arrow keys / Space that teaches the keyboard works too.
 **Evidence:** SOURCE review of each Activity's layout/controls/input modules + one DESKTOP headless capture each (`tools/headless_greia_activity.py --locale en --viewport 1024x600`, all 45 PASS, scratch only). Several Activities open on a menu (pet/deck/story/level picker); their play-screen positions come from source. Not Acer evidence.
+**Follow-up pass (same day, after `87322f0d`):** the 11 FOLLOW-UP rows below were applied — see § *Follow-up pass applied*. Evidence: focused unit tests per Activity + DESKTOP headless captures at 1024×600 and 800×480 (one with `--press-key` showing the lit key per Activity). Not Acer evidence.
 
 ## Legend
 
@@ -19,37 +20,37 @@
 | 45 | Activities audited (45 captures, all PASS) |
 | 45 | operable by keyboard focus (arrows + Space/Enter) |
 | 12 | play acts directly on arrows/Space (direct keys) |
-| 10 | keyboard hint required by the new rule — **1 now shown** (quattro_amici), 9 follow-up (all in the concurrent game-fps set) |
+| 10 | keyboard hint required by the new rule — **all 10 now shown** (quattro_amici first, the other 9 in the follow-up pass) |
 | 2 | direct-key pointer tools where the hint is optional (shape_garden, teatrino_fiabe: Space picks up, arrows carry) |
 | 2 | letter-key play outside the rule until a letter-keycap set exists (orchestra_animali, alfabeto_leo) |
-| 5 | related controls spread apart — **1 fixed** (morbidi_mostriciattoli), 4 follow-up (colline_allegre, sottomarino_giramondo, costruiamo_ponti, la_discesa_della_biglia; all game-fps set) |
+| 5 | related controls spread apart — **all 5 fixed** (morbidi_mostriciattoli first; colline_allegre, sottomarino_giramondo, costruiamo_ponti, la_discesa_della_biglia in the follow-up pass) |
 | 4 | paging arrows flanking their content — allowed by the rule's paging exception (enciclopedia_greia, teatrino_fiabe tray, shape_garden gallery, morbidi_mostriciattoli gallery) |
-| 2 | FIXED in this tranche (quattro_amici, morbidi_mostriciattoli) |
-| 11 | FOLLOW-UP (all in the game-fps set) |
+| 13 | FIXED (quattro_amici, morbidi_mostriciattoli in the first tranche; 11 in the follow-up pass) |
+| 0 | FOLLOW-UP left open from the required rules (optional items in § *Follow-up pass applied*) |
 | 32 | OK with no change |
 
 ## Per Activity
 
 | Activity | Profile | On-screen controls (1024×600 logical) | Spread | Keys | Hint | Verdict / recommendation |
 |---|---|---|---|---|---|---|
-| acquario_magico | hybrid | mode pills bottom-left→centre (creatures/feed/bubbles/day); tank is the play area | no | focus + direct (arrows move the tool cursor in the tank) | required, not shown | FOLLOW-UP (game-fps): `KeyboardHint` arrows + Space beside the mode row (right end) |
+| acquario_magico | hybrid | mode pills bottom-left→centre (creatures/feed/bubbles/day); tank is the play area | no | focus + direct (arrows move the tool cursor in the tank) | required — **shown** | **FIXED**: `KeyboardHint` arrows + Space (32 px keys) resting on the sand right above the Day/Night pill (right end of the bottom bar); shown 8 s at start, demonstrated with each mission hint, lit while pressed; display-only, nothing else changed |
 | alfabeto_leo | hybrid | listen top-left, letter cards centre, progress top-right | no | focus + letters (typing the letter) | n/a (letters) | OK; later: letter-keycap hint once a letter set exists |
-| baia_delle_orche | hybrid | care pills bottom row (feed/cuddle/play/song) + day/friend icons bottom-right; food picker top-centre; counters top-right | no | focus + direct (arrows move the cursor) | required, not shown | FOLLOW-UP (game-fps): hint arrows + Space at the right end of the care row |
+| baia_delle_orche | hybrid | care pills bottom row (feed/cuddle/play/song) + day/friend icons bottom-right; food picker top-centre; counters top-right | no | focus + direct (arrows move the cursor) | required — **shown** | **FIXED**: hint arrows + Space (32 px keys) in the sky under the counters (top-right, above the water and clear of the food tray) so it never covers a swimming orca; composed into the cached `HudOverlay` (re-composed only when its look changes); start/mission-hint/lit as acquario; nothing else changed |
 | bosco_numeri | hybrid | listen top-left, number card centre, answers in card, progress top-right | no | focus | not required | OK |
 | bottega_delle_misure | hybrid | shelves centre, answer card right, listen + progress top-right | no | focus | not required | OK |
 | casa_del_dieci | hybrid | windows centre, OK button bottom-centre under the house, listen + dots top-right | no | focus | not required | OK |
 | clinica_cuccioli | hybrid | tool tray bottom-centre, progress top-right | no | focus | not required | OK |
-| colline_allegre | game | BRAKE round 132 px bottom-**left**, GO 132 px bottom-**right** (~740 px apart); top bar dots/road/stars/listen | **yes** (owner's counter-example) | focus + direct (→/↑/Space go, ←/↓ brake) | required, not shown | FOLLOW-UP (game-fps): `layout.cluster([(132,132)]*2, hint_size=...)` → BRAKE + GO adjacent bottom-right (brake left of go), hint ← → + Space in the cluster's hint slot; buggy anchor x 300 keeps the road ahead visible |
-| corsa_bacche | directional | path board centre; basket counter top-left; dots + hint bulb top-right; no steering buttons (tap/drag on the path) | no | direct (arrows walk, Space waits) | required, not shown | FOLLOW-UP (game-fps): hint arrows + Space bottom-right outside the board |
-| costruiamo_ponti | hybrid | GO pill top-**left** beside Home; plank tray bottom-centre; dots + hint top-right | **yes** (GO far from the tray it confirms, next to Home) | focus | not required | FOLLOW-UP (game-fps): move GO to the right end of the plank tray (one cluster: planks → GO) |
+| colline_allegre | game | BRAKE round 132 px bottom-**left**, GO 132 px bottom-**right** (~740 px apart); top bar dots/road/stars/listen | **yes → fixed** | focus + direct (→/↑/Space go, ←/↓ brake) | required — **shown** | **FIXED**: `layout.cluster` ROW → BRAKE + GO side by side bottom-right (16 px gap, 132 px pedals; overlapping slop resolved to the nearer pedal), hint ← ↑ → ↓ + Space (34 px keys, ≥ 28 px on screen) in the cluster's hint slot; hint drawn in the cached HUD overlay (key includes its look); shown at set start, demonstrated with each idle hint |
+| corsa_bacche | directional | path board centre; basket counter top-left; dots + hint bulb top-right; no steering buttons (tap/drag on the path) | no | direct (arrows walk, Space waits) | required — **shown** | **FIXED**: hint arrows + Space bottom-right outside the garden panel (34 px keys; the widest gardens fit beside it with ≤ 4 % smaller cells or slightly smaller keys); start of visit, idle nudges, lit while pressed; a look change forces a full (not dirty-rect) frame |
+| costruiamo_ponti | hybrid | GO pill top-**left** beside Home; plank tray bottom-centre; dots + hint top-right | **yes → fixed** | focus | not required | **FIXED**: GO moved from the top bar beside Home to the right end of the plank tray (24 px gap, centred with it as one group: planks → GO) |
 | cucciolo_mio | hybrid | pet picker cards centre + confirm bottom-right; play screen: care tray bottom + confirm bottom-right (`CONFIRM_RECT` 882,452) | no | focus | not required | OK |
 | enciclopedia_greia | navigation | book with topic tiles; prev/next arrows on the book's left/right edges | paging exception | focus | not required | OK (paging arrows flank the pages they turn) |
 | faccine_momo | navigation | six feeling choices in two columns flanking Momo, listen top-right | no (choices, not a pair) | focus | not required | OK |
 | festa_delle_rime | navigation | listen top-left, two answer cards bottom-centre | no | focus | not required | OK |
-| foresta_parole | directional | word sign left, basket bottom-centre, letters falling; listen top-left, dots top-right | no | direct (← → move the basket, Space drops) | required, not shown | FOLLOW-UP (game-fps): hint ← → + Space bottom-right |
+| foresta_parole | directional | word sign left, basket bottom-centre, letters falling; listen top-left, dots top-right | no | direct (← → move the basket, Space drops) | required — **shown** | **FIXED**: hint ← → + Space (↑ ↓ dimmed) hanging above the picture sign (Space replays the word, like the sign), clear of the letter rain, the basket path and the chrome; part of the static-frame signature |
 | il_giardino_dei_numeri | hybrid | acorns + basket centre-right, listen + dots top-right | no | focus | not required | OK |
-| la_discesa_della_biglia | hybrid | GO pill top-**left** beside Home; piece tray top-left; board centre; dots + hint top-right | **yes** (GO next to Home, away from the board's exit) | focus | not required | FOLLOW-UP (game-fps): GO into a bottom-right cluster beside the board (or under the piece tray) |
-| labirinto_magico | directional | maze board centre; dots + hint bulb top-right; no steering buttons (tap/drag) | no | direct (arrows) | required, not shown | FOLLOW-UP (game-fps): hint arrows (+ Space if it acts) bottom-right outside the board |
+| la_discesa_della_biglia | hybrid | GO pill top-**left** beside Home; piece tray top-left; board centre; dots + hint top-right | **yes → fixed** | focus | not required | **FIXED**: GO moved from the top bar to the tray column, directly under the last piece (column width, never over the board); tiles 86 px, Tito shrinks only on screens where the touch floor needs it |
+| labirinto_magico | directional | maze board centre; dots + hint bulb top-right; no steering buttons (tap/drag) | no | direct (arrows) | required — **shown** | **FIXED**: hint arrows + Space bottom-right outside the maze (same fitting rule as corsa); Space also calls the firefly |
 | luci_di_momo | hybrid | jar + Momo bottom-left, sky is the play area, listen + dots top-right | no | focus | not required | OK |
 | memory_meraviglie | hybrid | deck picker centre; play: card grid centre | no | focus | not required | OK |
 | mondo_contrari | hybrid | scene centre, answer objects in scene, listen + dots top-right | no | focus | not required | OK |
@@ -66,24 +67,29 @@
 | quattro_stagioni | hybrid | four season buttons in one row bottom-centre, prompt top-centre | no | focus | not required | OK |
 | shape_garden | pointer | gallery/undo top-left, backdrop/house/new top-right, colours left column, shapes bottom row, size/rotate tools right column, bin bottom-right | no (tool families; gallery prev/next = paging) | focus + direct carry (Space picks up, arrows carry) | optional (pointer tool) | OK; optional later: show the hint while a shape is carried by keyboard |
 | sillabe_magiche | navigation | listen top-left, train centre, two answers bottom-centre | no | focus | not required | OK |
-| sottomarino_giramondo | hybrid | LEFT/RIGHT bottom-**left** under the wheel, SURFACE/DIVE top-**right**, AHEAD/STOP right-middle lever, lights/sonar/alarm/bubbles/horn bottom row | **yes** (steering split over three areas) | focus + direct (arrows steer) | required, not shown | FOLLOW-UP (game-fps): one bottom-right CROSS cluster (↑ dive/surface, ← →, ↓) + AHEAD/STOP beside it; hint arrows + Space in its slot; keep the fun buttons row |
+| sottomarino_giramondo | hybrid | LEFT/RIGHT bottom-**left** under the wheel, SURFACE/DIVE top-**right**, AHEAD/STOP right-middle lever, lights/sonar/alarm/bubbles/horn bottom row | **yes → fixed** | focus + direct (arrows steer) | required — **shown** | **FIXED**: all six piloting buttons in one right-panel cluster — Surface / Left / Right / Dive D-pad + Ahead / Stop under it + hint arrows + Space under that; the left panel is now the helm station (wheel above the throttle lever, both still draggable); look, fun-button row and arrow piloting unchanged |
 | specchi_magici | hybrid | mirror grid centre, tile tray bottom-centre, listen top-right | no | focus | not required | OK |
 | stelle_incantate | hybrid | numbered stars in the sky, banner + listen top-centre, dots top-right | no | focus | not required | OK |
 | storie_della_mia_voce | hybrid | story cards centre; story screen: mic with play + redo directly under it (`voice_layout` 129–133) | no | focus | not required | OK |
 | teatrino_fiabe | pointer | scene/shows/brush top-left, mic + rec top-right (together), sticker columns left/right, puppet tray bottom with prev/next at its ends | paging exception (tray arrows) | focus + direct carry (Space picks up, arrows move a puppet) | optional (pointer tool) | OK; optional later: show the hint while a puppet is carried by keyboard |
 | torre_forme | hybrid | piece tray + rotate button bottom-centre (together), target card right, listen + dots top | no | focus (+ controller west/north rotate) | not required | OK |
 | treno_numeri | hybrid | number sign left, wagons centre, apples bottom, GO bottom-right | no | focus | not required | OK |
-| viaggio_delfino | hybrid | level cards centre (menu); play: dolphin steered by pointer, no steering buttons | no | direct (↑ ↓ steer, Space jump) | required, not shown | FOLLOW-UP (game-fps): hint ↑ ↓ (← → dimmed) + Space bottom-right |
-| volo_draghetto | directional | course cards + look row (menu); play: tap to flap, drag to steer | no | direct (arrows steer, Space flaps) | required, not shown | FOLLOW-UP (game-fps): hint arrows + Space bottom-right during the flight |
+| viaggio_delfino | hybrid | level cards centre (menu); play: dolphin steered by pointer, no steering buttons | no | direct (↑ ↓ steer, Space jump) | required — **shown** | **FIXED**: hint ↑ ↓ + Space (← → dimmed) on the sand bottom-right, below the deepest pearl row and far from the dolphin; shown at journey start, demonstrated with each idle hint, hidden for the count-up (a low jellyfish's tentacles can pass under it) |
+| volo_draghetto | directional | course cards + look row (menu); play: tap to flap, drag to steer | no | direct (arrows steer, Space flaps) | required — **shown** | **FIXED**: hint arrows + Space on the cloud floor bottom-right, below the band the dragon and pickups fly in; shown at flight start, demonstrated with each idle hint (the existing over-the-dragon glyph hint is unchanged) |
 | workshop_settings | navigation | tabs top, preview left, choices grid right, reset top-right | no | focus | not required | OK |
 | writing | text | book/undo/emoji top-left, save/new top-right, page | no | text | exempt (text) | OK |
 
-## Follow-up pass (not changed here)
+## Follow-up pass applied (2026-10-16, after `87322f0d`)
 
-All in the concurrent **game-fps** set, which this tranche was told not to edit:
+All 11 follow-ups from the first tranche are FIXED (rows above). Common implementation (no kit change):
 
-1. **colline_allegre** — BRAKE + GO as one bottom-right `ControlLayout.cluster` (ROW), keyboard hint ← → + Space in the cluster's hint slot (owner's original example).
-2. **sottomarino_giramondo** — steering/depth/throttle into one bottom-right cluster (CROSS + throttle pair) with hint.
-3. **costruiamo_ponti**, **la_discesa_della_biglia** — move GO out of the top bar beside Home into a cluster with the tray/board it confirms.
-4. Keyboard hints (`KeyboardHint`, shown at start, `demonstrate()` from `IdleHintScheduler` steps, `observe_event` for lighting): **corsa_bacche**, **labirinto_magico**, **foresta_parole**, **volo_draghetto**, **viaggio_delfino**, **acquario_magico**, **baia_delle_orche** (and the two above).
-5. Optional: shape_garden / teatrino_fiabe show the hint only while something is carried by keyboard; a letter-keycap set for orchestra_animali / alfabeto_leo.
+* every hint is `ControlKit.keyboard_hint(...)` — display-only (never a layer/focus/touch target), shown 8 s at start, `demonstrate()` from the Activity's existing idle-hint step (IdleHintScheduler / mission hint / Captain Leo's order hint), lit through `observe_event` on every Pygame event, `update()` once per loop with `FrameGovernor.wake_at(deadline())` on static loops;
+* keycaps are 32–34 logical px at 1024×600 (≈ 28–30 px visible) and are raised to ≥ 26–28 physical px on 800×480 where the space allows (the kit default of 44 in `preferred_size` is not used by any Activity; quattro_amici still uses 36);
+* drawing preserves the Acer fast path: Activities with a cached `HudOverlay` (colline_allegre, baia_delle_orche) compose the hint into it and key the overlay on the hint's look; the others blit one RLE copy per look (`PreparedSurfaces`), and dirty-rect Activities (corsa_bacche, foresta_parole) force a full frame when the look changes;
+* captures: `tools/headless_greia_activity.py` at 1024×600 + 800×480 for all 11 (flight/swim screens via `--click-*`), contact sheet `~/.cache/greia-art-review/control_followups.png` (scratch, not committed).
+
+Still optional (unchanged):
+
+1. shape_garden / teatrino_fiabe: show the hint only while something is carried by keyboard;
+2. a letter-keycap set for orchestra_animali / alfabeto_leo;
+3. kit candidates reported to the owner, not done here: a shared legible-key helper (logical key size from `ControlLayout.scale`) and a corner/"beside this rect" placement helper — four Activities carry the same few lines.

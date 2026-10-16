@@ -6,9 +6,10 @@
 * the shining slots on the board are ``SlotTarget``s: they join keyboard / D-pad
   / stick focus and get the shared focus ring, while pointer and touch on the
   board stay with the Activity (tap, drag and drop);
-* GO is the big primary pill at the start of the top bar (shared ``go``
-  glyph + the short localized GO label); hint is a round button (shared
-  ``hint`` glyph) beside ``ProgressDots`` at the end of the bar.
+* GO is the big primary pill right under the last tray piece (shared ``go``
+  glyph + the short localized GO label), so pieces and GO form one
+  mouse-first cluster (ADR 0037 §4a); hint is a round button (shared
+  ``hint`` glyph) beside ``ProgressDots`` at the end of the top bar.
 
 There is no other text on the play screen.
 """
@@ -125,10 +126,8 @@ class RunControls:
         self.hint.rect = hint
         self.hint.icon = self._kit.glyph("hint", int(height * GLYPH_SHARE))
         self.go.icon = self._kit.glyph("go", int(screen.go.height * 0.62))
+        # GO keeps the tray column's width: it never reaches over the board.
         self.go.rect = screen.go
-        preferred = self.go.preferred_width()
-        if preferred <= screen.go.width + 40:
-            self.go.rect = pygame.Rect(screen.go.x, screen.go.y, max(screen.go.width, preferred), screen.go.height)
         self.go.compact = self.go.preferred_width() > self.go.rect.width
         for button, rect in zip(self.tray, screen.tray):
             button.rect = rect
@@ -168,6 +167,9 @@ class RunControls:
                 target.set_rect(view.slot_rect(board.slots[index]))
             target.enabled = present and editable
             target.focusable = present
+        go_rect = self.screen.go_after(len(board.pieces))
+        if go_rect != self.go.rect:
+            self.go.rect = go_rect
         self.go.enabled = editable
         self.hint.enabled = editable
         self.progress.set_progress(done)

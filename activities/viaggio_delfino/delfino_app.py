@@ -123,6 +123,7 @@ WELCOME_HINT_SECONDS = 6.0
 #: The leap card appears when an arc is this close and no leap happened yet.
 LEAP_HINT_DISTANCE = 760.0
 FINISH_PAUSE_SECONDS = 1.3
+KEY_HINT_START_SECONDS = 8.0  # keyboard hint shown at the start of a journey (ADR 0037 §4b)
 COUNT_SETTLE_SECONDS = 0.9
 TAP_LEAP_SECONDS = 0.3
 _MAX_EFFECTS = 12
@@ -194,7 +195,7 @@ class DelfinoJourneyApp:
         self.art.warm_thumbnails(THUMB_SIZE)
         self.layout = ControlLayout.for_canvas(self.canvas, screen.get_size())
         self.picker = PickerControls(self.kit, self.art, self._text, self._pick)
-        self.hud = SwimHud(self.kit, self.art, self.layout, JOURNEYS[0])
+        self.hud = SwimHud(self.kit, self.art, self.layout, JOURNEYS[0], clock=clock)
         self.completion = PygameCompletionScreen(
             self.typography,
             palette=_COMPLETION_PALETTE,
@@ -311,6 +312,7 @@ class DelfinoJourneyApp:
         self.completion.clear()
         self._surfaces.replace(self.hud.layer)
         self.phase = Phase.SWIM
+        self.hud.keys.show(KEY_HINT_START_SECONDS)
         self.steering.reset()
         self._effects.clear()
         self._miss_streak = 0
@@ -436,6 +438,7 @@ class DelfinoJourneyApp:
     def _advance_swim(self, dt: float, now: float) -> None:
         run = self.run_state
         assert run is not None
+        self.hud.keys.update()  # swimming redraws every frame
         if self.steering.active:
             run.dolphin.steer(self.steering.step(dt))
             self._hints.reset(now)  # a held key or stick is input too
@@ -473,6 +476,7 @@ class DelfinoJourneyApp:
         if abs(target[1] - run.dolphin.y) < 60.0:
             return
         self._hints.fire(now)
+        self.hud.keys.demonstrate()
         show = self._hints.animation_seconds(HINT_SHOW_SECONDS)
         self.cast.point(self._hints.animation_seconds(self.cast.POINT_SECONDS))
         self._hint_until = now + show
@@ -493,6 +497,7 @@ class DelfinoJourneyApp:
         run = self.run_state
         assert run is not None
         self.phase = Phase.COUNT
+        self.hud.keys.hide()
         self._count_shown = 0
         self._count_flight = 0.0
         self._count_done_at = 0.0
@@ -600,6 +605,8 @@ class DelfinoJourneyApp:
             effects=self._effects,
         )
         self.renderer.draw_swim(surface, run, self._scene, view)
+        if self.phase is Phase.SWIM:
+            self.hud.draw_keys(surface)
         if self.phase is Phase.COUNT:
             self.renderer.draw_count(
                 surface,
@@ -711,6 +718,7 @@ class DelfinoJourneyApp:
         run = self.run_state
         if run is None:
             return
+        self.hud.keys.observe_event(event)
         meaning = self.steering.handle(event)
         if meaning is SwimInput.LEAP:
             self._hints.reset(self._clock())

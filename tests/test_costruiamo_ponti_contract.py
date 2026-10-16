@@ -577,6 +577,23 @@ class AppLoopTests(unittest.TestCase):
                 self.assertGreaterEqual(BANK_TOP - 4 * UNIT, controls.screen.bar.bottom)
                 app.render()
 
+    def test_go_sits_at_the_right_end_of_the_tray_it_confirms(self) -> None:
+        from activities.costruiamo_ponti.ponti_content import ALL_CROSSINGS
+
+        for size in ((1024, 600), (800, 480)):
+            app, now, _ = self._app(size=size, next_set=1)
+            controls = app.controls
+            with self.subTest(size=size):
+                for crossing in ALL_CROSSINGS:
+                    controls.set_crossing(crossing)
+                    tiles = [tile.rect for tile in controls.tray[: len(crossing.pieces)]]
+                    go = controls.go.rect
+                    self.assertGreater(go.left, tiles[-1].right, crossing.crossing_id)
+                    self.assertLessEqual(go.left - tiles[-1].right, 30, "GO beside the tray, not across the screen")
+                    self.assertTrue(tiles[-1].top <= go.centery <= tiles[-1].bottom)
+                    self.assertLessEqual(go.right, 1024 - 8)
+                    self.assertGreater(go.top, 300, "GO is no longer in the top bar beside Home")
+
     def test_pointer_in_the_protected_region_is_ignored(self) -> None:
         app, now, _ = self._app()
         before = list(app.bridge.seat_of)

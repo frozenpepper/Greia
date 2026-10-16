@@ -516,6 +516,40 @@ class AppLoopTests(unittest.TestCase):
                     self.assertGreaterEqual(app.geometry.cell * layout.scale, 20)
                     app.render()
 
+    def test_keyboard_hint_sits_beside_the_maze_and_lights_the_pressed_key(self) -> None:
+        from greia_platform.activity_controls import ControlLayout
+        from greia_platform.activity_keyboard_hint import KeyCap
+
+        from maze_app import _panel
+
+        for size in ((1024, 600), (800, 480)):
+            for level in range(1, MAX_LEVEL + 1):
+                app, now, _ = self._app(level=level, size=size)
+                with self.subTest(size=size, level=level):
+                    keys = app.controls.keys
+                    layout = ControlLayout.for_canvas(app.canvas, size)
+                    self.assertTrue(keys.visible, "shown at the start of a visit")
+                    self.assertFalse(keys.rect.colliderect(_panel(app.geometry)), "never over the maze")
+                    self.assertFalse(keys.rect.colliderect(layout.protected))
+                    self.assertGreater(keys.rect.centerx, 700, "bottom-right corner")
+                    self.assertGreater(keys.rect.centery, 450)
+                    smallest = min(r.height for r in keys.key_rects().values()) * layout.scale
+                    self.assertGreaterEqual(smallest, 21)
+        app, now, _ = self._app(level=1)
+        keys = app.controls.keys
+        self.assertEqual(keys.active, {KeyCap.UP, KeyCap.DOWN, KeyCap.LEFT, KeyCap.RIGHT, KeyCap.SPACE})
+        self.assertGreaterEqual(min(r.height for r in keys.key_rects().values()), 30, "legible keycaps")
+        app._handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_UP, mod=0, unicode="", scancode=0))
+        self.assertIn(KeyCap.UP, keys.lit)
+        app._handle_event(pygame.event.Event(pygame.KEYUP, key=pygame.K_UP, mod=0, unicode="", scancode=0))
+        self._advance(app, now, 0.5)
+        self.assertNotIn(KeyCap.UP, keys.lit)
+        self._walk_out(app, now)
+        keys.hide()
+        self._advance(app, now, 10.0)
+        self.assertTrue(keys.visible, "an idle nudge shows the keys again")
+        app.render()
+
     def test_frames_are_blits_only_after_warm_up(self) -> None:
         app, now, _ = self._app(level=4, seed=2)
         app.render()

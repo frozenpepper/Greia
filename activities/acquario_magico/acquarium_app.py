@@ -95,6 +95,7 @@ CHEST_RECT = pygame.Rect(456, 402, 112, 88)
 CURSOR_MIN = (70, 85)
 CURSOR_MAX = (REFERENCE_WIDTH - 70, REFERENCE_HEIGHT - 110)
 CURSOR_STEP = 48
+KEY_HINT_START_SECONDS = 8.0  # keyboard hint shown at start (ADR 0037 §4b)
 
 _DIRECTIONS = {
     SemanticAction.NAV_LEFT: (-1, 0),
@@ -168,6 +169,7 @@ class AquariumApp:
     _missions: Optional[MissionDirector] = None
     _cast: Optional[AquariumCast] = None
     _hinted_uid: Optional[int] = None
+    _keys_changed: bool = False
     keyboard_cursor: tuple[int, int] = (REFERENCE_WIDTH // 2, REFERENCE_HEIGHT // 2)
 
     def __post_init__(self) -> None:
@@ -188,6 +190,8 @@ class AquariumApp:
             on_tank=self._act_at_cursor,
             on_hint=self._request_hint,
         )
+        # Keyboard hint (ADR 0037 §4b): shown for a few seconds at start.
+        self._controls.keys.show(KEY_HINT_START_SECONDS)
         self._surfaces = SurfaceNavigator(self._controls.layer)
         self._input = PygameControlInput(
             to_logical=self.canvas.pointer,
@@ -257,6 +261,8 @@ class AquariumApp:
         if event.type == pygame.QUIT:
             self._running = False
             return
+        if self._controls is not None:
+            self._controls.keys.observe_event(event)  # input already redraws
         if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION) and getattr(event, "touch", False):
             # SDL synthesizes a mouse event for the same physical finger;
             # the FINGER* event is the one we act on.
@@ -574,6 +580,8 @@ class AquariumApp:
             return
         if outcome is MissionOutcome.HINT:
             self._show_hint()
+            if self._controls is not None:
+                self._controls.keys.demonstrate()
         elif outcome in (MissionOutcome.STARTED, MissionOutcome.RETIRED):
             self._hinted_uid = None
             if outcome is MissionOutcome.STARTED:
@@ -673,6 +681,14 @@ class AquariumApp:
     def _step_frame(self, dt: float) -> None:
         self.advance(dt)
         frames: FrameGovernor | None = getattr(self, "_frames", None)
+        if frames is not None and self._controls is not None:
+            # The hint's lit/hide timers must show even while the tank is idle.
+            if self._keys_changed:
+                frames.invalidate()
+            deadline = self._controls.keys.deadline()
+            if deadline is not None:
+                frames.wake_at(deadline)
+        self._keys_changed = False
         frame = frames.frame(ambient=True) if frames is not None else FrameKind.FULL
         if frame is FrameKind.FULL:
             self._draw()
@@ -702,6 +718,8 @@ class AquariumApp:
                 {"count": newly_fed, "total_fed": self.session.total_fed},
             )
         self._advance_missions(dt)
+        if self._controls is not None and self._controls.keys.update():
+            self._keys_changed = True
         if self._cast is not None:
             self._cast.update(dt)
         if (
@@ -732,6 +750,8 @@ class AquariumApp:
         renderer.draw_effects(surf, self.session.effects)
         if self._cast is not None:
             self._cast.draw(surf, CAST_MIDBOTTOM)
+        if self._controls is not None:
+            self._controls.draw_keys(surf)
         if self._surfaces is not None:
             self._surfaces.draw(surf)
         self.canvas.present()

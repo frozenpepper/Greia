@@ -485,6 +485,36 @@ class BaiaDelleOrcheAppTests(unittest.TestCase):
                 worst = max(worst, abs(a.r - b.r), abs(a.g - b.g), abs(a.b - b.b))
         self.assertLessEqual(worst, 3)
 
+    def test_keyboard_hint_sits_in_the_sky_and_lights_through_the_cached_hud(self) -> None:
+        from greia_platform.activity_keyboard_hint import KeyCap
+
+        from activities.baia_delle_orche.orca_content import WATER_SURFACE_Y
+
+        for size in ((1024, 600), (800, 480)):
+            app, pod, _, clock = self._app(size=size, missions=True)
+            controls = app._controls
+            keys = controls.keys
+            self.assertTrue(keys.visible, "shown at start")
+            self.assertEqual(keys.active, {KeyCap.UP, KeyCap.DOWN, KeyCap.LEFT, KeyCap.RIGHT, KeyCap.SPACE})
+            self.assertLess(keys.rect.bottom, WATER_SURFACE_Y - 60, "in the sky, above the water")
+            self.assertGreater(keys.rect.left, 1024 // 2 + 120, "right side, clear of the food tray")
+            self.assertFalse(keys.rect.colliderect(controls._layout.protected))
+            for target in (*controls.foods.controls, controls.fed, controls.cuddles, controls.stars, controls.dots):
+                self.assertFalse(keys.rect.colliderect(target.rect), target.control_id)
+            self.assertNotIn(keys, list(controls.layer.targets), "display-only, never a focus target")
+            smallest = min(r.height for r in keys.key_rects().values()) * controls._layout.scale
+            self.assertGreaterEqual(smallest, 25, "legible keycaps")
+        app.draw()
+        composed = app._hud.compositions
+        app.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_LEFT, mod=0, unicode="", scancode=0))
+        self.assertIn(KeyCap.LEFT, keys.lit)
+        app.draw()
+        self.assertGreater(app._hud.compositions, composed, "a lit key re-composes the cached HUD")
+        app.handle_event(pygame.event.Event(pygame.KEYUP, key=pygame.K_LEFT, mod=0, unicode="", scancode=0))
+        self._step(app, clock, 15)
+        self.assertNotIn(KeyCap.LEFT, keys.lit)
+        self.assertTrue(app._keys_changed or not keys.animating)
+
     def test_day_sea_keeps_the_deep_ocean_blue_and_moon_clears_counters(self) -> None:
         assets = OrcaAssetCache()
         day = assets.background(False)

@@ -8,12 +8,17 @@ that sends the firefly to show the way. There are no setting chips in the
 child flow: maze size, stars and keys follow the adaptive ladder.
 
 Arrow keys / D-pad steer Tito (they are gameplay, not focus moves); pointer
-input the layer ignores is gameplay too (tap or drag in the maze).
+input the layer ignores is gameplay too (tap or drag in the maze). A
+display-only ``KeyboardHint`` (arrows + Space keycaps) sits in the bottom-right
+corner beside the maze: it teaches that the arrows walk Tito and Space calls
+the firefly, and the drawn key lights while the real key is held (ADR 0037 §4b).
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable
+import math
+import time
 
 import pygame
 
@@ -27,6 +32,8 @@ from greia_platform.activity_controls import (
     IconButton,
     ProgressDots,
 )
+from greia_platform.activity_keyboard_hint import KeyboardHint, KeyCap
+from greia_platform.pygame_blit import PreparedSurfaces
 
 if __package__:
     from .maze_layout import maze_area
@@ -36,6 +43,16 @@ else:
     from maze_model import Maze
 
 HINT_GLYPH_SHARE = 0.62
+# Arrows walk Tito, Space / Enter call the firefly (maze_app).
+KEY_HINT_KEYS = frozenset({KeyCap.UP, KeyCap.DOWN, KeyCap.LEFT, KeyCap.RIGHT, KeyCap.SPACE})
+KEY_HINT_KEY = 34  # logical keycap height (legible for 4-7 year olds)
+KEY_HINT_MIN_PHYSICAL = 28  # never drawn smaller than this on screen
+KEY_HINT_SMALLEST = 28  # logical keycap height a wide maze may shrink the hint to
+KEY_HINT_CLEARANCE = 14  # free space kept between the hint and the maze
+
+
+def key_hint_key(scale: float) -> int:
+    return max(KEY_HINT_KEY, math.ceil(KEY_HINT_MIN_PHYSICAL / max(0.01, scale)))
 
 
 class MazeControls:
@@ -48,8 +65,12 @@ class MazeControls:
         mazes: int,
         *,
         on_hint: Callable[[], object],
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._kit = kit
+        # Display-only (not a layer target): drawn by ``draw_keys``.
+        self.keys: KeyboardHint = kit.keyboard_hint("keys", pygame.Rect(0, 0, 10, 10), active=KEY_HINT_KEYS, clock=clock)
+        self._fast = PreparedSurfaces(max_entries=12, max_pixels=12 * 260 * 100)
         self.stars: HudChip = kit.hud_chip("hud.stars", pygame.Rect(0, 0, 10, 10), icon=None, value="")
         self.key: HudChip = kit.hud_chip("hud.key", pygame.Rect(0, 0, 10, 10), icon=None, value="")
         self.progress: ProgressDots = kit.progress_dots("progress", pygame.Rect(0, 0, 10, 10), total=mazes)
@@ -84,7 +105,34 @@ class MazeControls:
         self._key_state = (False, False)
         top = max(bar.bottom, layout.protected.bottom) + 6
         self.area = maze_area(top)
+        self.key_size = key_hint_key(layout.scale)
+        self.place_keys(self.key_size)
         self.layer.invalidation.invalidate()
+
+    def place_keys(self, key: int) -> None:
+        """Put the keyboard hint, ``key`` px keycaps, in the bottom-right corner."""
+
+        width, height = KeyboardHint.preferred_size(KEY_HINT_KEYS, key=key)
+        rect = pygame.Rect(self.area.right - width, self.area.bottom - height, width, height)
+        if rect != self.keys.rect:
+            self.keys.rect = rect
+            self._fast.clear()
+
+    def maze_room(self) -> pygame.Rect:
+        """The maze area with the keyboard hint's corner column taken off."""
+
+        room = self.area.copy()
+        room.width = self.keys.rect.left - KEY_HINT_CLEARANCE - room.left
+        return room
+
+    def keys_clear_of(self, panel: pygame.Rect) -> bool:
+        return not self.keys.rect.inflate(2 * KEY_HINT_CLEARANCE, 2 * KEY_HINT_CLEARANCE).colliderect(panel)
+
+    def draw_keys(self, surface: pygame.Surface) -> None:
+        """The keyboard hint, one RLE blit per look (no per-frame alpha work)."""
+
+        if self.keys.visible:
+            surface.blit(self._fast(self.keys.render()), self.keys.rect.topleft)
 
     # -- state mirroring -----------------------------------------------------
 

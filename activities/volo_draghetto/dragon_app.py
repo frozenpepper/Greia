@@ -99,6 +99,7 @@ except ImportError:  # pragma: no cover - package import path
 
 START_HINT_SECONDS = 4.5
 GUIDE_SECONDS = 3.0
+KEY_HINT_START_SECONDS = 8.0  # keyboard hint shown at the start of a flight (ADR 0037 §4b)
 DRAG_SLOP = 14
 COMPLETE_STARS = 3
 MAP_DRAGON_HEIGHT = 210
@@ -224,6 +225,8 @@ class DragonFlightActivity:
         self.motion.prune(now)
         if self.state is not AppState.FLIGHT or self.run is None:
             return
+        if self.hud is not None:
+            self.hud.keys.update()
         for event in self.run.update(dt, self._steer()):
             self._on_flight_event(event, now)
             if self.state is not AppState.FLIGHT:
@@ -241,6 +244,8 @@ class DragonFlightActivity:
         elif self.state is AppState.FLIGHT and self.run is not None:
             frames = self.art.dragon_frames(self.progress.look)
             self.flight_renderer.draw(surface, self.run, frames, self.motion, now)
+            if self.hud is not None:
+                self.hud.draw_keys(surface)
         self._surfaces.draw(surface)
 
     # -- input ----------------------------------------------------------------
@@ -274,6 +279,8 @@ class DragonFlightActivity:
             if isinstance(translated, KitPointer):
                 self._pointer(translated)
             return
+        if self.hud is not None:
+            self.hud.keys.observe_event(event)  # flight redraws every frame
         semantic = self._game_input.digital(event)
         if semantic is not None:
             self._last_source = semantic.source
@@ -416,7 +423,8 @@ class DragonFlightActivity:
         self.course_index = index
         course = self.builder.build(spec, assist=self.progress.assist.get(spec.course_id, False))
         self.run = FlightRun(course)
-        self.hud = FlightHud(self.kit, self._layout(), rings=spec.rings, gems=spec.gems)
+        self.hud = FlightHud(self.kit, self._layout(), rings=spec.rings, gems=spec.gems, clock=self.clock)
+        self.hud.keys.show(KEY_HINT_START_SECONDS)
         self.hud.sync(self.run)
         self.flight_renderer.prepare(spec)
         self._surfaces.replace(self.hud.layer)
@@ -539,6 +547,8 @@ class DragonFlightActivity:
         self.motion.hint_glyphs = self._hint_glyphs()
         self.motion.hint_since = now
         self.motion.ring_pulse_until = now + self._hints.animation_seconds(3.0)
+        if self.hud is not None:
+            self.hud.keys.demonstrate()
         if step >= 2:
             self.cast.point(self._hints.animation_seconds(2.2))
             self.motion.guide_until = now + self._hints.animation_seconds(GUIDE_SECONDS)

@@ -8,18 +8,25 @@
 * the GO and BRAKE pedals: big round kit ``IconButton`` bodies (leaf / coral
   accents, shared ``icon.hud.go`` / ``icon.hud.stop`` glyphs). They are hold
   controls, so the app drives their ``pressed`` state and draws them; they
-  are not focus targets (arrows / Space / D-pad / south button drive).
+  are not focus targets (arrows / Space / D-pad / south button drive). They
+  form one mouse-first ``ControlLayout.cluster`` at the bottom-right, BRAKE
+  then GO side by side (ADR 0037 §4a);
+* a ``KeyboardHint`` (arrow cluster + Space keycaps) in the cluster's hint
+  slot teaches that → / ↑ / Space drive and ← / ↓ brake; the drawn key lights
+  while the real key is held (ADR 0037 §4b).
 
 Every body is a kit body rendered once into the kit's bounded caches. While
 driving, the top bar and the pedals are composed once into a
 ``greia_platform.pygame_blit.HudOverlay`` (re-composed only when the layer is
-invalidated or a pedal's held state changes), so the per-frame work is one
+invalidated, a pedal's held state or the keyboard hint's look changes), so the per-frame work is one
 RLE blit plus the moving road marker.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable
+import dataclasses
+import time
 
 import pygame
 
@@ -40,18 +47,45 @@ from greia_platform.activity_controls import (
     ProgressDots,
     mix,
 )
+from greia_platform.activity_keyboard_hint import KeyboardHint, KeyCap
 
 if __package__:
     from .colline_art import CollineArt
     from .colline_content import COURSES_PER_SET, STARS_PER_COURSE
-    from .colline_layout import BRAKE_RECT, GO_RECT, LISTEN_SIZE, ROAD_WIDTH, STARS_WIDTH, TOP_BAR_HEIGHT
+    from .colline_layout import (
+        BRAKE_RECT,
+        GO_RECT,
+        KEY_HINT_KEY,
+        key_hint_key,
+        LISTEN_SIZE,
+        PEDAL_GAP,
+        PEDAL_MARGIN,
+        PEDAL_SIZE,
+        ROAD_WIDTH,
+        STARS_WIDTH,
+        TOP_BAR_HEIGHT,
+    )
 else:
     from colline_art import CollineArt
     from colline_content import COURSES_PER_SET, STARS_PER_COURSE
-    from colline_layout import BRAKE_RECT, GO_RECT, LISTEN_SIZE, ROAD_WIDTH, STARS_WIDTH, TOP_BAR_HEIGHT
+    from colline_layout import (
+        BRAKE_RECT,
+        GO_RECT,
+        KEY_HINT_KEY,
+        key_hint_key,
+        LISTEN_SIZE,
+        PEDAL_GAP,
+        PEDAL_MARGIN,
+        PEDAL_SIZE,
+        ROAD_WIDTH,
+        STARS_WIDTH,
+        TOP_BAR_HEIGHT,
+    )
 
 ROAD_MIN_WIDTH = 180
 PEDAL_GLOW_PAD = 18
+# GO: → / ↑ / Space; BRAKE: ← / ↓ (colline_input).
+KEY_HINT_KEYS = frozenset({KeyCap.LEFT, KeyCap.RIGHT, KeyCap.UP, KeyCap.DOWN, KeyCap.SPACE})
 
 
 class CourseRoad(KitControl):
@@ -151,7 +185,13 @@ class CollineControls:
     """Own the top bar, the pedals and one ``ControlLayer`` (listen + completion)."""
 
     def __init__(
-        self, kit: ControlKit, art: CollineArt, typography: LabelTypography, *, on_listen: Callable[[], object]
+        self,
+        kit: ControlKit,
+        art: CollineArt,
+        typography: LabelTypography,
+        *,
+        on_listen: Callable[[], object],
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._kit = kit
         self._art = art
@@ -174,6 +214,10 @@ class CollineControls:
         )
         self.brake: IconButton = self._brake_kit.icon_button(
             "brake", BRAKE_RECT, icon=self._brake_kit.glyph("stop", int(BRAKE_RECT.width * 0.44)), role=ButtonRole.PRIMARY
+        )
+        # Display-only: drawn in the cached HUD, never a focus or touch target.
+        self.keys: KeyboardHint = kit.keyboard_hint(
+            "keys", pygame.Rect(0, 0, *KeyboardHint.preferred_size(KEY_HINT_KEYS, key=KEY_HINT_KEY)), active=KEY_HINT_KEYS, clock=clock
         )
         self.layer: ControlLayer = kit.layer((self.progress, self.road, self.stars, self.listen), layer_id="colline.controls")
         self._glow: FadeSteps | None = None
@@ -203,6 +247,17 @@ class CollineControls:
         x += road_w + gap
         self.stars.rect = pygame.Rect(x, top, stars_w, height)
         self.listen.rect = pygame.Rect(bar.right - listen_size, bar.top, listen_size, listen_size)
+        # BRAKE + GO side by side at the bottom-right, the keys just left of them.
+        pedal_layout = dataclasses.replace(layout, margin=PEDAL_MARGIN)
+        cluster = pedal_layout.cluster(
+            [(PEDAL_SIZE, PEDAL_SIZE)] * 2,
+            gap=PEDAL_GAP,
+            hint_size=KeyboardHint.preferred_size(KEY_HINT_KEYS, key=key_hint_key(layout.scale)),
+        )
+        self.brake.rect, self.go.rect = cluster.rects
+        if cluster.hint is not None:
+            self.keys.rect = cluster.hint
+        self._glow = None
         self.layer.invalidation.invalidate()
 
     def set_course(self, index: int, friend: str) -> None:
@@ -250,11 +305,13 @@ class CollineControls:
             if not hinted:
                 self.go.draw(target)
                 self.brake.draw(target)
+            self.keys.draw(target)
             draw_layer(target)
 
+        keys_look = (self.keys.visible, self.keys.lit if self.keys.visible else frozenset())
         self.road.live_marker = True
         try:
-            self.hud.draw(surface, (go, brake, hinted), compose, stale=self.layer.invalidation.should_draw)
+            self.hud.draw(surface, (go, brake, hinted, keys_look), compose, stale=self.layer.invalidation.should_draw)
         finally:
             self.road.live_marker = False
         self.road.draw_marker(surface)
@@ -262,16 +319,19 @@ class CollineControls:
     def draw_pedals(self, surface: pygame.Surface, *, go: bool, brake: bool, go_hint: float, brake_hint: float) -> None:
         """Pedals with their held state; a pulsing gold ring when hinted (0..1)."""
 
-        for button, held, hint in ((self.go, go, go_hint), (self.brake, brake, brake_hint)):
+        pedals = ((self.go, go, go_hint), (self.brake, brake, brake_hint))
+        # Glows first: the pedals sit side by side, so a ring must not cover the neighbour.
+        for button, _held, hint in pedals:
             glow = self._pedal_glow().at(hint) if hint > 0.0 else None
             if glow is not None:
                 surface.blit(glow, glow.get_rect(center=button.rect.center))
+        for button, held, _hint in pedals:
             button.pressed = held
             button.draw(surface)
 
     def _pedal_glow(self) -> FadeSteps:
         if self._glow is None:
-            size = GO_RECT.width + 2 * PEDAL_GLOW_PAD
+            size = self.go.rect.width + 2 * PEDAL_GLOW_PAD
             ss = 2
             big = pygame.Surface((size * ss, size * ss), pygame.SRCALPHA)
             center = (size * ss // 2, size * ss // 2)
@@ -281,4 +341,4 @@ class CollineControls:
         return self._glow
 
 
-__all__ = ["CollineControls", "CourseRoad", "StarSlots"]
+__all__ = ["KEY_HINT_KEYS", "CollineControls", "CourseRoad", "StarSlots"]

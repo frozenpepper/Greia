@@ -37,7 +37,7 @@ from activities.colline_allegre.colline_content import (
     Surface,
 )
 from activities.colline_allegre.colline_input import DriveInput
-from activities.colline_allegre.colline_layout import BRAKE_RECT, GO_RECT
+from activities.colline_allegre.colline_layout import BRAKE_RECT, GO_RECT, pedal_at
 from activities.colline_allegre.colline_model import (
     Controls,
     CourseLayout,
@@ -536,6 +536,58 @@ class AppLoopTests(CollineBase):
         self.assertFalse(app.drive.go)
         app.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=BRAKE_RECT.center))
         self.assertTrue(app.drive.brake)
+
+    def test_pedals_form_one_bottom_right_cluster_with_the_keyboard_hint(self) -> None:
+        from greia_platform.activity_keyboard_hint import KeyCap
+
+        for size in ((1024, 600), (800, 480)):
+            app = self.make_app(size)
+            controls = app.controls
+            go, brake, keys = controls.go.rect, controls.brake.rect, controls.keys.rect
+            self.assertEqual(brake.right + 16, go.left, f"BRAKE sits just left of GO at {size}")
+            self.assertEqual(brake.centery, go.centery)
+            self.assertGreater(go.centerx, REFERENCE_WIDTH // 2, "the cluster is on the right")
+            self.assertGreater(go.top, REFERENCE_HEIGHT // 2, "the cluster is at the bottom")
+            self.assertLess(keys.right, brake.left, "the keys sit beside the pedals")
+            self.assertLess(brake.left - keys.right, 40)
+            self.assertGreaterEqual(min(r.height for r in controls.keys.key_rects().values()), 30, "legible keycaps")
+            self.assertFalse(keys.colliderect(ControlLayout.for_canvas(app.canvas, size).protected))
+            self.assertLess(keys.left, keys.right)
+            self.assertGreater(keys.left, 300 + 140, "the hint stays clear of the buggy")
+        if size == (800, 480):
+            self.assertEqual((go, brake), (controls.go.rect, controls.brake.rect))
+        app = self.make_app()
+        self.assertEqual((app.controls.go.rect, app.controls.brake.rect), (GO_RECT, BRAKE_RECT))
+        self.assertEqual(pedal_at(GO_RECT.center, GO_RECT, BRAKE_RECT), "go")
+        self.assertEqual(pedal_at(BRAKE_RECT.center, GO_RECT, BRAKE_RECT), "brake")
+        self.assertEqual(pedal_at((GO_RECT.left - 3, GO_RECT.centery), GO_RECT, BRAKE_RECT), "go")
+        self.assertEqual(pedal_at((BRAKE_RECT.right + 3, GO_RECT.centery), GO_RECT, BRAKE_RECT), "brake")
+        self.assertIsNone(pedal_at((400, 300), GO_RECT, BRAKE_RECT))
+        self.assertEqual(app.controls.keys.active, {KeyCap.LEFT, KeyCap.RIGHT, KeyCap.UP, KeyCap.DOWN, KeyCap.SPACE})
+
+    def test_keyboard_hint_shows_lights_the_held_key_and_recomposes_the_hud(self) -> None:
+        from greia_platform.activity_keyboard_hint import KeyCap
+
+        app = self.make_app()
+        keys = app.controls.keys
+        self.assertTrue(keys.visible, "the keys are shown at the start of a set")
+        app.render()
+        hud = app.controls.hud
+        composed = hud.compositions
+        app.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE))
+        self.assertIn(KeyCap.SPACE, keys.lit)
+        app.render()
+        self.assertGreater(hud.compositions, composed, "a lit key re-composes the cached HUD")
+        app.handle_event(pygame.event.Event(pygame.KEYUP, key=pygame.K_SPACE))
+        self.advance(app, 0.5)
+        self.assertNotIn(KeyCap.SPACE, keys.lit)
+        app.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_LEFT))
+        self.assertIn(KeyCap.LEFT, keys.lit)
+        app.handle_event(pygame.event.Event(pygame.KEYUP, key=pygame.K_LEFT))
+        keys.hide()
+        self.advance(app, 6.5)
+        self.assertTrue(keys.visible, "an idle hint shows the keys again")
+        self.assertTrue(keys.animating, "and lights them one after another")
 
     def test_keyboard_starts_and_idle_hint_points(self) -> None:
         app = self.make_app()

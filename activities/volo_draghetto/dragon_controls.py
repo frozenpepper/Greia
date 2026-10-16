@@ -6,7 +6,10 @@ Home/Back region:
 * ``FlightHud`` - flight: a star ``HudChip``, a gem ``HudChip`` (courses with
   gems) and ``ProgressDots`` for the course's rainbow rings. Nothing here is
   focusable: during flight arrows / D-pad / stick steer the dragon and Space /
-  south button flap (gameplay, not focus moves).
+  south button flap (gameplay, not focus moves). A display-only
+  ``KeyboardHint`` (arrows + Space keycaps) sits in the bottom-right corner,
+  below the band the dragon and the pickups fly in: it teaches the keys and
+  lights the drawn key while the real key is held (ADR 0037 §4b).
 * ``MapControls`` - the pre-flight sky map: one picture ``IconButton`` tile per
   course (its sky, motif, ring and earned stars; locked courses are disabled)
   and one round ``IconButton`` per look (worn prop; locked looks disabled,
@@ -17,6 +20,8 @@ Home/Back region:
 from __future__ import annotations
 
 from collections.abc import Callable
+import math
+import time
 
 import pygame
 
@@ -30,6 +35,8 @@ from greia_platform.activity_controls import (
     IconButton,
     ProgressDots,
 )
+from greia_platform.activity_keyboard_hint import KeyboardHint, KeyCap
+from greia_platform.pygame_blit import PreparedSurfaces
 
 try:
     from dragon_art import DragonArt
@@ -56,11 +63,29 @@ def look_control_id(look_id: str) -> str:
     return f"look.{look_id}"
 
 
-class FlightHud:
-    """Kit HUD for one flight: stars, gems and ring progress."""
+# Arrows steer the dragon, Space flaps (dragon_app).
+KEY_HINT_KEYS = frozenset({KeyCap.UP, KeyCap.DOWN, KeyCap.LEFT, KeyCap.RIGHT, KeyCap.SPACE})
+KEY_HINT_KEY = 34  # logical keycap height (legible for 4-7 year olds)
+KEY_HINT_MIN_PHYSICAL = 28  # never drawn smaller than this on screen
+KEY_HINT_BOTTOM_MARGIN = 8  # the hint sits on the cloud floor, under the flight band
 
-    def __init__(self, kit: ControlKit, layout: ControlLayout, *, rings: int, gems: bool) -> None:
+
+class FlightHud:
+    """Kit HUD for one flight: stars, gems, ring progress and the keyboard hint."""
+
+    def __init__(
+        self,
+        kit: ControlKit,
+        layout: ControlLayout,
+        *,
+        rings: int,
+        gems: bool,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
         self._kit = kit
+        # Display-only (not a layer target): drawn by ``draw_keys`` over the sky.
+        self.keys: KeyboardHint = kit.keyboard_hint("keys", pygame.Rect(0, 0, 10, 10), active=KEY_HINT_KEYS, clock=clock)
+        self._fast = PreparedSurfaces(max_entries=12, max_pixels=12 * 260 * 100)
         self.has_gems = gems
         self.stars: HudChip = kit.hud_chip("hud.stars", pygame.Rect(0, 0, 10, 10), icon=None, value=0)
         self.gems: HudChip = kit.hud_chip("hud.gems", pygame.Rect(0, 0, 10, 10), icon=None, value=0)
@@ -91,8 +116,20 @@ class FlightHud:
             self.gems.rect = rects[1]
         (dots,) = layout.row(bar, [dots_w], align=Align.END, height=dots_h)
         self.progress.rect = dots
+        key = max(KEY_HINT_KEY, math.ceil(KEY_HINT_MIN_PHYSICAL / max(0.01, layout.scale)))
+        width, height = KeyboardHint.preferred_size(KEY_HINT_KEYS, key=key)
+        right = layout.width - layout.margin
+        bottom = layout.height - KEY_HINT_BOTTOM_MARGIN
+        self.keys.rect = pygame.Rect(right - width, bottom - height, width, height)
+        self._fast.clear()
         self._state = None
         self.layer.invalidation.invalidate()
+
+    def draw_keys(self, surface: pygame.Surface) -> None:
+        """The keyboard hint, one RLE blit per look (no per-frame alpha work)."""
+
+        if self.keys.visible:
+            surface.blit(self._fast(self.keys.render()), self.keys.rect.topleft)
 
     def sync(self, run: FlightRun) -> bool:
         """Mirror the run into the HUD; returns True when something changed."""
