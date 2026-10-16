@@ -2,8 +2,9 @@
   <!-- Encyclopedia E4-D entry scene: The Airplane. Flattened opaque 1024x600 backdrop.
        High in the sky: thin cirrus wisps up high, puffy cumulus down low, and
        the patchwork world far below with a little airfield (runway, tower,
-       windsock). The live airplane flies through the calm centre
-       (x 380-650, y 220-400). The four discovery tokens rest on clouds whose
+       windsock). The live airplane (authored parts sheet
+       sprites/airplane_parts.svg) flies through the calm centre
+       (x 350-680, y 196-400). The four discovery tokens rest on clouds whose
        centres equal the semantic targets (data-center).
        Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md (scene). -->
   <defs>
@@ -41,8 +42,8 @@
   </g>
 
   <g id="birds" fill="none" stroke="#4B372F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M318 236 q7 -7 14 0 q7 -7 14 0"/>
-    <path d="M344 258 q5 -5 10 0 q5 -5 10 0"/>
+    <path d="M684 244 q7 -7 14 0 q7 -7 14 0"/>
+    <path d="M710 262 q5 -5 10 0 q5 -5 10 0"/>
   </g>
 
   <g id="world_below">

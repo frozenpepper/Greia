@@ -358,13 +358,16 @@ def draw_machine_action_button(
         pygame.draw.line(surface, (76, 135, 181), (cx, cy - 12), (cx + 14, cy + 6), 4)
         pygame.draw.line(surface, (76, 135, 181), (cx, cy - 12), (cx, cy + 6), 3)
     elif machine == "airplane":
-        # Cute colorful toy airplane icon
-        pygame.draw.ellipse(surface, (232, 68, 56), (cx - 16, cy - 6, 32, 12))
-        pygame.draw.ellipse(surface, (255, 248, 235), (cx - 12, cy - 8, 16, 5))
-        pygame.draw.polygon(surface, (41, 108, 179), [(cx - 4, cy - 2), (cx + 4, cy - 12), (cx + 12, cy - 12), (cx + 4, cy - 2)])
-        pygame.draw.polygon(surface, (41, 108, 179), [(cx - 4, cy + 2), (cx + 4, cy + 12), (cx + 10, cy + 12), (cx + 2, cy + 2)])
-        pygame.draw.circle(surface, (255, 199, 59), (cx - 16, cy), 3)
-        pygame.draw.line(surface, (255, 245, 208), (cx - 18, cy - 6), (cx - 18, cy + 6), 2)
+        # Toy airplane icon in the entry plane's neutral livery (cream body,
+        # ocean wings and stripe, sunshine spinner; no insignia).
+        pygame.draw.polygon(surface, (74, 145, 216), [(cx + 8, cy - 4), (cx + 14, cy - 14), (cx + 19, cy - 14), (cx + 18, cy - 2)])
+        pygame.draw.ellipse(surface, (255, 251, 235), (cx - 16, cy - 7, 34, 14))
+        pygame.draw.ellipse(surface, edge, (cx - 16, cy - 7, 34, 14), 2)
+        pygame.draw.line(surface, (74, 145, 216), (cx - 10, cy), (cx + 15, cy - 1), 3)
+        pygame.draw.polygon(surface, (74, 145, 216), [(cx - 4, cy + 3), (cx + 2, cy + 13), (cx + 10, cy + 13), (cx + 6, cy + 3)])
+        pygame.draw.polygon(surface, edge, [(cx - 4, cy + 3), (cx + 2, cy + 13), (cx + 10, cy + 13), (cx + 6, cy + 3)], 1)
+        pygame.draw.circle(surface, (255, 194, 52), (cx - 17, cy), 4)
+        pygame.draw.line(surface, (62, 110, 159), (cx - 19, cy - 9), (cx - 19, cy + 9), 3)
     elif machine == "bridge":
         # Cute arched bridge with little car icon
         pygame.draw.arc(surface, (50, 144, 204), (cx - 20, cy + 6, 40, 10), 0, math.pi, 3)

@@ -138,6 +138,12 @@ class VisualLibrary:
     PLANET_ASSETS = {
         "earth": "earth_planet_sprite.png",
     }
+    # Transparent part sheets for heroes with live moving parts (build tool
+    # ``SPRITE_SHEETS``). A page slices the returned sheet once with
+    # ``Surface.subsurface``; nothing is decoded or scaled on a frame path.
+    SPRITE_SHEETS = {
+        "sheet.machines.airplane.parts": "sprites/airplane_parts.png",
+    }
 
     def __init__(self, package_root: Path) -> None:
         self._runtime_root = package_root / "assets" / "runtime"
@@ -198,6 +204,24 @@ class VisualLibrary:
                 result = pygame.transform.smoothscale(source, (diameter, diameter))
             else:
                 result = source
+        except (OSError, RuntimeError, ValueError, pygame.error):
+            result = None
+        self._remember(key, result)
+        return result
+
+    def sprite_sheet(self, asset_id: str) -> pygame.Surface | None:
+        """Return one prebuilt transparent part sheet, or None to fail soft."""
+        relative = self.SPRITE_SHEETS.get(asset_id)
+        if relative is None:
+            return None
+        key = (f"sheet:{asset_id}", "sheet", 0, 0)
+        if key in self._cache:
+            result = self._cache.pop(key)
+            self._cache[key] = result
+            return result
+        result: pygame.Surface | None = None
+        try:
+            result = pygame.image.load(str(self._runtime_root / relative)).convert_alpha()
         except (OSError, RuntimeError, ValueError, pygame.error):
             result = None
         self._remember(key, result)
