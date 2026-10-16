@@ -509,7 +509,6 @@ test commands and expected observable behavior.
   Stop at first failure. Produce logs with exact exit codes and HEAD.
 - **Commands (each separately logged, sequential):**
   ```bash
-  python3 -m unittest discover -s tests -p 'test_activity_wave36_github_recovery.py' -v
   python3 -m unittest discover -s tests -p 'test_activity_memory_meraviglie.py' -v
   python3 -m unittest discover -s tests -p 'test_activity_treno_numeri.py' -v
   python3 -m unittest discover -s tests -p 'test_activity_labirinto_magico.py' -v
@@ -552,7 +551,6 @@ test commands and expected observable behavior.
   Python setup. Log every exit code, stop on first failure, no source edits.
 - **Exact sequential commands:**
   ```bash
-  python3 -m unittest discover -s tests -p 'test_activity_wave34_35_github_recovery.py' -v
   python3 -m unittest discover -s tests -p 'test_clinica_cuccioli_refactor.py' -v
   python3 -m unittest discover -s tests -p 'test_activity_baia_delle_orche.py' -v
   make verify
@@ -659,7 +657,6 @@ test commands and expected observable behavior.
   rules and existing prepared Pygame environment; no source modifications.
 - **Exact sequential source commands**, each with log and exit code:
   ```bash
-  python3 -m unittest discover -s tests -p 'test_greia_skill_identity.py' -v
   python3 -m unittest discover -s tests -p 'test_panel_localization.py' -v
   python3 -m unittest discover -s tests -p 'test_panel_frame_cache.py' -v
   python3 -m unittest discover -s tests -p 'test_panel_layout.py' -v
@@ -896,6 +893,16 @@ test commands and expected observable behavior.
 - **Last result:** PASS at source HEAD (2026-10-15). Generated `en/my_creations.wav` ("My Creations", Leo), `it/my_creations.wav` ("Le mie creazioni", Leo), plus ES/FR equivalents via `tools/greia_voice.py batch` with `mlx-whisper-tiny` ASR PASS (1.0). Reviewed and approved by repository owner ("all audio approved, commit everything please to giithub"); integrated with approved `.receipt.json` records into canonical `assets/audio/system/launcher-labels/{en,it,es,fr}/my_creations.wav`.
 
 ## 3. Execution history (append a one-line fact here, never fabricate)
+
+- **2026-10-16:** Open-source cleanup removed three test files named in
+  this queue: `test_activity_wave36_github_recovery.py` (it had no tests
+  left; every check already lives in the per-Activity files GLA-012 runs),
+  `test_activity_wave34_35_github_recovery.py` (its Clinic and Orca tests
+  moved into `test_clinica_cuccioli_refactor.py` and
+  `test_activity_baia_delle_orche.py`, which GLA-013 already runs) and
+  `test_greia_skill_identity.py` (it asserted wording inside skill files).
+  Their command lines were removed from GLA-012, GLA-013 and GLA-015; task
+  scope and statuses are unchanged.
 
 - **2026-10-08:** Source design follow-up shortened only the
   narrow-screen visible `my_creations` Home label (IT/EN/ES/DE/FR)

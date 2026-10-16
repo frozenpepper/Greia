@@ -551,6 +551,75 @@ class BaiaDelleOrcheAppTests(unittest.TestCase):
             GreiaOrcaEvents().record_mission_completed("find", star=False)
         self.assertIn(emit.call_args.args[0], declared)
 
+    def test_feeding_and_fact_events_are_in_manifest(self) -> None:
+        import tomllib
+        from unittest.mock import patch
+
+        declared = {
+            event["id"]
+            for event in tomllib.loads((ACTIVITY_DIR / "activity.toml").read_text())["education"]["events"]
+        }
+        with patch("activities.baia_delle_orche.orca_services.emit_activity_event") as emit:
+            events = GreiaOrcaEvents()
+            events.record_feeding(2)
+            events.record_fact_discovered("fact_breach")
+        emitted = [call.args[0] for call in emit.call_args_list]
+        self.assertEqual(emitted, ["orca.fed", "orca.fact_discovered"])
+        self.assertTrue(set(emitted) <= declared)
+
+
+class BaiaDelleOrcheHandlerTests(unittest.TestCase):
+    """Handler-level checks on a minimally wired app (no full composition)."""
+
+    def _app(self):
+        from types import SimpleNamespace
+
+        from activities.baia_delle_orche.orca_app import OrcaBayActivity
+
+        app = OrcaBayActivity.__new__(OrcaBayActivity)
+        app.renderer = SimpleNamespace(resources=SimpleNamespace(
+            context=SimpleNamespace(selected=SimpleNamespace(value="en"))
+        ))
+        app.pod = Mock()
+        app.pod.trigger_fact.return_value = "orca.fact.1"
+        app.pod.total_cuddled = 0
+        app.audio = Mock()
+        app.events = Mock()
+        app._gesture_cuddled_ids = set()
+        return app
+
+    def test_spoken_facts_use_the_selected_locale(self) -> None:
+        app = self._app()
+        app._play_fact()
+        app.audio.play_voice.assert_called_once_with("orca.fact.1", "en")
+        app.events.record_fact_discovered.assert_called_once_with("orca.fact.1")
+
+    def test_one_drag_cuddles_each_orca_at_most_once(self) -> None:
+        from types import SimpleNamespace
+
+        app = self._app()
+        orca = SimpleNamespace(id="a", x=500, y=300, trigger_cuddle=Mock())
+        app._cuddle_once(orca, drag=True)
+        app._cuddle_once(orca, drag=True)
+        self.assertEqual(app.pod.total_cuddled, 1)
+        app.events.record_cuddled.assert_called_once_with("a", "belly_rub")
+        orca.trigger_cuddle.assert_called_once()
+        self.assertEqual(app.audio.play.call_count, 1)
+        app._gesture_cuddled_ids.clear()  # the next, independent gesture
+        app._cuddle_once(orca, drag=True)
+        self.assertEqual(app.pod.total_cuddled, 2)
+
+    def test_pointer_outside_surface_or_on_chrome_is_ignored(self) -> None:
+        from activities.baia_delle_orche.orca_app import OrcaBayActivity
+        from greia_platform.pygame_canvas import activity_viewport_for_surface
+
+        app = object.__new__(OrcaBayActivity)
+        app.screen = pygame.Surface((1024, 600))
+        region = activity_viewport_for_surface(app.screen).protected_regions[0]
+        self.assertFalse(app._safe_pointer((int(region.x) + 1, int(region.y) + 1)))
+        self.assertFalse(app._safe_pointer((-1, 200)))
+        self.assertTrue(app._safe_pointer((500, 300)))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -378,6 +378,36 @@ class AppIntegrationTests(unittest.TestCase):
         app.press(pygame.K_SPACE)
         self.assertEqual(app.day.steps_done, 1)
 
+    def test_whole_day_is_playable_with_arrow_keys_only(self) -> None:
+        from clinic_controls import tool_id
+
+        app = self._build(level=1, seed=42)
+        layer = app.controls.layer
+
+        def press_until(control_id: str) -> None:
+            # Reach the control by arrow keys alone, never by setting focus.
+            for key in (pygame.K_RIGHT, pygame.K_LEFT, pygame.K_UP, pygame.K_DOWN) * 4:
+                for _ in range(6):
+                    if layer.focused_id == control_id:
+                        break
+                    app.press(key)
+            self.assertEqual(layer.focused_id, control_id)
+            app.press(pygame.K_RETURN)
+
+        for _ in range(PATIENTS_PER_DAY):
+            self._advance(1.3)
+            press_until(self._sore_target())
+            self._advance(1.2)
+            while app.day.phase is Phase.CARE:
+                press_until(tool_id(app.day.expected_tool))
+                self._advance(1.3)
+            self._advance(3.6)
+        self._advance(0.5)
+        self.assertEqual(app.day.healed_count, PATIENTS_PER_DAY)
+        self.assertEqual(app.state.value, "terminal")
+        app.press(pygame.K_RETURN)
+        self.assertEqual(app.state.value, "playing")
+
     def test_idle_hints_are_graduated(self) -> None:
         app = self._build(level=2)
         self._advance(1.3)

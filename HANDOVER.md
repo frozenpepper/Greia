@@ -75,9 +75,9 @@ promote unvoiced locales.
 **Open (owner decisions or follow-ups):**
 1. Licensing/provenance (`NOTICE.md`): about 1,350 recordings were made with macOS system voices (`say`), and their redistribution terms must be checked; the character voice references are marked redistribution-pending; the art is AI-assisted. The full CC BY 4.0 legal text and SPDX headers are not added yet.
 2. Enable GitHub private vulnerability reporting (`SECURITY.md` points to it), and decide whether the public repository keeps the full git history. The history scan found no keys, tokens or Wi-Fi secrets, but about 2,100 voice receipts and the old handover contain local `/Users/...` paths and home-LAN addresses.
-3. Merge `tests/test_activity_wave34_35_github_recovery.py` and `tests/test_p7_batch3_source_regressions.py` into their per-Activity test files (unblocked now that the frame-governor worker has landed).
+3. Done later the same day: `tests/test_activity_wave34_35_github_recovery.py` and `tests/test_p7_batch3_source_regressions.py` were merged into `test_clinica_cuccioli_refactor.py`, `test_activity_baia_delle_orche.py`, `test_activity_acquario_magico.py` and `test_activity_cucciolo_mio.py` (9 tests moved; 1 duplicate of the Cucciolo manifest test dropped). All four files PASS (20, 35, 33 and 25 tests). The local-agent queue commands were updated to match.
 
-**Next exact step:** finish item 3, then run a full `make verify` on a quiet machine.
+**Next exact step:** run a full `make verify` on a quiet machine; the owner decides items 1 and 2.
 
 ## 2026-10-16 — All 45 Activities reworked (P7 W0–W3)
 

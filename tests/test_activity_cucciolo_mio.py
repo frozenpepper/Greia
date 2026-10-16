@@ -576,5 +576,42 @@ class AppLoopTests(unittest.TestCase):
                         app.render()
 
 
+class QueuedPointerTests(unittest.TestCase):
+    """Taps come from the queued Pygame events; the app never polls the mouse."""
+
+    def test_care_tray_consumes_queued_events_not_global_mouse_polling(self) -> None:
+        from activities.cucciolo_mio.cucciolo_services import PetProfile
+        from greia_platform.pygame_canvas import PygameReferenceCanvas
+        from greia_platform.typography import GreiaTypography
+
+        pygame.init()
+        screen = pygame.display.set_mode((1024, 600))
+        now = [100.0]
+        progress = mock.Mock()
+        progress.load.return_value = PetProfile(species="puppy", name="moon")
+        app = CuccioloApp(
+            screen=screen,
+            canvas=PygameReferenceCanvas(screen),
+            typography=GreiaTypography(),
+            resources=None,
+            audio=mock.Mock(),
+            progress=progress,
+            events=mock.Mock(),
+            rng=random.Random(1),
+            clock=lambda: now[0],
+        )
+        while app.day.phase is not Phase.NEED and now[0] < 120.0:
+            now[0] += 0.1
+            app.step()
+        self.assertIs(app.day.phase, Phase.NEED)
+        target = app.controls.tray_rect(CARE_FOR_NEED[app.day.current_need]).center
+        with mock.patch("pygame.mouse.get_pos", side_effect=AssertionError("polled")), mock.patch(
+            "pygame.mouse.get_pressed", side_effect=AssertionError("polled")
+        ):
+            app.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": target}))
+            app.handle_event(pygame.event.Event(pygame.MOUSEBUTTONUP, {"button": 1, "pos": target}))
+        self.assertIs(app.day.phase, Phase.CARE)
+
+
 if __name__ == "__main__":
     unittest.main()
