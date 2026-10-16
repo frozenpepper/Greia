@@ -5,14 +5,15 @@
   "strings": {
     "activity.faccine_momo.title": "Momo's Happy Faces",
     "activity.title": "Momo's Happy Faces",
+    "button.play_again": "Play again",
+    "complete.body": "Thank you for helping Momo!",
+    "complete.title": "Momo feels better!",
+    "emotion.angry": "Angry",
     "emotion.happy": "Happy",
     "emotion.sad": "Sad",
-    "emotion.surprised": "Surprised",
     "emotion.silly": "Silly",
-    "emotion.angry": "Angry",
     "emotion.sleepy": "Sleepy",
-    "ui.mode_free_mirror": "Free mirror",
-    "ui.mode_guess_emotion": "How does it feel?"
+    "emotion.surprised": "Surprised"
   },
   "audio": {
     "activity.title": {

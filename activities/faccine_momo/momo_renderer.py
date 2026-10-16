@@ -1,439 +1,386 @@
-"""Visual rendering and facial expressions for Le Faccine di Momo."""
+"""Frame composition and light motion for Momo's Happy Faces.
+
+The renderer only blits prepared surfaces from ``MomoArt``: no scaling, no
+decoding and no text rendering per frame. Motion (Momo acting a feeling, the
+story card sliding in, FX bursts, a help item flying to Momo) is computed from
+the injected clock and applied as offsets.
+"""
 
 from __future__ import annotations
 
+from collections import deque
+from collections.abc import Callable
+from dataclasses import dataclass
 import math
-from typing import Final
 
 import pygame
 
-from greia_platform.localization import LocalizedResources
-from greia_platform.typography import FontRole, GreiaTypography
+from greia_platform.activity_feedback import CastFeedback, CastPose
 
 if __package__:
-    from .momo_model import (
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        Emotion,
-        GameMode,
-        MomoModel,
-        MomoParticle,
-    )
+    from .momo_art import MomoArt
+    from .momo_content import Emotion
+    from .momo_layout import CARD_RECT, GUIDE_MIDBOTTOM, momo_head, momo_rect
 else:
-    from momo_model import (
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        Emotion,
-        GameMode,
-        MomoModel,
-        MomoParticle,
-    )
+    from momo_art import MomoArt
+    from momo_content import Emotion
+    from momo_layout import CARD_RECT, GUIDE_MIDBOTTOM, momo_head, momo_rect
 
-# Palette
-COLOR_WALLPAPER_TOP: Final = (255, 243, 224)
-COLOR_WALLPAPER_BOT: Final = (255, 224, 178)
+MAX_FX = 16
+MAX_FLIGHTS = 4
+CARD_SLIDE = 0.45
+PULSE_SECONDS = 0.9
 
-COLOR_MIRROR_FRAME: Final = (255, 202, 40)
-COLOR_MIRROR_INNER: Final = (255, 236, 179)
-COLOR_MIRROR_GLASS: Final = (225, 245, 254)
-
-COLOR_MOMO_BODY: Final = (186, 104, 200)
-COLOR_MOMO_SHADOW: Final = (156, 77, 174)
-COLOR_MOMO_EARS: Final = (171, 71, 188)
-COLOR_MOMO_CHEEKS: Final = (255, 138, 128)
-COLOR_MOMO_EYES: Final = (45, 25, 55)
-
-EMOTION_ACCENTS: Final = {
-    Emotion.HAPPY: (255, 193, 7),
-    Emotion.SAD: (66, 165, 245),
-    Emotion.SURPRISED: (255, 112, 67),
-    Emotion.SILLY: (126, 87, 194),
-    Emotion.ANGRY: (239, 83, 80),
-    Emotion.SLEEPY: (92, 107, 192),
-}
-
-# Semantic copy keys. Display strings come from the Activity's locale bundles
-# (resolved once in the renderer); there is no fixed-language fallback, so an
-# independently constructed renderer shows only the pictograms.
-EMOTION_LABEL_KEYS: Final = {emotion: f"emotion.{emotion.value}" for emotion in Emotion}
-MODE_LABEL_KEYS: Final = {
-    GameMode.FREE_MIRROR: "ui.mode_free_mirror",
-    GameMode.GUESS_EMOTION: "ui.mode_guess_emotion",
+# How Momo "acts" each feeling: (seconds, FX name or None, FX size).
+ACTS: dict[str, tuple[float, str | None, int]] = {
+    Emotion.HAPPY.value: (0.9, "confetti", 280),
+    Emotion.SAD.value: (1.3, None, 0),
+    Emotion.ANGRY.value: (0.8, "dust_puff", 110),
+    Emotion.SURPRISED.value: (0.6, "star_burst", 260),
+    Emotion.SLEEPY.value: (2.2, None, 0),
+    Emotion.SILLY.value: (1.1, "sparkle", 220),
+    "appear": (0.3, None, 0),
 }
 
 
-# Caption lane under each round emotion button (buttons are 94 px wide with a
-# 48 px screen margin; this keeps captions clear of the mirror and screen edge).
-EMOTION_CAPTION_WIDTH: Final = 128
+@dataclass(slots=True)
+class FxBurst:
+    name: str
+    center: tuple[int, int]
+    start: float
+    size: int
+    duration: float = 0.9
+    rise: int = 18
+    behind: bool = False  # drawn behind Momo (his own feeling FX never hide his face)
+
+
+@dataclass(slots=True)
+class Flight:
+    surface: pygame.Surface
+    start_pos: tuple[int, int]
+    end_pos: tuple[int, int]
+    start: float
+    duration: float = 0.7
+
+
+@dataclass(slots=True)
+class FrameView:
+    """What the current frame shows (decided by the app, drawn here)."""
+
+    momo: str | None                       # an Emotion value, "silhouette" or None
+    momo_midbottom: tuple[int, int]
+    momo_height: int
+    story_id: str | None = None
+    show_guide: bool = True
+
+
+class SceneMotion:
+    """Bounded, clock-driven presentation state (never gameplay state)."""
+
+    def __init__(self, clock: Callable[[], float]) -> None:
+        self._clock = clock
+        self.fx: deque[FxBurst] = deque(maxlen=MAX_FX)
+        self.flights: deque[Flight] = deque(maxlen=MAX_FLIGHTS)
+        self.act_kind: str | None = None
+        self.act_start = 0.0
+        self.card_start: float | None = None
+        self.card_pulse: float | None = None
+        self.momo_pulse: float | None = None
+        self.glow_id: str | None = None
+        self.glow_until = 0.0
+        self.wobble_id: str | None = None
+        self.wobble_start = 0.0
+        self.zzz_start: float | None = None
+
+    def clear(self) -> None:
+        self.fx.clear()
+        self.flights.clear()
+        self.act_kind = None
+        self.card_start = None
+        self.card_pulse = None
+        self.momo_pulse = None
+        self.glow_id = None
+        self.wobble_id = None
+        self.zzz_start = None
+
+    def act(self, kind: str, head: tuple[int, int], *, fx: bool = True) -> None:
+        """Momo acts a feeling: a motion plus (optionally) the matching library FX."""
+
+        now = self._clock()
+        self.act_kind = kind
+        self.act_start = now
+        _, fx_name, size = ACTS.get(kind, (0.5, None, 0))
+        if fx and fx_name is not None:
+            if kind == Emotion.ANGRY.value:
+                for dx in (-96, 96):
+                    self.add_fx(fx_name, (head[0] + dx, head[1] - 44), size, behind=True)
+            else:
+                self.add_fx(fx_name, (head[0], head[1] - 40), size, behind=True)
+        if kind == Emotion.SLEEPY.value:
+            self.zzz_start = now
+
+    def add_fx(
+        self,
+        name: str,
+        center: tuple[int, int],
+        size: int,
+        *,
+        delay: float = 0.0,
+        behind: bool = False,
+    ) -> None:
+        self.fx.append(FxBurst(name, (int(center[0]), int(center[1])), self._clock() + delay, size, behind=behind))
+
+    def fly(self, flight: Flight) -> None:
+        self.flights.append(flight)
+
+    def wobble(self, control_id: str) -> None:
+        self.wobble_id = control_id
+        self.wobble_start = self._clock()
+
+    def glow(self, control_id: str, seconds: float) -> None:
+        self.glow_id = control_id
+        self.glow_until = self._clock() + seconds
+
+    def momo_offset(self) -> tuple[int, int]:
+        kind = self.act_kind
+        if kind is None:
+            return (0, 0)
+        t = self._clock() - self.act_start
+        duration = ACTS.get(kind, (0.5, None, 0))[0]
+        if t >= duration or t < 0:
+            return (0, 0)
+        if kind == Emotion.HAPPY.value:
+            return (0, -int(abs(math.sin(math.pi * t / 0.45)) * 22))
+        if kind == Emotion.SAD.value:
+            return (0, int(math.sin(math.pi * t / duration) * 9))
+        if kind == Emotion.ANGRY.value:
+            return (int(math.sin(2 * math.pi * t * 9) * 7 * (1 - t / duration)), 0)
+        if kind == Emotion.SURPRISED.value:
+            return (0, -int(math.sin(math.pi * t / duration) * 30))
+        if kind == Emotion.SLEEPY.value:
+            return (int(math.sin(2 * math.pi * t / 1.1) * 5), int(math.sin(math.pi * t / duration) * 5))
+        if kind == Emotion.SILLY.value:
+            return (int(math.sin(2 * math.pi * t * 3) * 11 * (1 - t / duration)), 0)
+        if kind == "appear":
+            return (0, int(18 * (1 - t / duration)))
+        return (0, 0)
+
+    def card_offset(self) -> int:
+        if self.card_start is None:
+            return 0
+        t = self._clock() - self.card_start
+        if t >= CARD_SLIDE:
+            return 0
+        if t < 0:
+            return -CARD_RECT.right - 20
+        eased = 1 - (1 - t / CARD_SLIDE) ** 3
+        return int((-CARD_RECT.right - 20) * (1 - eased))
+
+    def card_bump(self) -> int:
+        if self.card_pulse is None:
+            return 0
+        t = self._clock() - self.card_pulse
+        if not 0 <= t < PULSE_SECONDS:
+            return 0
+        return -int(abs(math.sin(math.pi * t / (PULSE_SECONDS / 2))) * 10)
+
+    def wobble_offset(self, control_id: str) -> int:
+        if self.wobble_id != control_id:
+            return 0
+        t = self._clock() - self.wobble_start
+        if t >= 0.45:
+            return 0
+        return int(9 * (1 - t / 0.45) * (1 if int(t * 40) % 2 else -1))
+
+    def glowing(self, control_id: str) -> bool:
+        return self.glow_id == control_id and self._clock() < self.glow_until
+
+    def active(self) -> bool:
+        now = self._clock()
+        if self.act_kind is not None and now - self.act_start < ACTS.get(self.act_kind, (0.5, None, 0))[0]:
+            return True
+        if self.zzz_start is not None and now - self.zzz_start < 2.4:
+            return True
+        if any(now < burst.start + burst.duration for burst in self.fx):
+            return True
+        if any(now < flight.start + flight.duration for flight in self.flights):
+            return True
+        if self.card_start is not None and now - self.card_start < CARD_SLIDE:
+            return True
+        if self.card_pulse is not None and now - self.card_pulse < PULSE_SECONDS:
+            return True
+        if self.wobble_id is not None and now - self.wobble_start < 0.45:
+            return True
+        return self.glow_id is not None and now < self.glow_until
+
+    def prune(self) -> None:
+        now = self._clock()
+        while self.fx and now >= self.fx[0].start + self.fx[0].duration:
+            self.fx.popleft()
+        while self.flights and now >= self.flights[0].start + self.flights[0].duration:
+            self.flights.popleft()
+
+
+class GuideCast:
+    """The guide friend: shared cheer/think feedback plus a point pose for hints."""
+
+    def __init__(self, feedback: CastFeedback, point: pygame.Surface | None, clock: Callable[[], float]) -> None:
+        self.feedback = feedback
+        self._point = point
+        self._clock = clock
+        self._point_until = 0.0
+
+    @property
+    def pose(self) -> CastPose:
+        return self.feedback.pose
+
+    @property
+    def pointing(self) -> bool:
+        return self._clock() < self._point_until and self.feedback.pose is CastPose.IDLE
+
+    @property
+    def animating(self) -> bool:
+        return self.feedback.animating or self.pointing
+
+    def correct(self) -> None:
+        self._point_until = 0.0
+        self.feedback.correct()
+
+    def try_again(self) -> None:
+        self._point_until = 0.0
+        self.feedback.try_again()
+
+    def point(self, seconds: float) -> None:
+        self.feedback.reset()
+        self._point_until = self._clock() + seconds
+
+    def reset(self) -> None:
+        self._point_until = 0.0
+        self.feedback.reset()
+
+    def update(self) -> bool:
+        changed = self.feedback.update()
+        if self._point_until and self._clock() >= self._point_until:
+            self._point_until = 0.0
+            changed = True
+        return changed
+
+    def draw(self, surface: pygame.Surface) -> None:
+        if self.pointing and self._point is not None:
+            bob = int(math.sin((self._point_until - self._clock()) * 7.0) * 3)
+            surface.blit(self._point, self._point.get_rect(midbottom=(GUIDE_MIDBOTTOM[0], GUIDE_MIDBOTTOM[1] + bob)))
+            return
+        self.feedback.draw(surface, GUIDE_MIDBOTTOM)
 
 
 class MomoRenderer:
-    """Render the magic mirror, animated facial features of Momo, and generous touch controls."""
+    """Compose one frame from prepared art (blits only)."""
 
-    def __init__(
-        self,
-        resources: LocalizedResources | None = None,
-        typography: GreiaTypography | None = None,
-    ) -> None:
-        self._typography = typography or GreiaTypography()
-        self._emotion_labels: dict[Emotion, str] = {
-            emotion: resources.text(key) if resources else ""
-            for emotion, key in EMOTION_LABEL_KEYS.items()
-        }
-        self._mode_labels: dict[GameMode, str] = {
-            mode: resources.text(key) if resources else ""
-            for mode, key in MODE_LABEL_KEYS.items()
-        }
-        # Bounded cache of fitted label surfaces (rasterized once per state).
-        self._label_surfaces: dict[tuple[str, int, int, tuple[int, int, int]], pygame.Surface] = {}
-        self._reference_surf = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
-        self.mirror_center = (512, 280)
-        self.mirror_radius_x = 195
-        self.mirror_radius_y = 215
+    def __init__(self, art: MomoArt, guide: GuideCast, motion: SceneMotion, clock: Callable[[], float]) -> None:
+        self.art = art
+        self.guide = guide
+        self.motion = motion
+        self._clock = clock
 
-        # Hitboxes
-        self.momo_face_rect = pygame.Rect(512 - 130, 280 - 140, 260, 280)
-        self.momo_left_cheek = pygame.Rect(512 - 100, 280 + 15, 60, 50)
-        self.momo_right_cheek = pygame.Rect(512 + 40, 280 + 15, 60, 50)
+    def draw(self, surface: pygame.Surface, view: FrameView) -> None:
+        surface.blit(self.art.background, (0, 0))
+        if view.story_id is not None:
+            card = self.art.story_card(view.story_id)
+            if card is not None:
+                rect = CARD_RECT.move(self.motion.card_offset(), self.motion.card_bump())
+                surface.blit(card, rect)
+        self._draw_fx(surface, behind=True)
+        self._draw_momo(surface, view)
+        self._draw_zzz(surface, view)
+        if view.show_guide:
+            self.guide.draw(surface)
 
-        # Mode toggle button (top center)
-        self.mode_button_rect = pygame.Rect(512 - 120, 20, 240, 54)
+    def draw_overlay(self, surface: pygame.Surface) -> None:
+        """FX bursts and flying help items, above the answer tiles."""
 
-        # Free mirror emotion buttons (3 on left, 3 on right)
-        btn_sz = 94
-        self.left_buttons: list[tuple[Emotion, pygame.Rect]] = [
-            (Emotion.HAPPY, pygame.Rect(48, 95, btn_sz, btn_sz)),
-            (Emotion.SURPRISED, pygame.Rect(48, 235, btn_sz, btn_sz)),
-            (Emotion.SILLY, pygame.Rect(48, 375, btn_sz, btn_sz)),
-        ]
-        self.right_buttons: list[tuple[Emotion, pygame.Rect]] = [
-            (Emotion.SAD, pygame.Rect(REFERENCE_WIDTH - 48 - btn_sz, 95, btn_sz, btn_sz)),
-            (Emotion.ANGRY, pygame.Rect(REFERENCE_WIDTH - 48 - btn_sz, 235, btn_sz, btn_sz)),
-            (Emotion.SLEEPY, pygame.Rect(REFERENCE_WIDTH - 48 - btn_sz, 375, btn_sz, btn_sz)),
-        ]
+        self._draw_fx(surface, behind=False)
+        self._draw_flights(surface)
 
-        # Quiz choice buttons (bottom center)
-        q_w, q_h = 220, 84
-        self.quiz_choice_rects = [
-            pygame.Rect(512 - q_w - 20, 480, q_w, q_h),
-            pygame.Rect(512 + 20, 480, q_w, q_h),
-        ]
-
-    def render(self, target_surface: pygame.Surface, model: MomoModel) -> None:
-        ref = self._reference_surf
-
-        # 1. Cheerful Background Wallpaper
-        self._render_background(ref)
-
-        # 2. Ornate Magic Mirror
-        self._render_mirror(ref, model)
-
-        # 3. Momo Monster inside Mirror
-        self._render_momo(ref, model)
-
-        # 4. Particles (hearts, confetti, steam, Zzz)
-        self._render_particles(ref, model)
-
-        # 5. Pre-reader UI Controls
-        self._render_ui(ref, model)
-
-        # Scale to physical window
-        sw, sh = target_surface.get_size()
-        if (sw, sh) == (REFERENCE_WIDTH, REFERENCE_HEIGHT):
-            target_surface.blit(ref, (0, 0))
+    def _draw_momo(self, surface: pygame.Surface, view: FrameView) -> None:
+        if view.momo is None:
+            return
+        if view.momo == "silhouette":
+            image = self.art.silhouette(view.momo_height)
         else:
-            scaled = pygame.transform.smoothscale(ref, (sw, sh))
-            target_surface.blit(scaled, (0, 0))
+            image = self.art.momo(view.momo, view.momo_height)
+        if image is None:
+            return
+        dx, dy = self.motion.momo_offset()
+        pulse = self.motion.momo_pulse
+        if pulse is not None:
+            t = self._clock() - pulse
+            if 0 <= t < PULSE_SECONDS:
+                dy -= int(abs(math.sin(math.pi * t / (PULSE_SECONDS / 2))) * 12)
+        rect = momo_rect(view.momo_midbottom, view.momo_height).move(dx, dy)
+        surface.blit(image, rect)
 
-    def _render_background(self, surf: pygame.Surface) -> None:
-        # Vertical pastel gradient
-        for y in range(0, REFERENCE_HEIGHT, 8):
-            frac = y / REFERENCE_HEIGHT
-            r = int(COLOR_WALLPAPER_TOP[0] + (COLOR_WALLPAPER_BOT[0] - COLOR_WALLPAPER_TOP[0]) * frac)
-            g = int(COLOR_WALLPAPER_TOP[1] + (COLOR_WALLPAPER_BOT[1] - COLOR_WALLPAPER_TOP[1]) * frac)
-            b = int(COLOR_WALLPAPER_TOP[2] + (COLOR_WALLPAPER_BOT[2] - COLOR_WALLPAPER_TOP[2]) * frac)
-            pygame.draw.rect(surf, (r, g, b), (0, y, REFERENCE_WIDTH, 8))
+    def _draw_fx(self, surface: pygame.Surface, *, behind: bool) -> None:
+        now = self._clock()
+        for burst in self.motion.fx:
+            if burst.behind is not behind:
+                continue
+            t = now - burst.start
+            if t < 0 or t >= burst.duration:
+                continue
+            frames = self.art.fx_frames(burst.name, burst.size)
+            if not frames:
+                continue
+            progress = t / burst.duration
+            frame = frames[min(len(frames) - 1, int(progress * len(frames)))]
+            center = (burst.center[0], burst.center[1] - int(burst.rise * progress))
+            surface.blit(frame, frame.get_rect(center=center))
 
-        # Subtle playful wallpaper polka dots
-        dot_color = (255, 255, 255, 80)
-        for row in range(5):
-            for col in range(12):
-                ox = 40 + col * 90 + (45 if row % 2 == 1 else 0)
-                oy = 40 + row * 120
-                pygame.draw.circle(surf, (255, 238, 205), (ox, oy), 8)
+    def _draw_zzz(self, surface: pygame.Surface, view: FrameView) -> None:
+        start = self.motion.zzz_start
+        if start is None or view.momo in (None, "silhouette"):
+            return
+        t = self._clock() - start
+        if not 0 <= t < 2.4:
+            return
+        head = momo_head(view.momo_midbottom, view.momo_height)
+        for index, size in enumerate((34, 44, 56)):
+            local = t - index * 0.35
+            if local < 0:
+                continue
+            glyph = self.art.zzz(size)
+            x = head[0] + 70 + index * 26 + int(math.sin(local * 3) * 6)
+            y = head[1] - 30 - index * 34 - int(local * 16)
+            surface.blit(glyph, glyph.get_rect(center=(x, y)))
 
-    def _render_mirror(self, surf: pygame.Surface, model: MomoModel) -> None:
-        cx, cy = self.mirror_center
-        rx, ry = self.mirror_radius_x, self.mirror_radius_y
+    def _draw_flights(self, surface: pygame.Surface) -> None:
+        now = self._clock()
+        for flight in self.motion.flights:
+            t = now - flight.start
+            if t < 0 or t >= flight.duration:
+                continue
+            p = t / flight.duration
+            eased = 1 - (1 - p) ** 2
+            x = flight.start_pos[0] + (flight.end_pos[0] - flight.start_pos[0]) * eased
+            y = flight.start_pos[1] + (flight.end_pos[1] - flight.start_pos[1]) * eased - math.sin(math.pi * p) * 90
+            surface.blit(flight.surface, flight.surface.get_rect(center=(int(x), int(y))))
 
-        # Mirror outer frame shadow
-        pygame.draw.ellipse(surf, (210, 160, 40), (cx - rx - 18, cy - ry - 14, (rx + 18) * 2, (ry + 18) * 2))
-        # Golden Frame
-        pygame.draw.ellipse(surf, COLOR_MIRROR_FRAME, (cx - rx - 14, cy - ry - 14, (rx + 14) * 2, (ry + 14) * 2))
-        # Inner Frame groove
-        pygame.draw.ellipse(surf, COLOR_MIRROR_INNER, (cx - rx - 4, cy - ry - 4, (rx + 4) * 2, (ry + 4) * 2))
-        # Glass Surface
-        pygame.draw.ellipse(surf, COLOR_MIRROR_GLASS, (cx - rx, cy - ry, rx * 2, ry * 2))
+    def draw_glow(self, surface: pygame.Surface, control_id: str, rect: pygame.Rect) -> None:
+        """Hint glow around a control (drawn after the controls)."""
 
-        # Mirror glass highlight reflection arc
-        pygame.draw.arc(surf, (255, 255, 255), (cx - rx + 16, cy - ry + 16, (rx - 16) * 2, (ry - 16) * 2), math.pi * 0.75, math.pi * 1.15, 6)
+        if not self.motion.glowing(control_id):
+            return
+        halo = self.art.halo(rect.size)
+        # A soft breathing glow (alpha only: no new surfaces per frame).
+        halo.set_alpha(150 + int(105 * abs(math.sin(self._clock() * math.pi * 1.6))))
+        surface.blit(halo, halo.get_rect(center=rect.center))
 
-    def _render_momo(self, surf: pygame.Surface, model: MomoModel) -> None:
-        cx = self.mirror_center[0] + int(model.shake_offset * math.sin(model.anim_timer * 25.0))
-        cy = self.mirror_center[1] - int(model.hop_offset)
-        t = model.anim_timer
-        emo = model.emotion
 
-        # 1. Cute Fluffy Horns/Tufts (wiggle gently)
-        ear_wiggle = math.sin(t * 5.0) * 4
-        # Left ear
-        pygame.draw.ellipse(surf, COLOR_MOMO_EARS, (cx - 105 + ear_wiggle, cy - 170, 52, 70))
-        pygame.draw.ellipse(surf, (206, 147, 216), (cx - 97 + ear_wiggle, cy - 160, 36, 48))
-        # Right ear
-        pygame.draw.ellipse(surf, COLOR_MOMO_EARS, (cx + 53 - ear_wiggle, cy - 170, 52, 70))
-        pygame.draw.ellipse(surf, (206, 147, 216), (cx + 61 - ear_wiggle, cy - 160, 36, 48))
-
-        # 2. Main Head & Body
-        head_w, head_h = 240, 250
-        # Soft shadow underneath
-        pygame.draw.ellipse(surf, COLOR_MOMO_SHADOW, (cx - head_w // 2, cy - head_h // 2 + 10, head_w, head_h))
-        # Head surface
-        pygame.draw.ellipse(surf, COLOR_MOMO_BODY, (cx - head_w // 2, cy - head_h // 2, head_w, head_h))
-
-        # 3. Rosy Cheeks
-        cheek_alpha = (255, 170, 170)
-        pygame.draw.circle(surf, COLOR_MOMO_CHEEKS, (cx - 75, cy + 30), 22)
-        pygame.draw.circle(surf, COLOR_MOMO_CHEEKS, (cx + 75, cy + 30), 22)
-        if model.is_comforted or emo == Emotion.HAPPY:
-            # Extra cute blushing glow
-            pygame.draw.circle(surf, cheek_alpha, (cx - 75, cy + 30), 14)
-            pygame.draw.circle(surf, cheek_alpha, (cx + 75, cy + 30), 14)
-
-        # 4. Eyes & Eyebrows (according to emotion)
-        self._render_eyes(surf, cx, cy, model)
-
-        # 5. Mouth & Expression
-        self._render_mouth(surf, cx, cy, model)
-
-    def _render_eyes(self, surf: pygame.Surface, cx: int, cy: int, model: MomoModel) -> None:
-        emo = model.emotion
-        eye_y = cy - 20
-        lx, rx = cx - 48, cx + 48
-
-        if model.is_comforted or emo == Emotion.HAPPY:
-            # Cheerful closed crescent eyes ^ ^
-            pygame.draw.arc(surf, COLOR_MOMO_EYES, (lx - 20, eye_y - 12, 40, 26), math.pi * 0.15, math.pi * 0.85, 5)
-            pygame.draw.arc(surf, COLOR_MOMO_EYES, (rx - 20, eye_y - 12, 40, 26), math.pi * 0.15, math.pi * 0.85, 5)
-
-        elif emo == Emotion.SAD:
-            # Drooping sad eyes with tear
-            pygame.draw.arc(surf, COLOR_MOMO_EYES, (lx - 18, eye_y - 6, 36, 24), math.pi * 1.15, math.pi * 1.85, 4)
-            pygame.draw.arc(surf, COLOR_MOMO_EYES, (rx - 18, eye_y - 6, 36, 24), math.pi * 1.15, math.pi * 1.85, 4)
-            # Tear on right cheek
-            tear_y = eye_y + 20 + int((model.anim_timer * 30.0) % 35)
-            pygame.draw.ellipse(surf, (66, 165, 245), (rx + 14, tear_y, 8, 14))
-
-        elif emo == Emotion.SURPRISED:
-            # Big wide round open white eyes with dark pupils
-            for ex in (lx, rx):
-                pygame.draw.circle(surf, (255, 255, 255), (ex, eye_y), 24)
-                pygame.draw.circle(surf, COLOR_MOMO_EYES, (ex, eye_y), 12)
-                pygame.draw.circle(surf, (255, 255, 255), (ex - 4, eye_y - 4), 4)
-
-        elif emo == Emotion.SILLY:
-            # Left eye wide open with crazy pupil, Right eye winking closed
-            pygame.draw.circle(surf, (255, 255, 255), (lx, eye_y), 22)
-            pygame.draw.circle(surf, COLOR_MOMO_EYES, (lx + 2, eye_y - 2), 10)
-            pygame.draw.circle(surf, (255, 255, 255), (lx, eye_y - 4), 3)
-            # Winking right eye
-            pygame.draw.line(surf, COLOR_MOMO_EYES, (rx - 18, eye_y), (rx + 18, eye_y), 5)
-            pygame.draw.line(surf, COLOR_MOMO_EYES, (rx - 14, eye_y - 8), (rx + 14, eye_y + 8), 4)
-
-        elif emo == Emotion.ANGRY:
-            # Furrowed eyes and angled eyebrows
-            pygame.draw.line(surf, (136, 14, 79), (lx - 24, eye_y - 18), (lx + 18, eye_y - 4), 6)
-            pygame.draw.line(surf, (136, 14, 79), (rx + 24, eye_y - 18), (rx - 18, eye_y - 4), 6)
-            pygame.draw.circle(surf, (255, 255, 255), (lx, eye_y), 18)
-            pygame.draw.circle(surf, COLOR_MOMO_EYES, (lx + 4, eye_y), 9)
-            pygame.draw.circle(surf, (255, 255, 255), (rx, eye_y), 18)
-            pygame.draw.circle(surf, COLOR_MOMO_EYES, (rx - 4, eye_y), 9)
-
-        elif emo == Emotion.SLEEPY:
-            # Peaceful horizontal closed lines
-            pygame.draw.line(surf, COLOR_MOMO_EYES, (lx - 16, eye_y), (lx + 16, eye_y), 4)
-            pygame.draw.line(surf, COLOR_MOMO_EYES, (rx - 16, eye_y), (rx + 16, eye_y), 4)
-
-    def _render_mouth(self, surf: pygame.Surface, cx: int, cy: int, model: MomoModel) -> None:
-        emo = model.emotion
-        my = cy + 45
-
-        if model.is_comforted:
-            # Sweet gentle smile after cuddle
-            pygame.draw.arc(surf, (136, 14, 79), (cx - 30, my - 15, 60, 30), math.pi * 1.15, math.pi * 1.85, 4)
-
-        elif emo == Emotion.HAPPY:
-            # Big open grinning mouth with single cute white tooth
-            pygame.draw.polygon(
-                surf,
-                (194, 24, 91),
-                [(cx - 38, my), (cx + 38, my), (cx + 25, my + 38), (cx - 25, my + 38)],
-            )
-            pygame.draw.arc(surf, (136, 14, 79), (cx - 40, my - 10, 80, 52), math.pi * 1.0, math.pi * 2.0, 4)
-            # White tooth
-            pygame.draw.rect(surf, (255, 255, 255), (cx - 8, my, 16, 12), border_radius=2)
-
-        elif emo == Emotion.SAD:
-            # Downward curved frown
-            pygame.draw.arc(surf, (136, 14, 79), (cx - 32, my + 5, 64, 30), math.pi * 0.15, math.pi * 0.85, 4)
-
-        elif emo == Emotion.SURPRISED:
-            # Big round open 'O' mouth
-            pygame.draw.ellipse(surf, (194, 24, 91), (cx - 18, my - 6, 36, 44))
-            pygame.draw.ellipse(surf, (136, 14, 79), (cx - 18, my - 6, 36, 44), 3)
-
-        elif emo == Emotion.SILLY:
-            # Wide grin with big tongue out (bleeeh!)
-            pygame.draw.arc(surf, (136, 14, 79), (cx - 36, my - 10, 72, 36), math.pi * 1.1, math.pi * 1.9, 4)
-            # Pink floppy tongue
-            pygame.draw.ellipse(surf, (255, 64, 129), (cx - 16, my + 6, 32, 38))
-            pygame.draw.line(surf, (216, 27, 96), (cx, my + 10), (cx, my + 34), 2)
-
-        elif emo == Emotion.ANGRY:
-            # Grumpy pouty zig-zag mouth
-            points = [(cx - 28, my + 10), (cx - 10, my + 5), (cx + 10, my + 12), (cx + 28, my + 6)]
-            pygame.draw.lines(surf, (136, 14, 79), False, points, 4)
-
-        elif emo == Emotion.SLEEPY:
-            # Soft yawning oval
-            pygame.draw.ellipse(surf, (194, 24, 91), (cx - 14, my, 28, 22))
-            pygame.draw.ellipse(surf, (136, 14, 79), (cx - 14, my, 28, 22), 2)
-
-    def _render_particles(self, surf: pygame.Surface, model: MomoModel) -> None:
-        for p in model.particles:
-            if p.kind == "heart":
-                self._draw_heart(surf, int(p.x), int(p.y), p.size, p.color)
-            elif p.kind == "star":
-                self._draw_star(surf, int(p.x), int(p.y), p.size, p.color)
-            elif p.kind == "confetti":
-                pygame.draw.rect(surf, p.color, (int(p.x), int(p.y), int(p.size), int(p.size * 0.7)))
-            elif p.kind == "puff":
-                pygame.draw.circle(surf, p.color, (int(p.x), int(p.y)), int(p.size))
-            elif p.kind == "zzz":
-                self._draw_zzz(surf, int(p.x), int(p.y), int(p.size), p.color)
-
-    def _draw_heart(self, surf: pygame.Surface, x: int, y: int, size: float, color: tuple[int, int, int]) -> None:
-        r = size * 0.45
-        pygame.draw.circle(surf, color, (int(x - r * 0.7), int(y - r * 0.4)), int(r))
-        pygame.draw.circle(surf, color, (int(x + r * 0.7), int(y - r * 0.4)), int(r))
-        pts = [(x - r * 1.5, y - r * 0.2), (x + r * 1.5, y - r * 0.2), (x, y + r * 1.8)]
-        pygame.draw.polygon(surf, color, pts)
-
-    def _draw_star(self, surf: pygame.Surface, cx: int, cy: int, size: float, color: tuple[int, int, int]) -> None:
-        points = []
-        for i in range(10):
-            ang = i * (math.pi / 5) - math.pi / 2
-            r = size if i % 2 == 0 else size * 0.45
-            points.append((cx + math.cos(ang) * r, cy + math.sin(ang) * r))
-        pygame.draw.polygon(surf, color, points)
-
-    def _draw_zzz(self, surf: pygame.Surface, x: int, y: int, size: int, color: tuple[int, int, int]) -> None:
-        pygame.draw.line(surf, color, (x, y), (x + size, y), 3)
-        pygame.draw.line(surf, color, (x + size, y), (x, y + size), 3)
-        pygame.draw.line(surf, color, (x, y + size), (x + size, y + size), 3)
-
-    def _render_ui(self, surf: pygame.Surface, model: MomoModel) -> None:
-        # 1. Mode Toggle Button (Top Center)
-        is_quiz = model.mode == GameMode.GUESS_EMOTION
-        mode_rect = self.mode_button_rect
-        pygame.draw.rect(surf, (255, 255, 255), mode_rect, border_radius=27)
-        pygame.draw.rect(surf, (255, 145, 0) if is_quiz else (171, 71, 188), mode_rect, 4, border_radius=27)
-        lbl = self._label(self._mode_labels[model.mode], 22, mode_rect.width - 28, (60, 60, 60))
-        if lbl is not None:
-            surf.blit(lbl, lbl.get_rect(center=mode_rect.center))
-
-        # 2. Controls in Free Mirror Mode
-        if model.mode == GameMode.FREE_MIRROR:
-            for emo, rect in self.left_buttons + self.right_buttons:
-                is_active = model.emotion == emo
-                accent = EMOTION_ACCENTS[emo]
-                bg = (255, 255, 255) if is_active else (248, 245, 250)
-                pygame.draw.circle(surf, bg, rect.center, rect.width // 2)
-                pygame.draw.circle(surf, accent if is_active else (200, 200, 210), rect.center, rect.width // 2, 4 if is_active else 2)
-
-                # Icon preview, centred in the round button; the caption sits
-                # below the button where the full word fits at a legible size
-                # (inside the 94 px circle the longest word shrank to ~11 px).
-                self._draw_emotion_icon(surf, emo, rect.centerx, rect.centery)
-                lbl_name = self._label(
-                    self._emotion_labels[emo], 18, EMOTION_CAPTION_WIDTH,
-                    (60, 50, 70),
-                )
-                if lbl_name is not None:
-                    surf.blit(lbl_name, lbl_name.get_rect(midtop=(rect.centerx, rect.bottom + 4)))
-
-        # 3. Controls in Quiz Mode
-        else:
-            for idx, choice_emo in enumerate(model.quiz_choices):
-                rect = self.quiz_choice_rects[idx]
-                accent = EMOTION_ACCENTS[choice_emo]
-                pygame.draw.rect(surf, (255, 255, 255), rect, border_radius=24)
-                pygame.draw.rect(surf, accent, rect, 4, border_radius=24)
-
-                self._draw_emotion_icon(surf, choice_emo, rect.x + 46, rect.centery)
-                lbl_ch = self._label(
-                    self._emotion_labels[choice_emo], 22, rect.width - 84, (50, 50, 50)
-                )
-                if lbl_ch is not None:
-                    # Text lane: right of the icon, inside the rounded button.
-                    lane = pygame.Rect(rect.x + 72, rect.y, rect.width - 84, rect.height)
-                    surf.blit(lbl_ch, lbl_ch.get_rect(midleft=lane.midleft))
-
-    def _label(
-        self, text: str, size: int, max_width: int, color: tuple[int, int, int]
-    ) -> pygame.Surface | None:
-        """Cached label, shrunk (down to a floor) to fit ``max_width``."""
-
-        if not text:
-            return None
-        key = (text, size, max_width, color)
-        cached = self._label_surfaces.get(key)
-        if cached is None:
-            fitted = size
-            while fitted > 11 and self._typography.measure(text, FontRole.CONTROL, fitted).width > max_width:
-                fitted -= 1
-            if len(self._label_surfaces) >= 64:
-                self._label_surfaces.clear()
-            cached = self._typography.render(text, FontRole.CONTROL, fitted, color)
-            self._label_surfaces[key] = cached
-        return cached
-
-    def _draw_emotion_icon(self, surf: pygame.Surface, emo: Emotion, cx: int, cy: int) -> None:
-        # Mini expressive face icon inside button
-        pygame.draw.circle(surf, (255, 235, 120), (cx, cy), 18)
-        if emo == Emotion.HAPPY:
-            pygame.draw.arc(surf, (40, 40, 40), (cx - 10, cy - 8, 20, 16), math.pi * 1.1, math.pi * 1.9, 2)
-            pygame.draw.circle(surf, (40, 40, 40), (cx - 6, cy - 3), 2)
-            pygame.draw.circle(surf, (40, 40, 40), (cx + 6, cy - 3), 2)
-        elif emo == Emotion.SAD:
-            pygame.draw.arc(surf, (40, 40, 40), (cx - 8, cy + 2, 16, 12), math.pi * 0.1, math.pi * 0.9, 2)
-            pygame.draw.circle(surf, (40, 40, 40), (cx - 5, cy - 3), 2)
-            pygame.draw.circle(surf, (40, 40, 40), (cx + 5, cy - 3), 2)
-        elif emo == Emotion.SURPRISED:
-            pygame.draw.circle(surf, (40, 40, 40), (cx, cy + 5), 4)
-            pygame.draw.circle(surf, (40, 40, 40), (cx - 6, cy - 4), 2)
-            pygame.draw.circle(surf, (40, 40, 40), (cx + 6, cy - 4), 2)
-        elif emo == Emotion.SILLY:
-            pygame.draw.arc(surf, (40, 40, 40), (cx - 8, cy, 16, 10), math.pi * 1.1, math.pi * 1.9, 2)
-            pygame.draw.circle(surf, (255, 64, 129), (cx, cy + 7), 4)
-            pygame.draw.circle(surf, (40, 40, 40), (cx - 6, cy - 3), 2)
-            pygame.draw.line(surf, (40, 40, 40), (cx + 4, cy - 3), (cx + 8, cy - 3), 2)
-        elif emo == Emotion.ANGRY:
-            pygame.draw.line(surf, (40, 40, 40), (cx - 8, cy - 7), (cx - 2, cy - 4), 2)
-            pygame.draw.line(surf, (40, 40, 40), (cx + 8, cy - 7), (cx + 2, cy - 4), 2)
-            pygame.draw.circle(surf, (40, 40, 40), (cx - 5, cy - 2), 2)
-            pygame.draw.circle(surf, (40, 40, 40), (cx + 5, cy - 2), 2)
-            pygame.draw.line(surf, (40, 40, 40), (cx - 6, cy + 6), (cx + 6, cy + 4), 2)
-        elif emo == Emotion.SLEEPY:
-            pygame.draw.line(surf, (40, 40, 40), (cx - 8, cy - 3), (cx - 2, cy - 3), 2)
-            pygame.draw.line(surf, (40, 40, 40), (cx + 2, cy - 3), (cx + 8, cy - 3), 2)
-            pygame.draw.circle(surf, (40, 40, 40), (cx, cy + 4), 3)
+__all__ = [
+    "ACTS",
+    "Flight",
+    "FrameView",
+    "FxBurst",
+    "GuideCast",
+    "MomoRenderer",
+    "SceneMotion",
+]

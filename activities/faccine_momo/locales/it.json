@@ -5,14 +5,15 @@
   "strings": {
     "activity.faccine_momo.title": "Le Faccine di Momo",
     "activity.title": "Le Faccine di Momo",
+    "button.play_again": "Gioca ancora",
+    "complete.body": "Grazie per aver aiutato Momo!",
+    "complete.title": "Momo sta meglio!",
+    "emotion.angry": "Arrabbiato",
     "emotion.happy": "Felice",
     "emotion.sad": "Triste",
-    "emotion.surprised": "Sorpreso",
     "emotion.silly": "Buffo",
-    "emotion.angry": "Arrabbiato",
-    "emotion.sleepy": "Sonno",
-    "ui.mode_free_mirror": "Specchio libero",
-    "ui.mode_guess_emotion": "Come si sente?"
+    "emotion.sleepy": "Assonnato",
+    "emotion.surprised": "Sorpreso"
   },
   "audio": {
     "activity.title": {

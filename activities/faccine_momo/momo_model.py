@@ -1,223 +1,278 @@
-"""Domain model and state simulation for Le Faccine di Momo."""
+"""Renderer-independent rules for Momo's Happy Faces.
+
+A *visit* is ``TASKS_PER_VISIT`` tasks in three stages of one loop:
+
+* **recognise** - Momo shows a feeling; the child picks the friend who feels
+  the same (other cast faces, so it is never picture matching);
+* **explain** - a picture story happens to Momo (hidden behind a ``?``
+  silhouette); the child picks the face that fits;
+* **help** - Momo shows a feeling in a story; the child picks the kind thing
+  that would help (hug, teddy, umbrella, ...).
+
+Wrong picks are never final: the pick is set aside and the child retries
+(unlimited). The ladder (``LEVELS``) adapts between visits from first-try
+answers. The optional mirror warm-up is the free face play that opens the
+first visit of a session.
+"""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
-import math
 import random
-from typing import Final
 
-REFERENCE_WIDTH: Final[int] = 1024
-REFERENCE_HEIGHT: Final[int] = 600
+if __package__:
+    from .momo_content import (
+        ALL_EMOTIONS,
+        FRIEND_CHARACTERS,
+        HELP_PLANS,
+        LEVELS,
+        MAX_LEVEL,
+        STORIES_BY_ID,
+        TASKS_PER_VISIT,
+        WARMUP_READY_FACES,
+        Emotion,
+        LevelPlan,
+        Stage,
+        stories_for,
+    )
+else:
+    from momo_content import (
+        ALL_EMOTIONS,
+        FRIEND_CHARACTERS,
+        HELP_PLANS,
+        LEVELS,
+        MAX_LEVEL,
+        STORIES_BY_ID,
+        TASKS_PER_VISIT,
+        WARMUP_READY_FACES,
+        Emotion,
+        LevelPlan,
+        Stage,
+        stories_for,
+    )
 
 
-class Emotion(StrEnum):
-    HAPPY = "happy"
-    SAD = "sad"
-    SURPRISED = "surprised"
-    SILLY = "silly"
-    ANGRY = "angry"
-    SLEEPY = "sleepy"
+@dataclass(frozen=True, slots=True)
+class Choice:
+    """One answer tile: a feeling (shown by ``character``) or a help item."""
+
+    key: str
+    character: str | None = None
 
 
-class GameMode(StrEnum):
-    FREE_MIRROR = "free_mirror"
-    GUESS_EMOTION = "guess_emotion"
+@dataclass(frozen=True, slots=True)
+class Task:
+    """One decision. ``feeling`` is what Momo feels in this task."""
+
+    stage: Stage
+    feeling: Emotion
+    answer: str
+    choices: tuple[Choice, ...]
+    story_id: str | None = None
+
+    @property
+    def answer_index(self) -> int:
+        return next(index for index, choice in enumerate(self.choices) if choice.key == self.answer)
+
+    @property
+    def emotion_answer(self) -> Emotion | None:
+        return Emotion(self.answer) if self.stage is not Stage.HELP else None
 
 
-@dataclass
-class MomoParticle:
-    x: float
-    y: float
-    vx: float
-    vy: float
-    kind: str  # "heart", "star", "confetti", "puff", "zzz", "sparkle"
-    color: tuple[int, int, int]
-    size: float
-    life: float = 1.0
+class Outcome(StrEnum):
+    CORRECT = "correct"
+    TRY_AGAIN = "try_again"
+    IGNORED = "ignored"
 
 
-class MomoModel:
-    """Manage Momo's emotional states, interactive face elements, and quiz rounds."""
+class TaskFactory:
+    """Build a varied visit for one ladder rung (seeded ``random.Random``)."""
+
+    def __init__(self, rng: random.Random) -> None:
+        self._rng = rng
+        self._last_story_ids: tuple[str, ...] = ()
+
+    def build_visit(self, level: int) -> tuple[Task, ...]:
+        plan = LEVELS[max(0, min(MAX_LEVEL, level))]
+        used_stories: set[str] = set()
+        used_feelings: list[Emotion] = []
+        tasks: list[Task] = []
+        for stage in plan.stages:
+            if stage is Stage.RECOGNISE:
+                task = self._recognise(plan, used_feelings)
+            elif stage is Stage.EXPLAIN:
+                task = self._explain(plan, used_stories)
+            else:
+                task = self._help(plan, used_stories)
+            if task.story_id is not None:
+                used_stories.add(task.story_id)
+            used_feelings.append(task.feeling)
+            tasks.append(task)
+        self._last_story_ids = tuple(used_stories)
+        return tuple(tasks)
+
+    # -- stages ----------------------------------------------------------------
+
+    def _recognise(self, plan: LevelPlan, used: list[Emotion]) -> Task:
+        fresh = [emotion for emotion in plan.pool if emotion not in used] or list(plan.pool)
+        target = self._rng.choice(fresh)
+        others = [emotion for emotion in plan.pool if emotion is not target]
+        picks = [target, *self._rng.sample(others, plan.recognise_choices - 1)]
+        self._rng.shuffle(picks)
+        friends = self._rng.sample(list(FRIEND_CHARACTERS), len(picks))
+        choices = tuple(Choice(emotion.value, friend) for emotion, friend in zip(picks, friends))
+        return Task(Stage.RECOGNISE, target, target.value, choices)
+
+    def _explain(self, plan: LevelPlan, used_stories: set[str]) -> Task:
+        candidates = [story for story in stories_for(plan.pool) if story.story_id not in used_stories]
+        fresh = [story for story in candidates if story.story_id not in self._last_story_ids]
+        story = self._rng.choice(fresh or candidates)
+        wrong = [emotion for emotion in plan.pool if emotion is not story.emotion and emotion not in story.also_fits]
+        picks = [story.emotion, *self._rng.sample(wrong, plan.explain_choices - 1)]
+        self._rng.shuffle(picks)
+        choices = tuple(Choice(emotion.value, "momo") for emotion in picks)
+        return Task(Stage.EXPLAIN, story.emotion, story.emotion.value, choices, story.story_id)
+
+    def _help(self, plan: LevelPlan, used_stories: set[str]) -> Task:
+        candidates = [help_plan for help_plan in HELP_PLANS if help_plan.story_id not in used_stories]
+        fresh = [help_plan for help_plan in candidates if help_plan.story_id not in self._last_story_ids]
+        help_plan = self._rng.choice(fresh or candidates or list(HELP_PLANS))
+        story = STORIES_BY_ID[help_plan.story_id]
+        picks = [help_plan.helper, *self._rng.sample(list(help_plan.distractors), plan.help_choices - 1)]
+        self._rng.shuffle(picks)
+        return Task(Stage.HELP, story.emotion, help_plan.helper, tuple(Choice(key) for key in picks), story.story_id)
+
+
+@dataclass(slots=True)
+class TaskRecord:
+    first_try: bool = True
+    misses: int = 0
+    hints: int = 0
+
+
+class MomoVisit:
+    """Progress through one visit: picks, kind retries, first-try tally."""
+
+    def __init__(self, tasks: tuple[Task, ...], *, level: int = 0) -> None:
+        if not tasks:
+            raise ValueError("a visit needs at least one task")
+        self.tasks = tasks
+        self.level = max(0, min(MAX_LEVEL, int(level)))
+        self.index = 0
+        self.rejected: set[int] = set()
+        self.solved = False
+        self.records: list[TaskRecord] = [TaskRecord() for _ in tasks]
+
+    @property
+    def task(self) -> Task:
+        return self.tasks[self.index]
+
+    @property
+    def completed_count(self) -> int:
+        return self.index + (1 if self.solved else 0)
+
+    @property
+    def is_last(self) -> bool:
+        return self.index >= len(self.tasks) - 1
+
+    @property
+    def first_try_count(self) -> int:
+        return sum(1 for record in self.records[: self.completed_count] if record.first_try)
+
+    def choose(self, index: int) -> Outcome:
+        if self.solved or index in self.rejected or not 0 <= index < len(self.task.choices):
+            return Outcome.IGNORED
+        if self.task.choices[index].key == self.task.answer:
+            self.solved = True
+            return Outcome.CORRECT
+        self.rejected.add(index)
+        record = self.records[self.index]
+        record.first_try = False
+        record.misses += 1
+        return Outcome.TRY_AGAIN
+
+    def note_hint(self) -> None:
+        self.records[self.index].hints += 1
+
+    def advance(self) -> bool:
+        """Move to the next task; return False when the visit is over."""
+
+        if not self.solved:
+            return True
+        if self.is_last:
+            return False
+        self.index += 1
+        self.rejected = set()
+        self.solved = False
+        return True
+
+    @property
+    def finished(self) -> bool:
+        return self.solved and self.is_last
+
+
+def adapt_level(level: int, first_try: int, total: int = TASKS_PER_VISIT) -> int:
+    """Next rung: up after a near-perfect visit, down after a hard one."""
+
+    if first_try >= total - 1:
+        return min(MAX_LEVEL, level + 1)
+    if first_try <= total // 3:
+        return max(0, level - 1)
+    return max(0, min(MAX_LEVEL, level))
+
+
+class MirrorWarmup:
+    """Free face play before the first visit: Momo mirrors any chosen face."""
 
     def __init__(self) -> None:
         self.emotion: Emotion = Emotion.HAPPY
-        self.is_comforted: bool = False
-        self.mode: GameMode = GameMode.FREE_MIRROR
+        self.tried: set[Emotion] = set()
+        self.comforted = False
 
-        # Tracking for achievements/milestones
-        self.discovered_emotions: set[Emotion] = {Emotion.HAPPY}
-        self.quiz_streak: int = 0
-        self.completed_all: bool = False
-
-        # Quiz round state
-        self.quiz_target: Emotion = Emotion.HAPPY
-        self.quiz_choices: list[Emotion] = [Emotion.HAPPY, Emotion.SAD]
-
-        # Particles & animations
-        self.particles: list[MomoParticle] = []
-        self.anim_timer: float = 0.0
-        self.hop_offset: float = 0.0
-        self.shake_offset: float = 0.0
-
-    def set_emotion(self, emotion: Emotion) -> None:
+    def show(self, emotion: Emotion) -> None:
         self.emotion = emotion
-        self.is_comforted = False
-        self._remember_emotion(emotion)
+        self.tried.add(emotion)
+        self.comforted = False
 
-        # Spawn celebration particles when happy/silly
-        if emotion == Emotion.HAPPY:
-            self.hop_offset = 20.0
-            self._spawn_confetti(30)
-        elif emotion == Emotion.SILLY:
-            self.shake_offset = 12.0
-            self._spawn_stars(15)
-        elif emotion == Emotion.ANGRY:
-            self._spawn_puffs()
+    def comfort(self) -> bool:
+        """A cuddle helps sad Momo feel better (once per sad face)."""
 
-    def _remember_emotion(self, emotion: Emotion) -> None:
-        self.discovered_emotions.add(emotion)
-        self.completed_all = len(self.discovered_emotions) == len(Emotion)
-
-    def comfort_momo(self) -> bool:
-        """Called when child taps/strokes Momo's cheek when sad."""
-        if self.emotion == Emotion.SAD and not self.is_comforted:
-            self.is_comforted = True
-            # Spawn love hearts around Momo
-            for _ in range(12):
-                self.particles.append(
-                    MomoParticle(
-                        x=512 + random.uniform(-90, 90),
-                        y=320 + random.uniform(-60, 60),
-                        vx=random.uniform(-40, 40),
-                        vy=random.uniform(-80, -25),
-                        kind="heart",
-                        color=(255, 64, 129),
-                        size=random.uniform(14, 22),
-                        life=1.4,
-                    )
-                )
+        if self.emotion is Emotion.SAD and not self.comforted:
+            self.comforted = True
+            self.emotion = Emotion.HAPPY
             return True
         return False
 
-    def toggle_mode(self) -> GameMode:
-        if self.mode == GameMode.FREE_MIRROR:
-            self.start_quiz_round()
-        else:
-            self.mode = GameMode.FREE_MIRROR
-        return self.mode
+    @property
+    def ready(self) -> bool:
+        return len(self.tried) >= WARMUP_READY_FACES
 
-    def start_quiz_round(self) -> None:
-        self.mode = GameMode.GUESS_EMOTION
-        # Pick an emotion distinct from current if possible
-        all_emo = list(Emotion)
-        self.quiz_target = random.choice(all_emo)
-        self.emotion = self.quiz_target
-        self.is_comforted = False
 
-        # Pick one distractor
-        distractors = [e for e in all_emo if e != self.quiz_target]
-        distractor = random.choice(distractors)
+@dataclass(slots=True)
+class FeelingsLog:
+    """Profile-wide feelings the child has recognised (for milestone events)."""
 
-        choices = [self.quiz_target, distractor]
-        random.shuffle(choices)
-        self.quiz_choices = choices
+    known: set[Emotion] = field(default_factory=set)
 
-    def answer_quiz(self, choice: Emotion) -> bool:
-        if choice == self.quiz_target:
-            self._remember_emotion(self.quiz_target)
-            self.quiz_streak += 1
-            self.hop_offset = 25.0
-            self._spawn_confetti(40)
-            return True
-        # Friendly shake on retry
-        self.shake_offset = 14.0
-        return False
+    def learn(self, emotion: Emotion) -> bool:
+        if emotion in self.known:
+            return False
+        self.known.add(emotion)
+        return True
 
-    def _spawn_confetti(self, count: int) -> None:
-        colors = [
-            (255, 235, 59),
-            (255, 64, 129),
-            (0, 229, 255),
-            (118, 255, 3),
-            (255, 145, 0),
-        ]
-        for _ in range(count):
-            self.particles.append(
-                MomoParticle(
-                    x=512 + random.uniform(-140, 140),
-                    y=260 + random.uniform(-100, 100),
-                    vx=random.uniform(-90, 90),
-                    vy=random.uniform(-120, 20),
-                    kind="confetti",
-                    color=random.choice(colors),
-                    size=random.uniform(6, 12),
-                    life=1.5,
-                )
-            )
+    def ordered(self) -> tuple[str, ...]:
+        return tuple(emotion.value for emotion in ALL_EMOTIONS if emotion in self.known)
 
-    def _spawn_stars(self, count: int) -> None:
-        for _ in range(count):
-            self.particles.append(
-                MomoParticle(
-                    x=512 + random.uniform(-120, 120),
-                    y=300 + random.uniform(-80, 80),
-                    vx=random.uniform(-60, 60),
-                    vy=random.uniform(-70, 30),
-                    kind="star",
-                    color=(255, 215, 0),
-                    size=random.uniform(8, 14),
-                    life=1.2,
-                )
-            )
 
-    def _spawn_puffs(self) -> None:
-        for ox in (-70, 70):
-            for _ in range(3):
-                self.particles.append(
-                    MomoParticle(
-                        x=512 + ox,
-                        y=240,
-                        vx=random.uniform(-15, 15) + (10 if ox > 0 else -10),
-                        vy=random.uniform(-60, -30),
-                        kind="puff",
-                        color=(220, 220, 225),
-                        size=random.uniform(10, 20),
-                        life=1.0,
-                    )
-                )
-
-    def update(self, dt: float) -> None:
-        self.anim_timer += dt
-
-        # Decay hop and shake
-        if self.hop_offset > 0.0:
-            self.hop_offset = max(0.0, self.hop_offset - dt * 80.0)
-        if self.shake_offset > 0.0:
-            self.shake_offset = max(0.0, self.shake_offset - dt * 50.0)
-
-        # Ambient sleepy Zzz
-        if self.emotion == Emotion.SLEEPY and random.random() < 0.04:
-            self.particles.append(
-                MomoParticle(
-                    x=512 + 60,
-                    y=260,
-                    vx=random.uniform(10, 25),
-                    vy=random.uniform(-40, -20),
-                    kind="zzz",
-                    color=(180, 205, 255),
-                    size=random.uniform(12, 18),
-                    life=2.0,
-                )
-            )
-
-        # Update particles
-        surviving = []
-        for p in self.particles:
-            p.x += p.vx * dt
-            p.y += p.vy * dt
-            p.life -= dt
-            if p.life > 0:
-                surviving.append(p)
-        self.particles = surviving
+__all__ = [
+    "Choice",
+    "FeelingsLog",
+    "MirrorWarmup",
+    "MomoVisit",
+    "Outcome",
+    "Task",
+    "TaskFactory",
+    "TaskRecord",
+    "adapt_level",
+]

@@ -2,7 +2,7 @@
 id = "org.greia.faccine-momo"
 legacy_ids = ["faccine_momo"]
 title_key = "activity.faccine_momo.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
@@ -11,17 +11,28 @@ categories = ["play", "learn"]
 discovery_tags = ["care"]
 
 [education]
-categories = ["emotional_awareness", "social_learning", "expression"]
+# Momo's feelings, one loop in three stages: recognise a feeling on a face
+# (pick the friend who feels the same as Momo), explain it from a little
+# picture story (pick the face that fits), then help (pick the kind thing
+# that makes Momo feel better). Opens with a free mirror warm-up. Six tasks
+# per visit; a three-rung ladder (2 -> 3 choices, 4 -> 6 feelings, more
+# stories and helps) adapts from first-try answers.
+categories = ["emotional_awareness", "social_learning"]
 difficulty = 1
 recommended_age_min = 3
+recommended_age_max = 5
+difficulty_min = 1
+difficulty_max = 3
+adaptive_difficulty = true
 skills = [
   { id = "emotional.recognition.faces", weight = 3 },
-  { id = "emotional.self_expression", weight = 3 },
-  { id = "motor.pointer.selection", weight = 2 },
+  { id = "emotional.understanding.situations", weight = 3 },
+  { id = "socioemotional.empathy.caring", weight = 2 },
+  { id = "motor.pointer.selection", weight = 1 },
 ]
 events = [
   { id = "faccine_momo.emotion_discovered", kind = "milestone" },
-  { id = "faccine_momo.all_emotions_explored", kind = "completion" },
+  { id = "faccine_momo.visit_completed", kind = "completion" },
 ]
 
 [runtime]
@@ -30,11 +41,11 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "pointer"
+profile = "navigation"
 
 [requirements]
 required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["touch"]
+optional_capabilities = ["keyboard", "touch"]
 
 [permissions]
 requested = []

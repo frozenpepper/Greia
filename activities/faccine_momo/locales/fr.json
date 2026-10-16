@@ -5,14 +5,15 @@
   "strings": {
     "activity.faccine_momo.title": "Les grimaces de Momo",
     "activity.title": "Les grimaces de Momo",
+    "button.play_again": "Rejouer",
+    "complete.body": "Merci d'avoir aidé Momo !",
+    "complete.title": "Momo va mieux !",
+    "emotion.angry": "Fâché",
     "emotion.happy": "Heureux",
     "emotion.sad": "Triste",
-    "emotion.surprised": "Surpris",
     "emotion.silly": "Rigolo",
-    "emotion.angry": "Fâché",
     "emotion.sleepy": "Endormi",
-    "ui.mode_free_mirror": "Miroir libre",
-    "ui.mode_guess_emotion": "Comment se sent-il ?"
+    "emotion.surprised": "Surpris"
   },
   "audio": {}
 }

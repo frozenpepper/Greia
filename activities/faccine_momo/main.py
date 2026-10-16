@@ -1,25 +1,27 @@
-"""Thin Greia composition root for Le Faccine di Momo."""
+"""Thin Greia composition root for Momo's Happy Faces (Le Faccine di Momo)."""
 
 from __future__ import annotations
 
 from pathlib import Path
+import random
+import time
 
 import pygame
 
 from greia_platform.localization import activity_resources
+from greia_platform.pygame_canvas import PygameReferenceCanvas
+from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .momo_app import MomoActivity
     from .momo_audio import MomoAudio
-    from .momo_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, MomoModel
-    from .momo_renderer import MomoRenderer
-    from .momo_services import GreiaMomoEvents
+    from .momo_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from .momo_services import GreiaMomoEvents, GreiaMomoProgress
 else:
     from momo_app import MomoActivity
     from momo_audio import MomoAudio
-    from momo_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, MomoModel
-    from momo_renderer import MomoRenderer
-    from momo_services import GreiaMomoEvents
+    from momo_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from momo_services import GreiaMomoEvents, GreiaMomoProgress
 
 
 def main() -> int:
@@ -31,21 +33,28 @@ def main() -> int:
 
     package_root = Path(__file__).resolve().parent
     resources = activity_resources(package_root)
-    locale = resources.context.selected.language
     pygame.display.set_caption(resources.text("activity.title"))
-
-    model = MomoModel()
-    audio = MomoAudio(package_root, locale=locale, resources=resources)
-    renderer = MomoRenderer(resources=resources)
-
+    rng = random.Random()
     app = MomoActivity(
         screen=screen,
-        renderer=renderer,
-        audio=audio,
-        model=model,
+        canvas=PygameReferenceCanvas(screen),
+        typography=GreiaTypography(),
+        resources=resources,
+        audio=MomoAudio(
+            package_root,
+            locale=resources.context.selected.language,
+            resources=resources,
+            rng=rng,
+        ),
+        progress=GreiaMomoProgress(),
         events=GreiaMomoEvents(),
+        rng=rng,
+        session_id=f"{int(time.time())}-{rng.randrange(1_000_000):06d}",
     )
-    return app.run()
+    try:
+        return app.run()
+    finally:
+        pygame.quit()
 
 
 if __name__ == "__main__":

@@ -577,47 +577,58 @@ class VoiceCustodyTests(unittest.TestCase):
 
 from activities.faccine_momo.momo_app import MomoActivity
 from activities.faccine_momo.momo_audio import MomoAudio
-from activities.faccine_momo.momo_model import Emotion, GameMode, MomoModel
-from activities.faccine_momo.momo_renderer import MomoRenderer
+from activities.faccine_momo.momo_content import Emotion, Stage
 
 
 class MomoQuizDoesNotSpeakTheAnswerTests(unittest.TestCase):
-    def make_app(self) -> MomoActivity:
+    """Momo asks how he feels; the feeling itself is heard only after a pick."""
+
+    def make_app(self, seed: int) -> tuple[MomoActivity, list[float]]:
+        import random
+
+        from greia_platform.localization import activity_resources
+        from greia_platform.pygame_canvas import PygameReferenceCanvas
+        from greia_platform.typography import GreiaTypography
+
         screen = _screen()
-        audio = MomoAudio(ROOT / "activities" / "faccine_momo", locale="en")
-        app = MomoActivity(screen, MomoRenderer(), audio, MomoModel())
-        app.speech_queue._queue.clear()
-        return app
+        package = ROOT / "activities" / "faccine_momo"
+        resources = activity_resources(package, requested_locale="en")
+        now = [500.0]
+        app = MomoActivity(
+            screen=screen,
+            canvas=PygameReferenceCanvas(screen),
+            typography=GreiaTypography(),
+            resources=resources,
+            audio=MomoAudio(package, locale="en", resources=resources),
+            rng=random.Random(seed),
+            clock=lambda: now[0],
+            warmup=False,
+        )
+        return app, now
 
-    def queued(self, app: MomoActivity) -> list[str]:
-        return [cue for cue, _ in app.speech_queue._queue]
-
-    def test_entering_quiz_asks_but_never_names_the_target_emotion(self) -> None:
-        app = self.make_app()
-        app._handle_pointer_down(app.renderer.mode_button_rect.center)
-        self.assertEqual(app.model.mode, GameMode.GUESS_EMOTION)
-        cues = self.queued(app)
-        self.assertIn("game_prompt", cues)
+    def test_every_question_is_asked_without_naming_the_feeling(self) -> None:
         emotion_names = {emotion.value for emotion in Emotion}
-        self.assertFalse(emotion_names & set(cues), cues)
-
-    def test_next_round_asks_but_never_names_the_target_emotion(self) -> None:
-        app = self.make_app()
-        app.model.mode = GameMode.GUESS_EMOTION
-        app._quiz_advance_timer = 1e-9
-        app.speech_queue.enqueue = mock.Mock()
-        stop_after = {"n": 0}
-
-        def stop_requested() -> bool:
-            stop_after["n"] += 1
-            return stop_after["n"] > 1
-
-        with mock.patch("activities.faccine_momo.momo_app.activity_stop_requested", side_effect=stop_requested), \
-                mock.patch("activities.faccine_momo.momo_app.mark_activity_ready"), \
-                mock.patch("activities.faccine_momo.momo_app.pygame.quit"):
-            app.run()
-        cues = [call.args[0] for call in app.speech_queue.enqueue.call_args_list]
-        self.assertEqual(cues, ["game_prompt"])
+        for seed in range(4):
+            app, now = self.make_app(seed)
+            while app.state.value == "playing":
+                task = app.visit.task
+                app.audio.spoken.clear()
+                for _ in range(200):  # ~13 s: prompt plus two idle hints
+                    now[0] += 1 / 15
+                    app.step()
+                with self.subTest(seed=seed, stage=task.stage.value):
+                    self.assertFalse(emotion_names & set(app.audio.spoken), app.audio.spoken)
+                    if task.stage is Stage.RECOGNISE:
+                        self.assertIn("game_prompt", app.audio.spoken)
+                app._on_choice(task.answer_index)
+                if task.stage is not Stage.HELP:
+                    self.assertEqual(app.audio.spoken[-1], task.answer)  # heard after the pick
+                index = app.visit.index
+                for _ in range(150):  # until the next task (or the ending) begins
+                    if app.visit.index != index or app.state.value != "playing":
+                        break
+                    now[0] += 1 / 15
+                    app.step()
 
 
 # -------------------------------------------------------- Greia pointer kept
