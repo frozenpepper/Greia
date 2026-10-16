@@ -11,6 +11,9 @@ Drawing rules (Acer floor):
 - every sprite comes pre-scaled from the bounded asset cache; ``draw_*``
   only blits (name-tag text is rendered once per species and cached)
 - the dolphin's spin is a bounded ±30° wobble, the only per-frame transform
+- every cached sprite is blitted through a bounded ``PreparedSurfaces``
+  cache (SDL RLE copies, identical pixels): on the Acer a plain
+  per-pixel-alpha blit costs ~0.22 us/px, which held the tank to 9-23 fps
 """
 
 from __future__ import annotations
@@ -20,6 +23,8 @@ import time
 from typing import Any, Callable, Optional
 
 import pygame
+
+from greia_platform.pygame_blit import PreparedSurfaces
 
 if __package__:
     from .acquarium_assets import AquariumAssetCache
@@ -56,6 +61,8 @@ class AquariumRenderer:
         self._name_tag = name_tag
         self._hint_ring = hint_ring
         self._name_tags: dict[str, Optional[pygame.Surface]] = {}
+        # RLE copies of the cached sprites (bounded LRU; sources stay drawable).
+        self.fast = PreparedSurfaces(max_entries=96, max_pixels=1024 * 600)
 
     # ------------------------------------------------------------------
     # Scene
@@ -71,7 +78,7 @@ class AquariumRenderer:
             pygame.draw.rect(surface, (167, 110, 52), chest_rect, border_radius=10)
             return
         lift = int(math.sin(min(1.0, (2.5 - open_timer) * 3.0) * math.pi) * 4) if open_timer > 0 else 0
-        surface.blit(chest, (chest_rect.left, chest_rect.top - lift))
+        surface.blit(self.fast.for_target(chest, surface), (chest_rect.left, chest_rect.top - lift))
 
     # ------------------------------------------------------------------
     # Dynamic content
@@ -81,6 +88,8 @@ class AquariumRenderer:
         for pellet in pellets:
             diameter = 12 if pellet["size"] < 6.5 else 16
             sprite = self._assets.scaled("pellet.png", diameter, diameter)
+            if sprite is not None:
+                sprite = self.fast.for_target(sprite, surface)
             fx, fy = int(pellet["x"]), int(pellet["y"])
             if sprite is not None:
                 surface.blit(sprite, (fx - diameter // 2, fy - diameter // 2))
@@ -105,7 +114,7 @@ class AquariumRenderer:
             if glow_mode and species.get("glows"):
                 pulse = 0.5 + 0.5 * math.sin(t_now * 2.2 + creature["uid"])
                 radius = int(max(box) * (0.78 + 0.08 * pulse)) // 4 * 4
-                glow = self._assets.glow(radius)
+                glow = self.fast.for_target(self._assets.glow(radius), surface)
                 surface.blit(glow, glow.get_rect(center=(cx, cy)))
             if creature["uid"] == hint_uid:
                 self._draw_hint_ripple(surface, (cx, cy), box, t_now)
@@ -121,7 +130,10 @@ class AquariumRenderer:
                 self._draw_creature_vector_fallback(surface, creature, cx, cy, creature["facing"] > 0)
             else:
                 if creature["spin_t"] > 0:
+                    # Transient per-frame transform: never cached.
                     image = pygame.transform.rotate(image, int(math.sin(creature["spin_t"] * 8.0) * 30.0))
+                else:
+                    image = self.fast.for_target(image, surface)
                 surface.blit(image, image.get_rect(center=(cx, cy)))
 
             if creature["uid"] == hungry_uid:
@@ -136,7 +148,7 @@ class AquariumRenderer:
         step = (0, 8, 16, 8)[int(t_now * 5.0) % 4]
         size = (int(max(box) * 1.2) // 8 * 8 + step,) * 2
         if self._hint_ring is not None:
-            ring = self._hint_ring(size)
+            ring = self.fast.for_target(self._hint_ring(size), surface)
             surface.blit(ring, ring.get_rect(center=center))
         else:
             pygame.draw.circle(surface, (255, 194, 52), center, size[0] // 2, 5)
@@ -146,9 +158,11 @@ class AquariumRenderer:
         bubble = self._assets.bubble(48)
         center = (cx, top + bob)
         if bubble is not None:
+            bubble = self.fast.for_target(bubble, surface)
             surface.blit(bubble, bubble.get_rect(center=center))
         pellet = self._assets.scaled("pellet.png", 22, 22)
         if pellet is not None:
+            pellet = self.fast.for_target(pellet, surface)
             surface.blit(pellet, pellet.get_rect(center=center))
 
     def _draw_name_tag(self, surface: pygame.Surface, creature: dict[str, Any], cx: int, top: int) -> None:
@@ -162,7 +176,7 @@ class AquariumRenderer:
         rise = int(min(1.0, (NAME_TAG_SECONDS - remaining) * 6.0) * 6)
         rect = tag.get_rect(midbottom=(cx, top - 4 - rise))
         rect.clamp_ip(surface.get_rect().inflate(-8, -8))
-        surface.blit(tag, rect)
+        surface.blit(self.fast.for_target(tag, surface), rect)
 
     def _draw_creature_vector_fallback(
         self,
@@ -182,11 +196,17 @@ class AquariumRenderer:
         pygame.draw.circle(surface, (52, 44, 53), (eye_x, cy - base_size // 6), 3)
 
     def draw_bubbles(self, surface: pygame.Surface, bubbles: list[dict[str, Any]]) -> None:
+        # Up to MAX_BUBBLES share a few quantized sprites: look each RLE copy up once.
+        prepared: dict[int, pygame.Surface] = {}
         for bubble in bubbles:
             diameter = int(bubble["size"] * 1.4)
             sprite = self._assets.bubble(diameter)
             bx, by = int(bubble["x"]), int(bubble["y"])
             if sprite is not None:
+                fast = prepared.get(id(sprite))
+                if fast is None:
+                    fast = prepared[id(sprite)] = self.fast.for_target(sprite, surface)
+                sprite = fast
                 surface.blit(sprite, sprite.get_rect(center=(bx, by)))
             else:
                 pygame.draw.circle(surface, (230, 246, 253), (bx, by), diameter // 2, 2)
@@ -208,6 +228,7 @@ class AquariumRenderer:
             size = int(_FX_BOX.get(effect["kind"], 80) * effect.get("scale", 1.0)) // 8 * 8
             image = self._assets.shared_fit(f"fx.{effect['kind']}", (max(16, size), max(16, size)), frame)
             if image is not None:
+                image = self.fast.for_target(image, surface)
                 surface.blit(image, image.get_rect(center=(int(effect["x"]), int(effect["y"]))))
 
 

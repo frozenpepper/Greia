@@ -85,6 +85,7 @@ DRAG_SLOP = 12
 DROP_REACH = 36  # logical px around a target that still counts as "on it"
 MAX_SCHEDULED = 32
 DUSK = (52, 96, 70)
+KEY_HINT_START_SECONDS = 8.0  # keycap hint shown at the start of each crossing (ADR 0037 §4b)
 
 
 class AppState(StrEnum):
@@ -174,6 +175,7 @@ class BridgeActivity:
             on_spot=self._on_spot,
             on_go=self._on_go,
             on_hint=self._on_hint,
+            clock=clock,
         )
         self._surfaces = SurfaceNavigator(self.controls.layer)
         self._input = self._make_input()
@@ -195,6 +197,7 @@ class BridgeActivity:
         self._hints = IdleHintScheduler(now=self._last_activity)
         self._last_retry_voice = -100.0
         self._said_go = False
+        self._keys_changed = False
         self._start_crossing()
 
     @property
@@ -217,8 +220,12 @@ class BridgeActivity:
                 now = self.clock()
                 animating = self.step(min(0.1, now - last))
                 last = now
+                key_deadline = self.controls.keys.deadline()
+                if key_deadline is not None:
+                    frames.wake_at(key_deadline)
+                keys_changed, self._keys_changed = self._keys_changed, False
                 frame = frames.frame(
-                    dirty=self.controls.layer.invalidation.should_draw,
+                    dirty=self.controls.layer.invalidation.should_draw or keys_changed,
                     animating=animating,
                     ambient=self.state is AppState.TERMINAL,
                 )
@@ -242,6 +249,8 @@ class BridgeActivity:
 
         now = self.clock()
         changed = self.timeline.run_due()
+        if self.controls.keys.update():
+            self._keys_changed = True
         if self.cast is not None:
             changed = self.cast.update() or changed
         self.motion.prune(now)
@@ -273,6 +282,7 @@ class BridgeActivity:
                 targets=self._target_rects(),
                 go_rect=self.controls.go.rect,
             )
+            self.controls.draw_keys(surface)
         self._surfaces.draw(surface)
 
     def _target_rects(self) -> dict[str, pygame.Rect]:
@@ -302,6 +312,8 @@ class BridgeActivity:
         if event.type == pygame.WINDOWFOCUSLOST:
             self._cancel_pointer()
             return
+        if self.state is not AppState.TERMINAL and self.controls.keys.observe_event(event):
+            self._keys_changed = True
         translated = self._input.translate(event)
         if translated is None:
             return
@@ -494,6 +506,8 @@ class BridgeActivity:
         crossing = self.visit.crossing
         self.view = CrossingView(crossing)
         self.controls.set_crossing(crossing)
+        self.controls.keys.show(KEY_HINT_START_SECONDS)
+        self._keys_changed = True
         self.art.prepare(crossing)
         self.scene = self.art.compose_scene(crossing, self.view)
         friend = crossing.traveler
@@ -742,6 +756,7 @@ class BridgeActivity:
             )
         )
         self._surfaces.push_overlay(CompletionOverlay(self.completion, on_primary=self._restart))
+        self.controls.keys.hide()
         self.state = AppState.TERMINAL
 
     def _restart(self) -> None:
@@ -838,6 +853,9 @@ class BridgeActivity:
         if not step:
             return
         assert self.cast is not None
+        # Reveal the keycaps too; they light only for keys really held.
+        self.controls.keys.show(KEY_HINT_START_SECONDS)
+        self._keys_changed = True
         if step == 1:
             # First nudge: the friend points and the next place glows (no answer shown).
             plan = HintPlanner.next_step(self.bridge)

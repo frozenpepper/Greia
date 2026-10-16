@@ -13,7 +13,11 @@ The play screen follows Tito's Marble Run (same build -> GO -> watch pattern):
 * GO is the big primary pill at the right end of the tray it confirms
   (shared ``go`` glyph + the short localized GO label), so planks and GO form
   one mouse-first cluster (ADR 0037 §4a); hint is a round button (shared
-  ``hint`` glyph) beside ``ProgressDots`` at the end of the top bar.
+  ``hint`` glyph) beside ``ProgressDots`` at the end of the top bar;
+* a display-only ``KeyboardHint`` (arrows + Space keycaps) at the start of the
+  top bar teaches the keyboard: arrows move the kit focus, Space places. It
+  shows at the start of each crossing and with each idle hint, and lights a
+  keycap only while that real key is held (ADR 0037 §4b).
 
 There is no other text on the play screen.
 """
@@ -21,6 +25,8 @@ There is no other text on the play screen.
 from __future__ import annotations
 
 from collections.abc import Callable
+import math
+import time
 
 import pygame
 
@@ -36,6 +42,8 @@ from greia_platform.activity_controls import (
     PillButton,
     ProgressDots,
 )
+from greia_platform.activity_keyboard_hint import KeyboardHint, KeyCap
+from greia_platform.pygame_blit import PreparedSurfaces
 
 if __package__:
     from .ponti_art import BridgeArt
@@ -49,6 +57,10 @@ else:
     from ponti_model import BridgeState
 
 GLYPH_SHARE = 0.6
+# Arrows move the kit focus over tray, spans and rocks; Space places / presses.
+KEY_HINT_KEYS = frozenset({KeyCap.UP, KeyCap.DOWN, KeyCap.LEFT, KeyCap.RIGHT, KeyCap.SPACE})
+KEY_HINT_KEY = 29  # logical: 28 px keycaps drawn, the hint fits the 60 px top bar
+KEY_HINT_MIN_PHYSICAL = 28  # never drawn smaller than this on screen
 MAX_SEATS = 3
 MAX_SPOTS = 2
 
@@ -94,9 +106,13 @@ class BridgeControls:
         on_spot: Callable[[int], object],
         on_go: Callable[[], object],
         on_hint: Callable[[], object],
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._kit = kit
         self._art = art
+        # Display-only (not a layer target): drawn by ``draw_keys`` over the sky.
+        self.keys: KeyboardHint = kit.keyboard_hint("keys", pygame.Rect(0, 0, 10, 10), active=KEY_HINT_KEYS, clock=clock)
+        self._fast = PreparedSurfaces(max_entries=12, max_pixels=12 * 260 * 100)
         self.tray: tuple[IconButton, ...] = tuple(
             kit.icon_button(
                 tray_id(index),
@@ -141,6 +157,11 @@ class BridgeControls:
         self.progress.rect = pygame.Rect(dots.x, dots.centery - dots_h // 2, dots_w, dots_h)
         self.hint.rect = hint
         self.hint.icon = self._kit.glyph("hint", int(height * GLYPH_SHARE))
+        key = max(KEY_HINT_KEY, math.ceil(KEY_HINT_MIN_PHYSICAL / max(0.01, layout.scale)))
+        key_w, key_h = KeyboardHint.preferred_size(KEY_HINT_KEYS, key=key)
+        top = bar.top if key_h >= bar.height else bar.centery - key_h // 2
+        self.keys.rect = pygame.Rect(bar.left, top, key_w, key_h)
+        self._fast.clear()
         self.go.icon = self._kit.glyph("go", int(screen.go.height * 0.56))
         self.go.rect = screen.go
         preferred = self.go.preferred_width()
@@ -162,6 +183,12 @@ class BridgeControls:
         # GO confirms the tray: it sits at the tray's right end (ADR 0037 §4a).
         self.go.rect = self.screen.go_rect(rects, go_width)
         self._icon_state = None
+
+    def draw_keys(self, surface: pygame.Surface) -> None:
+        """The keyboard hint, one RLE blit per look (no per-frame alpha work)."""
+
+        if self.keys.visible:
+            surface.blit(self._fast(self.keys.render()), self.keys.rect.topleft)
 
     # -- state mirroring -----------------------------------------------------------
 

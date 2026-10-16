@@ -4,7 +4,10 @@
 backdrop, parallax decor and clouds, bouncy clouds, ring back halves,
 stars/gems, the finish rainbow, hint dots, the dragon, ring front halves (so
 the dragon flies *through* each ring), feedback FX, foreground clouds, the
-idle-hint input glyph and Flash. ``MapRenderer`` draws the pre-flight sky map
+idle-hint input glyph and Flash. Every alpha sprite is blitted through a
+bounded ``PreparedSurfaces`` cache (SDL RLE copies): on the Acer a plain
+per-pixel-alpha blit costs ~0.22 us/px, so the 900 px finish rainbow alone
+took ~90 ms a frame. ``MapRenderer`` draws the pre-flight sky map
 behind its kit controls. ``FlashCast`` wraps the shared ``CastFeedback`` with a
 pointing pose and a peek-in/out from the bottom-left corner.
 """
@@ -19,6 +22,7 @@ import math
 import pygame
 
 from greia_platform.activity_feedback import CastFeedback
+from greia_platform.pygame_blit import PreparedSurfaces
 
 try:
     from dragon_art import DragonArt
@@ -113,6 +117,8 @@ class FlashCast:
         self._mode = "hidden"
         self._shown_at = -10.0
         self._until = -10.0
+        #: Optional RLE cache shared with the renderer (set by ``FlightRenderer``).
+        self.fast: PreparedSurfaces | None = None
 
     @property
     def visible(self) -> bool:
@@ -162,7 +168,8 @@ class FlashCast:
         base_x = CAST_MARGIN + self.height // 2
         base_y = REFERENCE_HEIGHT + int((1.0 - peek) * (self.height + 10)) - 4
         if self._mode == "point" and self._point is not None:
-            surface.blit(self._point, self._point.get_rect(midbottom=(base_x, base_y)))
+            point = self._point if self.fast is None else self.fast(self._point)
+            surface.blit(point, point.get_rect(midbottom=(base_x, base_y)))
         else:
             self.feedback.draw(surface, (base_x, base_y))
 
@@ -174,6 +181,10 @@ class FlightRenderer:
         self._art = art
         self._cast = cast
         self._glyph = glyph
+        # Every sprite the flight blits is a stable cached object: blit its
+        # RLE copy (bounded by entries and pixels; see greia_platform.pygame_blit).
+        self.fast = PreparedSurfaces(max_entries=96, max_pixels=1024 * 600 * 3)
+        cast.fast = self.fast
         self._dot = _guide_dot(20)
         self._spec: CourseSpec | None = None
         self._finish: pygame.Surface | None = None
@@ -183,8 +194,12 @@ class FlightRenderer:
 
         self._spec = spec
         self._art.backdrop(spec)
-        self._art.decor(spec)
+        fast = self.fast
+        for sprite, _x, _y in (*self._art.decor(spec), *self._art.mid_clouds, *self._art.front_clouds):
+            fast(sprite)
         self._finish = self._art.finish_rainbow(FINISH_WIDTH)
+        # Encode the big finish rainbow now, not on the frame it scrolls in.
+        fast(self._finish)
 
     def draw(
         self,
@@ -198,9 +213,10 @@ class FlightRenderer:
         if self._spec is not spec:
             self.prepare(spec)
         distance = run.distance
+        fast = self.fast
         surface.blit(self._art.backdrop(spec), (0, 0))
-        _draw_repeating(surface, self._art.decor(spec), distance * DECOR_PARALLAX, DECOR_PERIOD)
-        _draw_repeating(surface, self._art.mid_clouds, distance * MID_PARALLAX, REFERENCE_WIDTH)
+        _draw_repeating(surface, self._art.decor(spec), distance * DECOR_PARALLAX, DECOR_PERIOD, fast)
+        _draw_repeating(surface, self._art.mid_clouds, distance * MID_PARALLAX, REFERENCE_WIDTH, fast)
         self._draw_clouds(surface, run)
         rings = self._ring_positions(run)
         for back, _front, pos in rings:
@@ -209,21 +225,21 @@ class FlightRenderer:
         self._draw_finish(surface, run)
         if now < motion.guide_until:
             self._draw_guide(surface, run, now)
-        frame = frames[run.flier.wing_frame]
+        frame = fast(frames[run.flier.wing_frame])
         bob = math.sin(run.time * 3.2) * 3.0
         surface.blit(frame, self._art.dragon_rect(frame, (DRAGON_SCREEN_X, run.flier.y + bob)))
         for _back, front, pos in rings:
             surface.blit(front, front.get_rect(center=pos))
         self._draw_ring_pulse(surface, run, motion, now)
         self._draw_fx(surface, run, motion, now)
-        _draw_repeating(surface, self._art.front_clouds, distance * FRONT_PARALLAX, REFERENCE_WIDTH)
+        _draw_repeating(surface, self._art.front_clouds, distance * FRONT_PARALLAX, REFERENCE_WIDTH, fast)
         self._draw_hint(surface, run, motion, now)
         self._cast.draw(surface)
 
     # -- pieces ------------------------------------------------------------
 
     def _draw_clouds(self, surface: pygame.Surface, run: FlightRun) -> None:
-        sprite = self._art.cloud(CLOUD_WIDTH)
+        sprite = self.fast(self._art.cloud(CLOUD_WIDTH))
         if sprite is None:
             return
         half = sprite.get_width() // 2 + 4
@@ -248,13 +264,14 @@ class FlightRenderer:
                     y = fy + (ring.y - fy) * ease - math.sin(math.pi * t) * 60.0
             sx = run.screen_x(x)
             back, front = self._art.ring(ring.half_open)
+            back, front = self.fast(back), self.fast(front)
             if -back.get_width() < sx < REFERENCE_WIDTH + back.get_width():
                 placed.append((back, front, (int(sx), int(y))))
         return placed
 
     def _draw_pickups(self, surface: pygame.Surface, run: FlightRun) -> None:
-        star = self._art.star(STAR_SIZE)
-        gem = self._art.gem(GEM_SIZE)
+        star = self.fast(self._art.star(STAR_SIZE))
+        gem = self.fast(self._art.gem(GEM_SIZE))
         left = run.distance - DRAGON_SCREEN_X - 60
         right = left + REFERENCE_WIDTH + 120
         for pickup in run.course.pickups:
@@ -276,7 +293,8 @@ class FlightRenderer:
         sx = run.screen_x(run.course.finish_x)
         half = self._finish.get_width() // 2
         if -half < sx < REFERENCE_WIDTH + half:
-            surface.blit(self._finish, self._finish.get_rect(midbottom=(int(sx), REFERENCE_HEIGHT + 30)))
+            finish = self.fast(self._finish)
+            surface.blit(finish, finish.get_rect(midbottom=(int(sx), REFERENCE_HEIGHT + 30)))
 
     def _draw_guide(self, surface: pygame.Surface, run: FlightRun, now: float) -> None:
         ring = run.next_ring
@@ -288,11 +306,12 @@ class FlightRenderer:
         x0, y0 = DRAGON_SCREEN_X + 70, run.flier.y
         x1, y1 = min(sx - 40, REFERENCE_WIDTH - 20), ring.y
         phase = (now * 2.0) % 1.0
+        dot = self.fast(self._dot)
         for i in range(GUIDE_DOTS):
             t = (i + phase) / GUIDE_DOTS
             x = x0 + (x1 - x0) * t
             y = y0 + (y1 - y0) * (t * t * (3 - 2 * t))
-            surface.blit(self._dot, self._dot.get_rect(center=(int(x), int(y))))
+            surface.blit(dot, dot.get_rect(center=(int(x), int(y))))
 
     def _draw_ring_pulse(self, surface: pygame.Surface, run: FlightRun, motion: FlightMotion, now: float) -> None:
         if now >= motion.ring_pulse_until:
@@ -304,7 +323,7 @@ class FlightRenderer:
         if not 0 < sx < REFERENCE_WIDTH:
             return
         frame = int(now * 6) % 2
-        sparkle = self._art.fx("sparkle", frame, 84)
+        sparkle = self.fast(self._art.fx("sparkle", frame, 84))
         if sparkle is not None:
             top = ring.y - ring.half_open - 40
             surface.blit(sparkle, sparkle.get_rect(center=(int(sx), int(top))))
@@ -317,7 +336,7 @@ class FlightRenderer:
                 continue
             count = self._art.fx_frames(burst.kind)
             frame = min(count - 1, int(age / FX_SECONDS * count))
-            sprite = self._art.fx(burst.kind, frame, burst.size)
+            sprite = self.fast(self._art.fx(burst.kind, frame, burst.size))
             if sprite is None:
                 continue
             x = run.screen_x(burst.x) if burst.world else burst.x
@@ -335,7 +354,7 @@ class FlightRenderer:
         total = len(motion.hint_glyphs) * size + (len(motion.hint_glyphs) - 1) * 8
         left = x - total // 2
         for index, glyph_id in enumerate(motion.hint_glyphs):
-            glyph = self._glyph(glyph_id, size)
+            glyph = self.fast(self._glyph(glyph_id, size))
             if glyph is not None:
                 surface.blit(glyph, (left + index * (size + 8), int(y)))
 
@@ -343,26 +362,36 @@ class FlightRenderer:
 class MapRenderer:
     """The sky map behind the course tiles: sky, clouds, island, dragon."""
 
-    def __init__(self, art: DragonArt, spec: CourseSpec) -> None:
+    def __init__(self, art: DragonArt, spec: CourseSpec, fast: PreparedSurfaces | None = None) -> None:
         self._art = art
         self._spec = spec
+        self.fast = fast if fast is not None else PreparedSurfaces(max_entries=48)
 
     def draw(self, surface: pygame.Surface, frames: tuple[pygame.Surface, ...], now: float, center: tuple[int, int]) -> None:
+        fast = self.fast
         surface.blit(self._art.backdrop(self._spec), (0, 0))
-        _draw_repeating(surface, self._art.mid_clouds, now * 8.0, REFERENCE_WIDTH)
-        isle = self._art.island(300)
+        _draw_repeating(surface, self._art.mid_clouds, now * 8.0, REFERENCE_WIDTH, fast)
+        isle = fast(self._art.island(300))
         if isle is not None:
             surface.blit(isle, isle.get_rect(midtop=(center[0], center[1] + 70)))
-        frame = frames[(0, 1, 2, 1)[int(now * 4.5) % 4]]
+        frame = fast(frames[(0, 1, 2, 1)[int(now * 4.5) % 4]])
         bob = math.sin(now * 2.4) * 8.0
         surface.blit(frame, self._art.dragon_rect(frame, (center[0], center[1] + bob)))
-        _draw_repeating(surface, self._art.front_clouds, now * 14.0, REFERENCE_WIDTH)
+        _draw_repeating(surface, self._art.front_clouds, now * 14.0, REFERENCE_WIDTH, fast)
 
 
-def _draw_repeating(surface: pygame.Surface, sprites, offset: float, period: int) -> None:
+def _draw_repeating(
+    surface: pygame.Surface,
+    sprites,
+    offset: float,
+    period: int,
+    fast: Callable[[pygame.Surface], pygame.Surface] | None = None,
+) -> None:
     shift = int(offset) % period
     width = surface.get_width()
     for sprite, x, y in sprites:
+        if fast is not None:
+            sprite = fast(sprite)
         base = x - shift
         w = sprite.get_width()
         for sx in (base, base + period, base - period):

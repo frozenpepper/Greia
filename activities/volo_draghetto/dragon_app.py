@@ -16,6 +16,13 @@ row of looks to wear. Tapping a course starts a finite 1-minute flight:
 * hints are graduated: at the start and after ~6 s without input the matching
   control glyph pulses by the dragon and the next ring sparkles; after ~12 s
   Flash points and guide dots lead to the ring;
+* a child who stops playing is not chased by an endless flight: after
+  ``REST_AFTER_SECONDS`` without input (nothing held) the dragon slows to a
+  hover over ``REST_EASE_SECONDS`` and the scene comes to rest with the keycap
+  hint showing, so the frame governor can freeze it (and release the audio
+  device); any key, tap, drag or stick move flies on at once;
+* the keycap hint lights only keys that are really held: idle hints reveal
+  it without "demonstrating" keys nobody pressed;
 * the finish rainbow ends the course on the shared cast completion scene
   (1-3 stars). Finishing unlocks the next course and a new look.
 """
@@ -101,6 +108,10 @@ START_HINT_SECONDS = 4.5
 GUIDE_SECONDS = 3.0
 KEY_HINT_START_SECONDS = 8.0  # keyboard hint shown at the start of a flight (ADR 0037 §4b)
 DRAG_SLOP = 14
+# No child input for this long -> the dragon rests. Long enough for both idle
+# hints (6 s and 18 s: keys + ring sparkle, then Flash points the way).
+REST_AFTER_SECONDS = 20.0
+REST_EASE_SECONDS = 1.6  # glide from full speed to a hover
 COMPLETE_STARS = 3
 MAP_DRAGON_HEIGHT = 210
 
@@ -185,13 +196,17 @@ class DragonFlightActivity:
         self._last_source = InputSource.KEYBOARD
         self._flight_started = clock()
         self._last_step = clock()
+        # Flight pace: 1 while flying, easing to 0 while the dragon settles.
+        self._pace = 1.0
+        self._frames: FrameGovernor | None = None
         self.map.sync(self.progress, refocus=self.progress.first_open_course())
 
     # -- main loop ------------------------------------------------------------
 
     def run_loop(self) -> int:
-        # Flight animates; the map's flapping dragon is ambient.
+        # Flight animates (until the dragon rests); the map's flapping dragon is ambient.
         frames = FrameGovernor(redraw_on_input=True)
+        self._frames = frames
         try:
             while self._running and not activity_stop_requested():
                 for event in frames.events():
@@ -203,7 +218,7 @@ class DragonFlightActivity:
                 now = self.clock()
                 self.step(min(0.05, max(0.0, now - self._last_step)))
                 self._last_step = now
-                frame = frames.frame(animating=self.state is AppState.FLIGHT, ambient=True)
+                frame = frames.frame(animating=self.flight_moving, ambient=self.state is not AppState.FLIGHT)
                 if frame is FrameKind.FULL:
                     self.render()
                     self.canvas.present()
@@ -225,15 +240,81 @@ class DragonFlightActivity:
         self.motion.prune(now)
         if self.state is not AppState.FLIGHT or self.run is None:
             return
-        if self.hud is not None:
-            self.hud.keys.update()
-        for event in self.run.update(dt, self._steer()):
+        if self.hud is not None and self.hud.keys.update() and self._frames is not None:
+            self._frames.invalidate()
+        if self._steering_held():
+            self._last_input = now  # holding a key/stick/drag is play, not idleness
+            self._hints.reset(now)
+        was_resting = self.resting
+        self._pace = self._next_pace(now, dt)
+        if self.resting:
+            if not was_resting:
+                self._settle()
+            return
+        for event in self.run.update(dt * self._pace, self._steer()):
             self._on_flight_event(event, now)
             if self.state is not AppState.FLIGHT:
                 return
         if self.hud is not None:
             self.hud.sync(self.run)
-        self._maybe_hint(now)
+        if self._pace >= 1.0:
+            self._maybe_hint(now)
+
+    # -- resting (calm idle) --------------------------------------------------
+
+    @property
+    def resting(self) -> bool:
+        """True while a flight is paused because the child stopped playing."""
+
+        return self.state is AppState.FLIGHT and self.run is not None and self._pace <= 0.0
+
+    @property
+    def flight_moving(self) -> bool:
+        """Essential motion for the frame governor: flying, or feedback still playing."""
+
+        if self.state is not AppState.FLIGHT:
+            return False
+        if not self.resting:
+            return True
+        now = self.clock()
+        motion = self.motion
+        return (
+            motion.active(now)
+            or self.cast.visible
+            or now < motion.ring_pulse_until
+            or now < motion.guide_until
+        )
+
+    def _next_pace(self, now: float, dt: float) -> float:
+        run = self.run
+        if run is None or run.phase is not FlightPhase.FLYING:
+            return 1.0
+        if now - self._last_input < REST_AFTER_SECONDS:
+            return 1.0
+        return max(0.0, self._pace - dt / REST_EASE_SECONDS)
+
+    def _settle(self) -> None:
+        """The dragon now hovers: show how to fly on, draw the still scene once."""
+
+        if self.hud is not None:
+            self.hud.keys.show(None)
+        if self._frames is not None:
+            self._frames.invalidate()
+
+    def _wake(self) -> None:
+        """Child input while resting: fly on at once."""
+
+        if self._pace >= 1.0:
+            return
+        self._pace = 1.0
+        if self.hud is not None:
+            self.hud.keys.hide()
+            self.hud.keys.show(KEY_HINT_START_SECONDS)
+
+    def _steering_held(self) -> bool:
+        if any(self._keys_v.values()) or any(self._keys_h.values()) or self._pointer_down:
+            return True
+        return normalize_stick(*self._stick, DEFAULT_INPUT_POLICY.stick_dead_zone).magnitude > 0.0
 
     def render(self) -> None:
         surface = self.canvas.surface
@@ -356,6 +437,7 @@ class DragonFlightActivity:
 
     def _note_input(self) -> None:
         self._last_input = self.clock()
+        self._wake()
         if self._hints.count:
             self.motion.hint_glyphs = ()
             self.motion.ring_pulse_until = -1.0
@@ -435,6 +517,7 @@ class DragonFlightActivity:
         now = self.clock()
         self._flight_started = now
         self._last_input = now
+        self._pace = 1.0
         self._hints.reset(now)
         self.session_id = f"{self.session_id.rsplit('-', 1)[0]}-{self.rng.randrange(1_000_000):06d}"
         self.motion.hint_glyphs = self._hint_glyphs()
@@ -548,7 +631,9 @@ class DragonFlightActivity:
         self.motion.hint_since = now
         self.motion.ring_pulse_until = now + self._hints.animation_seconds(3.0)
         if self.hud is not None:
-            self.hud.keys.demonstrate()
+            # Reveal the keycaps, but light only keys that are really held
+            # (a "demonstration" lit Left/Right nobody pressed; Acer 2026-10-16).
+            self.hud.keys.show(KEY_HINT_START_SECONDS)
         if step >= 2:
             self.cast.point(self._hints.animation_seconds(2.2))
             self.motion.guide_until = now + self._hints.animation_seconds(GUIDE_SECONDS)

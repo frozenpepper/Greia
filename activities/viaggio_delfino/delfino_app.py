@@ -125,6 +125,13 @@ LEAP_HINT_DISTANCE = 760.0
 FINISH_PAUSE_SECONDS = 1.3
 KEY_HINT_START_SECONDS = 8.0  # keyboard hint shown at the start of a journey (ADR 0037 §4b)
 COUNT_SETTLE_SECONDS = 0.9
+# A child who stops playing is not carried to the finish by an endless swim:
+# after REST_AFTER_SECONDS without input (nothing held) the dolphin slows to a
+# drift over REST_EASE_SECONDS and the sea comes to rest, so the frame
+# governor can freeze it and release the audio device. Long enough for both
+# idle hints (6 s and 18 s). Any steer, leap, tap or pointer move swims on.
+REST_AFTER_SECONDS = 20.0
+REST_EASE_SECONDS = 1.6
 TAP_LEAP_SECONDS = 0.3
 _MAX_EFFECTS = 12
 _COMPLETION_PALETTE = CompletionPalette(background=(26, 74, 120))
@@ -231,6 +238,8 @@ class DelfinoJourneyApp:
         self._count_done_at = 0.0
         self._touch_start: tuple[float, tuple[int, int]] | None = None
         self._last_result: tuple[int, int] = (0, 0)
+        self._last_swim_input = now
+        self._pace = 1.0  # swim pace: 1 swimming, easing to 0 while the sea settles
         self._sync_picker()
 
     # -------------------------------------------------------- localization
@@ -321,6 +330,7 @@ class DelfinoJourneyApp:
         self.picker_cast.present(False)
         now = self._clock()
         self._hints.reset(now)
+        self._swim_input(now)
         self._hint_until = 0.0
         self._happy_until = 0.0
         if not self._welcomed:
@@ -442,7 +452,17 @@ class DelfinoJourneyApp:
         if self.steering.active:
             run.dolphin.steer(self.steering.step(dt))
             self._hints.reset(now)  # a held key or stick is input too
-        for event in run.update(dt):
+            self._swim_input(now)
+        # A friend's fact Tito is telling is heard to the end before the sea settles.
+        if run.finished or now - self._last_swim_input < REST_AFTER_SECONDS or (self._pace >= 1.0 and now < self._talk_until):
+            self._pace = 1.0
+        elif self._pace > 0.0:
+            self._pace = max(0.0, self._pace - dt / REST_EASE_SECONDS)
+            if self._pace == 0.0:
+                self.hud.keys.show(None)  # resting: the keycaps show how to swim on
+        if self.resting:
+            return
+        for event in run.update(dt * self._pace):
             self._handle_world_event(event)
         if run.finished:
             if now - self._finish_at >= FINISH_PAUSE_SECONDS:
@@ -450,7 +470,37 @@ class DelfinoJourneyApp:
             return
         if self._demo_pending:
             self._maybe_demonstrate(run, now)
-        self._maybe_idle_hint(run, now)
+        if self._pace >= 1.0:
+            self._maybe_idle_hint(run, now)
+
+    # ---------------------------------------------------------------- rest
+
+    @property
+    def resting(self) -> bool:
+        """True while a swim is paused because the child stopped playing."""
+
+        return self.phase is Phase.SWIM and self.run_state is not None and self._pace <= 0.0
+
+    @property
+    def moving(self) -> bool:
+        """Essential motion for the frame governor (swim, count, feedback)."""
+
+        if self.phase is Phase.COUNT:
+            return True
+        if self.phase is not Phase.SWIM:
+            return False
+        if not self.resting:
+            return True
+        return bool(self._effects) or self.cast.animating
+
+    def _swim_input(self, now: float) -> None:
+        """Child input during a swim: restart the rest timer, swim on at once."""
+
+        self._last_swim_input = now
+        if self._pace < 1.0:
+            self._pace = 1.0
+            self.hud.keys.hide()
+            self.hud.keys.show(KEY_HINT_START_SECONDS)
 
     def _maybe_demonstrate(self, run: JourneyRun, now: float) -> None:
         """After a miss: Tito points and the next pearls pulse once visible."""
@@ -643,7 +693,7 @@ class DelfinoJourneyApp:
             if not self._running:
                 break
             self.advance(dt)
-            frame = frames.frame(animating=self.phase in (Phase.SWIM, Phase.COUNT), ambient=True)
+            frame = frames.frame(animating=self.moving, ambient=True)
             if frame is FrameKind.FULL:
                 self.draw()
                 # VIDEORESIZE replaces self.canvas inside the event owner; always
@@ -721,20 +771,20 @@ class DelfinoJourneyApp:
         self.hud.keys.observe_event(event)
         meaning = self.steering.handle(event)
         if meaning is SwimInput.LEAP:
-            self._hints.reset(self._clock())
+            self._note_swim_input()
             self.leap()
             return
         if meaning is SwimInput.STEER:
-            self._hints.reset(self._clock())
+            self._note_swim_input()
             return
         if event.type == pygame.MOUSEMOTION:
             logical = self._logical(event.pos)
             if logical is not None:
                 run.dolphin.aim(logical[1])
-                self._hints.reset(self._clock())
+                self._note_swim_input()
         elif event.type == pygame.MOUSEBUTTONDOWN and getattr(event, "button", 1) == 1:
             if self._logical(event.pos) is not None:
-                self._hints.reset(self._clock())
+                self._note_swim_input()
                 self.leap()
         elif event.type == pygame.FINGERDOWN:
             position = self._finger_position(event)
@@ -742,12 +792,12 @@ class DelfinoJourneyApp:
             if logical is not None:
                 self._touch_start = (self._clock(), position)
                 run.dolphin.aim(logical[1])
-                self._hints.reset(self._clock())
+                self._note_swim_input()
         elif event.type == pygame.FINGERMOTION:
             logical = self._logical(self._finger_position(event))
             if logical is not None:
                 run.dolphin.aim(logical[1])
-                self._hints.reset(self._clock())
+                self._note_swim_input()
         elif event.type == pygame.FINGERUP:
             start, self._touch_start = self._touch_start, None
             if start is None:
@@ -756,7 +806,13 @@ class DelfinoJourneyApp:
             position = self._finger_position(event)
             moved = abs(position[0] - origin[0]) + abs(position[1] - origin[1])
             if self._clock() - began <= TAP_LEAP_SECONDS and moved <= 24:
+                self._note_swim_input()
                 self.leap()
+
+    def _note_swim_input(self) -> None:
+        now = self._clock()
+        self._hints.reset(now)
+        self._swim_input(now)
 
     def _handle_count_event(self, event: pygame.event.Event) -> None:
         meaning = self.steering.handle(event)

@@ -59,6 +59,14 @@ class DelfinoCast:
     def pointing(self) -> bool:
         return self._clock() < self._point_until
 
+    @property
+    def animating(self) -> bool:
+        """True while Tito's picture changes on its own (slide, pose, talk bob)."""
+
+        if self.feedback.animating or self.talking or self.pointing or self._clock() < self._wave_until:
+            return True
+        return self._shown < 1.0 if self._wanted else self._shown > 0.0
+
     def present(self, wanted: bool) -> None:
         """Keep Tito on screen (picker, welcome) even when he is idle."""
 

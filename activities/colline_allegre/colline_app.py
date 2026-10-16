@@ -101,6 +101,13 @@ SIGN_HINT_SECONDS = 7.0
 SPEECH_GAP_SECONDS = 4.0
 KEY_HINT_START_SECONDS = 8.0  # keyboard hint shown at the start of a set (ADR 0037 §4b)
 MAX_FRAME_SECONDS = 0.1
+# The child let go of the pedals this long ago: the buggy is parked (rolls to
+# a stop). Once it has stood still for REST_HOLD_SECONDS the drive is no
+# longer essential motion and the frame governor can freeze the scene.
+PARK_AFTER_SECONDS = 3.0
+REST_SPEED = 1.5  # px/s
+REST_SPIN = 0.02  # rad/s
+REST_HOLD_SECONDS = 0.5
 MAX_SCHEDULED = 32
 MEADOW_DUSK = (58, 92, 128)  # deep ocean ("play" Collection hue, darkened)
 
@@ -201,6 +208,7 @@ class CollineActivity:
         self._last_tick = clock()
         self._accumulator = 0.0
         self._last_input = clock()
+        self._still_since: float | None = None
         self._hint_schedule = IdleHintScheduler(now=self._last_input)
         self._last_speech = -SPEECH_GAP_SECONDS
         self._hinted_drop: int | None = None
@@ -219,7 +227,7 @@ class CollineActivity:
                 if repeat is not None and self.state is AppState.TERMINAL:
                     self._surfaces.dispatch(repeat)
                 self.step()
-                riding = self.state in (AppState.DRIVING, AppState.TUMBLE, AppState.FINISH)
+                riding = self.riding
                 key_deadline = self.controls.keys.deadline()
                 if key_deadline is not None:
                     frames.wake_at(key_deadline)
@@ -258,8 +266,12 @@ class CollineActivity:
             return
         self._accumulator += dt
         steps = 0
+        parked = self.state is AppState.DRIVING and self._parked(now)
         while self._accumulator >= FIXED_DT and steps < MAX_STEPS_PER_FRAME:
-            controls = self.drive.controls() if self.state is AppState.DRIVING else _NO_INPUT
+            if self.state is not AppState.DRIVING:
+                controls = _NO_INPUT
+            else:
+                controls = _PARKED if parked else self.drive.controls()
             for event in ride.step(controls):
                 self._on_run_event(event, now)
             self._accumulator -= FIXED_DT
@@ -271,7 +283,55 @@ class CollineActivity:
         if self.ride is ride:
             self.camera.follow(ride, dt)
             self.controls.road.progress = ride.progress
+        self._track_rest(now)
         self._hints(now)
+
+    # -- rest (calm idle) -------------------------------------------------------------
+
+    @property
+    def riding(self) -> bool:
+        """Essential motion for the frame governor.
+
+        The buggy moving, tumbling or celebrating. A parked buggy that has
+        stood still (no pedal, no feedback playing) is a still picture: the
+        loop stops presenting and, 30 s later, releases the audio device.
+        """
+
+        if self.state in (AppState.TUMBLE, AppState.FINISH):
+            return True
+        return self.state is AppState.DRIVING and not self.at_rest
+
+    @property
+    def at_rest(self) -> bool:
+        """True while a parked buggy has stood still for ``REST_HOLD_SECONDS``."""
+
+        now = self.clock()
+        return (
+            self._still_since is not None
+            and now - self._still_since >= REST_HOLD_SECONDS
+            and self._parked(now)
+            and not self.motion.active(now)
+            and not self.driver.animating
+        )
+
+    def _parked(self, now: float) -> bool:
+        return not (self.drive.go or self.drive.brake) and now - self._last_input >= PARK_AFTER_SECONDS
+
+    def _track_rest(self, now: float) -> None:
+        run = self.ride
+        still = (
+            run is not None
+            and self.state is AppState.DRIVING
+            and self._parked(now)
+            and not run.vehicle.airborne
+            and run.vehicle.speed < REST_SPEED
+            and abs(run.vehicle.angular_velocity) < REST_SPIN
+            and self.camera.settled(run)
+        )
+        if not still:
+            self._still_since = None
+        elif self._still_since is None:
+            self._still_since = now
 
     def render(self) -> None:
         surface = self.canvas.surface
@@ -639,6 +699,7 @@ class CollineActivity:
 
 
 _NO_INPUT = Controls()
+_PARKED = Controls(park=True)
 
 
 def _wave(now: float, hz: float) -> float:

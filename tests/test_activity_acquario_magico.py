@@ -23,6 +23,7 @@ from greia_platform.localization import activity_resources
 from greia_platform.system_chrome import ActivitySystemChromeLayout
 
 from activities.acquario_magico.acquarium_assets import AquariumAssetCache
+from activities.acquario_magico import acquarium_assets
 from activities.acquario_magico.acquarium_app import CHEST_RECT, build_app
 from activities.acquario_magico.acquarium_content import (
     MAX_BUBBLES,
@@ -124,6 +125,24 @@ class AquariumAssetTests(AquariumTestCase):
         # Night is the same reef under moonlight: clearly darker water.
         self.assertLess(sum(night.get_at((512, 200))[:3]), sum(day.get_at((512, 200))[:3]))
 
+    def test_day_night_toggle_reuses_the_composed_scene_with_identical_pixels(self) -> None:
+        cache = AquariumAssetCache()
+        calls = []
+        compose = cache._compose_scene
+
+        def counting():
+            calls.append(1)
+            return compose()
+
+        cache._compose_scene = counting  # type: ignore[method-assign]
+        day = cache.background(glow_mode=False)
+        night = cache.background(glow_mode=True)
+        self.assertEqual(len(calls), 1, "the five full-screen layers are composed once")
+        expected = compose()
+        expected.fill(acquarium_assets._NIGHT_TINT, special_flags=pygame.BLEND_MULT)
+        self.assertEqual(pygame.image.tostring(night, "RGB"), pygame.image.tostring(expected, "RGB"))
+        self.assertEqual(pygame.image.tostring(day, "RGB"), pygame.image.tostring(compose(), "RGB"))
+
     def test_creature_cache_supports_both_facings_and_reuses_surface(self) -> None:
         cache = AquariumAssetCache()
         clownfish = SPECIES[0]
@@ -140,6 +159,24 @@ class AquariumAssetTests(AquariumTestCase):
         cache = AquariumAssetCache(resolver=missing)
         self.assertIsNone(cache.creature(SPECIES[0], "default", (84, 66)))
         self.assertEqual(cache.background(False).get_size(), (1024, 600))
+
+
+class AquariumRendererTests(AquariumTestCase):
+    def test_tank_sprites_blit_from_bounded_rle_copies(self) -> None:
+        from greia_platform.pygame_blit import is_rle
+
+        app = self.make_app()
+        for _ in range(3):
+            app.advance(0.033)
+        app._draw()
+        fast = app._renderer.fast
+        self.assertGreater(len(fast), 0)
+        self.assertLessEqual(len(fast), fast.max_entries)
+        creature = app.session.creatures[0]
+        species = creature["spec"]
+        image = app.assets.creature(species, "default", (species.get("w", 72), species.get("h", 54)), creature["facing"] > 0)
+        self.assertTrue(is_rle(fast(image)))
+        self.assertFalse(is_rle(image), "the cached source stays drawable")
 
 
 class AquariumMissionDirectorTests(unittest.TestCase):

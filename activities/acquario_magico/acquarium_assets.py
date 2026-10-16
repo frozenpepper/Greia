@@ -82,6 +82,7 @@ class AquariumAssetCache:
         self._scales: dict[tuple, Optional[pygame.Surface]] = {}
         self._backgrounds: dict[tuple[str, int, int], pygame.Surface] = {}
         self._glow: dict[int, pygame.Surface] = {}
+        self._composite: Optional[pygame.Surface] = None
 
     # ------------------------------------------------------------------
     # Decoding
@@ -270,6 +271,26 @@ class AquariumAssetCache:
         self._backgrounds.clear()
 
     def _bake_background(self, glow_mode: bool, width: int, height: int) -> pygame.Surface:
+        # The day scene composite (five full-screen alpha layers, ~0.7 s on
+        # the Atom) is kept once; night is that composite with the night tint,
+        # so the day/night toggle no longer re-composes it.
+        if self._composite is None:
+            self._composite = self._compose_scene()
+        bg = self._composite.copy()
+        if glow_mode:
+            bg.fill(_NIGHT_TINT, special_flags=pygame.BLEND_MULT)
+        if (width, height) != (REFERENCE_WIDTH, REFERENCE_HEIGHT):
+            bg = pygame.transform.smoothscale(bg, (width, height))
+        if pygame.display.get_surface() is not None:
+            try:
+                bg = bg.convert()
+            except pygame.error:
+                pass
+        return bg
+
+    def _compose_scene(self) -> pygame.Surface:
+        """The untinted day scene at the reference size (composed once)."""
+
         bg = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
         water = self.shared_image("bg.underwater.water")
         if water is not None:
@@ -291,15 +312,6 @@ class AquariumAssetCache:
         for image in front:
             if image is not None:
                 bg.blit(image, (0, 0))
-        if glow_mode:
-            bg.fill(_NIGHT_TINT, special_flags=pygame.BLEND_MULT)
-        if (width, height) != (REFERENCE_WIDTH, REFERENCE_HEIGHT):
-            bg = pygame.transform.smoothscale(bg, (width, height))
-        if pygame.display.get_surface() is not None:
-            try:
-                bg = bg.convert()
-            except pygame.error:
-                pass
         return bg
 
 

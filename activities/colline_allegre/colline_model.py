@@ -139,6 +139,10 @@ STALL_SECONDS = 3.5
 STALL_SPEED = 10.0
 ASSIST_CLIMB = 1.35
 FINISH_ROLL_BRAKE = 0.3
+# Per fixed step while parked (child idle): ~0.4 s half-life, so a buggy left
+# in a valley rolls to a stop in a couple of seconds instead of rocking for
+# minutes (Acer 2026-10-16: 51% CPU for 60 s after play).
+PARK_DAMPING = 0.985
 
 
 class RunEvent(StrEnum):
@@ -157,11 +161,17 @@ class RunEvent(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class Controls:
-    """One step of driver input: GO / BRAKE pedals and the air tilt."""
+    """One step of driver input: GO / BRAKE pedals and the air tilt.
+
+    ``park`` is set by the app (never by a pedal) once the child has let go
+    for a while: a grounded buggy then rolls to a stop instead of rocking in
+    a valley for minutes, so the scene can come to rest (frame governor idle).
+    """
 
     go: bool = False
     brake: bool = False
     tilt: float = 0.0
+    park: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -470,6 +480,10 @@ class CourseRun:
                     veh.vx = max(ASSIST_DROP_SPEED, veh.vx - BRAKE_DECEL * dt)
 
         self._integrate(dt, go, brake, tilt, events)
+        if controls.park and not (go or brake or veh.airborne or self.tumbling or self.finished):
+            veh.vx *= PARK_DAMPING
+            veh.vy *= PARK_DAMPING
+            veh.angular_velocity *= PARK_DAMPING
         if self.tumbling:
             # A tumbled buggy settles where it lies (on its roof), it does not roll on.
             veh.angular_velocity *= 0.86

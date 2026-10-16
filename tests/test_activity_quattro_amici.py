@@ -399,6 +399,25 @@ class QuattroAppLoopTests(unittest.TestCase):
             self.now[0] += 1 / 30
             app.step()
 
+    def test_falling_disc_frames_blit_rle_copies_of_the_board_and_discs(self) -> None:
+        from greia_platform.pygame_blit import is_rle
+
+        app, _, _, _ = self._app()
+        app._on_column(3)
+        self.assertIsNotNone(app.motion.drop)
+        for _ in range(3):
+            self.now[0] += 1 / 30
+            app.step()
+            app.render()
+        fast = app.renderer.fast
+        plate = app.art.plate
+        self.assertIsNotNone(plate)
+        self.assertTrue(is_rle(fast(plate)), "the board's front plate (the big alpha layer) blits as RLE")
+        self.assertFalse(is_rle(plate), "the cached source stays drawable")
+        token = app.art.token(app.motion.drop.player, app.geometry.token_size)
+        self.assertTrue(is_rle(fast(token)))
+        self.assertLessEqual(len(fast), fast.max_entries)
+
     def test_drop_animation_settles_and_clacks_once(self) -> None:
         from activities.quattro_amici.quattro_renderer import DropAnimation
 

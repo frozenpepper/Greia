@@ -406,6 +406,33 @@ class AppLoopTests(unittest.TestCase):
             self._advance(app, now, 1 / 30)
         self.fail(f"never reached {states}, stuck in {app.state}")
 
+    def test_keycap_hint_shows_at_start_and_lights_only_the_held_key(self) -> None:
+        from greia_platform.activity_keyboard_hint import KeyCap
+
+        app, now, _ = self._app()
+        keys = app.controls.keys
+        self.assertTrue(keys.visible, "shown at the start of a crossing")
+        self.assertEqual(keys.lit, frozenset())
+        controls = app.controls
+        layout_protected = controls.screen.protected
+        self.assertFalse(keys.rect.colliderect(layout_protected), "never under Home/Back")
+        for other in (controls.hint.rect, controls.progress.rect, controls.go.rect, *(b.rect for b in controls.tray)):
+            self.assertFalse(keys.rect.colliderect(other))
+        self.assertGreaterEqual(min(r.height for r in keys.key_rects().values()), 28, "legible keycaps")
+        app._handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RIGHT, mod=0, unicode="", scancode=0))
+        self.assertEqual(keys.lit, {KeyCap.RIGHT})
+        self.assertTrue(app._keys_changed, "a lit key redraws the static build screen")
+        app.render()
+        self._advance(app, now, 2.0)
+        self.assertEqual(keys.lit, {KeyCap.RIGHT}, "lit while held")
+        app._handle_event(pygame.event.Event(pygame.KEYUP, key=pygame.K_RIGHT, mod=0, unicode="", scancode=0))
+        self._advance(app, now, 0.5)
+        self.assertEqual(keys.lit, frozenset())
+        keys.hide()
+        self._advance(app, now, 6.0)  # first idle hint 6 s after the key release
+        self.assertTrue(keys.visible, "an idle hint shows the keys again")
+        self.assertEqual(keys.lit, frozenset(), "without lighting keys nobody pressed")
+
     def _key_activate(self, app, control_id: str) -> None:
         self.assertTrue(app.controls.layer.focus(control_id, visible=True), control_id)
         self.assertTrue(app.press(pygame.K_SPACE), control_id)

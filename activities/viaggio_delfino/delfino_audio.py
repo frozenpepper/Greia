@@ -99,7 +99,12 @@ class PygameDelfinoAudio:
     def __init__(self, *, project_root: Path | None = None) -> None:
         # Effects and the count-up bells ("count.<n>"), built after the first frame.
         self._sounds = DeferredSoundBank()
+        # Voice cues decode on a worker right after the first frame (or on
+        # first use): decoding them before READY cost ~1.3 s of launch on the
+        # Atom, and a cue is first needed when the child starts a journey.
+        self._voices = DeferredSoundBank()
         self._voice_cache: dict[str, pygame.mixer.Sound] = {}
+        self._shared_bank = DeferredSoundBank()
         self._shared_cache: dict[str, pygame.mixer.Sound | None] = {}
         self._voice_channel: pygame.mixer.Channel | None = None
         self._project_root = project_root if project_root is not None else PACKAGE_ROOT.parents[1]
@@ -265,25 +270,27 @@ class PygameDelfinoAudio:
         self.resources = resources
 
     def preload_voice(self, fact_ids: list[str]) -> None:
-        """Decode every localized cue once up front.
+        """Prepare every localized cue, in order, before it is needed.
 
         On the low-resource reference hardware a cold OGG decode inside the
         frame loop causes a very visible hitch at exactly the celebration
-        moment (star pickup), so all cues are prepared eagerly at startup.
+        moment (star pickup), so all cues are decoded ahead of use: by one
+        worker right after the first frame is presented (``DeferredSoundBank``),
+        not before it. A cue asked for earlier is decoded on demand.
         Fail-soft: a missing cue is simply skipped and ``play_voice`` will
         report 0.0 for it later.
         """
 
         if not self.enabled or self.resources is None:
             return
+        resources = self.resources
         for fact_id in fact_ids:
-            if fact_id in self._voice_cache:
+            if fact_id in self._voice_cache or fact_id in self._voices:
                 continue
-            try:
-                cue = self.resources.audio_cue(audio_key(fact_id))
-                self._voice_cache[fact_id] = pygame.mixer.Sound(str(cue.path))
-            except Exception:
-                continue
+            self._voices.define(
+                fact_id,
+                lambda fact_id=fact_id: pygame.mixer.Sound(str(resources.audio_cue(audio_key(fact_id)).path)),
+            )
 
     def play_voice(self, fact_id: str) -> float:
         """Play the reviewed Tito cue for a fact; return its duration in seconds.
@@ -295,6 +302,10 @@ class PygameDelfinoAudio:
         if not self.enabled or self.resources is None:
             return 0.0
         sound = self._voice_cache.get(fact_id)
+        if sound is None and fact_id in self._voices:
+            sound = self._voices.get(fact_id)
+            if sound is None:
+                return 0.0
         if sound is None:
             try:
                 cue = self.resources.audio_cue(audio_key(fact_id))
@@ -319,12 +330,25 @@ class PygameDelfinoAudio:
             return "en"
 
     def preload_shared(self) -> None:
+        """Prepare the shared reactions after the first frame (see ``preload_voice``)."""
+
+        if not self.enabled:
+            return
         for cue in SHARED_CUES:
-            self._shared(cue)
+            if cue not in self._shared_cache and cue not in self._shared_bank:
+                self._shared_bank.define(cue, lambda cue=cue: self._load_shared(cue))
+
+    def _load_shared(self, cue: str) -> pygame.mixer.Sound | None:
+        path = shared_character_audio_path(self._project_root, VOICE_SPEAKER, cue, self._locale())
+        return pygame.mixer.Sound(str(path)) if path is not None else None
 
     def _shared(self, cue: str) -> pygame.mixer.Sound | None:
         if cue in self._shared_cache:
             return self._shared_cache[cue]
+        if cue in self._shared_bank:
+            prepared = self._shared_bank.get(cue)
+            self._shared_cache[cue] = prepared
+            return prepared
         sound: pygame.mixer.Sound | None = None
         if self.enabled:
             try:

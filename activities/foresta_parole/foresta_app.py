@@ -102,7 +102,11 @@ STICK_SPEED = 600.0    # at full left-stick deflection
 # no more hints) so an unattended screen settles and stops presenting; the
 # next child input resumes it.  Without it the basket sat under a lucky letter
 # every so often, which counted as a catch and restarted the round forever.
-AWAY_SECONDS = 40.0
+# 20 s leaves room for both idle hints (6 s and 18 s); at 40 s the rain kept
+# the Acer at ~45% CPU, the round advanced on lucky catches (new cards, new
+# pictures and word surfaces decoded) and RSS crept up for the whole minute
+# after the child stopped (Acer 2026-10-16: 33% idle, 109 -> 114 MB).
+AWAY_SECONDS = 20.0
 KEY_HINT_START_SECONDS = 8.0  # keyboard hint shown at start (ADR 0037 §4b)
 _PRESENCE_EVENTS = frozenset(
     getattr(pygame, name)
@@ -369,6 +373,8 @@ class ForestaApp:
         self._last_tick = now
         if self.controls.keys.update():
             self._full_frame = True
+        if self._held:
+            self._last_input = now  # an arrow held down is play, not absence
         was_busy = self.speech_queue.busy
         self.speech_queue.update(dt)
         if was_busy and not self.speech_queue.busy:

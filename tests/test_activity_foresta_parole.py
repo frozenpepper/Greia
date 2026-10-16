@@ -456,6 +456,21 @@ class AppLoopTests(unittest.TestCase):
         state = app.scene_state()
         self.assertTrue(state.hint or state.leo_pointing)
 
+    def test_the_rain_rests_soon_after_the_idle_hints_but_not_while_an_arrow_is_held(self) -> None:
+        from activities.foresta_parole.foresta_app import AWAY_SECONDS
+
+        # Room for both idle hints (6 s, 18 s), but an unattended glade must
+        # settle well inside a minute (Acer: 33% CPU and creeping RSS at 40 s).
+        self.assertGreaterEqual(AWAY_SECONDS, 18.0)
+        self.assertLessEqual(AWAY_SECONDS, 25.0)
+        app, clock, _, _, _ = _make_app()
+        app._handle_event(_key(pygame.K_RIGHT))
+        _step(app, clock, AWAY_SECONDS + 10.0)
+        self.assertFalse(app._resting(clock.now), "holding an arrow is play, not absence")
+        app._handle_event(_key(pygame.K_RIGHT, down=False))
+        _step(app, clock, AWAY_SECONDS + 0.5)
+        self.assertTrue(app._resting(clock.now) or app.state is not AppState.PLAYING)
+
     def test_an_absent_child_lets_the_screen_settle_and_input_resumes_the_rain(self) -> None:
         from activities.foresta_parole.foresta_app import AWAY_SECONDS
 

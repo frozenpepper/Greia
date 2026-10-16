@@ -79,6 +79,12 @@ class Camera:
         target = max(CAMERA_Y_MIN, min(CAMERA_Y_MAX, veh.y - CAMERA_ANCHOR_Y))
         self.y += (target - self.y) * min(1.0, CAMERA_Y_FOLLOW * dt)
 
+    def settled(self, run: CourseRun) -> bool:
+        """True once the smooth vertical follow has caught up (sub-pixel)."""
+
+        target = max(CAMERA_Y_MIN, min(CAMERA_Y_MAX, run.vehicle.y - CAMERA_ANCHOR_Y))
+        return abs(target - self.y) < 0.5
+
     @staticmethod
     def _clamp_x(run: CourseRun, x: float) -> float:
         return max(0.0, min(run.layout.length - REFERENCE_WIDTH, x))

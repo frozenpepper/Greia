@@ -586,6 +586,7 @@ class AppLoopTests(unittest.TestCase):
         app = self.app
         app.start_journey("bay")
         self.clock.t += 20.0  # past the welcome
+        app._note_swim_input()  # the child is playing (not resting after the jump)
         app._talk_until = 0.0
         run = app.run_state
         first = run.course.groups[0]
@@ -601,6 +602,96 @@ class AppLoopTests(unittest.TestCase):
             self._step()
         self.assertGreater(app._hint_until, self.clock.t)
         self.assertTrue(app.cast.pointing)
+
+    def test_an_idle_child_is_not_carried_to_the_finish_the_sea_comes_to_rest(self) -> None:
+        from activities.viaggio_delfino.delfino_app import REST_AFTER_SECONDS, REST_EASE_SECONDS
+
+        app = self.app
+        app.start_journey("bay")
+        self._step(int(30 * (REST_AFTER_SECONDS - 1.0)))
+        self.assertFalse(app.resting, "both idle hints come first")
+        for _ in range(30 * 60):  # a friend's fact may still be playing
+            if app.resting:
+                break
+            self._step()
+        self.assertTrue(app.resting)
+        self.assertFalse(app.cast.talking)
+        self._step(int(30 * (REST_EASE_SECONDS + 1.0)))
+        self.assertIs(app.phase, self.Phase.SWIM)
+        self.assertFalse(app.moving, "a resting sea lets the frame governor freeze")
+        self.assertTrue(app.hud.keys.visible, "the keycaps show how to swim on")
+        x = app.run_state.dolphin.x
+        self._step(30 * 40)
+        self.assertEqual(app.run_state.dolphin.x, x)
+        self.assertFalse(app.run_state.finished)
+        self._key(pygame.K_UP)
+        self.assertFalse(app.resting)
+        self.assertTrue(app.moving)
+        self._step(10)
+        self.assertGreater(app.run_state.dolphin.x, x)
+
+    def test_holding_an_arrow_is_play_not_idleness(self) -> None:
+        from activities.viaggio_delfino.delfino_app import REST_AFTER_SECONDS
+
+        app = self.app
+        app.start_journey("bay")
+        self._key(pygame.K_DOWN)
+        self._step(int(30 * (REST_AFTER_SECONDS + 5.0)))
+        self.assertFalse(app.resting)
+
+
+class DelfinoLaunchWorkTests(unittest.TestCase):
+    """Work moved off the launch path keeps its exact result."""
+
+    def setUp(self) -> None:
+        pygame.init()
+        pygame.display.set_mode((1024, 600))
+
+    def tearDown(self) -> None:
+        pygame.quit()
+
+    def test_postcard_looks_share_identical_scene_parts_while_warming(self) -> None:
+        from activities.viaggio_delfino.delfino_art import LOOKS, DelfinoArt
+
+        art = DelfinoArt()
+        art._warm_parts = {}
+        try:
+            bay = art._bake_scene(LOOKS["bay"])
+            reef = art._bake_scene(LOOKS["reef"])
+            lagoon = art._bake_scene(LOOKS["lagoon"])
+        finally:
+            art._warm_parts = None
+        self.assertIs(bay.sky, reef.sky)
+        self.assertIsNot(bay.sky, lagoon.sky)
+        self.assertIs(bay.back[-1], lagoon.back[-1], "one sea band for every look")
+        self.assertIs(bay.back[-2], reef.back[-2], "one sand strip for every look")
+        # Shared parts give exactly the pixels a separate bake gives.
+        for look, shared in (("reef", reef), ("lagoon", lagoon)):
+            alone = art._bake_scene(LOOKS[look])
+            for camera in (0.0, 2600.0):
+                a = pygame.Surface((1024, 600))
+                b = pygame.Surface((1024, 600))
+                shared.draw_back(a, camera)
+                alone.draw_back(b, camera)
+                self.assertEqual(pygame.image.tostring(a, "RGB"), pygame.image.tostring(b, "RGB"), look)
+        art.release_sources()
+
+    def test_voice_cues_decode_after_the_first_frame_or_on_demand(self) -> None:
+        from activities.viaggio_delfino.delfino_audio import PygameDelfinoAudio
+
+        audio = PygameDelfinoAudio()
+        if not audio.enabled:
+            self.skipTest("no mixer")
+        clip = sorted((PACKAGE / "assets" / "audio" / "en").glob("*.ogg")) or sorted(
+            (PACKAGE / "assets" / "audio" / "en").glob("*.wav")
+        )
+        self.assertTrue(clip)
+        audio.bind_resources(SimpleNamespace(audio_cue=lambda key: SimpleNamespace(path=clip[0])))
+        audio.preload_voice([FACT_IDS[0], FACT_IDS[1]])
+        self.assertFalse(audio._voices.built(FACT_IDS[0]), "nothing is decoded before the first frame")
+        self.assertGreater(audio.play_voice(FACT_IDS[0]), 0.0, "a cue needed early decodes on demand")
+        self.assertTrue(audio._voices.built(FACT_IDS[0]))
+        audio.shutdown()
 
 
 def _pointer_pixel_is_drawn(target, position) -> bool:

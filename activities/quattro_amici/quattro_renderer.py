@@ -5,7 +5,10 @@ board, the falling disc, the board's front plate, hint and win highlights,
 the hovering disc of the friend whose turn it is, Flash and Leo with their
 score plates, and FX. Kit controls and their focus ring are drawn afterwards
 by the shared ``ControlLayer`` (ADR 0037). Per-frame work is blits only:
-every surface comes prepared from ``QuattroArt``; motion is offsets.
+every surface comes prepared from ``QuattroArt``; motion is offsets. Each
+alpha surface is blitted through one bounded ``PreparedSurfaces`` cache (SDL
+RLE copies): on the Acer a plain per-pixel-alpha blit costs ~0.22 us/px, so
+the board's front plate and discs alone held a falling disc to 6-7 fps.
 """
 
 from __future__ import annotations
@@ -18,6 +21,7 @@ import time
 import pygame
 
 from greia_platform.activity_feedback import CastFeedback, CastPose
+from greia_platform.pygame_blit import PreparedSurfaces
 
 if __package__:
     from .quattro_art import QuattroArt
@@ -123,6 +127,8 @@ class FriendCast:
         self._active = False
         self._hop_since = -10.0
         self._transient: tuple[str, float] | None = None  # (variant, until)
+        #: Optional RLE cache shared with the renderer (set by ``QuattroRenderer``).
+        self.fast: PreparedSurfaces | None = None
 
     @property
     def active(self) -> bool:
@@ -189,6 +195,8 @@ class FriendCast:
         if image is None:
             self.feedback.draw(target, midbottom)
             return
+        if self.fast is not None:
+            image = self.fast.for_target(image, target)
         hop = self._clock() - self._hop_since
         lift = int(math.sin(math.pi * hop / TURN_HOP_SECONDS) * self._height * 0.07) if hop < TURN_HOP_SECONDS else 0
         target.blit(image, image.get_rect(midbottom=(midbottom[0], midbottom[1] - lift)))
@@ -268,6 +276,13 @@ class QuattroRenderer:
         self._human_turn = True
         self._clock = clock
         self._last = clock()
+        # Every blitted sprite is a stable cached object: blit its RLE copy.
+        self.fast = PreparedSurfaces(max_entries=64)
+        for friend in friends.values():
+            friend.fast = self.fast
+
+    def _f(self, surface: pygame.Surface, target: pygame.Surface) -> pygame.Surface:
+        return self.fast.for_target(surface, target)
 
     def get_column_at_x(self, model: object, x: float) -> int | None:
         """Board column under logical ``x`` (``model`` kept for the caller's API)."""
@@ -295,7 +310,7 @@ class QuattroRenderer:
         self._draw_friends(target, wins, motion, now)
         self._draw_discs(target, game, geometry, motion)
         if self.art.plate is not None:
-            target.blit(self.art.plate, geometry.frame.topleft)
+            target.blit(self._f(self.art.plate, target), geometry.frame.topleft)
         self._draw_glow(target, geometry, motion, now)
         self._draw_win(target, game, geometry, motion, now)
         self._draw_selector(target, game, geometry, motion, selected_col, now, dt)
@@ -307,10 +322,10 @@ class QuattroRenderer:
         for player, friend in self.friends.items():
             midbottom = CAST_MIDBOTTOM[player]
             if friend.active:
-                spot = self.art.spotlight(176)
+                spot = self._f(self.art.spotlight(176), target)
                 target.blit(spot, spot.get_rect(center=(midbottom[0], midbottom[1] - 10)))
             friend.draw(target, midbottom)
-            plate = self.art.score_plate(player, wins.get(player, 0), WINS_FOR_MATCH, friend.active)
+            plate = self._f(self.art.score_plate(player, wins.get(player, 0), WINS_FOR_MATCH, friend.active), target)
             rect = plate_rect(player)
             lift = 0
             if motion.score_pop is not None and motion.score_pop[0] is player:
@@ -329,16 +344,17 @@ class QuattroRenderer:
                 player = board.grid[row][col]
                 if player == Player.EMPTY or (row, col) == hidden:
                     continue
-                disc = self.art.token(player, size)
+                disc = self._f(self.art.token(player, size), target)
                 target.blit(disc, disc.get_rect(center=geometry.cell_center(row, col)))
         if drop is not None and not drop.settled:
-            disc = self.art.token(drop.player, size)
+            disc = self._f(self.art.token(drop.player, size), target)
             target.blit(disc, disc.get_rect(center=(geometry.column_x(drop.col), int(drop.current_y))))
 
     def _draw_glow(self, target: pygame.Surface, geometry: BoardGeometry, motion: BoardMotion, now: float) -> None:
         if motion.glow_col is not None and now < motion.glow_until:
             if int(now * 3) % 3 != 2:  # gentle blink
-                target.blit(self.art.column_glow(geometry), geometry.column_rect(motion.glow_col).topleft)
+                glow = self._f(self.art.column_glow(geometry), target)
+                target.blit(glow, geometry.column_rect(motion.glow_col).topleft)
 
     def _draw_win(
         self, target: pygame.Surface, game: QuattroGame, geometry: BoardGeometry, motion: BoardMotion, now: float
@@ -348,8 +364,8 @@ class QuattroRenderer:
         age = now - motion.win_start
         shown = min(len(motion.win_cells), int(age / WIN_STEP_SECONDS) + 1) if age >= 0 else 0
         if shown >= len(motion.win_cells) and motion.win_band is not None:
-            target.blit(motion.win_band, geometry.frame.topleft)
-        ring = self.art.win_ring(geometry)
+            target.blit(self._f(motion.win_band, target), geometry.frame.topleft)
+        ring = self._f(self.art.win_ring(geometry), target)
         for index, (row, col) in enumerate(motion.win_cells[:shown]):
             center = geometry.cell_center(row, col)
             target.blit(ring, ring.get_rect(center=center))
@@ -357,7 +373,7 @@ class QuattroRenderer:
             if player != Player.EMPTY:
                 pop = now - (motion.win_start + index * WIN_STEP_SECONDS)
                 if 0.0 <= pop < 0.22:
-                    disc = self.art.token(player, int(geometry.token_size * 1.12))
+                    disc = self._f(self.art.token(player, int(geometry.token_size * 1.12)), target)
                     target.blit(disc, disc.get_rect(center=center))
 
     def _draw_selector(
@@ -391,11 +407,12 @@ class QuattroRenderer:
             elapsed = now - motion.wobble_start
             wobble = int(9 * (1 - elapsed / WOBBLE_SECONDS) * (1 if int(elapsed * 40) % 2 else -1))
         size = geometry.selector_size
-        disc = self.art.token(game.current_player, size)
+        disc = self._f(self.art.token(game.current_player, size), target)
         center = (int(motion.selector_x) + wobble, int(geometry.selector_y + bob))
         target.blit(disc, disc.get_rect(center=center))
         arrow = self.art.glyph("arrow_down", max(22, int(geometry.cell * 0.34)))
         if arrow is not None and self._human_turn:
+            arrow = self._f(arrow, target)
             target.blit(arrow, arrow.get_rect(midtop=(center[0], center[1] + size // 2 - 4)))
 
     def _draw_fx(self, target: pygame.Surface, motion: BoardMotion, now: float) -> None:
@@ -407,6 +424,7 @@ class QuattroRenderer:
                 continue
             frame = frames[min(len(frames) - 1, int(age / duration * len(frames)))]
             drift = int(FX_RISE.get(name, 0.0) * age / duration)
+            frame = self._f(frame, target)
             target.blit(frame, frame.get_rect(center=(position[0], position[1] + drift)))
 
 

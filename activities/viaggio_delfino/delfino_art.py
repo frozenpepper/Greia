@@ -229,6 +229,12 @@ class DelfinoArt:
         # Baked scenes shared by the picker thumbnails and backdrop while
         # warm_thumbnails runs (the bay was baked twice); None otherwise.
         self._warm_scenes: dict[str, SceneLayers] | None = None
+        # Scene parts that do not depend on the look (sky, far band, ground,
+        # foreground and sea strips, family water), shared by the looks baked
+        # while warm_thumbnails runs; None otherwise. The three postcards
+        # built every part three times (~1.2 s per look on the Atom, before
+        # the first frame).
+        self._warm_parts: dict[tuple, object] | None = None
 
     # -- decoding ----------------------------------------------------------
 
@@ -411,12 +417,54 @@ class DelfinoArt:
         self._scene = (look, layers)
         return layers
 
+    def _part(self, key: tuple, build: Callable[[], object]) -> object:
+        """One scene part, shared between looks while ``warm_thumbnails`` runs.
+
+        Parts are only ever blitted from (strips are prepared RLE copies), so
+        two looks with the same treatment can share the very same object.
+        """
+
+        memo = self._warm_parts
+        if memo is None:
+            return build()
+        if key not in memo:
+            memo[key] = build()
+        return memo[key]
+
     def _bake_scene(self, look: SceneLook) -> SceneLayers:
         surface_y = int(SURFACE_Y)
         shift = surface_y - _SEA_HORIZON
 
+        sky = self._part(("sky", look.golden_sky), lambda: self._bake_sky(look))
+        back: list[ParallaxStrip] = []
+        far = self._part(("far", look.golden_sky), lambda: self._bake_far(look, shift))
+        if far is not None:
+            back.append(far)
+        deep_key = ("deep", look.family_water, look.deep_tint, look.deep_lift)
+        back.append(self._part(deep_key, lambda: self._bake_deep(look, surface_y)))
+
+        for asset_id, factor in (
+            ("bg.underwater.mid", 0.62),
+            ("bg.underwater.foreground", 0.8),
+            ("bg.underwater.ground", 1.0),
+        ):
+            mid = asset_id.endswith("mid")
+            key = ("strip", asset_id, look.deep_tint if mid else None, look.dense_mid if mid else False)
+            strip = self._part(key, lambda asset_id=asset_id, factor=factor: self._bake_strip(look, asset_id, factor))
+            if strip is not None:
+                back.append(strip)
+
+        sea = self._part(("sea",), lambda: self._bake_sea(surface_y))
+        if sea is not None:
+            back.append(sea)
+
+        # Nothing is drawn over the action: pearls and friends must never
+        # hide behind scenery for a pre-reader.
+        return SceneLayers(sky, tuple(back), ())
+
+    def _bake_sky(self, look: SceneLook) -> pygame.Surface:
         # Sky: the upper rows of the shared sky (sun and clouds), opaque.
-        sky = pygame.Surface((REFERENCE_WIDTH, surface_y + _SURFACE_BAND[1]))
+        sky = pygame.Surface((REFERENCE_WIDTH, int(SURFACE_Y) + _SURFACE_BAND[1]))
         source_sky = self._layer("bg.sea_surface.sky")
         if look.golden_sky:
             self._paint_golden_sky(sky)
@@ -424,22 +472,37 @@ class DelfinoArt:
             sky.blit(source_sky, (0, 0))
         else:
             sky.fill((186, 226, 247))
-        sky = _convert(sky, alpha=False)
+        return _convert(sky, alpha=False)
 
-        back: list[ParallaxStrip] = []
+    def _bake_far(self, look: SceneLook, shift: int) -> ParallaxStrip | None:
         far = self._layer("bg.sea_surface.far")
-        if far is not None:
-            banded = _band(far)
-            if banded is not None:
-                band, top = banded
-                if look.golden_sky:
-                    band.fill((255, 226, 206, 255), special_flags=pygame.BLEND_RGBA_MULT)
-                # One copy per period (not mirrored): the far islands and
-                # lighthouse must not appear twice side by side.
-                strip = pygame.Surface((band.get_width() * 2, band.get_height()), pygame.SRCALPHA)
-                strip.blit(band, (0, 0))
-                back.append(ParallaxStrip(_convert(strip), top + shift, 0.12))
+        if far is None:
+            return None
+        banded = self._banded("bg.sea_surface.far", far)
+        if banded is None:
+            return None
+        band, top = banded
+        if look.golden_sky:
+            band.fill((255, 226, 206, 255), special_flags=pygame.BLEND_RGBA_MULT)
+        # One copy per period (not mirrored): the far islands and
+        # lighthouse must not appear twice side by side.
+        strip = pygame.Surface((band.get_width() * 2, band.get_height()), pygame.SRCALPHA)
+        strip.blit(band, (0, 0))
+        return ParallaxStrip(_convert(strip), top + shift, 0.12)
 
+    def _banded(self, asset_id: str, layer: pygame.Surface) -> tuple[pygame.Surface, int] | None:
+        """``_band`` of a layer; the crop scan runs once per layer while warming.
+
+        Returns a fresh copy each time, so callers may tint it.
+        """
+
+        found = self._part(("band", asset_id), lambda: _band(layer))
+        if found is None:
+            return None
+        band, top = found  # type: ignore[misc]
+        return (band.copy(), top) if self._warm_parts is not None else (band, top)
+
+    def _bake_deep(self, look: SceneLook, surface_y: int) -> ParallaxStrip:
         # Deep water: the underwater water + far reef, below the surface.
         deep = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT - surface_y))
         water = self._layer("bg.underwater.water")
@@ -465,49 +528,43 @@ class DelfinoArt:
         deep_strip = pygame.Surface((REFERENCE_WIDTH * 2, deep.get_height()))
         deep_strip.blit(deep, (0, 0))
         deep_strip.blit(pygame.transform.flip(deep, True, False), (REFERENCE_WIDTH, 0))
-        back.append(ParallaxStrip(_convert(deep_strip, alpha=False), surface_y, 0.3))
+        return ParallaxStrip(_convert(deep_strip, alpha=False), surface_y, 0.3)
 
-        for asset_id, factor in (
-            ("bg.underwater.mid", 0.62),
-            ("bg.underwater.foreground", 0.8),
-            ("bg.underwater.ground", 1.0),
-        ):
-            layer = self._layer(asset_id)
-            banded = _band(layer) if layer is not None else None
-            if banded is None:
-                continue
-            band, top = banded
-            if look.deep_tint is not None and asset_id.endswith("mid"):
-                band.fill(look.deep_tint + (255,), special_flags=pygame.BLEND_RGBA_MULT)
-            strip = _mirror_tile(band)
-            if look.dense_mid and asset_id.endswith("mid"):
-                # A second, offset copy of the corals fills the reef.
-                width = strip.get_width()
-                dense = strip.copy()
-                dense.blit(strip, (width // 4, 0))
-                dense.blit(strip, (width // 4 - width, 0))
-                strip = dense
-            back.append(ParallaxStrip(_convert(strip), top + _GROUND_DROP, factor))
+    def _bake_strip(self, look: SceneLook, asset_id: str, factor: float) -> ParallaxStrip | None:
+        layer = self._layer(asset_id)
+        banded = self._banded(asset_id, layer) if layer is not None else None
+        if banded is None:
+            return None
+        band, top = banded
+        if look.deep_tint is not None and asset_id.endswith("mid"):
+            band.fill(look.deep_tint + (255,), special_flags=pygame.BLEND_RGBA_MULT)
+        strip = _mirror_tile(band)
+        if look.dense_mid and asset_id.endswith("mid"):
+            # A second, offset copy of the corals fills the reef.
+            width = strip.get_width()
+            dense = strip.copy()
+            dense.blit(strip, (width // 4, 0))
+            dense.blit(strip, (width // 4 - width, 0))
+            strip = dense
+        return ParallaxStrip(_convert(strip), top + _GROUND_DROP, factor)
 
+    def _bake_sea(self, surface_y: int) -> ParallaxStrip | None:
         # Water surface band (wavelets) from the shared sea layer.
         sea = self._layer("bg.sea_surface.sea")
-        if sea is not None:
-            top_row = _SEA_HORIZON + _SURFACE_BAND[0]
-            rows = pygame.Rect(0, top_row, sea.get_width(), _SURFACE_BAND[1] - _SURFACE_BAND[0])
-            band = sea.subsurface(rows.clip(sea.get_rect())).copy()
-            fade = pygame.Surface(band.get_size(), pygame.SRCALPHA)
-            height = band.get_height()
-            for row in range(height):
-                # Opaque at the waterline, fading into the water below.
-                alpha = 255 if row < height // 3 else int(255 * (1.0 - (row - height // 3) / (height * 2 / 3)))
-                pygame.draw.line(fade, (255, 255, 255, max(0, alpha)), (0, row), (band.get_width(), row))
-            band = band.convert_alpha() if pygame.display.get_surface() is not None else band
-            band.blit(fade, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
-            back.append(ParallaxStrip(_convert(_mirror_tile(band)), surface_y + _SURFACE_BAND[0], 1.0))
-
-        # Nothing is drawn over the action: pearls and friends must never
-        # hide behind scenery for a pre-reader.
-        return SceneLayers(sky, tuple(back), ())
+        if sea is None:
+            return None
+        top_row = _SEA_HORIZON + _SURFACE_BAND[0]
+        rows = pygame.Rect(0, top_row, sea.get_width(), _SURFACE_BAND[1] - _SURFACE_BAND[0])
+        band = sea.subsurface(rows.clip(sea.get_rect())).copy()
+        fade = pygame.Surface(band.get_size(), pygame.SRCALPHA)
+        height = band.get_height()
+        for row in range(height):
+            # Opaque at the waterline, fading into the water below.
+            alpha = 255 if row < height // 3 else int(255 * (1.0 - (row - height // 3) / (height * 2 / 3)))
+            pygame.draw.line(fade, (255, 255, 255, max(0, alpha)), (0, row), (band.get_width(), row))
+        band = band.convert_alpha() if pygame.display.get_surface() is not None else band
+        band.blit(fade, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+        return ParallaxStrip(_convert(_mirror_tile(band)), surface_y + _SURFACE_BAND[0], 1.0)
 
     def _paint_golden_sky(self, sky: pygame.Surface) -> None:
         width, height = sky.get_size()
@@ -596,12 +653,14 @@ class DelfinoArt:
 
     def warm_thumbnails(self, size: tuple[int, int]) -> None:
         self._warm_scenes = {}
+        self._warm_parts = {}
         try:
             for spec in JOURNEYS:
                 self.thumbnail(spec, size)
             self.picker_backdrop()
         finally:
             self._warm_scenes = None
+            self._warm_parts = None
         self.release_sources()
 
 

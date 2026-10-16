@@ -453,6 +453,45 @@ class AppLoopTests(CollineBase):
             if app.state is AppState.TERMINAL:
                 return
 
+    def test_a_buggy_left_alone_parks_and_the_scene_comes_to_rest(self) -> None:
+        try:
+            from colline_app import PARK_AFTER_SECONDS
+        except ImportError:  # pragma: no cover - package import path
+            from activities.colline_allegre.colline_app import PARK_AFTER_SECONDS
+
+        app = self.make_app()
+        app.hold(go=True)
+        self.advance(app, 4.0)
+        self.assertTrue(app.riding)
+        app.hold(go=False)
+        self.advance(app, PARK_AFTER_SECONDS - 0.5)
+        self.assertTrue(app.riding, "still rolling freely just after the child lets go")
+        rested_at = None
+        for tick in range(int(30 * 30)):
+            self.advance(app, 1 / 30)
+            if not app.riding:
+                rested_at = tick / 30
+                break
+        self.assertIsNotNone(rested_at, "a parked buggy stops instead of rocking for minutes")
+        self.assertIs(app.state, AppState.DRIVING)
+        x = app.ride.vehicle.x
+        self.advance(app, 10.0)
+        self.assertLess(abs(app.ride.vehicle.x - x), 2.0, "at rest means the picture no longer changes")
+        app.hold(go=True)
+        self.assertTrue(app.riding, "GO drives on at once")
+        self.advance(app, 0.5)
+        self.assertGreater(app.ride.vehicle.x, x + 5)
+
+    def test_holding_a_pedal_never_parks(self) -> None:
+        app = self.make_app()
+        app.hold(go=True)
+        self.advance(app, 0.5)
+        app.drive.touch_go = False
+        app.drive.touch_brake = True
+        self.advance(app, 12.0)
+        self.assertFalse(app._parked(app.clock()))
+        self.assertTrue(app.riding)
+
     def test_frame_uses_rle_layers_and_a_cached_hud_overlay(self) -> None:
         from greia_platform.pygame_blit import is_rle
 

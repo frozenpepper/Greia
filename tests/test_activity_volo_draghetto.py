@@ -447,6 +447,74 @@ class VoloAppLoopTests(unittest.TestCase):
         self.assertTrue(app.motion.hint_glyphs)
         self.assertEqual(app.cast.mode, "point")
 
+    def test_idle_hint_reveals_keys_without_lighting_unpressed_ones(self) -> None:
+        app = self.app
+        app.start_course(0)
+        keys = app.hud.keys
+        seen_visible = False
+        for _ in range(int(19 / STEP)):  # both idle hints fire in this window
+            self._tick()
+            self.assertEqual(keys.lit, frozenset(), "only keys that are really held light up")
+            seen_visible = seen_visible or keys.visible
+        self.assertGreaterEqual(app._hints.count, 2)
+        self.assertTrue(seen_visible)
+        self._key(pygame.K_DOWN, True)
+        from greia_platform.activity_keyboard_hint import KeyCap
+
+        self.assertEqual(keys.lit, {KeyCap.DOWN})
+
+    def test_holding_a_steering_key_is_play_not_idleness(self) -> None:
+        app = self.app
+        app.start_course(0)
+        self._key(pygame.K_UP, True)
+        for _ in range(int(30 / STEP)):
+            self._tick()
+        self.assertEqual(app._hints.count, 0, "no idle hint while the child steers")
+        self.assertFalse(app.resting)
+
+    def test_dragon_rests_when_the_child_stops_and_flies_on_with_any_input(self) -> None:
+        try:
+            from dragon_app import REST_AFTER_SECONDS, REST_EASE_SECONDS
+        except ImportError:  # pragma: no cover - package import path
+            from activities.volo_draghetto.dragon_app import REST_AFTER_SECONDS, REST_EASE_SECONDS
+
+        app = self.app
+        app.start_course(0)
+        for _ in range(int((REST_AFTER_SECONDS + REST_EASE_SECONDS + 4.0) / STEP)):
+            self._tick()
+        self.assertTrue(app.resting)
+        self.assertFalse(app.flight_moving, "a resting scene lets the frame governor freeze")
+        self.assertIs(app.run.phase, FlightPhase.FLYING)
+        self.assertTrue(app.hud.keys.visible, "the keycaps show how to fly on")
+        distance, misses = app.run.distance, app.run.misses
+        pickups = len(app.run.course.pickups)
+        for _ in range(int(30 / STEP)):
+            self._tick()
+        self.assertEqual(app.run.distance, distance)
+        self.assertEqual((app.run.misses, len(app.run.course.pickups)), (misses, pickups), "no endless ring retries")
+        app.render()
+        self._key(pygame.K_SPACE, True)
+        self.assertFalse(app.resting)
+        self.assertTrue(app.flight_moving)
+        self._key(pygame.K_SPACE, False)
+        for _ in range(10):
+            self._tick()
+        self.assertGreater(app.run.distance, distance)
+
+    def test_flight_sprites_are_blitted_from_rle_copies(self) -> None:
+        from greia_platform.pygame_blit import is_rle
+
+        app = self.app
+        app.start_course(0)
+        app.render()
+        fast = app.flight_renderer.fast
+        self.assertGreater(len(fast), 3)
+        finish = app.art.finish_rainbow(900)
+        self.assertTrue(is_rle(fast(finish)), "the 900 px finish rainbow is encoded before it scrolls in")
+        frames = app.art.dragon_frames(app.progress.look)
+        self.assertTrue(is_rle(fast(frames[0])))
+        self.assertFalse(is_rle(frames[0]), "the cached source stays drawable")
+
 
 if __name__ == "__main__":
     unittest.main()
