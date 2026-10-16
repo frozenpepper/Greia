@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- cream → lavender -->
+    <linearGradient id="pearl_body" x1="0.2" y1="0.1" x2="0.85" y2="0.95">
+      <stop offset="0" stop-color="#FFFBEB"/>
+      <stop offset="1" stop-color="#E8DDF7"/>
+    </linearGradient>
+  </defs>
+  <g id="pearl">
+    <circle cx="122" cy="134" r="84" fill="url(#pearl_body)" stroke="#4B372F" stroke-width="9"/>
+    <!-- lavender shade step, lower right -->
+    <path d="M190 108 A76 76 0 0 1 96 206 A84 84 0 0 0 190 108 Z" fill="#C5B8CB" opacity="0.6"/>
+    <!-- rose reflection -->
+    <ellipse cx="90" cy="178" rx="26" ry="14" fill="#F5D6DF" opacity="0.75" transform="rotate(-35 90 178)"/>
+    <ellipse cx="92" cy="96" rx="30" ry="20" fill="#FFFFFF" opacity="0.9" transform="rotate(-38 92 96)"/>
+  </g>
+  <g id="fx">
+    <path d="M206 22 Q210 46 232 50 Q210 54 206 78 Q202 54 180 50 Q202 46 206 22 Z" fill="#FBBF24" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+  </g>
+</svg>

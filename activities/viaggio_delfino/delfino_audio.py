@@ -1,11 +1,15 @@
 """Sound synthesis and voice-cue playback for Il Viaggio del Delfino.
 
 Synthesized effects are prepared once as small mixer Sounds (the audio
-equivalent of pre-rendered sprites). Character voice cues are Activity-owned
+equivalent of pre-rendered sprites), including a rising chime scale for the
+pearl count-up. Tito's welcome and his six dolphin facts are Activity-owned
 reviewed OGG files resolved through ``LocalizedResources.audio_cue()`` so text
-and audio always share one semantic key per locale. Voice playback owns one
-dedicated channel and is fail-soft: missing hardware or assets never break
-gameplay.
+and audio always share one semantic key per locale; his short reactions
+(ready/go, well done, try again) are the shared owner-approved character takes
+resolved through ``shared_character_audio_path`` (selected language, then
+English, then silence). Nothing is generated or recorded here. Voice playback
+owns one reserved channel and is fail-soft: missing hardware or assets never
+break gameplay.
 """
 
 from __future__ import annotations
@@ -19,7 +23,9 @@ from typing import Protocol
 
 import pygame
 
-from greia_platform.localization import LocalizedResources
+from pathlib import Path
+
+from greia_platform.localization import LocalizedResources, shared_character_audio_path
 
 try:
     from delfino_content import audio_key
@@ -40,17 +46,62 @@ def _synth_wav(samples: list[int], rate: int = 22050) -> bytes:
     return buf.getvalue()
 
 
+PACKAGE_ROOT = Path(__file__).resolve().parent
+#: Shared character takes this Activity uses (owner-approved library).
+VOICE_SPEAKER = "tito"
+SHARED_CUES = ("ready.go", "celebrate.success", "praise.general", "encourage.retry", "encourage.progress")
+#: Pentatonic steps for the pearl count-up (C D E G A, two octaves).
+COUNT_NOTES = (523.25, 587.33, 659.25, 783.99, 880.0, 1046.5, 1174.66, 1318.51, 1567.98, 1760.0)
+
+
 class DelfinoAudio(Protocol):  # pragma: no cover - typing seam only
     def play(self, name: str) -> None: ...
+
+    def play_count(self, index: int) -> None: ...
+
+    def play_voice(self, fact_id: str) -> float: ...
+
+    def say(self, cue: str) -> float: ...
+
+    def stop_voice(self) -> None: ...
+
+    def shutdown(self) -> None: ...
+
+
+class SilentDelfinoAudio:
+    """No-op audio (tests, no mixer). Durations are zero."""
+
+    voice_busy = False
+
+    def play(self, name: str) -> None:
+        pass
+
+    def play_count(self, index: int) -> None:
+        pass
+
+    def play_voice(self, fact_id: str) -> float:
+        return 0.0
+
+    def say(self, cue: str) -> float:
+        return 0.0
+
+    def stop_voice(self) -> None:
+        pass
+
+    def shutdown(self) -> None:
+        pass
 
 
 class PygameDelfinoAudio:
     """Prepares synthesized effects plus localized Tito voice playback."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, project_root: Path | None = None) -> None:
         self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._count_sounds: list[pygame.mixer.Sound] = []
         self._voice_cache: dict[str, pygame.mixer.Sound] = {}
+        self._shared_cache: dict[str, pygame.mixer.Sound | None] = {}
         self._voice_channel: pygame.mixer.Channel | None = None
+        self._project_root = project_root if project_root is not None else PACKAGE_ROOT.parents[1]
         self.enabled = False
         self.resources: LocalizedResources | None = None
         try:
@@ -58,6 +109,8 @@ class PygameDelfinoAudio:
                 pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=512)
             try:
                 pygame.mixer.set_num_channels(8)
+                # Channel 0 is reserved for speech so effects never cut Tito off.
+                pygame.mixer.set_reserved(1)
                 self._voice_channel = pygame.mixer.Channel(0)
             except Exception:
                 self._voice_channel = None
@@ -146,6 +199,23 @@ class PygameDelfinoAudio:
             pop.append(int(math.sin(2 * math.pi * (640.0 - 2600.0 * t) * t) * env * 14000))
         self._sounds["pop"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(pop, rate)))
 
+        # Count-up chimes: one short bell per counted pearl, rising.
+        for freq in COUNT_NOTES:
+            bell: list[int] = []
+            for i in range(int(rate * 0.16)):
+                t = i / rate
+                env = math.exp(-14.0 * t)
+                bell.append(int((math.sin(2 * math.pi * freq * t) + 0.25 * math.sin(6 * math.pi * freq * t)) * env * 12000))
+            self._count_sounds.append(pygame.mixer.Sound(io.BytesIO(_synth_wav(bell, rate))))
+
+    def play_count(self, index: int) -> None:
+        if not self.enabled or not self._count_sounds:
+            return
+        try:
+            self._count_sounds[min(len(self._count_sounds) - 1, max(0, index))].play()
+        except Exception:
+            pass
+
     def play(self, name: str) -> None:
         if not self.enabled:
             return
@@ -210,6 +280,52 @@ class PygameDelfinoAudio:
         except Exception:
             return 0.0
         return float(sound.get_length())
+
+    def _locale(self) -> str:
+        try:
+            return self.resources.context.selected.value if self.resources is not None else "en"
+        except Exception:
+            return "en"
+
+    def preload_shared(self) -> None:
+        for cue in SHARED_CUES:
+            self._shared(cue)
+
+    def _shared(self, cue: str) -> pygame.mixer.Sound | None:
+        if cue in self._shared_cache:
+            return self._shared_cache[cue]
+        sound: pygame.mixer.Sound | None = None
+        if self.enabled:
+            try:
+                path = shared_character_audio_path(self._project_root, VOICE_SPEAKER, cue, self._locale())
+                sound = pygame.mixer.Sound(str(path)) if path is not None else None
+            except Exception:
+                sound = None
+        self._shared_cache[cue] = sound
+        return sound
+
+    def say(self, cue: str) -> float:
+        """Play one shared Tito reaction; return its duration (0.0 if silent)."""
+
+        sound = self._shared(cue)
+        if sound is None:
+            return 0.0
+        try:
+            if self._voice_channel is not None:
+                self._voice_channel.stop()
+                self._voice_channel.play(sound)
+            else:
+                sound.play()
+        except Exception:
+            return 0.0
+        return float(sound.get_length())
+
+    @property
+    def voice_busy(self) -> bool:
+        try:
+            return bool(self._voice_channel is not None and self._voice_channel.get_busy())
+        except Exception:
+            return False
 
     def stop_voice(self) -> None:
         if self.enabled and self._voice_channel is not None:

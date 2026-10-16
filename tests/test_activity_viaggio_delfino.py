@@ -1,299 +1,260 @@
-"""Semantic contract tests for Il Viaggio del Delfino (org.greia.viaggio-delfino)."""
+"""Contract and app-loop tests for Il Viaggio del Delfino (org.greia.viaggio-delfino)."""
 
 from __future__ import annotations
 
 import json
+import os
 import random
+import tomllib
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
+
+os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+
+import pygame
 
 from activities.viaggio_delfino.delfino_content import (
-    CHAPTERS,
     FACT_IDS,
-    TOTAL_JOURNEY_X,
+    JOURNEY_IDS,
+    JOURNEYS,
+    SURFACE_Y,
     audio_key,
     caption_key,
-    chapter_index_for_x,
-    chapter_start_x,
+    journey,
+    stars_for,
 )
 from activities.viaggio_delfino.delfino_model import (
     MAX_SWIM_Y,
     MIN_SWIM_Y,
-    SURFACE_Y,
     Dolphin,
-    JourneyState,
+    EventKind,
+    FriendState,
+    JourneyRun,
+    build_course,
 )
 from activities.viaggio_delfino.delfino_services import (
+    STORAGE_KEY,
+    DelfinoProgress,
     GreiaDelfinoEvents,
     GreiaDelfinoStorage,
 )
 
 PACKAGE = Path(__file__).resolve().parents[1] / "activities" / "viaggio_delfino"
+LOCALES = ("en", "it", "es", "fr")
+
+
+def _strings(locale: str) -> dict[str, str]:
+    return json.loads((PACKAGE / "locales" / f"{locale}.json").read_text(encoding="utf-8"))["strings"]
+
+
+def _run_until_finished(run: JourneyRun, *, steer: bool, leap: bool = True, limit: float = 240.0) -> list:
+    """Advance a journey to its finish, optionally steering like a child."""
+
+    events = []
+    elapsed = 0.0
+    while not run.finished and elapsed < limit:
+        if steer:
+            target = run.next_target()
+            if target is not None:
+                run.dolphin.aim(target[1])
+            group = next((g for g in run.course.groups if not g.resolved and g.end_x >= run.dolphin.x - 30), None)
+            if leap and group is not None and group.arc and 0 < group.start_x - run.dolphin.x < 175:
+                run.leap()
+        events.extend(run.update(1 / 30))
+        elapsed += 1 / 30
+    return events
 
 
 class JourneyContentTests(unittest.TestCase):
-    def test_chapters_are_ordered_with_positive_lengths(self) -> None:
-        self.assertEqual(len(CHAPTERS), 3)
-        for chapter in CHAPTERS:
-            self.assertGreater(chapter.length_x, 0.0)
-            self.assertTrue(chapter.name_key.startswith("chapter."))
-        self.assertEqual(TOTAL_JOURNEY_X, sum(c.length_x for c in CHAPTERS))
+    def test_three_finite_journeys_with_a_finish_and_friends(self) -> None:
+        self.assertEqual(JOURNEY_IDS, ("bay", "reef", "lagoon"))
+        for spec in JOURNEYS:
+            with self.subTest(journey=spec.journey_id):
+                self.assertGreater(spec.length_x, 5000.0)
+                # 1-1.5 minutes of swimming at cruise speed.
+                self.assertTrue(45.0 <= spec.length_x / spec.speed <= 90.0)
+                self.assertEqual(spec.layout.count("F"), len(spec.friends))
+                self.assertGreaterEqual(spec.layout.count("A"), 1)
+                self.assertEqual(spec.total_pearls, spec.pearl_groups * spec.group_size)
 
-    def test_chapter_index_tracks_boundaries_and_clamps(self) -> None:
-        self.assertEqual(chapter_index_for_x(0.0), 0)
-        self.assertEqual(chapter_index_for_x(chapter_start_x(1) - 1.0), 0)
-        self.assertEqual(chapter_index_for_x(chapter_start_x(1)), 1)
-        self.assertEqual(chapter_index_for_x(chapter_start_x(2)), 2)
-        self.assertEqual(chapter_index_for_x(TOTAL_JOURNEY_X + 5000.0), 2)
+    def test_difficulty_rises_gently_across_journeys(self) -> None:
+        speeds = [spec.speed for spec in JOURNEYS]
+        sizes = [spec.group_size for spec in JOURNEYS]
+        self.assertEqual(speeds, sorted(speeds))
+        self.assertEqual(sizes, sorted(sizes))
 
-    def test_fact_ids_have_caption_and_audio_key_helpers(self) -> None:
-        self.assertEqual(len(FACT_IDS), 6)
-        self.assertEqual(len(set(FACT_IDS)), 6)
-        for fact_id in FACT_IDS:
-            self.assertTrue(fact_id.startswith("curiosity.delfino."))
-            self.assertEqual(caption_key(fact_id), f"{fact_id}.caption")
-            self.assertEqual(audio_key(fact_id), f"{fact_id}.voice")
+    def test_every_recorded_fact_is_unlocked_by_exactly_one_friend(self) -> None:
+        facts = [friend.fact_id for spec in JOURNEYS for friend in spec.friends]
+        self.assertEqual(sorted(facts), sorted(FACT_IDS))
+        for friend in (friend for spec in JOURNEYS for friend in spec.friends):
+            self.assertTrue(friend.visual.startswith("creature.marine."))
+
+    def test_fact_key_helpers(self) -> None:
+        self.assertEqual(caption_key("curiosity.delfino.pods"), "curiosity.delfino.pods.caption")
+        self.assertEqual(audio_key("curiosity.delfino.pods"), "curiosity.delfino.pods.voice")
+
+    def test_stars_reward_finishing_and_more_pearls(self) -> None:
+        self.assertEqual(stars_for(0, 15), 1)
+        self.assertEqual(stars_for(8, 15), 2)
+        self.assertEqual(stars_for(12, 15), 3)
+        self.assertEqual(stars_for(0, 0), 1)
+
+    def test_manifest_matches_the_real_experience(self) -> None:
+        manifest = tomllib.loads((PACKAGE / "activity.toml").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["activity"]["id"], "org.greia.viaggio-delfino")
+        self.assertEqual(manifest["input"]["profile"], "hybrid")
+        education = manifest["education"]
+        self.assertEqual((education["recommended_age_min"], education["recommended_age_max"]), (4, 7))
+        self.assertIn("sea", manifest["presentation"]["discovery_tags"])
+        events = {event["id"] for event in education["events"]}
+        self.assertEqual(events, {"dolphin.chapter_completed", "dolphin.fact_opened", "dolphin.journey_score"})
+        self.assertEqual(set(manifest["activity"]["languages"]), {"it", "en"})
 
 
 class LocaleParityTests(unittest.TestCase):
-    def _bundle(self, locale: str) -> dict:
-        return json.loads((PACKAGE / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
-
-    def test_every_chapter_and_fact_has_localized_captions(self) -> None:
-        for locale in ("it", "en"):
-            strings = self._bundle(locale)["strings"]
+    def test_journey_names_and_completion_copy_exist_in_all_locales(self) -> None:
+        english = set(_strings("en"))
+        for locale in LOCALES:
+            strings = _strings(locale)
             with self.subTest(locale=locale):
-                self.assertIn("activity.viaggio_delfino.title", strings)
-                self.assertIn("completion.title", strings)
-                self.assertIn("completion.replay", strings)
-                self.assertIn("completion.body", strings)
-                self.assertIn("presenter.welcome.caption", strings)
-                for chapter in CHAPTERS:
-                    self.assertTrue(strings[chapter.name_key].strip())
+                self.assertEqual(set(strings), english)
+                for spec in JOURNEYS:
+                    self.assertTrue(strings[spec.name_key].strip())
+                for key in ("completion.title", "completion.replay", "completion.journeys", "completion.body"):
+                    self.assertTrue(strings[key].strip())
                 for fact_id in FACT_IDS:
                     self.assertTrue(strings[caption_key(fact_id)].strip())
 
-    def test_voice_audio_is_packaged_for_every_cue_in_every_locale(self) -> None:
-        cue_keys = ["presenter.welcome.voice"] + [audio_key(f) for f in FACT_IDS]
-        for locale in ("it", "en"):
-            data = self._bundle(locale)
-            audio = data.get("audio") or {}
-            # Launcher spoken title is an additional optional-catalogue cue
-            self.assertIn("activity.title", audio)
-            self.assertEqual(set(audio) - {"activity.title"}, set(cue_keys))
-            for key in cue_keys + ["activity.title"]:
-                with self.subTest(locale=locale, key=key):
-                    relative = audio[key]["path"]
-                    self.assertNotIn("..", relative)
-                    if key == "activity.title":
-                        self.assertTrue(
-                            relative.startswith(f"locales/{locale}/audio/"), relative
-                        )
-                    else:
-                        self.assertTrue(relative.startswith(f"assets/audio/{locale}/"), relative)
-                    packaged = PACKAGE / relative
-                    self.assertTrue(packaged.is_file(), relative)
-                    size = packaged.stat().st_size
-                    self.assertGreater(size, 10_000, "voice cue suspiciously small")
-                    self.assertLess(size, 512 * 1024, "voice cue exceeds package bound")
+    def test_voice_audio_is_packaged_for_every_cue_in_both_base_locales(self) -> None:
+        for locale in ("en", "it"):
+            data = json.loads((PACKAGE / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
+            for fact_id in (*FACT_IDS, "presenter.welcome"):
+                with self.subTest(locale=locale, fact=fact_id):
+                    entry = data["audio"][audio_key(fact_id)]
+                    self.assertTrue((PACKAGE / entry["path"]).is_file())
 
 
 class DolphinMotionTests(unittest.TestCase):
     def test_dolphin_advances_and_steering_clamps(self) -> None:
-        dolphin = Dolphin()
-        start_x = dolphin.x
-        dolphin.update(1 / 30)
-        self.assertGreater(dolphin.x, start_x)
-        dolphin.target_y = MIN_SWIM_Y
-        for _ in range(40):
-            dolphin.steer(-500.0)
+        dolphin = Dolphin(base_speed=160.0)
+        start = dolphin.x
+        dolphin.update(0.5)
+        self.assertAlmostEqual(dolphin.x - start, 80.0, places=3)
+        dolphin.steer(-10_000)
         self.assertEqual(dolphin.target_y, MIN_SWIM_Y)
-        for _ in range(40):
-            dolphin.steer(500.0)
+        dolphin.steer(10_000)
         self.assertEqual(dolphin.target_y, MAX_SWIM_Y)
 
-    def test_dash_near_the_surface_breaches_exactly_once(self) -> None:
-        dolphin = Dolphin(y=SURFACE_Y + 60.0)
-        dolphin.target_y = MIN_SWIM_Y
-        dolphin.trigger_dash()
-        seen: list[str] = []
-        for _ in range(240):
-            event = dolphin.update(1 / 30)
-            if event:
-                seen.append(event)
-        self.assertIn("splash_out", seen)
-        self.assertIn("splash_in", seen)
-        self.assertEqual(seen.count("splash_out"), 1)
-        self.assertEqual(seen.count("splash_in"), 1)
-
-    def test_cruising_cannot_breach_without_a_dash(self) -> None:
-        dolphin = Dolphin(y=SURFACE_Y + 60.0)
-        dolphin.target_y = MIN_SWIM_Y
-        for _ in range(240):
-            dolphin.update(1 / 30)
-            self.assertGreaterEqual(dolphin.y, SURFACE_Y - 8.0)
-
-    def test_dash_is_bounded_in_time(self) -> None:
+    def test_cruising_never_breaks_the_surface(self) -> None:
         dolphin = Dolphin()
-        dolphin.trigger_dash()
-        self.assertTrue(dolphin.is_dashing)
-        for _ in range(120):
-            dolphin.update(1 / 30)
-        self.assertFalse(dolphin.is_dashing)
+        dolphin.aim(MIN_SWIM_Y)
+        for _ in range(300):
+            self.assertIsNone(dolphin.update(1 / 30))
+        self.assertGreater(dolphin.y, SURFACE_Y)
 
-    def test_breach_flip_progress_tracks_air_time_and_lands_reset(self) -> None:
-        dolphin = Dolphin(y=SURFACE_Y + 60.0)
-        dolphin.target_y = MIN_SWIM_Y
-        self.assertEqual(dolphin.flip_step_fraction, 0.0)
-        dolphin.trigger_dash()
-        peak = 0.0
+    def test_one_leap_is_one_arc_out_of_the_water(self) -> None:
+        dolphin = Dolphin(y=420.0, target_y=420.0)
+        self.assertTrue(dolphin.trigger_leap())
+        self.assertFalse(dolphin.trigger_leap())
+        seen = []
         for _ in range(240):
-            dolphin.update(1 / 30)
-            peak = max(peak, dolphin.flip_step_fraction)
-        # The somersault completes before re-entry.
-        self.assertGreaterEqual(peak, 0.99)
-        # Landed: the flip state is fully reset for the next leap.
-        self.assertEqual(dolphin.flip_step_fraction, 0.0)
+            event = dolphin.update(1 / 60)
+            if event is not None:
+                seen.append(event)
+        self.assertEqual(seen, [EventKind.SPLASH_OUT, EventKind.SPLASH_IN])
+        self.assertFalse(dolphin.airborne)
+        self.assertGreaterEqual(dolphin.y, SURFACE_Y)
 
-    def test_flip_progress_clamps_at_one_while_airborne(self) -> None:
-        dolphin = Dolphin(y=SURFACE_Y - 40.0, airborne=True, air_time=99.0)
-        self.assertEqual(dolphin.flip_step_fraction, 1.0)
+    def test_stopped_dolphin_neither_moves_nor_leaps(self) -> None:
+        dolphin = Dolphin()
+        dolphin.stop()
+        x = dolphin.x
+        dolphin.update(1.0)
+        self.assertEqual(dolphin.x, x)
+        self.assertFalse(dolphin.trigger_leap())
 
 
-class JourneyStateTests(unittest.TestCase):
-    def test_fresh_journey_has_content_and_no_instant_completion(self) -> None:
-        world = JourneyState()
-        world.start_journey(random.Random(3))
-        self.assertGreater(len(world.pearls), 0)
-        self.assertGreater(len(world.decor), 0)
-        self.assertEqual(world.chapters_completed, 0)
-        self.assertFalse(world.finished)
-        events = world.update(1 / 30, random.Random(3))
-        self.assertNotIn("chapter_completed", events)
-        self.assertNotIn("journey_finished", events)
+class CourseTests(unittest.TestCase):
+    def test_course_content_is_fixed_and_bounded(self) -> None:
+        for spec in JOURNEYS:
+            course = build_course(spec, random.Random(3))
+            with self.subTest(journey=spec.journey_id):
+                self.assertEqual(course.total_pearls, spec.total_pearls)
+                self.assertLessEqual(len(course.jellies), spec.jellies)
+                self.assertEqual(len(course.friends), len(spec.friends))
+                self.assertEqual(len(course.stretch_ends), spec.stretches)
+                self.assertTrue(all(p.x < course.finish_x for p in course.pearls))
+                self.assertTrue(all(SURFACE_Y - 140 < p.y <= MAX_SWIM_Y for p in course.pearls))
 
-    def test_crossing_a_chapter_boundary_completes_it_exactly_once(self) -> None:
-        world = JourneyState()
-        world.start_journey(random.Random(5))
-        world.dolphin.x = chapter_start_x(1) + 5.0
-        events: list[str] = []
-        for _ in range(5):
-            events.extend(world.update(1 / 30, random.Random(5)))
-        self.assertEqual(events.count("chapter_completed"), 1)
-        self.assertEqual(world.chapters_completed, 1)
-        self.assertFalse(world.finished)
+    def test_arc_pearls_float_above_the_waves(self) -> None:
+        course = build_course(journey("bay"), random.Random(5))
+        arcs = [g for g in course.groups if g.arc]
+        self.assertTrue(arcs)
+        arc_pearls = [p for p in course.pearls if p.group == arcs[0].index]
+        self.assertTrue(all(p.y < SURFACE_Y for p in arc_pearls))
 
-    def test_full_journey_completes_all_chapters_and_finishes_once(self) -> None:
-        world = JourneyState()
-        world.start_journey(random.Random(5))
-        world.dolphin.x = TOTAL_JOURNEY_X + 10.0
-        events: list[str] = []
-        for _ in range(10):
-            events.extend(world.update(1 / 30, random.Random(5)))
-        self.assertEqual(events.count("chapter_completed"), 3)
-        self.assertEqual(events.count("journey_finished"), 1)
-        self.assertEqual(world.chapters_completed, 3)
-        self.assertTrue(world.finished)
-        # Continuing to swim must not re-emit completion facts.
-        for _ in range(10):
-            events.extend(world.update(1 / 30, random.Random(5)))
-        self.assertEqual(events.count("journey_finished"), 1)
+    def test_a_well_timed_leap_collects_an_arc(self) -> None:
+        run = JourneyRun.start(journey("bay"), random.Random(5))
+        events = _run_until_finished(run, steer=True)
+        arcs = [g for g in run.course.groups if g.arc]
+        self.assertTrue(all(g.collected > 0 for g in arcs))
+        self.assertIn(EventKind.GROUP_COMPLETE, [e.kind for e in events])
 
-    def test_pearls_score_and_vanish_when_collected(self) -> None:
-        world = JourneyState()
-        world.start_journey(random.Random(7))
-        pearl = world.pearls[0]
-        world.dolphin.x = pearl.x
-        world.dolphin.y = pearl.effective_y
-        events = world.update(1 / 30, random.Random(7))
-        self.assertTrue(pearl.collected)
-        self.assertEqual(world.session_pearls, 1)
-        self.assertIn("pearl_collected", events)
+    def test_steering_child_finishes_with_most_pearls_and_meets_friends(self) -> None:
+        for spec in JOURNEYS:
+            run = JourneyRun.start(spec, random.Random(11))
+            events = _run_until_finished(run, steer=True)
+            kinds = [e.kind for e in events]
+            with self.subTest(journey=spec.journey_id):
+                self.assertTrue(run.finished)
+                self.assertEqual(kinds.count(EventKind.FINISHED), 1)
+                self.assertEqual(kinds.count(EventKind.FRIEND_MET), len(spec.friends))
+                self.assertGreaterEqual(run.collected / run.course.total_pearls, 0.8)
+                self.assertEqual(run.stretches_passed, spec.stretches)
 
-    def test_jellyfish_pushes_away_without_harm_and_respects_cooldown(self) -> None:
-        from activities.viaggio_delfino.delfino_model import Jellyfish
+    def test_passive_child_still_finishes_and_meets_every_friend(self) -> None:
+        """No fail state: friends kindly come to the dolphin; jellies only bump."""
 
-        world = JourneyState()
-        world.start_journey(random.Random(11))
-        jelly = Jellyfish(x=world.dolphin.x + 1.0, y=world.dolphin.y, drift_amplitude=0.0)
-        world.jellies.append(jelly)
-        events = world.update(1 / 30, random.Random(11))
-        self.assertIn("jelly_bounce", events)
-        self.assertEqual(world.session_pearls, 0)
-        # Cooldown: still overlapping on the next tick must not re-bounce.
-        events = world.update(1 / 30, random.Random(11))
-        self.assertNotIn("jelly_bounce", events)
+        run = JourneyRun.start(journey("reef"), random.Random(2))
+        events = _run_until_finished(run, steer=False)
+        kinds = [e.kind for e in events]
+        self.assertTrue(run.finished)
+        self.assertEqual(kinds.count(EventKind.FRIEND_MET), 2)
+        self.assertTrue(all(f.state is not FriendState.WAITING for f in run.course.friends))
 
-    def test_starfish_scores_counts_and_emits_special_pickup(self) -> None:
-        from activities.viaggio_delfino.delfino_model import Starfish
+    def test_jellyfish_bump_pushes_away_without_harm(self) -> None:
+        run = JourneyRun.start(journey("bay"), random.Random(1))
+        jelly = run.course.jellies[0]
+        run.dolphin.x = jelly.x
+        run.dolphin.y = jelly.effective_y + 10
+        collected = run.collected
+        events = run.update(1 / 30)
+        self.assertIn(EventKind.BUMP, [e.kind for e in events])
+        self.assertGreater(run.dolphin.target_y, jelly.effective_y)
+        self.assertEqual(run.collected, collected)
+        # Cooldown: staying in contact does not bump again immediately.
+        again = run.update(1 / 30)
+        self.assertNotIn(EventKind.BUMP, [e.kind for e in again])
 
-        world = JourneyState()
-        world.start_journey(random.Random(21))
-        star = Starfish(x=world.dolphin.x + 2.0, y=world.dolphin.y)
-        world.starfish.append(star)
-        events = world.update(1 / 30, random.Random(21))
-        self.assertIn("starfish_collected", events)
-        self.assertTrue(star.collected)
-        self.assertEqual(world.session_pearls, 1)
+    def test_missed_group_is_reported_once(self) -> None:
+        run = JourneyRun.start(journey("bay"), random.Random(1))
+        first = run.course.groups[0]
+        ys = [p.y for p in run.course.pearls if p.group == first.index]
+        run.dolphin.aim(MAX_SWIM_Y if min(ys) < 360 else SURFACE_Y + 30)
+        run.dolphin.y = run.dolphin.target_y
+        missed = []
+        while run.dolphin.x < first.end_x + 200:
+            missed.extend(e for e in run.update(1 / 30) if e.kind is EventKind.GROUP_MISSED)
+        self.assertEqual(len(missed), 1)
 
-    def test_starfish_collects_at_the_nose_not_only_mid_body(self) -> None:
-        from activities.viaggio_delfino.delfino_model import (
-            DOLPHIN_NOSE_OFFSET,
-            DOLPHIN_RADIUS,
-            Starfish,
-        )
-
-        world = JourneyState()
-        world.start_journey(random.Random(23))
-        # Far beyond the centre radius but inside the nose reach: must collect.
-        star = Starfish(
-            x=world.dolphin.x + DOLPHIN_NOSE_OFFSET + DOLPHIN_RADIUS - 10.0,
-            y=world.dolphin.y,
-        )
-        world.starfish.append(star)
-        events = world.update(1 / 30, random.Random(23))
-        self.assertIn("starfish_collected", events)
-        self.assertTrue(star.collected)
-
-    def test_starfish_spawns_respect_the_minimum_gap(self) -> None:
-        world = JourneyState()
-        world.start_journey(random.Random(31))
-        stars_before = len(world.starfish)
-        pearls_before = len(world.pearls)
-        world._last_starfish_x = world.dolphin.x + 5000.0
-        # Too close: the treasure degrades to a plain pearl.
-        world._spawn_starfish(world._last_starfish_x + 1000.0, 300.0)
-        self.assertEqual(len(world.starfish), stars_before)
-        self.assertEqual(len(world.pearls), pearls_before + 1)
-        # Far enough: the starfish spawns.
-        world._spawn_starfish(world._last_starfish_x + 3000.0, 300.0)
-        self.assertEqual(len(world.starfish), stars_before + 1)
-
-    def test_star_and_kelp_patterns_reach_every_chapter(self) -> None:
-        self.assertIn("star_solo", JourneyState._patterns_for(0))
-        self.assertGreaterEqual(JourneyState._patterns_for(1).count("kelp_grove"), 2)
-        self.assertIn("starfish_run", JourneyState._patterns_for(2))
-
-    def test_kelp_grove_plants_a_dense_grove(self) -> None:
-        world = JourneyState()
-        world.start_journey(random.Random(37))
-        before = len(world.decor)
-        world._pattern_kelp_grove(5000.0, random.Random(37))
-        new_kelp = sum(1 for item in world.decor[before:] if item.kind == "kelp")
-        self.assertGreaterEqual(new_kelp, 6)
-
-    def test_world_collections_stay_bounded_behind_the_camera(self) -> None:
-        world = JourneyState()
-        world.start_journey(random.Random(13))
-        world.dolphin.x = 9000.0
-        for _ in range(30):
-            world.update(1 / 30, random.Random(13))
-        for pearl in world.pearls:
-            self.assertGreater(pearl.x, world.dolphin.x - 700.0)
-        for jelly in world.jellies:
-            self.assertGreater(jelly.x, world.dolphin.x - 700.0)
-        self.assertLess(len(world.bubbles), 60)
-        self.assertLess(len(world.particles), 200)
+    def test_next_target_points_at_the_next_pearl_or_waiting_friend(self) -> None:
+        run = JourneyRun.start(journey("bay"), random.Random(1))
+        target = run.next_target()
+        first = min(run.course.pearls, key=lambda p: p.x)
+        self.assertEqual(target, (first.x, first.y))
 
 
 class _StubStorage:
@@ -309,64 +270,77 @@ class _StubStorage:
 
 class _StubEvents:
     def __init__(self) -> None:
-        self.calls: list[tuple[str, dict]] = []
+        self.calls: list[tuple[str, object]] = []
 
     def chapter_completed(self, chapter_number: int) -> None:
-        self.calls.append(("dolphin.chapter_completed", {"chapter_number": chapter_number}))
+        self.calls.append(("dolphin.chapter_completed", chapter_number))
 
     def fact_opened(self, fact_id: str) -> None:
-        self.calls.append(("dolphin.fact_opened", {"fact_id": fact_id}))
+        self.calls.append(("dolphin.fact_opened", fact_id))
 
     def journey_score(self, score: int) -> None:
-        self.calls.append(("dolphin.journey_score", {"score": score}))
+        self.calls.append(("dolphin.journey_score", score))
+
+    def close(self) -> None:
+        self.calls.append(("close", None))
 
 
 class GreiaDelfinoStorageTests(unittest.TestCase):
-    def test_progress_round_trip_and_sanitization(self) -> None:
+    def test_progress_round_trip_unlocks_the_next_journey(self) -> None:
         stub = _StubStorage()
-        storage = GreiaDelfinoStorage(storage=stub)
-        self.assertEqual(
-            storage.load_progress(), {"total_pearls": 0, "best_journey_score": 0}
-        )
-        self.assertTrue(storage.save_progress(42, 310))
-        self.assertEqual(
-            storage.load_progress(), {"total_pearls": 42, "best_journey_score": 310}
-        )
-        stub.data[storage._key] = {
-            "total_pearls": "not-a-number",
+        storage = GreiaDelfinoStorage(storage=stub, journey_ids=JOURNEY_IDS)
+        progress = storage.load()
+        self.assertEqual(progress.unlocked(JOURNEY_IDS), ("bay",))
+        progress = progress.with_result("bay", 12, 3)
+        self.assertTrue(storage.save(progress))
+        loaded = storage.load()
+        self.assertEqual(loaded.unlocked(JOURNEY_IDS), ("bay", "reef"))
+        self.assertEqual(loaded.record("bay").best_pearls, 12)
+        self.assertEqual(loaded.record("bay").best_stars, 3)
+        self.assertEqual(loaded.total_pearls, 12)
+        # A weaker replay never lowers the best result but adds pearls.
+        loaded = loaded.with_result("bay", 4, 1)
+        self.assertEqual(loaded.record("bay").best_stars, 3)
+        self.assertEqual(loaded.record("bay").completions, 2)
+        self.assertEqual(loaded.total_pearls, 16)
+
+    def test_schema_one_save_migrates_forward_without_losing_counters(self) -> None:
+        stub = _StubStorage()
+        stub.data[STORAGE_KEY] = {"total_pearls": 140, "best_journey_score": 310, "timestamp": 1.0}
+        progress = GreiaDelfinoStorage(storage=stub, journey_ids=JOURNEY_IDS).load()
+        self.assertEqual(progress.total_pearls, 140)
+        self.assertEqual(progress.best_journey_score, 310)
+        # The old full journey counts as the first course done.
+        self.assertEqual(progress.unlocked(JOURNEY_IDS), ("bay", "reef"))
+
+    def test_corrupt_payloads_degrade_to_defaults(self) -> None:
+        stub = _StubStorage()
+        storage = GreiaDelfinoStorage(storage=stub, journey_ids=JOURNEY_IDS)
+        stub.data[STORAGE_KEY] = "corrupt"
+        self.assertEqual(storage.load(), DelfinoProgress())
+        stub.data[STORAGE_KEY] = {
+            "total_pearls": "x",
             "best_journey_score": -5,
-            "junk": "ignored",
+            "journeys": {"bay": {"completions": "?", "best_stars": 99}, "mars": {"completions": 3}, 7: {}},
         }
-        self.assertEqual(
-            storage.load_progress(), {"total_pearls": 0, "best_journey_score": 0}
-        )
-        stub.data[storage._key] = "corrupt"
-        self.assertEqual(
-            storage.load_progress(), {"total_pearls": 0, "best_journey_score": 0}
-        )
+        progress = storage.load()
+        self.assertEqual(progress.total_pearls, 0)
+        self.assertEqual(progress.record("bay").best_stars, 3)
+        self.assertFalse(progress.record("bay").done)
+        self.assertNotIn("mars", progress.journeys)
 
     def test_missing_storage_degrades_to_defaults(self) -> None:
         storage = GreiaDelfinoStorage(storage=None)
         self.assertFalse(storage.available)
-        self.assertEqual(
-            storage.load_progress(), {"total_pearls": 0, "best_journey_score": 0}
-        )
-        self.assertFalse(storage.save_progress(1, 1))
+        self.assertEqual(storage.load(), DelfinoProgress())
+        self.assertFalse(storage.save(DelfinoProgress()))
 
 
 class GreiaDelfinoEventsTests(unittest.TestCase):
-    def test_event_helpers_exist_with_declared_semantics(self) -> None:
-        # The service wrappers must expose exactly the manifest-declared facts.
-        self.assertTrue(hasattr(GreiaDelfinoEvents, "chapter_completed"))
-        self.assertTrue(hasattr(GreiaDelfinoEvents, "fact_opened"))
-        self.assertTrue(hasattr(GreiaDelfinoEvents, "journey_score"))
-
     def test_events_emit_asynchronously_without_blocking_the_caller(self) -> None:
         import time as time_module
-        from activities.viaggio_delfino import delfino_services
 
         calls: list[tuple[str, object]] = []
-        started = time_module.monotonic()
 
         def slow_emitter(event_id, payload=None, idempotency_key=None, score=None):
             time_module.sleep(0.05)
@@ -377,27 +351,18 @@ class GreiaDelfinoEventsTests(unittest.TestCase):
             submitted = time_module.monotonic()
             service.chapter_completed(1)
             service.fact_opened("curiosity.delfino.pods")
-            service.journey_score(120)
-            submit_ms = (time_module.monotonic() - submitted) * 1000
-            # Submitting must never wait on the slow broker round-trip.
-            self.assertLess(submit_ms, 15.0)
+            service.journey_score(12)
+            self.assertLess((time_module.monotonic() - submitted) * 1000, 15.0)
             self.assertTrue(service.flush(timeout=3.0))
             self.assertEqual(
                 [name for name, _ in calls],
-                [
-                    "dolphin.chapter_completed",
-                    "dolphin.fact_opened",
-                    "dolphin.journey_score",
-                ],
+                ["dolphin.chapter_completed", "dolphin.fact_opened", "dolphin.journey_score"],
             )
-            self.assertEqual(calls[2][1], 120)
+            self.assertEqual(calls[2][1], 12)
         finally:
             service.close()
-        del started
 
     def test_close_drains_pending_events(self) -> None:
-        from activities.viaggio_delfino import delfino_services
-
         calls: list[str] = []
         service = GreiaDelfinoEvents(
             emitter=lambda event_id, payload=None, idempotency_key=None, score=None: calls.append(event_id),
@@ -406,7 +371,213 @@ class GreiaDelfinoEventsTests(unittest.TestCase):
         service.chapter_completed(2)
         service.close()
         self.assertEqual(calls, ["dolphin.chapter_completed"])
-        self.assertTrue(service.flush(timeout=0.1))
+
+
+class SteeringInputTests(unittest.TestCase):
+    def setUp(self) -> None:
+        pygame.init()
+        from activities.viaggio_delfino.delfino_input import DolphinSteering, SwimInput
+
+        self.steering = DolphinSteering()
+        self.SwimInput = SwimInput
+
+    def test_arrows_and_ws_hold_depth_and_space_leaps(self) -> None:
+        handle = self.steering.handle
+        self.assertIs(handle(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_DOWN)), self.SwimInput.STEER)
+        self.assertEqual(self.steering.axis, 1.0)
+        self.assertGreater(self.steering.step(0.1), 0)
+        handle(pygame.event.Event(pygame.KEYUP, key=pygame.K_DOWN))
+        self.assertEqual(self.steering.axis, 0.0)
+        handle(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_w))
+        self.assertEqual(self.steering.axis, -1.0)
+        handle(pygame.event.Event(pygame.KEYUP, key=pygame.K_w))
+        self.assertIs(handle(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE)), self.SwimInput.LEAP)
+        self.assertIs(handle(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN)), self.SwimInput.LEAP)
+
+    def test_stick_uses_the_central_dead_zone(self) -> None:
+        axis_event = getattr(pygame, "CONTROLLERAXISMOTION", None)
+        if axis_event is None:
+            self.skipTest("SDL controller events unavailable")
+        from greia_platform.pygame_input import CONTROLLER_AXIS_LEFTY
+
+        self.steering.handle(pygame.event.Event(axis_event, axis=CONTROLLER_AXIS_LEFTY, value=3000))
+        self.assertEqual(self.steering.axis, 0.0)
+        self.steering.handle(pygame.event.Event(axis_event, axis=CONTROLLER_AXIS_LEFTY, value=30000))
+        self.assertGreater(self.steering.axis, 0.5)
+
+
+def _logical_to_physical(app, point):
+    x, y = app.canvas.mapper.transform.logical_to_physical(point)
+    return (int(x), int(y))
+
+
+class _Clock:
+    def __init__(self) -> None:
+        self.t = 100.0
+
+    def __call__(self) -> float:
+        return self.t
+
+
+class AppLoopTests(unittest.TestCase):
+    """Real app, real Pygame frames, no platform services."""
+
+    def setUp(self) -> None:
+        pygame.init()
+        pygame.display.set_mode((1024, 600))
+        from activities.viaggio_delfino.delfino_app import DelfinoJourneyApp, Phase
+        from activities.viaggio_delfino.delfino_audio import SilentDelfinoAudio
+
+        self.Phase = Phase
+        self.clock = _Clock()
+        self.stub = _StubStorage()
+        self.events = _StubEvents()
+        self.app = DelfinoJourneyApp(
+            rng=random.Random(7),
+            clock=self.clock,
+            storage=GreiaDelfinoStorage(storage=self.stub, journey_ids=JOURNEY_IDS),
+            events=self.events,
+            audio=SilentDelfinoAudio(),
+        )
+        self.app._enter_picker()
+
+    def tearDown(self) -> None:
+        pygame.quit()
+
+    def _step(self, frames: int = 1) -> None:
+        for _ in range(frames):
+            self.clock.t += 1 / 30
+            self.app.advance(1 / 30)
+            self.app.draw()
+
+    def _key(self, key: int, *, up: bool = False) -> None:
+        self.app.handle_event(pygame.event.Event(pygame.KEYUP if up else pygame.KEYDOWN, key=key, mod=0, unicode=""))
+
+    def _swim_with_keys(self, limit_frames: int = 30 * 150) -> None:
+        """Steer with held arrow keys and leap with Space, like a child."""
+
+        app = self.app
+        held: int | None = None
+        for _ in range(limit_frames):
+            if app.phase is not self.Phase.SWIM:
+                return
+            run = app.run_state
+            target = run.next_target()
+            wanted = None
+            if target is not None:
+                if target[1] < run.dolphin.target_y - 20:
+                    wanted = pygame.K_UP
+                elif target[1] > run.dolphin.target_y + 20:
+                    wanted = pygame.K_DOWN
+            if wanted != held:
+                if held is not None:
+                    self._key(held, up=True)
+                if wanted is not None:
+                    self._key(wanted)
+                held = wanted
+            group = next((g for g in run.course.groups if not g.resolved and g.end_x >= run.dolphin.x - 30), None)
+            if group is not None and group.arc and 0 < group.start_x - run.dolphin.x < 175 and not run.dolphin.leap_pending:
+                self._key(pygame.K_SPACE)
+            self._step()
+
+    def test_picker_offers_only_the_first_journey_at_first(self) -> None:
+        app = self.app
+        self.assertIs(app.phase, self.Phase.PICKER)
+        self.assertTrue(app.picker.cards["bay"].enabled)
+        self.assertFalse(app.picker.cards["reef"].enabled)
+        # Tapping a closed card is answered kindly and starts nothing.
+        app.tap(_logical_to_physical(app, app.picker.rect("lagoon").center))
+        self.assertIs(app.phase, self.Phase.PICKER)
+        self.assertTrue(app.picker_cast.feedback.animating)
+
+    def test_idle_picker_hint_points_at_the_open_journey(self) -> None:
+        self._step(int(30 * 6.5))
+        self.assertTrue(self.app.picker_cast.pointing)
+
+    def test_keyboard_child_plays_a_whole_journey_to_the_completion_scene(self) -> None:
+        app = self.app
+        self._key(pygame.K_SPACE)  # choose the focused (suggested) journey
+        self.assertIs(app.phase, self.Phase.SWIM)
+        self.assertEqual(app.spec.journey_id, "bay")
+        self._swim_with_keys()
+        self.assertIn(app.phase, (self.Phase.COUNT, self.Phase.DONE))
+        collected = app.run_state.collected
+        self.assertGreater(collected, 0)
+        for _ in range(30 * 20):
+            if app.phase is self.Phase.DONE:
+                break
+            self._step()
+        self.assertIs(app.phase, self.Phase.DONE)
+        self.assertEqual(app.hud.count.value, collected)
+        self.assertTrue(app.completion.is_prepared)
+        # Progress saved, reef unlocked, declared facts emitted.
+        saved = self.stub.data[STORAGE_KEY]
+        self.assertEqual(saved["version"], 2)
+        self.assertEqual(saved["journeys"]["bay"]["completions"], 1)
+        names = [name for name, _ in self.events.calls]
+        self.assertEqual(names.count("dolphin.fact_opened"), 2)
+        self.assertIn(("dolphin.chapter_completed", 1), self.events.calls)
+        self.assertIn(("dolphin.journey_score", collected), self.events.calls)
+        # Completion: arrow right + Space chooses "journeys" → back to the map.
+        self._key(pygame.K_RIGHT)
+        self._key(pygame.K_SPACE)
+        self.assertIs(app.phase, self.Phase.PICKER)
+        self.assertTrue(app.picker.cards["reef"].enabled)
+        self.assertEqual(app._suggested, "reef")
+
+    def test_count_up_can_be_skipped_and_replay_restarts_the_same_journey(self) -> None:
+        app = self.app
+        app.start_journey("bay")
+        run = app.run_state
+        for pearl in run.course.pearls[:5]:
+            pearl.collected = True
+        run.collected = 5
+        run.dolphin.x = run.course.finish_x - 1
+        self._step(2)
+        self.assertTrue(run.finished)
+        self._step(45)
+        self.assertIs(app.phase, self.Phase.COUNT)
+        self._key(pygame.K_SPACE)
+        self.assertEqual(app.hud.count.value, 5)
+        self._step(40)
+        self.assertIs(app.phase, self.Phase.DONE)
+        primary = app.completion.primary_rect.center
+        app.tap(_logical_to_physical(app, primary))
+        self.assertIs(app.phase, self.Phase.SWIM)
+        self.assertEqual(app.spec.journey_id, "bay")
+        self.assertEqual(app.run_state.collected, 0)
+
+    def test_pointer_steers_and_click_leaps_but_protected_chrome_is_ignored(self) -> None:
+        app = self.app
+        app.start_journey("bay")
+        app.handle_event(pygame.event.Event(pygame.MOUSEMOTION, pos=(500, 450), rel=(0, 0), buttons=(0, 0, 0)))
+        self.assertGreater(app.run_state.dolphin.target_y, 400)
+        # Inside the protected Home/Back region: no steering.
+        app.handle_event(pygame.event.Event(pygame.MOUSEMOTION, pos=(20, 20), rel=(0, 0), buttons=(0, 0, 0)))
+        self.assertGreater(app.run_state.dolphin.target_y, 400)
+        app.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=(500, 450), button=1))
+        self.assertTrue(app.run_state.dolphin.leap_pending)
+
+    def test_missed_group_brings_tito_and_a_demonstration(self) -> None:
+        app = self.app
+        app.start_journey("bay")
+        self.clock.t += 20.0  # past the welcome
+        app._talk_until = 0.0
+        run = app.run_state
+        first = run.course.groups[0]
+        ys = [p.y for p in run.course.pearls if p.group == first.index]
+        run.dolphin.aim(510 if min(ys) < 360 else SURFACE_Y + 30)
+        run.dolphin.y = run.dolphin.target_y
+        while run.dolphin.x < first.end_x + 80:
+            self._step()
+        self.assertTrue(app._demo_pending or app._hint_until > self.clock.t)
+        for _ in range(30 * 8):
+            if app._hint_until > self.clock.t:
+                break
+            self._step()
+        self.assertGreater(app._hint_until, self.clock.t)
+        self.assertTrue(app.cast.pointing)
+
 
 def _pointer_pixel_is_drawn(target, position) -> bool:
     # draw_activity_pointer's default body colour, 8 px right of the hot spot.
@@ -417,24 +588,54 @@ class ViaggioDelfinoPointerTests(unittest.TestCase):
     """The OS cursor is hidden; the platform canvas must draw Greia's pointer."""
 
     def test_frame_presentation_draws_the_platform_pointer(self) -> None:
-        import os
-        from unittest import mock
-
-        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
-        import pygame
         from greia_platform.activity_api import get_theme
         from activities.viaggio_delfino.delfino_app import DelfinoJourneyApp
+        from activities.viaggio_delfino.delfino_audio import SilentDelfinoAudio
 
         pygame.init()
         pygame.display.set_mode((1024, 600))
-        app = DelfinoJourneyApp()
+        app = DelfinoJourneyApp(
+            storage=GreiaDelfinoStorage(storage=None), events=_StubEvents(), audio=SilentDelfinoAudio()
+        )
+        app._enter_picker()
+        app.draw()
         for position in ((300, 200), (700, 380)):
             with mock.patch("pygame.mouse.get_focused", return_value=True), mock.patch(
                 "pygame.mouse.get_pos", return_value=position
             ):
                 app._present_frame(app.canvas, get_theme())
                 self.assertTrue(_pointer_pixel_is_drawn(app.canvas.target, position))
+        pygame.quit()
+
+    def test_main_loop_presents_the_replaced_canvas_after_video_resize(self) -> None:
+        from activities.viaggio_delfino.delfino_app import DelfinoJourneyApp
+
+        app = object.__new__(DelfinoJourneyApp)
+        old_canvas = SimpleNamespace(surface=object(), present=mock.Mock())
+        new_canvas = SimpleNamespace(surface=object(), present=mock.Mock())
+        app.canvas = old_canvas
+        app._running = True
+        app._enter_picker = lambda: None
+        app.advance = lambda _dt: None
+        app.draw = lambda: None
+        app.shutdown = mock.Mock()
+
+        def resize(_event) -> None:
+            app.canvas = new_canvas
+
+        app.handle_event = resize
+        with (
+            mock.patch("activities.viaggio_delfino.delfino_app.pygame.event.get", return_value=[SimpleNamespace(type=pygame.VIDEORESIZE)]),
+            mock.patch("activities.viaggio_delfino.delfino_app.get_theme", return_value=SimpleNamespace(background=(0, 0, 0))),
+            mock.patch("activities.viaggio_delfino.delfino_app.activity_stop_requested", side_effect=[False, True]),
+            mock.patch("activities.viaggio_delfino.delfino_app.mark_activity_ready"),
+            mock.patch("activities.viaggio_delfino.delfino_app.pygame.display.flip"),
+            mock.patch("activities.viaggio_delfino.delfino_app.pygame.quit"),
+        ):
+            self.assertEqual(app.run(), 0)
+        new_canvas.present.assert_called_once()
+        old_canvas.present.assert_not_called()
+        app.shutdown.assert_called_once()
 
 
 if __name__ == "__main__":

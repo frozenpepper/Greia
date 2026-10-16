@@ -1,403 +1,341 @@
-"""One-pass renderer and child-facing HUD for Il Viaggio del Delfino.
+"""Il Viaggio del Delfino — one-pass drawing of the swim, picker and finish.
 
-The renderer owns presentation only: every surface it blits is prepared by
-``DelfinoArtLibrary`` and all stable text is rendered through a bounded
-typography cache. Localized wording is handed in per frame through
-``HudView`` so this module stays locale-agnostic.
+The renderer owns presentation only. Every surface it blits comes prepared
+from ``DelfinoArt`` (scene strips, creatures, pearls, flipbooks) or from the
+shared control kit's painter (panels, labels, stars, focus rings); drawing
+never decodes, scales, rotates or builds fonts. Localized text arrives already
+resolved (and CAPITALISED by the platform case policy) from the app.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 import math
-from dataclasses import dataclass
 from typing import Final
 
 import pygame
 
-from greia_platform.typography import FontRole, GreiaTypography
+from greia_platform.activity_controls import BodyShape, ControlKit, mix
 
 try:
-    from delfino_art import (
-        DelfinoArtLibrary,
-        FLIP_STEPS,
-        INK,
-        PEARL_SHELL_DARK,
-        WHITE,
-        _colorkey_surface,
-    )
-    from delfino_model import (
-        JourneyState,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        SURFACE_Y,
-    )
+    from delfino_art import ARCH_SIZE, DelfinoArt, SceneLayers
+    from delfino_content import JOURNEYS, REFERENCE_HEIGHT, REFERENCE_WIDTH, SURFACE_Y, JourneySpec
+    from delfino_controls import NAME_SIZE, STAR_SIZE, PickerControls
+    from delfino_model import FriendState, JourneyRun
 except ImportError:  # repository/package import context
-    from .delfino_art import (
-        DelfinoArtLibrary,
-        FLIP_STEPS,
-        INK,
-        PEARL_SHELL_DARK,
-        WHITE,
-        _colorkey_surface,
-    )
-    from .delfino_model import (
-        JourneyState,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        SURFACE_Y,
-    )
+    from .delfino_art import ARCH_SIZE, DelfinoArt, SceneLayers
+    from .delfino_content import JOURNEYS, REFERENCE_HEIGHT, REFERENCE_WIDTH, SURFACE_Y, JourneySpec
+    from .delfino_controls import NAME_SIZE, STAR_SIZE, PickerControls
+    from .delfino_model import FriendState, JourneyRun
+
+PEARL_SIZE: Final = 46
+#: Every flipbook the swim uses (id, size), warmed at journey start.
+SWIM_FX: Final = (
+    ("sparkle", 74),
+    ("sparkle", 64),
+    ("star_burst", 130),
+    ("star_burst", 150),
+    ("splash", 120),
+    ("bubble_pop", 100),
+    ("heart_pop", 130),
+    ("confetti", 220),
+)
+COUNT_PEARL: Final = 44
+COUNT_GAP: Final = 14
+COUNT_PER_ROW: Final = 5
+#: Count tray: panel top, the count chip inside it, then the pearl grid.
+COUNT_PANEL_TOP: Final = 128
+COUNT_CHIP_TOP: Final = 146
+COUNT_GRID_TOP: Final = 232
+#: Where the finish props stand relative to the finish line (world px).
+_LANDMARK_PLACES: Final = {
+    "prop.vocab.lighthouse": ((150, 168), 330, int(SURFACE_Y) + 16),
+    "prop.vocab.island": ((330, 230), 320, int(SURFACE_Y) + 40),
+    "prop.everyday.shell": ((150, 130), 520, 586),
+}
+_INK: Final = (75, 55, 47)
+_WAKE: Final = (236, 250, 255)
 
 
-#: Child-sized hit target for the Tito curiosity affordance (reference coords).
-TITO_RECT: Final = pygame.Rect(930, 498, 76, 76)
+@dataclass(slots=True)
+class Effect:
+    """One shared ``fx.*`` flipbook at a world point (bounded list in the app)."""
 
-_PILL_BORDER: Final = (250, 205, 95)
+    frames: list[pygame.Surface]
+    x: float
+    y: float
+    duration: float = 0.6
+    age: float = 0.0
+    screen: bool = False
+
+    @property
+    def done(self) -> bool:
+        return self.age >= self.duration or not self.frames
+
+    def draw(self, surface: pygame.Surface, camera_x: float) -> None:
+        if self.done:
+            return
+        index = min(len(self.frames) - 1, int(self.age / self.duration * len(self.frames)))
+        frame = self.frames[index]
+        x = self.x if self.screen else self.x - camera_x
+        surface.blit(frame, frame.get_rect(center=(int(x), int(self.y))))
 
 
-@dataclass(frozen=True, slots=True)
-class HudView:
-    """Everything locale-dependent the HUD needs for one frame."""
+@dataclass(slots=True)
+class SwimView:
+    """Per-frame presentation hints decided by the app."""
 
-    pearls_count: int
-    journey_fraction: float
-    banner_text: str | None
-    fact_caption: str | None
-    tito_speaking: bool
-    #: Show the language-neutral "how to swim" animation (the welcome cue is
-    #: spoken by Tito; pre-readers get this picture instead of a paragraph).
-    controls_hint: bool = False
-    #: Monotonic seconds, used only to phase the hint animation.
-    hint_clock: float = 0.0
+    now: float
+    happy: bool = False
+    hint_target: tuple[float, float] | None = None
+    steer_hint: bool = False
+    leap_hint: bool = False
+    effects: list[Effect] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class CountView:
+    """Finish count-up: ``shown`` pearls already in the tray, one flying in."""
+
+    total: int
+    shown: int
+    flight: float  # 0..1 progress of the pearl currently flying in
 
 
 class DelfinoRenderer:
-    """Composites ocean world, dolphin, particles and HUD in one fast pass."""
+    """Composite the swim, the journey picker and the finish count-up."""
 
-    def __init__(self, art: DelfinoArtLibrary, typography: GreiaTypography) -> None:
-        self._art = art
-        self._typography = typography
-        self._text_cache: dict[tuple[str, str, int, tuple[int, int, int]], pygame.Surface] = {}
-        self._caption_cache: dict[str, tuple[pygame.Surface, list[str]]] = {}
+    def __init__(self, art: DelfinoArt, kit: ControlKit) -> None:
+        self.art = art
+        self.kit = kit
+        self._faded: dict[tuple[str, int], pygame.Surface | None] = {}
+        self._panels: dict[tuple[int, int], pygame.Surface] = {}
+        self._picker_backdrop: pygame.Surface | None = None
 
-    # ------------------------------------------------------------- helpers
+    # -- helpers -------------------------------------------------------------
 
-    def _text(
-        self,
-        text: str,
-        role: FontRole,
-        size: int,
-        color: tuple[int, int, int],
-    ) -> pygame.Surface:
-        key = (text, role.name, size, color)
-        cached = self._text_cache.get(key)
-        if cached is not None:
-            return cached
-        surf = self._typography.render(text, role, size, color)
-        if len(self._text_cache) > 160:
-            self._text_cache.clear()
-        self._text_cache[key] = surf
-        return surf
+    def _glyph(self, glyph_id: str, size: int, *, faded: bool = False) -> pygame.Surface | None:
+        key = (glyph_id, size if not faded else -size)
+        if key in self._faded:
+            return self._faded[key]
+        image = self.kit.glyph(glyph_id, size)
+        if image is not None and faded:
+            image = image.copy()
+            image.fill((255, 255, 255, 105), special_flags=pygame.BLEND_RGBA_MULT)
+        self._faded[key] = image
+        return image
 
-    def _wrapped_caption(self, caption: str) -> tuple[pygame.Surface, list[str]]:
-        cached = self._caption_cache.get(caption)
-        if cached is not None:
-            return cached
-        max_width = 470
-        words = caption.split()
-        lines: list[str] = []
-        current = ""
-        for word in words:
-            candidate = f"{current} {word}".strip()
-            if self._text(candidate, FontRole.BODY, 20, INK).get_width() <= max_width or not current:
-                current = candidate
-            else:
-                lines.append(current)
-                current = word
-        if current:
-            lines.append(current)
-        panel_w = min(520, max(220, max(self._text(line, FontRole.BODY, 20, INK).get_width() for line in lines) + 44))
-        panel_h = 26 * len(lines) + 34
-        panel = _colorkey_surface(panel_w, panel_h)
-        pygame.draw.rect(panel, (255, 252, 242), panel.get_rect(), border_radius=18)
-        pygame.draw.rect(panel, PEARL_SHELL_DARK, panel.get_rect(), 3, border_radius=18)
-        y = 14
-        for line in lines:
-            line_surf = self._text(line, FontRole.BODY, 20, INK)
-            panel.blit(line_surf, (22, y))
-            y += 26
-        entry = (panel, lines)
-        if len(self._caption_cache) > 24:
-            self._caption_cache.clear()
-        self._caption_cache[caption] = entry
-        return entry
+    def _panel(self, size: tuple[int, int]) -> pygame.Surface:
+        panel = self._panels.get(size)
+        if panel is None:
+            painter = self.kit.painter
+            panel = painter.body(BodyShape.PANEL, size, painter.theme.surface, lip=6, contour_width=4, highlight=False)
+            if len(self._panels) > 8:
+                self._panels.clear()
+            self._panels[size] = panel
+        return panel
 
-    # ------------------------------------------------------------- warm-up
+    # -- swim ----------------------------------------------------------------
 
-    def warm_banner(self, text: str) -> None:
-        """Pre-render a chapter banner (text + shadow) before it is needed.
+    def draw_swim(self, surface: pygame.Surface, run: JourneyRun, scene: SceneLayers, view: SwimView) -> None:
+        art = self.art
+        camera = run.camera_x
+        scene.draw_back(surface, camera)
+        self._draw_finish(surface, run.spec, run.course.finish_x - camera)
 
-        The first DISPLAY-size rasterisation of a long localized string is
-        expensive on the reference hardware; warming every chapter name at
-        startup removes the hitch at exactly the celebration moment.
+        jelly_idle = art.jelly(happy=False)
+        jelly_happy = art.jelly(happy=True)
+        for jelly in run.course.jellies:
+            sx = jelly.x - camera
+            if -80 <= sx <= REFERENCE_WIDTH + 80:
+                sprite = jelly_happy if jelly.happy_timer > 0 else jelly_idle
+                if sprite is not None:
+                    surface.blit(sprite, sprite.get_rect(center=(int(sx), int(jelly.effective_y))))
+
+        pearl = art.pearl(PEARL_SIZE)
+        if pearl is not None:
+            for item in run.course.pearls:
+                sx = item.x - camera
+                if not item.collected and -40 <= sx <= REFERENCE_WIDTH + 40:
+                    surface.blit(pearl, pearl.get_rect(center=(int(sx), int(item.effective_y))))
+
+        for friend in run.course.friends:
+            if friend.state in (FriendState.AHEAD, FriendState.GONE):
+                continue
+            sx = friend.x - camera
+            if not -260 <= sx <= REFERENCE_WIDTH + 260:
+                continue
+            sprite = art.creature(friend.spec.visual, friend.spec.box, happy=friend.happy, facing_right=friend.facing_right)
+            if sprite is None:
+                continue
+            rect = sprite.get_rect(center=(int(sx), int(friend.draw_y)))
+            surface.blit(sprite, rect)
+            if friend.state is FriendState.WAITING:
+                frames = art.fx_frames("sparkle", 64)
+                if frames:
+                    frame = frames[int(view.now * 5) % len(frames)]
+                    surface.blit(frame, frame.get_rect(center=(rect.right - 6, rect.top + 4)))
+
+        for x, y, age in run.wake:
+            radius = 3 + int(age * 5)
+            sx = int(x - camera)
+            pygame.draw.circle(surface, _WAKE, (sx, int(y - age * 26)), radius, 2)
+
+        dolphin = run.dolphin
+        bob = 0 if dolphin.airborne else int(math.sin(dolphin.swim_phase) * 3)
+        sprite = art.dolphin(dolphin.pitch, happy=view.happy)
+        if sprite is not None:
+            surface.blit(sprite, sprite.get_rect(center=(int(dolphin.x - camera), int(dolphin.y) + bob)))
+
+        for effect in view.effects:
+            effect.draw(surface, camera)
+
+        if view.hint_target is not None:
+            self._draw_hint_ring(surface, (view.hint_target[0] - camera, view.hint_target[1]), view.now)
+        if view.steer_hint or view.leap_hint:
+            self._draw_controls_hint(surface, view)
+
+    def _draw_finish(self, surface: pygame.Surface, spec: JourneySpec, finish_sx: float) -> None:
+        if finish_sx > REFERENCE_WIDTH + 700 or finish_sx < -900:
+            return
+        place = _LANDMARK_PLACES.get(spec.landmark or "")
+        if place is not None and spec.landmark is not None:
+            box, offset, bottom = place
+            landmark = self.art.prop(spec.landmark, box)
+            if landmark is not None:
+                surface.blit(landmark, landmark.get_rect(midbottom=(int(finish_sx + offset), bottom)))
+        arch = self.art.finish_arch()
+        if arch is not None:
+            surface.blit(arch, arch.get_rect(midbottom=(int(finish_sx), REFERENCE_HEIGHT - 6)))
+
+    def _draw_hint_ring(self, surface: pygame.Surface, centre: tuple[float, float], now: float) -> None:
+        # Two cached ring sizes alternate: a gentle pulse without scaling.
+        size = 96 if int(now * 3) % 2 == 0 else 110
+        ring = self.kit.painter.focus_ring((size, size), size // 2)
+        surface.blit(ring, ring.get_rect(center=(int(centre[0]), int(centre[1]))))
+
+    def _draw_controls_hint(self, surface: pygame.Surface, view: SwimView) -> None:
+        """Wordless how-to cards.
+
+        Steering (up / down with a bobbing mini dolphin) sits in the sky,
+        above every underwater pearl group; the leap card (Space / A with a
+        hopping mini dolphin) sits low over the sand, so it never covers the
+        pearl arc it is announcing.
         """
 
-        self._text(text, FontRole.DISPLAY, 34, (255, 250, 235))
-        self._text(text, FontRole.DISPLAY, 34, (32, 84, 128))
+        width, height = 236, 112
+        mini = self.art.creature("creature.marine.dolphin", (76, 38))
+        if view.steer_hint:
+            x, y = REFERENCE_WIDTH // 2 - width // 2, 70
+            surface.blit(self._panel((width, height)), (x, y))
+            face = pygame.Rect(x, y, width, height - 6)
+            phase = int(view.now / 0.6) % 2
+            up = self._glyph("arrow_up", 44, faded=phase != 0)
+            down = self._glyph("arrow_down", 44, faded=phase != 1)
+            if up is not None:
+                surface.blit(up, up.get_rect(center=(face.x + 44, face.centery - 23)))
+            if down is not None:
+                surface.blit(down, down.get_rect(center=(face.x + 44, face.centery + 23)))
+            if mini is not None:
+                dy = -18 if phase == 0 else 18
+                surface.blit(mini, mini.get_rect(center=(face.x + 160, face.centery + dy)))
+        if view.leap_hint:
+            x, y = REFERENCE_WIDTH // 2 - width // 2 + 60, REFERENCE_HEIGHT - height - 10
+            surface.blit(self._panel((width, height)), (x, y))
+            face = pygame.Rect(x, y, width, height - 6)
+            space = self._glyph("key_space", 54)
+            button = self._glyph("button_a", 46)
+            if space is not None:
+                surface.blit(space, space.get_rect(center=(face.x + 42, face.centery)))
+            if button is not None:
+                surface.blit(button, button.get_rect(center=(face.x + 98, face.centery)))
+            t = (view.now % 1.4) / 1.4
+            hop = math.sin(t * math.pi)
+            sprite = self.art.dolphin_mini(26 - 52 * t) or mini
+            if sprite is not None:
+                centre = (face.x + 140 + int(t * 64), face.bottom - 26 - int(hop * 46))
+                surface.blit(sprite, sprite.get_rect(center=centre))
 
-    def warm_caption(self, caption: str) -> None:
-        """Pre-build a fact caption panel before it is needed."""
+    # -- count-up ------------------------------------------------------------
 
-        if caption:
-            self._wrapped_caption(caption)
+    @staticmethod
+    def count_rows(total: int) -> int:
+        return max(1, math.ceil(total / COUNT_PER_ROW))
 
-    # ---------------------------------------------------------- controls hint
+    def count_slot(self, index: int, total: int) -> tuple[int, int]:
+        """Centre of pearl ``index`` in the count tray (rows of five)."""
 
-    def _draw_key(
+        row, column = divmod(index, COUNT_PER_ROW)
+        width = COUNT_PER_ROW * COUNT_PEARL + (COUNT_PER_ROW - 1) * COUNT_GAP
+        left = REFERENCE_WIDTH // 2 - width // 2
+        return (
+            left + column * (COUNT_PEARL + COUNT_GAP) + COUNT_PEARL // 2,
+            COUNT_GRID_TOP + row * (COUNT_PEARL + COUNT_GAP) + COUNT_PEARL // 2,
+        )
+
+    def draw_count(self, surface: pygame.Surface, view: CountView, origin: tuple[int, int]) -> None:
+        rows = self.count_rows(view.total)
+        grid_h = rows * COUNT_PEARL + (rows - 1) * COUNT_GAP
+        panel = self._panel((400, COUNT_GRID_TOP - COUNT_PANEL_TOP + grid_h + 34))
+        surface.blit(panel, panel.get_rect(midtop=(REFERENCE_WIDTH // 2, COUNT_PANEL_TOP)))
+        pearl = self.art.pearl(COUNT_PEARL)
+        if pearl is None:
+            return
+        for index in range(min(view.shown, view.total)):
+            surface.blit(pearl, pearl.get_rect(center=self.count_slot(index, view.total)))
+        if view.shown < view.total:
+            tx, ty = self.count_slot(view.shown, view.total)
+            t = max(0.0, min(1.0, view.flight))
+            x = origin[0] + (tx - origin[0]) * t
+            y = origin[1] + (ty - origin[1]) * t - math.sin(t * math.pi) * 60
+            surface.blit(pearl, pearl.get_rect(center=(int(x), int(y))))
+
+    # -- picker --------------------------------------------------------------
+
+    def picker_backdrop(self) -> pygame.Surface:
+        if self._picker_backdrop is None:
+            self._picker_backdrop = self.art.picker_backdrop()
+        return self._picker_backdrop
+
+    def draw_picker(
         self,
         surface: pygame.Surface,
-        rect: pygame.Rect,
-        pressed: bool,
-        arrow: str | None,
+        picker: PickerControls,
+        records: dict[str, int],
+        unlocked: tuple[str, ...],
+        suggested: str,
+        now: float,
     ) -> None:
-        """Draw one chunky keycap, optionally with a triangle arrow."""
+        surface.blit(self.picker_backdrop(), (0, 0))
+        painter = self.kit.painter
+        theme = painter.theme
+        small_pearl = self.art.pearl(18)
+        specs = list(JOURNEYS)
+        for index, spec in enumerate(specs):
+            rect = picker.rect(spec.journey_id)
+            is_open = spec.journey_id in unlocked
+            color = theme.text if is_open else mix(theme.text, theme.muted, 0.55)
+            name = painter.label(picker.names.get(spec.journey_id, ""), NAME_SIZE, color, max_width=rect.width)
+            plate = self._panel((rect.width, name.get_height() + 16))
+            surface.blit(plate, (rect.x, rect.bottom + 8))
+            surface.blit(name, name.get_rect(center=(rect.centerx, rect.bottom + 8 + (name.get_height() + 10) // 2)))
+            earned = records.get(spec.journey_id, 0)
+            star_y = rect.bottom + 8 + plate.get_height() + 6 + STAR_SIZE // 2
+            for star_index in range(3):
+                star = self.kit.star(STAR_SIZE, filled=star_index < earned)
+                surface.blit(star, star.get_rect(center=(rect.centerx + (star_index - 1) * (STAR_SIZE + 6), star_y)))
+            if index + 1 < len(specs) and small_pearl is not None:
+                gap_left = rect.right
+                gap_right = picker.rect(specs[index + 1].journey_id).left
+                for step in range(3):
+                    px = gap_left + (gap_right - gap_left) * (step + 1) // 4
+                    surface.blit(small_pearl, small_pearl.get_rect(center=(px, rect.centery)))
+        rect = picker.rect(suggested)
+        frames = self.art.fx_frames("sparkle", 72)
+        if frames:
+            frame = frames[int(now * 4) % len(frames)]
+            bob = int(math.sin(now * 3.0) * 4)
+            surface.blit(frame, frame.get_rect(center=(rect.right - 10, rect.top + 6 + bob)))
 
-        face = rect.move(0, 5 if pressed else 0)
-        pygame.draw.rect(surface, (120, 92, 52), rect.move(0, 6), border_radius=14)
-        pygame.draw.rect(surface, (255, 226, 130) if pressed else (255, 252, 242), face, border_radius=14)
-        pygame.draw.rect(surface, (238, 186, 92), face, 3, border_radius=14)
-        if arrow is None:
-            return
-        cx, cy = face.center
-        if arrow == "up":
-            points = [(cx - 13, cy + 8), (cx + 13, cy + 8), (cx, cy - 12)]
-        else:
-            points = [(cx - 13, cy - 8), (cx + 13, cy - 8), (cx, cy + 12)]
-        pygame.draw.polygon(surface, (146, 96, 22), points)
 
-    def _draw_controls_hint(self, surface: pygame.Surface, clock: float) -> None:
-        """Animated, wordless swim/leap hint shown while Tito's welcome plays.
-
-        Up/Down keys light alternately (swim), then the wide key presses with a
-        leaping arc above it (jump). Entirely drawn: no text, no new assets.
-        """
-
-        step = int(clock / 0.55) % 4  # up, down, up, down; space cycles on 1.65 s
-        up_rect = pygame.Rect(0, 0, 62, 62)
-        down_rect = pygame.Rect(0, 0, 62, 62)
-        up_rect.center = (REFERENCE_WIDTH // 2 - 60, 244)
-        down_rect.center = (REFERENCE_WIDTH // 2 - 60, 318)
-        self._draw_key(surface, up_rect, step % 2 == 0, "up")
-        self._draw_key(surface, down_rect, step % 2 == 1, "down")
-
-        space_rect = pygame.Rect(0, 0, 170, 62)
-        space_rect.center = (REFERENCE_WIDTH // 2 + 110, 318)
-        space_pressed = (clock % 1.65) > 1.2
-        self._draw_key(surface, space_rect, space_pressed, None)
-        # Leaping arc over the wide key: grows while it is "pressed".
-        arc_rect = pygame.Rect(0, 0, 120, 64)
-        arc_rect.midbottom = (space_rect.centerx, space_rect.top - 8)
-        pygame.draw.arc(surface, (255, 252, 242), arc_rect, 0.15, math.pi - 0.15, 6 if space_pressed else 4)
-        tip = (arc_rect.right - 8, arc_rect.centery + 2)
-        pygame.draw.polygon(surface, (255, 252, 242), [(tip[0] - 9, tip[1] - 11), (tip[0] + 9, tip[1] - 6), (tip[0] - 1, tip[1] + 8)])
-
-    # ---------------------------------------------------------------- world
-
-    def render_world(self, surface: pygame.Surface, world: JourneyState) -> None:
-        cam_x = world.dolphin.x - 220.0
-
-        # 1. Baked sky/sea backdrop (single opaque blit).
-        surface.blit(self._art.get_backdrop(), (0, 0))
-
-        # 2. Parallax islands just above the horizon.
-        islands = self._art.get_islands()
-        iw = islands.get_width()
-        ix = -int(cam_x * 0.16) % iw
-        surface.blit(islands, (ix - iw, SURFACE_Y - 112))
-        surface.blit(islands, (ix, SURFACE_Y - 112))
-
-        # 3. Drifting clouds in the sky band.
-        c1, c2, c3 = self._art.get_clouds()
-        cw1 = c1.get_width() + 260
-        cw2 = c2.get_width() + 320
-        cw3 = c3.get_width() + 300
-        surface.blit(c1, (int(150 - cam_x * 0.07) % cw1 - 130, 42))
-        surface.blit(c2, (int(560 - cam_x * 0.11) % cw2 - 160, 88))
-        surface.blit(c3, (int(980 - cam_x * 0.09) % cw3 - 150, 24))
-
-        # 4. Far foam strip (slower than the world).
-        self._blit_wave_strip(surface, cam_x * 0.75, SURFACE_Y - 4)
-
-        # 5. Decor: kelp, corals, landmarks.
-        for item in world.decor:
-            sx = int(item.x - cam_x)
-            if sx < -420 or sx > REFERENCE_WIDTH + 120:
-                continue
-            if item.kind == "kelp":
-                strip = self._art.get_kelp_strip(300 if item.x % 2 < 1 else 380)
-                surface.blit(strip, (sx - strip.get_width() // 2, 556 - strip.get_height()))
-            elif item.kind == "coral":
-                coral = self._art.get_coral()
-                surface.blit(coral, (sx - coral.get_width() // 2, 566 - coral.get_height()))
-            else:
-                landmark = self._art.get_landmark(item.kind)
-                surface.blit(
-                    landmark,
-                    (sx - landmark.get_width() // 2, 592 - landmark.get_height()),
-                )
-
-        # 6. Ambient bubbles.
-        for bubble in world.bubbles:
-            bx = int(bubble.x - cam_x)
-            if -14 <= bx <= REFERENCE_WIDTH + 14:
-                sprite = self._art.get_particle("bubble", bubble.size, WHITE)
-                surface.blit(sprite, (bx - bubble.size // 2, int(bubble.y) - bubble.size // 2))
-
-        # 7. Jellyfish.
-        jelly_frames = self._art.get_jelly_frames()
-        for jelly in world.jellies:
-            sx = int(jelly.x - cam_x)
-            if -120 <= sx <= REFERENCE_WIDTH + 120:
-                pulse = int((jelly.drift_phase / (2 * 3.14159)) * 3) % 3
-                frame = jelly_frames[pulse]
-                surface.blit(frame, (sx - frame.get_width() // 2, int(jelly.effective_y) - frame.get_height() // 2))
-
-        # 8. Pickups.
-        pearl_sprite = self._art.get_pearl()
-        pw, ph = pearl_sprite.get_size()
-        for pearl in world.pearls:
-            if pearl.collected:
-                continue
-            sx = int(pearl.x - cam_x)
-            sy = int(pearl.effective_y)
-            if -pw <= sx <= REFERENCE_WIDTH + pw:
-                surface.blit(pearl_sprite, (sx - pw // 2, sy - ph // 2))
-        star_sprite = self._art.get_starfish()
-        sw, sh = star_sprite.get_size()
-        for star in world.starfish:
-            if star.collected:
-                continue
-            sx = int(star.x - cam_x)
-            sy = int(star.y)
-            if -sw <= sx <= REFERENCE_WIDTH + sw:
-                surface.blit(star_sprite, (sx - sw // 2, sy - sh // 2))
-
-        # 9. Dolphin: breach somersault frames while airborne, otherwise the
-        # pose-bucket swim cycle (all rotations pre-baked).
-        dolf = world.dolphin
-        if dolf.airborne:
-            step = int(round(dolf.flip_step_fraction * FLIP_STEPS)) % FLIP_STEPS
-            sprite = self._art.get_flip_frame(step)
-        else:
-            pose = self._art.pose_for_motion(dolf.vertical_velocity, dolf.airborne)
-            tail_step = int(round(dolf.tail_phase / (math.pi / 2))) % 4
-            sprite = self._art.get_dolphin_frame(pose, tail_step)
-        dsx = int(dolf.x - cam_x)
-        dsy = int(dolf.y)
-        if dolf.is_dashing and not dolf.airborne:
-            # Wake streaks: length, offset, weight and shade all breathe with
-            # the tail beat so the boost reads as moving water, not a decal.
-            for i in range(4):
-                dy = (-20, -7, 7, 20)[i]
-                wobble = math.sin(dolf.tail_phase * 2.2 + i * 1.9) * 5.0
-                length = 30 + int((math.sin(dolf.tail_phase * 3.4 + i * 2.1) * 0.5 + 0.5) * 34)
-                gap = 86 + i * 11
-                color = (235, 250, 255) if i % 2 == 0 else (196, 232, 248)
-                y = dsy + dy + int(wobble)
-                pygame.draw.line(
-                    surface,
-                    color,
-                    (dsx - gap - length, y),
-                    (dsx - gap, y),
-                    3 if i % 2 == 0 else 2,
-                )
-        surface.blit(sprite, (dsx - sprite.get_width() // 2, dsy - sprite.get_height() // 2))
-
-        # 10. Particles on top of the action.
-        for particle in world.particles:
-            px = int(particle.x - cam_x)
-            py = int(particle.y)
-            if -30 <= px <= REFERENCE_WIDTH + 30:
-                size_bucket = (max(6, int(particle.size * particle.life)) // 4) * 4
-                sprite_p = self._art.get_particle(particle.kind, size_bucket, particle.color)
-                surface.blit(sprite_p, (px - sprite_p.get_width() // 2, py - sprite_p.get_height() // 2))
-
-        # 11. Near foam strip over the action for depth.
-        self._blit_wave_strip(surface, cam_x * 1.18, SURFACE_Y + 6)
-
-    def _blit_wave_strip(self, surface: pygame.Surface, scroll: float, y: int) -> None:
-        tile, _near_tile = self._art.get_wave_tiles()
-        tw = tile.get_width()
-        start = -int(scroll) % tw
-        for x in range(start - tw, REFERENCE_WIDTH + tw, tw):
-            surface.blit(tile, (x, y))
-
-    # ------------------------------------------------------------------ HUD
-
-    def draw_hud(self, surface: pygame.Surface, view: HudView) -> None:
-        # Pearl counter pill (top-right, outside protected Home chrome).
-        count_text = self._text(str(view.pearls_count), FontRole.TITLE, 26, (146, 96, 22))
-        pill_w = 64 + count_text.get_width()
-        pill = pygame.Rect(REFERENCE_WIDTH - pill_w - 20, 16, pill_w, 46)
-        pygame.draw.rect(surface, (255, 253, 246), pill, border_radius=16)
-        pygame.draw.rect(surface, _PILL_BORDER, pill, 3, border_radius=16)
-        small_pearl = self._art.get_small_pearl()
-        surface.blit(small_pearl, (pill.x + 12, pill.y + 5))
-        surface.blit(count_text, (pill.x + 54, pill.y + (pill.height - count_text.get_height()) // 2))
-
-        # Journey progress bar (bottom-centre, picture-based landmarks).
-        bar = self._art.get_progress_bar()
-        bar_rect = bar.get_rect(midbottom=(REFERENCE_WIDTH // 2 + 40, REFERENCE_HEIGHT - 12))
-        surface.blit(bar, bar_rect)
-        marker = self._art.get_marker()
-        fraction = max(0.0, min(1.0, view.journey_fraction))
-        marker_x = int(bar_rect.x + 12 + fraction * (bar_rect.width - 44))
-        surface.blit(marker, (marker_x, bar_rect.y - 4))
-
-        # Tito curiosity affordance (large circular portrait button).
-        tito_center = TITO_RECT.center
-        halo_color = (255, 214, 120) if view.tito_speaking else (255, 244, 214)
-        pygame.draw.circle(surface, halo_color, tito_center, TITO_RECT.width // 2)
-        pygame.draw.circle(surface, (238, 186, 92), tito_center, TITO_RECT.width // 2, 3)
-        portrait = self._art.get_tito_portrait(58)
-        surface.blit(portrait, portrait.get_rect(center=tito_center))
-        if not view.tito_speaking:
-            # Small speech-bubble nudge so the affordance reads as "talk".
-            bubble_x, bubble_y = TITO_RECT.right - 18, TITO_RECT.top + 2
-            pygame.draw.circle(surface, WHITE, (bubble_x, bubble_y), 11)
-            pygame.draw.polygon(surface, WHITE, [(bubble_x - 6, bubble_y + 8), (bubble_x - 14, bubble_y + 18), (bubble_x + 2, bubble_y + 11)])
-            pygame.draw.circle(surface, (238, 186, 92), (bubble_x, bubble_y), 11, 2)
-            for i, dx in enumerate((-4, 1, 6)):
-                pygame.draw.circle(surface, (196, 148, 84), (bubble_x + dx, bubble_y), 1 + (i == 1))
-
-        if view.controls_hint:
-            self._draw_controls_hint(surface, view.hint_clock)
-
-        # Chapter celebration banner (transient).
-        if view.banner_text:
-            banner = self._text(view.banner_text, FontRole.DISPLAY, 34, (255, 250, 235))
-            shadow = self._text(view.banner_text, FontRole.DISPLAY, 34, (32, 84, 128))
-            bw = banner.get_width() + 56
-            box = pygame.Rect(0, 0, bw, 62)
-            box.center = (REFERENCE_WIDTH // 2, 96)
-            pygame.draw.rect(surface, (38, 116, 178), box, border_radius=20)
-            pygame.draw.rect(surface, (250, 215, 120), box, 4, border_radius=20)
-            surface.blit(shadow, shadow.get_rect(center=(box.centerx + 2, box.centery + 2)))
-            surface.blit(banner, banner.get_rect(center=box.center))
-
-        # Fact caption bubble anchored above the Tito button, clamped inside
-        # the reference frame on both edges.
-        if view.fact_caption:
-            panel, _lines = self._wrapped_caption(view.fact_caption)
-            anchor_x = TITO_RECT.centerx - panel.get_width() // 2 - 6
-            anchor_x = max(16, min(anchor_x, REFERENCE_WIDTH - panel.get_width() - 16))
-            anchor_y = TITO_RECT.top - panel.get_height() - 14
-            surface.blit(panel, (anchor_x, anchor_y))
-            pygame.draw.polygon(
-                surface,
-                (255, 252, 242),
-                [
-                    (TITO_RECT.centerx - 18, anchor_y + panel.get_height() - 2),
-                    (TITO_RECT.centerx + 6, TITO_RECT.top - 4),
-                    (TITO_RECT.centerx - 4, anchor_y + panel.get_height() - 14),
-                ],
-            )
+__all__ = ["CountView", "DelfinoRenderer", "Effect", "PEARL_SIZE", "SWIM_FX", "SwimView", "ARCH_SIZE"]

@@ -2,7 +2,7 @@
 id = "org.greia.viaggio-delfino"
 legacy_ids = []
 title_key = "activity.viaggio_delfino.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
@@ -11,14 +11,20 @@ categories = ["play", "explore"]
 discovery_tags = ["sea", "action", "nature"]
 
 [education]
-categories = ["motor_skills", "reaction_time", "science_curiosity"]
+# Three finite swim journeys: steer the dolphin's depth (continuous
+# tracking), time leaps over the waves, meet sea friends who unlock one
+# recorded dolphin fact each, and watch the pearls counted into rows of five
+# at the finish.
+categories = ["motor_skills", "marine_life", "science_curiosity", "counting"]
 difficulty = 2
 recommended_age_min = 4
-recommended_age_max = 8
+recommended_age_max = 7
 skills = [
   { id = "motor.coordination.hand_eye", weight = 3 },
   { id = "motor.pointer.continuous_tracking", weight = 2 },
-  { id = "science.nature_curiosity", weight = 2 },
+  { id = "nature.marine_life.observation", weight = 2 },
+  { id = "science.nature_curiosity", weight = 1 },
+  { id = "math.counting.one_to_one", weight = 1 },
 ]
 events = [
   { id = "dolphin.chapter_completed", kind = "completion" },
@@ -32,11 +38,15 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
+# Hybrid: while swimming, the directional vocabulary (arrows / W-S / D-pad /
+# left stick hold the depth; Space / Enter / south face button leap) plus
+# pointer and touch (aim at a depth, tap to leap). The journey map and the
+# completion scene use kit focus navigation (arrows / D-pad, Space / south).
 profile = "hybrid"
 
 [requirements]
-required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["keyboard", "touch"]
+required_capabilities = ["display", "audio.basic"]
+optional_capabilities = ["pointer", "keyboard", "touch", "controller"]
 
 [permissions]
 requested = []

@@ -131,37 +131,25 @@ class DolphinResizeTests(unittest.TestCase):
         app = object.__new__(DelfinoJourneyApp)
         old_canvas = SimpleNamespace(surface=object(), present=mock.Mock())
         new_canvas = SimpleNamespace(surface=object(), present=mock.Mock())
-        app.screen = object()
         app.canvas = old_canvas
-        app.completion_screen = None
-        app.renderer = SimpleNamespace(render_world=mock.Mock(), draw_hud=mock.Mock())
-        app.world = SimpleNamespace(
-            dolphin=SimpleNamespace(x=0.0),
-            session_pearls=0,
-            update=lambda _dt, _rng: [],
-        )
-        app._rng = object()
-        app._banner_text = None
-        app._banner_until = 0.0
-        app._active_fact = None
-        app._fact_until = 0.0
-        app.start_new_journey = lambda: None
-        app._toggle_welcome = lambda: None
-        app._persist = mock.Mock()
-        app.events_service = SimpleNamespace(close=mock.Mock())
-        app.audio = SimpleNamespace(shutdown=mock.Mock())
+        app._running = True
+        app._enter_picker = lambda: None
+        app.advance = lambda _dt: None
+        drawn_on = []
+        app.draw = lambda: drawn_on.append(app.canvas)
+        app.shutdown = mock.Mock()
 
-        def resize(_old_screen, _old_canvas, _running, _dt):
-            app.screen = object()
+        def resize(_event):
             app.canvas = new_canvas
-            return False
 
-        app._handle_events = resize
-        fake_clock = SimpleNamespace(tick=lambda *_: 16)
+        app.handle_event = resize
         with (
-            mock.patch("activities.viaggio_delfino.delfino_app.pygame.time.Clock", return_value=fake_clock),
+            mock.patch(
+                "activities.viaggio_delfino.delfino_app.pygame.event.get",
+                return_value=[SimpleNamespace(type=pygame.VIDEORESIZE)],
+            ),
             mock.patch("activities.viaggio_delfino.delfino_app.get_theme", return_value=SimpleNamespace(background=(0, 0, 0))),
-            mock.patch("activities.viaggio_delfino.delfino_app.activity_stop_requested", return_value=False),
+            mock.patch("activities.viaggio_delfino.delfino_app.activity_stop_requested", side_effect=[False, True]),
             mock.patch("activities.viaggio_delfino.delfino_app.mark_activity_ready"),
             mock.patch("activities.viaggio_delfino.delfino_app.pygame.display.flip"),
             mock.patch("activities.viaggio_delfino.delfino_app.pygame.quit"),
@@ -169,7 +157,7 @@ class DolphinResizeTests(unittest.TestCase):
             self.assertEqual(app.run(), 0)
         new_canvas.present.assert_called_once()
         old_canvas.present.assert_not_called()
-        app.renderer.render_world.assert_called_once_with(new_canvas.surface, app.world)
+        self.assertEqual(drawn_on, [new_canvas])
 
 
 if __name__ == "__main__":
