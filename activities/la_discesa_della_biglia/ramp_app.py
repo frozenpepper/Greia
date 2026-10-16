@@ -29,6 +29,7 @@ from uuid import uuid4
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.activity_controls import (
     ControlKit,
     ControlLayout,
@@ -204,11 +205,12 @@ class MarbleRunActivity:
     # -- main loop ------------------------------------------------------------
 
     def run(self) -> int:
-        ticker = pygame.time.Clock()
+        # Input redraws, motion animates; the idle build screen is static.
+        frames = FrameGovernor(redraw_on_input=True, keepalive_seconds=1.0)
         last = self.clock()
         try:
             while self._running and not activity_stop_requested():
-                for event in pygame.event.get():
+                for event in frames.events():
                     self._handle_event(event)
                 repeat = self._input.poll()
                 if repeat is not None:
@@ -216,16 +218,21 @@ class MarbleRunActivity:
                 now = self.clock()
                 animating = self.step(min(0.1, now - last))
                 last = now
-                self.render()
-                self.canvas.present()
-                pygame.display.flip()
-                if not self._ready_published:
-                    mark_activity_ready()
-                    self._ready_published = True
-                if self.state is AppState.TERMINAL:
-                    ticker.tick(15)
-                else:
-                    ticker.tick(30 if animating else 20)
+                frame = frames.frame(
+                    dirty=self.controls.layer.invalidation.should_draw,
+                    animating=animating,
+                    ambient=self.state is AppState.TERMINAL,
+                )
+                if frame is FrameKind.FULL:
+                    self.render()
+                    self.canvas.present()
+                    pygame.display.flip()
+                    if not self._ready_published:
+                        mark_activity_ready()
+                        self._ready_published = True
+                elif frame is FrameKind.POINTER:
+                    self.canvas.present_pointer()
+                frames.wait(polling=self._input.repeating)
         finally:
             self.progress.save(self.visit.progress)
             self.typography.clear()
@@ -235,9 +242,9 @@ class MarbleRunActivity:
         """Advance the run, timers and motion; return True while something moves."""
 
         now = self.clock()
-        self.timeline.run_due()
+        changed = self.timeline.run_due()
         if self.cast is not None:
-            self.cast.update()
+            changed = self.cast.update() or changed
         self.motion.prune(now)
         if self.state is AppState.RUNNING and self.run_ is not None:
             for hit in self.run_.advance(dt):
@@ -247,7 +254,8 @@ class MarbleRunActivity:
         self._maybe_hint(now)
         cast_moving = self.cast is not None and self.cast.animating
         return (
-            self.state in (AppState.RUNNING, AppState.PAUSE, AppState.CELEBRATE)
+            changed
+            or self.state in (AppState.RUNNING, AppState.PAUSE, AppState.CELEBRATE)
             or self.motion.active(now)
             or cast_moving
             or self.drag is not None

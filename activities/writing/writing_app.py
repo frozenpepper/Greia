@@ -30,6 +30,7 @@ from greia_platform.activity_controls import (
 from greia_platform.activity_feedback import CastFeedback
 from greia_platform.activity_ui import ChildUiMetrics, draw_activity_pointer
 from greia_platform.emoji_palette import EmojiPalette
+from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.input_core import InputEdge, SemanticAction, SemanticInputEvent
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.typography import FontRole, GreiaTypography, grapheme_boundaries, grapheme_spans
@@ -192,28 +193,40 @@ class WritingApp:
     # -- public lifecycle -----------------------------------------------
 
     def run(self) -> int:
-        clock = pygame.time.Clock()
+        # Input redraws; the caret blink, banners and save status redraw when
+        # their visible state changes; keepalive bounds anything else.
+        frames = FrameGovernor(redraw_on_input=True, keepalive_seconds=1.0)
         self.running = True
         ready_published = False
+        shown: tuple[object, ...] | None = None
         while self.running and not activity_stop_requested():
-            for event in pygame.event.get():
+            for event in frames.events():
                 self.handle_event(event)
             repeat = self._input.poll()
             if repeat is not None:
                 self._route_semantic(repeat)
             self._step_frame()
-            self._draw()
-            # Legacy optional canvas seam (disabled in production composition).
-            if self.canvas is not None:
-                try:
-                    self.canvas.present(clear=(252, 246, 232))
-                except Exception:
-                    pass
-            pygame.display.flip()
-            if not ready_published:
-                mark_activity_ready()
-                ready_published = True
-            clock.tick(30)
+            signature = self._visual_signature()
+            frame = frames.frame(
+                dirty=signature != shown or self.controls.layer.invalidation.should_draw,
+                animating=bool(self._fx) or (self.cast is not None and self.cast.animating),
+            )
+            if frame is not FrameKind.SKIP:
+                # Writing draws straight to the display (no reference canvas),
+                # so a pointer-only frame is a full redraw here.
+                self._draw()
+                shown = signature
+                # Legacy optional canvas seam (disabled in production composition).
+                if self.canvas is not None:
+                    try:
+                        self.canvas.present(clear=(252, 246, 232))
+                    except Exception:
+                        pass
+                pygame.display.flip()
+                if not ready_published:
+                    mark_activity_ready()
+                    ready_published = True
+            frames.wait(polling=self._input.repeating)
         self._save()
         pygame.key.stop_text_input()
         self.surfaces.close()
@@ -1063,6 +1076,17 @@ class WritingApp:
         if self.save_error or self.shared_state == "error":
             return "error"
         return "saving" if self.dirty else "saved"
+
+    def _visual_signature(self) -> tuple[object, ...]:
+        """Time-dependent visible state; a change means one redraw is due."""
+
+        return (
+            self.mode,
+            self._caret_visible(),
+            self._status(),
+            self.shared_state,
+            self._clock() < self.library_full_until,
+        )
 
     def _caret_visible(self) -> bool:
         if self.toolbar_focus:

@@ -49,6 +49,7 @@ from greia_platform.pygame_canvas import (
 from greia_platform.pygame_input import PygameInputTranslator
 from greia_platform.typography import GreiaTypography
 from greia_platform.ui_core import SurfaceNavigator, UiEventResult
+from greia_platform.frame_governor import FrameGovernor, FrameKind
 
 if __package__:
     from .sub_art import PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y, PORTHOLE_RADIUS, SubmarineArt
@@ -711,24 +712,31 @@ class SubmarineApp:
         self.store.save(self.model.log)
 
     def run(self) -> int:
+        # Input redraws at full rate; the sea and Leo are ambient, presented
+        # at a reduced rate once the child has been idle.
+        frames = FrameGovernor(redraw_on_input=True)
         last_time = time.monotonic()
         while self._running and not activity_stop_requested():
             now = time.monotonic()
             dt = min(0.1, max(0.001, now - last_time))
             last_time = now
-            for event in pygame.event.get():
+            for event in frames.events():
                 self.handle_event(event)
                 if not self._running:
                     break
             if not self._running:
                 break
             self.advance(dt)
-            self.draw()
-            pygame.display.flip()
-            if not self._ready_published:
-                mark_activity_ready()
-                self._ready_published = True
-            self._frame_clock.tick(30)
+            frame = frames.frame(ambient=True)
+            if frame is FrameKind.FULL:
+                self.draw()
+                pygame.display.flip()
+                if not self._ready_published:
+                    mark_activity_ready()
+                    self._ready_published = True
+            elif frame is FrameKind.POINTER:
+                self.canvas.present_pointer()
+            frames.wait()
         self.audio.stop_voice()
         if self._dirty:
             self._save()

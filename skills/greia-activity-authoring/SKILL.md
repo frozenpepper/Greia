@@ -520,7 +520,7 @@ cast = CastFeedback("dani", height=170, art=kit.art)                  # cast.cor
 
 - **Shared art library:** reuse scenes, props, creatures, HUD glyphs, FX and cast poses by semantic ID (`bg.*`, `prop.*`, `creature.*`, `icon.hud.*`, `fx.*`, `character.<id>` variants) instead of drawing private art; inventory and registration rules are in `assets/visual/README.md` and `skills/greia-visual-authoring/SKILL.md`. Never redraw a cast member inside an Activity.
 - **Theme folders:** one Activity is one experience; the Shell groups related Activities. Add a theme to the manifest's `discovery_tags` (e.g. `discovery_tags = ["sea", "nature"]`) to join that theme's Shell folder. A theme becomes a one-level folder only if it is listed in `FOLDER_THEME_IDS` (`src/greia_launcher/catalogue_view.py`, currently `sea`) and has at least 3 visible members after Parent/age filtering; adding a new folder theme is a platform change (icon + constant + test), not an Activity change. Do not build multi-game hubs inside one Activity.
-- **Pointer and input parity:** `PygameReferenceCanvas.present()` already draws the platform pointer (`pointer=True` default); do not draw your own cursor, and keep calling `present()` every frame on completion screens so the pointer stays live. A `hybrid` input profile must still provide keyboard and controller paths for every action (kit focus navigation does this for kit controls; custom hit targets need `ExternalTarget`).
+- **Pointer and input parity:** `PygameReferenceCanvas.present()` already draws the platform pointer (`pointer=True` default); do not draw your own cursor. Do not present every frame to keep the pointer live: the frame governor's `POINTER` frames call `canvas.present_pointer()` (see "Frame governance" below). A `hybrid` input profile must still provide keyboard and controller paths for every action (kit focus navigation does this for kit controls; custom hit targets need `ExternalTarget`).
 
 ### Patterns from the 2026-10 reworks (all 45 Activities)
 
@@ -560,6 +560,34 @@ full-screen expensive alpha work that never settles
 Prefer preloaded/cached immutable assets, bounded caches/queues, event-driven/invalidation rendering where appropriate, and cheap static states.
 
 A performance stall can become an audio/timing bug by delaying feedback until semantic events collide.
+
+### Frame governance (ADR 0037 §6a, mandatory)
+
+Never flip unchanged frames and never use a bare `Clock.tick` loop. Every loop uses `greia_platform.frame_governor`:
+
+```python
+from greia_platform.frame_governor import FrameGovernor, FrameKind
+
+frames = FrameGovernor()                       # policy from GREIA_FRAME_PROFILE / CPU count
+while running and not activity_stop_requested():
+    for event in frames.events():              # drains pygame.event.get(), notes input/pointer motion
+        handle(event)                          # state change -> self._dirty = True
+    animating = self.step()                    # True only while something essential moves
+    frame = frames.frame(dirty=self._dirty, animating=animating, ambient=idle_motion)
+    if frame is FrameKind.FULL:
+        self.render(); self.canvas.present(); pygame.display.flip(); self._dirty = False
+        # first FULL frame -> mark_activity_ready()
+    elif frame is FrameKind.POINTER:
+        self.canvas.present_pointer()          # only Greia's pointer moved: no scene re-render
+    frames.wait(polling=self._input.repeating) # replaces Clock.tick
+```
+
+- **Mark dirty** for every visible state change: input handled, timer/timeline fired, `cast.update()` returned True, `controls.layer.invalidation.should_draw`, a time-based visual flipping state (e.g. caret blink phase). `frames.invalidate()` does the same from code that has no dirty flag.
+- **`animating=True`** only for essential motion (feedback, a steered character, physics after GO); `frames.animate_for(seconds)` requests a fixed animation window.
+- **`ambient=True`** for decorative idle motion (bubbles, clouds, breathing cast, sparkles): full rate for a few seconds after input, then 10–12 fps.
+- **Fixed-step simulations** keep their step with `frames.wait(polling=True)` and present only when `frame()` says so; `polling=True` also keeps held-stick repeats on cadence.
+- Activities that draw straight to the display (no reference canvas, e.g. Writing/Painting) treat `POINTER` as a full redraw.
+- Check with `PYTHONDONTWRITEBYTECODE=1 python3 tools/measure_activity_idle_cpu.py --settle 15 <activity>`: a static screen should show ~0 presents/s.
 
 Load `ENGINEERING.md` before implementation.
 

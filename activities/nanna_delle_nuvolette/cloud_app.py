@@ -34,6 +34,7 @@ import time
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.activity_controls import (
     ControlArt,
     ControlKit,
@@ -239,16 +240,17 @@ class CloudActivity:
     # -- main loop ----------------------------------------------------------------
 
     def run(self) -> int:
-        ticker = pygame.time.Clock()
+        frames = FrameGovernor()
         try:
             while self._running and not activity_stop_requested():
-                for event in pygame.event.get():
+                for event in frames.events():
                     self.handle_event(event)
                 repeat = self._input.poll()
                 if repeat is not None:
                     self._dispatch(repeat)
                 lively = self.step()
-                if self._dirty or self._ambient_due():
+                frame = frames.frame(dirty=self._dirty or self._ambient_due())
+                if frame is FrameKind.FULL:
                     self.render()
                     self.canvas.present()
                     pygame.display.flip()
@@ -257,7 +259,9 @@ class CloudActivity:
                     if not self.ready_published:
                         mark_activity_ready()
                         self.ready_published = True
-                ticker.tick(30 if lively else 15)
+                elif frame is FrameKind.POINTER:
+                    self.canvas.present_pointer()
+                frames.wait(polling=lively or self._input.repeating)
         finally:
             self.persist()
             self.typography.clear()

@@ -46,6 +46,7 @@ from greia_platform.activity_controls import (
     PygameControlInput,
 )
 from greia_platform.activity_feedback import CastFeedback
+from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.input_core import InputEdge, InputSource, SemanticAction, SemanticInputEvent
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_png import PygamePngError, encode_surface_png
@@ -205,6 +206,8 @@ class Curtain:
 
 class TeatrinoApp:
     """Coordinate the puppet theatre: stage, recording, shows, sheets, input."""
+
+    _hinting = False  # idle hint glow active (ambient motion), set by step()
 
     def __init__(
         self,
@@ -403,26 +406,29 @@ class TeatrinoApp:
 
     def run(self) -> int:
         ready_published = False
-        ticker = pygame.time.Clock()
+        frames = FrameGovernor()
         self.running = True
         try:
             while self.running and not activity_stop_requested():
-                for event in pygame.event.get():
+                for event in frames.events():
                     self.handle_event(event)
                 repeat = self._input.poll()
                 if repeat is not None:
                     self._dispatch(repeat)
                 animating = self.step()
-                if self._dirty or animating:
+                frame = frames.frame(dirty=self._dirty, animating=animating, ambient=self._hinting)
+                if frame is FrameKind.FULL:
                     self.render()
                     self._dirty = False
-                # Present every frame: the platform draws the Greia pointer here.
-                self.canvas.present(clear=(0, 0, 0))
-                pygame.display.flip()
-                if not ready_published:
-                    mark_activity_ready()
-                    ready_published = True
-                ticker.tick(30 if animating else 20)
+                    self.canvas.present(clear=(0, 0, 0))
+                    pygame.display.flip()
+                    if not ready_published:
+                        mark_activity_ready()
+                        ready_published = True
+                elif frame is FrameKind.POINTER:
+                    # Only the platform pointer moved: no scene re-render.
+                    self.canvas.present_pointer()
+                frames.wait(polling=self._input.repeating)
         finally:
             self.shutdown()
         return 0
@@ -505,12 +511,14 @@ class TeatrinoApp:
             self._dirty = True
         if self.controls.layer.invalidation.should_draw:
             self._dirty = True
+        # The idle hint glow can stay on indefinitely: it is ambient motion
+        # (reduced frame rate once the child is idle), not essential motion.
+        self._hinting = self._hint_target(now) is not None
         return (
             self.mode != StageMode.EDIT
             or self.stage.animating
             or self.curtain.moving
             or self.fx.active
-            or self._hint_target(now) is not None
             or any(f is not None and f.animating for f in (self.cast, self.shelf_cast))
             or self.timeline.busy
         )

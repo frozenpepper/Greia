@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+
 import pygame
 
 from greia_platform.activity_api import (
@@ -9,6 +11,7 @@ from greia_platform.activity_api import (
     get_input_profile,
     mark_activity_ready,
 )
+from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.input_core import InputEdge, SemanticAction
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
@@ -89,20 +92,29 @@ class EncyclopediaApp:
         return self.navigator.back()
 
     def run(self) -> int:
-        clock = pygame.time.Clock()
+        # Pages animate gently: input redraws at full rate, idle pages are
+        # ambient (reduced rate after a quiet spell).
+        frames = FrameGovernor(redraw_on_input=True)
+        last = time.monotonic()
         while self._running and not activity_stop_requested():
-            dt = min(0.1, clock.tick(30) / 1000.0)
-            for event in pygame.event.get():
+            for event in frames.events():
                 self._handle_event(event)
-            self.navigator.update(dt)
-            self.navigator.draw(self.canvas.surface)
-            if self.navigator.can_go_back:
-                self._draw_back_button(self.canvas.surface)
-            self.canvas.present(pointer=True)
-            pygame.display.flip()
-            if not self._ready_published:
-                mark_activity_ready()
-                self._ready_published = True
+            now = time.monotonic()
+            self.navigator.update(min(0.1, now - last))
+            last = now
+            frame = frames.frame(ambient=True)
+            if frame is FrameKind.FULL:
+                self.navigator.draw(self.canvas.surface)
+                if self.navigator.can_go_back:
+                    self._draw_back_button(self.canvas.surface)
+                self.canvas.present(pointer=True)
+                pygame.display.flip()
+                if not self._ready_published:
+                    mark_activity_ready()
+                    self._ready_published = True
+            elif frame is FrameKind.POINTER:
+                self.canvas.present_pointer()
+            frames.wait()
         return 0
 
     def _draw_back_button(self, surface: pygame.Surface) -> None:

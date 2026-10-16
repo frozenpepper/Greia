@@ -39,6 +39,7 @@ from greia_platform.activity_controls import (
     PygameControlInput,
 )
 from greia_platform.activity_ui import ChildUiMetrics
+from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.input_core import InputEdge, SemanticAction, SemanticInputEvent
 from greia_platform.localization import LocalizationError, LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
@@ -654,8 +655,11 @@ class AquariumApp:
     # ------------------------------------------------------------------
 
     def run(self) -> int:
+        # The tank simulates at a fixed 30 Hz step; swimming is ambient, so
+        # it is *presented* at a reduced rate once the child has been idle.
+        self._frames = FrameGovernor(redraw_on_input=True)
         while self._running and not activity_stop_requested():
-            for event in pygame.event.get():
+            for event in self._frames.events():
                 self.handle_event(event)
                 if not self._running:
                     break
@@ -667,11 +671,19 @@ class AquariumApp:
 
     def _step_frame(self, dt: float) -> None:
         self.advance(dt)
-        self._draw()
-        if not self.ready_published:
-            mark_activity_ready()
-            self.ready_published = True
-        self.clock.tick(30)
+        frames: FrameGovernor | None = getattr(self, "_frames", None)
+        frame = frames.frame(ambient=True) if frames is not None else FrameKind.FULL
+        if frame is FrameKind.FULL:
+            self._draw()
+            if not self.ready_published:
+                mark_activity_ready()
+                self.ready_published = True
+        elif frame is FrameKind.POINTER:
+            self.canvas.present_pointer()
+        if frames is not None:
+            frames.wait(polling=True)  # keep the fixed simulation cadence
+        else:
+            self.clock.tick(30)
 
     def advance(self, dt: float) -> None:
         """Simulate one frame: held-stick repeat, tank, missions, Tito, autosave."""

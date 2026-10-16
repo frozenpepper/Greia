@@ -25,6 +25,7 @@ from greia_platform.activity_controls import (
 )
 from greia_platform.activity_feedback import CastFeedback
 from greia_platform.activity_ui import ChildUiMetrics, draw_activity_pointer
+from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.pygame_canvas import activity_viewport_for_surface
 from greia_platform.typography import GreiaTypography
 from greia_platform.ui_core import SurfaceNavigator
@@ -207,21 +208,35 @@ class PaintingApp:
     # -- lifecycle --------------------------------------------------------
 
     def run(self) -> int:
+        # Input (strokes are drags) redraws; banners/save status redraw when
+        # their visible state changes; keepalive bounds anything else.
+        frames = FrameGovernor(redraw_on_input=True, keepalive_seconds=1.0)
         self.running = True
         ready_published = False
+        shown: tuple[object, ...] | None = None
         while self.running and not activity_stop_requested():
-            for event in pygame.event.get():
+            for event in frames.events():
                 self.handle_event(event)
             repeat = self._input.poll()
             if repeat is not None and not self.controller_pointer.active:
                 self._dispatch_to_kit(repeat)
-            self._step_frame()
-            self._draw()
-            pygame.display.flip()
-            if not ready_published:
-                mark_activity_ready()
-                ready_published = True
-            self.clock.tick(30)
+            moved = self._step_frame()
+            signature = self._visual_signature()
+            frame = frames.frame(
+                dirty=moved or signature != shown or self.controls.layer.invalidation.should_draw,
+                animating=bool(self._fx) or (self.cast is not None and self.cast.animating),
+            )
+            if frame is not FrameKind.SKIP:
+                # Painting draws straight to the display (no reference canvas),
+                # so a pointer-only frame is a full redraw here.
+                self._draw()
+                shown = signature
+                pygame.display.flip()
+                if not ready_published:
+                    mark_activity_ready()
+                    ready_published = True
+            # A controller-driven virtual pointer is polled at frame cadence.
+            frames.wait(polling=self.controller_pointer.active or self._input.repeating)
         self._save()
         self.surfaces.close()
         pygame.quit()
@@ -273,7 +288,8 @@ class PaintingApp:
         elif self._save():
             self.running = False
 
-    def _step_frame(self) -> None:
+    def _step_frame(self) -> bool:
+        """Advance timers; return True when the virtual pointer moved."""
         now = self._clock()
         elapsed = min(0.1, max(0.0, now - self._last_frame))
         self._last_frame = now
@@ -297,6 +313,18 @@ class PaintingApp:
         if self.cast is not None:
             self.cast.update()
         self._fx = [burst for burst in self._fx if not burst.done]
+        return moved is not None
+
+    def _visual_signature(self) -> tuple[object, ...]:
+        """Time-dependent visible state; a change means one redraw is due."""
+
+        return (
+            self.mode,
+            self._status(),
+            self.shared_feedback,
+            self.shared_import_state,
+            self._clock() < self.library_full_until,
+        )
 
     # -- input routing ----------------------------------------------------
 

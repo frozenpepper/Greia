@@ -203,6 +203,11 @@ class PygameReferenceCanvas:
         )
         flags = pygame.SRCALPHA if alpha else 0
         self.surface = pygame.Surface((spec.width, spec.height), flags)
+        # Last presented state, so a pointer-only refresh can repair the old
+        # pointer area from ``surface`` instead of re-rendering the scene.
+        self._last_clear: tuple[int, ...] | None = None
+        self._last_smooth = False
+        self._pointer_rect: pygame.Rect | None = None
 
     def pointer(
         self,
@@ -223,6 +228,8 @@ class PygameReferenceCanvas:
         # migrated so this authority correction does not become an API break.
         del system_chrome
 
+        self._last_clear = tuple(clear) if clear is not None else None
+        self._last_smooth = smooth
         if clear is not None:
             self.target.fill(clear)
 
@@ -258,10 +265,67 @@ class PygameReferenceCanvas:
         finally:
             self.target.set_clip(previous_clip)
 
+        self._pointer_rect = None
         if pointer:
             from .activity_ui import draw_activity_pointer
 
-            draw_activity_pointer(self.target)
+            self._pointer_rect = draw_activity_pointer(self.target)
+
+    @property
+    def _unscaled(self) -> bool:
+        transform = self.mapper.transform
+        return (
+            int(round(self.spec.width * transform.scale)) == self.spec.width
+            and int(round(self.spec.height * transform.scale)) == self.spec.height
+        )
+
+    def present_pointer(self) -> bool:
+        """Refresh only Greia's pointer after ``FrameKind.POINTER``.
+
+        Repairs the previous pointer rectangle from the last rendered logical
+        frame, draws the pointer at the current mouse position and pushes just
+        those two small rectangles with ``pygame.display.update``.  Returns
+        False when the cheap path does not apply (scaled presentation): it
+        then re-presents the unchanged logical frame and flips instead, which
+        still avoids re-rendering the scene.
+        """
+
+        from .activity_ui import draw_activity_pointer
+
+        on_display = self.target is pygame.display.get_surface()
+        if not self._unscaled:
+            self.present(clear=self._last_clear, smooth=self._last_smooth)
+            if on_display:
+                pygame.display.flip()
+            return False
+        dirty: list[pygame.Rect] = []
+        old = self._pointer_rect
+        if old is not None:
+            self._repair(old)
+            dirty.append(old)
+        self._pointer_rect = draw_activity_pointer(self.target)
+        if self._pointer_rect is not None:
+            dirty.append(self._pointer_rect)
+        if dirty and on_display:
+            pygame.display.update(dirty)
+        return True
+
+    def _repair(self, rect: pygame.Rect) -> None:
+        """Restore ``rect`` of the target from the last presented frame."""
+
+        area = rect.clip(self.target.get_rect())
+        if area.width <= 0 or area.height <= 0:
+            return
+        if self._last_clear is not None:
+            self.target.fill(self._last_clear, area)
+        transform = self.mapper.transform
+        target = transform.target
+        visible = area.clip(pygame.Rect(target.x, target.y, target.width, target.height))
+        if visible.width <= 0 or visible.height <= 0:
+            return
+        origin = transform.logical_to_physical((0.0, 0.0))
+        ox, oy = int(round(origin[0])), int(round(origin[1]))
+        self.target.blit(self.surface, visible.topleft, visible.move(-ox, -oy))
 
 
 __all__ = [

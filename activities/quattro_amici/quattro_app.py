@@ -30,6 +30,7 @@ import time
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.activity_controls import (
     ControlKit,
     ControlLayout,
@@ -188,6 +189,7 @@ class QuattroApp:
     running: bool = True
     _surfaces: SurfaceNavigator | None = None
     _dirty: bool = True
+    _frames: FrameGovernor | None = None
 
     def __init__(
         self,
@@ -269,7 +271,7 @@ class QuattroApp:
     # -- main loop ----------------------------------------------------------------
 
     def run(self) -> int:
-        ticker = pygame.time.Clock()
+        frames = self._frames = FrameGovernor()
         try:
             while self.running and not activity_stop_requested():
                 self._process_events()
@@ -277,7 +279,8 @@ class QuattroApp:
                 if repeat is not None:
                     self._dispatch(repeat)
                 animating = self.step()
-                if self._dirty or animating:
+                frame = frames.frame(dirty=self._dirty, animating=animating)
+                if frame is FrameKind.FULL:
                     self.render()
                     self.canvas.present()
                     pygame.display.flip()
@@ -285,7 +288,9 @@ class QuattroApp:
                     if not self.ready_published:
                         mark_activity_ready()
                         self.ready_published = True
-                ticker.tick(30 if animating else 15)
+                elif frame is FrameKind.POINTER:
+                    self.canvas.present_pointer()
+                frames.wait(polling=self._input.repeating)
         finally:
             self.typography.clear()
         return 0
@@ -340,7 +345,8 @@ class QuattroApp:
     # -- input ----------------------------------------------------------------------
 
     def _process_events(self) -> None:
-        for event in pygame.event.get():
+        frames = self._frames
+        for event in frames.events() if frames is not None else pygame.event.get():
             self._handle_event(event)
             if not self.running:
                 return

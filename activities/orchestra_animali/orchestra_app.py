@@ -31,6 +31,7 @@ import time
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.activity_controls import (
     ControlKit,
     ControlLayout,
@@ -263,10 +264,10 @@ class OrchestraApp:
     # -- main loop ------------------------------------------------------------------
 
     def run(self) -> int:
-        ticker = pygame.time.Clock()
+        frames = FrameGovernor()
         try:
             while self._running and not activity_stop_requested():
-                for event in pygame.event.get():
+                for event in frames.events():
                     self.handle_event(event)
                     if not self._running:
                         break
@@ -276,7 +277,8 @@ class OrchestraApp:
                 if repeat is not None:
                     self._dispatch(repeat)
                 animating = self.step()
-                if self._dirty or animating:
+                frame = frames.frame(dirty=self._dirty, animating=animating)
+                if frame is FrameKind.FULL:
                     self.render()
                     self.canvas.present()
                     pygame.display.flip()
@@ -284,7 +286,9 @@ class OrchestraApp:
                     if not self._ready_published:
                         mark_activity_ready()
                         self._ready_published = True
-                ticker.tick(30 if animating else 15)
+                elif frame is FrameKind.POINTER:
+                    self.canvas.present_pointer()
+                frames.wait(polling=self._input.repeating)
         finally:
             self.playalong.stop()
             self._save()

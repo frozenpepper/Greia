@@ -501,18 +501,24 @@ def draw_activity_pointer(
     inner_color: tuple[int, int, int] = (255, 255, 255),
     border_color: tuple[int, int, int] = (78, 56, 40),
     radius: int = 11,
-) -> None:
-    """Draw Greia's high-contrast responsive pointer cursor at the mouse position."""
+) -> pygame.Rect | None:
+    """Draw Greia's high-contrast responsive pointer cursor at the mouse position.
+
+    Returns the rectangle it covered (``None`` when nothing was drawn) so a
+    frame-governed Activity can later repair just that area
+    (``PygameReferenceCanvas.present_pointer``).
+    """
     if pos is None:
         if not pygame.mouse.get_focused():
-            return
+            return None
         pos = pygame.mouse.get_pos()
     x, y = pos
     if x <= 0 and y <= 0:
-        return
+        return None
     pygame.draw.circle(surface, color, pos, radius)
     pygame.draw.circle(surface, inner_color, pos, max(1, radius // 2))
     pygame.draw.circle(surface, border_color, pos, radius, max(1, radius // 5))
+    return pygame.Rect(int(x) - radius - 1, int(y) - radius - 1, 2 * radius + 3, 2 * radius + 3)
 
 
 def is_home_clicked(surface: pygame.Surface, pos: tuple[int, int]) -> bool:

@@ -24,6 +24,7 @@ from typing import Callable
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.activity_controls import (
     ControlKit,
     ControlLayout,
@@ -222,22 +223,27 @@ class ForestaApp:
 
     # -- main loop -------------------------------------------------------------------------
     def run(self) -> int:
-        ticker = pygame.time.Clock()
+        # Falling letters animate while playing; the completion scene is ambient.
+        frames = FrameGovernor(redraw_on_input=True)
         while self._running and not activity_stop_requested():
-            for event in pygame.event.get():
+            for event in frames.events():
                 self._handle_event(event)
             if self.state is AppState.TERMINAL:
                 repeat = self._input.poll()
                 if repeat is not None:
                     self._dispatch(repeat)
             self.tick()
-            self._render()
-            self.canvas.present()
-            pygame.display.flip()
-            if not self._ready_published:
-                mark_activity_ready()
-                self._ready_published = True
-            ticker.tick(20 if self.state is AppState.TERMINAL else 30)
+            frame = frames.frame(animating=self.state is not AppState.TERMINAL, ambient=True)
+            if frame is FrameKind.FULL:
+                self._render()
+                self.canvas.present()
+                pygame.display.flip()
+                if not self._ready_published:
+                    mark_activity_ready()
+                    self._ready_published = True
+            elif frame is FrameKind.POINTER:
+                self.canvas.present_pointer()
+            frames.wait(polling=self._input.repeating)
         self._save()
         return 0
 

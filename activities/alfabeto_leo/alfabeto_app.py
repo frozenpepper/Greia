@@ -22,6 +22,7 @@ from typing import Callable
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.activity_controls import (
     ControlKit,
     ControlLayout,
@@ -233,16 +234,17 @@ class AlfabetoApp:
 
     # -- main loop --------------------------------------------------------------------
     def run(self) -> int:
-        ticker = pygame.time.Clock()
+        frames = FrameGovernor()
         while self._running and not activity_stop_requested():
-            for event in pygame.event.get():
+            for event in frames.events():
                 self._handle_event(event)
             repeat = self._input.poll()
             if repeat is not None:
                 self._dispatch(repeat)
             if self.tick():
                 self._dirty = True
-            if self._dirty:
+            frame = frames.frame(dirty=self._dirty)
+            if frame is FrameKind.FULL:
                 self._render()
                 self.canvas.present()
                 pygame.display.flip()
@@ -250,7 +252,9 @@ class AlfabetoApp:
                 if not self._ready_published:
                     mark_activity_ready()
                     self._ready_published = True
-            ticker.tick(30 if self._animating() else 20)
+            elif frame is FrameKind.POINTER:
+                self.canvas.present_pointer()
+            frames.wait(polling=self._animating() or self._input.repeating)
         self._save()
         return 0
 

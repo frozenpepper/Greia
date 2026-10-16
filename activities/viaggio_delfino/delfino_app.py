@@ -58,6 +58,7 @@ from greia_platform.pygame_completion import (
 )
 from greia_platform.typography import GreiaTypography
 from greia_platform.ui_core import SurfaceNavigator, UiEventResult
+from greia_platform.frame_governor import FrameGovernor, FrameKind
 
 try:
     from delfino_art import DelfinoArt
@@ -143,6 +144,10 @@ def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
 
 class DelfinoJourneyApp:
     """Greia Activity application for Il Viaggio del Delfino."""
+
+    # Class-level default so the frame governor's phase check is safe before
+    # ``_enter_picker`` (and in partially built test doubles).
+    phase: Phase = Phase.PICKER
 
     def __init__(
         self,
@@ -615,7 +620,8 @@ class DelfinoJourneyApp:
     # ------------------------------------------------------------ lifecycle
 
     def run(self) -> int:
-        frame_clock = pygame.time.Clock()
+        # Swimming and counting animate; the picker and finale are ambient.
+        frames = FrameGovernor(redraw_on_input=True)
         theme = get_theme()
         self._enter_picker()
         ready_published = False
@@ -624,21 +630,25 @@ class DelfinoJourneyApp:
             now = time.monotonic()
             dt = min(0.1, max(0.001, now - previous))
             previous = now
-            for event in pygame.event.get():
+            for event in frames.events():
                 self.handle_event(event)
                 if not self._running:
                     break
             if not self._running:
                 break
             self.advance(dt)
-            self.draw()
-            # VIDEORESIZE replaces self.canvas inside the event owner; always
-            # present the current canvas, never a stale local.
-            self._present_frame(self.canvas, theme)
-            if not ready_published:
-                mark_activity_ready()
-                ready_published = True
-            frame_clock.tick(30)
+            frame = frames.frame(animating=self.phase in (Phase.SWIM, Phase.COUNT), ambient=True)
+            if frame is FrameKind.FULL:
+                self.draw()
+                # VIDEORESIZE replaces self.canvas inside the event owner; always
+                # present the current canvas, never a stale local.
+                self._present_frame(self.canvas, theme)
+                if not ready_published:
+                    mark_activity_ready()
+                    ready_published = True
+            elif frame is FrameKind.POINTER:
+                self.canvas.present_pointer()
+            frames.wait()
         self.shutdown()
         pygame.quit()
         return 0

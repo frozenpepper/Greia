@@ -27,6 +27,7 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
+from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.localization import LocalizedResources, activity_resources
 
 if __package__:
@@ -60,17 +61,24 @@ def main() -> int:
     app = build_app(screen, resources, storage=storage)
 
     # READY is published only after the first frame has actually been presented.
+    # The tank simulates at a fixed 30 Hz step; swimming is ambient, so it is
+    # presented at a reduced rate once the child has been idle.
+    frames = FrameGovernor(redraw_on_input=True)
     while not activity_stop_requested():
-        for event in pygame.event.get():
+        for event in frames.events():
             app.handle_event(event)
         if not app._running:
             break
         app.advance(0.033)
-        app._draw()
-        if not app.ready_published:
-            mark_activity_ready()
-            app.ready_published = True
-        app.clock.tick(30)
+        frame = frames.frame(ambient=True)
+        if frame is FrameKind.FULL:
+            app._draw()
+            if not app.ready_published:
+                mark_activity_ready()
+                app.ready_published = True
+        elif frame is FrameKind.POINTER:
+            app.canvas.present_pointer()
+        frames.wait(polling=True)  # keep the fixed simulation cadence
     app._autosave()
     return 0
 

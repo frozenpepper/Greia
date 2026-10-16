@@ -38,6 +38,7 @@ from greia_platform.activity_controls import (
 from greia_platform.input_core import InputEdge, SemanticAction, SemanticInputEvent
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.ui_core import SurfaceNavigator, UiEventResult
+from greia_platform.frame_governor import FrameGovernor, FrameKind
 
 try:
     from orca_audio import OrcaAudio
@@ -697,20 +698,27 @@ class OrcaBayActivity:
     def run(self) -> int:
         """Main activity execution loop."""
 
+        # The bay simulates at a fixed 30 Hz step; the swimming pod is
+        # ambient, so it is presented at a reduced rate once the child idles.
+        frames = FrameGovernor(redraw_on_input=True)
         while self._running and not activity_stop_requested():
-            for event in pygame.event.get():
+            for event in frames.events():
                 self.handle_event(event)
                 if not self._running:
                     break
             if not self._running:
                 break
             self.advance(0.033)
-            self.draw()
-            pygame.display.flip()
-            if not self._ready_published:
-                mark_activity_ready()
-                self._ready_published = True
-            self._frame_clock.tick(30)
+            frame = frames.frame(ambient=True)
+            if frame is FrameKind.FULL:
+                self.draw()
+                pygame.display.flip()
+                if not self._ready_published:
+                    mark_activity_ready()
+                    self._ready_published = True
+            elif frame is FrameKind.POINTER:
+                self.canvas.present_pointer()
+            frames.wait(polling=True)  # keep the fixed simulation cadence
         self.audio.stop_voice()
         self._save()
         return 0

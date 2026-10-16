@@ -51,6 +51,18 @@ Each control renders `normal`, `hover`, `pressed`, `disabled`, `selected` (and `
 
 Bodies, labels, composites and rings live in hard-bounded LRU caches (`BoundedCache`) owned by one `ControlKit` per Activity surface; `draw` is blits only (no font construction, text rendering, decoding or scaling per frame); content changes (a new number or label) build one new entry. `ControlLayer.invalidation` supports event-driven Activities; cast motion is an offset, never a per-frame scale. Art is resolved semantically (`get_shared_visual_path`), scaled once, and missing art degrades to vector/text fallbacks.
 
+### 6a. Frame governance (amendment 2026-10-16)
+
+The Acer sweep (`docs/reviews/acer/2026-10-16_ACER_ACTIVITY_SWEEP.md` §3.4) measured 19 of 29 Activities above 60% idle CPU on the Atom N270 because their loops re-rendered and flipped the full 1024×600 frame 20–30 times a second while nothing changed. Every Pygame Activity loop is therefore governed by one platform object, `greia_platform.frame_governor.FrameGovernor`, extending the canvas seam rather than adding a framework:
+
+* **Activities declare, the governor decides.** Per iteration the loop calls `frames.frame(dirty=…, animating=…, ambient=…)` and honours the answer: `FULL` (render, `present`, flip), `POINTER` (`PygameReferenceCanvas.present_pointer()` repairs only the old/new pointer rectangles from the last frame and calls `display.update(rects)`), or `SKIP` (no render, no present, no flip). `frames.wait()` replaces `Clock.tick`.
+* **Static screens cost ~0.** With nothing dirty the loop only sleeps `idle_poll_seconds` (50 ms) between event/timer polls, so `step()` timers keep running; `pygame.event.wait(timeout)` is deliberately not used because Pygame ≥ 2.1.3 implements it as a 1 ms poll loop.
+* **Capped motion.** `dirty`/`animating`/`animate_for(s)` present at `animation_fps`, never faster (hover storms are capped too). `ambient` (bubbles, clouds, idle cast, page sparkle) runs at full rate for `ambient_after_seconds` after the last child input, then at `ambient_fps`. Fixed-step simulations keep their step via `wait(polling=True)` (Clock.tick-like cadence) and only *present* at the governed rate.
+* **Hardware class.** `FramePolicy.from_environment()`: `GREIA_FRAME_PROFILE=standard` (30 / 12 fps, ambient after 8 s) or `reference-floor` (24 / 10 fps, ambient after 6 s); unset → reference-floor on ≤ 2 logical CPUs (Atom N270), else standard.
+* **Pointer and chrome.** `events()` notes pointer motion, so Greia's platform pointer follows promptly even on static screens; input latency on a static screen is bounded by `idle_poll_seconds` plus one frame. Trusted Home/Back is unaffected: it lives in the launcher/simulator layer above the Activity surface (the simulator re-draws it on both `flip` and partial `update`).
+* **Migration aids.** Loops that historically redrew every frame without complete dirty tracking use `FrameGovernor(redraw_on_input=True, keepalive_seconds=1.0)`: every non-motion input and every drag invalidates, and keepalive bounds how stale a missed state change can get. New Activities should track dirty state explicitly instead.
+* **Measurement.** `tools/measure_activity_idle_cpu.py` runs Activities headless (SDL dummy) and reports idle CPU via `getrusage` plus presents/s; it is a desktop proxy, not Atom evidence.
+
 ### 7. Relationship to existing decisions
 
 * ADR 0018: the kit is the Control level of Screen → Overlay → Control; no windows, z-order games or desktop widgets.

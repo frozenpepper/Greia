@@ -1283,6 +1283,16 @@ class PygameControlInput:
             return self._pointer(phase, event.pos)
         return None
 
+    @property
+    def repeating(self) -> bool:
+        """True while a held stick direction generates navigation repeats.
+
+        Frame-governed loops pass this as ``FrameGovernor.wait(polling=...)``
+        so repeats keep their cadence while nothing is being presented.
+        """
+
+        return self._held is not None
+
     def poll(self) -> SemanticInputEvent | None:
         """Return one repeated stick navigation step when due (call per frame)."""
 
