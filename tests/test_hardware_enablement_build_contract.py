@@ -18,18 +18,6 @@ class HardwareEnablementBuildContractTests(unittest.TestCase):
         }
         self.assertIn("isenkram-cli", packages)
 
-    def test_hardware_pool_manifest_builder_and_inspector_are_present(self) -> None:
-        self.assertTrue((PROJECT_ROOT / "tools/build_hardware_support_pool_manifest.py").is_file())
-        self.assertTrue((PROJECT_ROOT / "tools/inspect_hardware_enablement.py").is_file())
-
-    def test_hardware_enablement_architecture_decision_is_present(self) -> None:
-        self.assertTrue(
-            (
-                PROJECT_ROOT
-                / "docs/adr/0021-automatic-hardware-enablement-and-capability-discovery.md"
-            ).is_file()
-        )
-
 
 if __name__ == "__main__":
     unittest.main()

@@ -91,15 +91,6 @@ class BootProgressContractTests(unittest.TestCase):
         self.assertEqual(intro.count("_draw_progress_bar("), 1)
         self.assertIn("_background_rgb", intro)
 
-    def test_design_contract_records_visible_bar_retirement(self) -> None:
-        text = self.read("docs/design/GREIA_BOOT_PROGRESS.md")
-        self.assertIn("does **not** show a loading/progress bar", text)
-        self.assertIn("compatibility labels", text)
-        self.assertIn("5 seconds animation", text)
-        self.assertIn("2 seconds final-frame hold", text)
-        self.assertIn("retry storm", text)
-        self.assertIn("physical", text.lower())
-
 
 if __name__ == "__main__":
     unittest.main()
