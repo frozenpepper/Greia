@@ -647,3 +647,111 @@ Not re-checked here: the time-left pill (still no play limit configured), and cr
 - Shell left on Home, star count 1 from the earned badge. Same Shell PID throughout, `NRestarts` 0, no OOM.
 - `/tmp/gs` and `/tmp/gsweep.py` are deleted. No settings or system files were changed.
 - New data: about 12 history sessions, one more published Shape Garden creation, a `creation.completed` event, star balance 1 and the "first garden" badge.
+
+---
+
+## Game verification at fce322b9
+
+**Evidence class:** PHYSICAL DEVICE + remote input injection (`xdotool` as `greiakid` on `:0`, not physical touchpad or keyboard).
+**Deployed:** `/opt/greia-os/.deployed-sha` = `fce322b9…`. Every game was launched from its Home → Collection (or Mare folder) tile through the real Shell path. The exception is treno_numeri: the profile's `recommended_only` filter still hides it, so it was run STANDALONE.
+
+**Method (new instrument).** A persistent-connection Xlib prober (`XGetImage` over ctypes, about 160–190 samples/s) counts **distinct presented frames** in a horizontal 1024×8 strip (or a small box) crossing the moving content.
+- It runs at the same time as the scripted input and the 1 Hz CPU/RSS sampler.
+- "fps_per_s" is per-second frame counts.
+- Step- or event-driven games only change the strip when something moves through it, so their mean understates smoothness. Read the per-second peaks for those.
+- The prober costs CPU on the same Atom (about 160 grabs/s), so it is pessimistic.
+
+**Latency.** Latency is input → first pixel change in a region that was static before the input (the keycap hint, a control, or the play area).
+
+**Idle.** Idle is 60 s with the pointer parked and no input, sampled straight after play. Each game then got one input that should make a sound, with the ALSA PCM state polled every 150 ms ("first sound after long silence").
+
+**Caveat on pointer latency.** The pointer probe also moved to the persistent connection. Its floor is now about 2–5 ms, against about 40–50 ms for the earlier PIL-per-grab probe. Earlier pointer numbers are therefore **not comparable**.
+
+### G.1 Games while playing
+
+| Game (input used) | Launch s | Presented fps while active (per-second peaks) | Activity / Xorg CPU while playing | RSS MB | Input → visible | Idle 60 s after play | Mixer closed after idle → wake sound | Home → ended |
+|---|---|---|---|---|---|---|---|---|
+| colline_allegre (mouse GO/BRAKE hold; then keys) | 8.4 | **23–24 while driving** (mouse); 22–24 with keys; 13–14 only while braking or stopped | 47–49% / 15% | 69–76 | GO click **93 ms**, BRAKE click 127 ms, Right → lit keycap 106 ms, Space → keycap 67 ms | 50.8% (the level was still animating after finishing) | no, PCM still `RUNNING` | 0.69 s |
+| sottomarino_giramondo (cluster AVANTI/DESTRA/SALI by mouse, then arrows) | 8.1 | **23–25 while moving**; one dip during an encounter card | 68% / 13% | 83–87 | AVANTI click **30 ms**, Up → lit keycap 82 ms | 10.9% | yes → sound `RUNNING` ≤150 ms | 0.83 s |
+| baia_delle_orche (care buttons + taps; arrows) | – (navigation slip; was 5.8 s at 15212f44) | event-driven: 18–24 bursts, mean 13 | 52% / 13% | 86–102 | COCCOLE click 133 ms, Right → keycap hint 98 ms | 13.2% | yes → ≤150 ms | 0.72 s |
+| costruiamo_ponti (pick plank → gap → **VIA!**) | 6.9 | **bridge run 18–24 fps** (two runs measured; a run lasts about 2 s) | 27–34% / 11–13% | 70–79 | – | 9.6% | yes → ≤150 ms | 0.95 s |
+| la_discesa_della_biglia (ramp → place → VIA! beside tray) | 8.5 | **marble run 20–22 fps** (about 2 s) | 32% / 23% | 69–70 | – | 7.7% | yes → ≤150 ms | 1.01 s |
+| labirinto_magico (held arrows) | 7.0 | step-based; strip measure not meaningful | 59% / 15% | 66–69 | arrow → maze change 21–55 ms (noisy: region not always static) | 14.1% | yes → ≤150 ms | 0.93 s |
+| corsa_bacche (held arrows) | 7.1 | step movement, 9–17 strip changes/s | 61% / 15% | 68–69 | – | 12.6% | yes → ≤300 ms | 0.77 s |
+| foresta_parole (arrows + Space) | 6.4 | **falling letters 22–24** | 39% / 14% | 102–105 | Left/Right → lit keycap **21–37 ms** (one 570 ms outlier) | **33.1%**, RSS 109 → 113.6 MB during the 60 s (a round was still running) | yes → ≤300 ms | 1.10 s |
+| volo_draghetto (level 1, Up/Down/Space) | 7.4 | **12.4 mean (peaks 20); below the ≥20 target** | **77–84%** / 13% | 81–93 | – | 90% (auto-flight continues without input) | no, PCM `RUNNING` | 1.17 s |
+| viaggio_delfino (level 1, Up/Down/Space) | **13.8** | **23–25 steady** | 55% / 16% | 94–102 | – (keycap region shared with moving bubbles) | 27.7% | yes → ≤300 ms | 0.83 s |
+| acquario_magico (care buttons + taps) | 6.7 | 9–23, mean 17 | **85%** / 11% | 79–86 | – | 19.0% | yes → ≤150 ms | 1.03 s |
+| quattro_amici (column taps vs CPU) | 7.9 | **token drop 6–7 changes/s in the board box** | **88%** / 9% | 67–70 | column tap → change not captured (the CPU's turn) | 13.9% | yes → ≤150 ms | 1.23 s |
+| treno_numeri (STANDALONE; hidden by filter) | 4.4 (standalone) | not captured: my click did not load a valid wagon, so GO never ran | 61% in the first seconds | 72 | – | – | – | – |
+
+Keycap hints were visible at start and **lit on key press** in:
+- colline: Right lit;
+- sottomarino: Down lit;
+- foresta: Left lit;
+- labirinto, delfino, volo and baia (night scene, top right).
+
+costruiamo_ponti showed **no keycap hint** at start or while Right was held (screenshot). Its GO/VIA! sits beside the tray as described, as does biglia's. volo_draghetto showed the **Left** keycap lit while only Up/Down/Space had been pressed (screenshot): either a sticky highlight or a deliberate suggestion; worth checking.
+
+### G.2 Before / after (interaction-window Activity CPU and idle)
+
+| Game | Interaction CPU 0f560c2e → 15212f44 → fce322b9 | Idle (15212f44 "LATE" at 45 s / fce322b9 60 s after play) | fps at 15212f44 |
+|---|---|---|---|
+| colline_allegre | 110 → 92 → **47–49%** | 16% / 51% (level animating) | not measured |
+| sottomarino_giramondo | 99 → 60 → 68% | 13% / 11% | not measured |
+| baia_delle_orche | 93 → 24 → 52% | 15% / 13% | not measured |
+| costruiamo_ponti | 46 → 22 → 27–34% | 17% / 10% | not measured |
+| la_discesa_della_biglia | 84 → 41 → 32% | 18% / 8% | not measured |
+| labirinto_magico | 136 → 52 → 59% | 13% / 14% | not measured |
+| corsa_bacche | 119 → 69 → 61% | 13% / 13% | not measured |
+| foresta_parole | 116 → 70 → 39% | 88% → (a8be76d7: 7–9%) / 33% | not measured |
+| volo_draghetto | 132 → 69 → 77–84% | 13% / 90% (still flying) | not measured |
+| viaggio_delfino | 117 → 82 → 55% | 13% / 28% | not measured |
+| acquario_magico | 118 → 69 → 85% | 15% / 19% | not measured |
+| quattro_amici | 96 → 74 → 88% | 12% / 14% | not measured |
+
+The interaction scripts differ between sweeps: this pass plays real levels, earlier passes tapped generically. Compare the direction, not the exact values.
+
+### G.3 Spot checks
+
+| Check | a8be76d7 | fce322b9 |
+|---|---|---|
+| painting idle ~45 s after launch | 18.8% | **1.3%** (PCM closed) |
+| writing idle ~45 s after launch | 19.0% | **1.2%** |
+| workshop_settings (Mio Greia) idle | 7.1% | **1.4%** |
+| painting / writing pointer → visible (new persistent-connection probe) | 53 / 53 ms (old probe) | **median 5 / 5 ms**, max 9 ms, including the first move after 1.2 s idle. A single yellow pointer ring is visible; no double cursor. |
+| Home idle over 60 s | 2.4% | 2.5–2.7%, PCM closed |
+| Home → session ended (all 15 sessions) | 0.65–3.10 s | **0.62–1.23 s**, all `graceful_stop` |
+| Crashes / `NRestarts` / OOM / launcher journal errors | 0 / 0 / 0 / none | **0 / 0 / 0 / none** since the 21:29 deploy |
+| MemAvailable lowest | – | 553 MB (volo) |
+
+### G.4 Playability verdict: colline_allegre
+
+**Playable with the mouse alone, and it looks smooth.**
+- Holding the green GO button drives the car at a steady 23–24 presented fps along the hills.
+- Releasing it and holding the red BRAKE stops it.
+- The car reached the finish flag and earned three stars, with the progress bar and star HUD updating.
+- Click → visible reaction is about 90–130 ms.
+- The keyboard path works the same way (Right → lit keycap in 106 ms, 22–24 fps while held).
+
+The "completely unusable" state the owner reported is not reproduced on this build. Whether it feels fun cannot be judged honestly through remote injection. Two physical details are untested:
+- hold-to-drive on the Acer's touchpad means keeping a physical click button pressed, which may be tiring for a small child;
+- colline kept using about 51% CPU with the PCM `RUNNING` for 60 s after a level finished (celebration or next-level scene still animating).
+
+### G.5 Remaining issues, ranked
+
+1. **volo_draghetto still runs below target:** about 12 fps mean in-level (peaks 20) at 77–84% Activity CPU. It is the clear outlier among the motion games.
+2. **quattro_amici:** token-drop animation shows only 6–7 distinct frames per second in the board, with 88% CPU while the CPU opponent plays. **acquario_magico** sits at 85% CPU and 9–23 fps.
+3. **Some games keep the mixer and CPU busy after play stops:** colline after the finish (51%, PCM `RUNNING`), volo (90%, auto-flight continues by design?), foresta (33% with RSS creeping 109 → 114 MB while a round is live) and delfino (28%). The 30 s mixer lease works wherever the scene actually goes quiet (9 of 12 games: PCM `closed`, first sound back within 150–300 ms).
+4. **viaggio_delfino launch is still 13.8 s;** the other 11 games launched in 6.4–8.5 s.
+5. **Keycap hints:** none seen in costruiamo_ponti; volo showed an unexpected lit Left key.
+6. **treno_numeri cannot be reached through the Shell** with this profile's `recommended_only` filter, so it was only checked standalone.
+
+### G.6 Device state left
+
+- Shell on Home (star count 1), `NRestarts` 0.
+- `/tmp/gs` and `/tmp/gsweep.py` deleted. No settings changed.
+- New data:
+  - about 17 history sessions;
+  - Activity events and progress from real play (colline level finished with 3 stars, ponti and biglia rounds 1–2, labirinto maze 1, delfino, quattro_amici moves);
+  - standalone treno_numeri ran with a throwaway data dir under `/tmp`, now removed.
