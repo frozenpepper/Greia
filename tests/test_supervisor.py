@@ -279,6 +279,33 @@ class SupervisorTests(unittest.TestCase):
         self.assertEqual(session.result.session_id, session.session_id)
         self.assertEqual(session.result.exit_reason, ActivityExitReason.LAUNCH_FAILURE)
 
+    def test_unusable_activity_data_dir_fails_one_launch_not_the_shell(self) -> None:
+        # Acer sweep 2026-10-16 P0: a ProfileError from the profile directory
+        # contract escaped supervisor.start and killed the child Shell.
+        from greia_platform.profiles import ProfileError
+
+        class _BrokenProfile(_ProfileContext):
+            def activity_data_dir(self, activity_id: str) -> Path:
+                raise ProfileError("managed profile directory mode is 2770, chmod was refused")
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = _manifest(root / "activity")
+            profile = _BrokenProfile(root / "profile")
+            authority = _Authority(manifest.activity_id, capabilities={"display", "pointer"})
+            factory = mock.Mock(side_effect=AssertionError("process must not start"))
+            supervisor = ActivitySupervisor(
+                require_sandbox=False,
+                runtime_manager=_manager({"display", "pointer"}, process_factory=factory),
+            )
+            with self.assertLogs("greia_launcher.supervisor", level="ERROR"):
+                session = supervisor.start(manifest, profile, authority)
+
+        self.assertEqual(session.state, ActivitySessionState.FAILED)
+        self.assertEqual(session.result.exit_reason, ActivityExitReason.PLATFORM_FAILURE)
+        self.assertIsNone(supervisor.active_session)
+        factory.assert_not_called()
+
     def test_unavailable_runtime_is_normalized_to_launch_failure(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

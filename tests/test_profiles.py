@@ -174,6 +174,94 @@ class ProfileStoreTests(unittest.TestCase):
             self.assertEqual(first_theme.resolve().preferences.background, "sky")
             self.assertEqual(second_theme.resolve().preferences.background, "cream")
 
+    def _deny_chmod_of(self, *foreign: Path):
+        """Simulate directories owned by another identity (the Parent service).
+
+        chmod by a non-owner is always EPERM, even to the current mode, so any
+        chmod attempt on these paths is refused exactly as on the appliance.
+        """
+        original_chmod = os.chmod
+        refused = {Path(path).resolve() for path in foreign}
+        attempts: list[Path] = []
+
+        def guarded_chmod(path, mode, *args, **kwargs):
+            candidate = Path(path).resolve()
+            if candidate in refused:
+                attempts.append(candidate)
+                raise PermissionError(1, "Operation not permitted", str(path))
+            return original_chmod(path, mode, *args, **kwargs)
+
+        return mock.patch("greia_platform.profiles.os.chmod", side_effect=guarded_chmod), attempts
+
+    def test_child_creates_activity_dirs_inside_parent_owned_setgid_collection(self) -> None:
+        # Acer sweep 2026-10-16 P0: the Parent service creates activities/ as
+        # greiapanel 2770; the child must create its per-Activity leaf there
+        # without chmodding (EPERM) or de-setgid'ing the shared parent.
+        with tempfile.TemporaryDirectory() as temporary:
+            store = self.make_store(Path(temporary))
+            profile = store.create("Mia", "robot")
+            context = store.context(profile.profile_id)
+            self.assertEqual(stat.S_IMODE(context.activities_dir.stat().st_mode), 0o2770)
+            patcher, attempts = self._deny_chmod_of(context.activities_dir)
+            with patcher:
+                first = context.activity_data_dir("painting")
+                second = context.activity_data_dir("writing")
+                again = context.activity_data_dir("painting")
+            self.assertEqual(attempts, [])
+            self.assertEqual(first, again)
+            self.assertEqual(stat.S_IMODE(context.activities_dir.stat().st_mode), 0o2770)
+            for leaf in (first, second):
+                with self.subTest(leaf=leaf):
+                    self.assertEqual(leaf.parent, context.activities_dir)
+                    self.assertEqual(stat.S_IMODE(leaf.stat().st_mode), 0o770)
+                    self.assertEqual(leaf.stat().st_gid, store.root.stat().st_gid)
+
+    def test_child_owned_storage_collection_keeps_setgid_across_leaf_creation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            store = self.make_store(Path(temporary))
+            profile = store.create("Mia", "robot")
+            context = store.context(profile.profile_id)
+            first = context.activity_storage_dir("org.greia.painting")
+            self.assertEqual(stat.S_IMODE(context.storage_dir.stat().st_mode), 0o2770)
+            # A second leaf must not need any chmod of the shared collection.
+            patcher, attempts = self._deny_chmod_of(context.storage_dir)
+            with patcher:
+                second = context.activity_storage_dir("org.greia.writing")
+            self.assertEqual(attempts, [])
+            self.assertEqual(stat.S_IMODE(context.storage_dir.stat().st_mode), 0o2770)
+            for leaf in (first, second):
+                with self.subTest(leaf=leaf):
+                    self.assertEqual(stat.S_IMODE(leaf.stat().st_mode), 0o770)
+                    self.assertEqual(leaf.stat().st_gid, store.root.stat().st_gid)
+
+    def test_wrong_mode_foreign_activity_collection_still_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            store = self.make_store(Path(temporary))
+            profile = store.create("Mia", "robot")
+            context = store.context(profile.profile_id)
+            os.chmod(context.activities_dir, 0o2750)
+            patcher, attempts = self._deny_chmod_of(context.activities_dir)
+            with patcher, self.assertRaisesRegex(ProfileError, "chmod was refused"):
+                context.activity_data_dir("painting")
+            self.assertEqual(len(attempts), 1)
+            self.assertFalse((context.activities_dir / "painting").exists())
+
+    def test_activity_leaf_symlink_and_non_directory_are_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            store = self.make_store(Path(temporary))
+            profile = store.create("Mia", "robot")
+            context = store.context(profile.profile_id)
+            outside = Path(temporary) / "outside"
+            outside.mkdir()
+            (context.activities_dir / "painting").symlink_to(outside)
+            with self.assertRaisesRegex(ProfileError, "symbolic link"):
+                context.activity_data_dir("painting")
+            context.storage_dir.mkdir()
+            os.chmod(context.storage_dir, 0o2770)
+            (context.storage_dir / "org.greia.painting").write_text("x", encoding="utf-8")
+            with self.assertRaisesRegex(ProfileError, "non-directory"):
+                context.activity_storage_dir("org.greia.painting")
+
     def test_optional_secret_is_hashed_and_visible_entry_is_default(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             store = self.make_store(Path(temporary))

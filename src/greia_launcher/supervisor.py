@@ -289,7 +289,24 @@ class ActivitySupervisor:
         runtime_command = preparation.command
 
         sandboxed = self._sandbox_required()
-        host_activity_data = profile.activity_data_dir(manifest.activity_id)
+        try:
+            host_activity_data = profile.activity_data_dir(manifest.activity_id)
+        except (ProfileError, OSError) as exc:
+            # A profile-tree contract violation fails this one launch (and
+            # closes its history row), never the child Shell.
+            logger.error(
+                "Activity %s data directory is unusable; launch refused: %s",
+                manifest.activity_id,
+                str(exc)[:400],
+            )
+            return self._failed_launch_session(
+                manifest,
+                profile,
+                authority,
+                session_id=session_id,
+                history_store=history_store,
+                reason=ActivityExitReason.PLATFORM_FAILURE,
+            )
         child_activity_data = SANDBOX_ACTIVITY_ROOT if sandboxed else host_activity_data
 
         sandbox: Path | None = None
@@ -433,15 +450,27 @@ class ActivitySupervisor:
 
         if sandboxed:
             assert sandbox is not None
-            command = self._sandbox_command(
-                sandbox,
-                runtime_command,
-                manifest,
-                profile,
-                authority,
-                storage_broker=storage_broker,
-                event_broker=event_broker,
-            )
+            try:
+                command = self._sandbox_command(
+                    sandbox,
+                    runtime_command,
+                    manifest,
+                    profile,
+                    authority,
+                    storage_broker=storage_broker,
+                    event_broker=event_broker,
+                )
+            except (ActivityLifecycleError, ProfileError, OSError):
+                return self._failed_launch_session(
+                    manifest,
+                    profile,
+                    authority,
+                    session_id=session_id,
+                    control=control,
+                    history_store=history_store,
+                    resources=resources,
+                    reason=ActivityExitReason.PLATFORM_FAILURE,
+                )
             cwd: Path | None = None
         else:
             command = list(runtime_command.command)

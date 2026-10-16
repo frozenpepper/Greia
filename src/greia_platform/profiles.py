@@ -225,9 +225,10 @@ class ProfileContext:
     def activity_data_dir(self, activity_id: str) -> Path:
         if not activity_id or any(character not in "abcdefghijklmnopqrstuvwxyz0123456789._-" for character in activity_id):
             raise ProfileError("unsafe activity identifier")
-        _ensure_managed_directory(self.activities_dir, self.root, mode=0o2770)
         target = self.activities_dir / activity_id
-        _ensure_managed_directory(target, self.root, mode=0o770)
+        _ensure_managed_directory(
+            target, self.root, mode=0o770, intermediate_mode=0o2770
+        )
         return target
 
     def activity_storage_dir(self, activity_id: str) -> Path:
@@ -236,9 +237,10 @@ class ProfileContext:
             for character in activity_id
         ):
             raise ProfileError("unsafe activity identifier")
-        _ensure_managed_directory(self.storage_dir, self.root, mode=0o2770)
         target = self.storage_dir / activity_id
-        _ensure_managed_directory(target, self.root, mode=0o770)
+        _ensure_managed_directory(
+            target, self.root, mode=0o770, intermediate_mode=0o2770
+        )
         return target
 
     @property
@@ -744,7 +746,31 @@ def _ensure_directory_contract(
         )
 
 
-def _ensure_managed_directory(path: Path, managed_root: Path, *, mode: int) -> None:
+def _ensure_managed_directory(
+    path: Path,
+    managed_root: Path,
+    *,
+    mode: int,
+    intermediate_mode: int | None = None,
+) -> None:
+    """Create/validate ``path`` below ``managed_root`` one component at a time.
+
+    ``mode`` is the contract for the leaf only. Every intermediate component
+    is held to ``intermediate_mode`` (default: ``mode``). The distinction is
+    load-bearing: a per-Activity leaf is ``0770`` while its shared parent
+    (``activities/``, ``storage/``) is the setgid ``2770`` collection the
+    Parent service may have created as another identity. Applying the leaf
+    mode to that parent made the child try to chmod a directory it does not
+    own (EPERM -> every Activity launch failed) and, where it did own it,
+    stripped the setgid bit so later leaves lost the managed group.
+
+    ``_ensure_directory_contract`` only chmods on a real mode mismatch, so an
+    existing, correctly-moded parent owned by another identity is accepted
+    untouched; a wrong mode it cannot repair still fails closed, as do
+    symbolic links, non-directories and a foreign group.
+    """
+    if intermediate_mode is None:
+        intermediate_mode = mode
     try:
         relative = path.relative_to(managed_root)
     except ValueError as exc:
@@ -753,7 +779,8 @@ def _ensure_managed_directory(path: Path, managed_root: Path, *, mode: int) -> N
     if current.is_symlink() or (current.exists() and not current.is_dir()):
         raise ProfileError("managed profile root is not a real directory")
     current.mkdir(parents=True, exist_ok=True)
-    for component in relative.parts:
+    last_index = len(relative.parts) - 1
+    for index, component in enumerate(relative.parts):
         current = current / component
         if current.is_symlink():
             raise ProfileError("managed profile path contains a symbolic link")
@@ -761,11 +788,18 @@ def _ensure_managed_directory(path: Path, managed_root: Path, *, mode: int) -> N
             if not current.is_dir():
                 raise ProfileError("managed profile path contains a non-directory")
         else:
-            current.mkdir()
+            try:
+                current.mkdir()
+            except FileExistsError:
+                # Lost a creation race; re-validate what now exists.
+                if current.is_symlink() or not current.is_dir():
+                    raise ProfileError(
+                        "managed profile path changed type during creation"
+                    ) from None
         _ensure_directory_contract(
             current,
             reference_root=managed_root,
-            mode=mode,
+            mode=mode if index == last_index else intermediate_mode,
         )
 
 

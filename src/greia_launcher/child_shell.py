@@ -38,7 +38,7 @@ from .composition import (
 from .display_session import DisplaySessionCoordinator
 from .event_broker import ActivityEventBroker
 from .feedback_presentation import SharedUiFeedbackMixin
-from .main import _development_hal
+from .main import _development_hal, configure_launcher_logging
 from .navigation_chrome_presentation import SharedUiNavigationChromeMixin
 from .presentation import GreiaLauncherPresentation, parse_args
 from .profile_chrome_presentation import SharedUiProfileChromeMixin
@@ -572,6 +572,7 @@ class GreiaChildShell(
 
 def main() -> int:
     emit_boot_marker("launcher_python_enter")
+    configure_launcher_logging()
     args = parse_args()
     # Phase 4 order: minimal shell here; run() owns display, first flip,
     # single-worker preparation and intro-end apply.

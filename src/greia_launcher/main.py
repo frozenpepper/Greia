@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import argparse
+import logging
+import logging.handlers
 import os
 import subprocess
+import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -48,7 +51,9 @@ from greia_platform.profiles import (
     ProfileError,
 )
 
+from greia_platform.history import HistoryError
 from greia_platform.input_core import SemanticAction
+from greia_platform.storage import StorageError
 from .bootstrap import (
     BootLifecycleError,
     BootLifecycleGuard,
@@ -60,14 +65,85 @@ from .composition import (
     build_launcher_runtime_services,
     provisional_installed_display_session,
 )
+from .display_session import DisplaySessionError
 from .launch_feedback import launch_feedback
 from .key_chord import KeyChordTracker
 from .lifecycle import ActivityExitReason, ActivityResult, ActivitySessionState
 from .parent_credential_client import ParentCredentialClient
 from .parent_panel import ParentSettingsOverlay
 from .shell_input import ShellInputController
-from .supervisor import ActivitySupervisor
+from .runtime_adapter import RuntimeAdapterError
+from .supervisor import ActivityLifecycleError, ActivitySupervisor
 from .theme import LauncherThemeController
+
+
+logger = logging.getLogger(__name__)
+
+#: Launch-preparation failures that are expected operational faults (bad
+#: profile tree, full/unwritable storage, history, runtime validation, display
+#: lease, IO or a subprocess timeout). They fail one launch with one bounded
+#: journal line. Anything else is a programming error: still contained so
+#: the child Shell survives, but logged with its full traceback.
+EXPECTED_LAUNCH_START_ERRORS: tuple[type[Exception], ...] = (
+    ProfileError,
+    StorageError,
+    HistoryError,
+    RuntimeAdapterError,
+    ActivityLifecycleError,
+    DisplaySessionError,
+    OSError,
+    subprocess.SubprocessError,
+)
+_LAUNCH_ERROR_TEXT_LIMIT = 400
+
+
+def configure_launcher_logging(
+    *,
+    syslog_address: str = "/dev/log",
+    stream: Any = None,
+) -> None:
+    """Route WARNING+ records (tracebacks included) to the journal. Idempotent.
+
+    ``greia-x-session`` runs the Shell under xinit, whose stdio forwarding
+    provably loses ExecStart output, so a traceback written only to stderr
+    never reached the journal. journald owns ``/dev/log``; when it exists a
+    syslog handler delivers each record (with any traceback) as one journal
+    entry tagged ``greia-launcher``. stderr is kept for development runs.
+    Uncaught exceptions are routed through the same handlers before the
+    interpreter's default hook runs.
+    """
+
+    root = logging.getLogger()
+    if getattr(root, "_greia_launcher_logging", False):
+        return
+    formatter = logging.Formatter("%(levelname)s %(name)s: %(message)s")
+    stderr_handler = logging.StreamHandler(stream if stream is not None else sys.stderr)
+    stderr_handler.setLevel(logging.WARNING)
+    stderr_handler.setFormatter(formatter)
+    root.addHandler(stderr_handler)
+    if syslog_address and os.path.exists(syslog_address):
+        try:
+            syslog_handler = logging.handlers.SysLogHandler(address=syslog_address)
+        except OSError:
+            syslog_handler = None
+        if syslog_handler is not None:
+            syslog_handler.ident = "greia-launcher: "
+            syslog_handler.setLevel(logging.WARNING)
+            syslog_handler.setFormatter(formatter)
+            root.addHandler(syslog_handler)
+    if root.level == logging.NOTSET or root.level > logging.WARNING:
+        root.setLevel(logging.WARNING)
+    previous_hook = sys.excepthook
+
+    def _log_uncaught(exc_type: Any, exc: Any, tb: Any) -> None:
+        if not issubclass(exc_type, KeyboardInterrupt):
+            logging.getLogger("greia_launcher").critical(
+                "child Shell crashed", exc_info=(exc_type, exc, tb)
+            )
+        previous_hook(exc_type, exc, tb)
+
+    sys.excepthook = _log_uncaught
+    root._greia_launcher_logging = True  # type: ignore[attr-defined]
 
 
 @dataclass(frozen=True, slots=True)
@@ -1010,9 +1086,13 @@ class LauncherApplication:
             self._catalogue_error = True
             return
 
-        activity_session = self.supervisor.start(
-            manifest, self._active_profile, authority
-        )
+        try:
+            activity_session = self.supervisor.start(
+                manifest, self._active_profile, authority
+            )
+        except Exception as exc:  # containment boundary; logged below
+            self._contain_launch_start_failure(manifest, exc)
+            return
         self._last_result = activity_session.result
         picker_host = None
         picker_prepare_deadline = 0.0
@@ -1152,6 +1232,34 @@ class LauncherApplication:
         self._active_profile = refreshed
         self.theme_controller.invalidate()
         self.theme_controller.theme
+
+    def _contain_launch_start_failure(
+        self, manifest: ActivityManifest, exc: Exception
+    ) -> None:
+        """Fail one launch without taking the child Shell down.
+
+        Nothing has been presented yet, so the Shell simply stays on the
+        Collection page with the existing launch-error badge. Expected faults
+        log one bounded line; unexpected ones keep their traceback.
+        """
+
+        detail = str(exc)[:_LAUNCH_ERROR_TEXT_LIMIT]
+        if isinstance(exc, EXPECTED_LAUNCH_START_ERRORS):
+            logger.error(
+                "Activity %s failed to start (%s): %s",
+                manifest.activity_id,
+                type(exc).__name__,
+                detail,
+            )
+        else:
+            logger.exception(
+                "Activity %s failed to start with an unexpected %s: %s",
+                manifest.activity_id,
+                type(exc).__name__,
+                detail,
+            )
+        self._last_result = None
+        self._catalogue_error = True
 
     def _draw_launch_overlay(self, pygame: Any, *, text: str) -> None:
         """Full-screen launch overlay that visibly blocks interaction."""
@@ -2162,6 +2270,7 @@ def bootstrap_launcher(app: LauncherApplication) -> LauncherApplication:
 
 def main() -> int:
     emit_boot_marker("launcher_python_enter")
+    configure_launcher_logging()
     args = parse_args()
     # Phase 4 order: construct the minimal shell here; display init, first
     # flip, single-worker preparation and intro-end apply all happen inside
