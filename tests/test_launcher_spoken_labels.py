@@ -142,3 +142,113 @@ class LauncherSpokenLabelTests(unittest.TestCase):
 
         player.clear_focus()
         assert player.announce("activity:b", clip, pygame) is True
+
+
+class _LifecycleChannel:
+    def __init__(self) -> None:
+        self.busy = False
+
+    def stop(self) -> None:
+        self.busy = False
+
+    def play(self, sound: object) -> None:
+        self.busy = True
+
+    def get_busy(self) -> bool:
+        return self.busy
+
+
+class _LifecycleMixer:
+    """Fake mixer with an open/closed device, like pygame.mixer."""
+
+    def __init__(self) -> None:
+        self.open = False
+        self.calls: list[str] = []
+        self.channel = _LifecycleChannel()
+
+    def get_init(self):
+        return (22050, -16, 1) if self.open else None
+
+    def init(self) -> None:
+        self.calls.append("init")
+        self.open = True
+
+    def quit(self) -> None:
+        self.calls.append("quit")
+        self.open = False
+        self.channel = _LifecycleChannel()
+
+    def get_busy(self) -> bool:
+        return self.channel.busy
+
+    def Sound(self, path: str) -> object:  # noqa: N802 - mirrors pygame API
+        assert self.open, "Sound() on a closed mixer"
+        self.calls.append("Sound")
+        return ("sound", path)
+
+    def find_channel(self, force: bool = False) -> _LifecycleChannel:
+        assert self.open, "find_channel() on a closed mixer"
+        return self.channel
+
+
+class ShellMixerLeaseTests(unittest.TestCase):
+    """Acer sweep at 15212f44: Home idled at ~9% CPU once any Shell sound played."""
+
+    def setUp(self) -> None:
+        from greia_launcher.spoken_labels import ShellMixerLease
+
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.clip = Path(temporary.name).resolve() / "label.wav"
+        self.clip.write_bytes(b"clip")
+        self.now = 100.0
+        self.pygame = SimpleNamespace(mixer=_LifecycleMixer(), error=RuntimeError)
+        self.lease = ShellMixerLease(quiet_seconds=10.0, clock=lambda: self.now)
+        self.player = SpokenLabelPlayer(mixer=self.lease)
+
+    def test_mixer_closes_after_quiet_period_and_reopens_lazily(self) -> None:
+        mixer = self.pygame.mixer
+        self.assertTrue(self.player.announce("activity:a", self.clip, self.pygame))
+        self.assertEqual(mixer.calls, ["init", "Sound"])
+        # Still audible: never closed, however long the clip plays.
+        self.now += 30.0
+        self.assertFalse(self.player.poll_idle_audio(self.now, self.pygame))
+        mixer.channel.busy = False  # clip ended
+        self.now += 9.0
+        self.assertFalse(self.player.poll_idle_audio(self.now, self.pygame))
+        self.assertTrue(mixer.open)
+        self.now += 1.5
+        self.assertTrue(self.player.poll_idle_audio(self.now, self.pygame))
+        self.assertFalse(mixer.open)
+        self.assertEqual(self.lease.generation, 1)
+        # Bounded: polling a closed mixer does nothing.
+        self.assertFalse(self.player.poll_idle_audio(self.now + 60.0, self.pygame))
+        # The next sound reopens the device and reloads its clip.
+        self.assertTrue(self.player.announce("activity:b", self.clip, self.pygame))
+        self.assertEqual(mixer.calls, ["init", "Sound", "quit", "init", "Sound"])
+
+    def test_release_closes_at_once_for_an_activity_launch(self) -> None:
+        from greia_launcher.spoken_labels import SpokenLabelController
+
+        controller = SpokenLabelController(Path("."), player=self.player)
+        self.assertTrue(self.player.announce("activity:a", self.clip, self.pygame))
+        self.assertTrue(controller.release_audio(self.pygame))
+        self.assertFalse(self.pygame.mixer.open)
+        self.assertFalse(controller.release_audio(self.pygame))
+        self.assertTrue(self.player.play_if_idle(self.clip, self.pygame))
+        self.assertTrue(self.pygame.mixer.open)
+
+    def test_mixer_opened_elsewhere_gets_a_full_quiet_period(self) -> None:
+        self.pygame.mixer.init()
+        self.assertFalse(self.lease.poll(self.pygame, self.now))
+        self.now += 9.9
+        self.assertFalse(self.lease.poll(self.pygame, self.now))
+        self.now += 0.2
+        self.assertTrue(self.lease.poll(self.pygame, self.now))
+
+    def test_shell_loop_polls_the_lease_and_launch_releases_it(self) -> None:
+        source = (Path(__file__).resolve().parents[1] / "src/greia_launcher/presentation.py").read_text()
+        self.assertIn("self._spoken_labels.poll_idle_audio(now, pygame)", source)
+        main = (Path(__file__).resolve().parents[1] / "src/greia_launcher/main.py").read_text()
+        launch = main[main.index("def _launch_selected"):]
+        self.assertIn("release_audio", launch[: launch.index("manifest = self._activities")])

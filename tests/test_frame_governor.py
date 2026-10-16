@@ -301,6 +301,214 @@ class FrameGovernorTests(unittest.TestCase):
         self.assertIn(steps, range(19, 22))
 
 
+class _FakeWaiter:
+    """Simulated input wait: sleeps on FakeTime unless an event is 'queued'."""
+
+    def __init__(self, fake: FakeTime, event_after: float | None = None) -> None:
+        self.fake = fake
+        self.event_at = None if event_after is None else fake.now + event_after
+        self.calls: list[float] = []
+
+    def wait(self, timeout: float) -> bool:
+        self.calls.append(timeout)
+        if self.event_at is not None and self.fake.now + timeout >= self.event_at:
+            self.fake.now = max(self.fake.now, self.event_at)
+            self.event_at = None
+            return True
+        self.fake.now += timeout
+        return False
+
+
+class StaticScreenInputWaitTests(unittest.TestCase):
+    """Acer sweep at 15212f44: a static Activity must not run its loop at 20 Hz."""
+
+    def setUp(self) -> None:
+        pygame.init()
+
+    def loop(self, frames: FrameGovernor, fake: FakeTime, seconds: float, **frame_kwargs) -> int:
+        iterations = 0
+        end = fake.now + seconds
+        while fake.now < end:
+            frames.frame(**frame_kwargs)
+            frames.wait()
+            iterations += 1
+        return iterations
+
+    def test_static_loop_runs_at_most_four_times_per_second(self) -> None:
+        fake = FakeTime()
+        waiter = _FakeWaiter(fake)
+        frames = FrameGovernor(POLICY, clock=fake.clock, sleep=fake.sleep, input_waiter=waiter, audio_busy=lambda: False)
+        frames.frame()
+        iterations = self.loop(frames, fake, 10.0)
+        self.assertLessEqual(iterations, 41)
+        self.assertTrue(all(abs(t - POLICY.idle_block_seconds) < 1e-9 for t in waiter.calls))
+        # Default policies: 4 Hz idle on every hardware class.
+        self.assertEqual(FramePolicy.reference_floor().idle_block_seconds, 0.25)
+        self.assertEqual(FramePolicy.standard().idle_block_seconds, 0.25)
+
+    def test_frozen_ambient_scene_also_blocks_for_input(self) -> None:
+        fake = FakeTime()
+        static = FramePolicy(animation_fps=20.0, ambient_fps=0.0, ambient_after_seconds=2.0)
+        waiter = _FakeWaiter(fake)
+        frames = FrameGovernor(static, clock=fake.clock, sleep=fake.sleep, input_waiter=waiter, audio_busy=lambda: False)
+        self.assertGreaterEqual(self.loop(frames, fake, 1.9, ambient=True), 35)  # decorative window
+        fake.now += 0.2
+        self.assertLessEqual(self.loop(frames, fake, 10.0, ambient=True), 41)
+
+    def test_input_ends_the_wait_immediately(self) -> None:
+        fake = FakeTime()
+        waiter = _FakeWaiter(fake, event_after=0.03)
+        frames = FrameGovernor(POLICY, clock=fake.clock, sleep=fake.sleep, input_waiter=waiter, audio_busy=lambda: False)
+        frames.frame()
+        fake.now += 0.1
+        self.assertIs(frames.frame(), FrameKind.SKIP)
+        waiter.event_at = fake.now + 0.03
+        slept = frames.wait()
+        self.assertAlmostEqual(slept, 0.03, places=6)
+        frames.note_event(motion())
+        self.assertIs(frames.frame(), FrameKind.POINTER)
+
+    def test_queued_event_never_spins(self) -> None:
+        fake = FakeTime()
+
+        class Always:
+            def wait(self, timeout: float) -> bool:
+                return True
+
+        frames = FrameGovernor(POLICY, clock=fake.clock, sleep=fake.sleep, input_waiter=Always(), audio_busy=lambda: False)
+        frames.frame()
+        fake.now += 1.0
+        for _ in range(10):
+            frames.frame()
+            frames.wait()
+        self.assertTrue(fake.slept and all(s >= 0.002 - 1e-12 for s in fake.slept))
+
+    def test_audible_mixer_keeps_the_short_poll(self) -> None:
+        fake = FakeTime()
+        waiter = _FakeWaiter(fake)
+        frames = FrameGovernor(POLICY, clock=fake.clock, sleep=fake.sleep, input_waiter=waiter, audio_busy=lambda: True)
+        frames.frame()
+        self.loop(frames, fake, 1.0)
+        self.assertTrue(all(abs(t - POLICY.idle_poll_seconds) < 1e-9 for t in waiter.calls[1:]))
+
+    def test_wake_at_and_keepalive_bound_the_wait(self) -> None:
+        fake = FakeTime()
+        waiter = _FakeWaiter(fake)
+        frames = FrameGovernor(POLICY, clock=fake.clock, sleep=fake.sleep, input_waiter=waiter, audio_busy=lambda: False)
+        frames.frame()
+        fake.now += 1.0
+        frames.frame()
+        frames.wake_at(fake.now + 0.1)
+        frames.wait()
+        self.assertAlmostEqual(waiter.calls[-1], 0.1, places=9)
+        frames.frame()
+        frames.wait()  # the served wake is forgotten
+        self.assertAlmostEqual(waiter.calls[-1], POLICY.idle_block_seconds, places=9)
+        kept = FrameGovernor(POLICY, keepalive_seconds=0.1, clock=fake.clock, sleep=fake.sleep, input_waiter=waiter, audio_busy=lambda: False)
+        kept.frame()
+        fake.now += 0.05
+        kept.frame()
+        kept.wait()
+        self.assertLessEqual(waiter.calls[-1], 0.05 + 1e-9)
+
+    def test_idle_hint_still_fires_within_the_idle_bound(self) -> None:
+        from greia_platform.activity_feedback import IdleHintScheduler
+
+        fake = FakeTime()
+        waiter = _FakeWaiter(fake)
+        frames = FrameGovernor(POLICY, clock=fake.clock, sleep=fake.sleep, input_waiter=waiter, audio_busy=lambda: False)
+        hints = IdleHintScheduler(now=fake.now, policy=POLICY)
+        start = fake.now
+        fired: list[float] = []
+        while fake.now - start < 45.0:
+            if hints.poll(fake.now):
+                fired.append(fake.now - start)
+            frames.frame()
+            frames.wait()
+        expected = (6.0, 18.0, 42.0)
+        self.assertEqual(len(fired), 3)
+        for got, want in zip(fired, expected):
+            self.assertGreaterEqual(got, want)
+            self.assertLessEqual(got - want, POLICY.idle_block_seconds + 1e-6)
+
+    def test_policy_validates_idle_block(self) -> None:
+        with self.assertRaises(ValueError):
+            FramePolicy(idle_poll_seconds=0.1, idle_block_seconds=0.05)
+        with self.assertRaises(ValueError):
+            FramePolicy(idle_block_seconds=2.0)
+
+
+class InputWaiterTests(unittest.TestCase):
+    def test_sliced_waiter_slices_and_returns_on_event(self) -> None:
+        from greia_platform.input_wait import SlicedInputWaiter
+
+        fake = FakeTime()
+        queued = [False]
+        waiter = SlicedInputWaiter(0.05, sleep=fake.sleep, clock=fake.clock, has_events=lambda: queued[0])
+        self.assertFalse(waiter.wait(0.25))
+        self.assertEqual(len(fake.slept), 5)
+        self.assertTrue(all(abs(s - 0.05) < 1e-9 for s in fake.slept))
+        queued[0] = True
+        fake.slept.clear()
+        self.assertTrue(waiter.wait(0.25))
+        self.assertEqual(fake.slept, [])
+
+    def test_platform_waiter_falls_back_without_a_blocking_driver(self) -> None:
+        from greia_platform.input_wait import PlatformInputWaiter, SdlEventWaiter
+
+        pygame.init()
+        pygame.display.set_mode((64, 64))
+        loads: list[int] = []
+        sdl = SdlEventWaiter(loader=lambda: loads.append(1))
+        # The dummy driver has no kernel wait (SDL would poll every 1 ms).
+        self.assertEqual(pygame.display.get_driver(), "dummy")
+        self.assertFalse(sdl.usable())
+        self.assertEqual(loads, [])
+        calls: list[float] = []
+
+        class Fallback:
+            def wait(self, timeout: float) -> bool:
+                calls.append(timeout)
+                return False
+
+        PlatformInputWaiter(0.05, sdl=sdl, fallback=Fallback()).wait(0.2)
+        self.assertEqual(calls, [0.2])
+
+    def test_sdl_waiter_declines_while_a_joystick_is_open(self) -> None:
+        from greia_platform import input_wait
+
+        class Library:
+            joysticks = 1
+
+            def SDL_WasInit(self, flags: int) -> int:
+                return flags
+
+            def SDL_NumJoysticks(self) -> int:
+                return self.joysticks
+
+            def SDL_NumSensors(self) -> int:
+                return 0
+
+            def SDL_WaitEventTimeout(self, event, ms: int) -> int:
+                self.waited = ms
+                return 1
+
+        library = Library()
+        sdl = input_wait.SdlEventWaiter(loader=lambda: library)
+        original = input_wait._BLOCKING_DRIVERS
+        input_wait._BLOCKING_DRIVERS = frozenset({"dummy"})
+        try:
+            pygame.init()
+            pygame.display.set_mode((64, 64))
+            self.assertFalse(sdl.usable())
+            library.joysticks = 0
+            self.assertTrue(sdl.usable())
+            self.assertTrue(sdl.wait(0.25))
+            self.assertEqual(library.waited, 250)
+        finally:
+            input_wait._BLOCKING_DRIVERS = original
+
+
 class CanvasPointerRefreshTests(unittest.TestCase):
     def setUp(self) -> None:
         pygame.init()

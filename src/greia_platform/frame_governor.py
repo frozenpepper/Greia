@@ -21,12 +21,16 @@ own model and renderer and only *tells* the governor what happened:
 
 ``frame()`` answers what to present this iteration (``SKIP``, ``POINTER`` or
 ``FULL``) and never exceeds ``animation_fps``.  ``wait()`` replaces
-``Clock.tick``: it sleeps until the next frame is due while animating, and
-otherwise sleeps a short ``idle_poll_seconds`` so timers in ``step()`` (voice
-completion, hints, autosave) still run, without presenting anything.
-
-``pygame.event.wait(timeout)`` is deliberately not used: Pygame 2.1.3+
-implements it as a 1 ms poll loop, which costs more than a short sleep.
+``Clock.tick``: it sleeps until the next frame is due while animating.  On a
+static screen (nothing presented, nothing due) it *blocks for input* through
+an :class:`~greia_platform.input_wait.InputWaiter` for at most
+``idle_block_seconds`` (4 Hz on every profile), so timers in ``step()``
+(hints, autosave) still run, but the loop no longer spins 20 times a second
+while the child looks at a still picture (Acer sweep at 15212f44: ~12% CPU).
+Any queued event (input, a timer, a worker's posted event) ends the wait at
+once.  While the Pygame mixer is audible the wait stays at the short
+``idle_poll_seconds`` so voice-completion polling keeps its old latency, and
+``wake_at()`` lets an Activity request an exact earlier wake.
 
 Typical loop::
 
@@ -52,6 +56,8 @@ import time
 from typing import Callable, Mapping
 
 import pygame
+
+from .input_wait import InputWaiter, PlatformInputWaiter, SlicedInputWaiter, audio_playing
 
 FRAME_PROFILE_ENV = "GREIA_FRAME_PROFILE"
 
@@ -100,9 +106,11 @@ class FramePolicy:
     ``ambient_after_seconds``; ``0`` means decorative motion stops entirely
     (the last frame stays on screen) until the next child input.  On the
     Atom N270 even a 10 fps full 1024x600 redraw costs tens of ms per frame,
-    so the reference floor uses 0.  ``idle_poll_seconds`` bounds how long a static
-    loop sleeps between event/timer polls (and so the worst-case extra input
-    latency on a static screen).
+    so the reference floor uses 0.  ``idle_poll_seconds`` bounds a single
+    sleep (and so the worst-case extra input latency where the loop cannot
+    block for input).  ``idle_block_seconds`` bounds how long a static loop
+    waits for input before running ``step()`` again (worst-case lateness of
+    an Activity timer such as an idle hint).
     """
 
     animation_fps: float = 30.0
@@ -110,6 +118,7 @@ class FramePolicy:
     ambient_after_seconds: float = 8.0
     idle_poll_seconds: float = 0.05
     hint_animation_cap_seconds: float | None = None
+    idle_block_seconds: float = 0.25
 
     def __post_init__(self) -> None:
         if not 1.0 <= self.animation_fps <= 120.0:
@@ -120,6 +129,8 @@ class FramePolicy:
             raise ValueError("ambient_after_seconds must not be negative")
         if not 0.005 <= self.idle_poll_seconds <= 0.25:
             raise ValueError("idle_poll_seconds must be within 0.005..0.25")
+        if not self.idle_poll_seconds <= self.idle_block_seconds <= 1.0:
+            raise ValueError("idle_block_seconds must be within idle_poll_seconds..1.0")
         if self.hint_animation_cap_seconds is not None and self.hint_animation_cap_seconds <= 0.0:
             raise ValueError("hint_animation_cap_seconds must be positive")
 
@@ -224,12 +235,27 @@ class FrameGovernor:
         keepalive_seconds: float | None = None,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], None] = time.sleep,
+        input_waiter: InputWaiter | None = None,
+        audio_busy: Callable[[], bool] = audio_playing,
     ) -> None:
         if keepalive_seconds is not None and keepalive_seconds <= 0.0:
             raise ValueError("keepalive_seconds must be positive")
         self.policy = policy if policy is not None else FramePolicy.from_environment()
         self._clock = clock
         self._sleep = sleep
+        if input_waiter is None:
+            slice_seconds = self.policy.idle_poll_seconds
+            if sleep is time.sleep and clock is time.monotonic:
+                input_waiter = PlatformInputWaiter(slice_seconds)
+            else:
+                # Injected (simulated) time: stay on that clock/sleep and do
+                # not consult the real event queue.
+                input_waiter = SlicedInputWaiter(
+                    slice_seconds, sleep=sleep, clock=clock, has_events=lambda: False
+                )
+        self._input_waiter = input_waiter
+        self._audio_busy = audio_busy
+        self._wake_at: float | None = None
         # Migration aids for loops that historically redrew every frame and
         # have no complete dirty tracking: every non-motion input (and motion
         # with a button held, i.e. a drag) invalidates, and ``keepalive``
@@ -258,6 +284,18 @@ class FrameGovernor:
         """Run at the full animation rate for ``seconds`` from now."""
 
         self._animate_until = max(self._animate_until, self._clock() + max(0.0, float(seconds)))
+
+    def wake_at(self, deadline: float) -> None:
+        """Make a static loop's next input wait end no later than ``deadline``.
+
+        ``deadline`` uses the governor's clock (``time.monotonic`` by
+        default).  Without it a static loop still wakes every
+        ``idle_block_seconds``; use it for a timer that must fire on time.
+        """
+
+        deadline = float(deadline)
+        if self._wake_at is None or deadline < self._wake_at:
+            self._wake_at = deadline
 
     def note_event(self, event: pygame.event.Event) -> None:
         """Record child input: resets the ambient timer; motion moves the pointer."""
@@ -356,17 +394,25 @@ class FrameGovernor:
     def wait(self, *, polling: bool = False) -> float:
         """Sleep until the next frame or poll is due; return the seconds slept.
 
-        Replaces ``Clock.tick``.  The sleep never exceeds
-        ``idle_poll_seconds`` so input on a static or ambient-throttled screen
-        is noticed within that bound.  ``polling=True`` keeps the loop at frame
-        cadence without presenting, e.g. while a held stick generates
-        navigation repeats.
+        Replaces ``Clock.tick``.  While frames are pending or due, a single
+        sleep never exceeds ``idle_poll_seconds``.  On a static screen the
+        loop instead blocks for input for up to ``idle_block_seconds``
+        (``idle_wait``).  ``polling=True`` keeps the loop at frame cadence
+        without presenting, e.g. while a held stick generates navigation
+        repeats.
         """
 
         now = self._clock()
         # ``frame()`` re-arms the wake time every iteration; consume it so a
         # loop that polls without presenting never sleeps on a stale value.
         due, self._next_due = self._next_due, None
+        if (
+            due is None
+            and not polling
+            and self._last_kind is FrameKind.SKIP
+            and not (self._dirty or self._pointer or now < self._animate_until)
+        ):
+            return self._idle_wait(now)
         deadline = due if due is not None else now + self.policy.idle_poll_seconds
         if polling or self._dirty or self._pointer or now < self._animate_until:
             # Like Clock.tick: one period after the previous wake, so a
@@ -383,6 +429,32 @@ class FrameGovernor:
             self._sleep(delay)
         self._last_wake = self._clock()
         return max(0.0, delay)
+
+    def _idle_wait(self, now: float) -> float:
+        """Static screen: block until input, a requested wake, or the idle bound."""
+
+        policy = self.policy
+        limit = policy.idle_block_seconds
+        if self._audio_busy():
+            limit = policy.idle_poll_seconds
+        if self._keepalive is not None and self._last_present is not None:
+            limit = min(limit, self._last_present + self._keepalive - now)
+        if self._wake_at is not None:
+            limit = min(limit, self._wake_at - now)
+            if limit <= 0.0:
+                self._wake_at = None
+        if limit > 0.0:
+            self._input_waiter.wait(limit)
+        if self._wake_at is not None and self._clock() >= self._wake_at:
+            self._wake_at = None  # the step() after this wait serves it
+        waited = self._clock() - now
+        if waited < _MIN_IDLE_SLEEP:
+            # A queued event or a due wake returns at once; keep the
+            # never-spin guarantee for a loop that does not drain the queue.
+            self._sleep(_MIN_IDLE_SLEEP - max(0.0, waited))
+            waited = self._clock() - now
+        self._last_wake = self._clock()
+        return max(0.0, waited)
 
 
 __all__ = [

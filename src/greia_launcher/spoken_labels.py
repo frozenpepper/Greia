@@ -13,7 +13,8 @@ and failures are presentation-only/fail-silent.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+import time
+from typing import Any, Callable
 
 from greia_platform.activities import ActivityManifest
 from greia_platform.localization import (
@@ -107,6 +108,91 @@ def collection_title_audio(root: Path, collection_id: str, locale: str) -> Path 
     return None
 
 
+class ShellMixerLease:
+    """Owns the Shell's Pygame mixer: opened lazily, closed when quiet.
+
+    An open mixer keeps SDL's audio thread and the ALSA PCM running forever,
+    even in silence: on the Atom reference floor Home idled at ~9% CPU instead
+    of 2.8% once any Shell sound had played (Acer sweep at 15212f44).  The
+    lease opens the mixer immediately before a sound needs it and closes it
+    after ``quiet_seconds`` without playback, or at once via ``release()``
+    (e.g. when an Activity, a separate process with its own mixer, takes the
+    foreground).  ``generation`` changes on every close so holders drop
+    channels/Sounds tied to the closed device.
+    """
+
+    def __init__(
+        self,
+        *,
+        quiet_seconds: float = 10.0,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
+        if quiet_seconds <= 0.0:
+            raise ValueError("quiet_seconds must be positive")
+        self._quiet = float(quiet_seconds)
+        self._clock = clock
+        self._last_sound: float | None = None
+        self.generation = 0
+
+    def ensure_open(self, pygame: Any) -> bool:
+        """Open the mixer if needed (fail-soft); True when it is usable."""
+
+        if not pygame.mixer.get_init():
+            # Post-intro lazy mixer ownership: the display-only pre-frame
+            # path leaves the mixer uninitialized, so open it here
+            # immediately before the first audio it serves.
+            init = getattr(pygame.mixer, "init", None)
+            if init is None:
+                return False
+            try:
+                init()
+            except (OSError, RuntimeError, ValueError, pygame.error):
+                return False
+            if not pygame.mixer.get_init():
+                return False
+        self._last_sound = self._clock()
+        return True
+
+    def note_sound(self) -> None:
+        """A sound started: restart the quiet period."""
+
+        self._last_sound = self._clock()
+
+    def poll(self, pygame: Any, now: float | None = None) -> bool:
+        """Close the mixer after the quiet period; True when it was closed."""
+
+        try:
+            if not pygame.mixer.get_init():
+                self._last_sound = None
+                return False
+            now = self._clock() if now is None else now
+            busy = getattr(pygame.mixer, "get_busy", None)
+            if self._last_sound is None or (callable(busy) and busy()):
+                self._last_sound = now
+                return False
+            if now - self._last_sound < self._quiet:
+                return False
+        except Exception:  # noqa: BLE001 - optional presentation must fail silent
+            return False
+        return self.release(pygame)
+
+    def release(self, pygame: Any) -> bool:
+        """Close the mixer now (stops anything playing); True when it closed."""
+
+        try:
+            if not pygame.mixer.get_init():
+                return False
+            quit_mixer = getattr(pygame.mixer, "quit", None)
+            if quit_mixer is None:
+                return False
+            quit_mixer()
+        except Exception:  # noqa: BLE001 - optional presentation must fail silent
+            return False
+        self._last_sound = None
+        self.generation += 1
+        return True
+
+
 class SpokenLabelPlayer:
     """Interruptible, bounded launcher narration using pygame's existing mixer.
 
@@ -116,10 +202,38 @@ class SpokenLabelPlayer:
     an audio queue.
     """
 
-    def __init__(self, *, cache_entries: int = 48) -> None:
+    def __init__(self, *, cache_entries: int = 48, mixer: ShellMixerLease | None = None) -> None:
         self._cache: BoundedCache[str, Any] = BoundedCache(cache_entries)
         self._last_identity: str | None = None
         self._channel: Any = None
+        self._mixer = mixer if mixer is not None else ShellMixerLease()
+
+    @property
+    def mixer(self) -> ShellMixerLease:
+        return self._mixer
+
+    def poll_idle_audio(self, now: float, pygame: Any) -> bool:
+        """Close the Shell mixer once it has been quiet; True when closed."""
+
+        if self._mixer.poll(pygame, now):
+            self._forget_device()
+            return True
+        return False
+
+    def release_audio(self, pygame: Any) -> bool:
+        """Stop narration and close the Shell mixer now (Activity foreground)."""
+
+        self.stop()
+        if self._mixer.release(pygame):
+            self._forget_device()
+            return True
+        return False
+
+    def _forget_device(self) -> None:
+        # Channels and decoded Sounds belong to the closed device; the next
+        # sound reopens the mixer and reloads its (small) clip.
+        self._channel = None
+        self._cache.clear()
 
     def clear_focus(self) -> None:
         """Allow the same destination to speak again after focus leaves it."""
@@ -159,20 +273,8 @@ class SpokenLabelPlayer:
 
     def _play(self, clip: Path, pygame: Any, *, interrupt: bool) -> bool:
         try:
-            if not pygame.mixer.get_init():
-                # Post-intro lazy mixer ownership: the display-only pre-frame
-                # path leaves the mixer uninitialized, so open it here
-                # immediately before the first audio it serves. Fail-soft
-                # like every other optional-presentation path.
-                init = getattr(pygame.mixer, "init", None)
-                if init is None:
-                    return False
-                try:
-                    init()
-                except (OSError, RuntimeError, ValueError, pygame.error):
-                    return False
-                if not pygame.mixer.get_init():
-                    return False
+            if not self._mixer.ensure_open(pygame):
+                return False
             key = str(clip.resolve())
             sound = self._cache.get(key)
             if sound is None:
@@ -187,6 +289,7 @@ class SpokenLabelPlayer:
             elif self._channel.get_busy():
                 return False
             self._channel.play(sound)
+            self._mixer.note_sound()
             return True
         except (OSError, RuntimeError, ValueError, pygame.error):
             return False
@@ -311,6 +414,17 @@ class SpokenLabelController:
     def clear_pointer_focus(self) -> None:
         self._pending = None
         self._player.clear_focus()
+
+    def poll_idle_audio(self, now: float, pygame: Any) -> bool:
+        """Close the Shell mixer after its quiet period (see ``ShellMixerLease``)."""
+
+        return self._player.poll_idle_audio(now, pygame)
+
+    def release_audio(self, pygame: Any) -> bool:
+        """Silence narration and close the Shell mixer immediately."""
+
+        self._pending = None
+        return self._player.release_audio(pygame)
 
     def stop(self) -> None:
         self._pending = None

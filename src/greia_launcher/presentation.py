@@ -276,6 +276,8 @@ class GreiaLauncherPresentation(LauncherApplication):
     def _poll_spoken_labels(self, pygame: Any, now: float) -> None:
         try:
             self._spoken_labels.poll_pending_pointer_focus(now, pygame)
+            # Close the Shell mixer once it has been quiet for a while.
+            self._spoken_labels.poll_idle_audio(now, pygame)
         except Exception:
             pass
 
@@ -1104,6 +1106,17 @@ class GreiaLauncherPresentation(LauncherApplication):
         self._render_activities_content(self._cached_activities_surface, theme, pygame)
 
         self._cached_activities_key = static_key
+        # The hover signature belongs to the scene it is cached with. The one
+        # computed above came from the previous scene's targets (e.g. the
+        # Collection page's Back button while Back is being pressed); keeping
+        # it made the next frame "repair" that page's header onto Home
+        # (Acer sweep at 15212f44: stale Collection strip on Home).
+        hovered_target = None
+        if pointer_active:
+            for target in self._targets:
+                if target.rect.collidepoint(pointer):
+                    hovered_target = (target.action, target.value)
+                    break
         self._activities_hover_signature = hovered_target
         self._activities_launch_tick = launch_tick
         self._cached_activities_targets = list(self._targets)
@@ -1207,13 +1220,21 @@ class GreiaLauncherPresentation(LauncherApplication):
                 damage_arrows[signature[0]] = target
 
         damage_header = False
+        header_actions = {
+            target.action
+            for target in self._cached_activities_targets
+            if target.action in ("activity_category", "activity_category_back")
+        }
         for signature in (prev_hover, new_hover):
             if signature is not None and signature[0] in (
                 "activity_category",
                 "activity_category_back",
             ):
+                if signature[0] not in header_actions:
+                    # Not a control of the cached scene (e.g. Home has no
+                    # category bar): only a full rebuild is correct.
+                    return False
                 damage_header = True
-                break
 
         if not damage_tiles and not damage_arrows and not damage_header:
             return False

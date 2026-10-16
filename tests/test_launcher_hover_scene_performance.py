@@ -354,6 +354,43 @@ class HoverRepairSceneEquivalenceTests(unittest.TestCase):
             "repaired pixels with error badge diverged from rebuilt",
         )
 
+    def test_back_from_collection_page_never_paints_its_header_on_home(self) -> None:
+        """Acer sweep at 15212f44: stale Collection strip across Home after Back.
+
+        The child presses the Collection page's Back button (so the pointer
+        hover belongs to that page), Home is rebuilt, and the pointer then
+        moves.  The cached Home must equal a full rebuild: the old page's
+        header/category bar must never be "repaired" onto it.
+        """
+
+        shell, screen = self._prepared_shell()
+        shell._pointer_position = (2, 2)
+        self._rebuild_and_draw(shell, screen)
+        back = [
+            target
+            for target in shell._cached_activities_targets
+            if target.action == "activity_category_back"
+        ]
+        if not back:
+            self.skipTest("collection page has no Back control")
+        self._hover(shell, screen, back[0].rect.center)
+        shell._set_category("all")
+        shell._draw(screen, pygame)
+        self.assertNotIn(
+            "activity_category_back",
+            {target.action for target in shell._cached_activities_targets},
+        )
+        signature = shell._activities_hover_signature
+        self.assertTrue(
+            signature is None
+            or signature[0] in {target.action for target in shell._cached_activities_targets}
+        )
+        for pointer in ((500, 590), (2, 2)):
+            self._hover(shell, screen, pointer)
+            repaired = _surface_pixels(shell._cached_activities_surface)
+            self._rebuild_and_draw(shell, screen)
+            self.assertEqual(repaired, _surface_pixels(shell._cached_activities_surface))
+
 
 if __name__ == "__main__":
     unittest.main()

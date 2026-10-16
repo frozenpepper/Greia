@@ -1089,7 +1089,14 @@ class LauncherApplication:
         try:
             spoken = getattr(self, "_spoken_labels", None)
             if spoken is not None:
-                spoken.stop()
+                # The Activity (its own process and mixer) takes the
+                # foreground: close the Shell mixer so its audio thread does
+                # not run for the whole session.
+                release = getattr(spoken, "release_audio", None)
+                if callable(release):
+                    release(pygame)
+                else:
+                    spoken.stop()
         except Exception:
             pass
         if not self._activities or self._active_profile is None:
