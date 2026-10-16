@@ -7,7 +7,7 @@
     "locale": "en",
     "text": "pig",
     "cue_id": "festa_delle_rime.pig.en",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/en/pig.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/en/pig.wav",
     "verification": "off",
     "max_attempts": 1
   },

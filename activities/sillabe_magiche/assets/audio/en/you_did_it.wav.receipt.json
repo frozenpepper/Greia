@@ -7,7 +7,7 @@
     "locale": "en",
     "text": "you did it",
     "cue_id": "sillabe_magiche.you_did_it.en",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/en/you_did_it.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/en/you_did_it.wav",
     "verification": "off",
     "max_attempts": 1
   },

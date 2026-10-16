@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Casa",
     "cue_id": "sillabe_magiche.casa.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/es/casa.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/es/casa.wav",
     "verification": "auto",
     "max_attempts": 1
   },

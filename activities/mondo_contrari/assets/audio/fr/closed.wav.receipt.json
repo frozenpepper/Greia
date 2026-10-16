@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Fermé",
     "cue_id": "mondo_contrari.closed.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/mondo_contrari/fr/closed.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/mondo_contrari/fr/closed.wav",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Cambia de color para camuflarse",
     "cue_id": "encyclopedia.animals.octopus.camouflage.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/animals/octopus_camouflage.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/animals/octopus_camouflage.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

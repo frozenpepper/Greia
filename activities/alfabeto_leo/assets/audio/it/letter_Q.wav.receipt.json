@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "Q come Quadro",
     "cue_id": "alfabeto_leo.letter_Q.it",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_Q.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_Q.wav",
     "verification": "off",
     "max_attempts": 1
   },

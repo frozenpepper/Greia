@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "pane",
     "cue_id": "sillabe_magiche.word_pane.it",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/word_pane.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/word_pane.wav",
     "verification": "off",
     "max_attempts": 1
   },

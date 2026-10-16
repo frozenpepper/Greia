@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Salut ! Moi, c'est Tito ! Bouge la souris ou utilise les flèches pour nager. Appuie sur la barre d'espace pour sauter hors de l'eau. Ramasse toutes les perles !",
     "cue_id": "presenter.welcome.voice",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/fr/presenter-welcome.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/fr/presenter-welcome.ogg",
     "verification": "auto",
     "max_attempts": 2
   },

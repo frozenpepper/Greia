@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Moteur et hélice : ils poussent l'avion vers l'avant pour faire circuler l'air autour des ailes.",
     "cue_id": "encyclopedia.machines.airplane.thrust.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/airplane_thrust.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/airplane_thrust.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

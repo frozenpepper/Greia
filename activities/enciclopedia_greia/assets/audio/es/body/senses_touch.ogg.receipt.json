@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Los nervios transportan información del tacto, la presión y la temperatura",
     "cue_id": "encyclopedia.body.senses.touch.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/body/senses_touch.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/body/senses_touch.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

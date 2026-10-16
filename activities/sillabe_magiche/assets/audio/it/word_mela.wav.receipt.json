@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "mela",
     "cue_id": "sillabe_magiche.word_mela.it",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/word_mela.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/word_mela.wav",
     "verification": "off",
     "max_attempts": 1
   },

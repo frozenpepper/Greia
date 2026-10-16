@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Commandes de vol : ailerons, gouvernail et profondeur aident à tourner, monter ou descendre.",
     "cue_id": "encyclopedia.machines.airplane.myth.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/airplane_myth.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/airplane_myth.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

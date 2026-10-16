@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Los colores se separan porque se desvían de forma diferente",
     "cue_id": "encyclopedia.earth.rainbow.colors.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/rainbow_colors.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/rainbow_colors.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Pon el objeto en el estante!",
     "cue_id": "bottega_delle_misure.prompt_shelf.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/bottega_delle_misure/es/prompt_shelf.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/bottega_delle_misure/es/prompt_shelf.wav",
     "verification": "auto",
     "max_attempts": 1
   },

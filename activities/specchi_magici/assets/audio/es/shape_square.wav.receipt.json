@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Cuadrado",
     "cue_id": "specchi_magici.shape_square.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/specchi_magici/es/shape_square.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/specchi_magici/es/shape_square.wav",
     "verification": "auto",
     "max_attempts": 1
   },

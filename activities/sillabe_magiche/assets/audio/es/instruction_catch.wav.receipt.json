@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "escucha y toca la sílaba",
     "cue_id": "sillabe_magiche.instruction_catch.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/es/instruction_catch.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/es/instruction_catch.wav",
     "verification": "off",
     "max_attempts": 1
   },

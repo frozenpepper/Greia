@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Un solo océano conectado contiene casi toda el agua de la Tierra",
     "cue_id": "encyclopedia.earth.ocean.water.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/ocean_water.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/ocean_water.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

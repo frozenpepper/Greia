@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les vibrations deviennent des signaux envoyés vers le cerveau",
     "cue_id": "encyclopedia.body.senses.hearing.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/body/senses_hearing.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/body/senses_hearing.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Encuentra la palabra que empieza igual!",
     "cue_id": "festa_delle_rime.prompt_sound.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/es/prompt_sound.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/es/prompt_sound.wav",
     "verification": "auto",
     "max_attempts": 1
   },

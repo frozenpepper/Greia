@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "La gran aleta del lomo de una orca se llama aleta dorsal y ayuda a mantener la estabilidad al nadar.",
     "cue_id": "baia.fact_fin",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/es/tito_fact_fin.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/es/tito_fact_fin.wav",
     "verification": "auto",
     "max_attempts": 2
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Los pilares: unas columnas fuertes transmiten las cargas hasta unos cimientos resistentes.",
     "cue_id": "encyclopedia.machines.bridge.forces.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/bridge_forces.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/bridge_forces.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Touche la grimace !",
     "cue_id": "faccine_momo.game_prompt.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/faccine_momo/fr/game_prompt.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/faccine_momo/fr/game_prompt.wav",
     "verification": "auto",
     "max_attempts": 1
   },

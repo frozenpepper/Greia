@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "LE JARDIN DES NOMBRES",
     "cue_id": "il_giardino_dei_numeri.title.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/il_giardino_dei_numeri/fr/activity-title.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/il_giardino_dei_numeri/fr/activity-title.wav",
     "verification": "auto",
     "max_attempts": 2
   },

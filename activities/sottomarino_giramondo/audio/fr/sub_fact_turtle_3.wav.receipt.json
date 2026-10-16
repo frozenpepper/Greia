@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Beaucoup de tortues marines reviennent pondre sur la plage où elles sont nées !",
     "cue_id": "voice.fact.turtle.3.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_turtle_3.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_turtle_3.wav",
     "verification": "auto",
     "max_attempts": 1
   },

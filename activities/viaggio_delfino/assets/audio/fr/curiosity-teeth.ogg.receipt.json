@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les dauphins ont de nombreuses petites dents, mais ils ne mâchent pas les poissons : ils les attrapent et les avalent entiers.",
     "cue_id": "curiosity.delfino.teeth.voice",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/fr/curiosity-teeth.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/fr/curiosity-teeth.ogg",
     "verification": "auto",
     "max_attempts": 2
   },

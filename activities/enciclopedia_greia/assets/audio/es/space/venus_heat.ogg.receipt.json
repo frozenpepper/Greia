@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "El planeta más caliente",
     "cue_id": "encyclopedia.space.venus.heat.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/venus_heat.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/venus_heat.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

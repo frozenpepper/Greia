@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Théâtre de contes",
     "cue_id": "teatrino_fiabe.title.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/teatrino_fiabe/fr/activity-title.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/teatrino_fiabe/fr/activity-title.wav",
     "verification": "auto",
     "max_attempts": 2
   },

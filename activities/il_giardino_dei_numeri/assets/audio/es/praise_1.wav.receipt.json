@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Muy bien!",
     "cue_id": "il_giardino_dei_numeri.praise_1.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/il_giardino_dei_numeri/es/praise_1.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/il_giardino_dei_numeri/es/praise_1.wav",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Los delfines pueden saltar fuera del agua varios metros! Lo hacen, entre otras razones, para jugar y comunicarse.",
     "cue_id": "curiosity.delfino.breaching.voice",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/es/curiosity-breaching.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/es/curiosity-breaching.ogg",
     "verification": "auto",
     "max_attempts": 2
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Sept",
     "cue_id": "bosco_numeri.count_7.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/fr/count_7.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/fr/count_7.wav",
     "verification": "auto",
     "max_attempts": 1
   },

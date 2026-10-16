@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Coloca la forma en el espejo!",
     "cue_id": "specchi_magici.prompt_place.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/specchi_magici/es/prompt_place.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/specchi_magici/es/prompt_place.wav",
     "verification": "auto",
     "max_attempts": 1
   },

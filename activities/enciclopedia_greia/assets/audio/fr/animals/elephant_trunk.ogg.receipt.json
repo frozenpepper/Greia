@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Une trompe forte et précise",
     "cue_id": "encyclopedia.animals.elephant.trunk.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/animals/elephant_trunk.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/animals/elephant_trunk.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

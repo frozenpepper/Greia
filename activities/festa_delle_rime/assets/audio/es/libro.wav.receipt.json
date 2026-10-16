@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "libro",
     "cue_id": "festa_delle_rime.libro.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/es/libro.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/es/libro.wav",
     "verification": "off",
     "max_attempts": 1
   },

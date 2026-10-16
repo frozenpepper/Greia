@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Cercle",
     "cue_id": "specchi_magici.shape_circle.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/specchi_magici/fr/shape_circle.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/specchi_magici/fr/shape_circle.wav",
     "verification": "auto",
     "max_attempts": 1
   },

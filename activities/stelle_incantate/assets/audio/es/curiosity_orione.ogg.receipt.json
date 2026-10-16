@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Las estrellas de una constelación parecen estar cerca, ¡pero muchas se encuentran muy, muy lejos!",
     "cue_id": "curiosity.orione.fact",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/stelle_incantate/es/curiosity_orione.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/stelle_incantate/es/curiosity_orione.ogg",
     "verification": "auto",
     "max_attempts": 2
   },

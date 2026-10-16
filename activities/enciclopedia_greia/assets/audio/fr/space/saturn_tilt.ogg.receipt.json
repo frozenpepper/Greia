@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les anneaux semblent changer d'inclinaison",
     "cue_id": "encyclopedia.space.saturn.tilt.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/saturn_tilt.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/saturn_tilt.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Hola! ¡Soy Tito! Mueve el ratón o usa las flechas para nadar, y pulsa la barra espaciadora para saltar fuera del agua. ¡Recoge todas las perlas!",
     "cue_id": "presenter.welcome.voice",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/es/presenter-welcome.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/es/presenter-welcome.ogg",
     "verification": "auto",
     "max_attempts": 2
   },

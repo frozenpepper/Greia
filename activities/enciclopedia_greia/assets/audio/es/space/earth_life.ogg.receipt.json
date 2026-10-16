@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Una atmósfera y vida conocida",
     "cue_id": "encyclopedia.space.earth.life.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/earth_life.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/earth_life.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les récifs coralliens protègent les côtes des grandes vagues et des tempêtes !",
     "cue_id": "voice.fact.coral.2.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_coral_2.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_coral_2.wav",
     "verification": "auto",
     "max_attempts": 1
   },

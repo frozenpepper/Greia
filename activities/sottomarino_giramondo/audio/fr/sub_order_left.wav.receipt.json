@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Vire à bâbord ! Tourne le gouvernail vers la gauche !",
     "cue_id": "voice.order.left.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_order_left.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_order_left.wav",
     "verification": "auto",
     "max_attempts": 1
   },

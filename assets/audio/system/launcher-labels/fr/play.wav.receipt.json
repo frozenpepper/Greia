@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Jouer",
     "cue_id": "collection.play",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/launcher-labels/fr/play.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/launcher-labels/fr/play.wav",
     "verification": "auto",
     "max_attempts": 2
   },

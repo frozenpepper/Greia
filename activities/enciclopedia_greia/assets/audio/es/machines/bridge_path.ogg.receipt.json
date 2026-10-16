@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Los cables: los tirantes de acero sostienen el tablero mediante tensión y ayudan a mantenerlo estable.",
     "cue_id": "encyclopedia.machines.bridge.path.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/bridge_path.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/bridge_path.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

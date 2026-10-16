@@ -7,7 +7,7 @@
     "locale": "en",
     "text": "house",
     "cue_id": "festa_delle_rime.house.en",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/en/house.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/en/house.wav",
     "verification": "off",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Ailes et portance : l'aile dévie l'air vers le bas, ce qui aide à soulever l'avion.",
     "cue_id": "encyclopedia.machines.airplane.lift.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/airplane_lift.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/airplane_lift.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

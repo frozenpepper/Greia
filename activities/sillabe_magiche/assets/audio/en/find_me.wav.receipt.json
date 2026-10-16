@@ -7,7 +7,7 @@
     "locale": "en",
     "text": "find me",
     "cue_id": "sillabe_magiche.find_me.en",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/en/find_me.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/en/find_me.wav",
     "verification": "off",
     "max_attempts": 1
   },

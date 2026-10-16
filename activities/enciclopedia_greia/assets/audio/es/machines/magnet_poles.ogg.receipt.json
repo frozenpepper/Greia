@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Polos norte y sur: los opuestos (N y S) se atraen y los iguales (N-N o S-S) se repelen.",
     "cue_id": "encyclopedia.machines.magnet.poles.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/magnet_poles.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/magnet_poles.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Los leones suelen vivir en manadas",
     "cue_id": "encyclopedia.animals.lion.pride.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/animals/lion_pride.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/animals/lion_pride.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

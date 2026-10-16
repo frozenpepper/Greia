@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "La grande nageoire sur le dos d'une orque s'appelle la nageoire dorsale. Elle aide l'animal à rester stable en nageant.",
     "cue_id": "baia.fact_fin",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/fr/tito_fact_fin.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/fr/tito_fact_fin.wav",
     "verification": "auto",
     "max_attempts": 2
   },

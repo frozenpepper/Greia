@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "I delfini saltano sulle onde della prua delle navi per giocare!",
     "cue_id": "voice.fact.dolphin.3",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/it/sub_fact_dolphin_3.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/it/sub_fact_dolphin_3.wav",
     "verification": "auto",
     "max_attempts": 2
   },

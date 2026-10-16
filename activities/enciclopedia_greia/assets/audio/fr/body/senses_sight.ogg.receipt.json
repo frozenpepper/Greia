@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "La rétine transforme la lumière en signaux pour le cerveau",
     "cue_id": "encyclopedia.body.senses.sight.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/body/senses_sight.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/body/senses_sight.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

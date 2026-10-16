@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "La baleine bleue est le plus grand animal ayant jamais vécu sur Terre !",
     "cue_id": "voice.fact.whale.1.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_whale_1.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_whale_1.wav",
     "verification": "auto",
     "max_attempts": 1
   },

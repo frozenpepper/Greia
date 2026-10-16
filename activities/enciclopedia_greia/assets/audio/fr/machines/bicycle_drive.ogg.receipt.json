@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Pédales, plateau, chaîne et pignon transmettent le mouvement",
     "cue_id": "encyclopedia.machines.bicycle.drive.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/bicycle_drive.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/bicycle_drive.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

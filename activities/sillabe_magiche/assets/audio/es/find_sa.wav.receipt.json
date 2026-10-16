@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "encuentra sa",
     "cue_id": "sillabe_magiche.find_sa.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/es/find_sa.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/es/find_sa.wav",
     "verification": "off",
     "max_attempts": 1
   },

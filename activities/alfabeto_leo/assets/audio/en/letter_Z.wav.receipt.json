@@ -7,7 +7,7 @@
     "locale": "en",
     "text": "Z as Zebra",
     "cue_id": "alfabeto_leo.letter_Z.en",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_Z.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_Z.wav",
     "verification": "off",
     "max_attempts": 1
   },

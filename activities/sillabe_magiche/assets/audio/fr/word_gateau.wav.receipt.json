@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "gateau",
     "cue_id": "sillabe_magiche.word_gateau.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/fr/word_gateau.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/fr/word_gateau.wav",
     "verification": "off",
     "max_attempts": 1
   },

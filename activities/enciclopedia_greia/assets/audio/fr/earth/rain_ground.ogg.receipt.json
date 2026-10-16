@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Une partie de l'eau ruisselle, l'autre pénètre dans le sol",
     "cue_id": "encyclopedia.earth.rain.ground.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/rain_ground.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/rain_ground.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

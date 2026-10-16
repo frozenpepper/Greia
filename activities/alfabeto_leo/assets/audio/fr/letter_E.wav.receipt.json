@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "E comme Escargot",
     "cue_id": "alfabeto_leo.letter_E.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/fr/letter_E.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/fr/letter_E.wav",
     "verification": "off",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Del movimiento giratorio al movimiento recto",
     "cue_id": "encyclopedia.machines.gears.rack.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/gears_rack.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/gears_rack.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

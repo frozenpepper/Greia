@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Descubre lo que esconden las nubes!",
     "cue_id": "encyclopedia.space.venus.intro.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/venus_intro.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/venus_intro.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

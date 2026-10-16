@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "No todos los árboles cambian del mismo modo",
     "cue_id": "encyclopedia.earth.tree.seasons.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/tree_seasons.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/tree_seasons.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Une roue qui tourne fait avancer le vélo sur la route",
     "cue_id": "encyclopedia.machines.bicycle.travel.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/bicycle_travel.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/bicycle_travel.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Huellas o restos de seres vivos del pasado",
     "cue_id": "encyclopedia.history.fossils.definition.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/fossils_definition.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/fossils_definition.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

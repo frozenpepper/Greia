@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "T de Tren",
     "cue_id": "alfabeto_leo.letter_T.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/es/letter_T.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/es/letter_T.wav",
     "verification": "off",
     "max_attempts": 1
   },

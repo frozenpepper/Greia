@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "La lumière se courbe, se réfléchit, puis se courbe encore",
     "cue_id": "encyclopedia.earth.rainbow.droplet.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/rainbow_droplet.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/rainbow_droplet.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Des crinières différentes",
     "cue_id": "encyclopedia.animals.lion.mane.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/animals/lion_mane.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/animals/lion_mane.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

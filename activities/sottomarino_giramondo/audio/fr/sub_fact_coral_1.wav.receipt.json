@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les coraux ressemblent à des rochers ou à des plantes, mais ce sont des colonies de minuscules animaux !",
     "cue_id": "voice.fact.coral.1.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_coral_1.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_coral_1.wav",
     "verification": "auto",
     "max_attempts": 1
   },

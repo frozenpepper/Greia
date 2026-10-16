@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "J come Jeep",
     "cue_id": "alfabeto_leo.letter_J.it",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_J.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_J.wav",
     "verification": "off",
     "max_attempts": 1
   },

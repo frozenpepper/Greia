@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Siluetas de manos hechas aplicando pigmento alrededor de los dedos",
     "cue_id": "encyclopedia.history.cave_paintings.hands.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/cave_paintings_hands.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/cave_paintings_hands.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

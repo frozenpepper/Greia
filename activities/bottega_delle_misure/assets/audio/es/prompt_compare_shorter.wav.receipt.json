@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¿Cuál es más corto?",
     "cue_id": "bottega_delle_misure.prompt_compare_shorter.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/bottega_delle_misure/es/prompt_compare_shorter.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/bottega_delle_misure/es/prompt_compare_shorter.wav",
     "verification": "auto",
     "max_attempts": 1
   },

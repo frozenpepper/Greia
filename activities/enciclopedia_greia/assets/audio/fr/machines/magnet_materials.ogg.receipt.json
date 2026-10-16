@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Matériaux : les aimants attirent le fer et l'acier, mais pas le bois, le plastique ni l'aluminium.",
     "cue_id": "encyclopedia.machines.magnet.materials.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/magnet_materials.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/magnet_materials.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

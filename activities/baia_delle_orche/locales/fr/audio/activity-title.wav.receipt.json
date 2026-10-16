@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "La baie des orques",
     "cue_id": "baia_delle_orche.title.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/fr/activity-title.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/fr/activity-title.wav",
     "verification": "auto",
     "max_attempts": 2
   },

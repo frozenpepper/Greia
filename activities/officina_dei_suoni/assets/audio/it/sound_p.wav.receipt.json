@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "p",
     "cue_id": "officina_dei_suoni.sound_p.it",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/it/sound_p.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/it/sound_p.wav",
     "verification": "off",
     "max_attempts": 1
   },

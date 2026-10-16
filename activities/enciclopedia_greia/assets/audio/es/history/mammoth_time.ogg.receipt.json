@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Los mamuts vivieron mucho después de los dinosaurios y coincidieron con los humanos",
     "cue_id": "encyclopedia.history.mammoth.time.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/mammoth_time.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/mammoth_time.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

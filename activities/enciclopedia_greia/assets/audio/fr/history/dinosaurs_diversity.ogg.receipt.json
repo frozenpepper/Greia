@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Des formes, tailles et régimes alimentaires très variés",
     "cue_id": "encyclopedia.history.dinosaurs.diversity.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/dinosaurs_diversity.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/dinosaurs_diversity.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

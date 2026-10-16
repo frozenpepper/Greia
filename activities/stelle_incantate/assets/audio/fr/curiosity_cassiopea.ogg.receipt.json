@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Cassiopée était une reine des récits anciens ; ses étoiles dessinent un W dans le ciel.",
     "cue_id": "curiosity.cassiopea.fact",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/stelle_incantate/fr/curiosity_cassiopea.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/stelle_incantate/fr/curiosity_cassiopea.ogg",
     "verification": "auto",
     "max_attempts": 2
   },

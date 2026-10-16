@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les grandes algues ont de petites poches d'air qui font flotter leurs feuilles vers la lumière du Soleil !",
     "cue_id": "voice.fact.kelp.2.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_kelp_2.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_kelp_2.wav",
     "verification": "auto",
     "max_attempts": 1
   },

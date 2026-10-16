@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les orques sautent parfois hors de l'eau. Lorsqu'elles retombent, elles produisent une grande éclaboussure qui peut servir à communiquer.",
     "cue_id": "baia.fact_breach",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/fr/tito_fact_breach.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/fr/tito_fact_breach.wav",
     "verification": "auto",
     "max_attempts": 2
   },

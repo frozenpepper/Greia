@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¿Dónde está el número 9?",
     "cue_id": "bosco_numeri.ask_9.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/es/ask_9.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/es/ask_9.wav",
     "verification": "auto",
     "max_attempts": 1
   },

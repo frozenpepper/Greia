@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Robot",
     "cue_id": "officina_dei_suoni.robot.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/fr/robot.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/fr/robot.wav",
     "verification": "off",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "El agua viaja desde las raíces hasta las hojas",
     "cue_id": "encyclopedia.earth.tree.water.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/tree_water.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/tree_water.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "maison",
     "cue_id": "sillabe_magiche.word_maison.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/fr/word_maison.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/fr/word_maison.wav",
     "verification": "off",
     "max_attempts": 1
   },

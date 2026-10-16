@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "oreille",
     "cue_id": "festa_delle_rime.oreille.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/fr/oreille.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/fr/oreille.wav",
     "verification": "off",
     "max_attempts": 1
   },

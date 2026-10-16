@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "Metti la lettera per formare la parola!",
     "cue_id": "officina_dei_suoni.prompt_build_word.it",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/it/prompt_build_word.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/it/prompt_build_word.wav",
     "verification": "off",
     "max_attempts": 1
   },

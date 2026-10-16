@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Maintenant, touche les lumières dans l'ordre !",
     "cue_id": "luci_di_momo.prompt_choose.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/luci_di_momo/fr/prompt_choose.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/luci_di_momo/fr/prompt_choose.wav",
     "verification": "auto",
     "max_attempts": 1
   },

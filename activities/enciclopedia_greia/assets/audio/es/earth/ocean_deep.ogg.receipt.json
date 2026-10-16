@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Las profundidades son oscuras, pero están llenas de vida",
     "cue_id": "encyclopedia.earth.ocean.deep.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/ocean_deep.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/ocean_deep.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

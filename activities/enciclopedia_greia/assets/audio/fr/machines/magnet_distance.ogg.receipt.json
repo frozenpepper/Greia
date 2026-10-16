@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Une force à distance : plus les aimants se rapprochent, plus leur attraction ou leur répulsion invisible peut devenir forte.",
     "cue_id": "encyclopedia.machines.magnet.distance.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/magnet_distance.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/magnet_distance.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

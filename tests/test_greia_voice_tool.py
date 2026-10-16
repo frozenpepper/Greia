@@ -243,6 +243,8 @@ class VoiceEngineTests(unittest.TestCase):
             receipt = json.loads(result.receipt_path.read_text(encoding="utf-8"))
             self.assertEqual(receipt["voice_id"], "greia.leo.v1")
             self.assertEqual(receipt["request"]["kind"], "shared_character_utterance")
+            # An absolute output inside the repository is recorded repo-relative.
+            self.assertEqual(receipt["request"]["output"], "shared.wav")
 
     def test_shared_dani_library_production_keeps_dani_system_profile(self):
         with tempfile.TemporaryDirectory() as tmp:

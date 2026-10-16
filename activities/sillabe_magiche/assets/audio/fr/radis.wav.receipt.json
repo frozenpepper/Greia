@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Radis",
     "cue_id": "sillabe_magiche.radis.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/fr/radis.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/fr/radis.wav",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "en",
     "text": "F as Fish",
     "cue_id": "alfabeto_leo.letter_F.en",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_F.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_F.wav",
     "verification": "off",
     "max_attempts": 1
   },

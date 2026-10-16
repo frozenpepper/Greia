@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les incisives coupent, les canines saisissent et les molaires broient",
     "cue_id": "encyclopedia.body.teeth.jobs.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/body/teeth_jobs.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/body/teeth_jobs.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

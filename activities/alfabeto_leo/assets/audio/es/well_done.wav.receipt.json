@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Muy bien!",
     "cue_id": "alfabeto_leo.well_done.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/es/well_done.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/es/well_done.wav",
     "verification": "auto",
     "max_attempts": 1
   },

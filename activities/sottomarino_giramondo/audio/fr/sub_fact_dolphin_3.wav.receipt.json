@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les dauphins adorent bondir et jouer dans les vagues à l'avant des bateaux !",
     "cue_id": "voice.fact.dolphin.3.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_dolphin_3.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_dolphin_3.wav",
     "verification": "auto",
     "max_attempts": 1
   },

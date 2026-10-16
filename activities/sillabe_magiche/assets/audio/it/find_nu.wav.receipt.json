@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "trova nu",
     "cue_id": "sillabe_magiche.find_nu.it",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/find_nu.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/find_nu.wav",
     "verification": "off",
     "max_attempts": 1
   },

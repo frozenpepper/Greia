@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "La fusión libera energía en el núcleo",
     "cue_id": "encyclopedia.space.sun.fusion.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/sun_fusion.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/sun_fusion.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

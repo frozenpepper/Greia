@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Lequel est le plus long ?",
     "cue_id": "bottega_delle_misure.prompt_compare_longer.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/bottega_delle_misure/fr/prompt_compare_longer.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/bottega_delle_misure/fr/prompt_compare_longer.wav",
     "verification": "auto",
     "max_attempts": 1
   },

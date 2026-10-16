@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Un rugissement qui porte loin",
     "cue_id": "encyclopedia.animals.lion.roar.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/animals/lion_roar.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/animals/lion_roar.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "N comme Nuage",
     "cue_id": "alfabeto_leo.letter_N.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/fr/letter_N.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/fr/letter_N.wav",
     "verification": "off",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Los delfines emiten pequeños chasquidos y escuchan el eco. ¡Así encuentran peces incluso cuando apenas pueden verlos!",
     "cue_id": "curiosity.delfino.echolocation.voice",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/es/curiosity-echolocation.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/es/curiosity-echolocation.ogg",
     "verification": "auto",
     "max_attempts": 2
   },

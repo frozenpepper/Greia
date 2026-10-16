@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "La vapeur refroidit et forme de petites gouttes",
     "cue_id": "encyclopedia.earth.rain.condensation.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/rain_condensation.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/rain_condensation.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

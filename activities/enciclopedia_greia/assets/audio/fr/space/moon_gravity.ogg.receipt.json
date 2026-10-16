@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Une gravité environ six fois plus faible que sur Terre",
     "cue_id": "encyclopedia.space.moon.gravity.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/moon_gravity.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/moon_gravity.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

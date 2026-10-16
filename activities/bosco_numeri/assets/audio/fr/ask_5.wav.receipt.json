@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Où est le numéro 5 ?",
     "cue_id": "bosco_numeri.ask_5.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/fr/ask_5.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/fr/ask_5.wav",
     "verification": "auto",
     "max_attempts": 1
   },

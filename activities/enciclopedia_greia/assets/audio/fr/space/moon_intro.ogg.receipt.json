@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Découvre la compagne de la Terre !",
     "cue_id": "encyclopedia.space.moon.intro.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/moon_intro.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/moon_intro.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les dauphins peuvent dormir avec un œil ouvert et une moitié du cerveau éveillée pour continuer à respirer !",
     "cue_id": "voice.fact.dolphin.2.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_dolphin_2.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_dolphin_2.wav",
     "verification": "auto",
     "max_attempts": 1
   },

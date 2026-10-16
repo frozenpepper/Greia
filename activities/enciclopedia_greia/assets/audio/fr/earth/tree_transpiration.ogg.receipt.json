@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les feuilles rejettent aussi de la vapeur d'eau",
     "cue_id": "encyclopedia.earth.tree.transpiration.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/tree_transpiration.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/tree_transpiration.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

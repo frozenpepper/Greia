@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡La manta gigante se desliza por el agua como si volara con grandes alas!",
     "cue_id": "voice.fact.manta.1.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/es/sub_fact_manta_1.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/es/sub_fact_manta_1.wav",
     "verification": "auto",
     "max_attempts": 1
   },

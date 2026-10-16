@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les familles d'orques ont des cris et des sons particuliers qu'elles apprennent les unes des autres.",
     "cue_id": "baia.fact_song",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/fr/tito_fact_song.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/fr/tito_fact_song.wav",
     "verification": "auto",
     "max_attempts": 2
   },

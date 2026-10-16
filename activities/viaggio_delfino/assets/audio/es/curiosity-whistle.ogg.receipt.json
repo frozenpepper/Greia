@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Cada delfín puede tener un silbido distintivo, casi como un nombre, que permite a otros reconocerlo.",
     "cue_id": "curiosity.delfino.whistle.voice",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/es/curiosity-whistle.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/es/curiosity-whistle.ogg",
     "verification": "auto",
     "max_attempts": 2
   },

@@ -7,7 +7,7 @@
     "locale": "en",
     "text": "Pick the minutes, then press start.",
     "cue_id": "tempo_di_greia.instruction.timer",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/tempo_di_greia/en/instruction_timer.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/tempo_di_greia/en/instruction_timer.wav",
     "verification": "off",
     "max_attempts": 2
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Sol",
     "cue_id": "quattro_stagioni.sun.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/quattro_stagioni/es/sun.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/quattro_stagioni/es/sun.wav",
     "verification": "auto",
     "max_attempts": 1
   },

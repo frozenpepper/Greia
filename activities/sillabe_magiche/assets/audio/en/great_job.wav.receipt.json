@@ -7,7 +7,7 @@
     "locale": "en",
     "text": "great job",
     "cue_id": "sillabe_magiche.great_job.en",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/en/great_job.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/en/great_job.wav",
     "verification": "off",
     "max_attempts": 1
   },

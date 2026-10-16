@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Flor",
     "cue_id": "foresta_parole.fiore.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/foresta_parole/es/fiore.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/foresta_parole/es/fiore.wav",
     "verification": "auto",
     "max_attempts": 1
   },

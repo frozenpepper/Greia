@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "La Terre possède un champ magnétique invisible qui aide les boussoles à indiquer le nord.",
     "cue_id": "encyclopedia.machines.magnet.field.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/magnet_field.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/magnet_field.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

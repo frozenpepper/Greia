@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Colinas divertidas",
     "cue_id": "colline_allegre.title.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/colline_allegre/es/activity-title.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/colline_allegre/es/activity-title.wav",
     "verification": "auto",
     "max_attempts": 2
   },

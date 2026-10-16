@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Convertirse en fósil es poco frecuente",
     "cue_id": "encyclopedia.history.fossils.rare.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/fossils_rare.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/fossils_rare.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

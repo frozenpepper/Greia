@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Elle tourne sur elle-même en orbitant et nous montre presque toujours la même face",
     "cue_id": "encyclopedia.space.moon.rotation.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/moon_rotation.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/moon_rotation.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

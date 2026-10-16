@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Controles de vuelo: los alerones, el timón y los elevadores ayudan a girar, ascender o descender.",
     "cue_id": "encyclopedia.machines.airplane.myth.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/airplane_myth.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/airplane_myth.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

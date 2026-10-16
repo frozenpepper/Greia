@@ -7,7 +7,7 @@
     "locale": "en",
     "text": "B",
     "cue_id": "sillabe_magiche.letter_b.en",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/en/letter_b.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/en/letter_b.wav",
     "verification": "off",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les petits orques restent souvent avec leur mère et leur groupe familial pendant de nombreuses années, parfois toute leur vie.",
     "cue_id": "baia.fact_pod",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/fr/tito_fact_pod.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/fr/tito_fact_pod.wav",
     "verification": "auto",
     "max_attempts": 2
   },

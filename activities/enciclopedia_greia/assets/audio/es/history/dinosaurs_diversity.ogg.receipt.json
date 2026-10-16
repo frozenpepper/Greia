@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Formas, tamaños y dietas muy distintos",
     "cue_id": "encyclopedia.history.dinosaurs.diversity.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/dinosaurs_diversity.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/dinosaurs_diversity.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

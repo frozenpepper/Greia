@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Pôles nord et sud : les pôles opposés (N et S) s'attirent, les mêmes pôles (N-N ou S-S) se repoussent.",
     "cue_id": "encyclopedia.machines.magnet.poles.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/magnet_poles.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/magnet_poles.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

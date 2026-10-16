@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡No estés triste!",
     "cue_id": "faccine_momo.comfort.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/faccine_momo/es/comfort.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/faccine_momo/es/comfort.wav",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Mesure l'objet !",
     "cue_id": "bottega_delle_misure.prompt_measure.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/bottega_delle_misure/fr/prompt_measure.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/bottega_delle_misure/fr/prompt_measure.wav",
     "verification": "auto",
     "max_attempts": 1
   },

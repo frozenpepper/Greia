@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les piliers : de solides colonnes transmettent les charges à des fondations résistantes.",
     "cue_id": "encyclopedia.machines.bridge.forces.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/bridge_forces.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/bridge_forces.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

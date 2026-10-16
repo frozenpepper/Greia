@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "CUATRO AMIGOS EN LÍNEA",
     "cue_id": "quattro_amici.title.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/quattro_amici/es/activity-title.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/quattro_amici/es/activity-title.wav",
     "verification": "auto",
     "max_attempts": 2
   },

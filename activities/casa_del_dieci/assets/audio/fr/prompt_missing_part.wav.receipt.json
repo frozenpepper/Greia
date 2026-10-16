@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Trouve la partie qui manque !",
     "cue_id": "casa_del_dieci.prompt_missing_part.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/casa_del_dieci/fr/prompt_missing_part.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/casa_del_dieci/fr/prompt_missing_part.wav",
     "verification": "auto",
     "max_attempts": 1
   },

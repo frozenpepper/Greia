@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Materiales: los imanes atraen el hierro y el acero, pero no la madera, el plástico ni el aluminio.",
     "cue_id": "encyclopedia.machines.magnet.materials.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/magnet_materials.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/magnet_materials.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

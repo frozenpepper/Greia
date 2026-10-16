@@ -7,7 +7,7 @@
     "locale": "en",
     "text": "Pan",
     "cue_id": "officina_dei_suoni.pan.en",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/en/pan.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/en/pan.wav",
     "verification": "off",
     "max_attempts": 1
   },

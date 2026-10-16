@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Nube",
     "cue_id": "sillabe_magiche.nube.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/es/nube.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/es/nube.wav",
     "verification": "auto",
     "max_attempts": 1
   },

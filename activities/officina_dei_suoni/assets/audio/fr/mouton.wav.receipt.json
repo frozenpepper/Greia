@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Mouton",
     "cue_id": "officina_dei_suoni.mouton.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/fr/mouton.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/fr/mouton.wav",
     "verification": "off",
     "max_attempts": 1
   },

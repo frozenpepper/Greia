@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Bienvenido al jardín de las luces!",
     "cue_id": "luci_di_momo.welcome.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/luci_di_momo/es/welcome.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/luci_di_momo/es/welcome.wav",
     "verification": "auto",
     "max_attempts": 1
   },

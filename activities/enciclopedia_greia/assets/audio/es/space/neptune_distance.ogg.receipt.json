@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "La luz del Sol tarda unas cuatro horas en llegar",
     "cue_id": "encyclopedia.space.neptune.distance.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/neptune_distance.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/neptune_distance.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

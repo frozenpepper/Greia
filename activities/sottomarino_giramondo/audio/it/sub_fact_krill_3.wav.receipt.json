@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "Alcune specie di krill brillano al buio nell'abisso con una luce azzurra!",
     "cue_id": "voice.fact.krill.3",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/it/sub_fact_krill_3.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/it/sub_fact_krill_3.wav",
     "verification": "auto",
     "max_attempts": 2
   },

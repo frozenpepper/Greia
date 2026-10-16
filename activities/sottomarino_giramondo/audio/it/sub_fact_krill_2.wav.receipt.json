@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "Il krill è il cibo preferito delle balene e di tanti pesci dell'oceano!",
     "cue_id": "voice.fact.krill.2",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/it/sub_fact_krill_2.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/it/sub_fact_krill_2.wav",
     "verification": "auto",
     "max_attempts": 2
   },

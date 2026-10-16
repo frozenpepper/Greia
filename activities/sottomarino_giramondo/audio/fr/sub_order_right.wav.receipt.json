@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Vire à tribord ! Tourne le gouvernail vers la droite !",
     "cue_id": "voice.order.right.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_order_right.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_order_right.wav",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "forma la palabra",
     "cue_id": "sillabe_magiche.instruction_build.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/es/instruction_build.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/es/instruction_build.wav",
     "verification": "off",
     "max_attempts": 1
   },

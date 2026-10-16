@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Le diaphragme et la cage thoracique bougent pour faire entrer et sortir l'air",
     "cue_id": "encyclopedia.body.lungs.breath.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/body/lungs_breath.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/body/lungs_breath.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

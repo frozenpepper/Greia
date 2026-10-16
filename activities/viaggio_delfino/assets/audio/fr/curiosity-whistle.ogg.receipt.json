@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Chaque dauphin peut avoir un sifflement particulier, presque comme un nom, qui permet aux autres de le reconnaître.",
     "cue_id": "curiosity.delfino.whistle.voice",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/fr/curiosity-whistle.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/fr/curiosity-whistle.ogg",
     "verification": "auto",
     "max_attempts": 2
   },

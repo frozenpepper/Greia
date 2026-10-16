@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Découvre ce qui se passe au-dessus et au-dessous de la terre !",
     "cue_id": "encyclopedia.earth.tree.intro.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/tree_intro.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/tree_intro.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

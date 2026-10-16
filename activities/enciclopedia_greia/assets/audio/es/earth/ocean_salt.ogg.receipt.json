@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "El agua marina contiene sales disueltas",
     "cue_id": "encyclopedia.earth.ocean.salt.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/ocean_salt.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/ocean_salt.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

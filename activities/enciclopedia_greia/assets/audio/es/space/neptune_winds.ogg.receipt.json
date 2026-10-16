@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Los vientos más fuertes del sistema solar",
     "cue_id": "encyclopedia.space.neptune.winds.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/neptune_winds.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/neptune_winds.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

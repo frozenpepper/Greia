@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Ahora toca las luces en orden!",
     "cue_id": "luci_di_momo.prompt_choose.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/luci_di_momo/es/prompt_choose.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/luci_di_momo/es/prompt_choose.wav",
     "verification": "auto",
     "max_attempts": 1
   },

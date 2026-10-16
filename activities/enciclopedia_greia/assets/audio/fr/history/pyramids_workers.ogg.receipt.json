@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Des équipes organisées d'artisans et de travailleurs",
     "cue_id": "encyclopedia.history.pyramids.workers.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/pyramids_workers.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/pyramids_workers.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

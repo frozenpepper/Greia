@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Écoute le son et trouve l'image !",
     "cue_id": "officina_dei_suoni.prompt_find_sound.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/fr/prompt_find_sound.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/fr/prompt_find_sound.wav",
     "verification": "off",
     "max_attempts": 1
   },

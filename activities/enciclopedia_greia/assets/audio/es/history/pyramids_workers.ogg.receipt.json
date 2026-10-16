@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Equipos organizados de artesanos y trabajadores",
     "cue_id": "encyclopedia.history.pyramids.workers.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/pyramids_workers.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/pyramids_workers.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

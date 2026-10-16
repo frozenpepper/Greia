@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Pasadizos y cámaras dentro de los complejos funerarios",
     "cue_id": "encyclopedia.history.pyramids.inside.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/pyramids_inside.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/pyramids_inside.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

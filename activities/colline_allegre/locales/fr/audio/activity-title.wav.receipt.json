@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Collines rigolotes",
     "cue_id": "colline_allegre.title.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/colline_allegre/fr/activity-title.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/colline_allegre/fr/activity-title.wav",
     "verification": "auto",
     "max_attempts": 2
   },

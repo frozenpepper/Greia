@@ -150,10 +150,14 @@ class VoiceEngine:
         generation_parameters: dict,
     ) -> Path:
         receipt_path = output.with_suffix(output.suffix + ".receipt.json")
+        request_payload = request.to_dict()
+        if request.output is not None:
+            # The caller may pass an absolute path; keep the committed receipt portable.
+            request_payload["output"] = self._portable_output_path(output)
         receipt = {
             "schema_version": 1,
             "created_utc": datetime.now(timezone.utc).isoformat(),
-            "request": request.to_dict(),
+            "request": request_payload,
             "provider_id": provider.provider_id,
             "voice_id": profile.voice_id if profile else None,
             "voice_registry_version": self.registry.registry_version,

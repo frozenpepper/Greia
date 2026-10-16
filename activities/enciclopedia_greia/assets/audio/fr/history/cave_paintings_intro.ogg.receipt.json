@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Éclaire la paroi et explore des traces laissées il y a très longtemps !",
     "cue_id": "encyclopedia.history.cave_paintings.intro.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/cave_paintings_intro.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/cave_paintings_intro.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

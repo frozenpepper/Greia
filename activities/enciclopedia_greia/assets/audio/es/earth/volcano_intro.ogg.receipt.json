@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Toca los símbolos y haz que el volcán cobre vida!",
     "cue_id": "encyclopedia.earth.volcano.intro.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/volcano_intro.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/volcano_intro.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

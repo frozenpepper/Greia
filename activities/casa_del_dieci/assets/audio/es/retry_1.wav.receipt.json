@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Inténtalo otra vez!",
     "cue_id": "casa_del_dieci.retry_1.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/casa_del_dieci/es/retry_1.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/casa_del_dieci/es/retry_1.wav",
     "verification": "auto",
     "max_attempts": 1
   },

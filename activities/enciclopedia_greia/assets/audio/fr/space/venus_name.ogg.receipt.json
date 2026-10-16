@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Vénus",
     "cue_id": "encyclopedia.space.venus.name.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/venus_name.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/venus_name.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

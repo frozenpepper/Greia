@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Des quantités énormes de blocs préparés et placés avec soin",
     "cue_id": "encyclopedia.history.pyramids.blocks.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/pyramids_blocks.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/pyramids_blocks.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

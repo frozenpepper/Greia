@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Tren",
     "cue_id": "officina_dei_suoni.tren.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/es/tren.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/es/tren.wav",
     "verification": "off",
     "max_attempts": 1
   },

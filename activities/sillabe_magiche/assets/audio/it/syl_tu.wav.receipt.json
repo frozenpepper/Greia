@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "tu",
     "cue_id": "sillabe_magiche.syl_tu.it",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/syl_tu.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/syl_tu.wav",
     "verification": "off",
     "max_attempts": 1
   },

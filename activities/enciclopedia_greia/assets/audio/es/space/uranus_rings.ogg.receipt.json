@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Urano también tiene tenues anillos oscuros",
     "cue_id": "encyclopedia.space.uranus.rings.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/uranus_rings.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/uranus_rings.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

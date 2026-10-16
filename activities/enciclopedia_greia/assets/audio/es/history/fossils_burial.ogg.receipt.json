@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Quedar enterrado puede ayudar a conservar los restos",
     "cue_id": "encyclopedia.history.fossils.burial.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/fossils_burial.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/fossils_burial.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

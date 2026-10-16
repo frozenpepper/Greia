@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Uranus possède aussi de fins anneaux sombres",
     "cue_id": "encyclopedia.space.uranus.rings.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/uranus_rings.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/uranus_rings.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

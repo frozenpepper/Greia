@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Où est la lettre D ?",
     "cue_id": "alfabeto_leo.ask_D.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/fr/ask_D.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/fr/ask_D.wav",
     "verification": "auto",
     "max_attempts": 1
   },

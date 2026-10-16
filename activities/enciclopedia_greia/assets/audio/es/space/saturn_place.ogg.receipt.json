@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Sexto desde el Sol y segundo en tamaño",
     "cue_id": "encyclopedia.space.saturn.place.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/saturn_place.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/saturn_place.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

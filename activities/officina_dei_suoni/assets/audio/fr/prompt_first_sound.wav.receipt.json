@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Quel est le son initial ?",
     "cue_id": "officina_dei_suoni.prompt_first_sound.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/fr/prompt_first_sound.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/fr/prompt_first_sound.wav",
     "verification": "off",
     "max_attempts": 1
   },

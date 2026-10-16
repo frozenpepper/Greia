@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les astronomes du monde entier reconnaissent officiellement 88 constellations !",
     "cue_id": "curiosity.triangolo.fact",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/stelle_incantate/fr/curiosity_triangolo.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/stelle_incantate/fr/curiosity_triangolo.ogg",
     "verification": "auto",
     "max_attempts": 2
   },

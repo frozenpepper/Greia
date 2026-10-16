@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Cuatro",
     "cue_id": "bosco_numeri.count_4.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/es/count_4.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/es/count_4.wav",
     "verification": "auto",
     "max_attempts": 1
   },

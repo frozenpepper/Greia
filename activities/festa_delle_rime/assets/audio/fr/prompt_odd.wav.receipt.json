@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Trouve l'intrus qui ne rime pas !",
     "cue_id": "festa_delle_rime.prompt_odd.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/fr/prompt_odd.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/fr/prompt_odd.wav",
     "verification": "auto",
     "max_attempts": 1
   },

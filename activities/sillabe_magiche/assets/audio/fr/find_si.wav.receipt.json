@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "trouve si",
     "cue_id": "sillabe_magiche.find_si.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/fr/find_si.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/fr/find_si.wav",
     "verification": "off",
     "max_attempts": 1
   },

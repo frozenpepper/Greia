@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Bienvenido al bosque de los números!",
     "cue_id": "bosco_numeri.intro.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/es/intro.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/es/intro.wav",
     "verification": "auto",
     "max_attempts": 1
   },

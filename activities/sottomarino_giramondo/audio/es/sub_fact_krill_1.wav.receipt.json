@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡El kril está formado por pequeños crustáceos parecidos a gambas que nadan en enormes enjambres!",
     "cue_id": "voice.fact.krill.1.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/es/sub_fact_krill_1.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/es/sub_fact_krill_1.wav",
     "verification": "auto",
     "max_attempts": 1
   },

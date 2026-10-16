@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡La cesta está llena!",
     "cue_id": "il_giardino_dei_numeri.basket_full.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/il_giardino_dei_numeri/es/basket_full.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/il_giardino_dei_numeri/es/basket_full.wav",
     "verification": "auto",
     "max_attempts": 1
   },

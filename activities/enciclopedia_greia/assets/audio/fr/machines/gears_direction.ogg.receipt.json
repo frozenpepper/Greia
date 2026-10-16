@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les engrenages voisins tournent en sens opposé",
     "cue_id": "encyclopedia.machines.gears.direction.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/gears_direction.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/gears_direction.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

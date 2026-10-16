@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Altura y nubes: abajo flotan los cúmulos esponjosos; muy arriba, en el frío, aparecen finos cirros.",
     "cue_id": "encyclopedia.machines.airplane.forces.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/airplane_forces.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/airplane_forces.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

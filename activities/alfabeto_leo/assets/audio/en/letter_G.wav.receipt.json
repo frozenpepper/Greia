@@ -7,7 +7,7 @@
     "locale": "en",
     "text": "G as Giraffe",
     "cue_id": "alfabeto_leo.letter_G.en",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_G.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_G.wav",
     "verification": "off",
     "max_attempts": 1
   },

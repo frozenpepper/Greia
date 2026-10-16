@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "boca",
     "cue_id": "sillabe_magiche.word_boca.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/es/word_boca.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/es/word_boca.wav",
     "verification": "off",
     "max_attempts": 1
   },

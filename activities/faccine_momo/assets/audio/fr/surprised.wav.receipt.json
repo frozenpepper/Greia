@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Surpris",
     "cue_id": "faccine_momo.surprised.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/faccine_momo/fr/surprised.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/faccine_momo/fr/surprised.wav",
     "verification": "auto",
     "max_attempts": 1
   },

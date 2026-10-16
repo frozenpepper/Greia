@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "X comme Xylophone",
     "cue_id": "alfabeto_leo.letter_X.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/fr/letter_X.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/fr/letter_X.wav",
     "verification": "off",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "Premi avvia. Vediamo quanto dura!",
     "cue_id": "tempo_di_greia.instruction.stopwatch",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/tempo_di_greia/it/instruction_stopwatch.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/tempo_di_greia/it/instruction_stopwatch.wav",
     "verification": "off",
     "max_attempts": 2
   },

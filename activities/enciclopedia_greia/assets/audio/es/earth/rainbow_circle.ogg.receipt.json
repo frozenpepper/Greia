@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Un arcoíris completo forma un círculo",
     "cue_id": "encyclopedia.earth.rainbow.circle.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/rainbow_circle.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/rainbow_circle.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

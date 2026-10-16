@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡La ballena azul es el animal más grande que ha vivido en la Tierra!",
     "cue_id": "voice.fact.whale.1.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/es/sub_fact_whale_1.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/es/sub_fact_whale_1.wav",
     "verification": "auto",
     "max_attempts": 1
   },

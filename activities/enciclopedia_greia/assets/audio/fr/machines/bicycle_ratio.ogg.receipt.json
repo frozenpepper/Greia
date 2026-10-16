@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les rapports de vitesse font varier les tours de roue et l'effort de pédalage",
     "cue_id": "encyclopedia.machines.bicycle.ratio.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/bicycle_ratio.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/bicycle_ratio.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

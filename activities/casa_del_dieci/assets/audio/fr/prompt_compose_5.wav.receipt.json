@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Forme le nombre 5 !",
     "cue_id": "casa_del_dieci.prompt_compose_5.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/casa_del_dieci/fr/prompt_compose_5.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/casa_del_dieci/fr/prompt_compose_5.wav",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Grand et petit : des vitesses différentes",
     "cue_id": "encyclopedia.machines.gears.ratio.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/gears_ratio.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/gears_ratio.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

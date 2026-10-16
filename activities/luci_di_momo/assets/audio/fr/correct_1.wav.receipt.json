@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Bravo !",
     "cue_id": "luci_di_momo.correct_1.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/luci_di_momo/fr/correct_1.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/luci_di_momo/fr/correct_1.wav",
     "verification": "auto",
     "max_attempts": 1
   },

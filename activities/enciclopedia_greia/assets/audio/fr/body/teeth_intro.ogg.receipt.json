@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Chaque dent a son rôle !",
     "cue_id": "encyclopedia.body.teeth.intro.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/body/teeth_intro.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/body/teeth_intro.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

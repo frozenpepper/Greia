@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les ailes propulsent ; les pattes et la queue dirigent",
     "cue_id": "encyclopedia.animals.penguin.swim.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/animals/penguin_swim.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/animals/penguin_swim.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

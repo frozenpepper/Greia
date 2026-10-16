@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Maman",
     "cue_id": "officina_dei_suoni.maman.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/fr/maman.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/fr/maman.wav",
     "verification": "off",
     "max_attempts": 1
   },

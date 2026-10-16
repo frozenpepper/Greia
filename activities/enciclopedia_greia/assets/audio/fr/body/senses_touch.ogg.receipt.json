@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les nerfs transmettent les sensations de toucher, de pression et de température",
     "cue_id": "encyclopedia.body.senses.touch.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/body/senses_touch.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/body/senses_touch.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

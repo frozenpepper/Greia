@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Distintas articulaciones permiten movimientos diferentes",
     "cue_id": "encyclopedia.body.bones.joints.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/body/bones_joints.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/body/bones_joints.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

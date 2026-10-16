@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Des traces ou des restes de la vie passée",
     "cue_id": "encyclopedia.history.fossils.definition.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/fossils_definition.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/fossils_definition.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

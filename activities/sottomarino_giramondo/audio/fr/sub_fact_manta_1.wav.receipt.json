@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "La raie manta géante glisse dans l'eau comme si elle volait avec de grandes ailes !",
     "cue_id": "voice.fact.manta.1.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_manta_1.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_manta_1.wav",
     "verification": "auto",
     "max_attempts": 1
   },

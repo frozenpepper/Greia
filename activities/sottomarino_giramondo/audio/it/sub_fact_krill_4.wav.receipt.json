@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "Tutti insieme, i banchi di krill pesano più di tutti gli umani del mondo!",
     "cue_id": "voice.fact.krill.4",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/it/sub_fact_krill_4.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/it/sub_fact_krill_4.wav",
     "verification": "auto",
     "max_attempts": 2
   },

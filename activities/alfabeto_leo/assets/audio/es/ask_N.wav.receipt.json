@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¿Dónde está la letra N?",
     "cue_id": "alfabeto_leo.ask_N.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/es/ask_N.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/es/ask_N.wav",
     "verification": "auto",
     "max_attempts": 1
   },

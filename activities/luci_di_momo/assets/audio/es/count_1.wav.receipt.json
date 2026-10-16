@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Uno",
     "cue_id": "luci_di_momo.count_1.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/luci_di_momo/es/count_1.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/luci_di_momo/es/count_1.wav",
     "verification": "auto",
     "max_attempts": 1
   },

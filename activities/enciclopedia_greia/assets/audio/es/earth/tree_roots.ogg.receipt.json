@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Las raíces absorben agua y sujetan el árbol",
     "cue_id": "encyclopedia.earth.tree.roots.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/tree_roots.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/tree_roots.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

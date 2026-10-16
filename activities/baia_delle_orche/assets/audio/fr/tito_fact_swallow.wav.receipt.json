@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les orques ne mâchent pas comme nous : leurs dents attrapent les poissons, qu'elles avalent ensuite entiers.",
     "cue_id": "baia.fact_swallow",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/fr/tito_fact_swallow.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/fr/tito_fact_swallow.wav",
     "verification": "auto",
     "max_attempts": 2
   },

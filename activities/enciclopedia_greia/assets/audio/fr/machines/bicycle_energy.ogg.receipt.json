@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les engrenages transforment le mouvement, ils ne créent pas d'énergie",
     "cue_id": "encyclopedia.machines.bicycle.energy.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/bicycle_energy.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/bicycle_energy.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

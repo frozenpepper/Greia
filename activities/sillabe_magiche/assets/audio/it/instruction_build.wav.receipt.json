@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "componi la parola",
     "cue_id": "sillabe_magiche.instruction_build.it",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/instruction_build.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/instruction_build.wav",
     "verification": "off",
     "max_attempts": 1
   },

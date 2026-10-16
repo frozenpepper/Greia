@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Un seul océan relié contient presque toute l'eau de la Terre",
     "cue_id": "encyclopedia.earth.ocean.water.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/ocean_water.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/ocean_water.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

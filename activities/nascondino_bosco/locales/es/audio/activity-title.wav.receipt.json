@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Escondite en el bosque",
     "cue_id": "nascondino_bosco.title.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/nascondino_bosco/es/activity-title.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/nascondino_bosco/es/activity-title.wav",
     "verification": "auto",
     "max_attempts": 2
   },

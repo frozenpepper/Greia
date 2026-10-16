@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Prêt ? Regarde les lumières !",
     "cue_id": "luci_di_momo.prompt_ready.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/luci_di_momo/fr/prompt_ready.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/luci_di_momo/fr/prompt_ready.wav",
     "verification": "auto",
     "max_attempts": 1
   },

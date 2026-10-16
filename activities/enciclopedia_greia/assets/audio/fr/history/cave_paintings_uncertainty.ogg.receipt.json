@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Nous ignorons encore la signification exacte de nombreuses images",
     "cue_id": "encyclopedia.history.cave_paintings.uncertainty.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/cave_paintings_uncertainty.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/cave_paintings_uncertainty.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

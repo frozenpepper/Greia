@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "Trova la parola che fa rima!",
     "cue_id": "festa_delle_rime.prompt_find_rhyme.it",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/it/prompt_find_rhyme.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/it/prompt_find_rhyme.wav",
     "verification": "off",
     "max_attempts": 1
   },

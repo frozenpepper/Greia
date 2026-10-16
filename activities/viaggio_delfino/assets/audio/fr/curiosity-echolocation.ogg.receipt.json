@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les dauphins émettent de petits clics et écoutent les échos. Ils trouvent ainsi des poissons même lorsqu'ils voient mal !",
     "cue_id": "curiosity.delfino.echolocation.voice",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/fr/curiosity-echolocation.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/fr/curiosity-echolocation.ogg",
     "verification": "auto",
     "max_attempts": 2
   },

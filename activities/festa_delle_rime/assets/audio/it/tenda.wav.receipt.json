@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "tenda",
     "cue_id": "festa_delle_rime.tenda.it",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/it/tenda.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/it/tenda.wav",
     "verification": "off",
     "max_attempts": 1
   },

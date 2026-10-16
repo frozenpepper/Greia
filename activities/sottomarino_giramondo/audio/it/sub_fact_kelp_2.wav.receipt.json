@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "Le alghe giganti kelp hanno vesciche d'aria che le fanno galleggiare verso il sole!",
     "cue_id": "voice.fact.kelp.2",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/it/sub_fact_kelp_2.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/it/sub_fact_kelp_2.wav",
     "verification": "auto",
     "max_attempts": 2
   },

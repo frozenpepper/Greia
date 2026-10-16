@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les profondeurs sont sombres, mais pleines de vie",
     "cue_id": "encyclopedia.earth.ocean.deep.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/ocean_deep.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/ocean_deep.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

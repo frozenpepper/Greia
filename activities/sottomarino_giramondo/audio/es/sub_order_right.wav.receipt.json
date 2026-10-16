@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Gira a estribor! ¡Lleva el timón a la derecha!",
     "cue_id": "voice.order.right.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/es/sub_order_right.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/es/sub_order_right.wav",
     "verification": "auto",
     "max_attempts": 1
   },

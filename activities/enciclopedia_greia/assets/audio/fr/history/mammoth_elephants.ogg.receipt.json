@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Mammouths et éléphants sont apparentés, mais ce ne sont pas les mêmes espèces",
     "cue_id": "encyclopedia.history.mammoth.elephants.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/mammoth_elephants.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/mammoth_elephants.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

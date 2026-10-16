@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Una nube de tinta para escapar",
     "cue_id": "encyclopedia.animals.octopus.ink.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/animals/octopus_ink.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/animals/octopus_ink.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Miles de animales marinos de colores encuentran refugio y comida entre los corales!",
     "cue_id": "voice.fact.coral.3.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/es/sub_fact_coral_3.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/es/sub_fact_coral_3.wav",
     "verification": "auto",
     "max_attempts": 1
   },

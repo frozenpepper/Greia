@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Les dinosaures non aviens vivaient bien avant les humains",
     "cue_id": "encyclopedia.history.dinosaurs.time.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/dinosaurs_time.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/dinosaurs_time.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

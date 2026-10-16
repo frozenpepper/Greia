@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Super !",
     "cue_id": "mondo_contrari.praise_3.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/mondo_contrari/fr/praise_3.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/mondo_contrari/fr/praise_3.wav",
     "verification": "auto",
     "max_attempts": 1
   },

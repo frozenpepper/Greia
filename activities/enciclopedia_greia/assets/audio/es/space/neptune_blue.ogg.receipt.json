@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Un gigante helado azul con anillos tenues",
     "cue_id": "encyclopedia.space.neptune.blue.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/neptune_blue.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/neptune_blue.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

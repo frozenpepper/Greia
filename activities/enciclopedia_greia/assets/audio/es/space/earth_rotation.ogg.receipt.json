@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "La rotación produce el día y la noche",
     "cue_id": "encyclopedia.space.earth.rotation.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/earth_rotation.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/earth_rotation.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

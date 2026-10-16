@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Miles de millones de fragmentos de hielo y roca",
     "cue_id": "encyclopedia.space.saturn.rings.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/saturn_rings.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/saturn_rings.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

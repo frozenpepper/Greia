@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Où est la lettre I ?",
     "cue_id": "alfabeto_leo.ask_I.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/fr/ask_I.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/fr/ask_I.wav",
     "verification": "auto",
     "max_attempts": 1
   },

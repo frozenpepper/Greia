@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "La retina transforma la luz en señales para el cerebro",
     "cue_id": "encyclopedia.body.senses.sight.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/body/senses_sight.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/body/senses_sight.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

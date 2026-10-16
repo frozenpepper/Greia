@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Día",
     "cue_id": "quattro_stagioni.day.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/quattro_stagioni/es/day.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/quattro_stagioni/es/day.wav",
     "verification": "auto",
     "max_attempts": 1
   },

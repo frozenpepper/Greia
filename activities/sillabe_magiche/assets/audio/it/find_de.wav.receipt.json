@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "trova de",
     "cue_id": "sillabe_magiche.find_de.it",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/find_de.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/find_de.wav",
     "verification": "off",
     "max_attempts": 1
   },

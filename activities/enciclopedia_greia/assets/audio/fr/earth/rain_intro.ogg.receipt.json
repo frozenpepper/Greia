@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Suis le voyage d'une goutte d'eau !",
     "cue_id": "encyclopedia.earth.rain.intro.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/rain_intro.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/rain_intro.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

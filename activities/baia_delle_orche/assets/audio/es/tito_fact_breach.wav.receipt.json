@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Cuando las orcas saltan fuera del agua se llama breaching. Al caer producen un gran chapoteo que puede servir para comunicarse con otras orcas.",
     "cue_id": "baia.fact_breach",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/es/tito_fact_breach.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/es/tito_fact_breach.wav",
     "verification": "auto",
     "max_attempts": 2
   },

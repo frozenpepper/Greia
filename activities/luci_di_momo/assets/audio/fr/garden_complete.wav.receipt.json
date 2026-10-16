@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Le jardin brille de mille feux !",
     "cue_id": "luci_di_momo.garden_complete.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/luci_di_momo/fr/garden_complete.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/luci_di_momo/fr/garden_complete.wav",
     "verification": "auto",
     "max_attempts": 1
   },

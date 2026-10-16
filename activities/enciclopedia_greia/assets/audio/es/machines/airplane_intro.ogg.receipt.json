@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¿Cómo vuela un avión? ¡Descubre las alas, el motor, los controles y las nubes del cielo!",
     "cue_id": "encyclopedia.machines.airplane.intro.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/airplane_intro.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/airplane_intro.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

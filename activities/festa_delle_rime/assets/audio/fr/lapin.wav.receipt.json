@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "lapin",
     "cue_id": "festa_delle_rime.lapin.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/fr/lapin.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/fr/lapin.wav",
     "verification": "off",
     "max_attempts": 1
   },

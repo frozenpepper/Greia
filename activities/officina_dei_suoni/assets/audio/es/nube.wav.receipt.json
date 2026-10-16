@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Nube",
     "cue_id": "officina_dei_suoni.nube.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/es/nube.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/es/nube.wav",
     "verification": "off",
     "max_attempts": 1
   },

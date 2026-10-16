@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "La carga: cuando pasan coches y camiones, su peso empuja hacia abajo el tablero del puente.",
     "cue_id": "encyclopedia.machines.bridge.load.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/bridge_load.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/bridge_load.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

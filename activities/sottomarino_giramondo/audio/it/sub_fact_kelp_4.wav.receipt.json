@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "Le foreste sottomarine di kelp producono tanto ossigeno per il pianeta!",
     "cue_id": "voice.fact.kelp.4",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/it/sub_fact_kelp_4.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/it/sub_fact_kelp_4.wav",
     "verification": "auto",
     "max_attempts": 2
   },

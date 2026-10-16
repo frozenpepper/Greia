@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Le Soleil fait évaporer une partie de l'eau",
     "cue_id": "encyclopedia.earth.rain.evaporation.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/rain_evaporation.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/rain_evaporation.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Une géante glacée bleue avec des anneaux discrets",
     "cue_id": "encyclopedia.space.neptune.blue.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/neptune_blue.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/neptune_blue.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

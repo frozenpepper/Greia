@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Mamuts y elefantes son parientes, pero no la misma especie",
     "cue_id": "encyclopedia.history.mammoth.elephants.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/mammoth_elephants.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/history/mammoth_elephants.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

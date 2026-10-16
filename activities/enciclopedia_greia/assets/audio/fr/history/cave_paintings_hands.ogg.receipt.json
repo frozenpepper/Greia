@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Des silhouettes de mains obtenues en appliquant des pigments autour des doigts",
     "cue_id": "encyclopedia.history.cave_paintings.hands.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/cave_paintings_hands.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/cave_paintings_hands.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

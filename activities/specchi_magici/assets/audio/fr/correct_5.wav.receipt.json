@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Parfait !",
     "cue_id": "specchi_magici.correct_5.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/specchi_magici/fr/correct_5.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/specchi_magici/fr/correct_5.wav",
     "verification": "auto",
     "max_attempts": 1
   },

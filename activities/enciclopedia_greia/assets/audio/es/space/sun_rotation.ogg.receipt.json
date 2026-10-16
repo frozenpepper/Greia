@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Sus distintas zonas giran a velocidades diferentes",
     "cue_id": "encyclopedia.space.sun.rotation.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/sun_rotation.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/sun_rotation.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

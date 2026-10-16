@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Motor y hélice: empujan el avión hacia delante para que el aire fluya alrededor de las alas.",
     "cue_id": "encyclopedia.machines.airplane.thrust.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/airplane_thrust.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/airplane_thrust.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

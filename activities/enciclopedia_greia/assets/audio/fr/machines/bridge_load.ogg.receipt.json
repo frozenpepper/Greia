@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "La charge : quand des voitures et des camions passent, leur poids appuie sur le tablier du pont.",
     "cue_id": "encyclopedia.machines.bridge.load.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/bridge_load.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/bridge_load.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

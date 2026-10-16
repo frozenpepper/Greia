@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Place la forme dans le miroir !",
     "cue_id": "specchi_magici.prompt_place.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/specchi_magici/fr/prompt_place.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/specchi_magici/fr/prompt_place.wav",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "L'eau monte des racines jusqu'aux feuilles",
     "cue_id": "encyclopedia.earth.tree.water.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/tree_water.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/tree_water.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Le méthane contribue à sa couleur bleu-vert",
     "cue_id": "encyclopedia.space.uranus.color.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/uranus_color.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/uranus_color.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

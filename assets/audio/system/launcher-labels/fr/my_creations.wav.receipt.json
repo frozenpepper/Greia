@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Mes créations",
     "cue_id": "collection.my_creations",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/launcher-labels/fr/my_creations.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/launcher-labels/fr/my_creations.wav",
     "verification": "auto",
     "max_attempts": 2
   },

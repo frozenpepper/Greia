@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Du cœur vers les poumons et le reste du corps",
     "cue_id": "encyclopedia.body.heart.circulation.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/body/heart_circulation.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/body/heart_circulation.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

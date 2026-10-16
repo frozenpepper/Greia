@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Chaque raie manta porte sur son ventre un dessin de taches unique, comme une empreinte digitale !",
     "cue_id": "voice.fact.manta.3.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_manta_3.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/fr/sub_fact_manta_3.wav",
     "verification": "auto",
     "max_attempts": 1
   },

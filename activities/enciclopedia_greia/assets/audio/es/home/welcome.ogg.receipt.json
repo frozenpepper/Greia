@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¿Qué quieres descubrir?",
     "cue_id": "encyclopedia.home.welcome.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/home/welcome.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/home/welcome.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

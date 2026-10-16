@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "C come Cane",
     "cue_id": "alfabeto_leo.letter_C.it",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_C.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_C.wav",
     "verification": "off",
     "max_attempts": 1
   },

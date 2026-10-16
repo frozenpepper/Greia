@@ -7,7 +7,7 @@
     "locale": "en",
     "text": "you made the word",
     "cue_id": "sillabe_magiche.word_complete.en",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/en/word_complete.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/en/word_complete.wav",
     "verification": "off",
     "max_attempts": 1
   },

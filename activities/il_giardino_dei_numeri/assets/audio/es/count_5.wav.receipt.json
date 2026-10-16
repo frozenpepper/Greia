@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Cinco",
     "cue_id": "il_giardino_dei_numeri.count_5.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/il_giardino_dei_numeri/es/count_5.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/il_giardino_dei_numeri/es/count_5.wav",
     "verification": "auto",
     "max_attempts": 1
   },

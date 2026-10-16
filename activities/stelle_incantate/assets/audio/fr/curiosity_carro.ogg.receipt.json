@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Deux étoiles de la Grande Ourse aident à trouver l'étoile Polaire !",
     "cue_id": "curiosity.carro.fact",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/stelle_incantate/fr/curiosity_carro.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/stelle_incantate/fr/curiosity_carro.ogg",
     "verification": "auto",
     "max_attempts": 2
   },

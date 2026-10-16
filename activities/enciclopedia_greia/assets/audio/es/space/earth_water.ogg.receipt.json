@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Un planeta cubierto de agua en gran parte",
     "cue_id": "encyclopedia.space.earth.water.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/earth_water.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/earth_water.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

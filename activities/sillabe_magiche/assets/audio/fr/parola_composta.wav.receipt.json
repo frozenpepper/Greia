@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "tu as formé le mot",
     "cue_id": "sillabe_magiche.parola_composta.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/fr/parola_composta.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/fr/parola_composta.wav",
     "verification": "off",
     "max_attempts": 1
   },

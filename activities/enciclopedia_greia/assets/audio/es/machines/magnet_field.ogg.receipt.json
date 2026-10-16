@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "La Tierra tiene un campo magnético invisible que ayuda a las brújulas a señalar el norte.",
     "cue_id": "encyclopedia.machines.magnet.field.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/magnet_field.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/magnet_field.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Le Cygne semble voler dans le ciel d'été, et ses étoiles dessinent une grande croix.",
     "cue_id": "curiosity.cigno.fact",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/stelle_incantate/fr/curiosity_cigno.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/stelle_incantate/fr/curiosity_cigno.ogg",
     "verification": "auto",
     "max_attempts": 2
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Siete",
     "cue_id": "bosco_numeri.count_7.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/es/count_7.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/es/count_7.wav",
     "verification": "auto",
     "max_attempts": 1
   },

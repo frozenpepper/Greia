@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "ottimo lavoro",
     "cue_id": "sillabe_magiche.ottimo.it",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/ottimo.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/ottimo.wav",
     "verification": "off",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Des passages et des chambres à l'intérieur des complexes funéraires",
     "cue_id": "encyclopedia.history.pyramids.inside.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/pyramids_inside.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/pyramids_inside.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

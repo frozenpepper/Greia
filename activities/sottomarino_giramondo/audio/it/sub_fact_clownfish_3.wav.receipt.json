@@ -7,7 +7,7 @@
     "locale": "it",
     "text": "I pesci pagliaccio comunicano tra loro facendo piccoli schiocchi con le fauci!",
     "cue_id": "voice.fact.clownfish.3",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/it/sub_fact_clownfish_3.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/it/sub_fact_clownfish_3.wav",
     "verification": "auto",
     "max_attempts": 2
   },

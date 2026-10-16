@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Dos estrellas de la Osa Mayor ayudan a encontrar la Estrella Polar!",
     "cue_id": "curiosity.carro.fact",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/stelle_incantate/es/curiosity_carro.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/stelle_incantate/es/curiosity_carro.ogg",
     "verification": "auto",
     "max_attempts": 2
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "¡Las tortugas marinas pueden aguantar la respiración bajo el agua durante muchas horas!",
     "cue_id": "voice.fact.turtle.1.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/es/sub_fact_turtle_1.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/es/sub_fact_turtle_1.wav",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "Un delfín no es un pez: ¡es un mamífero! Respira aire por el orificio que tiene en la parte superior de la cabeza.",
     "cue_id": "curiosity.delfino.blowhole.voice",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/es/curiosity-blowhole.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/es/curiosity-blowhole.ogg",
     "verification": "auto",
     "max_attempts": 2
   },

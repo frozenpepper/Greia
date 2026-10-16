@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "La luz, el agua y el dióxido de carbono ayudan a producir azúcares",
     "cue_id": "encyclopedia.earth.tree.photosynthesis.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/tree_photosynthesis.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/earth/tree_photosynthesis.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

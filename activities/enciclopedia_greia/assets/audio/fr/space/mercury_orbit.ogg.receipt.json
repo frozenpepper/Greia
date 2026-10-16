@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Une année y dure 88 jours terrestres",
     "cue_id": "encyclopedia.space.mercury.orbit.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/mercury_orbit.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/space/mercury_orbit.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

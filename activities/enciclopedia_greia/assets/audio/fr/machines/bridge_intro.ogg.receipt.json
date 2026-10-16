@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Comment un pont supporte-t-il un poids si lourd ? Découvre comment les charges des voitures et camions passent jusqu'au sol !",
     "cue_id": "encyclopedia.machines.bridge.intro.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/bridge_intro.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/bridge_intro.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

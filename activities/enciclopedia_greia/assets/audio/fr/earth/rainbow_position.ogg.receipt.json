@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Le Soleil derrière, les gouttes devant",
     "cue_id": "encyclopedia.earth.rainbow.position.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/rainbow_position.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/rainbow_position.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

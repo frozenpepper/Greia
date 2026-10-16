@@ -7,7 +7,7 @@
     "locale": "en",
     "text": "Q as Queen",
     "cue_id": "alfabeto_leo.letter_Q.en",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_Q.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_Q.wav",
     "verification": "off",
     "max_attempts": 1
   },

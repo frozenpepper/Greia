@@ -7,7 +7,7 @@
     "locale": "es",
     "text": "L de Luna",
     "cue_id": "alfabeto_leo.letter_L.es",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/es/letter_L.wav",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/es/letter_L.wav",
     "verification": "off",
     "max_attempts": 1
   },

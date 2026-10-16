@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Des couleurs fabriquées avec des matériaux naturels et minéraux",
     "cue_id": "encyclopedia.history.cave_paintings.pigments.fr",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/cave_paintings_pigments.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/cave_paintings_pigments.ogg",
     "verification": "auto",
     "max_attempts": 1
   },

@@ -7,7 +7,7 @@
     "locale": "fr",
     "text": "Un dauphin n'est pas un poisson : c'est un mammifère ! Il respire l'air par un orifice situé sur le dessus de sa tête.",
     "cue_id": "curiosity.delfino.blowhole.voice",
-    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/fr/curiosity-blowhole.ogg",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/fr/curiosity-blowhole.ogg",
     "verification": "auto",
     "max_attempts": 2
   },
