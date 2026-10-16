@@ -5,7 +5,7 @@ platform ``LocalizedResources`` fallback policy (selected language → base →
 English → silence): the comparison prompts, the measuring prompt and the
 short praise / try-again lines. Jobs without a recorded prompt (the balance)
 stay pictorial. Wooden clacks, counting chimes, the balance creak and the
-fanfare are generated once at start-up; every call fails soft without a mixer.
+fanfare are generated once, after the first frame; every call fails soft without a mixer.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import LocalizedResources
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final[int] = 0
 FIRST_SFX_CHANNEL: Final[int] = 2
@@ -43,7 +43,7 @@ class MeasureAudio:
     def __init__(self, resources: LocalizedResources | None = None, *, rng: random.Random | None = None) -> None:
         self._resources = resources
         self._rng = rng if rng is not None else random.Random()
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._speech: dict[str, pygame.mixer.Sound] = {}
         self._available = False
         self._praise = 0
@@ -127,14 +127,14 @@ class MeasureAudio:
             return
         rate, channels = spec
         for index, frequency in enumerate(_COUNT_NOTES, start=1):
-            self._sounds[f"chime_{index}"] = _chime(rate, channels, 0.38, frequency)
-        self._sounds["clack"] = _knock(rate, channels, 0.07, 9000, 11)
-        self._sounds["take"] = _sweep(rate, channels, 0.16, 640.0, 420.0, 6500)
-        self._sounds["pop"] = _sweep(rate, channels, 0.16, 520.0, 880.0, 8000)
-        self._sounds["boop"] = _sweep(rate, channels, 0.22, 420.0, 330.0, 7000)
-        self._sounds["creak"] = _sweep(rate, channels, 0.34, 220.0, 160.0, 6000)
-        self._sounds["whoosh"] = _whoosh(rate, channels)
-        self._sounds["fanfare"] = _fanfare(rate, channels)
+            self._sounds.define(f"chime_{index}", lambda frequency=frequency: _chime(rate, channels, 0.38, frequency))
+        self._sounds.define("clack", lambda: _knock(rate, channels, 0.07, 9000, 11))
+        self._sounds.define("take", lambda: _sweep(rate, channels, 0.16, 640.0, 420.0, 6500))
+        self._sounds.define("pop", lambda: _sweep(rate, channels, 0.16, 520.0, 880.0, 8000))
+        self._sounds.define("boop", lambda: _sweep(rate, channels, 0.22, 420.0, 330.0, 7000))
+        self._sounds.define("creak", lambda: _sweep(rate, channels, 0.34, 220.0, 160.0, 6000))
+        self._sounds.define("whoosh", lambda: _whoosh(rate, channels))
+        self._sounds.define("fanfare", lambda: _fanfare(rate, channels))
 
 
 def _chime(rate: int, channels: int, duration: float, frequency: float) -> pygame.mixer.Sound:

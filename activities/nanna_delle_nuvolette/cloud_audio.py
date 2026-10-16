@@ -6,7 +6,7 @@ character takes (``praise.general``, ``encourage.retry``,
 (locale -> English fallback), played softly. There is no approved recording
 of the bedtime wishes, numbers or colours yet, so the game is fully pictorial.
 
-The small effects are synthesized once at start-up in the mixer's own format,
+The small effects are synthesized once, after the first frame in the mixer's own format,
 deliberately quiet and slow: a cotton rustle, a sleepy yawn, a music-box note
 per cloud falling asleep, a soft "hm-hm" for a declined quilt, a twinkle, and
 a slow falling arpeggio of those notes as the end-of-night lullaby. Every call fails
@@ -24,7 +24,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
@@ -58,7 +58,7 @@ class CloudAudio:
         self.locale = locale.split("-")[0].split("_")[0] or "en"
         self._project_root = project_root
         self._rng = rng if rng is not None else random.Random()
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._clips: OrderedDict[str, pygame.mixer.Sound | None] = OrderedDict()
         self._takes: dict[str, list[Path]] = {}
         self._available = False
@@ -153,13 +153,13 @@ class CloudAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["pick"] = _bell(rate, channels, 880.0, 0.25, 2600)
-        self._sounds["twinkle"] = _bell(rate, channels, 1760.0, 0.4, 1800)
-        self._sounds["rustle"] = _rustle(rate, channels)
-        self._sounds["yawn"] = _yawn(rate, channels)
-        self._sounds["hush"] = _hush(rate, channels)
+        self._sounds.define("pick", lambda: _bell(rate, channels, 880.0, 0.25, 2600))
+        self._sounds.define("twinkle", lambda: _bell(rate, channels, 1760.0, 0.4, 1800))
+        self._sounds.define("rustle", lambda: _rustle(rate, channels))
+        self._sounds.define("yawn", lambda: _yawn(rate, channels))
+        self._sounds.define("hush", lambda: _hush(rate, channels))
         for index, note in enumerate(SLEEP_NOTES):
-            self._sounds[f"sleep_{index}"] = _bell(rate, channels, note, 0.9, 3200)
+            self._sounds.define(f"sleep_{index}", lambda note=note: _bell(rate, channels, note, 0.9, 3200))
 
 
 def _bell(rate: int, channels: int, frequency: float, duration: float, volume: int) -> pygame.mixer.Sound:

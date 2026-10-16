@@ -7,7 +7,7 @@ package lines (``intro``, ``well_done``) through
 silence), and Tito's owner-accepted shared character clips
 (``shared_character_audio_path``). A cue without a clip (there is no "zero"
 recording yet) stays silent while its picture still glows. Nonverbal chimes
-are tiny tones built once at start-up. Nothing here generates speech.
+are tiny tones built once, after the first frame. Nothing here generates speech.
 """
 
 from __future__ import annotations
@@ -22,6 +22,7 @@ from typing import Final, Protocol
 import pygame
 
 from greia_platform.localization import LocalizedResources, shared_character_audio_path
+from greia_platform.pygame_audio import DeferredSoundBank
 
 _SAMPLE_RATE: Final = 22_050
 MAX_QUEUE_LEN: Final = 24
@@ -132,7 +133,8 @@ class BoscoAudio:
         self._locale = locale
         self._package_root = package_root
         self._project_root = project_root if project_root is not None else package_root.resolve().parents[1]
-        self._speech: dict[str, pygame.mixer.Sound] = {}
+        # Approved clips decode after the first frame (or on first use).
+        self._speech = DeferredSoundBank()
         self._sfx: dict[str, pygame.mixer.Sound] = {}
         self._speech_channel: pygame.mixer.Channel | None = None
         self._sfx_channel: pygame.mixer.Channel | None = None
@@ -142,13 +144,14 @@ class BoscoAudio:
             pygame.mixer.set_num_channels(8)
             self._speech_channel = pygame.mixer.Channel(0)
             self._sfx_channel = pygame.mixer.Channel(1)
-            self._sfx = {
-                "correct": self._tone(880.0, 0.14, 0.20),
-                "retry": self._tone(340.0, 0.08, 0.12),
-                "stroke": self._tone(660.0, 0.07, 0.14),
-                "pop": self._tone(760.0, 0.05, 0.12),
-                "bloom": self._tone(1040.0, 0.22, 0.20),
-            }
+            # Synthesized after the first frame (DeferredSoundBank), not at launch.
+            sfx = DeferredSoundBank()
+            sfx.define("correct", lambda: self._tone(880.0, 0.14, 0.20))
+            sfx.define("retry", lambda: self._tone(340.0, 0.08, 0.12))
+            sfx.define("stroke", lambda: self._tone(660.0, 0.07, 0.14))
+            sfx.define("pop", lambda: self._tone(760.0, 0.05, 0.12))
+            sfx.define("bloom", lambda: self._tone(1040.0, 0.22, 0.20))
+            self._sfx = sfx
             self._load_package_clips()
             self._load_tito_clips()
         except (pygame.error, ValueError, OSError):
@@ -180,7 +183,7 @@ class BoscoAudio:
 
     def _load(self, cue_id: str, path: Path) -> None:
         try:
-            self._speech[cue_id] = pygame.mixer.Sound(str(path))
+            self._speech.define(cue_id, lambda path=path: pygame.mixer.Sound(str(path)))
         except (pygame.error, OSError):
             return
 

@@ -1,6 +1,7 @@
 """Sound for Fluffy Monsters: tiny prepared cues + Momo's approved voice.
 
-Cues are synthesized once at construction to match the active PCM16 mixer:
+Cues are synthesized once, after the first frame (``DeferredSoundBank``), to
+match the active PCM16 mixer:
 ``tick`` (a drawer opens), ``boing`` (a part pops on), ``squish`` (a new body
 or colour), ``giggle`` (the friend is tickled), ``rattle`` (surprise dice),
 ``chime`` (saved / shared), ``swish`` (a friend was deleted) and ``syllable.N``
@@ -17,13 +18,13 @@ from __future__ import annotations
 import io
 import math
 from pathlib import Path
-from typing import Final
+from typing import Callable, Final
 import wave
 
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 if __package__:
     from .monster_content import SYLLABLES
@@ -55,6 +56,12 @@ def _wav(samples: list[float], rate: int, channels: int) -> bytes:
     return buffer.getvalue()
 
 
+def _cue(samples: list[float], rate: int, channels: int) -> pygame.mixer.Sound:
+    sound = pygame.mixer.Sound(io.BytesIO(_wav(samples, rate, channels)))
+    sound.set_volume(0.5)
+    return sound
+
+
 def host_clip_path(line: str, locale: str, *, project_root: Path = PROJECT_ROOT) -> Path | None:
     """Momo's approved clip for ``line`` in ``locale`` (English fallback) or None."""
 
@@ -73,7 +80,7 @@ class MonsterAudio:
     """Bounded bank of prepared cues plus at most four cached host lines."""
 
     def __init__(self, *, locale: str = "en", project_root: Path = PROJECT_ROOT) -> None:
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._voices: dict[str, pygame.mixer.Sound | None] = {}
         self._voice_channel: pygame.mixer.Channel | None = None
         self._locale = locale
@@ -86,10 +93,8 @@ class MonsterAudio:
             if spec is None:
                 return
             rate, channels = spec
-            for name, samples in self._recipes(rate).items():
-                sound = pygame.mixer.Sound(io.BytesIO(_wav(samples, rate, channels)))
-                sound.set_volume(0.5)
-                self._sounds[name] = sound
+            for name, recipe in self._recipes(rate).items():
+                self._sounds.define(name, lambda recipe=recipe: _cue(recipe(), rate, channels))
             pygame.mixer.set_num_channels(max(8, pygame.mixer.get_num_channels()))
             self._voice_channel = pygame.mixer.Channel(7)
         except Exception:  # noqa: BLE001 - audio must never break the Activity
@@ -97,9 +102,11 @@ class MonsterAudio:
             self._voice_channel = None
 
     @staticmethod
-    def _recipes(rate: int) -> dict[str, list[float]]:
-        def tone(seconds: float, voice) -> list[float]:
-            return [voice(i / rate) for i in range(int(rate * seconds))]
+    def _recipes(rate: int) -> dict[str, Callable[[], list[float]]]:
+        """Name -> sample generator; nothing is computed until a cue is built."""
+
+        def tone(seconds: float, voice) -> Callable[[], list[float]]:
+            return lambda: [voice(i / rate) for i in range(int(rate * seconds))]
 
         def chirp(f1: float, f2: float):
             def voice(t: float) -> float:

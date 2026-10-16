@@ -28,7 +28,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path, shared_vocab_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
@@ -54,7 +54,7 @@ class TorreAudio:
         self._project_root = project_root
         self._rng = rng if rng is not None else random.Random()
         self._paths: dict[str, Path] = {}
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._clips: OrderedDict[str, pygame.mixer.Sound | None] = OrderedDict()
         self._available = False
         self.last_speech: str | None = None
@@ -163,12 +163,12 @@ class TorreAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["pick"] = _bell(rate, channels, (987.8,), 0.14, 2200)
-        self._sounds["clack"] = _wood(rate, channels)
-        self._sounds["chime"] = _bell(rate, channels, (784.0, 1174.7), 0.5, 2400)
-        self._sounds["hum"] = _hum(rate, channels)
-        self._sounds["turn"] = _bell(rate, channels, (698.5, 880.0), 0.18, 1900)
-        self._sounds["sparkle"] = _bell(rate, channels, (1046.5, 1318.5, 1568.0, 2093.0), 1.0, 1900)
+        self._sounds.define("pick", lambda: _bell(rate, channels, (987.8,), 0.14, 2200))
+        self._sounds.define("clack", lambda: _wood(rate, channels))
+        self._sounds.define("chime", lambda: _bell(rate, channels, (784.0, 1174.7), 0.5, 2400))
+        self._sounds.define("hum", lambda: _hum(rate, channels))
+        self._sounds.define("turn", lambda: _bell(rate, channels, (698.5, 880.0), 0.18, 1900))
+        self._sounds.define("sparkle", lambda: _bell(rate, channels, (1046.5, 1318.5, 1568.0, 2093.0), 1.0, 1900))
 
 
 def _bell(rate: int, channels: int, notes: tuple[float, ...], duration: float, volume: int) -> pygame.mixer.Sound:

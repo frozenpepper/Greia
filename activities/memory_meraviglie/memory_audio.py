@@ -11,7 +11,7 @@ Speech uses only recorded, approved clips:
   library.
 
 Effects (flip, match chime, gentle miss, sticker pop, whoosh, fanfare) are
-synthesized once at start-up. Every call fails soft without a mixer, and
+synthesized once, after the first frame. Every call fails soft without a mixer, and
 speech for the current album is loaded once when a board starts.
 """
 
@@ -30,7 +30,7 @@ from greia_platform.localization import (
     shared_character_audio_path,
     shared_vocab_audio_path,
 )
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
@@ -56,7 +56,7 @@ class MemoryAudio:
         self.locale = locale.split("-")[0]
         self._project_root = project_root
         self._rng = rng if rng is not None else random.Random()
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._lilli: dict[str, list[pygame.mixer.Sound]] = {}
         self._names: OrderedDict[str, pygame.mixer.Sound | None] = OrderedDict()
         self._available = False
@@ -186,14 +186,14 @@ class MemoryAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["flip"] = _sweep(rate, channels, 0.09, 700.0, 1100.0, 5200)
-        self._sounds["unflip"] = _sweep(rate, channels, 0.08, 900.0, 600.0, 3600)
-        self._sounds["match"] = _chord(rate, channels, (659.25, 783.99, 1046.5), 0.42)
-        self._sounds["miss"] = _sweep(rate, channels, 0.2, 420.0, 330.0, 6000)
-        self._sounds["pop"] = _sweep(rate, channels, 0.14, 520.0, 880.0, 7600)
-        self._sounds["whoosh"] = _sweep(rate, channels, 0.26, 900.0, 1500.0, 3800)
-        self._sounds["peek"] = _chord(rate, channels, (880.0, 1318.5), 0.5)
-        self._sounds["fanfare"] = _fanfare(rate, channels)
+        self._sounds.define("flip", lambda: _sweep(rate, channels, 0.09, 700.0, 1100.0, 5200))
+        self._sounds.define("unflip", lambda: _sweep(rate, channels, 0.08, 900.0, 600.0, 3600))
+        self._sounds.define("match", lambda: _chord(rate, channels, (659.25, 783.99, 1046.5), 0.42))
+        self._sounds.define("miss", lambda: _sweep(rate, channels, 0.2, 420.0, 330.0, 6000))
+        self._sounds.define("pop", lambda: _sweep(rate, channels, 0.14, 520.0, 880.0, 7600))
+        self._sounds.define("whoosh", lambda: _sweep(rate, channels, 0.26, 900.0, 1500.0, 3800))
+        self._sounds.define("peek", lambda: _chord(rate, channels, (880.0, 1318.5), 0.5))
+        self._sounds.define("fanfare", lambda: _fanfare(rate, channels))
 
 
 def _sweep(rate: int, channels: int, duration: float, start: float, end: float, volume: int) -> pygame.mixer.Sound:

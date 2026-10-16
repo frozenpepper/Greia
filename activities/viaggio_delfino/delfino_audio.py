@@ -26,6 +26,7 @@ import pygame
 from pathlib import Path
 
 from greia_platform.localization import LocalizedResources, shared_character_audio_path
+from greia_platform.pygame_audio import DeferredSoundBank
 
 try:
     from delfino_content import audio_key
@@ -96,8 +97,8 @@ class PygameDelfinoAudio:
     """Prepares synthesized effects plus localized Tito voice playback."""
 
     def __init__(self, *, project_root: Path | None = None) -> None:
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
-        self._count_sounds: list[pygame.mixer.Sound] = []
+        # Effects and the count-up bells ("count.<n>"), built after the first frame.
+        self._sounds = DeferredSoundBank()
         self._voice_cache: dict[str, pygame.mixer.Sound] = {}
         self._shared_cache: dict[str, pygame.mixer.Sound | None] = {}
         self._voice_channel: pygame.mixer.Channel | None = None
@@ -125,94 +126,124 @@ class PygameDelfinoAudio:
         rate = 22050
 
         # Pearl chime: two ascending sparkles.
-        chime: list[int] = []
-        for i in range(int(rate * 0.22)):
-            t = i / rate
-            freq = 1318.5 if t < 0.08 else 1760.0
-            env = max(0.0, 1.0 - t / 0.20)
-            chime.append(
-                int((math.sin(2 * math.pi * freq * t) + 0.3 * math.sin(4 * math.pi * freq * t)) * env * 13000)
-            )
-        self._sounds["pearl"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(chime, rate)))
+        def render_pearl() -> list[int]:
+            chime: list[int] = []
+            for i in range(int(rate * 0.22)):
+                t = i / rate
+                freq = 1318.5 if t < 0.08 else 1760.0
+                env = max(0.0, 1.0 - t / 0.20)
+                chime.append(
+                    int((math.sin(2 * math.pi * freq * t) + 0.3 * math.sin(4 * math.pi * freq * t)) * env * 13000)
+                )
+            return chime
+
+        self._sounds.define("pearl", lambda: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_pearl(), rate))))
 
         # Starfish fanfare: quick major arpeggio.
-        fanfare: list[int] = []
-        for note in (1046.5, 1318.5, 1568.0):
+        def render_star() -> list[int]:
+            fanfare: list[int] = []
+            for note in (1046.5, 1318.5, 1568.0):
+                for i in range(int(rate * 0.09)):
+                    t = i / rate
+                    env = max(0.0, 1.0 - t / 0.09)
+                    fanfare.append(int(math.sin(2 * math.pi * note * t) * env * 12000))
+            return fanfare
+
+        self._sounds.define("star", lambda: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_star(), rate))))
+
+        # Splash: noise burst with falling body.
+        def render_splash() -> list[int]:
+            splash: list[int] = []
+            for i in range(int(rate * 0.30)):
+                t = i / rate
+                env = math.exp(-8.5 * t)
+                noise = (random.random() * 2.0 - 1.0) * 0.55
+                tone = math.sin(2 * math.pi * (300.0 - 160.0 * (t / 0.30)) * t) * 0.45
+                splash.append(int(32767.0 * 0.32 * env * (tone + noise)))
+            return splash
+
+        self._sounds.define("splash", lambda: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_splash(), rate))))
+
+        # Jelly bounce: friendly boing.
+        def render_boing() -> list[int]:
+            boing: list[int] = []
+            for i in range(int(rate * 0.20)):
+                t = i / rate
+                env = math.exp(-11.0 * t)
+                freq = 320.0 + 190.0 * math.exp(-14.0 * t)
+                boing.append(int(math.sin(2 * math.pi * freq * t) * env * 13500))
+            return boing
+
+        self._sounds.define("boing", lambda: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_boing(), rate))))
+
+        # Tail-boost whoosh.
+        def render_whoosh() -> list[int]:
+            whoosh: list[int] = []
+            for i in range(int(rate * 0.28)):
+                t = i / rate
+                env = math.sin(math.pi * (t / 0.28))
+                freq = 280.0 + math.sin(t * 18.0) * 120.0 + (1.0 - t / 0.28) * 380.0
+                noise = (random.random() * 2.0 - 1.0) * 0.2
+                whoosh.append(int((math.sin(2 * math.pi * freq * t) * 0.75 + noise) * env * 14000))
+            return whoosh
+
+        self._sounds.define("whoosh", lambda: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_whoosh(), rate))))
+
+        # Chapter/finish celebration.
+        def render_victory() -> list[int]:
+            victory: list[int] = []
+            for note in (523.25, 659.25, 783.99, 1046.5):
+                for i in range(int(rate * 0.13)):
+                    t = i / rate
+                    env = max(0.0, 1.0 - t / 0.13)
+                    victory.append(
+                        int(
+                            (
+                                math.sin(2 * math.pi * note * t)
+                                + 0.3 * math.sin(4 * math.pi * note * t)
+                            )
+                            * env
+                            * 11500
+                        )
+                    )
+            return victory
+
+        self._sounds.define("victory", lambda: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_victory(), rate))))
+
+        # Fact-button pop.
+        def render_pop() -> list[int]:
+            pop: list[int] = []
             for i in range(int(rate * 0.09)):
                 t = i / rate
                 env = max(0.0, 1.0 - t / 0.09)
-                fanfare.append(int(math.sin(2 * math.pi * note * t) * env * 12000))
-        self._sounds["star"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(fanfare, rate)))
+                pop.append(int(math.sin(2 * math.pi * (640.0 - 2600.0 * t) * t) * env * 14000))
+            return pop
 
-        # Splash: noise burst with falling body.
-        splash: list[int] = []
-        for i in range(int(rate * 0.30)):
-            t = i / rate
-            env = math.exp(-8.5 * t)
-            noise = (random.random() * 2.0 - 1.0) * 0.55
-            tone = math.sin(2 * math.pi * (300.0 - 160.0 * (t / 0.30)) * t) * 0.45
-            splash.append(int(32767.0 * 0.32 * env * (tone + noise)))
-        self._sounds["splash"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(splash, rate)))
-
-        # Jelly bounce: friendly boing.
-        boing: list[int] = []
-        for i in range(int(rate * 0.20)):
-            t = i / rate
-            env = math.exp(-11.0 * t)
-            freq = 320.0 + 190.0 * math.exp(-14.0 * t)
-            boing.append(int(math.sin(2 * math.pi * freq * t) * env * 13500))
-        self._sounds["boing"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(boing, rate)))
-
-        # Tail-boost whoosh.
-        whoosh: list[int] = []
-        for i in range(int(rate * 0.28)):
-            t = i / rate
-            env = math.sin(math.pi * (t / 0.28))
-            freq = 280.0 + math.sin(t * 18.0) * 120.0 + (1.0 - t / 0.28) * 380.0
-            noise = (random.random() * 2.0 - 1.0) * 0.2
-            whoosh.append(int((math.sin(2 * math.pi * freq * t) * 0.75 + noise) * env * 14000))
-        self._sounds["whoosh"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(whoosh, rate)))
-
-        # Chapter/finish celebration.
-        victory: list[int] = []
-        for note in (523.25, 659.25, 783.99, 1046.5):
-            for i in range(int(rate * 0.13)):
-                t = i / rate
-                env = max(0.0, 1.0 - t / 0.13)
-                victory.append(
-                    int(
-                        (
-                            math.sin(2 * math.pi * note * t)
-                            + 0.3 * math.sin(4 * math.pi * note * t)
-                        )
-                        * env
-                        * 11500
-                    )
-                )
-        self._sounds["victory"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(victory, rate)))
-
-        # Fact-button pop.
-        pop: list[int] = []
-        for i in range(int(rate * 0.09)):
-            t = i / rate
-            env = max(0.0, 1.0 - t / 0.09)
-            pop.append(int(math.sin(2 * math.pi * (640.0 - 2600.0 * t) * t) * env * 14000))
-        self._sounds["pop"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(pop, rate)))
+        self._sounds.define("pop", lambda: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_pop(), rate))))
 
         # Count-up chimes: one short bell per counted pearl, rising.
-        for freq in COUNT_NOTES:
+        def render_count(freq: float) -> list[int]:
             bell: list[int] = []
             for i in range(int(rate * 0.16)):
                 t = i / rate
                 env = math.exp(-14.0 * t)
                 bell.append(int((math.sin(2 * math.pi * freq * t) + 0.25 * math.sin(6 * math.pi * freq * t)) * env * 12000))
-            self._count_sounds.append(pygame.mixer.Sound(io.BytesIO(_synth_wav(bell, rate))))
+            return bell
+
+        for index, freq in enumerate(COUNT_NOTES):
+            self._sounds.define(
+                f"count.{index}",
+                lambda freq=freq: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_count(freq), rate))),
+            )
 
     def play_count(self, index: int) -> None:
-        if not self.enabled or not self._count_sounds:
+        if not self.enabled:
+            return
+        sound = self._sounds.get(f"count.{min(len(COUNT_NOTES) - 1, max(0, index))}")
+        if sound is None:
             return
         try:
-            self._count_sounds[min(len(self._count_sounds) - 1, max(0, index))].play()
+            sound.play()
         except Exception:
             pass
 

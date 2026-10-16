@@ -65,6 +65,10 @@ def _make_app(store=None, seed=7):
         pygame.display.set_mode((1024, 600))
     from sub_app import SubmarineApp
 
+    # A fresh app must not inherit a voice line still sounding (in real time,
+    # on the shared dummy mixer) from the previous test's app.
+    if pygame.mixer.get_init():
+        pygame.mixer.stop()
     clock = _Clock()
     app = SubmarineApp(rng=random.Random(seed), clock=clock, store=store or _MemoryStore())
     app.test_clock = clock

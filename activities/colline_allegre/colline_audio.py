@@ -24,7 +24,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
@@ -43,7 +43,7 @@ class CollineAudio:
         self.locale = locale.split("-")[0].split("_")[0] or "en"
         self._rng = rng if rng is not None else random.Random()
         self._paths: dict[str, Path] = {}
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._clips: OrderedDict[str, pygame.mixer.Sound | None] = OrderedDict()
         self._available = False
         self.last_speech: str | None = None
@@ -138,13 +138,16 @@ class CollineAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["star"] = _bell(rate, channels, (1046.5, 1318.5, 1568.0), 0.36, 2300)
-        self._sounds["flag"] = _bell(rate, channels, (784.0, 1046.5), 0.32, 2100)
-        self._sounds["sparkle"] = _bell(rate, channels, (1046.5, 1318.5, 1568.0, 2093.0), 0.8, 1900)
-        self._sounds["fanfare"] = _bell(rate, channels, (523.3, 659.3, 784.0, 1046.5, 1318.5), 1.2, 2600)
-        self._sounds["boing"] = _boing(rate, channels)
-        self._sounds["whoosh"] = _whoosh(rate, channels, self._rng)
-        self._sounds["thump"] = _thump(rate, channels)
+        self._sounds.define("star", lambda: _bell(rate, channels, (1046.5, 1318.5, 1568.0), 0.36, 2300))
+        self._sounds.define("flag", lambda: _bell(rate, channels, (784.0, 1046.5), 0.32, 2100))
+        self._sounds.define("sparkle", lambda: _bell(rate, channels, (1046.5, 1318.5, 1568.0, 2093.0), 0.8, 1900))
+        self._sounds.define("fanfare", lambda: _bell(rate, channels, (523.3, 659.3, 784.0, 1046.5, 1318.5), 1.2, 2600))
+        self._sounds.define("boing", lambda: _boing(rate, channels))
+        # The whoosh draws its noise from the shared game RNG: build it now so
+        # the game's random sequence is exactly what it was before deferral.
+        whoosh = _whoosh(rate, channels, self._rng)
+        self._sounds.define("whoosh", lambda: whoosh)
+        self._sounds.define("thump", lambda: _thump(rate, channels))
 
 
 def _bell(rate: int, channels: int, notes: tuple[float, ...], duration: float, volume: int) -> pygame.mixer.Sound:

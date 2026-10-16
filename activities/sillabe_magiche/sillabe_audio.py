@@ -4,8 +4,8 @@ Only owner-approved recordings are spoken: this package's syllable / vowel /
 word / instruction clips (resolved through ``LocalizedResources.audio_path``,
 which owns the selected-language → English fallback) and Leo's shared
 character clips (``shared_character_audio_path``). Nonverbal sounds — the clap
-drum, the train whistle and feedback chimes — are tiny tones synthesised once
-at start-up. Nothing here generates speech.
+drum, the train whistle and feedback chimes — are tiny tones synthesised once,
+after the first frame. Nothing here generates speech.
 
 Clips are decoded lazily on first use into a bounded LRU cache (a round touches
 about a dozen clips), so start-up never decodes the whole syllabary.
@@ -23,6 +23,7 @@ from typing import Final, Protocol
 import pygame
 
 from greia_platform.localization import LocalizedResources, shared_character_audio_path
+from greia_platform.pygame_audio import DeferredSoundBank
 
 
 _SAMPLE_RATE: Final = 22_050
@@ -158,13 +159,14 @@ class SillabeAudio:
             pygame.mixer.set_num_channels(8)
             self._speech_channel = pygame.mixer.Channel(0)
             self._sfx_channel = pygame.mixer.Channel(1)
-            self._sfx = {
-                "drum": self._drum(),
-                "whistle": self._whistle(),
-                "correct": self._tone(880.0, 0.14, 0.20),
-                "retry": self._tone(340.0, 0.08, 0.12),
-                "complete": self._tone(1040.0, 0.25, 0.22),
-            }
+            # Synthesized after the first frame (DeferredSoundBank), not at launch.
+            sfx = DeferredSoundBank()
+            sfx.define("drum", lambda: self._drum())
+            sfx.define("whistle", lambda: self._whistle())
+            sfx.define("correct", lambda: self._tone(880.0, 0.14, 0.20))
+            sfx.define("retry", lambda: self._tone(340.0, 0.08, 0.12))
+            sfx.define("complete", lambda: self._tone(1040.0, 0.25, 0.22))
+            self._sfx = sfx
         except (pygame.error, ValueError, OSError):
             self._sfx = {}
             self._speech_channel = None

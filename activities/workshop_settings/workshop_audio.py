@@ -9,7 +9,7 @@ Speech uses only owner-approved recordings:
   spaced out so rapid tapping never becomes a stream of voices.
 
 Speech falls back selected language -> English -> silence. Chimes are
-generated once at start-up; every call fails soft without a mixer.
+generated once, after the first frame; every call fails soft without a mixer.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ from typing import Callable, Final
 import pygame
 
 from greia_platform.localization import LocalizedResources, LocaleTag, shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 if not __package__:
     __package__ = "activities.workshop_settings"  # type: ignore[assignment]
@@ -59,7 +59,7 @@ class MyGreiaAudio:
         if resources is not None:
             language = resources.context.selected.language
         self.language = LocaleTag.parse(language).language
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._speech: dict[Path, pygame.mixer.Sound] = {}
         self._introduced: set[str] = set()
         self._next_speech = 0.0
@@ -157,9 +157,9 @@ class MyGreiaAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["pick"] = _sparkle(rate, channels)
-        self._sounds["tab"] = _sweep(rate, channels, 0.12, 520.0, 780.0, 6500)
-        self._sounds["undo"] = _sweep(rate, channels, 0.16, 780.0, 470.0, 6500)
+        self._sounds.define("pick", lambda: _sparkle(rate, channels))
+        self._sounds.define("tab", lambda: _sweep(rate, channels, 0.12, 520.0, 780.0, 6500))
+        self._sounds.define("undo", lambda: _sweep(rate, channels, 0.16, 780.0, 470.0, 6500))
 
 
 def _sparkle(rate: int, channels: int) -> pygame.mixer.Sound:

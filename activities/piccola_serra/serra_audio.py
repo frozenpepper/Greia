@@ -7,8 +7,8 @@ Speech uses only Tito's owner-accepted shared character takes
 pictures are in order, the big cheer at the end of a visit, "keep going" as
 the first idle nudge and "let's try again" after a care that did not help.
 Moments without an approved line ("the plant is thirsty", "what comes
-first?") stay pictorial + sound. Sound effects are generated once at
-start-up; every call fails soft without a mixer. No generated speech.
+first?") stay pictorial + sound. Sound effects are generated once, after
+the first frame; every call fails soft without a mixer. No generated speech.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 if __package__:
     from .serra_content import TITO
@@ -50,7 +50,7 @@ class SerraAudio:
     def __init__(self, locale: str = "en", *, project_root: Path = PROJECT_ROOT) -> None:
         self.locale = (locale or "en").split("-")[0].split("_")[0] or "en"
         self._project_root = project_root
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._speech: dict[str, pygame.mixer.Sound] = {}
         self._available = False
         self.last_speech: str | None = None
@@ -116,18 +116,18 @@ class SerraAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["seed"] = _sweep(rate, channels, 0.14, 520.0, 300.0, 7000)
-        self._sounds["water"] = _trickle(rate, channels)
-        self._sounds["grow"] = _chime(rate, channels, (523.25, 659.25, 783.99), step=0.09, volume=8000)
-        self._sounds["sun"] = _chime(rate, channels, (880.0, 1108.7, 1318.5), step=0.12, volume=6000)
-        self._sounds["wait"] = _ticks(rate, channels)
-        self._sounds["harvest"] = _pop(rate, channels)
-        self._sounds["basket"] = _chime(rate, channels, (783.99, 1046.5, 1318.5, 1568.0), step=0.08)
-        self._sounds["card"] = _chime(rate, channels, (987.77,), step=0.05, volume=7000)
-        self._sounds["not_yet"] = _sweep(rate, channels, 0.22, 420.0, 330.0, 5000)
-        self._sounds["cloth"] = _swish(rate, channels)
-        self._sounds["drip"] = _chime(rate, channels, (1318.5, 1046.5), step=0.12, volume=4500)
-        self._sounds["fanfare"] = _chime(rate, channels, (523.25, 659.25, 783.99, 1046.5, 1318.5), step=0.14, volume=10000)
+        self._sounds.define("seed", lambda: _sweep(rate, channels, 0.14, 520.0, 300.0, 7000))
+        self._sounds.define("water", lambda: _trickle(rate, channels))
+        self._sounds.define("grow", lambda: _chime(rate, channels, (523.25, 659.25, 783.99), step=0.09, volume=8000))
+        self._sounds.define("sun", lambda: _chime(rate, channels, (880.0, 1108.7, 1318.5), step=0.12, volume=6000))
+        self._sounds.define("wait", lambda: _ticks(rate, channels))
+        self._sounds.define("harvest", lambda: _pop(rate, channels))
+        self._sounds.define("basket", lambda: _chime(rate, channels, (783.99, 1046.5, 1318.5, 1568.0), step=0.08))
+        self._sounds.define("card", lambda: _chime(rate, channels, (987.77,), step=0.05, volume=7000))
+        self._sounds.define("not_yet", lambda: _sweep(rate, channels, 0.22, 420.0, 330.0, 5000))
+        self._sounds.define("cloth", lambda: _swish(rate, channels))
+        self._sounds.define("drip", lambda: _chime(rate, channels, (1318.5, 1046.5), step=0.12, volume=4500))
+        self._sounds.define("fanfare", lambda: _chime(rate, channels, (523.25, 659.25, 783.99, 1046.5, 1318.5), step=0.14, volume=10000))
 
 
 def _chime(rate: int, channels: int, notes: tuple[float, ...], *, step: float = 0.08, volume: int = 9000) -> pygame.mixer.Sound:

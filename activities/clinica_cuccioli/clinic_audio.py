@@ -5,7 +5,7 @@ Speech uses only recorded, approved clips: Momo's shared character takes
 ``encourage.progress``, ``celebrate.success``) and the shared vocabulary
 bank for a patient's name where one exists ("cat", "mouse", "dog").
 Moments without an approved line ("where does it hurt?", tool names) stay
-pictorial and silent. Care sounds are generated once at start-up; every call
+pictorial and silent. Care sounds are generated once, after the first frame; every call
 fails soft without a mixer.
 """
 
@@ -19,7 +19,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path, shared_vocab_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final[int] = 0
 FIRST_SFX_CHANNEL: Final[int] = 2
@@ -50,7 +50,7 @@ class ClinicAudio:
         self.locale = locale.split("-")[0]
         self._project_root = project_root
         self._rng = rng if rng is not None else random.Random()
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._speech: dict[str, list[pygame.mixer.Sound]] = {}
         self._available = False
         self.last_speech: str | None = None
@@ -134,17 +134,17 @@ class ClinicAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["pop"] = _sweep(rate, channels, 0.12, 520.0, 880.0, 7000)
-        self._sounds["hop"] = _sweep(rate, channels, 0.16, 380.0, 640.0, 6000)
-        self._sounds["whoosh"] = _sweep(rate, channels, 0.24, 900.0, 1500.0, 3800)
-        self._sounds["nope"] = _sweep(rate, channels, 0.24, 420.0, 300.0, 6500)
-        self._sounds["scrub"] = _scrub(rate, channels)
-        self._sounds["fluff"] = _sweep(rate, channels, 0.3, 300.0, 520.0, 4200)
-        self._sounds["drip"] = _sweep(rate, channels, 0.14, 1200.0, 700.0, 6000)
-        self._sounds["stick"] = _chime(rate, channels, 0.22, 880.0)
-        self._sounds["heartbeat"] = _heartbeat(rate, channels)
-        self._sounds["cuddle"] = _sweep(rate, channels, 0.38, 520.0, 760.0, 6000)
-        self._sounds["fanfare"] = _fanfare(rate, channels)
+        self._sounds.define("pop", lambda: _sweep(rate, channels, 0.12, 520.0, 880.0, 7000))
+        self._sounds.define("hop", lambda: _sweep(rate, channels, 0.16, 380.0, 640.0, 6000))
+        self._sounds.define("whoosh", lambda: _sweep(rate, channels, 0.24, 900.0, 1500.0, 3800))
+        self._sounds.define("nope", lambda: _sweep(rate, channels, 0.24, 420.0, 300.0, 6500))
+        self._sounds.define("scrub", lambda: _scrub(rate, channels))
+        self._sounds.define("fluff", lambda: _sweep(rate, channels, 0.3, 300.0, 520.0, 4200))
+        self._sounds.define("drip", lambda: _sweep(rate, channels, 0.14, 1200.0, 700.0, 6000))
+        self._sounds.define("stick", lambda: _chime(rate, channels, 0.22, 880.0))
+        self._sounds.define("heartbeat", lambda: _heartbeat(rate, channels))
+        self._sounds.define("cuddle", lambda: _sweep(rate, channels, 0.38, 520.0, 760.0, 6000))
+        self._sounds.define("fanfare", lambda: _fanfare(rate, channels))
 
 
 def _load(path: Path) -> pygame.mixer.Sound | None:

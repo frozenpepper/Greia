@@ -32,6 +32,7 @@ except ImportError:
 from greia_platform.activity_api import get_audio_capture_device, get_sdl_capture_device
 from greia_platform.creation_media import CreationMediaError, WavCodec
 from greia_platform.localization import shared_character_audio_path
+from greia_platform.pygame_audio import DeferredSoundBank
 
 ENVELOPE_HZ = 15
 VOICE_THRESHOLD = 0.12
@@ -290,7 +291,9 @@ def _wav(samples: list[float], rate: int) -> bytes:
 
 
 class SoundManager:
-    """Short synthesized theatre cues, prepared once (silent without a mixer).
+    """Short synthesized theatre cues, prepared once after the first frame.
+
+    Silent without a mixer; see ``DeferredSoundBank``.
 
     Cues are rendered as small mono WAVs at 16 kHz and handed to the mixer,
     which converts them to its own format, so the bank works whatever rate
@@ -300,17 +303,22 @@ class SoundManager:
     RATE = 16000
 
     def __init__(self) -> None:
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         try:
             if not pygame.mixer.get_init():
                 pygame.mixer.init(frequency=22050, size=-16, channels=1, buffer=512)
             for name, (voice, seconds) in self._recipes().items():
-                count = int(self.RATE * seconds)
-                samples = [voice(i / self.RATE, seconds) for i in range(count)]
-                self._sounds[name] = pygame.mixer.Sound(io.BytesIO(_wav(samples, self.RATE)))
-                self._sounds[name].set_volume(0.6)
+                self._sounds.define(name, lambda voice=voice, seconds=seconds: self._render(voice, seconds))
         except Exception:
             self._sounds.clear()
+
+    @classmethod
+    def _render(cls, voice, seconds: float) -> pygame.mixer.Sound:
+        count = int(cls.RATE * seconds)
+        samples = [voice(i / cls.RATE, seconds) for i in range(count)]
+        sound = pygame.mixer.Sound(io.BytesIO(_wav(samples, cls.RATE)))
+        sound.set_volume(0.6)
+        return sound
 
     @staticmethod
     def _recipes() -> dict:
@@ -377,7 +385,7 @@ class SoundManager:
             pass
 
     def stop_all(self) -> None:
-        for sound in self._sounds.values():
+        for sound in self._sounds.built_sounds():
             try:
                 sound.stop()
             except Exception:

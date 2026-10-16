@@ -7,7 +7,7 @@ Speech uses only Tito's owner-accepted shared character takes
 cheer at the end of a visit, "keep going" as the first idle nudge and "let's
 try again" when the tent or a door is still closed. Moments without an
 approved line (a star found, the key picked up) stay pictorial + chime.
-Sound effects are generated once at start-up; every call fails soft without
+Sound effects are generated once, after the first frame; every call fails soft without
 a mixer.
 """
 
@@ -21,7 +21,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
@@ -51,7 +51,7 @@ class LabyrinthAudio:
         self.locale = (locale or "en").split("-")[0]
         self._project_root = project_root
         self._rng = rng if rng is not None else random.Random()
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._speech: dict[str, pygame.mixer.Sound] = {}
         self._available = False
         self.last_speech: str | None = None
@@ -114,15 +114,15 @@ class LabyrinthAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["step"] = _sweep(rate, channels, 0.09, 380.0, 300.0, 4200)
-        self._sounds["bump"] = _thud(rate, channels)
-        self._sounds["star"] = _chime(rate, channels, (1046.5, 1318.5, 1568.0))
-        self._sounds["key"] = _chime(rate, channels, (1568.0, 2093.0, 1568.0, 2093.0), step=0.06, volume=7000)
-        self._sounds["door"] = _sweep(rate, channels, 0.32, 240.0, 180.0, 6500)
-        self._sounds["locked"] = _sweep(rate, channels, 0.22, 420.0, 330.0, 6500)
-        self._sounds["hint"] = _chime(rate, channels, (1318.5, 1760.0), step=0.09, volume=6000)
-        self._sounds["tent"] = _chime(rate, channels, (523.25, 659.25, 783.99, 1046.5), step=0.12)
-        self._sounds["fanfare"] = _chime(rate, channels, (523.25, 659.25, 783.99, 1046.5, 1318.5), step=0.14, volume=10000)
+        self._sounds.define("step", lambda: _sweep(rate, channels, 0.09, 380.0, 300.0, 4200))
+        self._sounds.define("bump", lambda: _thud(rate, channels))
+        self._sounds.define("star", lambda: _chime(rate, channels, (1046.5, 1318.5, 1568.0)))
+        self._sounds.define("key", lambda: _chime(rate, channels, (1568.0, 2093.0, 1568.0, 2093.0), step=0.06, volume=7000))
+        self._sounds.define("door", lambda: _sweep(rate, channels, 0.32, 240.0, 180.0, 6500))
+        self._sounds.define("locked", lambda: _sweep(rate, channels, 0.22, 420.0, 330.0, 6500))
+        self._sounds.define("hint", lambda: _chime(rate, channels, (1318.5, 1760.0), step=0.09, volume=6000))
+        self._sounds.define("tent", lambda: _chime(rate, channels, (523.25, 659.25, 783.99, 1046.5), step=0.12))
+        self._sounds.define("fanfare", lambda: _chime(rate, channels, (523.25, 659.25, 783.99, 1046.5, 1318.5), step=0.14, volume=10000))
 
 
 def _chime(

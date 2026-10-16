@@ -1,7 +1,7 @@
 """Sounds and character voices for Quattro Amici in Fila.
 
 * Tiny wooden effects (slide, clack, taps, a gentle "boop", counting chimes
-  and a short fanfare) are synthesised once at startup for the active mixer.
+  and a short fanfare) are synthesised once, after the first frame for the active mixer.
 * Speech uses ONLY the owner-approved shared character takes of Flash and
   Leo, resolved through ``shared_character_audio_path`` (selected language,
   then English, then silence). A cue's sibling takes (``__01``, ``__02``…)
@@ -20,7 +20,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 VOICE_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 1
@@ -38,7 +38,7 @@ class QuattroAudio:
         self.locale = locale.split("-")[0]
         self._project_root = project_root or Path(__file__).resolve().parents[2]
         self._rng = rng or random.Random()
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._voices: dict[tuple[str, str], list[pygame.mixer.Sound]] = {}
         self._available = False
         try:
@@ -128,15 +128,15 @@ class QuattroAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["slide"] = _sweep(rate, channels, 0.2, 420.0, 240.0, 7000)
-        self._sounds["clack"] = _clack(rate, channels)
-        self._sounds["hover"] = _tap(rate, channels, 380.0)
-        self._sounds["click"] = _tap(rate, channels, 520.0)
-        self._sounds["boop"] = _sweep(rate, channels, 0.22, 420.0, 300.0, 7000)
-        self._sounds["pop"] = _sweep(rate, channels, 0.14, 520.0, 880.0, 7500)
+        self._sounds.define("slide", lambda: _sweep(rate, channels, 0.2, 420.0, 240.0, 7000))
+        self._sounds.define("clack", lambda: _clack(rate, channels))
+        self._sounds.define("hover", lambda: _tap(rate, channels, 380.0))
+        self._sounds.define("click", lambda: _tap(rate, channels, 520.0))
+        self._sounds.define("boop", lambda: _sweep(rate, channels, 0.22, 420.0, 300.0, 7000))
+        self._sounds.define("pop", lambda: _sweep(rate, channels, 0.14, 520.0, 880.0, 7500))
         for index, frequency in enumerate(_COUNT_NOTES, start=1):
-            self._sounds[f"chime_{index}"] = _chime(rate, channels, frequency)
-        self._sounds["fanfare"] = _fanfare(rate, channels)
+            self._sounds.define(f"chime_{index}", lambda frequency=frequency: _chime(rate, channels, frequency))
+        self._sounds.define("fanfare", lambda: _fanfare(rate, channels))
 
 
 def _sound(raw: bytearray) -> pygame.mixer.Sound:

@@ -26,7 +26,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import LocalizedResources, shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 if __package__:
     from .mirror_model import ShapeKind
@@ -65,7 +65,7 @@ class MirrorAudio:
         self._project_root = project_root
         self._rng = rng if rng is not None else random.Random()
         self._paths: dict[str, Path] = {}
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._clips: OrderedDict[str, pygame.mixer.Sound | None] = OrderedDict()
         self._available = False
         self.last_speech: str | None = None
@@ -173,11 +173,11 @@ class MirrorAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["pick"] = _bell(rate, channels, (987.8,), 0.16, 2400)
-        self._sounds["place"] = _bell(rate, channels, (659.3,), 0.22, 3000)
-        self._sounds["chime"] = _bell(rate, channels, (784.0, 1174.7), 0.5, 2600)
-        self._sounds["hum"] = _hum(rate, channels)
-        self._sounds["sparkle"] = _bell(rate, channels, (1318.5, 1568.0, 2093.0), 0.9, 1900)
+        self._sounds.define("pick", lambda: _bell(rate, channels, (987.8,), 0.16, 2400))
+        self._sounds.define("place", lambda: _bell(rate, channels, (659.3,), 0.22, 3000))
+        self._sounds.define("chime", lambda: _bell(rate, channels, (784.0, 1174.7), 0.5, 2600))
+        self._sounds.define("hum", lambda: _hum(rate, channels))
+        self._sounds.define("sparkle", lambda: _bell(rate, channels, (1318.5, 1568.0, 2093.0), 0.9, 1900))
 
 
 def _bell(rate: int, channels: int, notes: tuple[float, ...], duration: float, volume: int) -> pygame.mixer.Sound:

@@ -7,7 +7,7 @@ Speech uses only Tito's owner-accepted shared character takes
 basket, the big cheer at the end of a set, "keep going" as the first idle
 nudge and "let's try again" after a miss. Moments without an approved line
 (placing or turning a piece, the marble stopping) stay pictorial + sound.
-Sound effects are generated once at start-up; every call fails soft without a
+Sound effects are generated once, after the first frame; every call fails soft without a
 mixer.
 """
 
@@ -21,7 +21,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
@@ -44,7 +44,7 @@ class RampAudio:
     def __init__(self, locale: str = "en", *, project_root: Path = PROJECT_ROOT) -> None:
         self.locale = (locale or "en").split("-")[0]
         self._project_root = project_root
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._speech: dict[str, pygame.mixer.Sound] = {}
         self._available = False
         self.last_speech: str | None = None
@@ -107,18 +107,18 @@ class RampAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["pick"] = _knock(rate, channels, 520.0, 0.07, 5200)
-        self._sounds["place"] = _knock(rate, channels, 300.0, 0.12, 8000)
-        self._sounds["turn"] = _knock(rate, channels, 680.0, 0.06, 5200)
-        self._sounds["remove"] = _sweep(rate, channels, 0.14, 420.0, 560.0, 4800)
-        self._sounds["go"] = _sweep(rate, channels, 0.22, 220.0, 440.0, 6000)
-        self._sounds["clack"] = _knock(rate, channels, 860.0, 0.05, 4200)
-        self._sounds["bonk"] = _sweep(rate, channels, 0.16, 300.0, 520.0, 7000)
-        self._sounds["basket"] = _chime(rate, channels, (523.25, 659.25, 783.99, 1046.5), step=0.1)
-        self._sounds["lost"] = _sweep(rate, channels, 0.42, 520.0, 220.0, 6000)
-        self._sounds["stopped"] = _knock(rate, channels, 180.0, 0.18, 6500)
-        self._sounds["hint"] = _chime(rate, channels, (1318.5, 1760.0), step=0.09, volume=6000)
-        self._sounds["fanfare"] = _chime(rate, channels, (523.25, 659.25, 783.99, 1046.5, 1318.5), step=0.14, volume=10000)
+        self._sounds.define("pick", lambda: _knock(rate, channels, 520.0, 0.07, 5200))
+        self._sounds.define("place", lambda: _knock(rate, channels, 300.0, 0.12, 8000))
+        self._sounds.define("turn", lambda: _knock(rate, channels, 680.0, 0.06, 5200))
+        self._sounds.define("remove", lambda: _sweep(rate, channels, 0.14, 420.0, 560.0, 4800))
+        self._sounds.define("go", lambda: _sweep(rate, channels, 0.22, 220.0, 440.0, 6000))
+        self._sounds.define("clack", lambda: _knock(rate, channels, 860.0, 0.05, 4200))
+        self._sounds.define("bonk", lambda: _sweep(rate, channels, 0.16, 300.0, 520.0, 7000))
+        self._sounds.define("basket", lambda: _chime(rate, channels, (523.25, 659.25, 783.99, 1046.5), step=0.1))
+        self._sounds.define("lost", lambda: _sweep(rate, channels, 0.42, 520.0, 220.0, 6000))
+        self._sounds.define("stopped", lambda: _knock(rate, channels, 180.0, 0.18, 6500))
+        self._sounds.define("hint", lambda: _chime(rate, channels, (1318.5, 1760.0), step=0.09, volume=6000))
+        self._sounds.define("fanfare", lambda: _chime(rate, channels, (523.25, 659.25, 783.99, 1046.5, 1318.5), step=0.14, volume=10000))
 
 
 def _chime(

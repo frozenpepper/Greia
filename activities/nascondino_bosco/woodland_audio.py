@@ -10,7 +10,7 @@ Speech uses only recorded, approved clips:
   ``encourage.retry``, ``encourage.progress``, ``praise.general``).
 
 Effects (leaf rustle, found chime, hop pop, "not me" boing, hide whoosh,
-fanfare) are synthesized once at start-up. Every call fails soft without a
+fanfare) are synthesized once, after the first frame. Every call fails soft without a
 mixer; name clips are decoded at most once each (bounded cache).
 """
 
@@ -25,7 +25,7 @@ from typing import Final, Iterable
 import pygame
 
 from greia_platform.localization import shared_character_audio_path, shared_vocab_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
@@ -50,7 +50,7 @@ class WoodlandAudio:
         self.locale = locale.split("-")[0].split("_")[0] or "en"
         self._project_root = project_root
         self._rng = rng if rng is not None else random.Random()
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._lilli: dict[str, list[pygame.mixer.Sound]] = {}
         self._names: OrderedDict[str, pygame.mixer.Sound | None] = OrderedDict()
         self._name_paths: dict[str, bool] = {}
@@ -182,12 +182,12 @@ class WoodlandAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["rustle"] = _rustle(rate, channels)
-        self._sounds["found"] = _chord(rate, channels, (659.25, 783.99, 1046.5), 0.46)
-        self._sounds["pop"] = _sweep(rate, channels, 0.14, 520.0, 980.0, 7200)
-        self._sounds["boing"] = _boing(rate, channels)
-        self._sounds["hide"] = _sweep(rate, channels, 0.24, 1100.0, 600.0, 3200)
-        self._sounds["fanfare"] = _fanfare(rate, channels)
+        self._sounds.define("rustle", lambda: _rustle(rate, channels))
+        self._sounds.define("found", lambda: _chord(rate, channels, (659.25, 783.99, 1046.5), 0.46))
+        self._sounds.define("pop", lambda: _sweep(rate, channels, 0.14, 520.0, 980.0, 7200))
+        self._sounds.define("boing", lambda: _boing(rate, channels))
+        self._sounds.define("hide", lambda: _sweep(rate, channels, 0.24, 1100.0, 600.0, 3200))
+        self._sounds.define("fanfare", lambda: _fanfare(rate, channels))
 
 
 def _rustle(rate: int, channels: int) -> pygame.mixer.Sound:

@@ -5,7 +5,7 @@ Only existing owner-approved recordings are played: this package's clips
 ``<word>`` — the example word) through ``LocalizedResources.speech_paths``
 (selected language → base → English → silence), plus Leo's shared character
 clips (``shared_character_audio_path``). Nonverbal chimes are tiny tones built
-once at start-up. Nothing here generates speech.
+once, after the first frame. Nothing here generates speech.
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ from typing import Final, Protocol
 import pygame
 
 from greia_platform.localization import LocalizedResources, shared_character_audio_path
+from greia_platform.pygame_audio import DeferredSoundBank
 
 _SAMPLE_RATE: Final = 22_050
 MAX_QUEUE_LEN: Final = 6
@@ -116,7 +117,8 @@ class ForestAudio:
         self._locale = locale
         self._package_root = package_root
         self._project_root = project_root if project_root is not None else package_root.resolve().parents[1]
-        self._speech: dict[str, pygame.mixer.Sound] = {}
+        # Approved clips decode after the first frame (or on first use).
+        self._speech = DeferredSoundBank()
         self._sfx: dict[str, pygame.mixer.Sound] = {}
         self._speech_channel: pygame.mixer.Channel | None = None
         self._sfx_channel: pygame.mixer.Channel | None = None
@@ -126,12 +128,13 @@ class ForestAudio:
             pygame.mixer.set_num_channels(8)
             self._speech_channel = pygame.mixer.Channel(0)
             self._sfx_channel = pygame.mixer.Channel(1)
-            self._sfx = {
-                "catch": self._chirp(660.0, 1046.0, 0.16, 0.20),
-                "bounce": self._chirp(420.0, 260.0, 0.18, 0.14),
-                "drop": self._tone(520.0, 0.05, 0.05),
-                "finale": self._chirp(784.0, 1318.0, 0.30, 0.20),
-            }
+            # Synthesized after the first frame (DeferredSoundBank), not at launch.
+            sfx = DeferredSoundBank()
+            sfx.define("catch", lambda: self._chirp(660.0, 1046.0, 0.16, 0.20))
+            sfx.define("bounce", lambda: self._chirp(420.0, 260.0, 0.18, 0.14))
+            sfx.define("drop", lambda: self._tone(520.0, 0.05, 0.05))
+            sfx.define("finale", lambda: self._chirp(784.0, 1318.0, 0.30, 0.20))
+            self._sfx = sfx
             self._load_package_clips()
             self._load_leo_clips()
         except (pygame.error, ValueError, OSError):
@@ -162,7 +165,7 @@ class ForestAudio:
 
     def _load(self, cue_id: str, path: Path) -> None:
         try:
-            self._speech[cue_id] = pygame.mixer.Sound(str(path))
+            self._speech.define(cue_id, lambda path=path: pygame.mixer.Sound(str(path)))
         except (pygame.error, OSError):
             return
 

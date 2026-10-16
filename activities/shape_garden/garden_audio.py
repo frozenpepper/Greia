@@ -19,12 +19,12 @@ import io
 import math
 from pathlib import Path
 import wave
-from typing import Final
+from typing import Callable, Final
 
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 if __package__:
     from .garden_content import SHAPE_KINDS
@@ -50,11 +50,17 @@ def _wav(samples: list[float], rate: int, channels: int) -> bytes:
     return buffer.getvalue()
 
 
+def _cue(samples: list[float], rate: int, channels: int) -> pygame.mixer.Sound:
+    sound = pygame.mixer.Sound(io.BytesIO(_wav(samples, rate, channels)))
+    sound.set_volume(0.5)
+    return sound
+
+
 class GardenSounds:
     """Bounded bank of short cues and four Dani clips for one session."""
 
     def __init__(self, locale: str = "en", *, project_root: Path = PROJECT_ROOT) -> None:
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._speech: dict[str, pygame.mixer.Sound] = {}
         self.last_speech: str | None = None
         try:
@@ -65,10 +71,8 @@ class GardenSounds:
                 return
             rate, channels = spec
             pygame.mixer.set_num_channels(max(pygame.mixer.get_num_channels(), 4))
-            for name, samples in self._recipes(rate).items():
-                sound = pygame.mixer.Sound(io.BytesIO(_wav(samples, rate, channels)))
-                sound.set_volume(0.5)
-                self._sounds[name] = sound
+            for name, recipe in self._recipes(rate).items():
+                self._sounds.define(name, lambda recipe=recipe: _cue(recipe(), rate, channels))
             for cue in SPEECH_CUES:
                 path = shared_character_audio_path(project_root, "dani", cue, locale or "en")
                 if path is not None:
@@ -78,9 +82,11 @@ class GardenSounds:
             self._speech.clear()
 
     @staticmethod
-    def _recipes(rate: int) -> dict[str, list[float]]:
-        def tone(seconds: float, voice) -> list[float]:
-            return [voice(i / rate) for i in range(int(rate * seconds))]
+    def _recipes(rate: int) -> dict[str, Callable[[], list[float]]]:
+        """Name -> sample generator; nothing is computed until a cue is built."""
+
+        def tone(seconds: float, voice) -> Callable[[], list[float]]:
+            return lambda: [voice(i / rate) for i in range(int(rate * seconds))]
 
         recipes = {
             f"pop.{kind}": tone(

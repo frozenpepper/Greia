@@ -4,7 +4,7 @@ Speech uses only recorded, approved clips: this package's cues (intro, prompt,
 count_1..count_5, praise, basket_full) through ``LocalizedResources`` and Dani's
 shared reaction library (``encourage.retry``). Missing cues (for example
 ``count_6``..``count_10`` until they are recorded) stay silent; the game
-remains fully pictorial. Chimes are generated once at start-up.
+remains fully pictorial. Chimes are generated once, after the first frame.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import LocalizedResources, shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final[int] = 0
 FIRST_SFX_CHANNEL: Final[int] = 2
@@ -42,7 +42,7 @@ class GiardinoAudio:
         self._resources = resources
         self.locale = locale.split("-")[0]
         self._project_root = project_root
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._speech: dict[str, pygame.mixer.Sound] = {}
         self._available = False
         self.last_speech: str | None = None
@@ -146,11 +146,11 @@ class GiardinoAudio:
             return
         rate, channels = spec
         for index, frequency in enumerate(_COUNT_NOTES, start=1):
-            self._sounds[f"chime_{index}"] = _chime(rate, channels, 0.4, frequency)
-        self._sounds["pop"] = _sweep(rate, channels, 0.16, 520.0, 880.0, 9000)
-        self._sounds["boop"] = _sweep(rate, channels, 0.22, 420.0, 330.0, 7000)
-        self._sounds["ripple"] = _sweep(rate, channels, 0.22, 440.0, 640.0, 6000)
-        self._sounds["fanfare"] = _fanfare(rate, channels)
+            self._sounds.define(f"chime_{index}", lambda frequency=frequency: _chime(rate, channels, 0.4, frequency))
+        self._sounds.define("pop", lambda: _sweep(rate, channels, 0.16, 520.0, 880.0, 9000))
+        self._sounds.define("boop", lambda: _sweep(rate, channels, 0.22, 420.0, 330.0, 7000))
+        self._sounds.define("ripple", lambda: _sweep(rate, channels, 0.22, 440.0, 640.0, 6000))
+        self._sounds.define("fanfare", lambda: _fanfare(rate, channels))
 
 
 def _chime(rate: int, channels: int, duration: float, frequency: float) -> pygame.mixer.Sound:

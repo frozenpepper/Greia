@@ -19,6 +19,7 @@ from .customization import (
 )
 from .creation_client import ActivityCreationsClient
 from .event_client import ActivityEventClient, ActivityEventReceipt
+from .first_frame_work import release_first_frame_work
 from .input_core import InteractionProfile, parse_interaction_profile
 from .profile_presentation import (
     GrammaticalGender,
@@ -542,6 +543,9 @@ def mark_activity_ready() -> None:
     session_id, path = _lifecycle_path("GREIA_ACTIVITY_READY_PATH")
     if session_id and path:
         _write_lifecycle_marker(path, session_id)
+    # Only now may deferred start-up work (e.g. sound synthesis) compete for
+    # the CPU: the Shell has its READY marker and the child sees the screen.
+    release_first_frame_work()
 
 
 def activity_stop_requested() -> bool:

@@ -8,7 +8,7 @@
 * The child's recordings (WAV bytes from ``VoiceRecorder``) on their own
   channel, so the slideshow can follow real playback.
 * Effects (pop, whoosh, chime, gentle boop, countdown pip, record start/stop,
-  page turn, fanfare) are synthesized once at start-up.
+  page turn, fanfare) are synthesized once, after the first frame.
 
 Every call fails soft without a mixer. All output stops before the
 microphone opens so Leo or an effect never ends up inside a recording.
@@ -26,7 +26,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final = 0
 VOICE_CHANNEL: Final = 1
@@ -51,7 +51,7 @@ class StoryAudio:
         self._host = host
         self._project_root = project_root
         self._rng = rng if rng is not None else random.Random()
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._host_takes: dict[str, list[pygame.mixer.Sound]] = {}
         self._voice: pygame.mixer.Sound | None = None
         self._available = False
@@ -188,16 +188,16 @@ class StoryAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["pop"] = _sweep(rate, channels, 0.12, 520.0, 900.0, 7200)
-        self._sounds["unpop"] = _sweep(rate, channels, 0.12, 760.0, 460.0, 5600)
-        self._sounds["whoosh"] = _sweep(rate, channels, 0.24, 900.0, 1500.0, 3600)
-        self._sounds["chime"] = _chord(rate, channels, (659.25, 783.99, 1046.5), 0.5)
-        self._sounds["boop"] = _sweep(rate, channels, 0.22, 420.0, 330.0, 6000)
-        self._sounds["pip"] = _sweep(rate, channels, 0.08, 880.0, 880.0, 6000)
-        self._sounds["rec_on"] = _chord(rate, channels, (880.0, 1318.5), 0.28)
-        self._sounds["rec_off"] = _sweep(rate, channels, 0.16, 990.0, 660.0, 6400)
-        self._sounds["page"] = _sweep(rate, channels, 0.18, 1200.0, 700.0, 2800)
-        self._sounds["fanfare"] = _fanfare(rate, channels)
+        self._sounds.define("pop", lambda: _sweep(rate, channels, 0.12, 520.0, 900.0, 7200))
+        self._sounds.define("unpop", lambda: _sweep(rate, channels, 0.12, 760.0, 460.0, 5600))
+        self._sounds.define("whoosh", lambda: _sweep(rate, channels, 0.24, 900.0, 1500.0, 3600))
+        self._sounds.define("chime", lambda: _chord(rate, channels, (659.25, 783.99, 1046.5), 0.5))
+        self._sounds.define("boop", lambda: _sweep(rate, channels, 0.22, 420.0, 330.0, 6000))
+        self._sounds.define("pip", lambda: _sweep(rate, channels, 0.08, 880.0, 880.0, 6000))
+        self._sounds.define("rec_on", lambda: _chord(rate, channels, (880.0, 1318.5), 0.28))
+        self._sounds.define("rec_off", lambda: _sweep(rate, channels, 0.16, 990.0, 660.0, 6400))
+        self._sounds.define("page", lambda: _sweep(rate, channels, 0.18, 1200.0, 700.0, 2800))
+        self._sounds.define("fanfare", lambda: _fanfare(rate, channels))
 
 
 def _sweep(rate: int, channels: int, duration: float, start: float, end: float, volume: int) -> pygame.mixer.Sound:

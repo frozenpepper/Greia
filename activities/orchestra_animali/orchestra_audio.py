@@ -2,8 +2,8 @@
 
 The Activity ships no packaged instrument audio. ``BandAudio`` synthesizes
 the six band instruments (one short strike each, so echo beats stay
-countable), the rainbow-xylophone octave and two feedback cues once at
-construction; playback never re-decodes or re-synthesizes. Speech uses only
+countable), the rainbow-xylophone octave and two feedback cues once, after
+the first frame; playback never re-decodes or re-synthesizes. Speech uses only
 approved shared character takes (``ready.go``, ``praise.general``,
 ``encourage.retry``, ``celebrate.success``), one take per musician loaded up
 front. Loud/soft is a volume set once per toggle. Without a mixer (headless
@@ -25,6 +25,7 @@ import pygame
 
 from greia_platform.creation_media import CreationMediaError, WavCodec
 from greia_platform.localization import LocalizationError, shared_character_audio_path
+from greia_platform.pygame_audio import DeferredSoundBank
 
 if __package__:
     from .orchestra_content import BAND, BAND_LEADER, NOTE_FREQS, Dynamics
@@ -196,9 +197,9 @@ class BandAudio:
         rng: random.Random | None = None,
     ) -> None:
         self._rng = rng if rng is not None else random.Random(7)
-        self._instruments: dict[str, pygame.mixer.Sound] = {}
-        self._notes: list[pygame.mixer.Sound] = []
-        self._cues: dict[str, pygame.mixer.Sound] = {}
+        # Instruments, bars ("note.<n>") and cues share one bank that is
+        # synthesized after the first frame (see DeferredSoundBank).
+        self._bank = DeferredSoundBank()
         self._speech: dict[tuple[str, str], pygame.mixer.Sound] = {}
         self.dynamics = Dynamics.LOUD
         self.last_speech: tuple[str, str] | None = None
@@ -217,14 +218,14 @@ class BandAudio:
     # -- playback -------------------------------------------------------------
 
     def play_instrument(self, instrument: str) -> None:
-        self._play(self._instruments.get(instrument))
+        self._play(self._bank.get(f"instrument.{instrument}"))
 
     def play_note(self, index: int) -> None:
-        if 0 <= index < len(self._notes):
-            self._play(self._notes[index])
+        if 0 <= index < len(NOTE_FREQS):
+            self._play(self._bank.get(f"note.{index}"))
 
     def cue(self, name: str) -> None:
-        self._play(self._cues.get(name))
+        self._play(self._bank.get(f"cue.{name}"))
 
     def say(self, character: str, family: str) -> None:
         """Speak one approved shared take (silent when it is missing)."""
@@ -242,11 +243,12 @@ class BandAudio:
         """Loud/soft for every instrument and bar (set once, not per play)."""
 
         self.dynamics = dynamics
-        for sound in (*self._instruments.values(), *self._notes):
-            try:
-                sound.set_volume(dynamics.volume)
-            except (pygame.error, AttributeError):
-                continue
+        for name in self._bank:
+            if self._bank.built(name) and name.startswith(("instrument.", "note.")):
+                try:
+                    self._bank[name].set_volume(dynamics.volume)
+                except (pygame.error, AttributeError, KeyError):
+                    continue
 
     def _play(self, sound: pygame.mixer.Sound | None) -> None:
         if not self._enabled or sound is None:
@@ -283,12 +285,32 @@ class BandAudio:
             "tambourine": (0.24, lambda t: _tambourine(t, noise)),
             "keyboard": (0.45, _keyboard),
         }
+        # Maracas and tambourine draw from the run's RNG: render those two now,
+        # in their original order, so the RNG sequence is unchanged by deferral.
+        eager = {name: _render(*voices[name]) for name in ("maracas", "tambourine")}
         for name, (duration, voice) in voices.items():
-            self._instruments[name] = self._sound(_render(duration, voice))
-        for frequency in NOTE_FREQS:
-            self._notes.append(self._sound(_render(0.42, lambda t, f=frequency * 2: _bar(t, f))))
-        self._cues["fanfare"] = self._sound(_render(0.8, _fanfare))
-        self._cues["boop"] = self._sound(_render(0.24, _boop))
+            if name in eager:
+                samples = eager[name]
+                self._bank.define(f"instrument.{name}", lambda samples=samples: self._instrument(samples))
+            else:
+                self._bank.define(
+                    f"instrument.{name}",
+                    lambda duration=duration, voice=voice: self._instrument(_render(duration, voice)),
+                )
+        for index, frequency in enumerate(NOTE_FREQS):
+            self._bank.define(
+                f"note.{index}",
+                lambda f=frequency * 2: self._instrument(_render(0.42, lambda t: _bar(t, f))),
+            )
+        self._bank.define("cue.fanfare", lambda: self._sound(_render(0.8, _fanfare)))
+        self._bank.define("cue.boop", lambda: self._sound(_render(0.24, _boop)))
+
+    def _instrument(self, samples: array) -> pygame.mixer.Sound:
+        """An instrument/bar sound at the current loud/soft dynamics."""
+
+        sound = self._sound(samples)
+        sound.set_volume(self.dynamics.volume)
+        return sound
 
     @staticmethod
     def _sound(samples: array) -> pygame.mixer.Sound:

@@ -6,8 +6,8 @@ Speech uses only Momo's owner-accepted shared character takes
 "ready, go" when a garden starts, praise when the basket is full, the big
 cheer at the end of a visit, "keep going" as the first idle nudge and "let's
 try again" after a bump. Moments without an approved line (a berry, "wait
-for the ladybird") stay pictorial + sound. Sound effects are generated once
-at start-up; every call fails soft without a mixer. No generated speech.
+for the ladybird") stay pictorial + sound. Sound effects are generated once,
+after the first frame; every call fails soft without a mixer. No generated speech.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
@@ -49,7 +49,7 @@ class CorsaAudio:
     ) -> None:
         self.locale = (locale or "en").split("-")[0].split("_")[0] or "en"
         self._project_root = project_root
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._speech: dict[str, pygame.mixer.Sound] = {}
         self._available = False
         self.last_speech: str | None = None
@@ -115,15 +115,15 @@ class CorsaAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["pop"] = _pop(rate, channels)
-        self._sounds["basket"] = _chime(rate, channels, (783.99, 1046.5, 1318.5, 1568.0), step=0.08)
-        self._sounds["bump"] = _boing(rate, channels)
-        self._sounds["boop"] = _sweep(rate, channels, 0.16, 520.0, 700.0, 4200)
-        self._sounds["wall"] = _thud(rate, channels)
-        self._sounds["hint"] = _chime(rate, channels, (1318.5, 1760.0), step=0.09, volume=6000)
-        self._sounds["wait"] = _chime(rate, channels, (659.25, 659.25), step=0.18, volume=5000)
-        self._sounds["fanfare"] = _chime(rate, channels, (523.25, 659.25, 783.99, 1046.5, 1318.5), step=0.14, volume=10000)
-        self._sounds["yawn"] = _sweep(rate, channels, 0.45, 420.0, 260.0, 3000)
+        self._sounds.define("pop", lambda: _pop(rate, channels))
+        self._sounds.define("basket", lambda: _chime(rate, channels, (783.99, 1046.5, 1318.5, 1568.0), step=0.08))
+        self._sounds.define("bump", lambda: _boing(rate, channels))
+        self._sounds.define("boop", lambda: _sweep(rate, channels, 0.16, 520.0, 700.0, 4200))
+        self._sounds.define("wall", lambda: _thud(rate, channels))
+        self._sounds.define("hint", lambda: _chime(rate, channels, (1318.5, 1760.0), step=0.09, volume=6000))
+        self._sounds.define("wait", lambda: _chime(rate, channels, (659.25, 659.25), step=0.18, volume=5000))
+        self._sounds.define("fanfare", lambda: _chime(rate, channels, (523.25, 659.25, 783.99, 1046.5, 1318.5), step=0.14, volume=10000))
+        self._sounds.define("yawn", lambda: _sweep(rate, channels, 0.45, 420.0, 260.0, 3000))
 
 
 def _chime(

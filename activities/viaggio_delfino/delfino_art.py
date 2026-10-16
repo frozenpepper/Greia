@@ -218,6 +218,9 @@ class DelfinoArt:
         self._thumbs: dict[tuple[str, tuple[int, int]], pygame.Surface] = {}
         self._fx: OrderedDict[tuple[str, int], list[pygame.Surface]] = OrderedDict()
         self._backdrop: pygame.Surface | None = None
+        # Baked scenes shared by the picker thumbnails and backdrop while
+        # warm_thumbnails runs (the bay was baked twice); None otherwise.
+        self._warm_scenes: dict[str, SceneLayers] | None = None
 
     # -- decoding ----------------------------------------------------------
 
@@ -520,7 +523,7 @@ class DelfinoArt:
         cached = self._thumbs.get(key)
         if cached is not None:
             return cached
-        scene = self._bake_scene(LOOKS.get(spec.look, SceneLook()))
+        scene = self._postcard_scene(spec.look)
         frame = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
         scene.draw_back(frame, _POSTCARD_CAMERA)
         # The bay's far layer already shows its lighthouse.
@@ -565,17 +568,30 @@ class DelfinoArt:
         """Opaque journey-picker backdrop (the bay scene), baked once."""
 
         if self._backdrop is None:
-            scene = self._bake_scene(LOOKS["bay"])
+            scene = self._postcard_scene("bay")
             frame = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
             scene.draw_back(frame, _POSTCARD_CAMERA)
             self._backdrop = _convert(frame, alpha=False)
             self.release_sources()
         return self._backdrop
 
+    def _postcard_scene(self, look: str) -> SceneLayers:
+        memo = self._warm_scenes
+        if memo is not None and look in memo:
+            return memo[look]
+        layers = self._bake_scene(LOOKS.get(look, SceneLook()))
+        if memo is not None:
+            memo[look] = layers
+        return layers
+
     def warm_thumbnails(self, size: tuple[int, int]) -> None:
-        for spec in JOURNEYS:
-            self.thumbnail(spec, size)
-        self.picker_backdrop()
+        self._warm_scenes = {}
+        try:
+            for spec in JOURNEYS:
+                self.thumbnail(spec, size)
+            self.picker_backdrop()
+        finally:
+            self._warm_scenes = None
         self.release_sources()
 
 

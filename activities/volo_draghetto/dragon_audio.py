@@ -4,7 +4,7 @@ Speech uses only owner-approved shared character takes (Flash:
 ``ready.go``, ``praise.general``, ``encourage.retry``, ``encourage.progress``,
 ``celebrate.success``) resolved per locale with the platform's English
 fallback. No new lines are generated; moments without an approved line stay
-pictorial. Effects are short tones synthesized once at start-up (no files).
+pictorial. Effects are short tones synthesized once, after the first frame (no files).
 Everything fails soft without a mixer.
 """
 
@@ -15,12 +15,13 @@ import math
 from pathlib import Path
 import random
 import struct
-from typing import Final
+from typing import Callable, Final
 import wave
 
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
+from greia_platform.pygame_audio import DeferredSoundBank
 
 PROJECT_ROOT: Final = Path(__file__).resolve().parents[2]
 SPEAKER: Final = "flash"
@@ -67,19 +68,25 @@ def _sweep(start: float, end: float, seconds: float, volume: float, noise: float
     return out
 
 
+def effect_recipes() -> dict[str, Callable[[], bytes]]:
+    """The effect set as deferred WAV renderers (nothing computed yet)."""
+
+    return {
+        "star": lambda: _wav(_tone((1318.5, 1760.0), 0.07, 0.30)),
+        "gem": lambda: _wav(_tone((1046.5, 1318.5, 1568.0, 2093.0), 0.06, 0.30)),
+        "flap": lambda: _wav(_sweep(420.0, 260.0, 0.14, 0.22, noise=0.45)),
+        "ring": lambda: _wav(_tone((784.0, 988.0, 1175.0, 1568.0), 0.09, 0.34)),
+        "miss": lambda: _wav(_tone((523.25, 440.0), 0.12, 0.24)),
+        "boing": lambda: _wav(_sweep(200.0, 520.0, 0.24, 0.32)),
+        "finish": lambda: _wav(_tone((523.25, 659.25, 783.99, 1046.5, 1318.5), 0.12, 0.34)),
+        "pop": lambda: _wav(_sweep(700.0, 380.0, 0.09, 0.3)),
+    }
+
+
 def synth_effects() -> dict[str, bytes]:
     """The effect set as WAV bytes (pure function, testable)."""
 
-    return {
-        "star": _wav(_tone((1318.5, 1760.0), 0.07, 0.30)),
-        "gem": _wav(_tone((1046.5, 1318.5, 1568.0, 2093.0), 0.06, 0.30)),
-        "flap": _wav(_sweep(420.0, 260.0, 0.14, 0.22, noise=0.45)),
-        "ring": _wav(_tone((784.0, 988.0, 1175.0, 1568.0), 0.09, 0.34)),
-        "miss": _wav(_tone((523.25, 440.0), 0.12, 0.24)),
-        "boing": _wav(_sweep(200.0, 520.0, 0.24, 0.32)),
-        "finish": _wav(_tone((523.25, 659.25, 783.99, 1046.5, 1318.5), 0.12, 0.34)),
-        "pop": _wav(_sweep(700.0, 380.0, 0.09, 0.3)),
-    }
+    return {name: render() for name, render in effect_recipes().items()}
 
 
 class DragonAudio:
@@ -89,7 +96,7 @@ class DragonAudio:
         self.locale = (locale or "it").split("-")[0]
         self._project_root = project_root
         self._rng = rng if rng is not None else random.Random()
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._speech: dict[str, list[pygame.mixer.Sound]] = {}
         self._available = False
         self.last_speech: str | None = None
@@ -97,8 +104,8 @@ class DragonAudio:
             if pygame.mixer.get_init() is None:
                 pygame.mixer.init()
             pygame.mixer.set_num_channels(max(pygame.mixer.get_num_channels(), LAST_SFX_CHANNEL + 1))
-            for name, data in synth_effects().items():
-                self._sounds[name] = pygame.mixer.Sound(io.BytesIO(data))
+            for name, render in effect_recipes().items():
+                self._sounds.define(name, lambda render=render: pygame.mixer.Sound(io.BytesIO(render())))
             self._load_speech()
             self._available = True
         except (pygame.error, RuntimeError, OSError):

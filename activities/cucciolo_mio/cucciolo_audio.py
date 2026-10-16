@@ -12,7 +12,7 @@ Speech uses only recorded, approved clips:
 There are no approved pet-need lines yet ("I'm hungry!"): needs are shown by
 body language only. Effects (need chime, "not now" hum, munch, bubbles,
 boing, plaster pop, cuddle hearts, yawn, lullaby, room swoosh) are
-synthesized once at start-up. Every call fails soft without a mixer.
+synthesized once, after the first frame. Every call fails soft without a mixer.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path, shared_vocab_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
@@ -63,7 +63,7 @@ class CuccioloAudio:
         self.locale = locale.split("-")[0].split("_")[0] or "en"
         self._project_root = project_root
         self._rng = rng if rng is not None else random.Random()
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._lilli: dict[str, list[pygame.mixer.Sound]] = {}
         self._names: OrderedDict[str, pygame.mixer.Sound | None] = OrderedDict()
         self._available = False
@@ -175,23 +175,23 @@ class CuccioloAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["chime"] = _notes(rate, channels, ((0.0, 0.22, 784.0), (0.14, 0.32, 1046.5)), 0.5, 5200)
-        self._sounds["nope"] = _notes(rate, channels, ((0.0, 0.16, 392.0), (0.16, 0.24, 330.0)), 0.42, 5600)
-        self._sounds["pick"] = _sweep(rate, channels, 0.14, 520.0, 980.0, 7000)
-        self._sounds["munch"] = _munch(rate, channels)
-        self._sounds["bubble"] = _bubbles(rate, channels)
-        self._sounds["boing"] = _boing(rate, channels)
-        self._sounds["stick"] = _sweep(rate, channels, 0.09, 900.0, 1500.0, 6500)
-        self._sounds["heart"] = _notes(rate, channels, ((0.0, 0.18, 659.25), (0.1, 0.18, 783.99), (0.2, 0.3, 1046.5)), 0.55, 6000)
-        self._sounds["yawn"] = _sweep(rate, channels, 0.7, 520.0, 260.0, 4200)
-        self._sounds["lullaby"] = _notes(
+        self._sounds.define("chime", lambda: _notes(rate, channels, ((0.0, 0.22, 784.0), (0.14, 0.32, 1046.5)), 0.5, 5200))
+        self._sounds.define("nope", lambda: _notes(rate, channels, ((0.0, 0.16, 392.0), (0.16, 0.24, 330.0)), 0.42, 5600))
+        self._sounds.define("pick", lambda: _sweep(rate, channels, 0.14, 520.0, 980.0, 7000))
+        self._sounds.define("munch", lambda: _munch(rate, channels))
+        self._sounds.define("bubble", lambda: _bubbles(rate, channels))
+        self._sounds.define("boing", lambda: _boing(rate, channels))
+        self._sounds.define("stick", lambda: _sweep(rate, channels, 0.09, 900.0, 1500.0, 6500))
+        self._sounds.define("heart", lambda: _notes(rate, channels, ((0.0, 0.18, 659.25), (0.1, 0.18, 783.99), (0.2, 0.3, 1046.5)), 0.55, 6000))
+        self._sounds.define("yawn", lambda: _sweep(rate, channels, 0.7, 520.0, 260.0, 4200))
+        self._sounds.define("lullaby", lambda: _notes(
             rate,
             channels,
             ((0.0, 0.4, 659.25), (0.38, 0.4, 523.25), (0.76, 0.4, 587.33), (1.14, 0.8, 392.0)),
             2.0,
             5200,
-        )
-        self._sounds["swoosh"] = _swoosh(rate, channels)
+        ))
+        self._sounds.define("swoosh", lambda: _swoosh(rate, channels))
 
 
 def _notes(

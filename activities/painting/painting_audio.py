@@ -1,6 +1,6 @@
 """Tiny prepared sound bank for Painting (no speech, no files).
 
-Four short soft cues are synthesized once at construction to match the
+Four short soft cues are synthesized once, after the first frame to match the
 active PCM16 mixer: ``tick`` (tool/colour chosen), ``pop`` (stamp placed),
 ``chime`` (a picture went to / came from My Creations) and ``swish``
 (a painting was deleted). Audio is fail-soft: without a mixer the bank is
@@ -12,10 +12,11 @@ from __future__ import annotations
 import io
 import math
 import wave
+from typing import Callable
 
 import pygame
 
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 
 def _wav(samples: list[float], rate: int, channels: int) -> bytes:
@@ -31,11 +32,17 @@ def _wav(samples: list[float], rate: int, channels: int) -> bytes:
     return buffer.getvalue()
 
 
+def _cue(samples: list[float], rate: int, channels: int) -> pygame.mixer.Sound:
+    sound = pygame.mixer.Sound(io.BytesIO(_wav(samples, rate, channels)))
+    sound.set_volume(0.55)
+    return sound
+
+
 class PaintingSounds:
     """Bounded bank of four prepared cues (all under 0.4 s)."""
 
     def __init__(self) -> None:
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         try:
             if not pygame.mixer.get_init():
                 pygame.mixer.init(frequency=22050, size=-16, channels=1, buffer=512)
@@ -43,17 +50,18 @@ class PaintingSounds:
             if spec is None:
                 return
             rate, channels = spec
-            for name, samples in self._recipes(rate).items():
-                self._sounds[name] = pygame.mixer.Sound(io.BytesIO(_wav(samples, rate, channels)))
-                self._sounds[name].set_volume(0.55)
+            for name, recipe in self._recipes(rate).items():
+                self._sounds.define(name, lambda recipe=recipe: _cue(recipe(), rate, channels))
         except Exception:  # noqa: BLE001 - audio must never break painting
             self._sounds.clear()
 
     @staticmethod
-    def _recipes(rate: int) -> dict[str, list[float]]:
-        def tone(seconds: float, voice) -> list[float]:
+    def _recipes(rate: int) -> dict[str, Callable[[], list[float]]]:
+        """Name -> sample generator; nothing is computed until a cue is built."""
+
+        def tone(seconds: float, voice) -> Callable[[], list[float]]:
             count = int(rate * seconds)
-            return [voice(i / rate) for i in range(count)]
+            return lambda: [voice(i / rate) for i in range(count)]
 
         return {
             "tick": tone(0.05, lambda t: 7000 * math.sin(2 * math.pi * 880 * t) * math.exp(-60 * t)),

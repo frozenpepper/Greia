@@ -6,7 +6,7 @@ through ``LocalizedResources`` (selected language -> base -> English ->
 silence), and Flash's shared character takes for "let's try again"
 (``encourage.retry``) and the end of a visit (``celebrate.success``).
 Moments without an approved line ("show me the opposite") stay pictorial.
-Effects are generated once at start-up; every call fails soft without a mixer.
+Effects are generated once, after the first frame; every call fails soft without a mixer.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import LocalizedResources, shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final[int] = 0
 FIRST_SFX_CHANNEL: Final[int] = 2
@@ -52,7 +52,7 @@ class ContrariAudio:
         self._project_root = project_root
         self._rng = rng if rng is not None else random.Random()
         self._speech: dict[str, pygame.mixer.Sound] = {}
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._pending: deque[str] = deque(maxlen=MAX_PENDING)
         self._available = False
         self.last_speech: str | None = None
@@ -179,14 +179,14 @@ class ContrariAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["pop"] = _sweep(rate, channels, 0.12, 520.0, 880.0, 8000)
-        self._sounds["rise"] = _sweep(rate, channels, 0.5, 420.0, 1180.0, 6500)
-        self._sounds["fall"] = _sweep(rate, channels, 0.5, 900.0, 300.0, 6500)
-        self._sounds["boing"] = _sweep(rate, channels, 0.26, 210.0, 520.0, 9000)
-        self._sounds["whoosh"] = _sweep(rate, channels, 0.24, 650.0, 1500.0, 4200)
-        self._sounds["ding"] = _chime(rate, channels, 0.4, 1174.7)
-        self._sounds["boop"] = _sweep(rate, channels, 0.22, 420.0, 330.0, 7000)
-        self._sounds["fanfare"] = _fanfare(rate, channels)
+        self._sounds.define("pop", lambda: _sweep(rate, channels, 0.12, 520.0, 880.0, 8000))
+        self._sounds.define("rise", lambda: _sweep(rate, channels, 0.5, 420.0, 1180.0, 6500))
+        self._sounds.define("fall", lambda: _sweep(rate, channels, 0.5, 900.0, 300.0, 6500))
+        self._sounds.define("boing", lambda: _sweep(rate, channels, 0.26, 210.0, 520.0, 9000))
+        self._sounds.define("whoosh", lambda: _sweep(rate, channels, 0.24, 650.0, 1500.0, 4200))
+        self._sounds.define("ding", lambda: _chime(rate, channels, 0.4, 1174.7))
+        self._sounds.define("boop", lambda: _sweep(rate, channels, 0.22, 420.0, 330.0, 7000))
+        self._sounds.define("fanfare", lambda: _fanfare(rate, channels))
 
 
 def _chime(rate: int, channels: int, duration: float, frequency: float) -> pygame.mixer.Sound:

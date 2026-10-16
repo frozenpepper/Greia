@@ -165,7 +165,12 @@ class PythonRuntimeAdapterBytecodeTests(unittest.TestCase):
         )
         self.assertEqual(
             dict(command.environment),
-            {"PYTHONNOUSERSITE": "1", "PYTHONDONTWRITEBYTECODE": "1"},
+            {
+                "PYTHONNOUSERSITE": "1",
+                "PYTHONDONTWRITEBYTECODE": "1",
+                # Acer R.2: software framebuffer, no GL texture framebuffer.
+                "SDL_FRAMEBUFFER_ACCELERATION": "0",
+            },
         )
 
     def test_trusted_prefix_is_handed_to_the_activity(self) -> None:
@@ -294,6 +299,14 @@ class ImageBytecodeContractTests(unittest.TestCase):
                 f"Environment=PYTHONPYCACHEPREFIX={TRUSTED_BYTECODE_PREFIX}\n", text
             )
             self.assertIn("Environment=PYTHONDONTWRITEBYTECODE=1\n", text)
+
+    def test_shell_uses_the_software_sdl_framebuffer(self) -> None:
+        # Acer re-sweep R.2: the GL texture framebuffer costs 0.7-1.2 s of
+        # set_mode and ~70 MB RSS per process on the N270/GMA 950.
+        text = (
+            ROOT / "build/overlay/etc/systemd/system/greia-launcher.service"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Environment=SDL_FRAMEBUFFER_ACCELERATION=0\n", text)
 
 
 class ReadyTimeoutPolicyTests(unittest.TestCase):

@@ -5,7 +5,7 @@ Speech uses only recorded, approved clips: this package's cues
 ``prompt_missing_part``, ``correct_1..3``, ``retry_1..2``) through
 ``LocalizedResources`` and Dani's shared ``celebrate.success`` take for the
 end of a visit. Moments without an approved line (guests arriving, lights
-leaving) stay pictorial and silent. Chimes are generated once at start-up;
+leaving) stay pictorial and silent. Chimes are generated once, after the first frame;
 every call fails soft without a mixer.
 """
 
@@ -19,7 +19,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import LocalizedResources, shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final[int] = 0
 FIRST_SFX_CHANNEL: Final[int] = 2
@@ -51,7 +51,7 @@ class TenHouseAudio:
         self.locale = locale.split("-")[0]
         self._project_root = project_root
         self._rng = rng if rng is not None else random.Random()
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._speech: dict[str, pygame.mixer.Sound] = {}
         self._available = False
         self.last_speech: str | None = None
@@ -150,12 +150,12 @@ class TenHouseAudio:
             return
         rate, channels = spec
         for index, frequency in enumerate(_COUNT_NOTES, start=1):
-            self._sounds[f"chime_{index}"] = _chime(rate, channels, 0.38, frequency)
-        self._sounds["pop"] = _sweep(rate, channels, 0.14, 520.0, 880.0, 8000)
-        self._sounds["unpop"] = _sweep(rate, channels, 0.14, 700.0, 420.0, 7000)
-        self._sounds["whoosh"] = _sweep(rate, channels, 0.26, 900.0, 1500.0, 4200)
-        self._sounds["boop"] = _sweep(rate, channels, 0.22, 420.0, 330.0, 7000)
-        self._sounds["fanfare"] = _fanfare(rate, channels)
+            self._sounds.define(f"chime_{index}", lambda frequency=frequency: _chime(rate, channels, 0.38, frequency))
+        self._sounds.define("pop", lambda: _sweep(rate, channels, 0.14, 520.0, 880.0, 8000))
+        self._sounds.define("unpop", lambda: _sweep(rate, channels, 0.14, 700.0, 420.0, 7000))
+        self._sounds.define("whoosh", lambda: _sweep(rate, channels, 0.26, 900.0, 1500.0, 4200))
+        self._sounds.define("boop", lambda: _sweep(rate, channels, 0.22, 420.0, 330.0, 7000))
+        self._sounds.define("fanfare", lambda: _fanfare(rate, channels))
 
 
 def _chime(rate: int, channels: int, duration: float, frequency: float) -> pygame.mixer.Sound:

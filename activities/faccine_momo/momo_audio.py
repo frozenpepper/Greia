@@ -3,7 +3,7 @@
 Speech uses only the package's approved Momo recordings, selected by Greia's
 localization (selected language -> base -> English -> silence). ``say``
 interrupts the previous line so feedback is never delayed behind a queue.
-Sound effects are tiny tones synthesised once at start-up (no files).
+Sound effects are tiny tones synthesised once, after the first frame (no files).
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import LocalizedResources
+from greia_platform.pygame_audio import DeferredSoundBank
 
 _SAMPLE_RATE: Final = 22_050
 PRAISE_CUES: Final[tuple[str, ...]] = ("praise_1", "praise_2", "praise_3")
@@ -36,7 +37,7 @@ class MomoAudio:
         self._package_root = package_root
         self._rng = rng if rng is not None else random.Random()
         self._speech_sounds: dict[str, pygame.mixer.Sound] = {}
-        self._sfx_sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sfx_sounds = DeferredSoundBank()
         self._speech_channel: pygame.mixer.Channel | None = None
         self._available = False
         self.spoken: list[str] = []  # bounded log of requested cues (tests/tools)
@@ -125,16 +126,16 @@ class MomoAudio:
             pass
 
     def _build_procedural_sfx(self) -> None:
-        self._sfx_sounds["pop"] = self._sweep(0.10, 450.0, 800.0)
-        self._sfx_sounds["giggle"] = self._giggle()
-        self._sfx_sounds["heart"] = self._tone(0.45, 587.33, harmonics=(1.0, 0.5, 0.2))
-        self._sfx_sounds["boing"] = self._sweep(0.25, 200.0, 520.0)
-        self._sfx_sounds["wobble"] = self._wobble(0.35, 280.0)
-        self._sfx_sounds["chime"] = self._tone(0.6, 880.0, harmonics=(1.0, 0.35, 0.15))
-        self._sfx_sounds["whoosh"] = self._sweep(0.35, 700.0, 260.0, level=7000)
-        self._sfx_sounds["splat"] = self._sweep(0.18, 320.0, 120.0)
-        self._sfx_sounds["crash"] = self._rumble(0.45, 140.0, level=9000)
-        self._sfx_sounds["rumble"] = self._rumble(0.9, 70.0, level=10000)
+        self._sfx_sounds.define("pop", lambda: self._sweep(0.10, 450.0, 800.0))
+        self._sfx_sounds.define("giggle", lambda: self._giggle())
+        self._sfx_sounds.define("heart", lambda: self._tone(0.45, 587.33, harmonics=(1.0, 0.5, 0.2)))
+        self._sfx_sounds.define("boing", lambda: self._sweep(0.25, 200.0, 520.0))
+        self._sfx_sounds.define("wobble", lambda: self._wobble(0.35, 280.0))
+        self._sfx_sounds.define("chime", lambda: self._tone(0.6, 880.0, harmonics=(1.0, 0.35, 0.15)))
+        self._sfx_sounds.define("whoosh", lambda: self._sweep(0.35, 700.0, 260.0, level=7000))
+        self._sfx_sounds.define("splat", lambda: self._sweep(0.18, 320.0, 120.0))
+        self._sfx_sounds.define("crash", lambda: self._rumble(0.45, 140.0, level=9000))
+        self._sfx_sounds.define("rumble", lambda: self._rumble(0.9, 70.0, level=10000))
 
     @staticmethod
     def _pack(samples) -> pygame.mixer.Sound:

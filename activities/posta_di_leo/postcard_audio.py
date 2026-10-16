@@ -1,6 +1,6 @@
 """Sound for Leo's Post: tiny prepared cues + the friends' approved voices.
 
-Cues are synthesized once at construction to match the active PCM16 mixer:
+Cues are synthesized once, after the first frame to match the active PCM16 mixer:
 ``tick`` (a choice), ``pop`` (a sticker lands), ``flip`` (the card turns),
 ``whoosh`` (the postcard flies), ``drop`` (it lands in the mailbox), ``chime``
 (shared to My Creations) and ``swish`` (a card was deleted).
@@ -17,11 +17,12 @@ import io
 import math
 from pathlib import Path
 import wave
+from typing import Callable
 
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 if __package__:
     from .postcard_content import FRIEND_REACTION_CUE, FRIEND_REACTION_VARIANTS
@@ -43,6 +44,12 @@ def _wav(samples: list[float], rate: int, channels: int) -> bytes:
         handle.setframerate(rate)
         handle.writeframes(bytes(raw))
     return buffer.getvalue()
+
+
+def _cue(samples: list[float], rate: int, channels: int) -> pygame.mixer.Sound:
+    sound = pygame.mixer.Sound(io.BytesIO(_wav(samples, rate, channels)))
+    sound.set_volume(0.55)
+    return sound
 
 
 def reaction_clip_path(friend_id: str, locale: str, *, project_root: Path = PROJECT_ROOT) -> Path | None:
@@ -67,7 +74,7 @@ class PostcardAudio:
     """Bounded bank of prepared cues plus at most six cached friend voices."""
 
     def __init__(self, *, locale: str = "en", project_root: Path = PROJECT_ROOT) -> None:
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._voices: dict[str, pygame.mixer.Sound | None] = {}
         self._voice_channel: pygame.mixer.Channel | None = None
         self._locale = locale
@@ -80,10 +87,8 @@ class PostcardAudio:
             if spec is None:
                 return
             rate, channels = spec
-            for name, samples in self._recipes(rate).items():
-                sound = pygame.mixer.Sound(io.BytesIO(_wav(samples, rate, channels)))
-                sound.set_volume(0.55)
-                self._sounds[name] = sound
+            for name, recipe in self._recipes(rate).items():
+                self._sounds.define(name, lambda recipe=recipe: _cue(recipe(), rate, channels))
             pygame.mixer.set_num_channels(max(8, pygame.mixer.get_num_channels()))
             self._voice_channel = pygame.mixer.Channel(7)
         except Exception:  # noqa: BLE001 - audio must never break the Activity
@@ -91,9 +96,11 @@ class PostcardAudio:
             self._voice_channel = None
 
     @staticmethod
-    def _recipes(rate: int) -> dict[str, list[float]]:
-        def tone(seconds: float, voice) -> list[float]:
-            return [voice(i / rate) for i in range(int(rate * seconds))]
+    def _recipes(rate: int) -> dict[str, Callable[[], list[float]]]:
+        """Name -> sample generator; nothing is computed until a cue is built."""
+
+        def tone(seconds: float, voice) -> Callable[[], list[float]]:
+            return lambda: [voice(i / rate) for i in range(int(rate * seconds))]
 
         return {
             "tick": tone(0.05, lambda t: 7000 * math.sin(2 * math.pi * 880 * t) * math.exp(-60 * t)),

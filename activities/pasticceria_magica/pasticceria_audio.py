@@ -14,7 +14,7 @@ locale -> base language -> English -> silence fallback:
 
 Effects (topping pop, take-off, "not that one" hum, serve bell, happy jingle,
 gentle "hmm", shop door chime, rising counting tones, swoosh) are synthesized
-once at start-up. Every call fails soft without a mixer.
+once, after the first frame. Every call fails soft without a mixer.
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ import pygame
 
 from greia_platform import localization
 from greia_platform.localization import shared_character_audio_path, shared_vocab_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
@@ -58,7 +58,7 @@ class BakeryAudio:
         self.locale = locale.split("-")[0].split("_")[0] or "en"
         self._project_root = project_root
         self._rng = rng if rng is not None else random.Random()
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._cast: OrderedDict[str, dict[str, list[pygame.mixer.Sound]]] = OrderedDict()
         self._words: OrderedDict[str, pygame.mixer.Sound | None] = OrderedDict()
         self._queue: deque[pygame.mixer.Sound] = deque(maxlen=SPEECH_QUEUE_LIMIT)
@@ -249,21 +249,21 @@ class BakeryAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["pop"] = _sweep(rate, channels, 0.09, 600.0, 1200.0, 6500)
-        self._sounds["unpop"] = _sweep(rate, channels, 0.11, 900.0, 420.0, 5200)
-        self._sounds["nope"] = _notes(rate, channels, ((0.0, 0.14, 392.0), (0.14, 0.2, 330.0)), 0.4, 5200)
-        self._sounds["bell"] = _bell(rate, channels)
-        self._sounds["yum"] = _notes(
+        self._sounds.define("pop", lambda: _sweep(rate, channels, 0.09, 600.0, 1200.0, 6500))
+        self._sounds.define("unpop", lambda: _sweep(rate, channels, 0.11, 900.0, 420.0, 5200))
+        self._sounds.define("nope", lambda: _notes(rate, channels, ((0.0, 0.14, 392.0), (0.14, 0.2, 330.0)), 0.4, 5200))
+        self._sounds.define("bell", lambda: _bell(rate, channels))
+        self._sounds.define("yum", lambda: _notes(
             rate, channels, ((0.0, 0.16, 659.25), (0.12, 0.16, 783.99), (0.24, 0.3, 1046.5)), 0.7, 6200
-        )
-        self._sounds["hmm"] = _sweep(rate, channels, 0.32, 440.0, 360.0, 4200)
-        self._sounds["door"] = _notes(rate, channels, ((0.0, 0.3, 1318.51), (0.16, 0.4, 1046.5)), 0.8, 4800)
-        self._sounds["swoosh"] = _swoosh(rate, channels)
-        self._sounds["save"] = _notes(
+        ))
+        self._sounds.define("hmm", lambda: _sweep(rate, channels, 0.32, 440.0, 360.0, 4200))
+        self._sounds.define("door", lambda: _notes(rate, channels, ((0.0, 0.3, 1318.51), (0.16, 0.4, 1046.5)), 0.8, 4800))
+        self._sounds.define("swoosh", lambda: _swoosh(rate, channels))
+        self._sounds.define("save", lambda: _notes(
             rate, channels, ((0.0, 0.14, 783.99), (0.1, 0.14, 987.77), (0.2, 0.3, 1174.66)), 0.6, 5600
-        )
+        ))
         for index, frequency in enumerate(_SCALE[:COUNT_TONES], start=1):
-            self._sounds[f"count{index}"] = _notes(rate, channels, ((0.0, 0.16, frequency),), 0.32, 5600)
+            self._sounds.define(f"count{index}", lambda frequency=frequency: _notes(rate, channels, ((0.0, 0.16, frequency),), 0.32, 5600))
 
 
 def _notes(

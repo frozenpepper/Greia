@@ -6,7 +6,7 @@ shared ``LocalizedResources.speech_paths`` with English fallback):
 ``prompt_choose`` ("how many fireflies did you see?"), ``count_1..5``
 ("three fireflies!"), ``correct_1..5`` (praise), ``retry_1..2`` ("almost! look
 again ...") and ``garden_complete``. Sound effects are short synthesized tones
-generated once at start-up (a bounded set); nothing is decoded per frame.
+generated once, after the first frame (a bounded set); nothing is decoded per frame.
 Everything fails soft to silence when the mixer is unavailable.
 """
 
@@ -21,6 +21,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import LocalizedResources
+from greia_platform.pygame_audio import DeferredSoundBank
 
 
 _SAMPLE_RATE: Final = 22_050
@@ -42,7 +43,6 @@ class FireflyAudio:
         self._package_root = package_root
         self._speech_clips: dict[str, pygame.mixer.Sound] = {}
         self._sfx_clips: dict[str, pygame.mixer.Sound] = {}
-        self._chimes: list[pygame.mixer.Sound] = []
         self._speech_channel: pygame.mixer.Channel | None = None
         self._sfx_channel: pygame.mixer.Channel | None = None
         self._chime_channel: pygame.mixer.Channel | None = None
@@ -56,22 +56,21 @@ class FireflyAudio:
             self._sfx_channel = pygame.mixer.Channel(1)
             self._chime_channel = pygame.mixer.Channel(2)
 
-            self._sfx_clips = {
-                "reveal": self._tone(660.0, 0.10, 0.14),
-                "correct": self._tone(880.0, 0.12, 0.16),
-                "retry": self._tone(392.0, 0.10, 0.10),
-                "complete": self._tone(1046.5, 0.22, 0.16),
-                "light": self._tone(1318.5, 0.09, 0.12),
-            }
-            self._chimes = [
-                self._tone(_CHIME_BASE * 2 ** (step / 12), 0.09, 0.12) for step in _SCALE
-            ]
+            # Synthesized after the first frame (DeferredSoundBank), not at launch.
+            sfx = DeferredSoundBank()
+            sfx.define("reveal", lambda: self._tone(660.0, 0.10, 0.14))
+            sfx.define("correct", lambda: self._tone(880.0, 0.12, 0.16))
+            sfx.define("retry", lambda: self._tone(392.0, 0.10, 0.10))
+            sfx.define("complete", lambda: self._tone(1046.5, 0.22, 0.16))
+            sfx.define("light", lambda: self._tone(1318.5, 0.09, 0.12))
+            for index, step in enumerate(_SCALE):
+                sfx.define(f"chime.{index}", lambda step=step: self._tone(_CHIME_BASE * 2 ** (step / 12), 0.09, 0.12))
+            self._sfx_clips = sfx
             if self._package_root is not None:
                 self._load_speech_clips()
         except (pygame.error, ValueError, OSError):
             self._speech_clips = {}
             self._sfx_clips = {}
-            self._chimes = []
 
     def _load_speech_clips(self) -> None:
         if self._package_root is None:
@@ -108,11 +107,14 @@ class FireflyAudio:
     def chime(self, number: int) -> None:
         """A rising counting tick (1 is lowest); silent beyond the prepared set."""
 
-        if not self._chimes or self._chime_channel is None:
+        if self._chime_channel is None:
             return
-        index = max(1, min(len(self._chimes), int(number))) - 1
+        index = max(1, min(len(_SCALE), int(number))) - 1
+        sound = self._sfx_clips.get(f"chime.{index}")
+        if sound is None:
+            return
         try:
-            self._chime_channel.play(self._chimes[index])
+            self._chime_channel.play(sound)
         except pygame.error:
             return
 

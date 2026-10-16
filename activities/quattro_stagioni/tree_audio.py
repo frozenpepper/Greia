@@ -12,7 +12,7 @@ Speech uses only recorded, approved clips (no generated audio):
 
 Clips are decoded lazily, at most ``CLIP_CACHE_LIMIT`` at a time. Effects
 (card pop, place chime, soft "not here" boing, whoosh, fanfare, rustle) are
-synthesized once at start-up in the mixer's own format. Every call fails soft
+synthesized once, after the first frame in the mixer's own format. Every call fails soft
 without a mixer.
 """
 
@@ -31,7 +31,7 @@ from greia_platform.localization import (
     shared_character_audio_path,
     shared_vocab_audio_path,
 )
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
@@ -58,7 +58,7 @@ class TreeAudio:
         self.locale = locale.split("-")[0].split("_")[0] or "en"
         self._project_root = project_root
         self._rng = rng if rng is not None else random.Random()
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._clip_paths: dict[str, Path] = {}
         self._clips: OrderedDict[str, pygame.mixer.Sound | None] = OrderedDict()
         self._tito: dict[str, list[Path]] = {}
@@ -188,12 +188,12 @@ class TreeAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds["pop"] = _sweep(rate, channels, 0.12, 520.0, 920.0, 6800)
-        self._sounds["place"] = _chord(rate, channels, (659.25, 783.99, 1046.5), 0.46)
-        self._sounds["boing"] = _boing(rate, channels)
-        self._sounds["whoosh"] = _sweep(rate, channels, 0.22, 900.0, 520.0, 2800)
-        self._sounds["fanfare"] = _fanfare(rate, channels)
-        self._sounds["rustle"] = _rustle(rate, channels)
+        self._sounds.define("pop", lambda: _sweep(rate, channels, 0.12, 520.0, 920.0, 6800))
+        self._sounds.define("place", lambda: _chord(rate, channels, (659.25, 783.99, 1046.5), 0.46))
+        self._sounds.define("boing", lambda: _boing(rate, channels))
+        self._sounds.define("whoosh", lambda: _sweep(rate, channels, 0.22, 900.0, 520.0, 2800))
+        self._sounds.define("fanfare", lambda: _fanfare(rate, channels))
+        self._sounds.define("rustle", lambda: _rustle(rate, channels))
 
 
 def _rustle(rate: int, channels: int) -> pygame.mixer.Sound:

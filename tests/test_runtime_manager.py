@@ -181,7 +181,11 @@ class RuntimeManagerTests(unittest.TestCase):
         preparation = self._manager({"display", "pointer"}).prepare_launch(shape)
         self.assertEqual(
             dict(preparation.command.environment),
-            {"PYTHONNOUSERSITE": "1", "PYTHONDONTWRITEBYTECODE": "1"},
+            {
+                "PYTHONNOUSERSITE": "1",
+                "PYTHONDONTWRITEBYTECODE": "1",
+                "SDL_FRAMEBUFFER_ACCELERATION": "0",
+            },
         )
 
     def test_runtime_environment_cannot_override_platform_authority(self) -> None:

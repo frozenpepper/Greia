@@ -3,7 +3,7 @@
 Only owner-approved recordings are played: the package's word/prompt clips
 (through ``LocalizedResources.speech_paths``) and Leo's shared character clips
 (``shared_character_audio_path``). Nonverbal feedback chimes are tiny tones
-synthesised once at start-up. Nothing here generates speech.
+synthesised once, after the first frame. Nothing here generates speech.
 """
 
 from __future__ import annotations
@@ -18,6 +18,7 @@ from typing import Final, Protocol
 import pygame
 
 from greia_platform.localization import LocalizedResources, shared_character_audio_path
+from greia_platform.pygame_audio import DeferredSoundBank
 
 
 _SAMPLE_RATE: Final = 22_050
@@ -114,7 +115,8 @@ class RhymeAudio:
         self._locale = locale
         self._package_root = package_root
         self._project_root = project_root if project_root is not None else package_root.resolve().parents[1]
-        self._speech_clips: dict[str, pygame.mixer.Sound] = {}
+        # Approved clips decode after the first frame (or on first use).
+        self._speech_clips = DeferredSoundBank()
         self._sfx_clips: dict[str, pygame.mixer.Sound] = {}
         self._speech_channel: pygame.mixer.Channel | None = None
         self._sfx_channel: pygame.mixer.Channel | None = None
@@ -126,11 +128,12 @@ class RhymeAudio:
             self._speech_channel = pygame.mixer.Channel(0)
             self._sfx_channel = pygame.mixer.Channel(1)
 
-            self._sfx_clips = {
-                "correct": self._tone(880.0, 0.14, 0.20),
-                "retry": self._tone(340.0, 0.08, 0.12),
-                "complete": self._tone(1040.0, 0.25, 0.22),
-            }
+            # Synthesized after the first frame (DeferredSoundBank), not at launch.
+            sfx = DeferredSoundBank()
+            sfx.define("correct", lambda: self._tone(880.0, 0.14, 0.20))
+            sfx.define("retry", lambda: self._tone(340.0, 0.08, 0.12))
+            sfx.define("complete", lambda: self._tone(1040.0, 0.25, 0.22))
+            self._sfx_clips = sfx
             self._load_speech_clips()
             self._load_leo_clips()
         except (pygame.error, ValueError, OSError):
@@ -163,7 +166,7 @@ class RhymeAudio:
 
     def _load(self, cue_id: str, path: Path) -> None:
         try:
-            self._speech_clips[cue_id] = pygame.mixer.Sound(str(path))
+            self._speech_clips.define(cue_id, lambda path=path: pygame.mixer.Sound(str(path)))
         except (pygame.error, OSError):
             return
 

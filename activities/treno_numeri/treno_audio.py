@@ -5,7 +5,7 @@ Speech uses only recorded, approved clips: Dani's shared reaction library
 ``ready.go``, ``encourage.progress``) and, when they exist, this package's own
 cues through ``LocalizedResources`` (for example ``count_1``..``count_10``
 once spoken numbers are recorded). Missing cues stay silent; the game remains
-fully pictorial. Whistle, chug, chimes and pops are generated once at start-up.
+fully pictorial. Whistle, chug, chimes and pops are generated once, after the first frame.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import LocalizedResources, shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final[int] = 0
 FIRST_SFX_CHANNEL: Final[int] = 2
@@ -50,7 +50,7 @@ class TrainAudio:
         self._resources = resources
         self.locale = locale.split("-")[0]
         self._project_root = project_root
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._speech: dict[str, pygame.mixer.Sound] = {}
         self._available = False
         self.last_speech: str | None = None
@@ -141,14 +141,14 @@ class TrainAudio:
             return
         rate, channels = spec
         for index, frequency in enumerate(_COUNT_NOTES, start=1):
-            self._sounds[f"chime_{index}"] = _chime(rate, channels, 0.4, frequency)
-        self._sounds["pop"] = _sweep(rate, channels, 0.16, 520.0, 880.0, 9000)
-        self._sounds["unload"] = _sweep(rate, channels, 0.18, 760.0, 480.0, 7000)
-        self._sounds["boop"] = _sweep(rate, channels, 0.22, 420.0, 330.0, 7000)
-        self._sounds["creak"] = _sweep(rate, channels, 0.32, 210.0, 160.0, 6000)
-        self._sounds["whistle"] = _whistle(rate, channels)
-        self._sounds["chug"] = _chug(rate, channels)
-        self._sounds["fanfare"] = _fanfare(rate, channels)
+            self._sounds.define(f"chime_{index}", lambda frequency=frequency: _chime(rate, channels, 0.4, frequency))
+        self._sounds.define("pop", lambda: _sweep(rate, channels, 0.16, 520.0, 880.0, 9000))
+        self._sounds.define("unload", lambda: _sweep(rate, channels, 0.18, 760.0, 480.0, 7000))
+        self._sounds.define("boop", lambda: _sweep(rate, channels, 0.22, 420.0, 330.0, 7000))
+        self._sounds.define("creak", lambda: _sweep(rate, channels, 0.32, 210.0, 160.0, 6000))
+        self._sounds.define("whistle", lambda: _whistle(rate, channels))
+        self._sounds.define("chug", lambda: _chug(rate, channels))
+        self._sounds.define("fanfare", lambda: _fanfare(rate, channels))
 
 
 def _chime(rate: int, channels: int, duration: float, frequency: float) -> pygame.mixer.Sound:

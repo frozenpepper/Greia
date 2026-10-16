@@ -1,6 +1,6 @@
 """Baia delle Orche — synthesized sea sounds plus Tito's approved voice.
 
-The splash/whistle/purr/bell cues are tiny tones synthesized once at start-up.
+The splash/whistle/purr/bell cues are tiny tones synthesized once, after the first frame.
 Speech is never generated here: Tito's six orca facts are the Activity's
 owner-approved recordings (``assets/audio/<lang>/tito_fact_*.wav``, resolved by
 ``LocalizedResources.audio_path``), and his short praise lines are the shared
@@ -21,6 +21,7 @@ import wave
 import pygame
 
 from greia_platform.localization import LocalizedResources, shared_character_audio_path
+from greia_platform.pygame_audio import DeferredSoundBank
 
 
 def _synth_wav(samples: list[int], rate: int = 22050) -> bytes:
@@ -72,7 +73,7 @@ class PygameOrcaAudio:
     ) -> None:
         self._resources = resources
         self._project_root = project_root if project_root is not None else PACKAGE_ROOT.parents[1]
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._voice_cache: dict[tuple[str, str], pygame.mixer.Sound] = {}
         self._shared_voices: dict[str, pygame.mixer.Sound | None] = {}
         self._voice_channel: pygame.mixer.Channel | None = None
@@ -96,102 +97,133 @@ class PygameOrcaAudio:
         rate = 22050
 
         # 1. Water Splash
-        splash_samples: list[int] = []
-        for i in range(int(rate * 0.22)):
-            t = i / rate
-            env = math.exp(-9.0 * t)
-            noise = (random.random() * 2.0 - 1.0) * 0.45
-            tone = math.sin(2.0 * math.pi * (260.0 - 80.0 * (t / 0.22)) * t) * 0.55
-            splash_samples.append(int(32767.0 * 0.35 * env * (tone + noise)))
-        self._sounds["splash"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(splash_samples, rate)))
+        def render_splash() -> list[int]:
+            splash_samples: list[int] = []
+            for i in range(int(rate * 0.22)):
+                t = i / rate
+                env = math.exp(-9.0 * t)
+                noise = (random.random() * 2.0 - 1.0) * 0.45
+                tone = math.sin(2.0 * math.pi * (260.0 - 80.0 * (t / 0.22)) * t) * 0.55
+                splash_samples.append(int(32767.0 * 0.35 * env * (tone + noise)))
+            return splash_samples
+
+        self._sounds.define("splash", lambda: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_splash(), rate))))
 
         # 2. Orca Whistle (Harmonic, joyful cetacean whistle)
-        whistle_samples: list[int] = []
-        for i in range(int(rate * 0.45)):
-            t = i / rate
-            env = math.sin(math.pi * (t / 0.45)) ** 0.8
-            f = 950.0 + 350.0 * math.sin(2.0 * math.pi * 3.5 * t) + 120.0 * math.sin(2.0 * math.pi * 12.0 * t)
-            val = (
-                0.7 * math.sin(2.0 * math.pi * f * t)
-                + 0.25 * math.sin(2.0 * math.pi * f * 2.0 * t)
-                + 0.05 * math.sin(2.0 * math.pi * f * 3.0 * t)
-            )
-            whistle_samples.append(int(32767.0 * 0.28 * env * val))
-        self._sounds["whistle"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(whistle_samples, rate)))
+        def render_whistle() -> list[int]:
+            whistle_samples: list[int] = []
+            for i in range(int(rate * 0.45)):
+                t = i / rate
+                env = math.sin(math.pi * (t / 0.45)) ** 0.8
+                f = 950.0 + 350.0 * math.sin(2.0 * math.pi * 3.5 * t) + 120.0 * math.sin(2.0 * math.pi * 12.0 * t)
+                val = (
+                    0.7 * math.sin(2.0 * math.pi * f * t)
+                    + 0.25 * math.sin(2.0 * math.pi * f * 2.0 * t)
+                    + 0.05 * math.sin(2.0 * math.pi * f * 3.0 * t)
+                )
+                whistle_samples.append(int(32767.0 * 0.28 * env * val))
+            return whistle_samples
+
+        self._sounds.define("whistle", lambda: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_whistle(), rate))))
 
         # 3. Echolocation Clicks
-        clicks_samples: list[int] = []
-        for i in range(int(rate * 0.28)):
-            t = i / rate
-            # Rapid clicks at 35Hz repetition
-            click_phase = (t * 35.0) % 1.0
-            click_env = math.exp(-40.0 * click_phase) if click_phase < 0.15 else 0.0
-            high_freq = 2400.0 + random.uniform(-150.0, 150.0)
-            val = math.sin(2.0 * math.pi * high_freq * t) * click_env
-            clicks_samples.append(int(32767.0 * 0.25 * val))
-        self._sounds["clicks"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(clicks_samples, rate)))
+        def render_clicks() -> list[int]:
+            clicks_samples: list[int] = []
+            for i in range(int(rate * 0.28)):
+                t = i / rate
+                # Rapid clicks at 35Hz repetition
+                click_phase = (t * 35.0) % 1.0
+                click_env = math.exp(-40.0 * click_phase) if click_phase < 0.15 else 0.0
+                high_freq = 2400.0 + random.uniform(-150.0, 150.0)
+                val = math.sin(2.0 * math.pi * high_freq * t) * click_env
+                clicks_samples.append(int(32767.0 * 0.25 * val))
+            return clicks_samples
+
+        self._sounds.define("clicks", lambda: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_clicks(), rate))))
 
         # 4. Fish Nibble / Munch
-        nibble_samples: list[int] = []
-        for i in range(int(rate * 0.12)):
-            t = i / rate
-            env = math.exp(-18.0 * t)
-            val = math.sin(2.0 * math.pi * 680.0 * t) + 0.35 * (random.random() * 2.0 - 1.0)
-            nibble_samples.append(int(32767.0 * 0.32 * env * val))
-        self._sounds["nibble"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(nibble_samples, rate)))
+        def render_nibble() -> list[int]:
+            nibble_samples: list[int] = []
+            for i in range(int(rate * 0.12)):
+                t = i / rate
+                env = math.exp(-18.0 * t)
+                val = math.sin(2.0 * math.pi * 680.0 * t) + 0.35 * (random.random() * 2.0 - 1.0)
+                nibble_samples.append(int(32767.0 * 0.32 * env * val))
+            return nibble_samples
+
+        self._sounds.define("nibble", lambda: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_nibble(), rate))))
 
         # 5. Happy Purr / Chirp
-        purr_samples: list[int] = []
-        for i in range(int(rate * 0.32)):
-            t = i / rate
-            env = math.sin(math.pi * (t / 0.32))
-            mod = 1.0 + 0.5 * math.sin(2.0 * math.pi * 28.0 * t)
-            val = math.sin(2.0 * math.pi * 420.0 * t) * mod
-            purr_samples.append(int(32767.0 * 0.25 * env * val))
-        self._sounds["purr"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(purr_samples, rate)))
+        def render_purr() -> list[int]:
+            purr_samples: list[int] = []
+            for i in range(int(rate * 0.32)):
+                t = i / rate
+                env = math.sin(math.pi * (t / 0.32))
+                mod = 1.0 + 0.5 * math.sin(2.0 * math.pi * 28.0 * t)
+                val = math.sin(2.0 * math.pi * 420.0 * t) * mod
+                purr_samples.append(int(32767.0 * 0.25 * env * val))
+            return purr_samples
+
+        self._sounds.define("purr", lambda: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_purr(), rate))))
 
         # 6. Bubble Pop
-        bubble_samples: list[int] = []
-        for i in range(int(rate * 0.07)):
-            t = i / rate
-            env = math.exp(-25.0 * t)
-            val = math.sin(2.0 * math.pi * (450.0 + 600.0 * (t / 0.07)) * t)
-            bubble_samples.append(int(32767.0 * 0.30 * env * val))
-        self._sounds["bubble"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(bubble_samples, rate)))
+        def render_bubble() -> list[int]:
+            bubble_samples: list[int] = []
+            for i in range(int(rate * 0.07)):
+                t = i / rate
+                env = math.exp(-25.0 * t)
+                val = math.sin(2.0 * math.pi * (450.0 + 600.0 * (t / 0.07)) * t)
+                bubble_samples.append(int(32767.0 * 0.30 * env * val))
+            return bubble_samples
+
+        self._sounds.define("bubble", lambda: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_bubble(), rate))))
 
         # 7. Ball Bounce / Boing
-        bounce_samples: list[int] = []
-        for i in range(int(rate * 0.15)):
-            t = i / rate
-            env = math.exp(-12.0 * t)
-            f = 320.0 + 180.0 * math.exp(-15.0 * t)
-            val = math.sin(2.0 * math.pi * f * t)
-            bounce_samples.append(int(32767.0 * 0.32 * env * val))
-        self._sounds["bounce"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(bounce_samples, rate)))
+        def render_bounce() -> list[int]:
+            bounce_samples: list[int] = []
+            for i in range(int(rate * 0.15)):
+                t = i / rate
+                env = math.exp(-12.0 * t)
+                f = 320.0 + 180.0 * math.exp(-15.0 * t)
+                val = math.sin(2.0 * math.pi * f * t)
+                bounce_samples.append(int(32767.0 * 0.32 * env * val))
+            return bounce_samples
+
+        self._sounds.define("bounce", lambda: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_bounce(), rate))))
 
         # 8. Marine Chimes for Musical Echolocation (Notes: C5, E5, G5, C6)
         notes = {"bell_0": 523.25, "bell_1": 659.25, "bell_2": 783.99, "bell_3": 1046.50}
-        for b_name, freq in notes.items():
+
+        def render_bell(freq: float) -> list[int]:
             chime_samples: list[int] = []
             for i in range(int(rate * 0.40)):
                 t = i / rate
                 env = math.exp(-4.5 * t)
                 val = 0.65 * math.sin(2.0 * math.pi * freq * t) + 0.35 * math.sin(2.0 * math.pi * (freq * 2.0) * t)
                 chime_samples.append(int(32767.0 * 0.30 * env * val))
-            self._sounds[b_name] = pygame.mixer.Sound(io.BytesIO(_synth_wav(chime_samples, rate)))
+            return chime_samples
+
+        for b_name, freq in notes.items():
+            self._sounds.define(
+                b_name,
+                lambda freq=freq: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_bell(freq), rate))),
+            )
 
         # 9. Aurora / Night Shimmer Chime
-        aurora_samples: list[int] = []
-        for i in range(int(rate * 0.55)):
-            t = i / rate
-            env = math.exp(-2.8 * t)
-            val = (
-                0.4 * math.sin(2.0 * math.pi * 587.33 * t)
-                + 0.35 * math.sin(2.0 * math.pi * 880.0 * t)
-                + 0.25 * math.sin(2.0 * math.pi * 1174.66 * t)
-            )
-            aurora_samples.append(int(32767.0 * 0.26 * env * val))
-        self._sounds["aurora"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(aurora_samples, rate)))
+        def render_aurora() -> list[int]:
+            aurora_samples: list[int] = []
+            for i in range(int(rate * 0.55)):
+                t = i / rate
+                env = math.exp(-2.8 * t)
+                val = (
+                    0.4 * math.sin(2.0 * math.pi * 587.33 * t)
+                    + 0.35 * math.sin(2.0 * math.pi * 880.0 * t)
+                    + 0.25 * math.sin(2.0 * math.pi * 1174.66 * t)
+                )
+                aurora_samples.append(int(32767.0 * 0.26 * env * val))
+            return aurora_samples
+
+        self._sounds.define("aurora", lambda: pygame.mixer.Sound(io.BytesIO(_synth_wav(render_aurora(), rate))))
 
     def play(self, name: str) -> None:
         if not self._enabled:

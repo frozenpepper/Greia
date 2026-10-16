@@ -32,6 +32,16 @@ from .lifecycle import (
 PRODUCTION_ROOT = Path("/opt/greia-os")
 #: Platform-owned interpreter entry; see greia_platform.python_activity_entry.
 PYTHON_ACTIVITY_ENTRY_MODULE = "greia_platform.python_activity_entry"
+#: SDL hint the curated Pygame runtime always sets for Activities: present the
+#: window surface through SDL's plain software framebuffer instead of SDL 2.26's
+#: X11 "texture framebuffer" (a GL renderer streaming each frame through a
+#: texture). Measured on the reference Atom N270 / GMA 950 (Acer re-sweep at
+#: 0f560c2e, docs/reviews/acer/2026-10-16_ACER_ACTIVITY_SWEEP.md R.2):
+#: ``set_mode`` 0.7-1.2 s -> 0.03-0.15 s, about 70 MB less RSS per process
+#: (Mesa/libGL is never loaded) and half the per-flip cost. Software surfaces
+#: are what Pygame Activities draw into anyway; the dummy/KMSDRM/desktop
+#: drivers simply honour or ignore the hint.
+SDL_SOFTWARE_FRAMEBUFFER_ENVIRONMENT = ("SDL_FRAMEBUFFER_ACCELERATION", "0")
 _PLATFORM_OWNED_ENVIRONMENT = frozenset(
     {
         "DISPLAY",
@@ -335,6 +345,7 @@ class PythonRuntimeAdapter:
         environment: list[tuple[str, str]] = [
             ("PYTHONNOUSERSITE", "1"),
             ("PYTHONDONTWRITEBYTECODE", "1"),
+            SDL_SOFTWARE_FRAMEBUFFER_ENVIRONMENT,
         ]
         prefix = self._bytecode_prefix.for_current_process()
         if prefix is not None:

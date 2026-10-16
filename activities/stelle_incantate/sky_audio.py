@@ -6,8 +6,8 @@ Speech uses only recorded, approved clips: Leo's shared reaction library
 ``LocalizedResources``, and — when they are recorded — package counting cues
 ``count_1`` .. ``count_20``. Missing cues stay silent; the game remains fully
 pictorial. Star chimes follow the number itself on a gentle major scale, so
-counting up climbs and counting back descends. Effects are generated once at
-start-up and chimes once per number on first need; every call fails soft
+counting up climbs and counting back descends. Effects are generated once, after
+the first frame and chimes once per number on first need; every call fails soft
 without a mixer.
 """
 
@@ -20,7 +20,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import LocalizedResources, shared_character_audio_path
-from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
 
 SPEECH_CHANNEL: Final[int] = 0
 FIRST_SFX_CHANNEL: Final[int] = 2
@@ -59,7 +59,7 @@ class SkyAudio:
         self._resources = resources
         self.locale = locale.split("-")[0]
         self._project_root = project_root
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._sounds = DeferredSoundBank()
         self._speech: dict[str, pygame.mixer.Sound] = {}
         self._voice: dict[str, pygame.mixer.Sound] = {}  # bounded by the fact catalogue
         self._available = False
@@ -166,7 +166,7 @@ class SkyAudio:
             key = f"chime_{number}"
             if key not in self._sounds:
                 try:
-                    self._sounds[key] = _chime(rate, channels, 0.36, number_frequency(number))
+                    self._sounds.define(key, lambda number=number: _chime(rate, channels, 0.36, number_frequency(number)))
                 except (pygame.error, RuntimeError):
                     return
 
@@ -194,12 +194,12 @@ class SkyAudio:
             return
         self._spec = spec
         rate, channels = spec
-        self._sounds["boop"] = _sweep(rate, channels, 0.28, 330.0, 262.0, 7000)
-        self._sounds["twinkle"] = _sweep(rate, channels, 0.18, 1320.0, 1760.0, 4000)
-        self._sounds["card"] = _sweep(rate, channels, 0.16, 520.0, 880.0, 8000)
-        self._sounds["reveal"] = _arpeggio(rate, channels, (523.25, 659.25, 783.99, 1046.5, 1318.5), 0.12, 9000)
-        self._sounds["whoosh"] = _sweep(rate, channels, 0.6, 220.0, 880.0, 5000)
-        self._sounds["fanfare"] = _arpeggio(rate, channels, (523.25, 659.25, 783.99, 1046.5), 0.15, 11000)
+        self._sounds.define("boop", lambda: _sweep(rate, channels, 0.28, 330.0, 262.0, 7000))
+        self._sounds.define("twinkle", lambda: _sweep(rate, channels, 0.18, 1320.0, 1760.0, 4000))
+        self._sounds.define("card", lambda: _sweep(rate, channels, 0.16, 520.0, 880.0, 8000))
+        self._sounds.define("reveal", lambda: _arpeggio(rate, channels, (523.25, 659.25, 783.99, 1046.5, 1318.5), 0.12, 9000))
+        self._sounds.define("whoosh", lambda: _sweep(rate, channels, 0.6, 220.0, 880.0, 5000))
+        self._sounds.define("fanfare", lambda: _arpeggio(rate, channels, (523.25, 659.25, 783.99, 1046.5), 0.15, 11000))
 
 
 def _chime(rate: int, channels: int, duration: float, frequency: float) -> pygame.mixer.Sound:
