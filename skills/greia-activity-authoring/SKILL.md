@@ -214,7 +214,9 @@ missing/incorrect cues.
 All 45 built-in Activity packages have staged
 `locales/es.json` and `locales/fr.json` source text
 bundles, now with **45/45 declared source-key parity**.
-Word Forest now owns 21 Spanish and 21 French
+Word Forest (since the 2026-10 rework the "catch the
+first letter of the spoken picture word" game, ages 5-7)
+owns 21 Spanish and 21 French
 letter-to-example-word lessons in its pure
 `foresta_content.PHONICS_DATA` domain catalogue;
 its 24 previously missing source `word.*`/
@@ -480,11 +482,11 @@ For first-party Python Activities:
 
 The platform-owned PNG/WAV/UTF-8 `CreationLibrary` has a guarded Activity transfer API (`get_creations`) and manifest `creations.produces`/`creations.consumes` declarations. The universal `CreationsGalleryScreen`/controller and the nonblocking `request_selection(...)` / `poll_selection(...)` / `cancel_selection(...)` protocol now connect in SOURCE-WIP to a trusted modal host. Legacy-X and Simulator each implement the same runtime-neutral Shell modal contract; an Activity still cannot enumerate/delete the profile library or mint its own handle. **Never** read another Activity namespace, mount a global shared directory, create an Activity-local chooser, or block a frame loop waiting for human input.
 
-Painting is the reference PNG integration: normal autosaves stay private; an explicit up-arrow publishes an immutable snapshot; from Painting's own gallery a down-arrow requests `image/png`, the Activity polls at a bounded cadence, and a child-selected one-use handle is imported as a new independent editable private painting after digest/type validation. This latest interaction is **SOURCE-WIP and not yet accepted in a complete checkout/GUI**. New consumers should copy the semantic pattern only after the consolidated acceptance is green. The cross-Activity implementation and 45-Activity release review remain tracked in the single Creations PLAN/PROGRESS; Shape Garden is not yet a persistent stamp editor and must not be treated as one without the planned project-model work.
+Painting is the reference PNG integration: normal autosaves stay private; an explicit up-arrow publishes an immutable snapshot; from Painting's own gallery a down-arrow requests `image/png`, the Activity polls at a bounded cadence, and a child-selected one-use handle is imported as a new independent editable private painting after digest/type validation. This latest interaction is **SOURCE-WIP and not yet accepted in a complete checkout/GUI**. New consumers should copy the semantic pattern only after the consolidated acceptance is green. The cross-Activity implementation and 45-Activity release review remain tracked in the single Creations PLAN/PROGRESS; Shape Garden (2026-10 rework) is now a word-free composition studio with a persistent project model, a gallery of up to 24 gardens and a flattened PNG share/backdrop-import round trip; its older "not a persistent editor" status is superseded.
 
 ### Use the shared control kit (ADR 0037, Accepted)
 
-Do not hand-draw buttons, mode tabs, HUD counters, prompt bubbles, try-again banners or completion cards. Compose them from `greia_platform.activity_controls` (+ `activity_feedback`, `pygame_completion`), which gives one look, cached rendering and keyboard / D-pad / stick / south-button focus for free. Reference pilots: `activities/casa_del_dieci/ten_house_controls.py`, `activities/pasticceria_magica/pasticceria_controls.py`.
+Do not hand-draw buttons, mode tabs, HUD counters, prompt bubbles, try-again banners or completion cards. Compose them from `greia_platform.activity_controls` (+ `activity_feedback`, `pygame_completion`), which gives one look, cached rendering and keyboard / D-pad / stick / south-button focus for free. Reference implementations (all 45 Activities now use the kit): `activities/casa_del_dieci/ten_house_controls.py` (icon-only listen + check pills, ten-frame rooms, `CastFeedback`, completion scene), `activities/pasticceria_magica/pasticceria_controls.py` (pantry, counted badges, bell), and for galleries/toolbars `activities/painting/` and `activities/writing/`. The sample below shows API shape only; the reworks are word-free, so prefer icon-only pills (`kit.glyph(...)`) and picture prompts over text labels such as "OK".
 
 ```python
 from greia_platform.activity_controls import (
@@ -519,6 +521,23 @@ cast = CastFeedback("dani", height=170, art=kit.art)                  # cast.cor
 - **Shared art library:** reuse scenes, props, creatures, HUD glyphs, FX and cast poses by semantic ID (`bg.*`, `prop.*`, `creature.*`, `icon.hud.*`, `fx.*`, `character.<id>` variants) instead of drawing private art; inventory and registration rules are in `assets/visual/README.md` and `skills/greia-visual-authoring/SKILL.md`. Never redraw a cast member inside an Activity.
 - **Theme folders:** one Activity is one experience; the Shell groups related Activities. Add a theme to the manifest's `discovery_tags` (e.g. `discovery_tags = ["sea", "nature"]`) to join that theme's Shell folder. A theme becomes a one-level folder only if it is listed in `FOLDER_THEME_IDS` (`src/greia_launcher/catalogue_view.py`, currently `sea`) and has at least 3 visible members after Parent/age filtering; adding a new folder theme is a platform change (icon + constant + test), not an Activity change. Do not build multi-game hubs inside one Activity.
 - **Pointer and input parity:** `PygameReferenceCanvas.present()` already draws the platform pointer (`pointer=True` default); do not draw your own cursor, and keep calling `present()` every frame on completion screens so the pointer stays live. A `hybrid` input profile must still provide keyboard and controller paths for every action (kit focus navigation does this for kit controls; custom hit targets need `ExternalTarget`).
+
+### Patterns from the 2026-10 reworks (all 45 Activities)
+
+These are the conventions the reworked Activities share; copy them rather than inventing variants. Full programme record: `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P7_ACTIVITY_QUALITY_PROGRAM.md`.
+
+- **One Activity = one core experience.** Levels/stages of one loop are fine; no multi-game hubs or tab piles. Related Activities are grouped by Shell theme folders, never merged.
+- **One feedback grammar through `CastFeedback`.** Correct: `pose_cheer` + FX + a short approved line. Try again: `pose_think` + a *demonstration* (never a bare "wrong"), unlimited kind retry. Finish: the shared cast completion scene (`pygame_completion`, 1-3 stars); the scene currently supports one cast member and has no calm variant or icon parameter (see P7 section 8).
+- **Graduated hints, implemented in the Activity until the kit helper exists:** about 6 s idle: cast `pose_point` + pulse on the next valid target; first error: demonstrate one step; repeated errors: glow the right target. A hint never shows the answer as text, a number or a pre-marked slot.
+- **Never answer-revealing UI.** No printed sums, lit target counters, auto-focused right choice, per-slot answer icons or pre-GO right/wrong marks. Wrong options that are "sometimes right" are never offered as wrong; distractors are near-misses (+-1/+-2, look-alike, contrast).
+- **Finite, kind rounds:** spoken goal, act, celebrate, progress dots, a real ending in 1-3 minutes; adaptive stages saved per profile; nothing fails or loses progress; old saves migrate forward (schema bump, never silent reset). Event ids stay stable for achievements (e.g. `bridge.level_completed`) unless deliberately renamed.
+- **Child-work custody:** every saved item is reachable (paged big-card gallery); delete is deliberate (preview, Back/keep is the default, never hover or single stray tap); a full shelf shows a sheet or refuses a new item, it never evicts silently; no blank or duplicate saves; drafts survive Home; share to My Creations publishes immutable PNG/WAV/UTF-8 snapshots through the platform API; gallery actions must target the *focused* item (selection follows kit focus; see the `552011a1` regression).
+- **Pygame `set_alpha` pitfall:** never call `Surface.set_alpha(None)` on a per-pixel-alpha surface; it disables alpha blending for every later blit and transparent pixels draw solid. Reset with `set_alpha(255)`. Cache static composition once (no per-frame alpha surfaces, decode or scale) and bound every cache and list.
+- **Shared vocabulary audio bank.** Picture-name clips live once in `assets/audio/vocab/v1/<locale>/<noun_id>.wav` and resolve through `greia_platform.localization.shared_vocab_audio_path` (locale, base, English, silence). Never copy noun clips into an Activity package. Spoken numbers will use a shared `shared_number_audio_path` (F6, awaiting voice approval; probe it with `getattr(..., None)` as `pasticceria_magica` does). Cast lines come from `shared_character_audio_path`; do not reach them with relative `../..` paths (installed-image safety).
+- **Runtime policy:** the stdlib `abc` module is allowed in the curated child runtime, so abstract base classes at genuine variation points are fine. Do not rely on other new imports without checking the runtime policy.
+- **Canonical cast and library art only:** no off-model redraws, no emoji as content; if the library lacks a needed picture, keep the Activity-private asset small and list it as a promotion candidate in P7 section 8.
+- **Platform APIs added during the reworks:** `greia_platform.activity_api.set_curated_wallpaper(asset_id)` (requires `customization.manage`; curated `bg.wallpaper.*` scenes only, never a caller path). USB wallpaper import is not part of the child flow; it belongs to a trusted Parent/system workflow.
+- **Evidence honesty:** reworks are SOURCE + headless desktop review. Voice lines are requested, not recorded (`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/VOICE_LINES_REQUESTED_2026-10-16.md`); until approved clips exist the Activity must stay fully playable in silence.
 
 ### Performance is correctness
 
@@ -751,6 +770,8 @@ GLA-015 for source/visual acceptance; no live review has run yet.
 
 
 ### Opposites state words and real language presentation (2026-10-13)
+
+*(Historical lesson: `mondo_contrari` was later reworked into Flash's guided opposite game with no tabs or state banners; the locale-resolution rule below still applies.)*
 
 `activities/mondo_contrari` originally had perfectly good `opposite.*`
 translations in EN/IT/ES/FR bundles but drew ten fixed Italian state

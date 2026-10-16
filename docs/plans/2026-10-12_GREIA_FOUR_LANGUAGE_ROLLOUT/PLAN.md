@@ -13,6 +13,10 @@
 
 **Owner approval status:** All previously committed recordings are fully personally approved; old text saying audio generation/listening is entirely pending is historical and does not override this decision. The focused still-missing files are assigned to [`docs/testing/2026-10-15_GREIA_TARGETED_MISSING_VOICES_LOCAL_AGENT.md`](../../testing/2026-10-15_GREIA_TARGETED_MISSING_VOICES_LOCAL_AGENT.md). Release status remains EN/IT selectable, ES/FR staging until technical runtime/playback and visual acceptance; fallback alone should not be treated as a failure or as a security concern.
 
+## 2026-10-16 — Voice lines requested by the P7 Activity reworks
+
+All 45 Activities were reworked word-free and voice-first (P7 W0–W3, `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P7_ACTIVITY_QUALITY_PROGRAM.md`). The consolidated, owner-reviewable list of every spoken line the reworks want (shared numbers 0–25, colour, position, shape and noun names for the vocabulary bank, then per-Activity lines, EN + IT) is [`VOICE_LINES_REQUESTED_2026-10-16.md`](./VOICE_LINES_REQUESTED_2026-10-16.md). **Nothing was generated.** After the owner approves rows, the zero-new-spend local Voice Studio may produce candidates under the rules of `LOCAL_AGENT_VOICE_PRODUCTION.md`; ES/FR stay staged.
+
 ## Owner decision — 2026-10-14: text approved, complete voice production authorized
 
 The owner explicitly **approved all translations already authored in the

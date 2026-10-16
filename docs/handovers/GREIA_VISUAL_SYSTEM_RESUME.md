@@ -1,7 +1,7 @@
 # Greia Visual System — Current Resume File
 
 **Status:** current visual-workstream continuation contract  
-**Last reviewed:** 2026-10-15 (design and art tranche)  
+**Last reviewed:** 2026-10-16 (all-Activity rework tranche)  
 **Repository:** `frozenpepper/Greia`  
 **Branch:** `main`  
 **Visual-system guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
@@ -13,7 +13,21 @@
 
 ---
 
-# 2026-10-15 — Current phase: W2 Activity reworks on the library and kit (read first)
+# 2026-10-16 — Current phase: Encyclopedia E5 next; Activity-private art awaiting library promotion (read first)
+
+**Phase:** all 45 Activities are reworked on the shared library and control kit (P7 W0-W3; SOURCE + DESKTOP VISUAL REVIEW only; table with commits in `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P7_ACTIVITY_QUALITY_PROGRAM.md` §6a). Library catalogue is 0.7.0 (62 vocabulary pictures, `a779b10f`). **Encyclopedia E4 is COMPLETE** (`7b1f6b2c`: 36 authored storybook scenes; canonical cairo backend; `--check` reproduces 43/43 PNGs, 2.47 MiB).
+
+**Next actions:**
+1. **Encyclopedia E5 interaction visual-language pass** (subplan `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md`), then E6 and the fresh full 43-page capture.
+2. **Library promotion/migration pass:** Activity-private art candidates (Serra plant stages, Specchi mosaic tiles, Alfabeto pictures, Stelle constellation figures, Morbidi part kit, Teatrino fairy-tale puppets, bridge/marble-run/picnic art, Volo dragon + rings, Colline buggy, instruments, pet props, tokens) are listed in P7 §8; promote once, switch consumers to shared IDs, retire duplicates. Also: left-facing `pose_point` variants, tileable `bg.sky_clouds` mid/fg layers, woodland creature hurt/happy states.
+3. **Disk pass** on runtime PNG sizes against the core budget (lossless palette/quantized candidates, verify visually).
+4. No Simulator/physical visual review of the reworked Activities exists yet; keep evidence labels accurate.
+
+**Rules unchanged:** one drawing per animal; flat recipe (`GREIA_SVG_AUTHORING_RULES.md`); Opus authors SVG; installed runtime visuals are `assets/visual/runtime/` + catalogues; append new assets only for a demonstrated gap.
+
+---
+
+# 2026-10-15 — Current phase: W2 Activity reworks on the library and kit (superseded by the 2026-10-16 phase above)
 
 **Phase:** the art-direction reset waves are done (cast poses, P0 Activity icons, complete flat core icons) and the **shared art library v1 is registered** (catalogue 0.6.0; `bg.*`, `prop.*`, `creature.*`, `icon.hud.*`, `fx.*`, cast variants; inventory in `assets/visual/README.md`). The shared Activity control kit (ADR 0037) and the storybook Shell redesign (Home, picker, Collection pages, Sea theme folder, My Creations, launch screen) are committed. Execution record: `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P7_ACTIVITY_QUALITY_PROGRAM.md` (wave W2 = number, literacy and creative ladders first; no Activity merges; grouping by Shell theme folders). Evidence: SOURCE + headless desktop review only.
 

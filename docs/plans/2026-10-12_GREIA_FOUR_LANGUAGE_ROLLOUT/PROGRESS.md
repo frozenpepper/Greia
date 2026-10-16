@@ -1339,3 +1339,10 @@ in this authoring session. The local agent will produce the actual
 recording ledger, WAV/OGG candidates, receipts, review evidence,
 gap list and resumable ZIP under ignored `tmp/` and hand it back for
 reviewed integration into `main`.
+
+## 2026-10-16 — Voice-line request list from the P7 reworks (DOCUMENTATION)
+
+Created [`VOICE_LINES_REQUESTED_2026-10-16.md`](./VOICE_LINES_REQUESTED_2026-10-16.md): every voice line requested by the 45 Activity reworks (commits `39733dd9..HEAD`), EN + IT, grouped as shared sets first (numbers 0-25 via a future `shared_number_audio_path`, colour names, position words, shape names, noun names for the `assets/audio/vocab/v1/<locale>/<noun_id>.wav` bank, with current bank coverage computed from the committed files) and then per Activity. Row texts are taken from the reworks' design backlog; lines the backlog only described are marked as proposed/to be authored. Also recorded: known ES/FR defects (Luci `prompt_choose`, Colline empty audio maps, Specchi Lilli voice, Casa ES `prompt_add`) and EN/IT receipts missing in Foresta.
+
+**Evidence:** DESIGN SPEC / request list only. No voice was generated, recorded or listened to; no audio file or receipt was touched; no hardware. The owner review of the list is the next step; ES/FR remain unselectable.
+

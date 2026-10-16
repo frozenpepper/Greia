@@ -1,3 +1,24 @@
+## 2026-10-16 — All 45 Activities reworked (P7 W0–W3)
+
+**Evidence class: SOURCE + headless desktop review** (Pygame dummy drivers at 1024×600 / 800×480 / 480×320, app-loop tests, one BEFORE/AFTER sheet reviewed per Activity). **No hardware, no VM/Acer/Pi, no audible review** (no new audio exists). `[release].status` remains `draft` for every Activity. Unit suite at the end of the span: 5,300 tests with 2 failures, both fixed afterwards and not re-run; **a full `make verify` on the final head (~85 min) is still owed**.
+
+**Shipped (SOURCE):** every Activity was reworked (or, for the three child favourites, conservatively polished) as one end-to-end commit; per-Activity table with SHAs in `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P7_ACTIVITY_QUALITY_PROGRAM.md` §6a. Same span: shared vocabulary audio bank with locale fallback (`00d303a5`, `shared_vocab_audio_path`), 62 vocabulary pictures in the shared library (`a779b10f`, catalogue 0.7.0), Encyclopedia E4 complete (`7b1f6b2c`: 36 authored storybook scenes, canonical cairo backend, `--check` reproduces 43/43 PNGs), `set_alpha(None)` transparency fix (`11a61e59`), stdlib `abc` allowed in the child runtime (`ab0fabc7`), fail-soft unrecorded sessions, Parent API Activity policy for Parent-installed Activities (`8d1588f3`), Python 3.11 f-string fixes in the Parent panel (`ce2e2c95`, `7f745bca`; the child Shell failed to import on Debian 12 before this), My Greia rework with the new platform API `set_curated_wallpaper` / `WallpaperImporter.install_curated` (`677f0cd1`), painting gallery focus/selection fix (`552011a1`).
+
+**Key decisions:**
+- **One Activity = one core experience** (levels of one loop are fine; no multi-game hubs). All merges cancelled; related Activities are grouped by the Shell theme folders (Sea folder: Aquarium, Orca Bay, Submarine, Dolphin), never by merging.
+- **Child favourites (Aquarium, Orca Bay, Submarine) were polished conservatively:** same controls, colours and scale, library art, optional never-failing prompts; reviewers compare BEFORE vs AFTER for drift.
+- **One feedback grammar** (`CastFeedback`: cheer / think + demonstration / shared cast completion scene), graduated hints, never answer-revealing UI, canonical cast only, platform pointer always visible.
+- **Shared vocabulary audio bank:** noun clips live once under `assets/audio/vocab/v1/<locale>/<noun_id>.wav`; Activities must not copy noun clips. Shared numbers use the not-yet-implemented `shared_number_audio_path` (named by Pasticceria).
+- **Child work is sacred:** paged galleries, deliberate delete with preview, no eviction, no blank saves (details in the Activity authoring skill).
+
+**Open items:**
+1. **Voice approval (owner):** every requested line is in `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/VOICE_LINES_REQUESTED_2026-10-16.md` (shared numbers 0–25, colours, positions, shapes, nouns, then per Activity). Nothing generated; local Voice Studio (zero new spend) may produce candidates after approval. ES/FR stay staged (known ES/FR clip defects listed there and in P7 §8).
+2. **Follow-ups** (P7 §8): kit gaps (calm completion variant, completion icon param, multi-cast completion, selection-follows-focus, graduated hint helper, shared confirm-delete/status-icon/burst/sound-bank pieces), F3 platform voice recorder, F4 runtime pointer guarantee, library migration/promotion of Activity-private art, disk pass on runtime PNG sizes (Serra ~930 KB) against the ≤800 MiB core budget, Parent-side wallpaper import, Flash/Tito avatars, Acquario/Quattro Tito clip paths via `shared_character_audio_path`.
+3. **Stale docs to correct on touch:** `docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md` (old Writing toolbar), ADR 0037 (Casa pilot's old banner/OK pill), `tools/generate_*_audio.py` for Casa/Luci/Bosco (old lines), "246" Encyclopedia string count elsewhere (now 260). The authoring skill was refreshed in this tranche.
+4. W4 (new Activities: Tidy-Up Time, Robot Path, Float Lab) not started; Sound Blender / Story Time await voice approval.
+
+**Next exact step:** run the full `make verify` on the final head (~85 min) and record the result here; then owner review of the voice-line list, then the library-migration/disk pass before any `[release]` status change.
+
 ## 2026-10-16 — Parent API Activity policy now covers Parent-installed Activities
 
 **Evidence class: SOURCE only** (local macOS checkout, Python 3.12). No Linux image, VM, Acer or Pi run; the HTML Parent client was not exercised in a browser.

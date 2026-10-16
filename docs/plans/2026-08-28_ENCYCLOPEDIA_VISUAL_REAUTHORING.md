@@ -1,7 +1,8 @@
 # Greia Encyclopedia v0.1 — Visual Reauthoring Plan
 
-**Status:** COMPLETE for E3 — E2 APPROVED; E3 SOURCE + 11-PNG RUNTIME + SIMULATOR ACCEPTED at 03bf76ac; E4 UNBLOCKED/NEXT (deferred per post-activity-pass protocol)  
+**Status:** COMPLETE for E3 — E2 APPROVED; E3 SOURCE + 11-PNG RUNTIME + SIMULATOR ACCEPTED at 03bf76ac; E4 COMPLETE at 7b1f6b2c (2026-10-16); E5 interaction visual-language pass NEXT  
 **Date:** 2026-08-28  
+**Latest checkpoint:** 2026-10-16 — E4 COMPLETE (`7b1f6b2c`); E5 next  
 **Current checkpoint:** 2026-08-30 — E3 ACCEPTED (see `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md`; evidence HEAD 69cf8966)  
 **Parent visual authority:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
 **Stable visual architecture:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
@@ -462,9 +463,11 @@ History   ambiguous dinosaur silhouette
 - [ ] review Home + six sections together in one runtime contact sheet;
 - [ ] close E3.
 
-**Hard gate:** E4 remains blocked until the six-section runtime family is accepted.
+**Hard gate (historical):** E4 was blocked until the six-section runtime family was accepted; that gate passed and E4 is complete.
 
-## E4 — Entry migration by archetype **[BLOCKED]**
+## E4 — Entry migration by archetype **[COMPLETE 2026-10-16, `7b1f6b2c`]**
+
+All five archetype batches below are authored as opaque 1024x600 storybook scenes with live moving parts in the E3 ink style (36 entries). Every target centre, input, model and cue is unchanged and the procedural fallback is kept. The canonical raster backend is **cairo** (documented in the build tool); `--check` reproduces 43/43 PNGs byte-for-byte (2.47 MiB). Build groups are `e4_*`. Fixes landed with it: a magnet-page crash on pointer events and a dinosaurs fallback draw crash. Evidence: SOURCE + headless desktop review only; the fresh full 43-page Simulator capture stays E7.
 
 ### E4-A Organic/nature
 
@@ -499,7 +502,7 @@ dinosaurs fossils mammoth cave_paintings pyramids
 
 Each batch gets a targeted contact sheet/review. Do not run the full 43-page acceptance after every small correction.
 
-## E5 — Interaction visual-language pass
+## E5 — Interaction visual-language pass **[NEXT]**
 
 After all pages have strong static art:
 
@@ -714,3 +717,8 @@ The owner explicitly asked the primary agent to perform the current visual-autho
 - Extended the visual-foundation contract so E3 generated art is staged atomically: 0/5 during source work or 5/5 when committed; partial section packs are forbidden.
 - Added `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md`.
 - E3 runtime PNG build, fresh tests/verify, exact-SHA Simulator and six-section runtime review remain pending. E4 remains blocked.
+
+## 2026-10-16 — E4 entry migration complete (SOURCE / DESKTOP VISUAL REVIEW)
+
+`7b1f6b2c` completed E4: nature (elephant, octopus, bee, penguin, frog, volcano, rain, ocean, tree, rainbow), space (sun to neptune inside the Saturn observatory, each with a teaching prop), body (heart model, lungs in a bell jar, X-ray skeleton, mouth model, mirror face; no mannequin, nothing gory), machines (magnet, bicycle, airplane, bridge) and history (dinosaurs, fossils, mammoth, cave paintings) were authored as opaque 1024x600 scenes with live moving parts in the accepted ink style. No behaviour contract changed. The cairo backend is the canonical rasterizer and `--check` reproduces 43/43 PNGs byte-for-byte (2.47 MiB). A magnet-page crash on pointer events and a dinosaurs fallback draw crash were fixed. **E5 (interaction visual-language pass) is next**, then E6 responsive/pre-reader acceptance and E7 fresh complete Simulator capture. Not done: Simulator visual review, native narration lane.
+
