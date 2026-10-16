@@ -4,21 +4,10 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Torre de formas",
-    "mode.free_build": "1. Libre",
-    "mode.slow_fall": "2. Suave",
-    "mode.challenge": "3. Torre",
-    "celebration.title": "¡Hurra! ¡Qué torre tan bonita has construido!",
-    "celebration.subtitle": "¡La torre de madera es muy alta y colorida!",
-    "btn.replay": "Construir otra",
-    "btn.rotate": "Girar",
-    "btn.left": "Izquierda",
-    "btn.right": "Derecha",
-    "btn.drop": "Soltar",
-    "btn.clean": "Formas nuevas",
-    "hud.stars": "Estrellas: $stars",
-    "hud.height": "Altura: $height / $goal",
-    "hint.pick_block": "¡Elige un bloque y colócalo!",
-    "celebration.achievement": "Estrellas: $stars | Altura máxima: $height pisos."
+    "activity.torre_forme.title": "Torre de formas",
+    "button.play_again": "Construir otra vez",
+    "victory.title": "¡Qué constructor!",
+    "victory.subtitle": "¡Cinco construcciones hechas con Dani!"
   },
   "audio": {}
 }

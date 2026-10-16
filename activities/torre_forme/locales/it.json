@@ -4,21 +4,10 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "La Torre delle Forme",
-    "mode.free_build": "1. Libero",
-    "mode.slow_fall": "2. Piano",
-    "mode.challenge": "3. Sfida",
-    "celebration.title": "Evviva! Che splendida torre hai costruito!",
-    "celebration.subtitle": "La torre di legno è altissima e colorata!",
-    "btn.replay": "Costruisci Ancora",
-    "btn.rotate": "Gira",
-    "btn.left": "Sinistra",
-    "btn.right": "Destra",
-    "btn.drop": "Giù",
-    "btn.clean": "Nuove Forme",
-    "hud.stars": "Stelle: $stars",
-    "hud.height": "Altezza: $height / $goal",
-    "hint.pick_block": "Scegli un blocco e posizionalo!",
-    "celebration.achievement": "Stelle: $stars | Altezza massima: $height piani!"
+    "activity.torre_forme.title": "La Torre delle Forme",
+    "button.play_again": "Costruisci ancora",
+    "victory.title": "Che costruttore!",
+    "victory.subtitle": "Cinque costruzioni fatte con Dani!"
   },
   "audio": {
     "activity.title": {

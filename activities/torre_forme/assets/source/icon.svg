@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- La Torre delle Forme (Shape Tower) Activity icon: a wooden block house
+       built into its dashed outline, the last square block flying into its slot.
+       Play Collection -> ocean tile. Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md -->
+  <defs>
+    <!-- ocean light (mix 35% white) -> ocean -->
+    <linearGradient id="torre_icon_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+    <!-- sunshine light (mix 40% white) -> sunshine -->
+    <linearGradient id="torre_icon_sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDA85"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+    <!-- coral light (mix 40% white) -> coral -->
+    <linearGradient id="torre_icon_coral" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F9ABA3"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+    <!-- wood light -> wood (prop.blocks default variant) -->
+    <linearGradient id="torre_icon_wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F6D3A8"/>
+      <stop offset="1" stop-color="#E2AC74"/>
+    </linearGradient>
+  </defs>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#torre_icon_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="104" cy="218" rx="70" ry="9" fill="#2F4E6E" opacity="0.18"/>
+  </g>
+  <g id="subject">
+    <!-- the empty slot: cream paper with a dashed contour -->
+    <rect x="104" y="108" width="58" height="56" rx="6" fill="#FFFBEB" stroke="#4B372F" stroke-width="4.5" stroke-dasharray="10 7" stroke-linecap="round"/>
+    <!-- roof: sunshine triangle -->
+    <path d="M44 108 L162 108 L106 50 Z" fill="url(#torre_icon_sun)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M92 76 L76 94" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.75"/>
+    <!-- left square: coral -->
+    <rect x="46" y="108" width="58" height="56" rx="6" fill="url(#torre_icon_coral)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M56 118 L82 118" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+    <!-- base: wooden rectangle -->
+    <rect x="46" y="164" width="116" height="50" rx="6" fill="url(#torre_icon_wood)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M58 175 L110 175" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+    <path d="M70 196 C90 192 120 200 142 194" fill="none" stroke="#C98E58" stroke-width="3" stroke-linecap="round"/>
+    <!-- the block on its way in: coral square, tilted -->
+    <g transform="rotate(14 196 104)">
+      <rect x="167" y="76" width="58" height="56" rx="6" fill="url(#torre_icon_coral)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M177 86 L203 86" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+    </g>
+  </g>
+  <g id="accent">
+    <path d="M176 156 C188 150 196 146 206 146" fill="none" stroke="#FFFBEB" stroke-width="5" stroke-linecap="round"/>
+    <path d="M206 40 L211 53 L224 58 L211 63 L206 76 L201 63 L188 58 L201 53 Z" fill="#FBBF24" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+  </g>
+</svg>

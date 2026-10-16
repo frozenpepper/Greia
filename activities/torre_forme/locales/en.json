@@ -4,21 +4,10 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Shape Tower",
-    "mode.free_build": "1. Free",
-    "mode.slow_fall": "2. Gentle",
-    "mode.challenge": "3. Tower",
-    "celebration.title": "Hooray! What a wonderful tower you built!",
-    "celebration.subtitle": "The wooden tower is so tall and colorful!",
-    "btn.replay": "Build Again",
-    "btn.rotate": "Rotate",
-    "btn.left": "Left",
-    "btn.right": "Right",
-    "btn.drop": "Drop",
-    "btn.clean": "New Shapes",
-    "hud.stars": "Stars: $stars",
-    "hud.height": "Height: $height / $goal",
-    "hint.pick_block": "Pick a block and place it!",
-    "celebration.achievement": "Stars: $stars | Top height: $height floors!"
+    "activity.torre_forme.title": "Shape Tower",
+    "button.play_again": "Build again",
+    "victory.title": "What a builder!",
+    "victory.subtitle": "Five builds, all made with Dani!"
   },
   "audio": {
     "activity.title": {

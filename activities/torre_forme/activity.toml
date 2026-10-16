@@ -2,7 +2,7 @@
 id = "org.greia.torre-forme"
 legacy_ids = []
 title_key = "activity.torre_forme.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
@@ -11,21 +11,29 @@ categories = ["play"]
 discovery_tags = ["building", "puzzles"]
 
 [education]
-categories = ["early_math", "spatial", "geometry"]
+# Silhouette fitting with real geometric blocks (square, rectangle, triangle,
+# half circle, arch, cylinder). Each build (lighthouse, rocket, cat, car ...)
+# is an outline on Dani's workbench; the child fills it exactly with blocks
+# from a kit, turning them in quarter turns where needed. No falling pieces,
+# no line clears, no clock. Five builds per set; the rung adapts between sets:
+# one dashed slot per block, kit already turned -> one kind starts turned the
+# wrong way -> random turns plus a kind that belongs nowhere -> only the outer
+# silhouette (the child decomposes it) -> two kinds that belong nowhere.
+categories = ["spatial", "geometry"]
 difficulty = 2
-recommended_age_min = 3
-recommended_age_max = 6
+recommended_age_min = 4
+recommended_age_max = 7
 difficulty_min = 1
 difficulty_max = 5
 adaptive_difficulty = true
 skills = [
   { id = "spatial.composition", weight = 3 },
-  { id = "math.geometry", weight = 3 },
-  { id = "cognition.planning", weight = 2 },
+  { id = "math.geometry.shape_recognition", weight = 2 },
+  { id = "cognition.spatial_rotation", weight = 2 },
 ]
 events = [
-  { id = "tower.line_cleared", kind = "milestone" },
-  { id = "tower.celebration_reached", kind = "completion" },
+  { id = "tower.build_completed", kind = "milestone" },
+  { id = "tower.set_completed", kind = "completion" },
 ]
 
 [runtime]
@@ -37,8 +45,8 @@ entrypoint = "main.py"
 profile = "hybrid"
 
 [requirements]
-required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["touch", "keyboard", "controller"]
+required_capabilities = ["display", "pointer"]
+optional_capabilities = ["keyboard", "touch", "controller", "audio.basic"]
 
 [permissions]
 requested = []
