@@ -1,0 +1,20 @@
+{
+  "schema": "greia-updates/1",
+  "updated_at": "2026-10-16T05:22:45+00:00",
+  "parents_app": {
+    "latest": "1.0.0",
+    "minimum": "1.0.0",
+    "ios_url": null,
+    "android_url": null,
+    "notes": {
+      "en": "First release of Greia Parents.",
+      "it": "Prima versione di Greia Genitori."
+    }
+  },
+  "greia_os": {
+    "channels": {
+      "stable": [],
+      "dev": []
+    }
+  }
+}
