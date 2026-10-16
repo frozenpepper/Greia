@@ -5,15 +5,8 @@
   "strings": {
     "activity.title": "Course aux baies",
     "activity.corsa_bacche.title": "Course aux baies",
-    "hud.berries": "Baies",
-    "hud.hearts": "Cœurs",
-    "hud.level": "Niveau",
-    "hud.score": "Score",
-    "prompt.start": "Ramasse de bonnes baies avec Momo !",
-    "msg.rainbow_power": "✨ Baie étoile arc-en-ciel ! ✨",
-    "msg.rescue": "On se relève en douceur !",
-    "msg.level_clear": "Hourra ! Niveau terminé ! 🍓🎉",
-    "msg.oops": "Momo croque une pomme et repart en bondissant !"
+    "victory.title": "Panier plein !",
+    "btn.play_again": "Rejouer"
   },
   "audio": {}
 }

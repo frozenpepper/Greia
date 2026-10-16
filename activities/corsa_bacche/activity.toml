@@ -2,7 +2,7 @@
 id = "org.greia.corsa-bacche"
 legacy_ids = []
 title_key = "activity.corsa_bacche.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
@@ -11,23 +11,30 @@ categories = ["play", "explore"]
 discovery_tags = ["action", "nature", "puzzles"]
 
 [education]
+# Momo's berry chase: steer Momo through a small garden maze and pick every
+# berry (8-18, all visible at once; the basket shows the slots still to fill).
+# Friendly critters wander the paths: walking into an awake one is a gentle
+# bump back (no lives, nothing lost), while standing still is always safe and
+# a sleeping hedgehog (eyes closed) can be passed -- so the child learns to
+# watch, wait and choose another way (inhibition + route planning), not just
+# to react. One visit is three gardens; the rung adapts between gardens:
+# open 3x3 garden -> sleepy hedgehog -> slow ladybird -> both -> a ladybird
+# that sometimes turns towards Momo -> the widest garden with quicker critters.
 categories = ["spatial_awareness", "reaction_time", "inhibition_control"]
 difficulty = 2
-recommended_age_min = 3
-recommended_age_max = 6
+recommended_age_min = 4
+recommended_age_max = 7
 difficulty_min = 1
-difficulty_max = 5
+difficulty_max = 6
 adaptive_difficulty = true
 skills = [
-  { id = "motor.reaction", weight = 3 },
   { id = "spatial.mapping", weight = 3 },
-  { id = "cognition.inhibition", weight = 2 },
+  { id = "cognition.inhibition", weight = 3 },
+  { id = "motor.reaction", weight = 2 },
 ]
 events = [
-  { id = "berry.collected", kind = "milestone" },
-  { id = "rainbow_star.activated", kind = "milestone" },
-  { id = "critter.gentle_rescue", kind = "milestone" },
-  { id = "maze.level_completed", kind = "completion" },
+  { id = "berries.garden_cleared", kind = "milestone" },
+  { id = "berries.visit_completed", kind = "completion" },
 ]
 
 [runtime]
@@ -36,14 +43,16 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "hybrid"
+profile = "directional"
 
 [requirements]
-required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["keyboard", "touch", "controller"]
+required_capabilities = ["display"]
+optional_capabilities = ["keyboard", "pointer", "touch", "controller", "audio.basic"]
 
 [permissions]
 requested = []
 
 [storage]
+# Platform save schema stays 1; the progress payload carries its own version
+# (corsa_services.SCHEMA_VERSION). The first release stored nothing.
 schema_version = 1

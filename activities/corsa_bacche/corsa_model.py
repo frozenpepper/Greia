@@ -1,581 +1,835 @@
-"""Pure logic simulation model for Corsa delle Bacche.
+"""Pure garden rules for La Corsa delle Bacche (Momo's berry chase).
 
-This module contains zero Pygame draw calls or rendering dependencies.
-It models the grid, player movement, path snapping, critter AI,
-power-ups, collision detection, and preschool-friendly recoverable failure.
+No Pygame here: layouts, Momo's walking, the friendly critters, gentle
+bumps, the adaptive ladder and the visit are plain Python so they can be
+tested exhaustively.
+
+Coordinates are cells ``(row, col)``; positions between cells are floats
+in the same units. Walking is continuous (a ``Walker`` moves from one cell
+centre to the next), so this is a real-time action game -- but never a
+scary one:
+
+* Momo walks along a corridor by himself, follows bends and stops at a
+  junction unless a direction is held; a tap on the garden plans the
+  shortest path there (BFS);
+* walking *into* an awake critter is a gentle bump: Momo bounces back to
+  the cell he came from (nothing is lost, there are no lives); a critter
+  that walks into a Momo who is standing still or walking away simply
+  turns around -- standing still is always safe;
+* a planned (tapped) path stops in front of an awake critter instead of
+  walking into it (Momo waits; the child taps again when the way is clear);
+* a sleeping hedgehog (eyes closed) can be passed safely.
+
+The next garden's rung adapts to how the last one went (bumps, hints).
 """
 
 from __future__ import annotations
 
+from collections import deque
+from collections.abc import Collection, Iterable, Sequence
 from dataclasses import dataclass, field
+from enum import StrEnum
 import math
 import random
 from typing import Final
 
-try:
-    from corsa_content import (
-        CELL_SIZE,
-        GRID_COLS,
-        GRID_ORIGIN_X,
-        GRID_ORIGIN_Y,
-        GRID_ROWS,
-        LEVELS,
-        BerryType,
-        CritterConfig,
-        CritterKind,
-        Direction,
-        LevelConfig,
-    )
-except ImportError:
+if __package__:
     from .corsa_content import (
-        CELL_SIZE,
-        GRID_COLS,
-        GRID_ORIGIN_X,
-        GRID_ORIGIN_Y,
-        GRID_ROWS,
-        LEVELS,
-        BerryType,
-        CritterConfig,
+        CRITTER_CHARS,
+        GARDENS_PER_VISIT,
+        MAX_LEVEL,
+        MIN_LEVEL,
         CritterKind,
-        Direction,
-        LevelConfig,
+        CritterSpec,
+        RungSpec,
+        clamp_level,
+        rung_spec,
+    )
+else:
+    from corsa_content import (
+        CRITTER_CHARS,
+        GARDENS_PER_VISIT,
+        MAX_LEVEL,
+        MIN_LEVEL,
+        CritterKind,
+        CritterSpec,
+        RungSpec,
+        clamp_level,
+        rung_spec,
     )
 
+Cell = tuple[int, int]
+Direction = tuple[int, int]
 
-def grid_to_world(col: int, row: int) -> tuple[float, float]:
-    """Convert grid cell coordinates (col, row) to world center (x, y)."""
-    x = GRID_ORIGIN_X + col * CELL_SIZE + CELL_SIZE / 2.0
-    y = GRID_ORIGIN_Y + row * CELL_SIZE + CELL_SIZE / 2.0
-    return x, y
+UP: Final[Direction] = (-1, 0)
+DOWN: Final[Direction] = (1, 0)
+LEFT: Final[Direction] = (0, -1)
+RIGHT: Final[Direction] = (0, 1)
+DIRECTIONS: Final[tuple[Direction, ...]] = (UP, DOWN, LEFT, RIGHT)
 
-
-def world_to_grid(x: float, y: float) -> tuple[int, int]:
-    """Convert world (x, y) to closest grid cell (col, row)."""
-    col = int((x - GRID_ORIGIN_X) // CELL_SIZE)
-    row = int((y - GRID_ORIGIN_Y) // CELL_SIZE)
-    return col, row
-
-
-@dataclass
-class Berry:
-    col: int
-    row: int
-    x: float
-    y: float
-    berry_type: BerryType
-    collected: bool = False
-    sparkle_phase: float = 0.0
-
-    @property
-    def point_value(self) -> int:
-        if self.berry_type == BerryType.BLUEBERRY:
-            return 10
-        if self.berry_type == BerryType.STRAWBERRY:
-            return 20
-        if self.berry_type == BerryType.GOLDEN_BERRY:
-            return 50
-        if self.berry_type == BerryType.RAINBOW_STAR:
-            return 100
-        return 10
+CONTACT_DISTANCE: Final = 0.62  # cells between centres that count as touching
+BUMP_GRACE_SECONDS: Final = 1.6
+BOUNCE_BOOST: Final = 2.2
+CRITTER_BUMP_PAUSE: Final = 1.2
+CRITTER_TURN_PAUSE: Final = 0.5
+CRITTER_COOLDOWN: Final = 1.2
+CRITTER_START_PAUSE: Final = 1.2
+WAIT_DISTANCE: Final = 1.05  # an awake critter this close to the next cell blocks a tapped path
 
 
-@dataclass
-class MomoPlayer:
-    x: float
-    y: float
-    grid_col: int
-    grid_row: int
-    direction: Direction = Direction.NONE
-    queued_direction: Direction = Direction.NONE
-    facing_right: bool = True
-    speed: float = 120.0
-    wobble_timer: float = 0.0
-    apple_munch_timer: float = 0.0
-    start_pos: tuple[float, float] = (0.0, 0.0)
-
-    @property
-    def is_wobbling(self) -> bool:
-        return self.wobble_timer > 0.0
-
-    @property
-    def is_munching_apple(self) -> bool:
-        return self.apple_munch_timer > 0.0
+def opposite(direction: Direction | None) -> Direction | None:
+    if direction is None:
+        return None
+    return (-direction[0], -direction[1])
 
 
-@dataclass
-class CritterState:
-    kind: CritterKind
-    x: float
-    y: float
-    grid_col: int
-    grid_row: int
-    direction: Direction
-    speed: float
-    nest_col: int
-    nest_row: int
-    is_dizzy: bool = False
-    is_napping: bool = False
-    nap_timer: float = 0.0
-    next_nap_in: float = 4.0
-    nap_interval: float = 4.0
-    nap_duration: float = 2.5
-    scurrying_home: bool = False
-    facing_right: bool = True
-    wing_phase: float = 0.0
+def step(cell: Cell, direction: Direction) -> Cell:
+    return (cell[0] + direction[0], cell[1] + direction[1])
 
 
-@dataclass
-class MovingBonusFruit:
-    x: float
-    y: float
-    grid_col: int
-    grid_row: int
-    direction: Direction
-    speed: float = 50.0
-    active: bool = True
-    bounce_timer: float = 0.0
+def direction_between(a: Cell, b: Cell) -> Direction:
+    return (b[0] - a[0], b[1] - a[1])
 
 
-class CorsaModel:
-    """Pure domain logic and state machine for Corsa delle Bacche."""
+# --------------------------------------------------------------------------
+# Layout
+# --------------------------------------------------------------------------
 
-    def __init__(self, level_index: int = 0) -> None:
-        self.level_index: int = max(0, min(level_index, len(LEVELS) - 1))
-        self.level_config: LevelConfig = LEVELS[self.level_index]
-        self.walls: set[tuple[int, int]] = set()
-        self.berries: list[Berry] = []
-        self.critters: list[CritterState] = []
-        self.bonus_fruit: MovingBonusFruit | None = None
-        self.player: MomoPlayer = MomoPlayer(x=0.0, y=0.0, grid_col=1, grid_row=1)
-        self.hearts: int = 3
-        self.max_hearts: int = 3
-        self.score: int = 0
-        self.berries_collected: int = 0
-        self.total_berries: int = 0
-        self.rainbow_timer: float = 0.0
-        self.level_complete: bool = False
-        self.recent_events: list[str] = []
 
-        self._load_level(self.level_config)
+@dataclass(frozen=True, slots=True)
+class GardenLayout:
+    """One authored garden: hedges, Momo's start, berries and critter starts."""
+
+    level: int
+    lattice: tuple[str, ...]
+    start: Cell
+    berries: tuple[Cell, ...]
+    critters: tuple[tuple[CritterKind, Cell], ...] = ()
+
+    @classmethod
+    def parse(cls, level: int, lattice: Sequence[str]) -> "GardenLayout":
+        rows = tuple(lattice)
+        if len(rows) < 3 or len(rows) % 2 == 0:
+            raise ValueError("lattice must have an odd number (>= 3) of rows")
+        width = len(rows[0])
+        if width < 3 or width % 2 == 0 or any(len(row) != width for row in rows):
+            raise ValueError("lattice rows must share one odd width")
+        start: Cell | None = None
+        berries: list[Cell] = []
+        critters: list[tuple[CritterKind, Cell]] = []
+        for r, row in enumerate(rows):
+            for c, ch in enumerate(row):
+                border = r in (0, len(rows) - 1) or c in (0, width - 1)
+                if (border or (r % 2 == 0 and c % 2 == 0)) and ch != "#":
+                    raise ValueError(f"lattice ({r},{c}) must be a hedge")
+                if r % 2 == 1 and c % 2 == 1:
+                    cell = (r // 2, c // 2)
+                    if ch == "M":
+                        if start is not None:
+                            raise ValueError("lattice has two starts")
+                        start = cell
+                    elif ch == ".":
+                        berries.append(cell)
+                    elif ch in CRITTER_CHARS:
+                        critters.append((CRITTER_CHARS[ch], cell))
+                    elif ch != " ":
+                        raise ValueError(f"unknown cell mark {ch!r}")
+                elif ch not in "# ":
+                    raise ValueError(f"unknown hedge mark {ch!r} at ({r},{c})")
+        if start is None:
+            raise ValueError("lattice has no start")
+        return cls(level, rows, start, tuple(berries), tuple(critters))
 
     @property
-    def is_rainbow_active(self) -> bool:
-        return self.rainbow_timer > 0.0
+    def rows(self) -> int:
+        return len(self.lattice) // 2
 
     @property
-    def remaining_berries(self) -> int:
-        return sum(1 for b in self.berries if not b.collected)
+    def cols(self) -> int:
+        return len(self.lattice[0]) // 2
 
-    def is_wall(self, col: int, row: int) -> bool:
-        """Return True if the grid coordinate is out of bounds or a hedge wall."""
-        if not (0 <= col < GRID_COLS and 0 <= row < GRID_ROWS):
-            return True
-        return (col, row) in self.walls
+    def inside(self, cell: Cell) -> bool:
+        return 0 <= cell[0] < self.rows and 0 <= cell[1] < self.cols
 
-    def can_move(self, col: int, row: int, direction: Direction) -> bool:
-        """Check if stepping in direction from (col, row) is free."""
-        target_c = col + direction.dx
-        target_r = row + direction.dy
-        return not self.is_wall(target_c, target_r)
+    def is_open(self, cell: Cell, direction: Direction) -> bool:
+        """True when Momo can step from ``cell`` towards ``direction``."""
 
-    def _load_level(self, cfg: LevelConfig) -> None:
-        self.level_config = cfg
-        self.walls.clear()
-        self.berries.clear()
-        self.critters.clear()
-        self.bonus_fruit = None
-        self.level_complete = False
-        self.rainbow_timer = 0.0
+        if not self.inside(cell) or not self.inside(step(cell, direction)):
+            return False
+        r, c = cell
+        return self.lattice[2 * r + 1 + direction[0]][2 * c + 1 + direction[1]] != "#"
 
-        layout = cfg.maze_layout
-        momo_start_cell = cfg.momo_start
+    def open_directions(self, cell: Cell) -> list[Direction]:
+        return [d for d in DIRECTIONS if self.is_open(cell, d)]
 
-        for r in range(min(len(layout), GRID_ROWS)):
-            row_str = layout[r]
-            for c in range(min(len(row_str), GRID_COLS)):
-                char = row_str[c]
-                wx, wy = grid_to_world(c, r)
+    def neighbours(self, cell: Cell, blocked: Collection[Cell] = ()) -> list[Cell]:
+        result = []
+        for direction in DIRECTIONS:
+            if self.is_open(cell, direction):
+                nxt = step(cell, direction)
+                if nxt not in blocked:
+                    result.append(nxt)
+        return result
 
-                if char == "#":
-                    self.walls.add((c, r))
-                elif char == ".":
-                    # Alternate blueberries and strawberries for visual sweetness
-                    btype = BerryType.STRAWBERRY if (c + r) % 3 == 0 else BerryType.BLUEBERRY
-                    self.berries.append(Berry(col=c, row=r, x=wx, y=wy, berry_type=btype))
-                elif char == "*":
-                    self.berries.append(Berry(col=c, row=r, x=wx, y=wy, berry_type=BerryType.GOLDEN_BERRY))
-                elif char == "@":
-                    self.berries.append(Berry(col=c, row=r, x=wx, y=wy, berry_type=BerryType.RAINBOW_STAR))
-                elif char == "M":
-                    momo_start_cell = (c, r)
-                    # Also put a berry at M
-                    self.berries.append(Berry(col=c, row=r, x=wx, y=wy, berry_type=BerryType.STRAWBERRY))
+    def cells(self) -> Iterable[Cell]:
+        for r in range(self.rows):
+            for c in range(self.cols):
+                yield (r, c)
 
-        self.total_berries = len(self.berries)
-        start_x, start_y = grid_to_world(momo_start_cell[0], momo_start_cell[1])
-        self.player = MomoPlayer(
-            x=start_x,
-            y=start_y,
-            grid_col=momo_start_cell[0],
-            grid_row=momo_start_cell[1],
-            direction=Direction.NONE,
-            queued_direction=Direction.NONE,
-            start_pos=(start_x, start_y),
-            speed=125.0,
+    def mirrored(self, horizontal: bool, vertical: bool) -> "GardenLayout":
+        rows = list(self.lattice)
+        if vertical:
+            rows.reverse()
+        if horizontal:
+            rows = [row[::-1] for row in rows]
+        return GardenLayout.parse(self.level, rows)
+
+
+def bfs_path(layout: GardenLayout, start: Cell, goal: Cell, blocked: Collection[Cell] = ()) -> list[Cell]:
+    """Shortest route from ``start`` to ``goal`` (both inclusive), or ``[]``."""
+
+    if start == goal:
+        return [start]
+    parent: dict[Cell, Cell | None] = {start: None}
+    queue: deque[Cell] = deque([start])
+    while queue:
+        current = queue.popleft()
+        for nxt in layout.neighbours(current, blocked):
+            if nxt in parent:
+                continue
+            parent[nxt] = current
+            if nxt == goal:
+                path = [nxt]
+                while parent[path[-1]] is not None:
+                    path.append(parent[path[-1]])  # type: ignore[arg-type]
+                path.reverse()
+                return path
+            queue.append(nxt)
+    return []
+
+
+def distances(layout: GardenLayout, start: Cell) -> dict[Cell, int]:
+    seen = {start: 0}
+    queue: deque[Cell] = deque([start])
+    while queue:
+        current = queue.popleft()
+        for nxt in layout.neighbours(current):
+            if nxt not in seen:
+                seen[nxt] = seen[current] + 1
+                queue.append(nxt)
+    return seen
+
+
+# --------------------------------------------------------------------------
+# Walking
+# --------------------------------------------------------------------------
+
+
+@dataclass(slots=True)
+class Walker:
+    """Continuous cell-to-cell movement (Momo and the critters)."""
+
+    cell: Cell
+    speed: float = 2.6  # cells per second
+    target: Cell | None = None
+    t: float = 0.0
+    boost: float = 1.0
+
+    @property
+    def moving(self) -> bool:
+        return self.target is not None
+
+    @property
+    def heading(self) -> Direction | None:
+        return direction_between(self.cell, self.target) if self.target is not None else None
+
+    @property
+    def resting_cell(self) -> Cell:
+        """Where the walker will stand next (its target while moving)."""
+
+        return self.target if self.target is not None else self.cell
+
+    def position(self) -> tuple[float, float]:
+        if self.target is None:
+            return (float(self.cell[0]), float(self.cell[1]))
+        return (
+            self.cell[0] + (self.target[0] - self.cell[0]) * self.t,
+            self.cell[1] + (self.target[1] - self.cell[1]) * self.t,
         )
 
-        # Initialize critters from config
-        for ccfg in cfg.critters:
-            cx, cy = grid_to_world(ccfg.start_grid[0], ccfg.start_grid[1])
-            self.critters.append(
-                CritterState(
-                    kind=ccfg.kind,
-                    x=cx,
-                    y=cy,
-                    grid_col=ccfg.start_grid[0],
-                    grid_row=ccfg.start_grid[1],
-                    direction=Direction.LEFT if ccfg.kind == CritterKind.BAFFO else Direction.UP,
-                    speed=ccfg.speed,
-                    nest_col=ccfg.start_grid[0],
-                    nest_row=ccfg.start_grid[1],
-                    nap_interval=ccfg.nap_interval,
-                    nap_duration=ccfg.nap_duration,
-                    next_nap_in=ccfg.nap_interval,
-                )
-            )
+    def start(self, target: Cell) -> None:
+        self.target = target
+        self.t = 0.0
 
-        # Moving bonus fruit (levels 4 & 5)
-        if cfg.has_bonus_fruit:
-            bx, by = grid_to_world(9, 1)
-            self.bonus_fruit = MovingBonusFruit(
-                x=bx,
-                y=by,
-                grid_col=9,
-                grid_row=1,
-                direction=Direction.RIGHT,
-                speed=45.0,
-            )
+    def reverse(self) -> None:
+        if self.target is not None:
+            self.cell, self.target = self.target, self.cell
+            self.t = 1.0 - self.t
 
-    def request_direction(self, direction: Direction) -> None:
-        """Queue a movement intent for Momo (arrow keys, swipes, D-pad)."""
-        if direction == Direction.NONE:
-            return
-        self.player.queued_direction = direction
+    def halt(self) -> None:
+        """Stop at the current cell (only called between steps)."""
 
-        # If currently stopped, immediately check if can move
-        if self.player.direction == Direction.NONE:
-            c, r = world_to_grid(self.player.x, self.player.y)
-            if self.can_move(c, r, direction):
-                self.player.direction = direction
-                if direction in (Direction.LEFT, Direction.RIGHT):
-                    self.player.facing_right = (direction == Direction.RIGHT)
+        self.target = None
+        self.t = 0.0
+        self.boost = 1.0
 
-    def update(self, dt: float) -> list[str]:
-        """Advance domain simulation by dt seconds and return events."""
-        events: list[str] = []
-        if self.level_complete:
-            return events
+    def advance(self, dt: float) -> float | None:
+        """Move on; return the leftover seconds when a cell is reached, else None."""
 
-        # Handle munching restorative apple timer
-        if self.player.is_munching_apple:
-            self.player.apple_munch_timer -= dt
-            if self.player.apple_munch_timer <= 0.0:
-                self.player.apple_munch_timer = 0.0
-            return events
+        if self.target is None or dt <= 0:
+            return None
+        rate = self.speed * self.boost
+        self.t += dt * rate
+        if self.t < 1.0:
+            return None
+        leftover = (self.t - 1.0) / rate
+        self.cell = self.target
+        self.target = None
+        self.t = 0.0
+        return leftover
 
-        # Handle recovery wobble
-        if self.player.is_wobbling:
-            self.player.wobble_timer -= dt
-            if self.player.wobble_timer < 0.0:
-                self.player.wobble_timer = 0.0
 
-        # Rainbow Star Powerup countdown
-        if self.rainbow_timer > 0.0:
-            prev_timer = self.rainbow_timer
-            self.rainbow_timer -= dt
-            if self.rainbow_timer <= 0.0:
-                self.rainbow_timer = 0.0
-                # Defrost critters
-                for cr in self.critters:
-                    if not cr.scurrying_home:
-                        cr.is_dizzy = False
+@dataclass(slots=True)
+class Critter:
+    """One friendly garden critter wandering the paths."""
 
-        # 1. Update Momo movement & grid snapping
-        self._update_player(dt)
+    spec: CritterSpec
+    walker: Walker
+    heading: Direction = RIGHT
+    asleep: bool = False
+    timer: float = 0.0  # seconds until it naps (awake) or wakes (asleep)
+    pause: float = 0.0
+    cooldown: float = 0.0
+    wants_nap: bool = False
 
-        # 2. Check berry collection
-        berry_events = self._check_berry_collection()
-        events.extend(berry_events)
+    @property
+    def kind(self) -> CritterKind:
+        return self.spec.kind
 
-        # 3. Update critters
-        self._update_critters(dt)
+    @property
+    def naps(self) -> bool:
+        return self.spec.awake_seconds > 0 and self.spec.nap_seconds > 0
 
-        # 4. Update moving bonus fruit
-        if self.bonus_fruit is not None and self.bonus_fruit.active:
-            self._update_bonus_fruit(dt)
-            # Check collision with player
-            dist = math.hypot(self.player.x - self.bonus_fruit.x, self.player.y - self.bonus_fruit.y)
-            if dist < 26.0:
-                self.bonus_fruit.active = False
-                self.score += 150
-                events.append("chime")
+    @property
+    def awake(self) -> bool:
+        return not self.asleep
 
-        # 5. Check collision between Momo and Critters
-        critter_events = self._check_critter_collisions()
-        events.extend(critter_events)
+    def position(self) -> tuple[float, float]:
+        return self.walker.position()
 
-        # 6. Check Level Completion
-        if self.remaining_berries == 0 and not self.level_complete:
-            self.level_complete = True
-            events.append("level_clear")
+    def occupies(self) -> set[Cell]:
+        cells = {self.walker.cell}
+        if self.walker.target is not None:
+            cells.add(self.walker.target)
+        return cells
 
-        self.recent_events = events
-        return events
 
-    def _update_player(self, dt: float) -> None:
-        p = self.player
-        # Align with grid cell center on perpendicular axis
-        curr_c, curr_r = world_to_grid(p.x, p.y)
-        cell_center_x, cell_center_y = grid_to_world(curr_c, curr_r)
+# --------------------------------------------------------------------------
+# One garden
+# --------------------------------------------------------------------------
 
-        # Check if queued direction can take effect
-        if p.queued_direction != Direction.NONE and p.queued_direction != p.direction:
-            q = p.queued_direction
-            # 180 turn is always allowed
-            if q == p.direction.opposite:
-                p.direction = q
-                p.queued_direction = Direction.NONE
-                if q in (Direction.LEFT, Direction.RIGHT):
-                    p.facing_right = (q == Direction.RIGHT)
-            else:
-                # Orthogonal turn: allowed when near cell center
-                dx = abs(p.x - cell_center_x)
-                dy = abs(p.y - cell_center_y)
-                snap_threshold = 8.0
-                if dx <= snap_threshold and dy <= snap_threshold:
-                    if self.can_move(curr_c, curr_r, q):
-                        # Snap to junction center and turn
-                        p.x = cell_center_x
-                        p.y = cell_center_y
-                        p.direction = q
-                        p.queued_direction = Direction.NONE
-                        if q in (Direction.LEFT, Direction.RIGHT):
-                            p.facing_right = (q == Direction.RIGHT)
 
-        # Move along current direction
-        if p.direction != Direction.NONE:
-            step = p.speed * dt
-            next_x = p.x + p.direction.dx * step
-            next_y = p.y + p.direction.dy * step
+class GardenEventKind(StrEnum):
+    BERRY = "berry"  # a berry went into the basket
+    CLEARED = "cleared"  # the last berry: the garden is done
+    BUMP = "bump"  # Momo walked into an awake critter and bounced back
+    WAIT = "wait"  # a tapped path stopped in front of an awake critter
+    BOOP = "boop"  # a critter met a still Momo and turned around
+    NAP = "nap"
+    WAKE = "wake"
 
-            # Wall collision check ahead
-            ahead_col = curr_c + p.direction.dx
-            ahead_row = curr_r + p.direction.dy
-            ahead_cx, ahead_cy = grid_to_world(ahead_col, ahead_row)
 
-            if self.is_wall(ahead_col, ahead_row):
-                # Clamp to current cell center
-                if p.direction == Direction.RIGHT and next_x > cell_center_x:
-                    next_x = cell_center_x
-                    p.direction = Direction.NONE
-                elif p.direction == Direction.LEFT and next_x < cell_center_x:
-                    next_x = cell_center_x
-                    p.direction = Direction.NONE
-                elif p.direction == Direction.DOWN and next_y > cell_center_y:
-                    next_y = cell_center_y
-                    p.direction = Direction.NONE
-                elif p.direction == Direction.UP and next_y < cell_center_y:
-                    next_y = cell_center_y
-                    p.direction = Direction.NONE
+@dataclass(frozen=True, slots=True)
+class GardenEvent:
+    kind: GardenEventKind
+    cell: Cell
+    critter: int = -1
 
-            p.x = next_x
-            p.y = next_y
 
-        p.grid_col, p.grid_row = world_to_grid(p.x, p.y)
+class StepResult(StrEnum):
+    MOVED = "moved"
+    QUEUED = "queued"
+    BLOCKED = "blocked"  # a hedge in that direction
+    IGNORED = "ignored"
 
-    def _check_berry_collection(self) -> list[str]:
-        events: list[str] = []
-        p = self.player
-        collect_radius = 20.0
 
-        for b in self.berries:
-            if not b.collected:
-                dist = math.hypot(p.x - b.x, p.y - b.y)
-                if dist <= collect_radius:
-                    b.collected = True
-                    self.berries_collected += 1
-                    self.score += b.point_value
+@dataclass(slots=True)
+class GardenSummary:
+    """How one garden went (drives the next rung; never shown as a score)."""
 
-                    if b.berry_type == BerryType.RAINBOW_STAR:
-                        self.rainbow_timer = self.level_config.powerup_duration
-                        events.append("star_fanfare")
-                        for cr in self.critters:
-                            cr.is_dizzy = True
-                    elif b.berry_type == BerryType.GOLDEN_BERRY:
-                        events.append("chime")
-                    else:
-                        events.append("pop")
+    level: int
+    berries: int = 0
+    bumps: int = 0
+    hints: int = 0
+    waits: int = 0
+    walls: int = 0
 
-        return events
+    @property
+    def clean(self) -> bool:
+        return self.bumps <= 1 and self.hints == 0
 
-    def _update_critters(self, dt: float) -> None:
-        for cr in self.critters:
-            cr.wing_phase = (cr.wing_phase + dt * 25.0) % (2.0 * math.pi)
+    @property
+    def struggled(self) -> bool:
+        return self.bumps >= 4 or self.hints >= 2
 
-            # If returning to nest after dizzy rescue
-            if cr.scurrying_home:
-                nest_x, nest_y = grid_to_world(cr.nest_col, cr.nest_row)
-                dist = math.hypot(nest_x - cr.x, nest_y - cr.y)
-                if dist < 6.0:
-                    cr.x, cr.y = nest_x, nest_y
-                    cr.grid_col, cr.grid_row = cr.nest_col, cr.nest_row
-                    cr.scurrying_home = False
-                    cr.is_dizzy = False
-                    cr.is_napping = True
-                    cr.nap_timer = 3.0
-                else:
-                    step = (cr.speed * 1.3) * dt
-                    angle = math.atan2(nest_y - cr.y, nest_x - cr.x)
-                    cr.x += math.cos(angle) * step
-                    cr.y += math.sin(angle) * step
-                    cr.facing_right = (math.cos(angle) >= 0)
+
+def next_level(level: int, summary: GardenSummary) -> int:
+    if summary.clean:
+        return clamp_level(level + 1)
+    if summary.struggled:
+        return clamp_level(level - 1)
+    return clamp_level(level)
+
+
+class Garden:
+    """Momo, the berries and the critters of one garden."""
+
+    def __init__(self, layout: GardenLayout, spec: RungSpec, rng: random.Random | None = None) -> None:
+        self.layout = layout
+        self.spec = spec
+        self.rng = rng if rng is not None else random.Random()
+        self.momo = Walker(layout.start, speed=spec.momo_speed)
+        self.remaining: list[Cell] = list(layout.berries)
+        self.basket: list[Cell] = []  # berries in the order Momo picked them
+        self.summary = GardenSummary(layout.level)
+        self.cleared = False
+        self.bouncing = False
+        self.grace = 0.0
+        self.critters: list[Critter] = []
+        for index, (kind, cell) in enumerate(layout.critters):
+            critter_spec = next((s for s in spec.critters if s.kind is kind), None)
+            if critter_spec is None:
                 continue
+            critter = Critter(critter_spec, Walker(cell, speed=critter_spec.speed))
+            critter.pause = CRITTER_START_PAUSE + 0.4 * index
+            if critter.naps:
+                # Hedgehogs start the garden asleep: a calm first look.
+                critter.asleep = True
+                critter.timer = critter_spec.nap_seconds
+            self.critters.append(critter)
+        self._path: deque[Cell] = deque()
+        self._queued: Direction | None = None
+        self._held: Direction | None = None
+        self._auto = False
+        self._stop = False
+        self._last_heading: Direction | None = None
 
-            # If dizzy during rainbow powerup, stay frozen
-            if cr.is_dizzy:
+    # -- queries -----------------------------------------------------------
+
+    @property
+    def total(self) -> int:
+        return len(self.layout.berries)
+
+    @property
+    def collected(self) -> int:
+        return self.total - len(self.remaining)
+
+    @property
+    def path(self) -> tuple[Cell, ...]:
+        return tuple(self._path)
+
+    @property
+    def queued(self) -> Direction | None:
+        return self._queued
+
+    @property
+    def held(self) -> Direction | None:
+        return self._held
+
+    def awake_critters(self) -> list[int]:
+        return [index for index, critter in enumerate(self.critters) if critter.awake]
+
+    def critter_near(self, cell: Cell, distance: float = WAIT_DISTANCE) -> int | None:
+        """An awake critter on, heading to, or right next to ``cell``."""
+
+        for index, critter in enumerate(self.critters):
+            if critter.asleep:
                 continue
+            if cell in critter.occupies():
+                return index
+            r, c = critter.position()
+            if math.hypot(r - cell[0], c - cell[1]) < distance:
+                return index
+        return None
 
-            # If napping (Baffo)
-            if cr.is_napping:
-                cr.nap_timer -= dt
-                if cr.nap_timer <= 0.0:
-                    cr.is_napping = False
-                    cr.next_nap_in = cr.nap_interval
-                continue
+    def next_berry(self) -> Cell | None:
+        """The nearest remaining berry by walking distance."""
 
-            # Handle nap interval
-            if cr.nap_interval > 0.0:
-                cr.next_nap_in -= dt
-                if cr.next_nap_in <= 0.0:
-                    cr.is_napping = True
-                    cr.nap_timer = cr.nap_duration
-                    continue
+        if not self.remaining:
+            return None
+        dist = distances(self.layout, self.momo.resting_cell)
+        return min(self.remaining, key=lambda cell: (dist.get(cell, 999), cell))
 
-            # Normal critter patrol
-            curr_c, curr_r = world_to_grid(cr.x, cr.y)
-            center_x, center_y = grid_to_world(curr_c, curr_r)
+    def hint_route(self, *, avoid_critters: bool = False) -> list[Cell]:
+        """Route to the nearest berry (around awake critters when asked and possible)."""
 
-            # At junction center, decide route
-            dx = abs(cr.x - center_x)
-            dy = abs(cr.y - center_y)
-            if dx <= 4.0 and dy <= 4.0:
-                # Gather valid directions
-                valid_dirs = [
-                    d for d in (Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT)
-                    if self.can_move(curr_c, curr_r, d)
-                ]
-                if valid_dirs:
-                    # Prefer not turning back unless dead end
-                    non_reverse = [d for d in valid_dirs if d != cr.direction.opposite]
-                    candidates = non_reverse if non_reverse else valid_dirs
+        target = self.next_berry()
+        if target is None:
+            return []
+        origin = self.momo.resting_cell
+        if avoid_critters:
+            blocked = set()
+            for index in self.awake_critters():
+                blocked |= self.critters[index].occupies()
+            blocked.discard(origin)
+            blocked.discard(target)
+            route = bfs_path(self.layout, origin, target, blocked)
+            if route:
+                return route
+        return bfs_path(self.layout, origin, target)
 
-                    # Slight bias towards Momo for gentle chase
-                    if candidates and random.random() < 0.35:
-                        px, py = self.player.x, self.player.y
-                        best_dir = min(
-                            candidates,
-                            key=lambda d: math.hypot(
-                                (cr.x + d.dx * CELL_SIZE) - px,
-                                (cr.y + d.dy * CELL_SIZE) - py,
-                            ),
-                        )
-                        cr.direction = best_dir
-                    elif cr.direction not in candidates:
-                        cr.direction = random.choice(candidates)
+    # -- steering ----------------------------------------------------------
 
-                cr.x = center_x
-                cr.y = center_y
+    def steer(self, direction: Direction) -> StepResult:
+        """Arrow / D-pad / stick press: walk, turn around, or queue a turn."""
 
-            # Advance along direction
-            step = cr.speed * dt
-            cr.x += cr.direction.dx * step
-            cr.y += cr.direction.dy * step
-            if cr.direction in (Direction.LEFT, Direction.RIGHT):
-                cr.facing_right = (cr.direction == Direction.RIGHT)
-            cr.grid_col, cr.grid_row = world_to_grid(cr.x, cr.y)
+        if self.cleared or self.bouncing or direction not in DIRECTIONS:
+            return StepResult.IGNORED
+        self._path.clear()
+        self._stop = False
+        momo = self.momo
+        if momo.moving:
+            heading = momo.heading
+            if direction == opposite(heading):
+                momo.reverse()
+                self._last_heading = direction
+                self._queued = None
+                self._auto = True
+                return StepResult.MOVED
+            if direction == heading:
+                self._queued = None
+                self._auto = True
+                return StepResult.MOVED
+            self._queued = direction
+            self._auto = True
+            return StepResult.QUEUED
+        if self.layout.is_open(momo.cell, direction):
+            self._step_to(step(momo.cell, direction))
+            self._auto = True
+            self._queued = None
+            return StepResult.MOVED
+        self.summary.walls += 1
+        return StepResult.BLOCKED
 
-    def _update_bonus_fruit(self, dt: float) -> None:
-        bf = self.bonus_fruit
-        if bf is None:
-            return
-        bf.bounce_timer = (bf.bounce_timer + dt * 4.0) % (2.0 * math.pi)
-        curr_c, curr_r = world_to_grid(bf.x, bf.y)
-        cx, cy = grid_to_world(curr_c, curr_r)
+    def hold(self, direction: Direction | None) -> None:
+        """A direction is held (or released with ``None``).
 
-        if abs(bf.x - cx) <= 3.0 and abs(bf.y - cy) <= 3.0:
-            valid_dirs = [
-                d for d in (Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT)
-                if self.can_move(curr_c, curr_r, d)
-            ]
-            non_reverse = [d for d in valid_dirs if d != bf.direction.opposite]
-            choices = non_reverse if non_reverse else valid_dirs
-            if choices and (bf.direction not in choices or random.random() < 0.25):
-                bf.direction = random.choice(choices)
-            bf.x = cx
-            bf.y = cy
+        While held, Momo keeps walking that way through junctions; the press
+        itself is delivered through ``steer``.
+        """
 
-        step = bf.speed * dt
-        bf.x += bf.direction.dx * step
-        bf.y += bf.direction.dy * step
-        bf.grid_col, bf.grid_row = world_to_grid(bf.x, bf.y)
+        self._held = direction if direction in DIRECTIONS else None
 
-    def _check_critter_collisions(self) -> list[str]:
-        events: list[str] = []
-        p = self.player
-        hit_radius = 26.0
+    def go_to(self, cell: Cell) -> bool:
+        """Tap-to-go: plan the shortest path to ``cell`` and walk it."""
 
-        for cr in self.critters:
-            if cr.scurrying_home:
-                continue
-            dist = math.hypot(p.x - cr.x, p.y - cr.y)
-            if dist <= hit_radius:
-                if self.is_rainbow_active or cr.is_dizzy:
-                    # Momo tags a dizzy critter! Gentle bonus rescue!
-                    cr.is_dizzy = False
-                    cr.scurrying_home = True
-                    self.score += 100
-                    events.append("dizzy_squeak")
-                elif not p.is_wobbling and not cr.is_napping:
-                    # Bump into active critter without rainbow power
-                    self.hearts = max(0, self.hearts - 1)
-                    p.wobble_timer = 1.0
-                    events.append("bounce")
-
-                    # Recoverable Failure: bounce safely back to lane start
-                    p.x, p.y = p.start_pos
-                    p.direction = Direction.NONE
-                    p.queued_direction = Direction.NONE
-
-                    # At 0 hearts: munch restorative apple, cheerfully restart
-                    if self.hearts == 0:
-                        p.apple_munch_timer = 1.4
-                        self.hearts = self.max_hearts
-                        events.append("apple_munch")
-
-        return events
-
-    def next_level(self) -> bool:
-        """Advance to next level. Returns True if advanced, False if wrapped."""
-        next_idx = self.level_index + 1
-        if next_idx < len(LEVELS):
-            self.level_index = next_idx
-            self._load_level(LEVELS[self.level_index])
-            return True
-        else:
-            self.level_index = 0
-            self._load_level(LEVELS[0])
+        if self.cleared or self.bouncing or not self.layout.inside(cell):
             return False
+        origin = self.momo.resting_cell
+        route = bfs_path(self.layout, origin, cell)
+        if not route:
+            return False
+        self._queued = None
+        self._auto = False
+        self._stop = False
+        self._path = deque(route[1:])
+        return True
 
-    def restart_level(self) -> None:
-        """Restart the current level without changing difficulty."""
-        self._load_level(LEVELS[self.level_index])
+    def stop(self) -> bool:
+        """Space / south button: stop at the next cell and wait."""
+
+        self._path.clear()
+        self._queued = None
+        self._auto = False
+        if self.momo.moving and not self.bouncing:
+            self._stop = True
+            return True
+        return False
+
+    def _step_to(self, cell: Cell) -> None:
+        self._last_heading = direction_between(self.momo.cell, cell)
+        self.momo.start(cell)
+
+    # -- simulation ---------------------------------------------------------
+
+    def update(self, dt: float) -> list[GardenEvent]:
+        events: list[GardenEvent] = []
+        if self.cleared or dt <= 0:
+            return events
+        self.grace = max(0.0, self.grace - dt)
+        momo = self.momo
+        if not momo.moving:
+            self._choose_next(events)
+        remaining = dt
+        for _ in range(4):
+            if not momo.moving:
+                break
+            leftover = momo.advance(remaining)
+            if leftover is None:
+                break
+            if self.bouncing:
+                self.bouncing = False
+                momo.halt()
+                break
+            self._arrive(events)
+            if self.cleared:
+                break
+            self._choose_next(events)
+            remaining = leftover
+        if not self.cleared:
+            for index, critter in enumerate(self.critters):
+                self._update_critter(index, critter, dt, events)
+            self._contacts(events)
+        return events
+
+    def _choose_next(self, events: list[GardenEvent]) -> None:
+        momo = self.momo
+        if momo.moving or self.bouncing or self.cleared:
+            return
+        here = momo.cell
+        if self._stop:
+            self._stop = False
+            self._auto = False
+            return
+        if self._path:
+            nxt = self._path[0]
+            blocker = self.critter_near(nxt)
+            if blocker is not None:
+                self._path.clear()
+                self.summary.waits += 1
+                events.append(GardenEvent(GardenEventKind.WAIT, here, blocker))
+                return
+            self._path.popleft()
+            self._step_to(nxt)
+            return
+        if self._queued is not None and self.layout.is_open(here, self._queued):
+            direction, self._queued = self._queued, None
+            self._auto = True
+            self._step_to(step(here, direction))
+            return
+        if self._held is not None and self.layout.is_open(here, self._held):
+            self._auto = True
+            self._step_to(step(here, self._held))
+            return
+        heading = self._last_heading
+        if not self._auto or heading is None:
+            return
+        onward = [d for d in self.layout.open_directions(here) if d != opposite(heading)]
+        if heading in onward and len(onward) == 1:
+            self._step_to(step(here, heading))  # straight corridor
+            return
+        if heading not in onward and len(onward) == 1:
+            self._step_to(step(here, onward[0]))  # follow the bend
+            return
+        # A junction (or a dead end): stop and let the child choose.
+        self._auto = False
+        self._queued = None
+
+    def _arrive(self, events: list[GardenEvent]) -> None:
+        cell = self.momo.cell
+        if cell in self.remaining:
+            self.remaining.remove(cell)
+            self.basket.append(cell)
+            self.summary.berries += 1
+            events.append(GardenEvent(GardenEventKind.BERRY, cell))
+            if not self.remaining:
+                self.cleared = True
+                self._path.clear()
+                self._queued = None
+                self._auto = False
+                self.momo.halt()
+                events.append(GardenEvent(GardenEventKind.CLEARED, cell))
+
+    def _update_critter(self, index: int, critter: Critter, dt: float, events: list[GardenEvent]) -> None:
+        critter.cooldown = max(0.0, critter.cooldown - dt)
+        if critter.naps:
+            critter.timer -= dt
+            if critter.asleep and critter.timer <= 0:
+                critter.asleep = False
+                critter.timer = critter.spec.awake_seconds
+                critter.pause = max(critter.pause, 0.4)
+                events.append(GardenEvent(GardenEventKind.WAKE, critter.walker.cell, index))
+            elif critter.awake and critter.timer <= 0:
+                critter.wants_nap = True
+        if critter.asleep:
+            return
+        if critter.pause > 0:
+            critter.pause = max(0.0, critter.pause - dt)
+            return
+        remaining = dt
+        for _ in range(3):
+            if not critter.walker.moving:
+                if critter.wants_nap:
+                    critter.wants_nap = False
+                    critter.asleep = True
+                    critter.timer = critter.spec.nap_seconds
+                    events.append(GardenEvent(GardenEventKind.NAP, critter.walker.cell, index))
+                    return
+                nxt = self._critter_choice(index, critter)
+                if nxt is None:
+                    critter.pause = 0.5
+                    return
+                critter.heading = direction_between(critter.walker.cell, nxt)
+                critter.walker.start(nxt)
+            leftover = critter.walker.advance(remaining)
+            if leftover is None:
+                return
+            remaining = leftover
+
+    def _critter_choice(self, index: int, critter: Critter) -> Cell | None:
+        here = critter.walker.cell
+        blocked: set[Cell] = set()
+        for other_index, other in enumerate(self.critters):
+            if other_index != index:
+                blocked |= other.occupies()
+        if not self.momo.moving:
+            blocked.add(self.momo.cell)  # never walk into a Momo who is standing still
+        options = self.layout.neighbours(here, blocked)
+        if not options:
+            return None
+        back = step(here, opposite(critter.heading) or (0, 0))
+        forward = [cell for cell in options if cell != back]
+        pool = forward or options
+        rng = self.rng
+        if critter.spec.follow > 0 and rng.random() < critter.spec.follow:
+            dist = distances(self.layout, self.momo.resting_cell)
+            return min(pool, key=lambda cell: (dist.get(cell, 999), cell))
+        straight = step(here, critter.heading)
+        if straight in pool and rng.random() < 0.65:
+            return straight
+        return rng.choice(pool)
+
+    def _contacts(self, events: list[GardenEvent]) -> None:
+        momo = self.momo
+        mr, mc = momo.position()
+        for index, critter in enumerate(self.critters):
+            if critter.asleep or critter.cooldown > 0:
+                continue
+            cr, cc = critter.position()
+            if math.hypot(cr - mr, cc - mc) >= CONTACT_DISTANCE:
+                continue
+            heading = momo.heading
+            towards = heading is not None and ((cr - mr) * heading[0] + (cc - mc) * heading[1]) > 0.05
+            if towards and not self.bouncing and self.grace <= 0:
+                self._bump(index, critter, events)
+                return
+            c_heading = critter.heading if critter.walker.moving else None
+            if c_heading is not None and ((mr - cr) * c_heading[0] + (mc - cc) * c_heading[1]) > 0.05:
+                critter.walker.reverse()
+                critter.heading = opposite(c_heading) or critter.heading
+                critter.pause = CRITTER_TURN_PAUSE
+                critter.cooldown = CRITTER_COOLDOWN
+                events.append(GardenEvent(GardenEventKind.BOOP, critter.walker.resting_cell, index))
+
+    def _bump(self, index: int, critter: Critter, events: list[GardenEvent]) -> None:
+        """Gentle bump: Momo bounces back to the cell he came from; nothing is lost."""
+
+        momo = self.momo
+        self.summary.bumps += 1
+        momo.reverse()
+        momo.boost = BOUNCE_BOOST
+        self.bouncing = True
+        self.grace = BUMP_GRACE_SECONDS
+        self._path.clear()
+        self._queued = None
+        self._auto = False
+        self._stop = False
+        if critter.walker.moving:
+            critter.walker.reverse()
+            critter.heading = opposite(critter.heading) or critter.heading
+        critter.pause = CRITTER_BUMP_PAUSE
+        critter.cooldown = BUMP_GRACE_SECONDS
+        events.append(GardenEvent(GardenEventKind.BUMP, momo.resting_cell, index))
+
+
+# --------------------------------------------------------------------------
+# Progress + visit
+# --------------------------------------------------------------------------
+
+
+@dataclass(slots=True)
+class CorsaProgress:
+    """Profile-scoped progress (see ``corsa_services``)."""
+
+    level: int = MIN_LEVEL
+    gardens_cleared: int = 0
+    visits_completed: int = 0
+    berries: int = 0
+
+
+@dataclass(slots=True)
+class Visit:
+    """One sitting: ``GARDENS_PER_VISIT`` gardens, then the completion scene."""
+
+    progress: CorsaProgress
+    rng: random.Random = field(default_factory=random.Random)
+    total: int = GARDENS_PER_VISIT
+    completed: int = 0
+    garden: Garden = field(init=False)
+    _last_variant: tuple[int, bool, bool] | None = field(default=None, init=False)
+
+    def __post_init__(self) -> None:
+        self.progress.level = clamp_level(self.progress.level)
+        self.garden = self._new_garden()
+
+    @property
+    def complete(self) -> bool:
+        return self.completed >= self.total
+
+    def _new_garden(self) -> Garden:
+        spec = rung_spec(self.progress.level)
+        variants = [(spec.level, h, v) for h in (False, True) for v in (False, True)]
+        if self._last_variant in variants and len(variants) > 1:
+            variants.remove(self._last_variant)
+        choice = self.rng.choice(variants)
+        self._last_variant = choice
+        layout = GardenLayout.parse(spec.level, spec.lattice).mirrored(choice[1], choice[2])
+        return Garden(layout, spec, self.rng)
+
+    def finish_garden(self) -> GardenSummary:
+        summary = self.garden.summary
+        self.completed += 1
+        self.progress.gardens_cleared += 1
+        self.progress.berries += summary.berries
+        self.progress.level = next_level(self.progress.level, summary)
+        return summary
+
+    def next_garden(self) -> None:
+        self.garden = self._new_garden()
+
+    def finish_visit(self) -> None:
+        self.progress.visits_completed += 1
+
+    def restart(self) -> None:
+        self.completed = 0
+        self.garden = self._new_garden()
+
+
+__all__ = [
+    "BUMP_GRACE_SECONDS",
+    "CONTACT_DISTANCE",
+    "DIRECTIONS",
+    "DOWN",
+    "GARDENS_PER_VISIT",
+    "LEFT",
+    "MAX_LEVEL",
+    "MIN_LEVEL",
+    "RIGHT",
+    "UP",
+    "Cell",
+    "CorsaProgress",
+    "Critter",
+    "Direction",
+    "Garden",
+    "GardenEvent",
+    "GardenEventKind",
+    "GardenLayout",
+    "GardenSummary",
+    "StepResult",
+    "Visit",
+    "Walker",
+    "bfs_path",
+    "distances",
+    "next_level",
+    "opposite",
+]

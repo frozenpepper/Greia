@@ -11,56 +11,72 @@ from unittest import mock
 
 import pygame
 
-from activities.corsa_bacche.corsa_app import CorsaApp
+from activities.corsa_bacche.corsa_app import CorsaActivity
 from activities.quattro_amici.quattro_app import QuattroApp, _is_safe_pointer
 from activities.viaggio_delfino.delfino_app import DelfinoJourneyApp
 
 
 class CorsaPointerTests(unittest.TestCase):
-    def test_queued_click_drag_release_and_focus_loss(self):
-        app = object.__new__(CorsaApp)
-        app._pointer_drag_held = False
-        points = []
-        app._handle_pointer_motion = lambda pos: points.append(pos)
-        # Explicit press must steer regardless of current device-state polling.
-        app._process_pointer_event(
-            pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=(100, 150))
-        )
-        app._process_pointer_event(
-            pygame.event.Event(pygame.MOUSEMOTION, pos=(110, 152))
-        )
-        app._process_pointer_event(
-            pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=(110, 152))
-        )
-        app._process_pointer_event(
-            pygame.event.Event(pygame.MOUSEMOTION, pos=(200, 250))
-        )
-        self.assertEqual(points, [(100, 150), (110, 152)])
-        self.assertFalse(app._pointer_drag_held)
-        app._process_pointer_event(
-            pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=(300, 350))
-        )
-        app._process_pointer_event(
-            pygame.event.Event(pygame.WINDOWFOCUSLOST)
-        )
-        app._process_pointer_event(
-            pygame.event.Event(pygame.MOUSEMOTION, pos=(350, 350))
-        )
-        self.assertEqual(points[-1], (300, 350))
-        self.assertEqual(len(points), 3)
+    """Berry Chase: queued press/drag/release drive tap-to-go; chrome stays Greia's."""
 
-    def test_secondary_button_never_starts_gameplay_drag(self):
-        app = object.__new__(CorsaApp)
-        app._pointer_drag_held = False
-        points = []
-        app._handle_pointer_motion = lambda pos: points.append(pos)
-        app._process_pointer_event(
-            pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=3, pos=(10, 10))
+    @classmethod
+    def setUpClass(cls) -> None:
+        import os
+
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+        pygame.init()
+
+    def _app(self):
+        import random
+
+        from greia_platform.pygame_canvas import PygameReferenceCanvas
+        from greia_platform.typography import GreiaTypography
+        from activities.corsa_bacche.corsa_model import CorsaProgress, Visit
+
+        screen = pygame.display.set_mode((1024, 600))
+        storage = SimpleNamespace(kv_get=lambda *a, **k: None, kv_set=lambda *a, **k: None)
+        from activities.corsa_bacche.corsa_services import GreiaCorsaProgress
+
+        return CorsaActivity(
+            screen=screen,
+            canvas=PygameReferenceCanvas(screen),
+            visit=Visit(CorsaProgress(), random.Random(1)),
+            typography=GreiaTypography(),
+            resources=None,
+            audio=SimpleNamespace(say=lambda *_: None, play=lambda *_: None),
+            progress=GreiaCorsaProgress(storage),
+            events=SimpleNamespace(garden_cleared=lambda *_: None, visit_completed=lambda *_: None),
+            clock=lambda: 100.0,
         )
-        app._process_pointer_event(
-            pygame.event.Event(pygame.MOUSEMOTION, pos=(20, 20))
-        )
-        self.assertEqual(points, [])
+
+    def _point(self, app, cell):
+        x, y = app.geometry.center(*cell)
+        return app.canvas.mapper.point(int(x), int(y))
+
+    def test_queued_click_drag_release_and_focus_loss(self):
+        app = self._app()
+        targets = []
+        app.garden.go_to = lambda cell: targets.append(cell) or True
+        a, b, c = (1, 0), (2, 0), (2, 2)
+        app._handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=self._point(app, a)))
+        app._handle_event(pygame.event.Event(pygame.MOUSEMOTION, pos=self._point(app, b), rel=(0, 1), buttons=(1, 0, 0)))
+        app._handle_event(pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=self._point(app, b)))
+        app._handle_event(pygame.event.Event(pygame.MOUSEMOTION, pos=self._point(app, c), rel=(1, 0), buttons=(0, 0, 0)))
+        self.assertEqual(targets, [a, b])  # hover after release never steers
+        app._handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=self._point(app, a)))
+        app._handle_event(pygame.event.Event(pygame.WINDOWFOCUSLOST))
+        app._handle_event(pygame.event.Event(pygame.MOUSEMOTION, pos=self._point(app, c), rel=(1, 0), buttons=(1, 0, 0)))
+        self.assertEqual(targets, [a, b, a])
+
+    def test_secondary_button_and_protected_chrome_never_start_gameplay(self):
+        app = self._app()
+        targets = []
+        app.garden.go_to = lambda cell: targets.append(cell) or True
+        app._handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=3, pos=self._point(app, (1, 1))))
+        app._handle_event(pygame.event.Event(pygame.MOUSEMOTION, pos=self._point(app, (2, 2)), rel=(1, 1), buttons=(0, 0, 1)))
+        self.assertFalse(app.tap((5, 5)))
+        self.assertEqual(targets, [])
 
 
 class QuattroPointerTests(unittest.TestCase):

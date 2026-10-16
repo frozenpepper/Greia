@@ -5,15 +5,8 @@
   "strings": {
     "activity.title": "Carrera de bayas",
     "activity.corsa_bacche.title": "Carrera de bayas",
-    "hud.berries": "Bayas",
-    "hud.hearts": "Corazones",
-    "hud.level": "Nivel",
-    "hud.score": "Puntos",
-    "prompt.start": "¡Recoge deliciosas bayas con Momo!",
-    "msg.rainbow_power": "✨ ¡Baya estrella arcoíris! ✨",
-    "msg.rescue": "¡Arriba, con suavidad!",
-    "msg.level_clear": "¡Hurra! ¡Nivel completado! 🍓🎉",
-    "msg.oops": "¡Momo come una manzana y se recupera de un salto!"
+    "victory.title": "¡Cesta llena!",
+    "btn.play_again": "Jugar otra vez"
   },
   "audio": {}
 }

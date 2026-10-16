@@ -1,151 +1,208 @@
-"""Procedural sound effects synthesis and audio playback for Corsa delle Bacche."""
+"""Approved speech plus small synthesized garden sounds for La Corsa delle Bacche.
+
+Speech uses only Momo's owner-accepted shared character takes
+(``assets/audio/characters/shared/v0.2/momo``) through
+``shared_character_audio_path`` (selected language -> English -> silence):
+"ready, go" when a garden starts, praise when the basket is full, the big
+cheer at the end of a visit, "keep going" as the first idle nudge and "let's
+try again" after a bump. Moments without an approved line (a berry, "wait
+for the ladybird") stay pictorial + sound. Sound effects are generated once
+at start-up; every call fails soft without a mixer. No generated speech.
+"""
 
 from __future__ import annotations
 
-import io
 import math
+from pathlib import Path
 import random
-import struct
-import wave
 from typing import Final
 
 import pygame
 
-SAMPLE_RATE: Final[int] = 22050
+from greia_platform.localization import shared_character_audio_path
+from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
 
-
-def _synth_wav(samples: list[int], rate: int = SAMPLE_RATE) -> bytes:
-    """Pack signed 16-bit mono samples into in-memory WAV bytes."""
-    buf = io.BytesIO()
-    with wave.open(buf, "wb") as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(rate)
-        clamped = (max(-32767, min(32767, int(s))) for s in samples)
-        raw = b"".join(struct.pack("<h", s) for s in clamped)
-        w.writeframes(raw)
-    return buf.getvalue()
+SPEECH_CHANNEL: Final = 0
+FIRST_SFX_CHANNEL: Final = 2
+LAST_SFX_CHANNEL: Final = 5
+PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+SPEAKER: Final = "momo"
+# Activity cue -> Momo's shared take family.
+SHARED_CUES: Final[dict[str, str]] = {
+    "start": "ready.go",
+    "cleared": "praise.general",
+    "complete": "celebrate.success",
+    "nudge": "encourage.progress",
+    "retry": "encourage.retry",
+}
+EFFECTS: Final = ("pop", "basket", "bump", "boop", "wall", "hint", "wait", "fanfare", "yawn")
 
 
 class CorsaAudio:
-    """Manages synthesized procedural audio effects with graceful fallback."""
+    """Own the speech/sound bank for one Activity run."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        locale: str = "en",
+        *,
+        project_root: Path = PROJECT_ROOT,
+    ) -> None:
+        self.locale = (locale or "en").split("-")[0].split("_")[0] or "en"
+        self._project_root = project_root
         self._sounds: dict[str, pygame.mixer.Sound] = {}
-        self._enabled: bool = False
+        self._speech: dict[str, pygame.mixer.Sound] = {}
+        self._available = False
+        self.last_speech: str | None = None
+        self.last_sound: str | None = None
         try:
-            if not pygame.mixer.get_init():
-                pygame.mixer.init(SAMPLE_RATE, -16, 1, 512)
-            self._init_sounds()
-            self._enabled = True
-        except Exception:
-            self._enabled = False
+            if pygame.mixer.get_init() is not None:
+                pygame.mixer.set_num_channels(max(pygame.mixer.get_num_channels(), LAST_SFX_CHANNEL + 1))
+                self._build_sounds()
+                self._load_speech()
+                self._available = True
+        except (pygame.error, RuntimeError, OSError):
+            self._available = False
 
-    def _init_sounds(self) -> None:
-        # 1. Pop (Sweet berry eaten)
-        pop_samples = []
-        duration = 0.12
-        n_samples = int(duration * SAMPLE_RATE)
-        for i in range(n_samples):
-            t = i / SAMPLE_RATE
-            freq = 480.0 + (1.0 - t / duration) * 320.0
-            env = math.sin(math.pi * (t / duration)) ** 0.8
-            val = math.sin(2.0 * math.pi * freq * t) * env * 16000
-            pop_samples.append(int(val))
-        self._sounds["pop"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(pop_samples)))
+    def has_speech(self, cue: str) -> bool:
+        return cue in self._speech
 
-        # 2. Chimes (Golden berry collected)
-        chime_samples = []
-        notes = [880.0, 1108.73, 1318.51, 1760.0]
-        step = int(0.06 * SAMPLE_RATE)
-        total_len = step * len(notes) + int(0.2 * SAMPLE_RATE)
-        chime_raw = [0.0] * total_len
-        for idx, freq in enumerate(notes):
-            start = idx * step
-            for i in range(int(0.25 * SAMPLE_RATE)):
-                t = i / SAMPLE_RATE
-                env = math.exp(-10.0 * t)
-                harm = math.sin(2.0 * math.pi * freq * t) + 0.3 * math.sin(4.0 * math.pi * freq * t)
-                if start + i < total_len:
-                    chime_raw[start + i] += harm * env * 8000
-        chime_samples = [int(v) for v in chime_raw]
-        self._sounds["chime"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(chime_samples)))
+    def say(self, cue: str) -> None:
+        """Speak one approved cue now (silent when the take is missing)."""
 
-        # 3. Star Fanfare (Rainbow Star Berry eaten - 6s powerup activation)
-        star_notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]
-        fanfare_step = int(0.07 * SAMPLE_RATE)
-        fanfare_total = fanfare_step * len(star_notes) + int(0.3 * SAMPLE_RATE)
-        fanfare_raw = [0.0] * fanfare_total
-        for idx, freq in enumerate(star_notes):
-            start = idx * fanfare_step
-            for i in range(int(0.35 * SAMPLE_RATE)):
-                t = i / SAMPLE_RATE
-                env = math.exp(-8.0 * t)
-                val = (math.sin(2.0 * math.pi * freq * t) + 0.4 * math.sin(4.0 * math.pi * freq * t)) * env * 9000
-                if start + i < fanfare_total:
-                    fanfare_raw[start + i] += val
-        self._sounds["star_fanfare"] = pygame.mixer.Sound(io.BytesIO(_synth_wav([int(v) for v in fanfare_raw])))
-
-        # 4. Dizzy Squeak (Rescuing / tagging a dizzy critter)
-        squeak_samples = []
-        duration = 0.22
-        n_samples = int(duration * SAMPLE_RATE)
-        for i in range(n_samples):
-            t = i / SAMPLE_RATE
-            freq = 700.0 + math.sin(t * 55.0) * 350.0 + (t / duration) * 400.0
-            env = math.sin(math.pi * (t / duration))
-            val = math.sin(2.0 * math.pi * freq * t) * env * 14000
-            squeak_samples.append(int(val))
-        self._sounds["dizzy_squeak"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(squeak_samples)))
-
-        # 5. Bounce (Momo gentle wobble / bounce after hazard encounter)
-        bounce_samples = []
-        duration = 0.28
-        n_samples = int(duration * SAMPLE_RATE)
-        for i in range(n_samples):
-            t = i / SAMPLE_RATE
-            freq = 280.0 - (t / duration) * 120.0 + math.sin(t * 30.0) * 40.0
-            env = math.exp(-7.0 * t)
-            val = math.sin(2.0 * math.pi * freq * t) * env * 15000
-            bounce_samples.append(int(val))
-        self._sounds["bounce"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(bounce_samples)))
-
-        # 6. Apple Munch (Restorative apple at 0 hearts)
-        apple_samples = []
-        duration = 0.35
-        n_samples = int(duration * SAMPLE_RATE)
-        for i in range(n_samples):
-            t = i / SAMPLE_RATE
-            # Noise-based cheerful crunch
-            noise = (random.random() * 2.0 - 1.0)
-            crunch = math.sin(2.0 * math.pi * 320.0 * t) * 0.4 + noise * 0.6
-            env = (math.sin(math.pi * (t / 0.15)) if t < 0.15 else math.sin(math.pi * ((t - 0.15) / 0.2))) * math.exp(-3.0 * t)
-            apple_samples.append(int(crunch * env * 13000))
-        self._sounds["apple_munch"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(apple_samples)))
-
-        # 7. Level Clear Fanfare
-        clear_notes = [523.25, 659.25, 783.99, 1046.5, 880.0, 1046.5]
-        clear_step = int(0.10 * SAMPLE_RATE)
-        clear_total = clear_step * len(clear_notes) + int(0.4 * SAMPLE_RATE)
-        clear_raw = [0.0] * clear_total
-        for idx, freq in enumerate(clear_notes):
-            start = idx * clear_step
-            note_dur = 0.35 if idx == len(clear_notes) - 1 else 0.20
-            for i in range(int(note_dur * SAMPLE_RATE)):
-                t = i / SAMPLE_RATE
-                env = math.exp(-6.0 * t)
-                val = (math.sin(2.0 * math.pi * freq * t) + 0.35 * math.sin(3.0 * math.pi * freq * t)) * env * 9000
-                if start + i < clear_total:
-                    clear_raw[start + i] += val
-        self._sounds["level_clear"] = pygame.mixer.Sound(io.BytesIO(_synth_wav([int(v) for v in clear_raw])))
-
-    def play(self, sound_name: str) -> None:
-        """Play a synthesized sound effect if audio is enabled."""
-        if not self._enabled:
+        self.last_speech = cue
+        sound = self._speech.get(cue)
+        if not self._available or sound is None:
             return
-        sound = self._sounds.get(sound_name)
-        if sound is not None:
+        try:
+            pygame.mixer.Channel(SPEECH_CHANNEL).play(sound)
+        except (pygame.error, RuntimeError):
+            return
+
+    def play(self, name: str) -> None:
+        self.last_sound = name
+        if not self._available:
+            return
+        sound = self._sounds.get(name)
+        if sound is None:
+            return
+        try:
+            for index in range(FIRST_SFX_CHANNEL, LAST_SFX_CHANNEL + 1):
+                channel = pygame.mixer.Channel(index)
+                if not channel.get_busy():
+                    channel.play(sound)
+                    return
+            pygame.mixer.Channel(FIRST_SFX_CHANNEL).play(sound)
+        except (pygame.error, RuntimeError):
+            return
+
+    # -- loading ------------------------------------------------------------
+
+    def _load_speech(self) -> None:
+        for cue, family in SHARED_CUES.items():
             try:
-                sound.play()
+                path = shared_character_audio_path(self._project_root, SPEAKER, family, self.locale)
             except Exception:
-                pass
+                path = None
+            if path is None:
+                continue
+            try:
+                self._speech[cue] = pygame.mixer.Sound(str(path))
+            except (pygame.error, OSError):
+                continue
+
+    def _build_sounds(self) -> None:
+        spec = current_pcm16_mixer_spec()
+        if spec is None:
+            return
+        rate, channels = spec
+        self._sounds["pop"] = _pop(rate, channels)
+        self._sounds["basket"] = _chime(rate, channels, (783.99, 1046.5, 1318.5, 1568.0), step=0.08)
+        self._sounds["bump"] = _boing(rate, channels)
+        self._sounds["boop"] = _sweep(rate, channels, 0.16, 520.0, 700.0, 4200)
+        self._sounds["wall"] = _thud(rate, channels)
+        self._sounds["hint"] = _chime(rate, channels, (1318.5, 1760.0), step=0.09, volume=6000)
+        self._sounds["wait"] = _chime(rate, channels, (659.25, 659.25), step=0.18, volume=5000)
+        self._sounds["fanfare"] = _chime(rate, channels, (523.25, 659.25, 783.99, 1046.5, 1318.5), step=0.14, volume=10000)
+        self._sounds["yawn"] = _sweep(rate, channels, 0.45, 420.0, 260.0, 3000)
+
+
+def _chime(
+    rate: int,
+    channels: int,
+    notes: tuple[float, ...],
+    *,
+    step: float = 0.08,
+    volume: int = 9000,
+) -> pygame.mixer.Sound:
+    tail = 0.35
+    duration = step * len(notes) + tail
+    buffer = bytearray()
+    for index in range(int(rate * duration)):
+        t = index / rate
+        value = 0.0
+        for number, frequency in enumerate(notes):
+            start = number * step
+            if t >= start:
+                local = t - start
+                angle = 2.0 * math.pi * frequency * local
+                value += (math.sin(angle) + 0.3 * math.sin(2 * angle)) * math.exp(-7.0 * local)
+        append_mono_pcm16(buffer, int(max(-1.6, min(1.6, value)) * volume), channels)
+    return pygame.mixer.Sound(buffer=bytes(buffer))
+
+
+def _pop(rate: int, channels: int) -> pygame.mixer.Sound:
+    """A juicy little pop as a berry goes into the basket."""
+
+    buffer = bytearray()
+    duration = 0.12
+    phase = 0.0
+    for index in range(int(rate * duration)):
+        t = index / rate
+        frequency = 480.0 + (1.0 - t / duration) * 360.0
+        phase += 2.0 * math.pi * frequency / rate
+        envelope = math.sin(math.pi * t / duration) ** 0.8
+        append_mono_pcm16(buffer, int(math.sin(phase) * envelope * 9000), channels)
+    return pygame.mixer.Sound(buffer=bytes(buffer))
+
+
+def _boing(rate: int, channels: int) -> pygame.mixer.Sound:
+    """A soft springy "boing" for a gentle bump (never a buzzer)."""
+
+    buffer = bytearray()
+    duration = 0.32
+    phase = 0.0
+    for index in range(int(rate * duration)):
+        t = index / rate
+        frequency = 260.0 + 90.0 * math.sin(t * 38.0) * math.exp(-6.0 * t)
+        phase += 2.0 * math.pi * frequency / rate
+        envelope = math.exp(-6.5 * t)
+        append_mono_pcm16(buffer, int(math.sin(phase) * envelope * 8000), channels)
+    return pygame.mixer.Sound(buffer=bytes(buffer))
+
+
+def _sweep(rate: int, channels: int, duration: float, start: float, end: float, volume: int) -> pygame.mixer.Sound:
+    buffer = bytearray()
+    phase = 0.0
+    for index in range(int(rate * duration)):
+        t = index / rate
+        frequency = start + (end - start) * (t / duration)
+        phase += 2.0 * math.pi * frequency / rate
+        envelope = math.sin(math.pi * t / duration)
+        append_mono_pcm16(buffer, int(math.sin(phase) * envelope * volume), channels)
+    return pygame.mixer.Sound(buffer=bytes(buffer))
+
+
+def _thud(rate: int, channels: int) -> pygame.mixer.Sound:
+    """Soft leafy bump into a hedge: low sine plus a little rustle."""
+
+    noise = random.Random(7)
+    buffer = bytearray()
+    for index in range(int(rate * 0.14)):
+        t = index / rate
+        envelope = math.exp(-28.0 * t)
+        value = 0.75 * math.sin(2.0 * math.pi * 150.0 * t) + 0.25 * noise.uniform(-1.0, 1.0)
+        append_mono_pcm16(buffer, int(value * envelope * 7000), channels)
+    return pygame.mixer.Sound(buffer=bytes(buffer))
+
+
+__all__ = ["CorsaAudio", "EFFECTS", "SHARED_CUES", "SPEAKER"]

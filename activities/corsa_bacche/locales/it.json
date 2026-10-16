@@ -5,15 +5,8 @@
   "strings": {
     "activity.title": "La Corsa delle Bacche",
     "activity.corsa_bacche.title": "La Corsa delle Bacche",
-    "hud.berries": "Bacche",
-    "hud.hearts": "Cuori",
-    "hud.level": "Livello",
-    "hud.score": "Punti",
-    "prompt.start": "Raccogli le dolci bacche con Momo!",
-    "msg.rainbow_power": "✨ Super Bacca Arcobaleno! ✨",
-    "msg.rescue": "Sveglia gentile!",
-    "msg.level_clear": "Evviva! Livello completato! 🍓🎉",
-    "msg.oops": "Momo sgranocchia una mela e riparte!"
+    "victory.title": "Cestino pieno!",
+    "btn.play_again": "Gioca ancora"
   },
   "audio": {
     "activity.title": {
