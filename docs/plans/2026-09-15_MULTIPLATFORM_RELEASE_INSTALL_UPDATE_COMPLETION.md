@@ -1972,7 +1972,7 @@ remains open and the exact next step.
 - Final product-mode QEMU evidence is captured in
   `docs/testing/session04-evidence/attempt13-install-execute-serial.log` and
   summarized in
-  `docs/testing/2026-09-25_SESSION04_INSTALL_EXECUTE_ROOT_CAUSE_AND_DECISION.md`.
+  `docs/archive/testing/2026-09-25_SESSION04_INSTALL_EXECUTE_ROOT_CAUSE_AND_DECISION.md`.
   The service remained active through `finalize-completeness`, then apt in the
   mounted slot failed `setgroups`, `setegid`, and `seteuid` with
   `Operation not permitted`; systemd recorded `Result=exit-code` and
@@ -2024,7 +2024,7 @@ remains open and the exact next step.
 
 ## 2026-09-25 — Apt ownership decision brief prepared
 
-`docs/testing/2026-09-25_SESSION04_APT_OWNERSHIP_DECISION.md` records the
+`docs/archive/testing/2026-09-25_SESSION04_APT_OWNERSHIP_DECISION.md` records the
 post-GitHub Orbiter evidence and the explicit decision between adding
 `CAP_CHOWN` and changing apt's ownership/privilege behavior. It preserves the
 four-capability contract as the current authority, documents the proven
@@ -2034,7 +2034,7 @@ option has been applied; Session 04 remains OPEN pending owner/agent review.
 
 ## 2026-09-25 — Session 04 apt ownership conclusion deferred pending fatal-tail proof
 
-- Reviewed `docs/testing/2026-09-25_SESSION04_APT_OWNERSHIP_DECISION.md` and the committed QEMU refusal.
+- Reviewed `docs/archive/testing/2026-09-25_SESSION04_APT_OWNERSHIP_DECISION.md` and the committed QEMU refusal.
 - The visible `chown _apt:root ... SetupAPTPartialDirectory` line is warning-level in APT; the prior runner kept only the first 256 stderr characters, so a later fatal apt/dpkg/postinst reason could be hidden.
 - Do **not** add `CAP_CHOWN` yet. The exact four-capability contract remains authoritative.
 - GitHub repair now preserves bounded stderr head + fatal tail so the next refusal can identify the real failure.
@@ -2073,7 +2073,7 @@ option has been applied; Session 04 remains OPEN pending owner/agent review.
   reference Acer firmware+stick combination; the proven path is
   `legacy-x86-i686-dev` on Syslinux/FAT32. The A/B release route is GRUB. The image also
   ships `quiet splash loglevel=0 console=null panic=0`, the diagnostic suppression that
-  `docs/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md` §3.1 prohibits, which is
+  `docs/archive/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md` §3.1 prohibits, which is
   why the failure presented without a readable error. The removed GRUB theme and the
   1600x900 full-colour boot-canvas regeneration were reintroduced 2026-08-20..24 and are
   in the shipped image.
@@ -2092,7 +2092,7 @@ option has been applied; Session 04 remains OPEN pending owner/agent review.
 - Uninvestigated per owner instruction: 982 MiB accounted installed size against a ≤800 MiB
   profile preferred target (required target <1000 MiB).
 - Decisions D1–D8 for the lead agent are in
-  `docs/reviews/2026-09-27_ACER_AB_GRUB_INSTALLER_PHYSICAL_BOOT_FAILURE.md`. Chief: which
+  `docs/archive/reviews/2026-09-27_ACER_AB_GRUB_INSTALLER_PHYSICAL_BOOT_FAILURE.md`. Chief: which
   boot path is the product path for the reference device, and whether `console=null` /
   `panic=0` may ship in a product installer.
 - Next action: owner returns the stick, then

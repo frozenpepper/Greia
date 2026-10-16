@@ -191,13 +191,7 @@ ui.shadow.soft
 
 under existing launcher Activity tiles, preserving the current static/primitive fallback.
 
-Current owner-directed local-agent protocol:
-
-```text
-docs/testing/2026-08-20_V5_VISUAL_INTEGRATION_SIMULATOR_LOCAL_AGENT.md
-```
-
-For that tranche, runtime/visual/fallback/responsive acceptance is performed through the real Greia Shell in the Activity Simulator. Check `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` before resuming.
+The V5 local-agent integration runbook for that tranche is complete and was removed in the 2026-10-16 cleanup (see git history). For that tranche, runtime/visual/fallback/responsive acceptance is performed through the real Greia Shell in the Activity Simulator. Check `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` before resuming.
 
 ## Review discipline
 

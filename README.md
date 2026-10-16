@@ -323,7 +323,7 @@ docs/release/GREIA_PUBLIC_RELEASE_READINESS.md
 The first dedicated documentation/public-repository cleanup review is:
 
 ```text
-docs/reviews/2026-09-02_PUBLIC_REPOSITORY_DOCUMENTATION_DEEP_DIVE.md
+docs/archive/reviews/2026-09-02_PUBLIC_REPOSITORY_DOCUMENTATION_DEEP_DIVE.md
 ```
 
 Greia may reach **public source** before it reaches **ordinary-family binary release**. Those are deliberately different acceptance thresholds; public visibility must not be used to imply hardware/release readiness that has not been proven.

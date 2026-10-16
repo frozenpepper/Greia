@@ -15,7 +15,7 @@ The candidate performance changes are primarily:
 
 The owner review is:
 
-`docs/reviews/performance/2026-08-22_launcher-pacing-dirty-redraw/OWNER_REVIEW.md`
+`docs/archive/reviews/performance/2026-08-22_launcher-pacing-dirty-redraw/OWNER_REVIEW.md`
 
 Read it before modifying source.
 

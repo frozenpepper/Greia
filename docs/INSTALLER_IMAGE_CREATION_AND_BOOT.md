@@ -10,7 +10,7 @@ This document is the concise operating reference for the physical Acer path. His
 docs/INSTALLATION_USB_BOOT_POSTMORTEM.md
 docs/INSTALLED_OS_BOOT_POSTMORTEM.md
 docs/INSTALLATION_ISSUES_LOG.md
-docs/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md
+docs/archive/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md
 docs/design/GREIA_BOOT_EXPERIENCE.md
 ```
 

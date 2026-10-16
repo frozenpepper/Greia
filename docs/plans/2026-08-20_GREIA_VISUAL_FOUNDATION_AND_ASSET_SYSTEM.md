@@ -292,7 +292,7 @@ Evidence class: **SIMULATOR VISUAL REVIEW**.
 | Runtime visual focus | **Existing V5 runtime/scene/shared UI foundations accepted where recorded. Encyclopedia E3 runtime pack is ACCEPTED at `03bf76ac`. Current focus (2026-10-15): art-direction reset and library redraw under `docs/design/GREIA_SVG_AUTHORING_RULES.md` (ACCEPTED), per `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md` Shell storybook redesign (Home, picker, Collection pages, Sea theme folder, My Creations, launch screen) and control-kit art are SOURCE + headless DESKTOP VISUAL REVIEW only (2026-10-15).** |
 | Authoring focus | **Shared library v1 is REGISTERED (catalogue 0.6.0: `bg.*`, `prop.*`, `creature.*`, `icon.hud.*`, `fx.*`, cast variants). Cast poses, P0 Activity icons and the full flat core-icon family are done. Next art work is gap-filling only on demand from the P7 Activity reworks (W2); Opus remains the SVG model. Encyclopedia E4 remains governed by its own subplan.** |
 | Checkpoint 2026-10-16 | **All 45 Activities are reworked on the shared library and control kit (P7 W0–W3, SOURCE + DESKTOP VISUAL REVIEW only).** Catalogue is 0.7.0 (62 vocabulary pictures added, `a779b10f`). Encyclopedia **E4 is COMPLETE** (`7b1f6b2c`, 36 authored storybook scenes, canonical cairo backend; 43 PNGs reproduce byte-for-byte); **E5 interaction visual-language pass is next**. Many Activities authored private art kept Activity-local as candidates awaiting library promotion (Serra plants, Specchi mosaic tiles, Alfabeto pictures, Stelle constellations, Morbidi parts, Teatrino puppets, bridge/marble-run/picnic sets, Volo dragon, Colline buggy, instruments, pet props, tokens; full list in `P7_ACTIVITY_QUALITY_PROGRAM.md` §8). No Simulator or physical visual review of the reworks exists. |
-| Encyclopedia forensic audit | `docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md` — prior graphics rejected as final product quality |
+| Encyclopedia forensic audit | `docs/archive/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md` — prior graphics rejected as final product quality |
 | Encyclopedia visual subplan | `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md` |
 | Encyclopedia current source review | `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md` |
 | Encyclopedia runtime gate | `docs/testing/2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md` |
@@ -639,7 +639,7 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 ## 2026-08-28 — Encyclopedia visual forensic correction and reauthoring gate
 - Owner rejected the complete 43-page Encyclopedia screenshot set as aesthetically unacceptable despite green mechanical breadth.
 - Primary forensic review identified the systemic cause: final real-world subject art and section worlds are dominated by raw Pygame primitives, sparse flat backgrounds, floating instrumentation-like discovery bubbles, corner-stamped mascots and weak interaction payoff.
-- Recorded the rejection and preservation boundary in `docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md`.
+- Recorded the rejection and preservation boundary in `docs/archive/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md`.
 - Added bounded visual subplan `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md`.
 - Preserved the healthy 43-page runtime/navigation/research architecture and the already-landed generic headless capture-settle repair.
 - Paused broad 43-page visual recapture and final pointer/responsive acceptance until real graphics change.

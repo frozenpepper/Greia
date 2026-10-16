@@ -414,8 +414,9 @@ The Orbiter root disk died mid-Session-04 with SMART
 `FAILED / "Drive failure expected in less than 24 hours"`; agent build
 practice (retry storms without health checks, 17 leaked attached loops with
 deleted backing files, build debris) amplified load, pinned ~35–45 GB and left
-standing desktop probe volume against the failing disk. Full evidence and
-causation analysis: `docs/agents/2026-09-25_ORBITER_DISK_FAILURE_INVESTIGATION.md`.
+standing desktop probe volume against the failing disk. The full host-specific
+investigation report is kept in git history only (removed from the tree in the
+2026-10-16 open-source cleanup).
 Binding rules:
 
 - Disk-health preflight before heavy image churn: `sudo smartctl -a

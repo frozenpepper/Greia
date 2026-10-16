@@ -177,8 +177,8 @@ Read:
 ```text
 docs/adr/0019-platform-owned-activity-system-navigation.md
 docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
-docs/reviews/2026-08-29_R7_R73_ACTIVITY_CHROME_MIGRATION_TRANCHE.md
-docs/reviews/2026-08-31_R7_SIMULATOR_RUNTIME_INTEGRATION_REJECTION_AND_CORRECTION.md
+docs/archive/reviews/2026-08-29_R7_R73_ACTIVITY_CHROME_MIGRATION_TRANCHE.md
+docs/archive/reviews/2026-08-31_R7_SIMULATOR_RUNTIME_INTEGRATION_REJECTION_AND_CORRECTION.md
 src/greia_launcher/system_chrome.py
 src/greia_launcher/system_chrome_legacy_x.py
 src/greia_launcher/trusted_chrome_supervisor.py
@@ -437,7 +437,7 @@ Read:
 ```text
 docs/adr/0029-real-runtime-activity-simulator.md
 docs/development/GREIA_ACTIVITY_SIMULATOR.md
-docs/reviews/2026-08-31_R7_SIMULATOR_RUNTIME_INTEGRATION_REJECTION_AND_CORRECTION.md
+docs/archive/reviews/2026-08-31_R7_SIMULATOR_RUNTIME_INTEGRATION_REJECTION_AND_CORRECTION.md
 src/greia_simulator/
 ```
 
@@ -522,7 +522,7 @@ Read:
 ```text
 docs/adr/0031-platform-owned-microphone-processing.md
 docs/architecture/GREIA_AUDIO_SERVICE.md
-docs/reviews/2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md
+docs/archive/reviews/2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md
 skills/greia-activity-authoring/MICROPHONE_RECORDING.md
 ```
 

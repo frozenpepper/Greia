@@ -429,7 +429,7 @@ contained the old Xorg/systemd/input configuration. Those mismatches were
 corrected during the review and are now explicitly regression-locked.
 
 For the complete cross-cutting review and remaining risks, see
-`docs/reviews/2026-08-18_REAL_HARDWARE_INSTALLATION_AND_LAUNCHER_REVIEW.md`.
+`docs/archive/reviews/2026-08-18_REAL_HARDWARE_INSTALLATION_AND_LAUNCHER_REVIEW.md`.
 
 ---
 

@@ -3850,7 +3850,7 @@ Source checks: the copied high-resolution final frame has the same SHA-256 as th
 
 Session 04 remains OPEN, blocked on the fresh-install EXECUTE leg in product-mode QEMU: the install service stops responding (empty socket response, never a refusal) after streaming slot A and writing fstab, before GRUB/persist/journal work. Same signature across attempts 5–11 at 2 GB and 4 GB guest RAM. Host-side full service-stack reproduction with the exact Session-03 artifacts completes in ~66 s, so this is environmental, not a product-logic defect found so far. Two real product bugs were found and fixed along the way (support-classes narrowing, `1ecba9de`; installer USB sizing/bytecode, `6c13abea`).
 
-Full evidence, ruled-out theories, open hypotheses (ranked) and exact next steps are recorded in `docs/testing/2026-09-24_SESSION04_INSTALL_EXECUTE_FAILURE_DIAGNOSIS.md` with machine-readable facts and the serial log in `docs/testing/session04-evidence/`. HEAD carries two TEMPORARY diagnostic commits (`3f101b1c`, `0acc0f05`) that must be reverted before closure. Next agent: fix the faulthandler fd lifetime, try the sandboxed host repro, then strace-via-unit if needed — details in the report §8.
+Full evidence, ruled-out theories, open hypotheses (ranked) and exact next steps are recorded in `docs/archive/testing/2026-09-24_SESSION04_INSTALL_EXECUTE_FAILURE_DIAGNOSIS.md` with machine-readable facts and the serial log in `docs/testing/session04-evidence/`. HEAD carries two TEMPORARY diagnostic commits (`3f101b1c`, `0acc0f05`) that must be reverted before closure. Next agent: fix the faulthandler fd lifetime, try the sandboxed host repro, then strace-via-unit if needed — details in the report §8.
 
 ## 60. Session 04 root cause and security decision (2026-09-25)
 
@@ -3858,7 +3858,7 @@ The faulthandler file-handle lifetime is now corrected with a module-owned seria
 
 The rebuilt diagnostic installer was inspected from its live SquashFS and matched the S03 bundle/support facts. A final product-mode QEMU install reached `finalize-completeness` with the service active, 2/8 tasks, and approximately 1.74 GiB available. The final guest journal proved the failure at `src/greia_installer/hardware_support_install.py:61`: apt in the mounted slot failed `setgroups`, `setegid`, and `seteuid` with `Operation not permitted`; systemd recorded `Result=exit-code`, `ExecMainStatus=1`. The client empty response is a consequence of that failed service request, not a proven external SIGKILL.
 
-The full decision record is `docs/testing/2026-09-25_SESSION04_INSTALL_EXECUTE_ROOT_CAUSE_AND_DECISION.md`. Follow-up review found a second service-topology defect: the shipped unit executed `transaction_service` with `python -m` while composition re-imported that same implementation canonically, allowing split `__main__`/package module and exception identities. The repair is now landed: a thin `transaction_service_entrypoint` executes the canonical library module, the implementation is library-only, and the unit adds only `CAP_SETUID`/`CAP_SETGID` alongside the existing `CAP_SYS_ADMIN`/`CAP_SYS_CHROOT`; `NoNewPrivileges=yes` and `ProtectSystem=strict` stay intact. Permanent unit-contract tests pin this architecture. These source changes still require Orbiter focused tests, installer rebuild/inspection and product-mode QEMU. Session 04 remains OPEN; temporary diagnostics stay until one confirming install and must be removed before closure.
+The full decision record is `docs/archive/testing/2026-09-25_SESSION04_INSTALL_EXECUTE_ROOT_CAUSE_AND_DECISION.md`. Follow-up review found a second service-topology defect: the shipped unit executed `transaction_service` with `python -m` while composition re-imported that same implementation canonically, allowing split `__main__`/package module and exception identities. The repair is now landed: a thin `transaction_service_entrypoint` executes the canonical library module, the implementation is library-only, and the unit adds only `CAP_SETUID`/`CAP_SETGID` alongside the existing `CAP_SYS_ADMIN`/`CAP_SYS_CHROOT`; `NoNewPrivileges=yes` and `ProtectSystem=strict` stay intact. Permanent unit-contract tests pin this architecture. These source changes still require Orbiter focused tests, installer rebuild/inspection and product-mode QEMU. Session 04 remains OPEN; temporary diagnostics stay until one confirming install and must be removed before closure.
 
 ## 61. Post-GitHub Orbiter validation reached a new security boundary (2026-09-25)
 
@@ -3898,7 +3898,7 @@ acceptance has started.
 
 ## 62. Session 04 apt ownership decision report (2026-09-25)
 
-The detailed decision brief is `docs/testing/2026-09-25_SESSION04_APT_OWNERSHIP_DECISION.md`.
+The detailed decision brief is `docs/archive/testing/2026-09-25_SESSION04_APT_OWNERSHIP_DECISION.md`.
 It records the exact four-capability contract, the proven `chown _apt:root`
 failure, Option A (`CAP_CHOWN`), Option B (apt ownership/privilege policy), the
 security tradeoffs, acceptance criteria, and the explicit requirement not to
@@ -3961,7 +3961,7 @@ against `origin/main` before asserting a source state.
 **GRUB's MBR does not work on that Acer firmware+stick combination**. The flashed image is
 the GRUB path (`image_layout=bios-single-ext4`, only `i386-pc` modules, no ESP). It also
 carries the diagnostic-suppression cluster that
-`docs/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md` §3.1/§3.2/§3.4 removed as
+`docs/archive/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md` §3.1/§3.2/§3.4 removed as
 unaccepted — the live command line is `quiet splash loglevel=0 console=null panic=0`, which
 discards all kernel output and reboots on panic, converting a diagnosable early failure
 into exactly the reported blindness. `console=null` is still live in current source at
@@ -3993,7 +3993,7 @@ product path, and whether `console=null`/`panic=0` may ship in a product install
 requiring both installer-artifact and final read-only USB verification to report PASS
 before booting, and recording the last visible boot stage per the 2026-08-20 review §8.
 Do **not** rebuild or reflash `acer-aspire-one-i386-ab` onto the reference Acer until D1
-and D2 are decided. Full report: `docs/reviews/2026-09-27_ACER_AB_GRUB_INSTALLER_PHYSICAL_BOOT_FAILURE.md`.
+and D2 are decided. Full report: `docs/archive/reviews/2026-09-27_ACER_AB_GRUB_INSTALLER_PHYSICAL_BOOT_FAILURE.md`.
 
 **Host residue:** two leaked Greia loops (`/dev/loop2`, `/dev/loop34`, both `autoclear=1`)
 from the build runs; they clear only on reboot. Do not delete
@@ -4004,7 +4004,7 @@ zero error counters; the 2026-09-25 heavy-I/O prohibition no longer applies.
 
 ## 66. Acer physical boot: A/B GRUB USB route rejected on reference device (2026-09-27)
 
-Physical test of the flashed `acer-aspire-one-i386-ab` raw GRUB/MBR installer failed at the first boot stage on the reference Acer: brief blinking cursor, then black screen; no Greia boot screen or installer. This result is consistent with the already accepted `docs/INSTALLATION_USB_BOOT_POSTMORTEM.md` and `docs/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md`: this Acer + USB combination does not execute Greia's GRUB MBR path reliably, while the physically proven removable-media path is active FAT32 + Syslinux.
+Physical test of the flashed `acer-aspire-one-i386-ab` raw GRUB/MBR installer failed at the first boot stage on the reference Acer: brief blinking cursor, then black screen; no Greia boot screen or installer. This result is consistent with the already accepted `docs/INSTALLATION_USB_BOOT_POSTMORTEM.md` and `docs/archive/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md`: this Acer + USB combination does not execute Greia's GRUB MBR path reliably, while the physically proven removable-media path is active FAT32 + Syslinux.
 
 Do not use the A/B GRUB raw installer as the next Acer physical test. The A/B route is **UNPROVEN on the reference Acer** and currently has one negative physical result. The next Acer test must use the named `tools/build-and-flash-development-usb.sh legacy-x86-i686-dev <device>` procedure, which preserves visible tty1 diagnostics and the proven Syslinux/FAT32 first stage. Record the last visible boot stage.
 

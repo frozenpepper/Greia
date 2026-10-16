@@ -43,7 +43,7 @@ Before changing implementation or architecture, read:
 22. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
 23. `skills/greia-visual-authoring/SKILL.md` whenever creating, modifying, reviewing, generating, or integrating Greia visual assets or Activity art;
 24. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan;
-25. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as historical/supporting Phase-0 context where it is not superseded.
+25. `docs/archive/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as historical/supporting Phase-0 context where it is not superseded.
 
 `docs/DOCUMENTATION.md` defines which document class owns which fact. In short:
 

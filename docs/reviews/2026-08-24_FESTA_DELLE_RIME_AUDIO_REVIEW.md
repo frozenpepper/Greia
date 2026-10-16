@@ -1,7 +1,7 @@
 # Festa delle Rime Audio Review — 2026-08-24
 
 **Activity:** `org.greia.festa-delle-rime`
-**Corpus Authority:** `docs/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/README.md`
+**Corpus Authority:** `docs/archive/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/README.md`
 **Audio Format:** 22,050 Hz LEI16 mono WAV (pedagogical speech)
 **Reviewers:**
 - Italian: Fluent early-literacy specialist (Italian)

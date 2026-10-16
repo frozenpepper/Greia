@@ -1,7 +1,7 @@
 # Greia Documentation Map and Authority Model
 
 **Status:** LIVING repository-wide documentation contract  
-**Reviewed:** 2026-09-23
+**Reviewed:** 2026-10-16
 **Audience:** contributors, coding agents, reviewers, test operators and Activity authors
 
 ## 1. Purpose
@@ -130,6 +130,8 @@ docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P7_ACTIVITY_QUALITY
 
 The binding SVG authoring recipe (canvas, palette tokens, strokes, shading, forbidden constructs, budgets, review procedure) is owned by `docs/design/GREIA_SVG_AUTHORING_RULES.md`; `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` indexes it and `skills/greia-visual-authoring/SKILL.md` operationalizes it.
 
+Scoped owner-authorized workstreams (Creations/Activity release, four-language localization and voice production) are listed with their plan, progress file and approval state in `HANDOVER.md` § Active workstreams.
+
 Plans may be long because historical progress is intentionally retained. Do not copy their entire evidence history into `HANDOVER.md`.
 
 ### 2.7 Current continuation/evidence boundary — `HANDOVER.md`
@@ -162,7 +164,11 @@ Dated reviews preserve analysis, evidence and decisions for an exact context/sou
 
 They are historical evidence unless a current authority explicitly links them for a current rule/procedure. Do not edit old reviews merely to make history agree with the present.
 
-### 2.10 Derived manuals/skills — `skills/*`, `docs/agents/*`, developer guides
+### 2.10 Engineering archive — `docs/archive/*`
+
+`docs/archive/` holds older reviews, investigations and decision reports that still carry a useful lesson, moved verbatim. `docs/archive/README.md` lists each one with its lesson. Nothing in the archive is current instruction.
+
+### 2.11 Derived manuals/skills — `skills/*`, `docs/agents/*`, developer guides
 
 These are practical navigation/authoring/operations manuals derived from the authorities above. They must track source and accepted policy but do not override them.
 
@@ -268,12 +274,13 @@ Keep the public/current path intentionally small:
 
 ```text
 README.md
+CONTRIBUTING.md
 SETUP.md
 docs/DOCUMENTATION.md
 HANDOVER.md
 ```
 
-Then route by task using `skills/*`.
+Then route by task using `skills/*`. Licensing, security reporting and conduct live in the root `LICENSE`, `NOTICE.md`, `SECURITY.md` and `CODE_OF_CONDUCT.md`.
 
 Do not put current test counts, candidate SHAs or bulky evidence in README/SETUP. Those facts age quickly and belong in `HANDOVER.md`, a dated review or an immutable release record.
 
@@ -298,14 +305,14 @@ Examples:
 
 ## 7. Historical content and cleanup
 
-Do not delete valuable history merely because it is old. Prefer:
+Owner decision (2026-10-16, open-source cleanup): once work is finished and no longer current, its dated documents leave the working tree.
 
-- keep dated reviews/plans/procedures;
-- mark them historical/superseded where readers could reasonably mistake them for current;
-- remove historical scratch/result accumulators from repository root/public entry paths;
-- link from current docs to the small number of historical items still needed for continuation.
+- A document that still teaches something (a root cause, a rejected approach, a design rationale) moves verbatim to `docs/archive/` and gets one line in `docs/archive/README.md`.
+- Everything else (screenshots, capture evidence, finished runbooks, session handovers and status snapshots) is deleted. Git history keeps it.
+- A document still cited by a living authority (an ADR, product or design document, skill, asset provenance record or source file) stays in place until that citation is retired.
+- `HANDOVER.md` keeps only the current state and recent entries; it is not an archive.
 
-`LOCAL_AGENT_RESULT.md` is no longer a required root accumulator. Detailed retained results belong in dated reviews; bulky evidence belongs outside Git unless a specific evidence authority requires otherwise.
+Bulky evidence belongs outside Git unless a specific evidence authority requires otherwise.
 
 ## 8. Documentation freshness rules
 

@@ -12,7 +12,7 @@ For documentation authority and precedence, read `docs/DOCUMENTATION.md` first.
 A 2026-08-20 boot-polish tranche regressed the physically working reference Acer installer into a grey-screen/reboot loop. Before changing any reference-hardware bootloader, kernel-console, initramfs artwork, GRUB presentation or USB-writer behavior, read:
 
 ```text
-docs/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md
+docs/archive/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md
 docs/INSTALLATION_USB_BOOT_POSTMORTEM.md
 docs/INSTALLED_OS_BOOT_POSTMORTEM.md
 docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md

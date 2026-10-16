@@ -32,7 +32,7 @@ Read:
 2. `docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md`
 3. `docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md`
 4. `skills/greia-visual-authoring/SKILL.md`
-5. `docs/reviews/visual/2026-08-21_generic-authoring-library-consolidation/PRIMARY_REVIEW.md`
+5. `docs/archive/reviews/visual/2026-08-21_generic-authoring-library-consolidation/PRIMARY_REVIEW.md`
 6. `assets/visual/authoring_library/README.md`
 7. all six current generic collection TOMLs
 8. source catalogues for:

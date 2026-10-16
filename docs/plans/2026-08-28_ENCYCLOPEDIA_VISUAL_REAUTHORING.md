@@ -6,7 +6,7 @@
 **Current checkpoint:** 2026-08-30 — E3 ACCEPTED (see `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md`; evidence HEAD 69cf8966)  
 **Parent visual authority:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
 **Stable visual architecture:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
-**Forensic audit:** `docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md`  
+**Forensic audit:** `docs/archive/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md`  
 **Current E3 source review:** `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md`  
 **Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)
 
@@ -631,7 +631,7 @@ During work:
 Current reviews:
 
 ```text
-docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md
+docs/archive/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md
 docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
 docs/reviews/visual/2026-08-29_encyclopedia_owner_direct_repairs/REVIEW.md
 docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md

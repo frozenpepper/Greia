@@ -3,7 +3,7 @@
 **Status:** living derived Activity-authoring companion  
 **Reviewed:** 2026-08-25  
 **Architecture authority:** `docs/adr/0031-platform-owned-microphone-processing.md`  
-**Current implementation/evidence:** `docs/architecture/GREIA_AUDIO_SERVICE.md`, `docs/reviews/2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md`
+**Current implementation/evidence:** `docs/architecture/GREIA_AUDIO_SERVICE.md`, `docs/archive/reviews/2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md`
 
 This companion is about **child microphone input / voice recording**. It is not the custom character-voice production guide. For generated Greia character speech, use `VOICE_GENERATION.md`.
 

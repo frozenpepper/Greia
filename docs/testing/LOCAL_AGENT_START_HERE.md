@@ -46,23 +46,23 @@ Post-R1 product-composition closure is blocking: source composition primitives (
 
 Do not automatically run an old R7 closure procedure merely because it remains under `docs/testing/`. Use `HANDOVER.md` and the active plan to choose the exact gate for the work being accepted.
 
-The currently open Parent password/runtime cutover uses:
+The single execution authority for the open Parent authentication/runtime tranche is:
 
 ```text
-docs/testing/2026-09-08_PARENT_PASSWORD_RUNTIME_INTEGRATION_ACCEPTANCE.md
+docs/testing/2026-09-08_PARENT_UNIFIED_AUTH_RUNTIME_ACCEPTANCE.md
 ```
 
-That procedure supersedes the obsolete shared-pairing-token authentication instructions in the older Parent real-runtime document. The older document remains useful only for the wider system-control/hardware checks explicitly retained by the September 8 procedure.
+It replaced the earlier Parent password and Parent real-runtime procedures, which were removed in the 2026-10-16 cleanup (see git history).
 
-Other current subsystem procedures remain active when their owning workstream is being closed, including:
+Other subsystem procedures remain active when their owning workstream is being closed, including:
 
 ```text
 docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md
 docs/testing/2026-09-03_ACTIVITY_AGE_POLICY_ACCEPTANCE.md
-docs/testing/2026-09-02_RECENT_COMMIT_CLEANUP_ACCEPTANCE.md
 docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md
-docs/testing/2026-09-02_R7_PARENT_SPOKEN_LABEL_UNIFIED_PROMOTION_GATE.md
 ```
+
+Finished one-off procedures from August–September 2026 were deleted or moved to `docs/archive/` (see `docs/archive/README.md`).
 
 Always re-read `HANDOVER.md` immediately before execution. Source may have advanced after an earlier physical or image candidate; old evidence stays scoped to the exact SHA that produced it.
 
