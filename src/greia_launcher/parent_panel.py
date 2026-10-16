@@ -2552,7 +2552,9 @@ class ParentSettingsOverlay:
 
         readout = self._copy("AUDIO_INPUT_SILENT") if quiet else f"{level.rms_dbfs:+.0f} dB"
         if level.clipping:
-            readout = f"{self._copy("AUDIO_INPUT_CLIPPING")}  {level.rms_dbfs:+.0f} dB"
+            # Debian 12 ships Python 3.11: no same-quote nesting inside f-strings (PEP 701).
+            clipping = self._copy("AUDIO_INPUT_CLIPPING")
+            readout = f"{clipping}  {level.rms_dbfs:+.0f} dB"
         value = panel_layout.fit_single_line(
             typography, readout, FontRole.CONTROL, 16,
             (181, 46, 46) if level.clipping else (61, 44, 31), meter_w,
