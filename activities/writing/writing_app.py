@@ -28,11 +28,11 @@ from greia_platform.activity_controls import (
     PygameControlInput,
 )
 from greia_platform.activity_feedback import CastFeedback
-from greia_platform.activity_ui import ChildUiMetrics, draw_activity_pointer
+from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.emoji_palette import EmojiPalette
 from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.input_core import InputEdge, SemanticAction, SemanticInputEvent
-from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
+from greia_platform.pygame_canvas import PygamePointerSprite, PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.typography import FontRole, GreiaTypography, grapheme_boundaries, grapheme_spans
 from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 
@@ -75,6 +75,14 @@ _ARROWS = {pygame.K_LEFT: -1, pygame.K_RIGHT: 1, pygame.K_UP: -3, pygame.K_DOWN:
 _NAV_KEYS = {pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN}
 _ACTIVATE_KEYS = {pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE}
 _KEYBOARD_EVENTS = {pygame.KEYDOWN, pygame.KEYUP}
+# The caret blinks this long after the last edit, then stays on.
+CARET_BLINK_SECONDS = 10.0
+
+
+def _key_text(key: int) -> str:
+    """The TEXTINPUT SDL commits after ``key`` (only Space among activators)."""
+
+    return " " if key == pygame.K_SPACE else ""
 
 
 def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
@@ -145,7 +153,9 @@ class WritingApp:
         self.pending_delete: DocumentRecord | None = None
         self.toolbar_focus = False
         self.running = True
-        self._swallow_text = False
+        # Text of the last key a control consumed ("" when none).
+        self._swallow_text = ""
+        self._pointer = PygamePointerSprite()
         self._pointer_owner: str | None = None
         self._last_typing = clock()
         self._fx: list[FxBurst] = []
@@ -211,9 +221,12 @@ class WritingApp:
                 dirty=signature != shown or self.controls.layer.invalidation.should_draw,
                 animating=bool(self._fx) or (self.cast is not None and self.cast.animating),
             )
-            if frame is not FrameKind.SKIP:
-                # Writing draws straight to the display (no reference canvas),
-                # so a pointer-only frame is a full redraw here.
+            if frame is FrameKind.POINTER and ready_published:
+                # Writing draws straight to the display: hover moves only
+                # Greia's save-under pointer (Acer re-sweep R.3), the page is
+                # not re-rendered.
+                self._pointer.refresh(self.screen)
+            elif frame is not FrameKind.SKIP:
                 self._draw()
                 shown = signature
                 # Legacy optional canvas seam (disabled in production composition).
@@ -264,7 +277,7 @@ class WritingApp:
 
     def handle_key(self, event) -> bool:
         """Route one key press; returns False when the child leaves Writing."""
-        self._swallow_text = False
+        self._swallow_text = ""
         key = event.key
         mod = getattr(event, "mod", 0)
         if key == pygame.K_ESCAPE:
@@ -340,7 +353,7 @@ class WritingApp:
             if self.surfaces.dispatch(translated) is UiEventResult.HANDLED:
                 # A key a control consumed must not also type into the page
                 # (SDL sends TEXTINPUT right after KEYDOWN for Space).
-                self._swallow_text = True
+                self._swallow_text = _key_text(event.key)
 
     def _gallery_key(self, key: int) -> bool:
         """Gallery keyboard model; True when the key was consumed.
@@ -362,7 +375,7 @@ class WritingApp:
         if not on_card:
             return False
         if key in _ACTIVATE_KEYS:
-            self._swallow_text = True
+            self._swallow_text = _key_text(key)
             self._open(self.records[self.gallery_focus])
             return True
         if key == pygame.K_DELETE or key == pygame.K_BACKSPACE:
@@ -384,8 +397,11 @@ class WritingApp:
         return True
 
     def _text_input(self, text: str) -> None:
-        if self._swallow_text:
-            self._swallow_text = False
+        # Only the consumed key's own commit is dropped (Space -> " "), and
+        # only as the very next text event: a stale flag must never eat a
+        # later character (fast synthetic typing, Acer re-sweep R.1).
+        swallow, self._swallow_text = self._swallow_text, ""
+        if swallow and text == swallow:
             return
         sheet = self._top_sheet()
         if self.mode != "edit" or (sheet is not None and sheet.modal):
@@ -1091,8 +1107,12 @@ class WritingApp:
     def _caret_visible(self) -> bool:
         if self.toolbar_focus:
             return False
-        now = self._clock()
-        return now - self._last_typing < 0.8 or int((now - self._last_typing) * 1.8) % 2 == 0
+        idle = self._clock() - self._last_typing
+        if idle >= CARET_BLINK_SECONDS:
+            # Like desktop blink timeouts: a steady caret once the child
+            # pauses, so an idle page presents nothing (Atom CPU).
+            return True
+        return idle < 0.8 or int(idle * 1.8) % 2 == 0
 
     def _draw(self) -> None:
         renderer = self.renderer
@@ -1117,8 +1137,10 @@ class WritingApp:
         if self.cast is not None and self.cast.animating:
             editor = self.editor_rect
             self.cast.draw(self.screen, (editor.right - self.metrics.px(90), editor.bottom + self.metrics.px(6)))
-        # Activity-local pointer. Trusted Home/Back is platform-owned.
-        draw_activity_pointer(self.screen)
+        # Activity-local pointer (save-under sprite, so pointer-only frames
+        # repair two small rectangles). Trusted Home/Back is platform-owned.
+        self._pointer.forget()
+        self._pointer.draw(self.screen)
 
 
 __all__ = ["WritingApp"]

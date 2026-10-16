@@ -198,6 +198,7 @@ class CorsaActivity:
         self._held_key: Direction | None = None
         self._stick = (0.0, 0.0)
         self._stick_dir: Direction | None = None
+        self._full_frame = True  # next frame must repaint everything
         self._last_activity = clock()
         self._idle_hints = 0
         self._last_retry_voice = -100.0
@@ -213,22 +214,33 @@ class CorsaActivity:
         # The race animates while playing; other states are ambient.
         frames = FrameGovernor(redraw_on_input=True)
         last = self.clock()
+        # Dirty rectangles: while only Momo, critters and berries move over
+        # the cached garden scene, frames re-render and push just their
+        # rectangles (previous + current); anything else is a full frame.
+        previous: list[pygame.Rect] | None = None
         try:
             while self._running and not activity_stop_requested():
                 for event in frames.events():
                     self._handle_event(event)
+                    if event.type != pygame.MOUSEMOTION:
+                        self._full_frame = True
                 if self.state is AppState.TERMINAL:
                     repeat = self._input.poll()
                     if repeat is not None:
                         self._surfaces.dispatch(repeat)
                 now = self.clock()
-                animating = self.step(min(0.05, max(0.0, now - last)))
+                dt = min(0.05, max(0.0, now - last))
                 last = now
+                # Critters wandering around a resting Momo are decoration (they
+                # never walk into a Momo standing still): on the reference
+                # floor the garden pauses once the child is idle and resumes
+                # exactly where it stopped on the next input.
+                if frames.ambient_frozen and self._garden_resting():
+                    dt = 0.0
+                animating = self.step(dt)
                 frame = frames.frame(animating=animating, ambient=True)
                 if frame is FrameKind.FULL:
-                    self.render()
-                    self.canvas.present()
-                    pygame.display.flip()
+                    previous = self._present(previous)
                     if not self._ready_published:
                         mark_activity_ready()
                         self._ready_published = True
@@ -240,23 +252,62 @@ class CorsaActivity:
             self.typography.clear()
         return 0
 
+    def _present(self, previous: list[pygame.Rect] | None) -> list[pygame.Rect] | None:
+        """Present one frame; return this frame's sprite regions (or None)."""
+
+        current = None
+        if self.state is AppState.PLAYING and self.renderer is not None:
+            current = self.renderer.sprite_regions(self.garden, self.geometry, self.motion, self.clock())
+        partial = (
+            current is not None
+            and previous is not None
+            and self._ready_published
+            and not self._full_frame
+            and not self.controls.layer.invalidation.should_draw
+        )
+        plan = self.canvas.plan_regions(previous + current) if partial else None
+        if plan is not None:
+            self.canvas.render_regions(plan, self.render)
+            self.canvas.present_regions(plan)
+            return current
+        self.render()
+        self.canvas.present()
+        pygame.display.flip()
+        self._full_frame = False
+        return current
+
     def step(self, dt: float) -> bool:
         """Advance the garden, timers and motion; return True while something moves."""
 
         now = self.clock()
-        self.timeline.run_due()
+        if self.timeline.run_due():
+            self._full_frame = True
         if self.cast is not None:
             self.cast.update()
         self.motion.prune(now)
         if self.state is not AppState.PLAYING:
             return self.state is AppState.CELEBRATE
         for event in self.garden.update(dt):
+            self._full_frame = True
             self._on_garden_event(event)
             if self.state is not AppState.PLAYING:
                 break
         if self.state is AppState.PLAYING:
             self._maybe_hint(now)
-        return True
+        # Momo's run and feedback are essential; the critters are ambient.
+        return self._garden_busy(now)
+
+    def _garden_busy(self, now: float) -> bool:
+        if self.state is not AppState.PLAYING:
+            return self.state is AppState.CELEBRATE
+        garden = self.garden
+        cast_moving = self.cast is not None and self.cast.animating
+        return garden.momo.moving or garden.bouncing or self.motion.active(now) or cast_moving
+
+    def _garden_resting(self) -> bool:
+        """Nothing but decoration is moving (safe to pause the garden)."""
+
+        return self.state is AppState.PLAYING and not self._garden_busy(self.clock())
 
     def render(self) -> None:
         surface = self.canvas.surface

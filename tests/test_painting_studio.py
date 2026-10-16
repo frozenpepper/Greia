@@ -482,5 +482,76 @@ class PaintingArtTests(unittest.TestCase):
         self.assertEqual(grown.get_at((395, 395))[:3], (239, 77, 83))  # small art scales up too
 
 
+
+class PaintingPartialPresentTests(PaintingStudioTestCase):
+    """Acer re-sweep R.3: pointer moves and strokes must not redraw the studio."""
+
+    def test_stroke_frame_repaints_only_its_rectangle_and_matches_a_full_frame(self) -> None:
+        app = self.make_app()
+        self.frame(app)
+        canvas = app.canvas_rect
+        points = [(canvas.left + 60 + i * 9, canvas.top + 80 + i * 4) for i in range(15)]
+        app.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=points[0], button=1))
+        self.frame(app)  # the press itself is a full frame
+        backgrounds: list[int] = []
+        original = app.renderer.draw_studio_background
+        app.renderer.draw_studio_background = lambda screen: (backgrounds.append(1), original(screen))
+        updates: list[list[pygame.Rect]] = []
+        real_update = pygame.display.update
+        pygame.display.update = lambda rects=None: updates.append(list(rects or []))
+        try:
+            for point in points[1:]:
+                app.handle_event(pygame.event.Event(pygame.MOUSEMOTION, pos=point, rel=(1, 1), buttons=(1, 0, 0)))
+                self.assertIsNotNone(app._stroke_dirty)
+                app._present_stroke()
+                self.assertIsNone(app._stroke_dirty)
+        finally:
+            pygame.display.update = real_update
+            app.renderer.draw_studio_background = original
+        self.assertEqual(backgrounds, [])  # never a full studio render
+        self.assertTrue(updates and all(rects for rects in updates))
+        for rects in updates:
+            for rect in rects:
+                self.assertTrue(canvas.contains(rect), (rect, canvas))
+        partial = self.screen.copy()
+        app._draw()
+        diff = [
+            (x, y)
+            for x in range(0, self.size[0], 3)
+            for y in range(0, self.size[1], 3)
+            if partial.get_at((x, y)) != self.screen.get_at((x, y))
+        ]
+        self.assertEqual(diff, [])
+
+    def test_pointer_only_frame_repairs_two_small_rects(self) -> None:
+        app = self.make_app()
+        self.frame(app)
+        backgrounds: list[int] = []
+        original = app.renderer.draw_studio_background
+        app.renderer.draw_studio_background = lambda screen: (backgrounds.append(1), original(screen))
+        before = self.screen.copy()
+        try:
+            first = app._pointer.refresh(self.screen, (300, 300))
+            second = app._pointer.refresh(self.screen, (340, 320))
+        finally:
+            app.renderer.draw_studio_background = original
+        self.assertEqual(backgrounds, [])
+        self.assertEqual(len(first), 1)
+        self.assertEqual(len(second), 2)
+        self.assertTrue(all(r.width <= 30 and r.height <= 30 for r in second))
+        # The old pointer area is restored exactly; the new one shows the pointer.
+        self.assertEqual(self.screen.get_at((300, 300)), before.get_at((300, 300)))
+        self.assertNotEqual(self.screen.get_at((347, 320)), before.get_at((347, 320)))
+
+    def test_hover_motion_does_not_request_a_full_repaint(self) -> None:
+        app = self.make_app()
+        hover = pygame.event.Event(pygame.MOUSEMOTION, pos=(500, 300), rel=(1, 1), buttons=(0, 0, 0))
+        self.assertFalse(app._repaints(hover, False))
+        stroke = pygame.event.Event(pygame.MOUSEMOTION, pos=(500, 300), rel=(1, 1), buttons=(1, 0, 0))
+        self.assertFalse(app._repaints(stroke, True))
+        self.assertTrue(app._repaints(stroke, False))  # pressing a control
+        self.assertTrue(app._repaints(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_a), False))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -460,5 +460,83 @@ class WritingShareTests(WritingStudioTestCase):
         self.assertEqual(app.shared_state, "")
 
 
+
+def _typed_burst(text: str, *, ime_late: bool = False) -> list[pygame.event.Event]:
+    """Events SDL/X11 delivers for fast synthetic typing (``xdotool type``).
+
+    Normally KEYDOWN, TEXTINPUT, KEYUP per character; with an input method
+    the committed TEXTINPUT can arrive after the *next* key's KEYDOWN.
+    """
+
+    events: list[pygame.event.Event] = []
+    pending: pygame.event.Event | None = None
+    for char in text:
+        key = pygame.K_SPACE if char == " " else ord(char)
+        events.append(pygame.event.Event(pygame.KEYDOWN, key=key, mod=0, unicode=char, scancode=0))
+        if pending is not None:
+            events.append(pending)
+            pending = None
+        commit = pygame.event.Event(pygame.TEXTINPUT, text=char)
+        if ime_late:
+            pending = commit
+        else:
+            events.append(commit)
+        events.append(pygame.event.Event(pygame.KEYUP, key=key, mod=0, unicode=char, scancode=0))
+    if pending is not None:
+        events.append(pending)
+    return events
+
+
+class WritingFastTypingTests(WritingStudioTestCase):
+    """Acer re-sweep: ``xdotool type`` turned "ciao mamma" into "ciaomamma"."""
+
+    def run_loop_with(self, app: WritingApp, events: list[pygame.event.Event]) -> None:
+        # Drive the real frame-governed loop: every event goes through the SDL
+        # queue, FrameGovernor.events() and its wait() between iterations.
+        pygame.event.clear()
+        for event in events:
+            pygame.event.post(event)
+        pygame.event.post(pygame.event.Event(pygame.QUIT))
+        app.run()
+
+    def test_burst_through_the_run_loop_keeps_every_space(self) -> None:
+        app = self.make_app()
+        self.run_loop_with(app, _typed_burst("ciao mamma e papà"))
+        self.assertEqual(app.buffer.text, "ciao mamma e papà")
+
+    def test_late_text_commits_keep_every_space(self) -> None:
+        app = self.make_app()
+        for event in _typed_burst("ciao mamma", ime_late=True):
+            app.handle_event(event)
+        self.assertEqual(app.buffer.text, "ciao mamma")
+
+    def test_space_after_a_consumed_toolbar_key_types_on_the_page(self) -> None:
+        app = self.make_app()
+        # Keyboard-use the toolbar: Enter opens the shelf (consumed by a
+        # control; SDL commits no text for Enter) ...
+        app.handle_event(_key(pygame.K_TAB))
+        app.handle_event(_key(pygame.K_RETURN))
+        self.assertEqual(app.mode, "gallery")
+        # ... then the pointer goes back to the page (no key event at all).
+        self.tap(app, app.controls.gallery.rect.center)
+        self.assertEqual(app.mode, "edit")
+        # ... then a text commit that arrives before its KEYDOWN (IME order)
+        # must still type: only the consumed key's own text is swallowed.
+        app.handle_event(pygame.event.Event(pygame.TEXTINPUT, text=" "))
+        for event in _typed_burst("ciao mamma", ime_late=True):
+            app.handle_event(event)
+        self.assertEqual(app.buffer.text, " ciao mamma")
+
+    def test_hover_and_click_on_the_page_never_eat_a_space(self) -> None:
+        app = self.make_app()
+        hover = app.controls.gallery.rect.center
+        app.handle_event(pygame.event.Event(pygame.MOUSEMOTION, pos=hover, rel=(1, 1), buttons=(0, 0, 0)))
+        page = app.view_rect.center
+        self.tap(app, page)
+        for event in _typed_burst("ciao mamma"):
+            app.handle_event(event)
+        self.assertEqual(app.buffer.text, "ciao mamma")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -195,6 +195,7 @@ class ClinicActivity:
         self._running = True
         self._ready_published = False
         self._dirty = True
+        self._marks_bobbing = False
         self._activated = False
         self._busy = False
         self._last_activity = clock()
@@ -214,7 +215,10 @@ class ClinicActivity:
                 if repeat is not None:
                     self._dispatch(repeat)
                 animating = self.step()
-                frame = frames.frame(dirty=self._dirty, animating=animating)
+                # The bobbing sore-ear/tummy marks are decoration: on the
+                # reference floor they freeze once the child is idle (the
+                # 0f560c2e regression declared them essential motion).
+                frame = frames.frame(dirty=self._dirty, animating=animating, ambient=self._marks_bobbing)
                 if frame is FrameKind.FULL:
                     self.render()
                     self.canvas.present()
@@ -243,9 +247,12 @@ class ClinicActivity:
             self._maybe_hint(now)
         if self.controls.layer.invalidation.should_draw:
             self._dirty = True
-        # The sore-ear / tummy marks bob gently while a problem is visible.
-        marked = self.state is AppState.PLAYING and bool(self.day.look.overlays) and self.day.phase is not Phase.DONE
-        return self.motion.active(now) or self.cast.animating or marked
+        # The sore-ear / tummy marks bob gently while a problem is visible:
+        # ambient decoration, not essential motion.
+        self._marks_bobbing = (
+            self.state is AppState.PLAYING and bool(self.day.look.overlays) and self.day.phase is not Phase.DONE
+        )
+        return self.motion.active(now) or self.cast.animating
 
     def render(self) -> None:
         surface = self.canvas.surface

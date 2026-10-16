@@ -277,8 +277,13 @@ class OrchestraApp:
                 if repeat is not None:
                     self._dispatch(repeat)
                 animating = self.step()
-                frame = frames.frame(dirty=self._dirty, animating=animating)
+                # The band's sway is decoration (quantised, so it only asks
+                # for a frame when the bob changes); on the reference floor it
+                # freezes while the child is idle unless a song is playing.
+                swaying = self._sway_due() and (self.playalong.playing or not frames.ambient_frozen)
+                frame = frames.frame(dirty=self._dirty or swaying, animating=animating)
                 if frame is FrameKind.FULL:
+                    self._last_sway = sway(self.clock(), self.tempo)
                     self.render()
                     self.canvas.present()
                     pygame.display.flip()
@@ -313,13 +318,14 @@ class OrchestraApp:
         elif self.phase is Phase.ECHO:
             self._maybe_close_echo(now)
             self._maybe_hint(now)
-        bob = sway(now, self.tempo)
-        if bob != self._last_sway:
-            self._last_sway = bob
-            self._dirty = True
         if self.controls.layer.invalidation.should_draw:
             self._dirty = True
         return self.motion.active(now) or any(feedback.animating for feedback in self.feedback)
+
+    def _sway_due(self) -> bool:
+        """True when the quantised band sway moved since the last frame."""
+
+        return sway(self.clock(), self.tempo) != self._last_sway
 
     def render(self) -> None:
         surface = self.canvas.surface

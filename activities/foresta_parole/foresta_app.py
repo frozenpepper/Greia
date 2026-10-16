@@ -165,6 +165,8 @@ class ForestaApp:
         self.state_started = clock()
         self._running = True
         self._ready_published = False
+        self._full_frame = True  # next frame must repaint everything
+        self._frame_key: tuple | None = None
         self._last_tick = clock()
         self._quiet_since = clock()
         self._idle_hints = 0
@@ -225,9 +227,15 @@ class ForestaApp:
     def run(self) -> int:
         # Falling letters animate while playing; the completion scene is ambient.
         frames = FrameGovernor(redraw_on_input=True)
+        # Dirty rectangles: while only letters, basket, Leo and the sign move
+        # over the cached glade, frames re-render and push just their
+        # rectangles (previous + current); anything else is a full frame.
+        previous: list[pygame.Rect] | None = None
         while self._running and not activity_stop_requested():
             for event in frames.events():
                 self._handle_event(event)
+                if event.type != pygame.MOUSEMOTION:
+                    self._full_frame = True
             if self.state is AppState.TERMINAL:
                 repeat = self._input.poll()
                 if repeat is not None:
@@ -235,9 +243,7 @@ class ForestaApp:
             self.tick()
             frame = frames.frame(animating=self.state is not AppState.TERMINAL, ambient=True)
             if frame is FrameKind.FULL:
-                self._render()
-                self.canvas.present()
-                pygame.display.flip()
+                previous = self._present(previous)
                 if not self._ready_published:
                     mark_activity_ready()
                     self._ready_published = True
@@ -246,6 +252,35 @@ class ForestaApp:
             frames.wait(polling=self._input.repeating)
         self._save()
         return 0
+
+    def _present(self, previous: list[pygame.Rect] | None) -> list[pygame.Rect] | None:
+        """Present one frame; return this frame's sprite regions (or None)."""
+
+        current = None
+        key = None
+        if self.state in {AppState.INTRO, AppState.PLAYING, AppState.CAUGHT}:
+            state = self.scene_state()
+            current = self.renderer.sprite_regions(self.controls.geometry, state)
+            key = (self.state, state.card, state.revealed, len(state.caught))
+        partial = (
+            current is not None
+            and previous is not None
+            and key == self._frame_key
+            and self._ready_published
+            and not self._full_frame
+            and not self.controls.layer.invalidation.should_draw
+        )
+        self._frame_key = key
+        plan = self.canvas.plan_regions(previous + current) if partial else None
+        if plan is not None:
+            self.canvas.render_regions(plan, self._render)
+            self.canvas.present_regions(plan)
+            return current
+        self._render()
+        self.canvas.present()
+        pygame.display.flip()
+        self._full_frame = False
+        return current
 
     def tick(self) -> None:
         """Advance speech, cast, basket, falling letters and state timers."""
@@ -263,6 +298,7 @@ class ForestaApp:
         self._move_basket(dt)
         if self.state in {AppState.INTRO, AppState.PLAYING, AppState.CAUGHT}:
             for event in self.field.update(dt, self.basket.x):
+                self._full_frame = True
                 self._on_field_event(event.kind, event.letter, now)
         self._advance_state(now)
 

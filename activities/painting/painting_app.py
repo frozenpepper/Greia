@@ -24,9 +24,9 @@ from greia_platform.activity_controls import (
     PygameControlInput,
 )
 from greia_platform.activity_feedback import CastFeedback
-from greia_platform.activity_ui import ChildUiMetrics, draw_activity_pointer
+from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.frame_governor import FrameGovernor, FrameKind
-from greia_platform.pygame_canvas import activity_viewport_for_surface
+from greia_platform.pygame_canvas import PygamePointerSprite, activity_viewport_for_surface
 from greia_platform.typography import GreiaTypography
 from greia_platform.ui_core import SurfaceNavigator
 
@@ -134,6 +134,10 @@ class PaintingApp:
         self.library_full_until = 0.0
         self.pending_delete: PaintingRecord | None = None
         self._fx: list[FxBurst] = []
+        # Partial presentation (Acer re-sweep R.3): Greia's pointer is a
+        # save-under sprite and a stroke repaints only its own rectangle.
+        self._pointer = PygamePointerSprite()
+        self._stroke_dirty: pygame.Rect | None = None  # canvas-local
         self._pointer_pressed = False
         self._stamp_tap = False
         # Controller: left stick drives a Greia virtual pointer (pointer profile).
@@ -208,39 +212,100 @@ class PaintingApp:
     # -- lifecycle --------------------------------------------------------
 
     def run(self) -> int:
-        # Input (strokes are drags) redraws; banners/save status redraw when
-        # their visible state changes; keepalive bounds anything else.
+        # The governor decides *when* to present; Painting decides *what*:
+        # the whole studio (state, mode, controls or banners changed), only
+        # the rectangle a stroke touched, or only Greia's pointer.  On the
+        # Atom a full 1024x600 redraw per pointer move made the pointer trail
+        # the hand by ~300 ms (Acer re-sweep R.3).  Keepalive bounds anything
+        # a signature misses.
         frames = FrameGovernor(redraw_on_input=True, keepalive_seconds=1.0)
         self.running = True
         ready_published = False
         shown: tuple[object, ...] | None = None
+        repaint = True
+        last_full = time.monotonic()
         while self.running and not activity_stop_requested():
             for event in frames.events():
+                was_drawing = self.drawing
                 self.handle_event(event)
+                if self._repaints(event, was_drawing):
+                    repaint = True
             repeat = self._input.poll()
             if repeat is not None and not self.controller_pointer.active:
                 self._dispatch_to_kit(repeat)
+                repaint = True
             moved = self._step_frame()
             signature = self._visual_signature()
-            frame = frames.frame(
-                dirty=moved or signature != shown or self.controls.layer.invalidation.should_draw,
-                animating=bool(self._fx) or (self.cast is not None and self.cast.animating),
+            animating = bool(self._fx) or (self.cast is not None and self.cast.animating)
+            full = (
+                repaint or signature != shown or animating
+                or self.controls.layer.invalidation.should_draw
             )
+            frame = frames.frame(dirty=full or moved or self._stroke_dirty is not None, animating=animating)
             if frame is not FrameKind.SKIP:
-                # Painting draws straight to the display (no reference canvas),
-                # so a pointer-only frame is a full redraw here.
-                self._draw()
-                shown = signature
-                pygame.display.flip()
-                if not ready_published:
-                    mark_activity_ready()
-                    ready_published = True
+                now = time.monotonic()
+                stale = frame is FrameKind.FULL and now - last_full >= 1.0
+                if full or stale or not ready_published:
+                    self._draw()
+                    pygame.display.flip()
+                    shown = signature
+                    repaint = False
+                    self._stroke_dirty = None
+                    last_full = now
+                    if not ready_published:
+                        mark_activity_ready()
+                        ready_published = True
+                elif self._stroke_dirty is not None:
+                    self._present_stroke()
+                else:
+                    self._pointer.refresh(self.screen, self._pointer_position())
             # A controller-driven virtual pointer is polled at frame cadence.
             frames.wait(polling=self.controller_pointer.active or self._input.repeating)
         self._save()
         self.surfaces.close()
         pygame.quit()
         return 0
+
+    def _repaints(self, event: pygame.event.Event, was_drawing: bool) -> bool:
+        """Whether ``event`` may change more than the stroke or the pointer."""
+
+        if event.type != pygame.MOUSEMOTION:
+            return True
+        # Hover reaches the kit, which invalidates itself when its look
+        # changes; a drag that is not a stroke (pressed control) repaints.
+        return any(getattr(event, "buttons", ()) or ()) and not (was_drawing or self.drawing)
+
+    def _pointer_position(self) -> tuple[int, int] | None:
+        virtual = self.controller_pointer.position
+        if self.controller_pointer.active and virtual is not None:
+            return virtual
+        return None
+
+    def _note_stroke(self, rect: pygame.Rect) -> None:
+        """Remember the canvas-local area a stroke just changed."""
+
+        self._stroke_dirty = rect if self._stroke_dirty is None else self._stroke_dirty.union(rect)
+
+    def _present_stroke(self) -> None:
+        """Push only the stroke's rectangle (plus the pointer) to the display.
+
+        Inside the canvas nothing but the painting and the colouring outline
+        is drawn while a stroke is in progress (no sheet, burst or cast), so
+        blitting those two layers reproduces exactly what ``_draw`` would.
+        """
+
+        dirty, self._stroke_dirty = self._stroke_dirty, None
+        crect = self.canvas_rect
+        region = dirty.move(crect.topleft).clip(crect) if dirty is not None else pygame.Rect(0, 0, 0, 0)
+        if region.width <= 0 or region.height <= 0:
+            self._pointer.refresh(self.screen, self._pointer_position())
+            return
+        self._pointer.erase(self.screen)
+        area = region.move(-crect.x, -crect.y)
+        self.screen.blit(self.canvas, region.topleft, area)
+        if self.outline is not None:
+            self.screen.blit(self.outline, region.topleft, area)
+        self._pointer.refresh(self.screen, self._pointer_position(), extra=(region,))
 
     def handle_event(self, event: pygame.event.Event) -> None:
         """Route one Pygame event (pointer, keyboard, controller, window)."""
@@ -1028,7 +1093,10 @@ class PaintingApp:
         return self.metrics.px(BRUSH_SIZES[self.selected_size])
 
     def _draw_dot(self, surface: pygame.Surface, point: tuple[int, int]) -> None:
-        pygame.draw.circle(surface, self._brush_color(), point, max(1, self._brush_size() // 2))
+        radius = max(1, self._brush_size() // 2)
+        pygame.draw.circle(surface, self._brush_color(), point, radius)
+        if surface is self.canvas:
+            self._note_stroke(pygame.Rect(point[0] - radius - 1, point[1] - radius - 1, 2 * radius + 3, 2 * radius + 3))
 
     def _draw_segment(self, surface: pygame.Surface, start: tuple[int, int], end: tuple[int, int]) -> None:
         color = self._brush_color()
@@ -1037,6 +1105,10 @@ class PaintingApp:
         pygame.draw.line(surface, color, start, end, size)
         pygame.draw.circle(surface, color, start, radius)
         pygame.draw.circle(surface, color, end, radius)
+        if surface is self.canvas:
+            pad = max(size, radius) + 2
+            left, top = min(start[0], end[0]) - pad, min(start[1], end[1]) - pad
+            self._note_stroke(pygame.Rect(left, top, abs(end[0] - start[0]) + 2 * pad + 1, abs(end[1] - start[1]) + 2 * pad + 1))
 
     def _local(self, pos: tuple[int, int]) -> tuple[int, int]:
         return pos[0] - self.canvas_rect.left, pos[1] - self.canvas_rect.top
@@ -1101,11 +1173,10 @@ class PaintingApp:
         if self.cast is not None and self.cast.animating:
             crect = self.canvas_rect
             self.cast.draw(self.screen, (crect.right - self.metrics.px(80), crect.bottom + self.metrics.px(12)))
-        virtual = self.controller_pointer.position
-        if self.controller_pointer.active and virtual is not None:
-            draw_activity_pointer(self.screen, virtual)
-        else:
-            draw_activity_pointer(self.screen)
+        # The pointer is a save-under sprite so pointer-only frames and
+        # strokes can repair it without re-rendering the studio.
+        self._pointer.forget()
+        self._pointer.draw(self.screen, self._pointer_position())
 
 
 __all__ = ["PaintingApp"]

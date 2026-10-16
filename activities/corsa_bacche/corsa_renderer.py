@@ -20,11 +20,11 @@ import pygame
 from greia_platform.activity_feedback import CastFeedback, CastPose
 
 if __package__:
-    from .corsa_art import CorsaArt, fruit_for
+    from .corsa_art import MOMO_SHARE, CorsaArt, fruit_for
     from .corsa_layout import GardenGeometry
     from .corsa_model import Cell, Direction, Garden
 else:
-    from corsa_art import CorsaArt, fruit_for
+    from corsa_art import MOMO_SHARE, CorsaArt, fruit_for
     from corsa_layout import GardenGeometry
     from corsa_model import Cell, Direction, Garden
 
@@ -255,6 +255,46 @@ class CorsaRenderer:
             bubble = sprites.bubble
             bob = int(math.sin(now * 5.0) * cell * 0.03)
             surface.blit(bubble, bubble.get_rect(midbottom=(mx + int(cell * 0.42), my - int(cell * 0.62) + bob)))
+
+    def sprite_regions(
+        self,
+        garden: Garden,
+        geometry: GardenGeometry,
+        motion: CorsaMotion,
+        now: float,
+    ) -> list[pygame.Rect] | None:
+        """Logical rectangles ``draw`` may change between two frames.
+
+        Covers Momo, every critter (with hop and halo) and every remaining
+        berry (sway, pulse hop and halo).  Returns None when something else
+        animates (hint trail, FX, wall shove, wait bubble, intro hops): the
+        caller then renders a full frame.  Callers union these with the
+        previous frame's rectangles so vacated pixels are repaired too.
+        """
+
+        if (
+            motion.trail is not None
+            or motion.fx
+            or motion.wall is not None
+            or now - motion.bubble < BUBBLE_SECONDS + 0.1
+            or now - motion.intro < 2.5
+        ):
+            return None
+        cell = geometry.cell
+
+        def box(row: float, col: float, width: float, height: float, bottom: float) -> pygame.Rect:
+            x, y = geometry.center(row, col)
+            rect = pygame.Rect(0, 0, int(cell * width) + 4, int(cell * height) + 4)
+            rect.midbottom = (int(x), int(y + cell * bottom) + 2)
+            return rect
+
+        # Momo (incl. point/wave poses and cheer hop), then critters, berries.
+        regions = [box(*garden.momo.position(), 3.0, MOMO_SHARE + 0.9, FEET + 0.15)]
+        for critter in garden.critters:
+            regions.append(box(*critter.position(), 1.8, 2.1, FEET + 0.2))
+        for berry in garden.remaining:
+            regions.append(box(*berry, 1.5, 1.9, 0.75))
+        return regions
 
     def _draw_momo(
         self,

@@ -13,7 +13,9 @@ own model and renderer and only *tells* the governor what happened:
   physics, a moving character the child is steering): full ``animation_fps``;
 * ``ambient=True`` — decorative idle motion (bubbles, clouds, breathing
   characters): full rate for ``ambient_after_seconds`` after the last child
-  input, then the reduced ``ambient_fps``;
+  input, then the reduced ``ambient_fps``.  On the reference floor
+  ``ambient_fps`` is 0: decorative motion freezes on its last frame (a
+  static screen, no presents) and resumes at full rate on the next input;
 * pointer motion seen through ``events()`` — a cheap pointer-only refresh
   (``FrameKind.POINTER``) so Greia's platform pointer still follows promptly.
 
@@ -52,6 +54,9 @@ from typing import Callable, Mapping
 import pygame
 
 FRAME_PROFILE_ENV = "GREIA_FRAME_PROFILE"
+
+# Floor for a sleep after an iteration that presented nothing (anti-spin).
+_MIN_IDLE_SLEEP = 0.002
 
 # Raw input that counts as "the child is here" for the ambient throttle.
 _INPUT_EVENT_NAMES = (
@@ -92,7 +97,10 @@ class FramePolicy:
 
     ``animation_fps`` caps every presented frame (dirty, animation or pointer).
     ``ambient_fps`` applies to decorative motion once no input arrived for
-    ``ambient_after_seconds``.  ``idle_poll_seconds`` bounds how long a static
+    ``ambient_after_seconds``; ``0`` means decorative motion stops entirely
+    (the last frame stays on screen) until the next child input.  On the
+    Atom N270 even a 10 fps full 1024x600 redraw costs tens of ms per frame,
+    so the reference floor uses 0.  ``idle_poll_seconds`` bounds how long a static
     loop sleeps between event/timer polls (and so the worst-case extra input
     latency on a static screen).
     """
@@ -105,8 +113,8 @@ class FramePolicy:
     def __post_init__(self) -> None:
         if not 1.0 <= self.animation_fps <= 120.0:
             raise ValueError("animation_fps must be within 1..120")
-        if not 1.0 <= self.ambient_fps <= self.animation_fps:
-            raise ValueError("ambient_fps must be within 1..animation_fps")
+        if self.ambient_fps != 0.0 and not 1.0 <= self.ambient_fps <= self.animation_fps:
+            raise ValueError("ambient_fps must be 0 (static) or within 1..animation_fps")
         if self.ambient_after_seconds < 0.0:
             raise ValueError("ambient_after_seconds must not be negative")
         if not 0.005 <= self.idle_poll_seconds <= 0.25:
@@ -118,7 +126,15 @@ class FramePolicy:
 
     @property
     def ambient_period(self) -> float:
-        return 1.0 / self.ambient_fps
+        """Seconds between throttled ambient frames (``inf`` when static)."""
+
+        return float("inf") if self.ambient_fps == 0.0 else 1.0 / self.ambient_fps
+
+    @property
+    def ambient_static(self) -> bool:
+        """True when throttled decorative motion presents nothing at all."""
+
+        return self.ambient_fps == 0.0
 
     @classmethod
     def standard(cls) -> "FramePolicy":
@@ -126,9 +142,16 @@ class FramePolicy:
 
     @classmethod
     def reference_floor(cls) -> "FramePolicy":
-        """Atom N270-class budget: fewer full frames, earlier ambient drop."""
+        """Atom N270-class budget: fewer full frames; decoration stops when idle.
 
-        return cls(animation_fps=24.0, ambient_fps=10.0, ambient_after_seconds=6.0)
+        A full-frame redraw + flip costs tens of ms on the Atom, so even a
+        10 fps decorative loop kept Activities above 100% CPU (Acer re-sweep
+        at 0f560c2e).  After ``ambient_after_seconds`` without input the
+        decorative scene therefore freezes (``ambient_fps=0``) and resumes
+        instantly on the next input.
+        """
+
+        return cls(animation_fps=24.0, ambient_fps=0.0, ambient_after_seconds=6.0)
 
     @classmethod
     def for_profile(cls, name: str) -> "FramePolicy":
@@ -202,6 +225,7 @@ class FrameGovernor:
         self._last_present: float | None = None
         self._next_due: float | None = None  # when the loop should wake next
         self._last_wake: float | None = None
+        self._last_kind = FrameKind.FULL
         self.frames_presented = 0
 
     # -- producers --------------------------------------------------------
@@ -252,6 +276,18 @@ class FrameGovernor:
 
         return self._clock() - self._last_input >= self.policy.ambient_after_seconds
 
+    @property
+    def ambient_frozen(self) -> bool:
+        """True while decorative motion is stopped (static policy, child idle).
+
+        Loops that pace decoration themselves (e.g. an 8 fps cloud drift sent
+        as ``dirty``) or simulate purely decorative actors (wandering critters
+        a resting player cannot meet) check this to stop that work as well, so
+        the scene resumes where it froze instead of jumping on the next input.
+        """
+
+        return self.policy.ambient_static and self.ambient_throttled
+
     def frame(self, *, dirty: bool = False, animating: bool = False, ambient: bool = False) -> FrameKind:
         """Return what to present now; the caller must honour FULL/POINTER.
 
@@ -272,16 +308,24 @@ class FrameGovernor:
             essential = True
         period = self.policy.frame_period
         if ambient and not essential and self.ambient_throttled:
-            period = self.policy.ambient_period
+            if self.policy.ambient_static:
+                # Static decoration: the last frame stays; only the pointer
+                # (and essential work) may still present.
+                ambient = False
+            else:
+                period = self.policy.ambient_period
         if not (essential or ambient or self._pointer):
             self._next_due = None
+            self._last_kind = FrameKind.SKIP
             return FrameKind.SKIP
         last = self._last_present
         # A 2 ms slack keeps a sleeping loop from missing its slot by jitter.
         if last is not None and now - last < period - 0.002:
             self._next_due = last + period
+            self._last_kind = FrameKind.SKIP
             return FrameKind.SKIP
         kind = FrameKind.FULL if (essential or ambient) else FrameKind.POINTER
+        self._last_kind = kind
         self._dirty = False
         self._pointer = False
         self._last_present = now
@@ -311,6 +355,11 @@ class FrameGovernor:
             cadence = (self._last_wake if self._last_wake is not None else now) + self.policy.frame_period
             deadline = min(deadline, max(now, cadence))
         delay = min(deadline - now, self.policy.idle_poll_seconds)
+        if not polling and self._last_kind is FrameKind.SKIP:
+            # Nothing was presented this iteration: never return without a
+            # real sleep, so a loop that keeps asking for a frame that is not
+            # due (or nothing at all) cannot spin the CPU.
+            delay = max(delay, _MIN_IDLE_SLEEP)
         if delay > 0.0:
             self._sleep(delay)
         self._last_wake = self._clock()

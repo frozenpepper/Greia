@@ -358,6 +358,44 @@ class AppLoopTests(unittest.TestCase):
                 app._pointer(KitPointer(PointerPhase.MOVE, (int(target.x), 520)))
             _step(app, clock, 1 / 30)
 
+    def test_dirty_rect_frames_match_a_full_render(self) -> None:
+        """Falling letters / basket / Leo / sign repaint only their rectangles."""
+
+        for seed in (5, 9):
+            app, clock, _audio, _storage, _events = _make_app(seed=seed)
+            app._ready_published = True  # as after the first frame of run()
+            previous = app._present(None)
+            partial_frames: list[int] = []
+            checked: list[int] = []
+            mismatched: list[tuple[int, int, int]] = []
+            original = app.canvas.present_regions
+            app.canvas.present_regions = lambda regions: (partial_frames.append(1), original(regions))[1]
+            for tick in range(360):
+                if app.state is AppState.TERMINAL:
+                    break
+                target = app.field.falling_target()
+                if target is not None and tick % 15 == 0:
+                    app._pointer(KitPointer(PointerPhase.MOVE, (int(target.x), 520)))
+                clock.now += 1 / 24
+                app.tick()
+                previous = app._present(previous)
+                if tick % 30 == 29:
+                    # Every so often: what the dirty rectangles left on the
+                    # logical surface must equal a full render of this state.
+                    partial = app.canvas.surface.copy()
+                    app._render()
+                    full = app.canvas.surface
+                    checked.append(tick)
+                    mismatched.extend(
+                        (tick, x, y)
+                        for x in range(0, full.get_width(), 3)
+                        for y in range(0, full.get_height(), 3)
+                        if partial.get_at((x, y)) != full.get_at((x, y))
+                    )
+            self.assertGreater(len(partial_frames), 60)
+            self.assertTrue(checked)
+            self.assertEqual(mismatched[:5], [], f"seed {seed}")
+
     def test_plays_a_full_round_to_the_completion_scene(self) -> None:
         storage = MemoryStorage({STORAGE_KEY: {"score": 10, "stars": 1, "words_completed": 1}})
         app, clock, audio, storage, events = _make_app(storage=storage)

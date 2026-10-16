@@ -121,6 +121,42 @@ class ForestRenderer:
         draw_controls(target)
         self._draw_fx(target, state)
 
+    def sprite_regions(self, geometry: ForestLayout, state: SceneState) -> list[pygame.Rect] | None:
+        """Logical rectangles ``draw_scene`` may change between two frames.
+
+        Covers the letters in the air (with glow), the basket with the
+        letters peeking over its rim, Leo while he moves or points, and the
+        sign while it speaks or pulses.  Returns None while an FX burst or
+        the finale plays: the caller renders a full frame.  Callers union
+        these with the previous frame's rectangles (vacated pixels) and
+        render a full frame whenever the card/reveal/catch tally changes.
+        """
+
+        if state.sparkle is not None or state.bump is not None or state.finale is not None:
+            return None
+        regions: list[pygame.Rect] = []
+        glow_side = int(FRUIT_SIZE * 1.7 * 1.08) + 8
+        plain_side = FRUIT_SIZE + 12
+        for letter in state.letters:
+            side = glow_side if letter.glow else plain_side
+            rect = pygame.Rect(0, 0, side, side)
+            rect.center = (int(round(letter.x)), int(round(letter.y)))
+            regions.append(rect)
+        basket = self._basket_rect(geometry, state.basket_x)
+        regions.append(basket.inflate(16, 16).union(basket.move(0, -(PEEK_SIZE + 24))))
+        cast = self.cast
+        if state.leo_pointing or (cast is not None and cast.animating):
+            leo = pygame.Rect(0, 0, int(LEO_HEIGHT * 1.6), int(LEO_HEIGHT * 1.3))
+            leo.midbottom = (LEO_MIDBOTTOM[0], LEO_MIDBOTTOM[1] + 8)
+            regions.append(leo)
+        if state.speaking or state.hint:
+            sign = geometry.sign
+            side = int(max(sign.width, sign.height) * 1.25 * 1.05) + 8
+            glow = pygame.Rect(0, 0, side, side)
+            glow.center = sign.center
+            regions.append(glow.union(sign.inflate(16, 24)))
+        return regions
+
     @staticmethod
     def _basket_rect(geometry: ForestLayout, x: float) -> pygame.Rect:
         rect = pygame.Rect(0, 0, *BASKET_SIZE)

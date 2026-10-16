@@ -11,7 +11,7 @@ os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 import pygame
 
 from greia_platform.frame_governor import FrameGovernor, FrameKind, FramePolicy
-from greia_platform.pygame_canvas import PygameReferenceCanvas
+from greia_platform.pygame_canvas import PygamePointerSprite, PygameReferenceCanvas, merge_regions
 
 
 class FakeTime:
@@ -141,6 +141,68 @@ class FrameGovernorTests(unittest.TestCase):
         self.assertFalse(frames.ambient_throttled)
         self.assertGreaterEqual(count(1.0), 19)
 
+    def test_static_ambient_policy_freezes_decoration_and_resumes_instantly(self) -> None:
+        fake = FakeTime()
+        static = FramePolicy(animation_fps=20.0, ambient_fps=0.0, ambient_after_seconds=2.0)
+        self.assertTrue(static.ambient_static)
+        frames = FrameGovernor(static, clock=fake.clock, sleep=fake.sleep)
+
+        def count(seconds: float) -> int:
+            before = frames.frames_presented
+            end = fake.now + seconds
+            while fake.now < end:
+                frames.frame(ambient=True)
+                frames.wait()
+            return frames.frames_presented - before
+
+        self.assertGreaterEqual(count(1.9), 35)  # decorative window: full rate
+        fake.now += 0.2
+        self.assertTrue(frames.ambient_throttled)
+        slept = len(fake.slept)
+        self.assertEqual(count(10.0), 0)  # static frame: nothing presented
+        # ...and the loop only idles: every sleep is the bounded idle poll.
+        self.assertTrue(all(abs(s - static.idle_poll_seconds) < 1e-9 for s in fake.slept[slept:]))
+        # Pointer motion still moves Greia's pointer without waking the scene.
+        frames.note_event(motion())
+        self.assertIs(frames.frame(ambient=True), FrameKind.FULL)  # input resets the window
+        fake.now += 3.0
+        frames.note_input()
+        # Any input resumes decoration at full rate immediately.
+        self.assertIs(frames.frame(ambient=True), FrameKind.FULL)
+        self.assertGreaterEqual(count(1.0), 19)
+        # Essential motion and dirty frames are never frozen by the policy.
+        fake.now += 5.0
+        self.assertTrue(frames.ambient_throttled)
+        self.assertIs(frames.frame(dirty=True, ambient=True), FrameKind.FULL)
+        fake.now += 0.1
+        self.assertIs(frames.frame(animating=True, ambient=True), FrameKind.FULL)
+
+    def test_reference_floor_policy_is_static_after_window(self) -> None:
+        floor = FramePolicy.reference_floor()
+        self.assertEqual(floor.ambient_fps, 0.0)
+        self.assertTrue(floor.ambient_static)
+        self.assertEqual(floor.ambient_period, float("inf"))
+        self.assertFalse(FramePolicy.standard().ambient_static)
+        with self.assertRaises(ValueError):
+            FramePolicy(ambient_fps=0.5)
+
+    def test_wait_never_spins_when_nothing_is_presented(self) -> None:
+        fake = FakeTime()
+        frames = governor(fake)
+        frames.frame()
+        # A loop that keeps a pending frame which is never due must still sleep.
+        for _ in range(50):
+            frames.frame(dirty=True)  # capped: SKIP until the period elapses
+            fake.now += 0.0  # no work time passes
+            frames.wait()
+        self.assertTrue(all(s > 0.0 for s in fake.slept))
+        # Static screen: each iteration sleeps the idle poll, never zero.
+        fake.slept.clear()
+        for _ in range(20):
+            self.assertIs(frames.frame(), FrameKind.SKIP)
+            frames.wait()
+        self.assertTrue(all(s >= 0.002 for s in fake.slept))
+
     def test_essential_animation_is_never_throttled(self) -> None:
         fake = FakeTime()
         frames = governor(fake)
@@ -262,6 +324,63 @@ class CanvasPointerRefreshTests(unittest.TestCase):
         self.assertEqual(tuple(self.screen.get_at((200, 200)))[:3], (10, 20, 30))
         self.assertNotEqual(tuple(self.screen.get_at((400, 300)))[:3], (10, 20, 30))
         self.assertEqual(tuple(self.screen.get_at((605, 505)))[:3], (10, 20, 30))
+
+
+    def test_pointer_sprite_saves_under_and_restores_exactly(self) -> None:
+        self.screen.fill((10, 20, 30))
+        self.screen.fill((200, 0, 0), pygame.Rect(390, 290, 20, 20))
+        before = self.screen.copy()
+        sprite = PygamePointerSprite()
+        first = sprite.draw(self.screen, (400, 300))
+        self.assertIsNotNone(first)
+        self.assertNotEqual(self.screen.get_at((407, 300)), before.get_at((407, 300)))
+        rects = sprite.refresh(self.screen, (600, 400))
+        self.assertEqual(len(rects), 2)
+        # The red patch under the old pointer is back pixel for pixel.
+        for x in range(first.left, first.right):
+            for y in range(first.top, first.bottom):
+                self.assertEqual(self.screen.get_at((x, y)), before.get_at((x, y)))
+        # A partial update under the pointer: erase, repaint, refresh.
+        sprite.erase(self.screen)
+        self.screen.fill((0, 200, 0), pygame.Rect(590, 390, 30, 30))
+        rects = sprite.refresh(self.screen, (600, 400), extra=(pygame.Rect(590, 390, 30, 30),))
+        self.assertEqual(len(rects), 3)
+        sprite.erase(self.screen)
+        self.assertEqual(tuple(self.screen.get_at((600, 400)))[:3], (0, 200, 0))
+
+    def test_region_plan_merges_bounds_and_refuses_big_frames(self) -> None:
+        canvas = PygameReferenceCanvas(self.screen)
+        small = [pygame.Rect(10, 10, 40, 40), pygame.Rect(30, 30, 40, 40), pygame.Rect(500, 300, 20, 20),
+                 pygame.Rect(900, 500, 20, 20)]
+        plan = canvas.plan_regions(small, max_passes=2)
+        self.assertIsNotNone(plan)
+        self.assertLessEqual(len(plan), 2)
+        for rect in small:
+            self.assertTrue(any(region.contains(rect) for region in plan))
+        self.assertIsNone(canvas.plan_regions([pygame.Rect(0, 0, 1024, 400)]))
+        self.assertEqual(merge_regions([pygame.Rect(-50, -50, 10, 10)], self.screen.get_rect()), [])
+
+    def test_region_frame_updates_only_its_rectangles(self) -> None:
+        canvas = PygameReferenceCanvas(self.screen)
+        canvas.surface.fill((5, 5, 5))
+        canvas.present(clear=(0, 0, 0), pointer=False)
+        canvas.surface.fill((250, 250, 250))  # whole scene "changed" ...
+        region = pygame.Rect(100, 100, 50, 50)
+        draws: list[pygame.Rect] = []
+        canvas.render_regions([region], lambda: draws.append(canvas.surface.get_clip()))
+        self.assertEqual(draws, [region])
+        self.assertEqual(canvas.surface.get_clip(), canvas.surface.get_rect())
+        updates: list[list[pygame.Rect]] = []
+        real = pygame.display.update
+        pygame.display.update = lambda rects=None: updates.append(list(rects or []))
+        try:
+            self.assertTrue(canvas.present_regions([region]))
+        finally:
+            pygame.display.update = real
+        # ... but only the region reached the target and the display update.
+        self.assertEqual(tuple(self.screen.get_at((120, 120)))[:3], (250, 250, 250))
+        self.assertEqual(tuple(self.screen.get_at((300, 300)))[:3], (5, 5, 5))
+        self.assertEqual(updates and updates[0][0], region)
 
 
 if __name__ == "__main__":

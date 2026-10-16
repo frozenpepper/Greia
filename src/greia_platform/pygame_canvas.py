@@ -10,7 +10,7 @@ Activities can use PygameReferenceCanvas.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable, Iterable, Sequence
 
 import pygame
 
@@ -310,6 +310,90 @@ class PygameReferenceCanvas:
             pygame.display.update(dirty)
         return True
 
+    def plan_regions(
+        self,
+        regions: Iterable[pygame.Rect],
+        *,
+        max_passes: int = 2,
+        max_fraction: float = 0.5,
+    ) -> list[pygame.Rect] | None:
+        """Merge dirty ``regions`` into at most ``max_passes`` rectangles.
+
+        Returns None when a dirty-rectangle frame would not pay off (the
+        merged area exceeds ``max_fraction`` of the logical surface): the
+        caller then renders a full frame.  Each pass re-runs the Activity's
+        whole renderer under a clip, so on the Atom a few passes are cheap
+        but many are not — hence the small default.
+        """
+
+        bounds = self.surface.get_rect()
+        merged = merge_regions(regions, bounds, limit=max_passes)
+        if not merged or regions_area(merged) > max_fraction * bounds.width * bounds.height:
+            return None
+        return merged
+
+    def render_regions(
+        self,
+        regions: Sequence[pygame.Rect],
+        render: Callable[[], None],
+    ) -> None:
+        """Re-render only ``regions`` (from ``plan_regions``) of the logical surface.
+
+        ``render`` is the Activity's normal full-scene renderer; it runs once
+        per region with the logical surface clipped to it, so layering stays
+        exactly that of a full frame while SDL only touches the clipped
+        pixels.  The caller guarantees nothing changed outside ``regions``
+        since the last presented frame.  Follow with ``present_regions``.
+        """
+
+        previous = self.surface.get_clip()
+        try:
+            for region in regions:
+                self.surface.set_clip(region)
+                render()
+        finally:
+            self.surface.set_clip(previous)
+
+    def present_regions(self, regions: Sequence[pygame.Rect]) -> bool:
+        """Push only logical ``regions`` (and Greia's pointer) to the display.
+
+        The dirty-rectangle counterpart of ``present`` + ``flip`` for small
+        sprites moving over a cached background: copies just those regions
+        of the logical surface to the target and calls
+        ``pygame.display.update`` with them.  Returns False when the cheap
+        path does not apply (scaled presentation); it then presents and flips
+        the whole frame instead.
+        """
+
+        from .activity_ui import draw_activity_pointer
+
+        on_display = self.target is pygame.display.get_surface()
+        if not self._unscaled:
+            self.present(clear=self._last_clear, smooth=self._last_smooth)
+            if on_display:
+                pygame.display.flip()
+            return False
+        origin = self.mapper.transform.logical_to_physical((0.0, 0.0))
+        ox, oy = int(round(origin[0])), int(round(origin[1]))
+        bounds = self.surface.get_rect()
+        dirty: list[pygame.Rect] = []
+        for region in regions:
+            area = region.clip(bounds)
+            if area.width <= 0 or area.height <= 0:
+                continue
+            self.target.blit(self.surface, (area.x + ox, area.y + oy), area)
+            dirty.append(area.move(ox, oy))
+        old = self._pointer_rect
+        if old is not None:
+            self._repair(old)
+            dirty.append(old)
+        self._pointer_rect = draw_activity_pointer(self.target)
+        if self._pointer_rect is not None:
+            dirty.append(self._pointer_rect)
+        if dirty and on_display:
+            pygame.display.update(dirty)
+        return True
+
     def _repair(self, rect: pygame.Rect) -> None:
         """Restore ``rect`` of the target from the last presented frame."""
 
@@ -328,8 +412,149 @@ class PygameReferenceCanvas:
         self.target.blit(self.surface, visible.topleft, visible.move(-ox, -oy))
 
 
+def merge_regions(
+    regions: Iterable[pygame.Rect],
+    bounds: pygame.Rect,
+    *,
+    limit: int = 8,
+) -> list[pygame.Rect]:
+    """Clip ``regions`` to ``bounds`` and merge overlapping/touching ones.
+
+    Keeps at most ``limit`` rectangles (the smallest neighbours are unioned)
+    so a dirty-rectangle frame never degenerates into dozens of render
+    passes.  Bounded and allocation-light: meant for a handful of sprites.
+    """
+
+    pending = [r.clip(bounds) for r in regions]
+    pending = [r for r in pending if r.width > 0 and r.height > 0]
+    merged: list[pygame.Rect] = []
+    while pending:
+        rect = pending.pop()
+        grown = True
+        while grown:
+            grown = False
+            for index in range(len(merged) - 1, -1, -1):
+                if rect.colliderect(merged[index].inflate(2, 2)):
+                    rect = rect.union(merged.pop(index))
+                    grown = True
+        merged.append(rect)
+    while len(merged) > max(1, limit):
+        merged.sort(key=lambda r: r.width * r.height)
+        smallest = merged.pop(0)
+        nearest = min(
+            range(len(merged)),
+            key=lambda i: smallest.union(merged[i]).width * smallest.union(merged[i]).height,
+        )
+        merged[nearest] = merged[nearest].union(smallest)
+    return merged
+
+
+def regions_area(regions: Iterable[pygame.Rect]) -> int:
+    """Total pixel area of (already merged, non-overlapping) ``regions``."""
+
+    return sum(r.width * r.height for r in regions)
+
+
+class PygamePointerSprite:
+    """Save-under Greia pointer for Activities that render straight to the display.
+
+    Reference-canvas Activities repair the pointer from their logical surface
+    (``PygameReferenceCanvas.present_pointer``).  Activities that draw at
+    display resolution (Painting, Writing) have no such copy, so this sprite
+    keeps the few hundred pixels *under* the pointer instead:
+
+    * after a full render call ``draw(target)`` (it saves the patch first);
+    * on ``FrameKind.POINTER`` call ``refresh(target)``: restore the old
+      patch, draw at the new position, ``display.update`` the two rectangles
+      — no scene re-render, no full flip (Atom N270: tens of ms saved);
+    * before a partial scene update that may overlap the pointer, call
+      ``erase(target)``, redraw the region, then
+      ``refresh(target, extra=(region,))`` — one ``display.update`` pushes
+      the region and both pointer rectangles.
+
+    It owns one small bounded surface and no display resources.
+    """
+
+    def __init__(self, radius: int = 11) -> None:
+        if radius <= 0:
+            raise ValueError("radius must be positive")
+        self.radius = int(radius)
+        self._saved: tuple[pygame.Rect, pygame.Surface] | None = None
+        self._erased: pygame.Rect | None = None  # restored, not yet pushed
+
+    def forget(self) -> None:
+        """Drop the saved patch (the target was fully repainted underneath)."""
+
+        self._saved = None
+        self._erased = None
+
+    def draw(
+        self,
+        target: pygame.Surface,
+        pos: tuple[int, int] | None = None,
+    ) -> pygame.Rect | None:
+        """Save the pixels under the pointer, then draw it; return its rect."""
+
+        from . import activity_ui
+
+        self._saved = None
+        if pos is None:
+            if not pygame.mouse.get_focused():
+                return None
+            pos = pygame.mouse.get_pos()
+        x, y = int(pos[0]), int(pos[1])
+        if x <= 0 and y <= 0:
+            return None
+        r = self.radius
+        rect = pygame.Rect(x - r - 1, y - r - 1, 2 * r + 3, 2 * r + 3).clip(target.get_rect())
+        if rect.width <= 0 or rect.height <= 0:
+            return None
+        self._saved = (rect, target.subsurface(rect).copy())
+        activity_ui.draw_activity_pointer(target, (x, y), radius=r)
+        return rect
+
+    def erase(self, target: pygame.Surface) -> pygame.Rect | None:
+        """Restore the pixels under the last drawn pointer; return that rect."""
+
+        saved, self._saved = self._saved, None
+        if saved is None:
+            return None
+        rect, patch = saved
+        target.blit(patch, rect.topleft)
+        self._erased = rect
+        return rect
+
+    def refresh(
+        self,
+        target: pygame.Surface,
+        pos: tuple[int, int] | None = None,
+        *,
+        extra: tuple[pygame.Rect, ...] = (),
+    ) -> list[pygame.Rect]:
+        """Move the pointer and push only the changed rectangles.
+
+        ``extra`` adds rectangles the caller already redrew (e.g. a painting
+        stroke) so everything reaches the display in one ``update`` call.
+        """
+
+        rects = [rect for rect in extra if rect.width > 0 and rect.height > 0]
+        self.erase(target)  # no-op when the caller already erased
+        if self._erased is not None:
+            rects.append(self._erased)
+            self._erased = None
+        new = self.draw(target, pos)
+        if new is not None:
+            rects.append(new)
+        if rects and target is pygame.display.get_surface():
+            pygame.display.update(rects)
+        return rects
+
+
 __all__ = [
     "PygameCanvasMapper",
+    "PygamePointerSprite",
     "PygameReferenceCanvas",
     "activity_viewport_for_surface",
+    "merge_regions",
+    "regions_area",
 ]

@@ -249,7 +249,10 @@ class CloudActivity:
                 if repeat is not None:
                     self._dispatch(repeat)
                 lively = self.step()
-                frame = frames.frame(dirty=self._dirty or self._ambient_due())
+                # The drifting clouds are decoration: ~8 fps while the child
+                # is around, frozen on the reference floor once idle.
+                drifting = self._ambient_due() and not frames.ambient_frozen
+                frame = frames.frame(dirty=self._dirty or drifting)
                 if frame is FrameKind.FULL:
                     self.render()
                     self.canvas.present()

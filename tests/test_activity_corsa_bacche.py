@@ -451,6 +451,50 @@ class AppLoopTests(unittest.TestCase):
             self.assertNotEqual(app._visit_id, first_visit)  # fresh idempotency scope
             self._clear_with_keys(app, now)
 
+    def test_dirty_rect_frames_match_a_full_render(self) -> None:
+        """Moving Momo/critters/berries repaint only their rectangles, correctly."""
+
+        from corsa_app import AppState
+
+        for level in (1, 4, 6):
+            app, now, _ = self._app(level=level, seed=level)
+            self._advance(app, now, 3.0)  # past the intro hops
+            app._ready_published = True  # as after the first frame of run()
+            app._full_frame = True
+            previous = app._present(None)
+            partial_frames: list[int] = []
+            checked: list[int] = []
+            mismatched: list[tuple[int, int, int]] = []
+            original = app.canvas.present_regions
+            app.canvas.present_regions = lambda regions: (partial_frames.append(1), original(regions))[1]
+            garden = app.garden
+            for tick in range(240):
+                if app.state is not AppState.PLAYING:
+                    break
+                if not garden.momo.moving and tick % 40 == 0:
+                    route = garden.hint_route(avoid_critters=True)
+                    if len(route) > 1:
+                        app.press(_KEYS[(route[1][0] - route[0][0], route[1][1] - route[0][1])])
+                now[0] += 1 / 24
+                app.step(1 / 24)
+                previous = app._present(previous)
+                if tick % 30 == 29:
+                    # Every so often: what the dirty rectangles left on the
+                    # logical surface must equal a full render of this state.
+                    partial = app.canvas.surface.copy()
+                    app.render()
+                    full = app.canvas.surface
+                    checked.append(tick)
+                    mismatched.extend(
+                        (tick, x, y)
+                        for x in range(0, full.get_width(), 3)
+                        for y in range(0, full.get_height(), 3)
+                        if partial.get_at((x, y)) != full.get_at((x, y))
+                    )
+            self.assertGreater(len(partial_frames), 10)
+            self.assertTrue(checked)
+            self.assertEqual(mismatched[:5], [], f"level {level}")
+
     def test_space_on_completion_replays_through_kit_focus(self) -> None:
         from corsa_app import AppState
 
