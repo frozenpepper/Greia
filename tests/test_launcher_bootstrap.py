@@ -354,21 +354,20 @@ class LauncherBootstrapTests(unittest.TestCase):
                 calls: list[str] = []
                 import greia_platform.activities as activities
 
-                # Earlier tests in the same process may have validated the same
-                # unchanged tree; the registry memoises that (60b47498). This
-                # test observes a cold fallback validation, so start cold.
-                activities.clear_activity_validation_cache()
-
-                real_validate = activities.ActivityRegistry._validate_tree
-
-                def _counting_validate(self_obj: object, root: object) -> None:  # type: ignore[no-untyped-def]
+                # Observe a cold fallback validation through an isolated, empty
+                # memo (60b47498) so neither earlier nor later tests in this
+                # process are affected. Only the *call* matters here; the
+                # validator itself is covered by the registry tests, so the
+                # spy records instead of re-validating the whole catalogue.
+                def _recording_validate(self_obj: object, root: object) -> None:  # type: ignore[no-untyped-def]
                     calls.append(str(root))
-                    return real_validate(self_obj, root)  # type: ignore[arg-type]
 
                 with mock.patch.object(
+                    activities, "_validated_tree_cache", {}
+                ), mock.patch.object(
                     activities.ActivityRegistry,
                     "_validate_tree",
-                    _counting_validate,
+                    _recording_validate,
                 ):
                     app.bootstrap()
                 self.assertTrue(len(calls) > 0)

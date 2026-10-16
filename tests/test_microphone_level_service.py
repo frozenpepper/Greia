@@ -10,7 +10,9 @@ import threading
 import time
 import unittest
 from pathlib import Path
+from unittest import mock
 
+from greia_platform import microphone_level_service
 from greia_platform.microphone_level import MicrophoneLevel, MicrophoneLevelClient
 from greia_platform.microphone_level_service import (
     MicrophoneLevelService,
@@ -114,6 +116,11 @@ class ServiceReleasesTheDeviceTests(unittest.TestCase):
         """
 
         opened: list[bool] = []
+        # Shrink the production 3 s release gap: the contract is repeated
+        # open/close cycles, not the gap length.
+        gap = mock.patch.object(microphone_level_service, "RELEASE_GAP_SECONDS", 0.2)
+        gap.start()
+        self.addCleanup(gap.stop)
         with tempfile.TemporaryDirectory() as tmp:
             path = str(Path(tmp) / "burst.sock")
             service = MicrophoneLevelService(

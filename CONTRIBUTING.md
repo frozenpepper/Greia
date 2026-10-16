@@ -60,9 +60,11 @@ The full gate is:
 make verify
 ```
 
-It runs the unit tests, validates the project and every Activity, checks
-shell-script syntax and measures the source footprint. The full suite is
-large, so while you work, run the modules you touched:
+It runs the fast test lane, validates the project and every Activity, checks
+shell-script syntax and measures the source footprint. `make verify-full` adds
+the heavy end-to-end evidence suites listed in `tests/suite_lanes.py` (x8 QEMU
+rigs, install memory gates, whole-repository sweeps). While you work, run the
+modules you touched:
 
 ```bash
 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \

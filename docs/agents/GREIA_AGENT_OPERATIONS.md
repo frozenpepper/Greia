@@ -479,8 +479,19 @@ PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict
 Broad source gate:
 
 ```bash
-make verify
+make verify        # fast lane: every unit/contract/Activity test (default per turn)
+make verify-full   # fast lane + heavy evidence suites (x8 QEMU rigs, install RSS gates, whole-repo sweeps)
+make test-slow     # only the heavy suites
 ```
+
+Lanes are owned by `tests/suite_lanes.py` (`SLOW_TESTS`, one registry for both
+`tools/run_tests.py` and `tests/conftest.py`). Run `make verify-full` before
+claiming install/update/release/lifecycle work complete or when a change touches
+code those suites exercise. Naming a test module explicitly always runs it.
+The runner neutralises host-wide `os.sync()` inside the test process (durable
+writers still fsync, rename, directory-sync and re-read); a real-subprocess test
+must reap its child through `addCleanup` (see `tests/simulator_supervision.py`)
+so a failing assertion never orphans a process.
 
 Do not add brittle source-string tests merely because implementation text changed. Test real ownership, lifecycle, trust, policy, state, failure and performance contracts.
 
