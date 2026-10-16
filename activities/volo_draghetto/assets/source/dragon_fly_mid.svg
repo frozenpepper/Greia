@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- leaf light (mix 40% white) -> leaf -->
+    <linearGradient id="volo_dragon_body" x1="0" y1="60" x2="0" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+    <!-- sunshine light (mix 40% white) -> sunshine -->
+    <linearGradient id="volo_dragon_wing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDA85"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+    <!-- sunshine shade (mix 22% ink) flat pair for the far wing -->
+    <linearGradient id="volo_dragon_wing_far" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E9B656"/>
+      <stop offset="1" stop-color="#D9A132"/>
+    </linearGradient>
+  </defs>
+  <g id="character">
+    <g id="wing_far" transform="rotate(4 98 118)"><path d="M100 118 C94 86 74 50 40 28 C35 25 30 30 33 36 Q48 54 36 70 Q56 70 58 88 Q76 86 82 106 Z" fill="url(#volo_dragon_wing_far)" stroke="#4B372F" stroke-width="3.2" stroke-linejoin="round"/><path d="M96 112 L38 69 M96 113 L58 87" fill="none" stroke="#C7882A" stroke-width="2.2" stroke-linecap="round"/></g>
+    <g id="tail">
+      <path d="M70 150 C50 152 34 146 26 128 C24 122 30 120 33 125 C40 136 52 140 72 136 Z" fill="url(#volo_dragon_body)" stroke="#4B372F" stroke-width="3.2" stroke-linejoin="round"/>
+      <path d="M30 128 C18 128 10 118 14 106 C20 110 24 104 22 96 C34 100 40 114 33 125 Z" fill="#F46F61" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    </g>
+    <g id="spikes">
+      <path d="M98 112 Q100 92 112 86 Q114 100 112 110 Z" fill="#F46F61" stroke="#4B372F" stroke-width="2.8" stroke-linejoin="round"/>
+      <path d="M78 120 Q76 100 88 92 Q92 106 92 116 Z" fill="#F46F61" stroke="#4B372F" stroke-width="2.8" stroke-linejoin="round"/>
+      <path d="M62 132 Q56 114 66 104 Q72 118 74 128 Z" fill="#F46F61" stroke="#4B372F" stroke-width="2.8" stroke-linejoin="round"/>
+    </g>
+    <g id="feet_far">
+      <ellipse cx="96" cy="186" rx="10" ry="8" fill="#569C5D" stroke="#4B372F" stroke-width="2.6"/>
+    </g>
+    <g id="body">
+      <path d="M118 108 C150 106 166 128 162 154 C158 180 136 190 108 190 C80 190 58 176 56 152 C54 126 82 110 118 108 Z" fill="url(#volo_dragon_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M78 168 C92 182 126 184 146 172 C150 160 136 152 116 152 C96 152 80 158 78 168 Z" fill="#FFFBEB"/>
+      <path d="M90 164 L134 164 M96 174 L130 174" fill="none" stroke="#E8DCC0" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <g id="horns">
+      <path d="M144 76 C138 60 140 46 150 40 C156 52 158 64 156 74 Z" fill="#FBBF24" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M164 70 C162 54 168 42 178 38 C182 50 180 62 176 72 Z" fill="#FBBF24" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    </g>
+    <g id="head">
+      <circle cx="166" cy="112" r="46" fill="url(#volo_dragon_body)" stroke="#4B372F" stroke-width="3.5"/>
+      <ellipse cx="204" cy="126" rx="28" ry="23" fill="url(#volo_dragon_body)" stroke="#4B372F" stroke-width="3.5"/>
+      <circle cx="166" cy="112" r="44.2" fill="url(#volo_dragon_body)"/>
+      <ellipse cx="150" cy="86" rx="14" ry="8" fill="#FFFFFF" opacity="0.55" transform="rotate(-25 150 86)"/>
+    </g>
+    <g id="face">
+      <ellipse cx="166" cy="130" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.55"/>
+      <g id="eyes">
+        <ellipse cx="174" cy="104" rx="9" ry="12.5" fill="#342C35"/>
+        <ellipse cx="198" cy="100" rx="7" ry="10.5" fill="#342C35"/>
+        <ellipse cx="177" cy="99" rx="3.2" ry="4" fill="#FFFFFF"/>
+        <ellipse cx="200" cy="96" rx="2.5" ry="3.2" fill="#FFFFFF"/>
+      </g>
+      <g id="snout">
+        <ellipse cx="214" cy="118" rx="2.4" ry="2" fill="#4B372F"/>
+        <ellipse cx="224" cy="120" rx="2" ry="1.8" fill="#4B372F"/>
+      </g>
+      <g id="mouth">
+        <path d="M190 134 Q203 145 218 136" fill="none" stroke="#72513F" stroke-width="3" stroke-linecap="round"/>
+      </g>
+    </g>
+    <g id="feet_near">
+      <ellipse cx="128" cy="188" rx="11" ry="8.5" fill="#59B86A" stroke="#4B372F" stroke-width="2.6"/>
+    </g>
+    <g id="wing_near" transform="rotate(18 110 120)"><path d="M110 118 C104 86 84 50 50 28 C45 25 40 30 43 36 Q58 54 46 70 Q66 70 68 88 Q86 86 92 106 Z" fill="url(#volo_dragon_wing)" stroke="#4B372F" stroke-width="3.2" stroke-linejoin="round"/><path d="M106 112 L48 69 M106 113 L68 87" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round"/></g>
+  </g>
+</svg>

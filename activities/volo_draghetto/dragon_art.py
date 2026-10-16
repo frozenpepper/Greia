@@ -1,364 +1,412 @@
-"""Pre-rendered visual assets, parallax backdrops, and hardware-friendly colorkey caches for Il Volo del Draghetto."""
+"""Art for Il Volo del Draghetto: shared library + three private renditions.
+
+Shared art (resolved semantically, scaled once): the layered ``bg.sky_clouds``
+scene, ``prop.nature.cloud`` (bouncy clouds), ``prop.nature.rainbow`` (decor
+and the finish rainbow), ``ui.control.star`` (stars), ``prop.shape.diamond``
+(gems), look props (``prop.vocab.crown`` / ``prop.vocab.hat`` /
+``prop.nature.flower`` / ``prop.shape.star``) and the ``fx.*`` frames.
+
+Activity-private renditions (``assets/source/*.svg`` -> ``assets/runtime``,
+GREIA_SVG_AUTHORING_RULES): the dragon in three wing frames (a non-cast
+creature), the rainbow ring as back/front halves so the dragon flies *through*
+it, and a floating sky island.
+
+Performance (Acer floor): the sky + far cloud bank are composed once per
+course into one opaque surface; the mid/foreground cloud layers are cut once
+into small sprites (mask bounding rects) so parallax only blits cloud pixels.
+Everything else is scaled once into bounded caches; drawing is blits only.
+"""
 
 from __future__ import annotations
 
-import math
+from collections.abc import Callable
 from pathlib import Path
 from typing import Final
 
 import pygame
 
+from greia_platform.activity_controls import ControlArt
 from greia_platform.ui_core import BoundedCache
 
 try:
-    from dragon_model import (
-        ACCESSORIES,
-        RAINBOW_COLORS,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-    )
-except ImportError:
-    from .dragon_model import (
-        ACCESSORIES,
-        RAINBOW_COLORS,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-    )
+    from dragon_courses import COURSES, CourseSpec, SkyDecor, look_by_id
+    from dragon_model import REFERENCE_HEIGHT, REFERENCE_WIDTH
+except ImportError:  # pragma: no cover - package import path
+    from .dragon_courses import COURSES, CourseSpec, SkyDecor, look_by_id
+    from .dragon_model import REFERENCE_HEIGHT, REFERENCE_WIDTH
 
-COLORKEY: Final = (1, 2, 3)
-SKY_TOP: Final = (115, 185, 255)
-SKY_BOTTOM: Final = (248, 225, 240)
-DARK_TEXT: Final = (48, 38, 58)
-WHITE: Final = (255, 255, 255)
-GOLD: Final = (255, 215, 0)
-GOLD_DARK: Final = (245, 158, 11)
-PINK: Final = (255, 130, 165)
+PACKAGE_ROOT: Final = Path(__file__).resolve().parent
+RUNTIME_DIR: Final = PACKAGE_ROOT / "assets" / "runtime"
+DRAGON_FRAMES: Final = ("dragon_fly_up", "dragon_fly_mid", "dragon_fly_down")
+#: Body centre of the dragon in its 256 px master (collision pivot).
+DRAGON_PIVOT: Final = (138.0, 132.0)
+DRAGON_HEIGHT: Final = 150
+#: Inner half-height of the ring opening in its 256 px master.
+RING_INNER_HALF: Final = 84.0
+RING_VISUAL_SLACK: Final = 12.0
+SKY_LAYERS: Final = ("bg.sky_clouds.sky", "bg.sky_clouds.far", "bg.sky_clouds.mid", "bg.sky_clouds.foreground")
+FX_FRAMES: Final = {
+    "sparkle": ("default", "frame_2"),
+    "star_burst": ("default", "frame_2", "frame_3"),
+    "dust_puff": ("default", "frame_2", "frame_3"),
+    "confetti": ("default", "frame_2", "frame_3"),
+}
+NAVY: Final = (37, 59, 89)
 
-
-def _mix(c1: tuple[int, int, int], c2: tuple[int, int, int], factor: float) -> tuple[int, int, int]:
-    f = max(0.0, min(1.0, factor))
-    return (
-        int(round(c1[0] * (1.0 - f) + c2[0] * f)),
-        int(round(c1[1] * (1.0 - f) + c2[1] * f)),
-        int(round(c1[2] * (1.0 - f) + c2[2] * f)),
-    )
+Sprite = tuple[pygame.Surface, int, int]
 
 
-def _make_colorkey_surface(width: int, height: int) -> pygame.Surface:
-    """Create a hardware-friendly display-converted colorkey surface."""
-    surf = pygame.Surface((width, height))
-    if pygame.display.get_init() and pygame.display.get_surface():
+def _display_ready() -> bool:
+    return pygame.display.get_init() and pygame.display.get_surface() is not None
+
+
+def _alpha(surface: pygame.Surface) -> pygame.Surface:
+    return surface.convert_alpha() if _display_ready() else surface
+
+
+def _opaque(surface: pygame.Surface) -> pygame.Surface:
+    return surface.convert() if _display_ready() else surface
+
+
+class DragonArt:
+    """Own every scene/hero surface for one Activity run (bounded caches)."""
+
+    def __init__(
+        self,
+        art: ControlArt,
+        *,
+        runtime_dir: Path = RUNTIME_DIR,
+        layer_loader: Callable[[str], pygame.Surface | None] | None = None,
+    ) -> None:
+        self.art = art
+        self._runtime_dir = runtime_dir
+        self._layer_loader = layer_loader or self._load_shared_layer
+        self._private: dict[str, pygame.Surface | None] = {}
+        self._dragon: BoundedCache[tuple[str, int], tuple[pygame.Surface, ...]] = BoundedCache(4)
+        self._rings: BoundedCache[int, tuple[pygame.Surface, pygame.Surface]] = BoundedCache(6)
+        self._backdrops: BoundedCache[str, pygame.Surface] = BoundedCache(2)
+        self._misc: BoundedCache[tuple, pygame.Surface | None] = BoundedCache(48)
+        self._mid: list[Sprite] | None = None
+        self._front: list[Sprite] | None = None
+        self._sky: pygame.Surface | None = None
+        self._far: pygame.Surface | None = None
+
+    # -- loading -------------------------------------------------------------
+
+    @staticmethod
+    def _load_shared_layer(asset_id: str) -> pygame.Surface | None:
         try:
-            surf = surf.convert()
+            from greia_platform.activity_api import get_shared_visual_path
+
+            return pygame.image.load(str(get_shared_visual_path(asset_id)))
         except Exception:
-            pass
-    surf.fill(COLORKEY)
-    surf.set_colorkey(COLORKEY)
-    return surf
+            return None
 
+    def private(self, name: str) -> pygame.Surface | None:
+        if name not in self._private:
+            try:
+                surface = _alpha(pygame.image.load(str(self._runtime_dir / f"{name}.png")))
+            except Exception:
+                surface = None
+            self._private[name] = surface
+        return self._private[name]
 
-class DragonArtLibrary:
-    """Owns pre-rendered gameplay scenery, dragon animation frames, and sprite caches."""
+    def _scaled_private(self, name: str, size: tuple[int, int]) -> pygame.Surface | None:
+        key = ("private", name, size)
+        if key not in self._misc:
+            source = self.private(name)
+            self._misc[key] = None if source is None else pygame.transform.smoothscale(source, size)
+        return self._misc[key]
 
-    def __init__(self, root_path: Path | None = None) -> None:
-        self._root = root_path
-        self._bg_surface: pygame.Surface | None = None
-        self._distant_clouds: tuple[pygame.Surface, pygame.Surface, pygame.Surface] | None = None
+    def _layers(self) -> None:
+        if self._sky is not None:
+            return
+        size = (REFERENCE_WIDTH, REFERENCE_HEIGHT)
+        loaded = []
+        for asset_id in SKY_LAYERS:
+            layer = self._layer_loader(asset_id)
+            if layer is not None and layer.get_size() != size:
+                layer = pygame.transform.smoothscale(layer, size)
+            loaded.append(layer)
+        sky, far, mid, front = loaded
+        if sky is None:
+            sky = pygame.Surface(size)
+            top, bottom = (159, 205, 236), (233, 228, 240)
+            for y in range(size[1]):
+                t = y / size[1]
+                sky.fill(tuple(int(a + (b - a) * t) for a, b in zip(top, bottom)), (0, y, size[0], 1))
+        self._sky = _opaque(sky)
+        self._far = _alpha(far) if far is not None else None
+        self._mid = _cut_sprites(mid)
+        self._front = _cut_sprites(front)
 
-        # Pre-rendered gameplay sprites
-        self._star_sprite: pygame.Surface | None = None
-        self._rainbow_gate_sprite: pygame.Surface | None = None
-        self._cloud_obstacle_sprite: pygame.Surface | None = None
+    # -- scene ---------------------------------------------------------------
 
-        # Pre-rendered dragon body and wing frames: (flap_frame_idx, accessory, is_dashing) -> Surface
-        self._dragon_frames: dict[tuple[int, str, bool], pygame.Surface] = {}
+    def backdrop(self, spec: CourseSpec) -> pygame.Surface:
+        """Opaque sky + far cloud bank for one course (composed once)."""
 
-        # Pre-rendered particles by kind and size bucket
-        self._particle_cache: dict[tuple[str, int, tuple[int, int, int]], pygame.Surface] = {}
-
-    def get_sky_background(self) -> pygame.Surface:
-        """Return the pre-baked 1024x600 opaque sky gradient with distant rolling hills."""
-        if self._bg_surface is None:
-            surf = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
-            if pygame.display.get_init() and pygame.display.get_surface():
-                try:
-                    surf = surf.convert()
-                except Exception:
-                    pass
-            for y in range(REFERENCE_HEIGHT):
-                t = y / float(REFERENCE_HEIGHT)
-                color = _mix(SKY_TOP, SKY_BOTTOM, t)
-                pygame.draw.line(surf, color, (0, y), (REFERENCE_WIDTH, y))
-
-            # Distant gentle green rolling hills horizon far below (y=490..600)
-            pygame.draw.ellipse(surf, (168, 220, 160), (-100, 500, 600, 200))
-            pygame.draw.ellipse(surf, (148, 205, 140), (350, 480, 800, 240))
-            pygame.draw.ellipse(surf, (180, 230, 175), (100, 520, 500, 180))
-
-            self._bg_surface = surf
-        return self._bg_surface
-
-    def get_distant_clouds(self) -> tuple[pygame.Surface, pygame.Surface, pygame.Surface]:
-        """Return 3 pre-rendered fast colorkey puffy cloud sprites for parallax scrolling."""
-        if self._distant_clouds is None:
-            # Cloud 1: Small puffy cloud
-            c1 = _make_colorkey_surface(140, 75)
-            pygame.draw.ellipse(c1, (215, 230, 250), (10, 20, 120, 45))
-            pygame.draw.circle(c1, WHITE, (40, 36), 24)
-            pygame.draw.circle(c1, WHITE, (72, 28), 30)
-            pygame.draw.circle(c1, WHITE, (104, 38), 22)
-
-            # Cloud 2: Medium cumulus cloud
-            c2 = _make_colorkey_surface(200, 95)
-            pygame.draw.ellipse(c2, (215, 230, 250), (15, 25, 170, 60))
-            pygame.draw.circle(c2, WHITE, (50, 48), 34)
-            pygame.draw.circle(c2, WHITE, (98, 36), 42)
-            pygame.draw.circle(c2, WHITE, (148, 48), 32)
-            pygame.draw.ellipse(c2, WHITE, (30, 40, 140, 46))
-
-            # Cloud 3: Wide fluffy cloud
-            c3 = _make_colorkey_surface(160, 80)
-            pygame.draw.ellipse(c3, (215, 230, 250), (12, 22, 136, 50))
-            pygame.draw.circle(c3, WHITE, (45, 42), 26)
-            pygame.draw.circle(c3, WHITE, (82, 32), 34)
-            pygame.draw.circle(c3, WHITE, (120, 40), 28)
-
-            self._distant_clouds = (c1, c2, c3)
-        return self._distant_clouds
-
-    def get_star_sprite(self) -> pygame.Surface:
-        """Return a pre-rendered glowing gold star collectible sprite (44x44 colorkey)."""
-        if self._star_sprite is None:
-            size = 44
-            surf = _make_colorkey_surface(size, size)
-            cx, cy = size // 2, size // 2
-
-            # Soft golden halo ring
-            pygame.draw.circle(surf, (255, 245, 175), (cx, cy), 20)
-            pygame.draw.circle(surf, (255, 230, 110), (cx, cy), 16)
-
-            # 5-pointed gold star
-            pts = []
-            for i in range(10):
-                angle = -math.pi / 2 + i * (math.pi / 5)
-                r = 14 if i % 2 == 0 else 6
-                pts.append((cx + r * math.cos(angle), cy + r * math.sin(angle)))
-
-            pygame.draw.polygon(surf, GOLD, pts)
-            pygame.draw.polygon(surf, GOLD_DARK, pts, width=2)
-            # Center highlight
-            pygame.draw.circle(surf, (255, 255, 230), (cx - 2, cy - 2), 3)
-
-            self._star_sprite = surf
-        return self._star_sprite
-
-    def get_rainbow_gate_sprite(self) -> pygame.Surface:
-        """Return a pre-rendered vibrant upright rainbow arch gate (240x180 colorkey)."""
-        if self._rainbow_gate_sprite is None:
-            w, h = 240, 180
-            surf = _make_colorkey_surface(w, h)
-            cx, cy = w // 2, h - 35
-
-            # Rainbow bands in upright arch (0 to pi)
-            for i, col in enumerate(RAINBOW_COLORS):
-                r = 95 - i * 9
-                rect = pygame.Rect(cx - r, cy - r, r * 2, r * 2)
-                pygame.draw.arc(surf, col, rect, 0, math.pi, 9)
-
-            # Fluffy cloud footings at bases
-            for bx in (cx - 85, cx + 85):
-                # Cloud shadow
-                pygame.draw.ellipse(surf, (215, 230, 250), (bx - 32, cy - 8, 64, 32))
-                # Cloud lobes
-                pygame.draw.circle(surf, WHITE, (bx - 16, cy - 4), 18)
-                pygame.draw.circle(surf, WHITE, (bx, cy - 12), 22)
-                pygame.draw.circle(surf, WHITE, (bx + 16, cy - 4), 18)
-                pygame.draw.circle(surf, (245, 250, 255), (bx, cy + 2), 16)
-
-            self._rainbow_gate_sprite = surf
-        return self._rainbow_gate_sprite
-
-    def get_cloud_obstacle_sprite(self) -> pygame.Surface:
-        """Return a pre-rendered soft bouncy cloud obstacle (130x80 colorkey)."""
-        if self._cloud_obstacle_sprite is None:
-            w, h = 130, 80
-            surf = _make_colorkey_surface(w, h)
-            cx, cy = w // 2, h // 2
-
-            # Soft cloud shadow base
-            pygame.draw.ellipse(surf, (215, 230, 250), (cx - 55, cy - 10, 110, 46))
-            # Cloud lobes
-            pygame.draw.ellipse(surf, (235, 245, 255), (cx - 50, cy - 24, 60, 48))
-            pygame.draw.ellipse(surf, WHITE, (cx - 24, cy - 36, 68, 56))
-            pygame.draw.ellipse(surf, (245, 250, 255), (cx + 8, cy - 22, 52, 44))
-            pygame.draw.ellipse(surf, WHITE, (cx - 45, cy - 15, 90, 40))
-
-            # Cute sleeping/smiling face on the cloud
-            pygame.draw.arc(surf, (140, 165, 195), (cx - 16, cy - 4, 10, 8), math.pi, 2 * math.pi, 2)
-            pygame.draw.arc(surf, (140, 165, 195), (cx + 6, cy - 4, 10, 8), math.pi, 2 * math.pi, 2)
-            pygame.draw.arc(surf, (255, 160, 180), (cx - 4, cy + 4, 8, 6), math.pi, 2 * math.pi, 2)
-            # Rosy cheeks
-            pygame.draw.circle(surf, (255, 180, 200), (cx - 22, cy + 4), 5)
-            pygame.draw.circle(surf, (255, 180, 200), (cx + 22, cy + 4), 5)
-
-            self._cloud_obstacle_sprite = surf
-        return self._cloud_obstacle_sprite
-
-    def get_dragon_sprite(self, flap_phase: float, accessory: str, is_dashing: bool) -> pygame.Surface:
-        """Return a cached, pre-rendered animated baby dragon sprite (180x140 colorkey)."""
-        step = int(round((flap_phase % (2.0 * math.pi)) / (math.pi / 2.0))) % 4
-        key = (step, accessory, is_dashing)
-        cached = self._dragon_frames.get(key)
+        cached = self._backdrops.get(spec.course_id)
         if cached is not None:
             return cached
+        self._layers()
+        assert self._sky is not None
+        surface = self._sky.copy()
+        if spec.decor is SkyDecor.SUNSET:
+            # Evening light: coral at the top warming to peach near the clouds.
+            _wash(surface, (244, 150, 128), (255, 200, 140), spec.tint_amount + 0.24)
+        elif spec.tint is not None and spec.tint_amount > 0:
+            _wash(surface, spec.tint, spec.tint, spec.tint_amount)
+        if self._far is not None:
+            surface.blit(self._far, (0, 0))
+        if spec.decor is SkyDecor.SUNSET:
+            _wash(surface, (255, 196, 150), (255, 214, 170), 0.2)
+        surface = _opaque(surface)
+        self._backdrops[spec.course_id] = surface
+        return surface
 
-        w, h = 180, 140
-        surf = _make_colorkey_surface(w, h)
-        cx, cy = 80, 75
+    @property
+    def mid_clouds(self) -> list[Sprite]:
+        self._layers()
+        return self._mid or []
 
-        # Wing offsets based on animation step
-        wing_y_offsets = [16.0, 4.0, -14.0, 2.0]
-        wy = wing_y_offsets[step]
+    @property
+    def front_clouds(self) -> list[Sprite]:
+        self._layers()
+        return self._front or []
 
-        # 1. Turbo Aura Trail (when dashing)
-        if is_dashing:
-            for r_i, r_col in enumerate(RAINBOW_COLORS):
-                aura_rect = pygame.Rect(cx - 55 - r_i * 8, cy - 30 + r_i * 2, 100, 60 - r_i * 4)
-                pygame.draw.ellipse(surf, r_col, aura_rect, width=3)
+    def decor(self, spec: CourseSpec) -> list[tuple[pygame.Surface, int, int]]:
+        """Repeating background motif (period ``DECOR_PERIOD``) for a course."""
 
-        # 2. Tail with cute spade tip
-        tail_pts = [
-            (cx - 30, cy + 4),
-            (cx - 65, cy + int(math.sin(step * math.pi / 2) * 8)),
-            (cx - 34, cy + 16),
-        ]
-        pygame.draw.polygon(surf, (52, 211, 153), tail_pts)
-        pygame.draw.polygon(surf, (5, 150, 105), tail_pts, width=2)
-        # Gold spade
-        pygame.draw.circle(surf, (253, 224, 71), (int(tail_pts[1][0]), int(tail_pts[1][1])), 7)
+        key = ("decor", spec.decor.value)
+        cached = self._misc.get(key)
+        if cached is not None:
+            return cached  # type: ignore[return-value]
+        items: list[tuple[pygame.Surface, int, int]] = []
+        if spec.decor in (SkyDecor.ISLANDS, SkyDecor.SUNSET):
+            for width, x, y in ((190, 120, 96), (140, 760, 120), (170, 1300, 360)):
+                island = self._scaled_private("sky_island", (width, width // 2))
+                if island is not None:
+                    items.append((_haze(island), x, y))
+        elif spec.decor is SkyDecor.RAINBOWS:
+            for width, x, y in ((260, 160, 330), (200, 980, 96)):
+                bow = self.art.image("prop.nature.rainbow", (width, width // 2))
+                if bow is not None:
+                    items.append((_haze(bow), x, y))
+        self._misc[key] = items  # type: ignore[assignment]
+        return items
 
-        # 3. Back Wing
-        back_wing = [
-            (cx - 10, cy - 12),
-            (cx - 24, cy - 48 - int(wy)),
-            (cx + 14, cy - 20),
-        ]
-        pygame.draw.polygon(surf, (192, 132, 252), back_wing)
-        pygame.draw.polygon(surf, (147, 51, 234), back_wing, width=2)
+    # -- hero ----------------------------------------------------------------
 
-        # 4. Chubby Green Body
-        body_rect = pygame.Rect(cx - 36, cy - 22, 74, 52)
-        pygame.draw.ellipse(surf, (52, 211, 153), body_rect)
-        pygame.draw.ellipse(surf, (5, 150, 105), body_rect, width=2)
+    def dragon_frames(self, look_id: str, height: int = DRAGON_HEIGHT) -> tuple[pygame.Surface, ...]:
+        """Three wing frames (up, mid, down) wearing ``look_id``, scaled once."""
 
-        # Soft Yellow Tummy
-        tummy_rect = pygame.Rect(cx - 14, cy - 4, 42, 30)
-        pygame.draw.ellipse(surf, (254, 240, 138), tummy_rect)
-        # Tummy ridges
-        pygame.draw.line(surf, (202, 138, 4), (cx - 6, cy + 3), (cx + 20, cy + 3), 2)
-        pygame.draw.line(surf, (202, 138, 4), (cx - 4, cy + 12), (cx + 18, cy + 12), 2)
-
-        # 5. Front Wing
-        front_wing = [
-            (cx + 4, cy - 8),
-            (cx - 8, cy - 44 + int(wy)),
-            (cx + 28, cy - 16),
-        ]
-        pygame.draw.polygon(surf, (216, 180, 254), front_wing)
-        pygame.draw.polygon(surf, (168, 85, 247), front_wing, width=2)
-
-        # 6. Cute Head
-        head_rect = pygame.Rect(cx + 14, cy - 32, 52, 46)
-        pygame.draw.ellipse(surf, (52, 211, 153), head_rect)
-        pygame.draw.ellipse(surf, (5, 150, 105), head_rect, width=2)
-
-        # Little Horns
-        pygame.draw.polygon(surf, (253, 224, 71), [(cx + 28, cy - 30), (cx + 34, cy - 44), (cx + 40, cy - 30)])
-        pygame.draw.polygon(surf, (202, 138, 4), [(cx + 28, cy - 30), (cx + 34, cy - 44), (cx + 40, cy - 30)], width=2)
-        pygame.draw.polygon(surf, (253, 224, 71), [(cx + 42, cy - 28), (cx + 48, cy - 40), (cx + 52, cy - 26)])
-        pygame.draw.polygon(surf, (202, 138, 4), [(cx + 42, cy - 28), (cx + 48, cy - 40), (cx + 52, cy - 26)], width=2)
-
-        # Rosy Cheek
-        pygame.draw.ellipse(surf, (255, 130, 155), (cx + 34, cy - 6, 13, 9))
-
-        # Sparkling Eye
-        eye_rect = pygame.Rect(cx + 38, cy - 24, 15, 17)
-        pygame.draw.ellipse(surf, (30, 27, 75), eye_rect)
-        pygame.draw.circle(surf, WHITE, (cx + 42, cy - 20), 4)
-        pygame.draw.circle(surf, WHITE, (cx + 47, cy - 14), 2)
-
-        # Happy Smile
-        pygame.draw.arc(surf, (5, 150, 105), pygame.Rect(cx + 46, cy - 10, 14, 11), 0.1, math.pi * 0.9, 2)
-
-        # 7. Accessories
-        if accessory == "crown":
-            crown_x, crown_y = cx + 36, cy - 42
-            pts_c = [
-                (crown_x - 13, crown_y),
-                (crown_x - 13, crown_y - 13),
-                (crown_x - 6, crown_y - 6),
-                (crown_x, crown_y - 16),
-                (crown_x + 6, crown_y - 6),
-                (crown_x + 13, crown_y - 13),
-                (crown_x + 13, crown_y),
-            ]
-            pygame.draw.polygon(surf, GOLD, pts_c)
-            pygame.draw.polygon(surf, GOLD_DARK, pts_c, width=2)
-            pygame.draw.circle(surf, (239, 68, 68), (crown_x, crown_y - 8), 3)
-
-        elif accessory == "bow":
-            bx, by = cx + 24, cy - 36
-            pygame.draw.polygon(surf, PINK, [(bx, by), (bx - 12, by - 8), (bx - 12, by + 8)])
-            pygame.draw.polygon(surf, PINK, [(bx, by), (bx + 12, by - 8), (bx + 12, by + 8)])
-            pygame.draw.polygon(surf, (225, 29, 72), [(bx, by), (bx - 12, by - 8), (bx - 12, by + 8)], width=2)
-            pygame.draw.polygon(surf, (225, 29, 72), [(bx, by), (bx + 12, by - 8), (bx + 12, by + 8)], width=2)
-            pygame.draw.circle(surf, (255, 70, 110), (bx, by), 5)
-
-        elif accessory == "glasses":
-            gx, gy = cx + 44, cy - 16
-            pygame.draw.circle(surf, (24, 24, 27), (gx, gy), 10, 2)
-            pygame.draw.line(surf, (24, 24, 27), (gx - 10, gy), (gx - 18, gy - 4), 2)
-            pygame.draw.circle(surf, (186, 230, 253), (gx, gy), 8)
-
-        elif accessory == "flower":
-            fx, fy = cx + 32, cy - 38
-            for a_i in range(5):
-                fa = a_i * (2 * math.pi / 5)
-                px = int(fx + math.cos(fa) * 8)
-                py = int(fy + math.sin(fa) * 8)
-                pygame.draw.circle(surf, (251, 113, 133), (px, py), 5)
-            pygame.draw.circle(surf, GOLD, (fx, fy), 4)
-
-        self._dragon_frames[key] = surf
-        return surf
-
-    def get_particle_sprite(self, kind: str, size: int, color: tuple[int, int, int]) -> pygame.Surface:
-        """Return a pre-rendered particle sprite avoiding any dynamic font rendering (colorkey)."""
-        bucket_size = max(8, min(32, (size // 4) * 4))
-        key = (kind, bucket_size, color)
-        cached = self._particle_cache.get(key)
+        key = (look_id, int(height))
+        cached = self._dragon.get(key)
         if cached is not None:
             return cached
+        look = look_by_id(look_id)
+        hat: pygame.Surface | None = None
+        if look.visual_id is not None:
+            prop = self.art.image(look.visual_id, max(8, int(height * look.scale)))
+            if prop is not None:
+                hat = pygame.transform.rotozoom(prop, look.tilt, 1.0)
+        frames: list[pygame.Surface] = []
+        for name in DRAGON_FRAMES:
+            frame = self._scaled_private(name, (int(height), int(height)))
+            if frame is None:
+                frame = _fallback_dragon(int(height))
+            frame = frame.copy()
+            if hat is not None:
+                anchor = (int(height * look.anchor[0]), int(height * look.anchor[1]))
+                frame.blit(hat, hat.get_rect(midbottom=(anchor[0], anchor[1] + hat.get_height() // 6)))
+            frames.append(frame)
+        result = tuple(frames)
+        self._dragon[key] = result
+        return result
 
-        surf = _make_colorkey_surface(bucket_size, bucket_size)
-        cx, cy = bucket_size // 2, bucket_size // 2
-        r = bucket_size // 2
+    @staticmethod
+    def dragon_rect(frame: pygame.Surface, center: tuple[float, float]) -> pygame.Rect:
+        """Place a dragon frame so its body pivot sits on ``center``."""
 
-        if kind == "star" or kind == "sparkle":
-            pts = []
-            for i in range(8):
-                angle = -math.pi / 2 + i * (math.pi / 4)
-                pr = r if i % 2 == 0 else max(2, r // 3)
-                pts.append((cx + pr * math.cos(angle), cy + pr * math.sin(angle)))
-            pygame.draw.polygon(surf, color, pts)
+        scale = frame.get_height() / 256.0
+        return frame.get_rect(
+            topleft=(int(center[0] - DRAGON_PIVOT[0] * scale), int(center[1] - DRAGON_PIVOT[1] * scale))
+        )
 
-        elif kind == "cloud":
-            pygame.draw.circle(surf, (220, 235, 250), (cx, cy), max(2, r - 1))
-            pygame.draw.circle(surf, WHITE, (cx - max(1, r // 3), cy - max(1, r // 3)), max(2, r // 2))
+    def ring(self, half_open: float) -> tuple[pygame.Surface, pygame.Surface]:
+        """(back, front) halves sized so the opening matches the tolerance."""
 
-        else:  # rainbow or general
-            pygame.draw.circle(surf, color, (cx, cy), max(2, r - 2))
-            pygame.draw.circle(surf, WHITE, (cx - 2, cy - 2), max(1, r // 3))
+        size = int(round(256 * (half_open + RING_VISUAL_SLACK) / RING_INNER_HALF / 4.0)) * 4
+        cached = self._rings.get(size)
+        if cached is not None:
+            return cached
+        back = self._scaled_private("ring_back", (size, size))
+        front = self._scaled_private("ring_front", (size, size))
+        if back is None or front is None:
+            back, front = _fallback_ring(size)
+        result = (back, front)
+        self._rings[size] = result
+        return result
 
-        self._particle_cache[key] = surf
-        return surf
+    def image(self, asset_id: str, size: int | tuple[int, int], variant: str = "default") -> pygame.Surface | None:
+        return self.art.image(asset_id, size, variant=variant)
+
+    def star(self, size: int = 46) -> pygame.Surface | None:
+        return self.art.image("ui.control.star", size)
+
+    def gem(self, size: int = 52) -> pygame.Surface | None:
+        return self.art.image("prop.shape.diamond", size)
+
+    def cloud(self, width: int) -> pygame.Surface | None:
+        return self.art.image("prop.nature.cloud", width)
+
+    def island(self, width: int) -> pygame.Surface | None:
+        return self._scaled_private("sky_island", (int(width), int(width) // 2))
+
+    def finish_rainbow(self, width: int = 640) -> pygame.Surface | None:
+        return self.art.image("prop.nature.rainbow", (width, width // 2))
+
+    def fx(self, kind: str, frame: int, size: int) -> pygame.Surface | None:
+        variants = FX_FRAMES.get(kind, ("default",))
+        return self.art.image(f"fx.{kind}", size, variant=variants[min(frame, len(variants) - 1)])
+
+    def fx_frames(self, kind: str) -> int:
+        return len(FX_FRAMES.get(kind, ("default",)))
+
+    # -- pre-flight pictures -------------------------------------------------
+
+    def course_picture(self, spec: CourseSpec, width: int, *, earned: int, locked: bool) -> pygame.Surface:
+        """A course card picture: its sky + motif + ring, and earned stars."""
+
+        key = ("thumb", spec.course_id, int(width), locked, earned)
+        cached = self._misc.get(key)
+        if cached is not None:
+            return cached
+        height = int(width * 0.62)
+        stars_h = int(width * 0.24)
+        surface = pygame.Surface((width, height + stars_h + 4), pygame.SRCALPHA)
+        sky = pygame.transform.smoothscale(self.backdrop(spec), (int(height * REFERENCE_WIDTH / REFERENCE_HEIGHT), height))
+        picture = pygame.Surface((width, height), pygame.SRCALPHA)
+        picture.blit(sky, ((width - sky.get_width()) // 2, 0))
+        motif = self._motif(spec, width)
+        if motif is not None:
+            picture.blit(motif, motif.get_rect(midbottom=(int(width * 0.3), height - 4)))
+        back, front = self.ring(40.0)
+        ring_size = int(height * 0.9)
+        back = pygame.transform.smoothscale(back, (ring_size, ring_size))
+        front = pygame.transform.smoothscale(front, (ring_size, ring_size))
+        picture.blit(back, back.get_rect(center=(int(width * 0.68), height // 2)))
+        picture.blit(front, front.get_rect(center=(int(width * 0.68), height // 2)))
+        rounded = _round_corners(picture, max(8, width // 12))
+        pygame.draw.rect(rounded, (75, 55, 47), rounded.get_rect(), width=3, border_radius=max(8, width // 12))
+        surface.blit(rounded, (0, 0))
+        star_size = stars_h
+        gap = max(2, star_size // 8)
+        total = 3 * star_size + 2 * gap
+        x = (width - total) // 2
+        for index in range(3):
+            star = self.art.image("ui.control.star", star_size, variant="default" if index < earned else "off")
+            if star is not None:
+                surface.blit(star, (x + index * (star_size + gap), height + 4))
+        self._misc[key] = surface
+        return surface
+
+    def _motif(self, spec: CourseSpec, width: int) -> pygame.Surface | None:
+        if spec.decor in (SkyDecor.ISLANDS, SkyDecor.SUNSET):
+            w = int(width * 0.55)
+            return self._scaled_private("sky_island", (w, w // 2))
+        if spec.decor is SkyDecor.RAINBOWS:
+            w = int(width * 0.55)
+            return self.art.image("prop.nature.rainbow", (w, w // 2))
+        return self.art.image("prop.nature.cloud", int(width * 0.42))
+
+    def look_icon(self, look_id: str, size: int) -> pygame.Surface | None:
+        """Picture for a look button: the prop, or the bare dragon head."""
+
+        look = look_by_id(look_id)
+        if look.visual_id is not None:
+            return self.art.image(look.visual_id, size)
+        key = ("head", size)
+        if key not in self._misc:
+            source = self.private("dragon_fly_mid")
+            head = None
+            if source is not None:
+                crop = source.subsurface(pygame.Rect(116, 34, 124, 124)).copy()
+                head = pygame.transform.smoothscale(crop, (size, size))
+            self._misc[key] = head
+        return self._misc[key]
+
+    def clear(self) -> None:
+        self._dragon.clear()
+        self._rings.clear()
+        self._backdrops.clear()
+        self._misc.clear()
+        self._private.clear()
+
+
+def _cut_sprites(layer: pygame.Surface | None) -> list[Sprite]:
+    """Split a mostly transparent layer into its opaque pieces (once)."""
+
+    if layer is None:
+        return []
+    layer = _alpha(layer)
+    mask = pygame.mask.from_surface(layer, 12)
+    width, height = layer.get_size()
+    sprites: list[Sprite] = []
+    for rect in mask.get_bounding_rects():
+        # The layer does not tile: pieces cut by the canvas edge would show a
+        # seam when scrolled, so only whole clouds become parallax sprites.
+        if rect.width * rect.height < 64 or rect.left <= 0 or rect.right >= width or rect.top <= 0:
+            continue
+        sprites.append((layer.subsurface(rect).copy(), rect.x, rect.y))
+    return sprites[:24]
+
+
+def _wash(surface: pygame.Surface, top: tuple[int, int, int], bottom: tuple[int, int, int], amount: float) -> None:
+    """Blend a vertical colour wash over an opaque surface (composition time only)."""
+
+    width, height = surface.get_size()
+    wash = pygame.Surface((width, height))
+    for y in range(0, height, 4):
+        t = y / max(1, height - 1)
+        wash.fill(tuple(int(a + (b - a) * t) for a, b in zip(top, bottom)), (0, y, width, 4))
+    wash.set_alpha(int(255 * max(0.0, min(1.0, amount))))
+    surface.blit(wash, (0, 0))
+
+
+def _haze(surface: pygame.Surface) -> pygame.Surface:
+    """Far-layer value: lighter, bluer, less contrast (no blur)."""
+
+    hazed = surface.copy()
+    hazed.fill((70, 80, 92, 0), special_flags=pygame.BLEND_RGBA_ADD)
+    hazed.fill((255, 255, 255, 190), special_flags=pygame.BLEND_RGBA_MULT)
+    return hazed
+
+
+def _round_corners(surface: pygame.Surface, radius: int) -> pygame.Surface:
+    mask = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+    pygame.draw.rect(mask, (255, 255, 255, 255), mask.get_rect(), border_radius=radius)
+    result = surface.copy()
+    result.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
+    return result
+
+
+def _fallback_dragon(size: int) -> pygame.Surface:
+    surface = pygame.Surface((size, size), pygame.SRCALPHA)
+    s = size / 256.0
+    pygame.draw.ellipse(surface, (89, 184, 106), (int(56 * s), int(108 * s), int(106 * s), int(82 * s)))
+    pygame.draw.circle(surface, (89, 184, 106), (int(166 * s), int(112 * s)), int(46 * s))
+    pygame.draw.circle(surface, (52, 44, 53), (int(178 * s), int(104 * s)), max(2, int(9 * s)))
+    return surface
+
+
+def _fallback_ring(size: int) -> tuple[pygame.Surface, pygame.Surface]:
+    back = pygame.Surface((size, size), pygame.SRCALPHA)
+    front = pygame.Surface((size, size), pygame.SRCALPHA)
+    rect = pygame.Rect(size * 0.24, size * 0.06, size * 0.52, size * 0.88)
+    pygame.draw.ellipse(back, (244, 111, 97), rect, max(4, size // 18))
+    pygame.draw.arc(front, (244, 111, 97), rect, -1.57, 1.57, max(4, size // 18))
+    return back, front
+
+
+__all__ = ["DRAGON_HEIGHT", "DragonArt", "NAVY"]

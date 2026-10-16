@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <g id="ring_back">
+    <path d="M128 28.5 A55.5 99.5 0 0 0 128 227.5" fill="none" stroke="#4B372F" stroke-width="34.5"/>
+    <path d="M128 18.0 A66.0 110.0 0 0 0 128 238.0" fill="none" stroke="#F46F61" stroke-width="7.6"/>
+    <path d="M128 25.0 A59.0 103.0 0 0 0 128 231.0" fill="none" stroke="#FFC234" stroke-width="7.6"/>
+    <path d="M128 32.0 A52.0 96.0 0 0 0 128 224.0" fill="none" stroke="#59B86A" stroke-width="7.6"/>
+    <path d="M128 39.0 A45.0 89.0 0 0 0 128 217.0" fill="none" stroke="#4A91D8" stroke-width="7.6"/>
+    
+  </g>
+</svg>

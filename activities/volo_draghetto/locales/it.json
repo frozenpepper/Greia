@@ -4,18 +4,11 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Il Volo del Draghetto",
-    "hud.stars": "★ ",
-    "hud.score": "Punti: ",
-    "prompt.guide": "Muovi il puntatore o le frecce per volare tra le nuvole!",
-    "msg.rainbow_dash": "🌈 Scatto arcobaleno! 🌟",
-    "msg.star_milestone": "Fantastico! 20 Stelline raccolte! 🌟✨",
-    "btn.accessories": "🎀 Accessori",
-    "acc.none": "Nessuno",
-    "acc.bow": "Fiocchetto Rosa 🎀",
-    "acc.crown": "Corona Reale 👑",
-    "acc.glasses": "Occhiali da Sole 😎",
-    "acc.flower": "Corona di Fiori 🌸",
-    "hud.look": "Look"
+    "victory.title": "Che bel volo!",
+    "victory.subtitle": "Hai attraversato tutti gli anelli arcobaleno!",
+    "victory.new_look": "Un nuovo look per il tuo draghetto!",
+    "button.fly_again": "Ancora",
+    "button.next": "Avanti"
   },
   "audio": {
     "activity.title": {

@@ -1,251 +1,553 @@
-"""Application coordinator, event loop, and lifecycle for Il Volo del Draghetto."""
+"""Lifecycle, input and feedback for Il Volo del Draghetto.
+
+The child first sees the sky map: the little dragon on its island, one big
+picture card per course (locked ones faded, earned stars underneath) and a
+row of looks to wear. Tapping a course starts a finite 1-minute flight:
+
+* arrows / D-pad / left stick steer up and down (left/right: slower/faster),
+  Space / south button flap; pointer and touch: tap to flap, hold and drag to
+  steer. Hover alone never moves the dragon, and the Home/Back corner is
+  never gameplay;
+* stars and gems are collected by flying into them; clouds only bounce;
+* each rainbow ring is a checkpoint (progress dots). Through it: Flash cheers
+  (``pose_cheer`` + an approved praise line) and the ring bursts; past it:
+  Flash thinks (``pose_think`` + an approved retry line) and the ring hops
+  ahead, nearer and wider, with a star trail and guide dots showing the way;
+* hints are graduated: at the start and after ~6 s without input the matching
+  control glyph pulses by the dragon and the next ring sparkles; after ~12 s
+  Flash points and guide dots lead to the ring;
+* the finish rainbow ends the course on the shared cast completion scene
+  (1-3 stars). Finishing unlocks the next course and a new look.
+"""
 
 from __future__ import annotations
 
-from pathlib import Path
+from collections.abc import Callable
+from enum import StrEnum
+import random
 import time
-from typing import Any, Final
 
 import pygame
 
-from greia_platform.activity_api import (
-    activity_stop_requested,
-    emit_activity_event,
-    get_profile_locale,
-    get_storage,
-    get_theme,
-    mark_activity_ready,
+from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.activity_controls import (
+    ControlKit,
+    ControlLayout,
+    ControlTheme,
+    KitPointer,
+    PointerPhase,
+    PygameControlInput,
 )
-from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.localization import (
-    ActivityLocaleSupport,
-    LocalizedResources,
-    resolve_activity_locale,
+from greia_platform.activity_feedback import CastFeedback
+from greia_platform.input_core import (
+    DEFAULT_INPUT_POLICY,
+    ControllerAxis,
+    InputEdge,
+    InputSource,
+    InteractionProfile,
+    SemanticAction,
+    normalize_stick,
 )
-from greia_platform.pygame_canvas import (
-    PygameReferenceCanvas,
-    activity_viewport_for_surface,
-)
+from greia_platform.localization import LocalizedResources
+from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
     CompletionContent,
+    CompletionOverlay,
+    CompletionPalette,
+    CompletionScene,
     PygameCompletionScreen,
 )
+from greia_platform.pygame_input import PygameInputTranslator
 from greia_platform.typography import GreiaTypography
+from greia_platform.ui_core import SurfaceNavigator
 
 try:
-    from dragon_art import DragonArtLibrary
+    from dragon_art import NAVY, DragonArt
     from dragon_audio import DragonAudio
+    from dragon_controls import MAP_PREVIEW_CENTER, FlightHud, MapControls
+    from dragon_courses import COURSES
     from dragon_model import (
-        FlightWorldState,
-        MIN_FLIGHT_Y,
-        MAX_FLIGHT_Y,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
-        STORAGE_KEY,
+        CourseBuilder,
+        FlightEvent,
+        FlightEventKind,
+        FlightInput,
+        FlightPhase,
+        FlightRun,
     )
-    from dragon_renderer import DragonRenderer
-except ImportError:
-    from .dragon_art import DragonArtLibrary
+    from dragon_renderer import CAST_HEIGHT, FlashCast, FlightMotion, FlightRenderer, MapRenderer
+    from dragon_services import EventPort, FlightProgress, ProgressPort
+except ImportError:  # pragma: no cover - package import path
+    from .dragon_art import NAVY, DragonArt
     from .dragon_audio import DragonAudio
+    from .dragon_controls import MAP_PREVIEW_CENTER, FlightHud, MapControls
+    from .dragon_courses import COURSES
     from .dragon_model import (
-        FlightWorldState,
-        MIN_FLIGHT_Y,
-        MAX_FLIGHT_Y,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
-        STORAGE_KEY,
+        CourseBuilder,
+        FlightEvent,
+        FlightEventKind,
+        FlightInput,
+        FlightPhase,
+        FlightRun,
     )
-    from .dragon_renderer import DragonRenderer
+    from .dragon_renderer import CAST_HEIGHT, FlashCast, FlightMotion, FlightRenderer, MapRenderer
+    from .dragon_services import EventPort, FlightProgress, ProgressPort
+
+IDLE_HINT_SECONDS = 6.0
+START_HINT_SECONDS = 4.5
+GUIDE_SECONDS = 3.0
+DRAG_SLOP = 14
+COMPLETE_STARS = 3
+MAP_DRAGON_HEIGHT = 210
+
+_VERTICAL = {SemanticAction.MOVE_UP: -1, SemanticAction.MOVE_DOWN: 1}
+_HORIZONTAL = {SemanticAction.MOVE_LEFT: -1, SemanticAction.MOVE_RIGHT: 1}
 
 
-def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
-    vp = activity_viewport_for_surface(surface)
+class AppState(StrEnum):
+    MAP = "map"
+    FLIGHT = "flight"
+    COMPLETE = "complete"
+
+
+class DragonFlightActivity:
+    """Coordinate map, flight model, kit controls, art, audio and lifecycle."""
+
+    def __init__(
+        self,
+        *,
+        screen: pygame.Surface,
+        canvas: PygameReferenceCanvas,
+        typography: GreiaTypography,
+        resources: LocalizedResources,
+        progress: ProgressPort,
+        events: EventPort,
+        audio: DragonAudio,
+        rng: random.Random,
+        session_id: str,
+        clock: Callable[[], float] = time.monotonic,
+        kit: ControlKit | None = None,
+        art: DragonArt | None = None,
+    ) -> None:
+        self.screen = screen
+        self.canvas = canvas
+        self.typography = typography
+        self.resources = resources
+        self.progress_port = progress
+        self.events = events
+        self.audio = audio
+        self.rng = rng
+        self.session_id = session_id
+        self.clock = clock
+        # Play Collection -> ocean accent (ADR 0037 / SVG rules tile hue).
+        self.kit = kit if kit is not None else ControlKit(typography, ControlTheme.for_accent("ocean"))
+        self.art = art if art is not None else DragonArt(self.kit.art)
+        self.progress: FlightProgress = progress.load()
+        self.builder = CourseBuilder(rng)
+        feedback = CastFeedback("flash", height=CAST_HEIGHT, art=self.kit.art, clock=clock)
+        point = self.kit.art.image("character.flash", CAST_HEIGHT, variant="pose_point")
+        self.cast = FlashCast(feedback, point, clock)
+        self.motion = FlightMotion()
+        self.flight_renderer = FlightRenderer(self.art, self.cast, self.kit.glyph)
+        self.map_renderer = MapRenderer(self.art, COURSES[0])
+        self.map = MapControls(
+            self.kit, self.art, self._layout(), on_course=self._on_course, on_look=self._on_look
+        )
+        self.completion = PygameCompletionScreen(
+            typography,
+            width=REFERENCE_WIDTH,
+            height=REFERENCE_HEIGHT,
+            palette=CompletionPalette(background=NAVY),
+            scene=CompletionScene(self.kit, character="flash", star_total=COMPLETE_STARS, secondary_glyph="go"),
+        )
+        self._surfaces = SurfaceNavigator(self.map.layer)
+        self._input = self._make_input()
+        self._game_input = PygameInputTranslator(InteractionProfile.DIRECTIONAL)
+        self.state = AppState.MAP
+        self.course_index = 0
+        self.run: FlightRun | None = None
+        self.hud: FlightHud | None = None
+        self._running = True
+        self._ready_published = False
+        self._activated = False
+        self._keys_v: dict[SemanticAction, bool] = {}
+        self._keys_h: dict[SemanticAction, bool] = {}
+        self._stick = (0.0, 0.0)
+        self._pointer_down = False
+        self._press_y = 0.0
+        self._drag_y: float | None = None
+        self._last_input = clock()
+        self._idle_hints = 0
+        self._last_source = InputSource.KEYBOARD
+        self._flight_started = clock()
+        self._last_step = clock()
+        self.map.sync(self.progress, refocus=self.progress.first_open_course())
+
+    # -- main loop ------------------------------------------------------------
+
+    def run_loop(self) -> int:
+        ticker = pygame.time.Clock()
+        try:
+            while self._running and not activity_stop_requested():
+                for event in pygame.event.get():
+                    self.handle_event(event)
+                if self.state is not AppState.FLIGHT:
+                    repeat = self._input.poll()
+                    if repeat is not None:
+                        self._surfaces.dispatch(repeat)
+                now = self.clock()
+                self.step(min(0.05, max(0.0, now - self._last_step)))
+                self._last_step = now
+                self.render()
+                self.canvas.present()
+                pygame.display.flip()
+                if not self._ready_published:
+                    mark_activity_ready()
+                    self._ready_published = True
+                ticker.tick(15 if self.state is AppState.COMPLETE else 30)
+        finally:
+            self.progress_port.save(self.progress)
+            self.typography.clear()
+        return 0
+
+    def step(self, dt: float) -> None:
+        now = self.clock()
+        self.cast.update()
+        self.motion.prune(now)
+        if self.state is not AppState.FLIGHT or self.run is None:
+            return
+        for event in self.run.update(dt, self._steer()):
+            self._on_flight_event(event, now)
+            if self.state is not AppState.FLIGHT:
+                return
+        if self.hud is not None:
+            self.hud.sync(self.run)
+        self._maybe_hint(now)
+
+    def render(self) -> None:
+        surface = self.canvas.surface
+        now = self.clock()
+        if self.state is AppState.MAP:
+            frames = self.art.dragon_frames(self.progress.look, MAP_DRAGON_HEIGHT)
+            self.map_renderer.draw(surface, frames, now, MAP_PREVIEW_CENTER)
+        elif self.state is AppState.FLIGHT and self.run is not None:
+            frames = self.art.dragon_frames(self.progress.look)
+            self.flight_renderer.draw(surface, self.run, frames, self.motion, now)
+        self._surfaces.draw(surface)
+
+    # -- input ----------------------------------------------------------------
+
+    def _make_input(self) -> PygameControlInput:
+        return PygameControlInput(to_logical=self.canvas.pointer, is_safe=lambda pos: _safe_point(self.screen, pos))
+
+    def _layout(self) -> ControlLayout:
+        return ControlLayout.for_canvas(self.canvas, self.screen.get_size())
+
+    def handle_event(self, event: pygame.event.Event) -> None:
+        if event.type == pygame.QUIT:
+            self._running = False
+            return
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            self._running = False
+            return
+        if event.type == pygame.VIDEORESIZE:
+            self._relayout()
+            return
+        if event.type == getattr(pygame, "WINDOWFOCUSLOST", -1):
+            self._release_all()
+            return
+        if self.state is not AppState.FLIGHT:
+            translated = self._input.translate(event)
+            if translated is not None:
+                self._surfaces.dispatch(translated)
+            return
+        if event.type in {pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP}:
+            translated = self._input.translate(event)
+            if isinstance(translated, KitPointer):
+                self._pointer(translated)
+            return
+        semantic = self._game_input.digital(event)
+        if semantic is not None:
+            self._last_source = semantic.source
+            self._on_semantic(semantic.action, semantic.edge)
+            return
+        axis = self._game_input.controller_axis(event)
+        if axis is not None:
+            self._on_stick(axis.axis, axis.value)
+
+    def _on_semantic(self, action: SemanticAction, edge: InputEdge) -> None:
+        pressed = edge is InputEdge.PRESSED
+        if action in _VERTICAL:
+            self._keys_v[action] = pressed
+        elif action in _HORIZONTAL:
+            self._keys_h[action] = pressed
+        elif action in (SemanticAction.PRIMARY, SemanticAction.ACTIVATE) and pressed:
+            self._flap()
+        if pressed:
+            self._note_input()
+
+    def _on_stick(self, axis: ControllerAxis, value: float) -> None:
+        x, y = self._stick
+        if axis is ControllerAxis.LEFT_X:
+            x = value
+        elif axis is ControllerAxis.LEFT_Y:
+            y = value
+        else:
+            return
+        self._stick = (x, y)
+        vector = normalize_stick(x, y, DEFAULT_INPUT_POLICY.stick_dead_zone)
+        if vector.magnitude > 0.0:
+            self._last_source = InputSource.CONTROLLER
+            self._note_input()
+
+    def _pointer(self, pointer: KitPointer) -> None:
+        if pointer.phase is PointerPhase.DOWN:
+            self._pointer_down = True
+            self._press_y = float(pointer.position[1])
+            self._drag_y = None
+            self._last_source = InputSource.POINTER
+            self._flap()
+            self._note_input()
+        elif pointer.phase is PointerPhase.MOVE and self._pointer_down:
+            y = float(pointer.position[1])
+            if self._drag_y is not None or abs(y - self._press_y) > DRAG_SLOP:
+                self._drag_y = y
+                self._note_input()
+        elif pointer.phase in (PointerPhase.UP, PointerPhase.CANCEL):
+            self._pointer_down = False
+            self._drag_y = None
+
+    def _steer(self) -> FlightInput:
+        vertical = sum(direction for action, direction in _VERTICAL.items() if self._keys_v.get(action))
+        horizontal = sum(direction for action, direction in _HORIZONTAL.items() if self._keys_h.get(action))
+        stick = normalize_stick(*self._stick, DEFAULT_INPUT_POLICY.stick_dead_zone)
+        if vertical == 0 and abs(stick.y) > 0:
+            vertical = stick.y
+        if horizontal == 0 and abs(stick.x) > 0:
+            horizontal = stick.x
+        return FlightInput(vertical=float(vertical), horizontal=float(horizontal), drag_y=self._drag_y)
+
+    def _flap(self) -> None:
+        self._activated = True
+        if self.run is not None and self.run.flap():
+            self.audio.play("flap")
+
+    def _release_all(self) -> None:
+        self._keys_v.clear()
+        self._keys_h.clear()
+        self._stick = (0.0, 0.0)
+        self._pointer_down = False
+        self._drag_y = None
+
+    def _note_input(self) -> None:
+        self._last_input = self.clock()
+        if self._idle_hints:
+            self.motion.hint_glyphs = ()
+            self.motion.ring_pulse_until = -1.0
+        self._idle_hints = 0
+
+    def _relayout(self) -> None:
+        self.screen = pygame.display.get_surface() or self.screen
+        self.canvas = PygameReferenceCanvas(self.screen)
+        self._input = self._make_input()
+        layout = self._layout()
+        self.map.relayout(layout)
+        self.map.sync(self.progress)
+        if self.hud is not None:
+            self.hud.relayout(layout)
+
+    # -- tools/tests ------------------------------------------------------------
+
+    def tap(self, raw_pos: tuple[int, int]) -> bool:
+        """Deliver one complete tap at a physical position."""
+
+        self._activated = False
+        for kind in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+            self.handle_event(pygame.event.Event(kind, pos=raw_pos, button=1))
+        return self._activated
+
+    def press(self, key: int) -> bool:
+        self._activated = False
+        self.handle_event(pygame.event.Event(pygame.KEYDOWN, key=key, mod=0, unicode=""))
+        self.handle_event(pygame.event.Event(pygame.KEYUP, key=key, mod=0, unicode=""))
+        return self._activated
+
+    # -- map ------------------------------------------------------------------------
+
+    def _on_course(self, index: int) -> None:
+        if not self.progress.is_unlocked(index):
+            return
+        self._activated = True
+        self.audio.play("pop")
+        self.start_course(index)
+
+    def _on_look(self, look_id: str) -> None:
+        if not self.progress.look_unlocked(look_id):
+            return
+        self._activated = True
+        self.progress.look = look_id
+        self.progress_port.save(self.progress)
+        self.audio.play("pop")
+        self.map.sync(self.progress)
+
+    def show_map(self, focus: int | None = None) -> None:
+        self.state = AppState.MAP
+        self.run = None
+        self.hud = None
+        self.cast.hide()
+        self.motion.clear()
+        self.completion.clear()
+        self._surfaces.replace(self.map.layer)
+        self.map.sync(self.progress, refocus=self.progress.first_open_course() if focus is None else focus)
+
+    # -- flight ---------------------------------------------------------------------
+
+    def start_course(self, index: int) -> None:
+        index = max(0, min(len(COURSES) - 1, index))
+        spec = COURSES[index]
+        self.course_index = index
+        course = self.builder.build(spec, assist=self.progress.assist.get(spec.course_id, False))
+        self.run = FlightRun(course)
+        self.hud = FlightHud(self.kit, self._layout(), rings=spec.rings, gems=spec.gems)
+        self.hud.sync(self.run)
+        self.flight_renderer.prepare(spec)
+        self._surfaces.replace(self.hud.layer)
+        self.state = AppState.FLIGHT
+        self.completion.clear()
+        self.motion.clear()
+        self._release_all()
+        now = self.clock()
+        self._flight_started = now
+        self._last_input = now
+        self._idle_hints = 0
+        self.session_id = f"{self.session_id.rsplit('-', 1)[0]}-{self.rng.randrange(1_000_000):06d}"
+        self.motion.hint_glyphs = self._hint_glyphs()
+        self.motion.hint_since = now
+        self.cast.hide()
+        self.audio.say("ready.go")
+
+    def _on_flight_event(self, event: FlightEvent, now: float) -> None:
+        assert self.run is not None
+        kind = event.kind
+        if kind is FlightEventKind.STAR:
+            self.motion.add("sparkle", event.x, event.y, now, 72)
+            self.audio.play("star")
+        elif kind is FlightEventKind.GEM:
+            self.motion.add("star_burst", event.x, event.y, now, 110)
+            self.audio.play("gem")
+        elif kind is FlightEventKind.RING_PASSED:
+            self.motion.add("star_burst", event.x, event.y - 60, now, 128)
+            self.motion.add("star_burst", event.x, event.y + 60, now + 0.08, 112)
+            self.motion.guide_until = -1.0
+            self.audio.play("ring")
+            self.cast.cheer()
+            self.audio.say("praise.general")
+            self.events.ring_passed(self.session_id, self.run.spec.course_id, event.index)
+        elif kind is FlightEventKind.HALFWAY:
+            self.audio.say("encourage.progress")
+        elif kind is FlightEventKind.RING_MISSED:
+            self.motion.add("dust_puff", event.x, event.y, now, 120)
+            self.motion.guide_until = now + GUIDE_SECONDS
+            self.motion.ring_pulse_until = now + GUIDE_SECONDS
+            self.audio.play("miss")
+            self.cast.think()
+            self.audio.say("encourage.retry")
+        elif kind is FlightEventKind.BUMP:
+            self.motion.add("dust_puff", self.run.distance + 40, self.run.flier.y, now, 96)
+            self.audio.play("boing")
+        elif kind is FlightEventKind.FINISH:
+            for i, (dx, dy) in enumerate(((-120, 200), (0, 140), (140, 220), (60, 320), (-60, 300))):
+                self.motion.add("confetti", event.x + dx, dy, now + i * 0.12, 150)
+            self.motion.hint_glyphs = ()
+            self.audio.play("finish")
+            self.cast.cheer(2.6)
+            self.audio.say("celebrate.success")
+        elif kind is FlightEventKind.DONE:
+            self._complete()
+
+    def _complete(self) -> None:
+        assert self.run is not None
+        result = self.run.result
+        unlocked_look = self.progress.record(result.course_id, result.earned, result.stars, result.misses)
+        self.progress_port.save(self.progress)
+        self.events.course_completed(
+            self.session_id,
+            result.course_id,
+            {
+                "stars": result.stars,
+                "gems": result.gems,
+                "rings": len(self.run.course.rings),
+                "retries": result.misses,
+                "earned": result.earned,
+            },
+        )
+        body = "victory.new_look" if unlocked_look else "victory.subtitle"
+        self.completion.prepare(
+            CompletionContent(
+                title=self.resources.text("victory.title"),
+                primary_label=self.resources.text("button.fly_again"),
+                body_lines=(self.resources.text(body),),
+                achievement_count=result.earned,
+                secondary_label=self.resources.text("button.next"),
+            )
+        )
+        if self.hud is not None:
+            self.hud.sync(self.run)
+        self._surfaces.push_overlay(
+            CompletionOverlay(self.completion, on_primary=self._fly_again, on_secondary=self._next)
+        )
+        self.cast.hide()
+        self.state = AppState.COMPLETE
+
+    def _fly_again(self) -> None:
+        self._activated = True
+        self.start_course(self.course_index)
+
+    def _next(self) -> None:
+        self._activated = True
+        following = self.course_index + 1
+        focus = following if following < len(COURSES) and self.progress.is_unlocked(following) else None
+        self.show_map(focus)
+
+    # -- hints ----------------------------------------------------------------------
+
+    def _hint_glyphs(self) -> tuple[str, ...]:
+        if self._last_source is InputSource.CONTROLLER:
+            return ("button_a",)
+        if self._last_source in (InputSource.POINTER, InputSource.TOUCH):
+            return ("drag_hint",)
+        return ("arrow_up", "key_space")
+
+    def _maybe_hint(self, now: float) -> None:
+        run = self.run
+        if run is None or run.phase is not FlightPhase.FLYING:
+            return
+        if self._idle_hints == 0 and self.motion.hint_glyphs and now - self._flight_started > START_HINT_SECONDS:
+            if now - self._last_input < IDLE_HINT_SECONDS:
+                self.motion.hint_glyphs = ()
+        if now - self._last_input < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+            return
+        self._idle_hints += 1
+        self.motion.hint_glyphs = self._hint_glyphs()
+        self.motion.hint_since = now
+        self.motion.ring_pulse_until = now + 3.0
+        if self._idle_hints >= 2:
+            self.cast.point()
+            self.motion.guide_until = now + GUIDE_SECONDS
+
+
+def _safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
+    viewport = activity_viewport_for_surface(surface)
     x, y = position
-    if not (0 <= x < vp.surface.width and 0 <= y < vp.surface.height):
+    if not (0 <= x < viewport.surface.width and 0 <= y < viewport.surface.height):
         return False
-    for protected in vp.protected_regions:
+    for protected in viewport.protected_regions:
         if protected.x <= x < protected.right and protected.y <= y < protected.bottom:
             return False
     return True
 
 
-class DragonFlightApp:
-    """Main application coordinator for Il Volo del Draghetto."""
-
-    def __init__(self) -> None:
-        screen = pygame.display.get_surface()
-        if screen is None:
-            pygame.init()
-            screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.FULLSCREEN)
-        self.screen = screen
-        self.canvas = PygameReferenceCanvas(screen)
-        pygame.mouse.set_visible(False)
-
-        self.world = FlightWorldState()
-        self.art = DragonArtLibrary()
-        self.audio = DragonAudio()
-        self.typography = GreiaTypography()
-
-        self._resources: LocalizedResources | None = None
-        self._active_locale = "it"
-        self._init_localization()
-        self.renderer = DragonRenderer(self.art, self.typography, self._localized_label("hud.look"))
-
-        self._storage: Any = None
-        self._load_storage()
-
-        self._completion_screen: PygameCompletionScreen | None = None
-
-    def _init_localization(self) -> None:
-        pkg_root = Path(__file__).parent
-        support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-        try:
-            profile_lang = get_profile_locale()
-            context = resolve_activity_locale(profile_lang, support)
-            self._resources = LocalizedResources(pkg_root, context) if context else None
-            self._active_locale = context.selected.language if context else "it"
-        except Exception:
-            self._active_locale = "it"
-
-    def _localized_label(self, key: str) -> str:
-        """Resolve one caption once; empty means pictogram only."""
-        if self._resources is None:
-            return ""
-        try:
-            return self._resources.text(key)
-        except Exception:
-            return ""
-
-    def _load_storage(self) -> None:
-        try:
-            self._storage = get_storage()
-            if self._storage is not None:
-                saved = self._storage.kv_get(STORAGE_KEY, {})
-                if isinstance(saved, dict):
-                    self.world.score = int(saved.get("score", 0))
-                    self.world.total_stars = int(saved.get("stars", 0))
-        except Exception:
-            self._storage = None
-
-    def _save_storage(self) -> None:
-        if self._storage is not None:
-            try:
-                self._storage.kv_set(
-                    STORAGE_KEY,
-                    {
-                        "score": self.world.score,
-                        "stars": self.world.total_stars,
-                        "timestamp": time.time(),
-                    },
-                )
-            except Exception:
-                pass
-
-    def _start_new_round(self) -> None:
-        self.world.start_flight()
-        self._completion_screen = None
-
-    def run(self) -> int:
-        """Run the main application lifecycle loop."""
-        screen = self.screen
-        canvas = self.canvas
-        clock = pygame.time.Clock()
-        theme = get_theme()
-
-        self._start_new_round()
-
-        running = True
-        ready_published = False
-        previous_time = time.monotonic()
-
-        while running and not activity_stop_requested():
-            now = time.monotonic()
-            dt = min(0.1, max(0.001, now - previous_time))
-            previous_time = now
-
-            # 1. Event Handling
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        running = False
-                    elif event.key in (pygame.K_UP, pygame.K_w):
-                        self.world.dragon.move_altitude(-24.0)
-                    elif event.key in (pygame.K_DOWN, pygame.K_s):
-                        self.world.dragon.move_altitude(24.0)
-                    elif event.key in (pygame.K_RIGHT, pygame.K_d, pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER):
-                        self.world.dragon.trigger_dash(3.5)
-                        self.audio.play("whoosh")
-                    elif event.key in (pygame.K_TAB, pygame.K_l):
-                        self.world.dragon.cycle_accessory()
-                        self.audio.play("pop")
-                elif event.type == pygame.MOUSEMOTION:
-                    if _is_safe_point(screen, event.pos):
-                        plog = canvas.pointer(event.pos)
-                        if plog is not None:
-                            self.world.dragon.target_y = max(MIN_FLIGHT_Y, min(MAX_FLIGHT_Y, plog[1]))
-                elif event.type == pygame.VIDEORESIZE:
-                    screen = pygame.display.get_surface() or screen
-                    canvas = PygameReferenceCanvas(screen)
-                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    if not _is_safe_point(screen, event.pos):
-                        continue
-                    logical = canvas.pointer(event.pos)
-                    if logical is not None:
-                        lx, ly = logical
-                        # Accessory Button hit (x=580..716, y=14..58)
-                        if 580 <= lx <= 716 and 14 <= ly <= 58:
-                            self.world.dragon.cycle_accessory()
-                            self.audio.play("pop")
-                        else:
-                            # Click anywhere in flight triggers a dash burst!
-                            self.world.dragon.trigger_dash(3.0)
-                            self.audio.play("whoosh")
-
-            # 2. Continuous Keyboard & Controller Altitude Control
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_UP] or keys[pygame.K_w]:
-                self.world.dragon.move_altitude(-12.0)
-            elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
-                self.world.dragon.move_altitude(12.0)
-
-            if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-                self.world.dragon.trigger_dash(2.0)
-
-            # 3. Update World Simulation
-            events = self.world.update(dt)
-            for ev in events:
-                if ev == "star_collected":
-                    self.audio.play("star")
-                elif ev == "star_milestone":
-                    self.audio.play("star")
-                    self.audio.play("victory")
-                    self._save_storage()
-                    try:
-                        emit_activity_event("flight.star_milestone", idempotency_key=f"milestone-{time.time()}")
-                    except Exception:
-                        pass
-                elif ev == "rainbow_boost":
-                    self.audio.play("whoosh")
-                    self.audio.play("star")
-                elif ev == "cloud_bounce":
-                    self.audio.play("boing")
-
-            # 4. Composite Frame onto Reference Canvas
-            surf = canvas.surface
-            self.renderer.render_world(surf, self.world)
-
-            # 5. Present Canvas to Screen
-            canvas.present(clear=theme.background)
-            pygame.display.flip()
-
-            if not ready_published:
-                mark_activity_ready()
-                ready_published = True
-
-            clock.tick(30)
-
-        self._save_storage()
-        pygame.quit()
-        return 0
+__all__ = ["AppState", "DragonFlightActivity"]

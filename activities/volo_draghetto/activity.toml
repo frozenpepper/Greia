@@ -11,16 +11,25 @@ categories = ["play", "explore"]
 discovery_tags = ["action"]
 
 [education]
-categories = ["fine_motor", "reaction_time", "spatial_awareness"]
-difficulty = 3
+# Four finite sky courses (about one minute each): steer through rainbow
+# rings (checkpoints) and into star trails, choose over or under a bouncy
+# cloud. Rings that are missed come back nearer and wider; rings widen for a
+# course after a hard flight.
+categories = ["fine_motor", "spatial_awareness", "reaction_time"]
+difficulty = 2
 recommended_age_min = 4
-recommended_age_max = 9
+recommended_age_max = 7
+difficulty_min = 1
+difficulty_max = 4
+adaptive_difficulty = true
 skills = [
   { id = "motor.coordination.hand_eye", weight = 3 },
-  { id = "motor.pointer.continuous_tracking", weight = 2 },
+  { id = "spatial.position.up_down", weight = 2 },
+  { id = "cognition.planning.path_choice", weight = 1 },
 ]
 events = [
-  { id = "flight.star_milestone", kind = "milestone" },
+  { id = "flight.ring_passed", kind = "milestone" },
+  { id = "flight.course_completed", kind = "completion" },
 ]
 
 [runtime]
@@ -29,14 +38,17 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "hybrid"
+profile = "directional"
 
 [requirements]
-required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["keyboard", "touch"]
+required_capabilities = ["display"]
+optional_capabilities = ["keyboard", "pointer", "touch", "controller", "audio.basic"]
 
 [permissions]
 requested = []
 
 [storage]
+# Platform save schema stays 1: the progress payload carries its own version
+# (dragon_services.SCHEMA_VERSION = 3) and migrates the endless-flight
+# prototype's star count and score forward.
 schema_version = 1

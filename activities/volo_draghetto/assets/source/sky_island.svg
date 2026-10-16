@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" width="512" height="256">
+  <defs>
+    <!-- orange darkened 12% ink -> orange shade (25% ink) -->
+    <linearGradient id="sky_island_earth" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#DF8E37"/>
+      <stop offset="1" stop-color="#C98136"/>
+    </linearGradient>
+    <!-- leaf light (mix 40% white) -> leaf -->
+    <linearGradient id="sky_island_grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="pebbles">
+    <path d="M150 214 C146 204 156 198 164 202 C172 206 170 218 162 220 C156 222 152 219 150 214 Z" fill="#C98136" stroke="#4B372F" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M350 226 C348 218 356 214 362 217 C368 221 366 230 359 231 C354 232 351 230 350 226 Z" fill="#C98136" stroke="#4B372F" stroke-width="2.4" stroke-linejoin="round"/>
+  </g>
+  <g id="earth">
+    <path d="M96 120 C150 128 360 128 420 118 C412 150 380 170 346 178 C326 206 296 230 262 236 C230 232 204 212 184 186 C146 176 110 156 96 120 Z" fill="url(#sky_island_earth)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M150 152 Q176 166 206 166 M300 170 Q326 164 352 150 M236 196 Q256 206 280 198" fill="none" stroke="#A86C32" stroke-width="2.4" stroke-linecap="round"/>
+  </g>
+  <g id="grass">
+    <path d="M84 118 C82 96 112 84 150 82 C200 76 320 74 372 80 C410 84 432 96 430 116 C430 124 420 128 412 124 C404 132 390 132 382 126 C372 134 356 134 348 126 C338 134 320 134 312 126 C302 134 284 134 276 126 C266 134 248 134 240 126 C230 134 212 134 204 126 C194 134 176 134 168 126 C158 134 140 134 132 126 C122 134 104 134 96 126 C88 128 84 124 84 118 Z" fill="url(#sky_island_grass)" stroke="#51714A" stroke-width="3.2" stroke-linejoin="round"/>
+    <ellipse cx="170" cy="92" rx="40" ry="6" fill="#FFFFFF" opacity="0.45"/>
+  </g>
+  <g id="bush">
+    <path d="M286 82 C276 60 296 40 318 48 C330 30 362 36 364 58 C384 60 388 82 374 88 C350 92 304 92 286 82 Z" fill="#59B86A" stroke="#51714A" stroke-width="3" stroke-linejoin="round"/>
+    <ellipse cx="318" cy="58" rx="10" ry="6" fill="#9BD4A6" opacity="0.8"/>
+  </g>
+  <g id="flowers">
+    <path d="M190 84 L190 66 M222 82 L222 62" fill="none" stroke="#28513A" stroke-width="2.6" stroke-linecap="round"/>
+    <circle cx="190" cy="62" r="8" fill="#F46F61" stroke="#4B372F" stroke-width="2.4"/>
+    <circle cx="190" cy="62" r="3" fill="#FFC234"/>
+    <circle cx="222" cy="58" r="8" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.4"/>
+    <circle cx="222" cy="58" r="3" fill="#FFC234"/>
+  </g>
+</svg>
