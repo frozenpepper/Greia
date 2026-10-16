@@ -746,6 +746,8 @@ Before changing the private repository to public:
 
 If a real secret ever entered history, rotate/revoke it **before** publication and rewrite history if necessary for disclosure prevention.
 
+**Status 2026-10-16:** a scan of every blob reachable from any ref found no private keys, cloud or GitHub tokens, Wi-Fi passphrases or real passwords; secret-like strings are test fixtures, and the shared development login is the documented developer-image credential. History does contain the author's local checkout paths (old `HANDOVER.md` revisions and earlier voice receipts) and home-LAN addresses of test devices. Whether to publish the full history or a fresh squashed history remains an owner decision.
+
 ---
 
 # 16. Gate L — Licensing, provenance, trademark and privacy
@@ -788,6 +790,8 @@ CHANGELOG.md or an equivalent release-history surface
 ```
 
 Exact file naming may differ if the documentation architecture deliberately chooses another canonical location, but a public visitor must be able to find the information immediately.
+
+**Status 2026-10-16:** `LICENSE` (MPL-2.0), `NOTICE.md`, `SECURITY.md`, `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md` exist at the root. `PRIVACY.md` and `CHANGELOG.md` do not exist yet, and GitHub private vulnerability reporting (named in `SECURITY.md`) must be enabled in the repository settings.
 
 ## Privacy review
 

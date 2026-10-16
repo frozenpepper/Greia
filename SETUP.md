@@ -1,10 +1,10 @@
 # Greia Setup Index
 
 **Status:** LIVING workstation / contributor / operator setup router  
-**Reviewed:** 2026-09-02  
+**Reviewed:** 2026-10-16  
 **Canonical repository:** `frozenpepper/Greia`
 
-This file answers one question: **what does this workstation/operator role need to read and install?** It does not replace the narrower manuals that own exact procedures.
+This file answers one question: **what does this workstation/operator role need to read and install?** It does not replace the narrower manuals that own exact procedures. New contributors should start with `CONTRIBUTING.md`; this file covers the heavier roles.
 
 ## 1. Read before installing anything
 
@@ -38,8 +38,9 @@ Do not install heavy model stacks, enable SSH, write removable media, add privil
 ## 3. Common bootstrap
 
 ```bash
-git clone <authorized Greia repository URL>
+git clone https://github.com/frozenpepper/Greia.git
 cd Greia
+python3 -m pip install -r requirements-dev.txt
 
 git status --short
 git rev-parse HEAD
@@ -89,8 +90,8 @@ docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
 Typical host needs:
 
 ```text
-Python 3
-current Greia/Pygame development dependencies
+Python 3.11+
+requirements-dev.txt (pygame, Pillow, zstandard; regex optional)
 Tk support for Simulator control plane
 make
 ```
@@ -359,7 +360,7 @@ Do not add destructive disk/removable-media writes to a generic setup helper.
 | Shared reactions | **180 generated + owner-accepted in `shared/v0.2`** |
 | Character introductions | **12 generated + owner-accepted in `shared/v0.2/_intros`**; product placement separate |
 | Shared runtime resolver | separate integration task where still pending |
-| Public-source legal/provenance gate | pending; see release-readiness docs |
+| Public-source legal/provenance gate | root entry points added 2026-10-16 (`LICENSE`, `NOTICE.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`); audit still pending, see `NOTICE.md` |
 
 ## 13. Maintenance rule
 
