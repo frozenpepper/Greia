@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" width="512" height="256">
+  <!-- Cucciolo Mio prop.pet.bed (front layer): the soft front bolster. -->
+  <defs>
+    <!-- coral light (mix 30% white) -> coral shade (mix 20% ink) -->
+    <linearGradient id="bed_front_bolster" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F79A8F"/>
+      <stop offset="1" stop-color="#D2655A"/>
+    </linearGradient>
+  </defs>
+  <g id="bed_front">
+    <path d="M42 148 A214 82 0 0 0 470 148 L432 142 A176 36 0 0 1 80 142 Z" fill="url(#bed_front_bolster)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M104 190 Q170 212 244 216" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.5"/>
+    <!-- stitched hearts, cream -->
+    <path d="M326 212 C321 208 313 203 313 197 C313 192 318 190 321 190 C324 190 326 192.5 326 194.5 C326 192.5 328 190 331 190 C334 190 339 192 339 197 C339 203 331 208 326 212 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/>
+    <path d="M378 200 C374.5 197.5 369 194 369 190 C369 186.5 372.5 185 374.5 185 C376.5 185 378 187 378 188.5 C378 187 379.5 185 381.5 185 C383.5 185 387 186.5 387 190 C387 194 381.5 197.5 378 200 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="2"/>
+  </g>
+</svg>

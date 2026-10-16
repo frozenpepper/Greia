@@ -1,120 +1,77 @@
-"""Thin bootstrap for Cucciolo Mio.
+"""My Cute Pet (Cucciolo Mio) — thin Greia composition root.
 
-Composition root only; domain, rendering and lifecycle live in siblings.
-Re-exports historical symbols for compatibility.
+Build the collaborators (resources, audio, storage-backed pet profile,
+events, canvas) and enter the Activity lifecycle. The real work lives in
+:mod:`cucciolo_app` (flow), :mod:`cucciolo_model` (care-day rules),
+:mod:`cucciolo_content` (pets, names, needs, cares, rooms, ladder),
+:mod:`cucciolo_layout` (geometry), :mod:`cucciolo_renderer` and
+:mod:`cucciolo_art` (presentation), :mod:`cucciolo_controls` (shared control
+kit), :mod:`cucciolo_audio` and :mod:`cucciolo_services`.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
+import random
 
 import pygame
 
-from greia_platform.activity_api import get_profile_locale, get_storage, get_theme
-from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.localization import ActivityLocaleSupport, LocalizedResources, resolve_activity_locale
+from greia_platform.activity_api import get_profile_locale
+from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import GreiaTypography
 
 if __package__:
-    from .cucciolo_app import CuccioloApp, SoundManager
-    from .cucciolo_content import (
-        ACCENT_BLUE,
-        DARK_TEXT,
-        GOLD,
-        NIGHT_FLOOR,
-        NIGHT_WALL,
-        PASTEL_PINK,
-        PINK,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        ROOM_FLOOR,
-        ROOM_WALL,
-        STORAGE_KEY,
-        WHITE,
-    )
-    from .cucciolo_model import Particle, PetEntity
-    from .cucciolo_renderer import CuccioloRenderer
+    from .cucciolo_app import CuccioloApp
+    from .cucciolo_audio import CuccioloAudio
+    from .cucciolo_content import LEVELS, NAMES, REFERENCE_HEIGHT, REFERENCE_WIDTH, SPECIES
+    from .cucciolo_services import GreiaPetEvents, GreiaPetProgress
 else:
-    from cucciolo_app import CuccioloApp, SoundManager  # type: ignore[import-not-found,no-redef]
-    from cucciolo_content import (  # type: ignore[import-not-found,no-redef]
-        ACCENT_BLUE,
-        DARK_TEXT,
-        GOLD,
-        NIGHT_FLOOR,
-        NIGHT_WALL,
-        PASTEL_PINK,
-        PINK,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        ROOM_FLOOR,
-        ROOM_WALL,
-        STORAGE_KEY,
-        WHITE,
-    )
-    from cucciolo_model import Particle, PetEntity  # type: ignore[import-not-found,no-redef]
-    from cucciolo_renderer import CuccioloRenderer  # type: ignore[import-not-found,no-redef]
+    from cucciolo_app import CuccioloApp
+    from cucciolo_audio import CuccioloAudio
+    from cucciolo_content import LEVELS, NAMES, REFERENCE_HEIGHT, REFERENCE_WIDTH, SPECIES
+    from cucciolo_services import GreiaPetEvents, GreiaPetProgress
 
 __all__ = [
-    "REFERENCE_WIDTH",
-    "REFERENCE_HEIGHT",
-    "STORAGE_KEY",
-    "ROOM_WALL",
-    "ROOM_FLOOR",
-    "NIGHT_WALL",
-    "NIGHT_FLOOR",
-    "WHITE",
-    "DARK_TEXT",
-    "GOLD",
-    "PINK",
-    "PASTEL_PINK",
-    "ACCENT_BLUE",
-    "SoundManager",
-    "Particle",
-    "PetEntity",
-    "CuccioloRenderer",
     "CuccioloApp",
+    "CuccioloAudio",
+    "LEVELS",
+    "NAMES",
+    "REFERENCE_HEIGHT",
+    "REFERENCE_WIDTH",
+    "SPECIES",
     "main",
 ]
 
 
-def _localized_resources() -> LocalizedResources | None:
-    package_root = Path(__file__).parent
-    support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-    profile_lang = get_profile_locale()
-    context = resolve_activity_locale(profile_lang, support)
-    if context is None:
+def _resources() -> LocalizedResources | None:
+    try:
+        return activity_resources(Path(__file__).resolve().parent, requested_locale=get_profile_locale())
+    except Exception:
         return None
-    return LocalizedResources(package_root, context)
 
 
 def main() -> int:
-    """Compose platform services and enter the Activity lifecycle."""
-
     pygame.init()
-    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-    pygame.mouse.set_visible(False)
+    screen = pygame.display.get_surface()
+    if screen is None:
+        screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
+    pygame.mouse.set_visible(True)
+
+    resources = _resources()
+    locale = resources.context.selected.language if resources is not None else "en"
+    rng = random.Random()
+    app = CuccioloApp(
+        screen=screen,
+        canvas=PygameReferenceCanvas(screen),
+        typography=GreiaTypography(),
+        resources=resources,
+        audio=CuccioloAudio(locale=locale, rng=rng),
+        progress=GreiaPetProgress(),
+        events=GreiaPetEvents(),
+        rng=rng,
+    )
     try:
-        theme = get_theme()
-        metrics = ChildUiMetrics.for_size(*screen.get_size())
-        canvas = PygameReferenceCanvas(screen)
-        typography = GreiaTypography()
-        try:
-            storage = get_storage()
-        except Exception:
-            storage = None
-
-        resources = _localized_resources()
-
-        app = CuccioloApp(
-            screen=screen,
-            canvas=canvas,
-            metrics=metrics,
-            typography=typography,
-            theme=theme,
-            storage=storage,
-            resources=resources,
-        )
         return app.run()
     finally:
         pygame.quit()

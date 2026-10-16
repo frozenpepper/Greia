@@ -1,36 +1,52 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Cucciolo Mio Activity icon: play Collection (ocean tile), a happy puppy (library creature.pet.puppy) + a heart. -->
   <defs>
-    <linearGradient id="cat_fur" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FFCC80"/>
-      <stop offset="100%" stop-color="#FFA726"/>
+    <!-- ocean light (mix 35% white) -> ocean -->
+    <linearGradient id="cucciolo_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+    <!-- sand light -> sand shade (library puppy fur) -->
+    <linearGradient id="cucciolo_fur" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FFF7E6"/>
+      <stop offset="1" stop-color="#EBD3AE"/>
+    </linearGradient>
+    <linearGradient id="cucciolo_acc" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#C48E66"/>
+      <stop offset="1" stop-color="#9A6445"/>
     </linearGradient>
   </defs>
-  <!-- Shadow -->
-  <ellipse cx="128" cy="222" rx="66" ry="12" fill="#CFD8DC" opacity="0.6"/>
-  <!-- Pointy Ears -->
-  <polygon points="62,118 78,54 116,96" fill="url(#cat_fur)"/>
-  <polygon points="72,110 84,68 108,98" fill="#FFAB91"/>
-  <polygon points="194,118 178,54 140,96" fill="url(#cat_fur)"/>
-  <polygon points="184,110 172,68 148,98" fill="#FFAB91"/>
-  <!-- Head -->
-  <ellipse cx="128" cy="132" rx="72" ry="64" fill="url(#cat_fur)"/>
-  <!-- Big Shiny Anime Eyes -->
-  <ellipse cx="98" cy="126" rx="12" ry="16" fill="#2E7D32"/>
-  <circle cx="94" cy="120" r="5" fill="#FFFFFF"/>
-  <circle cx="102" cy="132" r="2" fill="#FFFFFF"/>
-  <ellipse cx="158" cy="126" rx="12" ry="16" fill="#2E7D32"/>
-  <circle cx="154" cy="120" r="5" fill="#FFFFFF"/>
-  <circle cx="162" cy="132" r="2" fill="#FFFFFF"/>
-  <!-- Pink Nose & Cute Mouth -->
-  <polygon points="124,146 132,146 128,152" fill="#E91E63"/>
-  <path d="M120 156 Q128 164 136 156" fill="none" stroke="#5D4037" stroke-width="4" stroke-linecap="round"/>
-  <!-- Whiskers -->
-  <line x1="64" y1="144" x2="88" y2="148" stroke="#8D6E63" stroke-width="3" stroke-linecap="round"/>
-  <line x1="62" y1="156" x2="88" y2="154" stroke="#8D6E63" stroke-width="3" stroke-linecap="round"/>
-  <line x1="192" y1="144" x2="168" y2="148" stroke="#8D6E63" stroke-width="3" stroke-linecap="round"/>
-  <line x1="194" y1="156" x2="168" y2="154" stroke="#8D6E63" stroke-width="3" stroke-linecap="round"/>
-  <!-- Collar & Bell / Heart -->
-  <path d="M92 184 Q128 198 164 184" fill="none" stroke="#E53935" stroke-width="10" stroke-linecap="round"/>
-  <circle cx="128" cy="198" r="12" fill="#FFD54F" stroke="#FFA000" stroke-width="3"/>
-  <circle cx="128" cy="201" r="3" fill="#E65100"/>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#cucciolo_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="128" cy="196" rx="62" ry="10" fill="#4B5B73" opacity="0.18"/>
+  </g>
+  <g id="subject" transform="translate(26 22) scale(0.8)">
+    <path d="M172.4 187.3 C188.7 174.9 193.3 154.8 188.6 136 C186.9 127.9 195.9 125.8 198 134.8 C205.4 159 197.1 183.1 180 195.9 Z" fill="url(#cucciolo_fur)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="86" cy="188" rx="20" ry="17" fill="url(#cucciolo_fur)" stroke="#4B372F" stroke-width="4.5"/>
+    <ellipse cx="170" cy="188" rx="20" ry="17" fill="url(#cucciolo_fur)" stroke="#4B372F" stroke-width="4.5"/>
+    <path d="M128 118 C160 118 180 148 182 178 C184 198 172 206 150 206 L106 206 C84 206 72 198 74 178 C76 148 96 118 128 118 Z" fill="url(#cucciolo_fur)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="164" rx="26" ry="30" fill="#FFFBEB"/>
+    <ellipse cx="110" cy="202" rx="14" ry="8.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="3"/>
+    <ellipse cx="146" cy="202" rx="14" ry="8.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="3"/>
+    <path d="M128 32 C171 32 194 58 194 90 C194 124 166 144 128 144 C90 144 62 124 62 90 C62 58 85 32 128 32 Z" fill="url(#cucciolo_fur)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M84.1 63.4 C82.1 60.1 85.7 54.2 92.3 50.1 C98.8 46 105.8 45.3 107.9 48.6 C109.9 51.9 106.3 57.8 99.7 61.9 C93.2 66 86.2 66.7 84.1 63.4 Z" fill="#FFFFFF" opacity="0.7"/>
+    <path d="M161.6 91.9 Q159 97.4 151.3 97.8 Q143.6 98.2 141.9 92 Q140.2 85.9 135.7 80 Q131.1 74.2 138.6 71.5 Q146 68.8 152.1 69.5 Q158.1 70.2 166 72.5 Q173.8 74.8 168.9 80.7 Q164.1 86.5 161.6 91.9 Z" fill="url(#cucciolo_acc)"/>
+    <ellipse cx="128" cy="115" rx="25" ry="18" fill="#FFFBEB"/>
+    <ellipse cx="86" cy="110" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="170" cy="110" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.55"/>
+    <path d="M94 90 Q104 77 114 90" fill="none" stroke="#342C35" stroke-width="5.5" stroke-linecap="round"/>
+    <path d="M142 90 Q152 77 162 90" fill="none" stroke="#342C35" stroke-width="5.5" stroke-linecap="round"/>
+    <path d="M116 100 Q128 92 140 100 Q136 110 128 113 Q120 110 116 100 Z" fill="#594047" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M113 116 Q128 119 143 116 Q141 134 128 135 Q115 134 113 116 Z" fill="#8A3B2E" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M120 129 Q128 124 136 129 Q132 134 128 134 Q124 134 120 129 Z" fill="#F28B8B"/>
+    <path d="M88 44.7 C68.5 29.5 43.9 40.4 32.6 68.2 C23 92.4 27.4 111.9 40.9 113.5 C54.8 114.2 72.3 94.7 93 57.9 Z" fill="url(#cucciolo_acc)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M168 44.7 C187.5 29.5 212.1 40.4 223.4 68.2 C233 92.4 228.6 111.9 215.1 113.5 C201.2 114.2 183.7 94.7 163 57.9 Z" fill="url(#cucciolo_acc)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+  </g>
+  <g id="accent">
+    <path d="M206 82 C198 76 186 68 186 58 C186 50 193 46 198 46 C202 46 206 49 206 53 C206 49 210 46 214 46 C219 46 226 50 226 58 C226 68 214 76 206 82 Z" fill="#F46F61" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="196" cy="56" rx="4" ry="3" fill="#FFFFFF" opacity="0.7"/>
+  </g>
 </svg>

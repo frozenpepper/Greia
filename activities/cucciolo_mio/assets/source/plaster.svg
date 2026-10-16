@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Cucciolo Mio prop.pet.plaster: a soft sticking plaster with a heart pad. -->
+  <defs>
+    <!-- peach light (mix 40% white) -> peach -->
+    <linearGradient id="plaster_band" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBE8D7"/>
+      <stop offset="1" stop-color="#F3C9A6"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="226" rx="80" ry="11" fill="#6A5147" opacity="0.13"/>
+  </g>
+  <g id="plaster" transform="rotate(-28 128 128)">
+    <rect x="26" y="96" width="204" height="68" rx="34" fill="url(#plaster_band)" stroke="#4B372F" stroke-width="3.5"/>
+    <rect x="96" y="100" width="64" height="60" rx="10" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5"/>
+    <path d="M128 147 C121 142 111 135 111 127 C111 120 117 117 121 117 C125 117 128 120 128 123 C128 120 131 117 135 117 C139 117 145 120 145 127 C145 135 135 142 128 147 Z" fill="#F46F61" stroke="#4B372F" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M44 116 Q58 104 80 104" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+    <g fill="#D9A47E">
+      <circle cx="56" cy="138" r="3.5"/><circle cx="72" cy="128" r="3.5"/><circle cx="72" cy="146" r="3.5"/>
+      <circle cx="184" cy="114" r="3.5"/><circle cx="184" cy="132" r="3.5"/><circle cx="200" cy="124" r="3.5"/>
+    </g>
+  </g>
+</svg>

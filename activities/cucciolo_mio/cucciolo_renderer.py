@@ -1,434 +1,532 @@
-"""Presentation renderer for Cucciolo Mio.
+"""Frame composition for My Cute Pet (blits only).
 
-Owns pre-rendered backdrop, bounded text caches, and stateless draw helpers.
-No Greia IO or game rules; all surfaces are prepared once and reused.
+``SceneMotion`` holds short-lived presentation state: the pet acting out its
+need (``tell``), the "not now" head shake, happy hops, bites, the ball throw,
+the plaster, the sponge, a room slide, hint glows, FX and the bedtime lights.
+``LilliCast`` wraps the shared ``CastFeedback`` (cheer / think) with Lilli's
+point pose. ``CuccioloRenderer`` draws one frame from a ``SceneView`` (what
+the app shows) plus that motion; every surface comes prepared from
+``CuccioloArt``.
 """
 
 from __future__ import annotations
 
+from collections import deque
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from enum import StrEnum
 import math
-import random
-from typing import Final
 
 import pygame
 
-from greia_platform.localization import LocalizationError, LocalizedResources
-from greia_platform.typography import FontRole, GreiaTypography
-from greia_platform.ui_core import BoundedCache
+from greia_platform.activity_feedback import CastFeedback, CastPose
 
 if __package__:
-    from .cucciolo_content import (
-        ACCENT_BLUE,
-        DARK_TEXT,
-        GOLD,
-        NIGHT_FLOOR,
-        NIGHT_WALL,
-        PINK,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        ROOM_FLOOR,
-        ROOM_WALL,
-        WHITE,
+    from .cucciolo_art import FADE_LEVELS, CuccioloArt
+    from .cucciolo_content import REFERENCE_WIDTH, SPECIES_BY_ID, Care, Need, Room
+    from .cucciolo_layout import (
+        BALL_CATCH,
+        BALL_REST,
+        BALL_SIZE,
+        HOME_FLOOR,
+        LILLI_HEIGHT,
+        LILLI_MIDBOTTOM,
+        NAME_PET_FLOOR,
+        PET_SIZE,
+        PLASTER_SIZE,
+        SPONGE_SIZE,
+        SPONGE_SPOTS,
+        STAGES,
+        pet_rect,
     )
-    from .cucciolo_model import Particle, PetEntity
 else:
-    from cucciolo_content import (  # type: ignore[import-not-found,no-redef]
-        ACCENT_BLUE,
-        DARK_TEXT,
-        GOLD,
-        NIGHT_FLOOR,
-        NIGHT_WALL,
-        PINK,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        ROOM_FLOOR,
-        ROOM_WALL,
-        WHITE,
+    from cucciolo_art import FADE_LEVELS, CuccioloArt
+    from cucciolo_content import REFERENCE_WIDTH, SPECIES_BY_ID, Care, Need, Room
+    from cucciolo_layout import (
+        BALL_CATCH,
+        BALL_REST,
+        BALL_SIZE,
+        HOME_FLOOR,
+        LILLI_HEIGHT,
+        LILLI_MIDBOTTOM,
+        NAME_PET_FLOOR,
+        PET_SIZE,
+        PLASTER_SIZE,
+        SPONGE_SIZE,
+        SPONGE_SPOTS,
+        STAGES,
+        pet_rect,
     )
-    from cucciolo_model import Particle, PetEntity  # type: ignore[import-not-found,no-redef]
+
+TELL_SECONDS = 1.0
+SHAKE_SECONDS = 0.6
+HOP_SECONDS = 0.45
+BITE_SECONDS = 0.32
+THROW_SECONDS = 0.95
+PLASTER_SECONDS = 0.4
+SCRUB_SECONDS = 0.5
+SLIDE_SECONDS = 0.55
+DIM_SECONDS = 1.2
+FX_SECONDS = 0.6
+WOBBLE_SECONDS = 0.4
+OFFER_SECONDS = 0.7
+OFFER_ICON = 96
+MAX_FX = 16
 
 
-_MAX_LABEL_CACHE: Final = 64
-_MAX_VALUE_CACHE: Final = 32
-_TAB_ICONS: Final[dict[str, str]] = {
-    "feed": "🐟",
-    "bath": "🧼",
-    "play": "🎾",
-    "sleep": "🌙",
-    "dress": "🎀",
-}
+class Screen(StrEnum):
+    ADOPT = "adopt"
+    NAME = "name"
+    DAY = "day"
+    END = "end"
+
+
+@dataclass(frozen=True, slots=True)
+class SceneView:
+    """What the app wants on screen this frame (semantic, no surfaces)."""
+
+    screen: Screen
+    room: Room = Room.PLAYROOM
+    species: str | None = None
+    variant: str = "default"
+    care: Care | None = None
+    steps_done: int = 0
+    dim: bool = False
+
+
+def _tell_offset(need: Need, t: float) -> tuple[int, int]:
+    """How the pet acts out each need (body language, never words)."""
+
+    k = max(0.0, min(1.0, t / TELL_SECONDS))
+    fade = 1.0 - k
+    if need is Need.HUNGRY:  # two little bounces towards the child
+        return (0, -int(abs(math.sin(t * 2 * math.pi * 2.0)) * 10 * fade))
+    if need is Need.DIRTY:  # shakes itself like a wet, muddy dog
+        return (int(math.sin(t * 38.0) * 7 * fade), 0)
+    if need is Need.PLAYFUL:  # two springy play hops
+        return (0, -int(abs(math.sin(t * 2 * math.pi * 1.0)) * 26 * fade))
+    if need is Need.HURT:  # small tremble
+        return (int(math.sin(t * 60.0) * 2.5 * fade), 0)
+    return (int(math.sin(t * 4.0) * 7 * fade), int(abs(math.sin(t * 2.0)) * 4))  # sleepy sway
+
+
+@dataclass(slots=True)
+class SceneMotion:
+    """Presentation-only timers (bounded; cleared when the screen changes)."""
+
+    tell_need: Need | None = None
+    tell_start: float = -10.0
+    shake_start: float = -10.0
+    hop_start: float = -10.0
+    bite_start: float = -10.0
+    throw_start: float = -10.0
+    plaster_start: float = -10.0
+    scrub_start: float = -10.0
+    scrub_spot: int = 0
+    dim_start: float = -10.0
+    slide_from: Room | None = None
+    slide_to: Room | None = None
+    slide_start: float = -10.0
+    glow_care: Care | None = None
+    glow_until: float = -10.0
+    pet_glow_until: float = -10.0
+    wobble_care: Care | None = None
+    wobble_start: float = -10.0
+    offer_care: Care | None = None
+    offer_start: float = -10.0
+    offer_from: tuple[int, int] = (0, 0)
+    offer_to: tuple[int, int] = (0, 0)
+    offer_returns: bool = False
+    fx: deque = field(default_factory=lambda: deque(maxlen=MAX_FX))
+
+    def reset(self) -> None:
+        self.tell_need = None
+        self.tell_start = self.shake_start = self.hop_start = self.bite_start = -10.0
+        self.throw_start = self.plaster_start = self.scrub_start = self.dim_start = -10.0
+        self.slide_from = self.slide_to = None
+        self.slide_start = -10.0
+        self.glow_care = None
+        self.glow_until = self.pet_glow_until = self.wobble_start = -10.0
+        self.wobble_care = None
+        self.offer_care = None
+        self.offer_start = -10.0
+        self.fx.clear()
+
+    # -- events --
+    def tell(self, need: Need, now: float) -> None:
+        self.tell_need = need
+        self.tell_start = now
+
+    def shake(self, now: float) -> None:
+        self.shake_start = now
+
+    def hop(self, now: float) -> None:
+        self.hop_start = now
+
+    def slide(self, old: Room, new: Room, now: float) -> None:
+        self.slide_from, self.slide_to, self.slide_start = old, new, now
+
+    def glow(self, care: Care, now: float, seconds: float) -> None:
+        self.glow_care, self.glow_until = care, now + seconds
+
+    def wobble(self, care: Care, now: float) -> None:
+        self.wobble_care, self.wobble_start = care, now
+
+    def offer(self, care: Care, origin: tuple[int, int], target: tuple[int, int], now: float, *, returns: bool) -> None:
+        """The chosen care flies to the pet (and back again for "not now")."""
+
+        self.offer_care, self.offer_start = care, now
+        self.offer_from, self.offer_to, self.offer_returns = origin, target, returns
+
+    def offer_position(self, now: float) -> tuple[int, int] | None:
+        t = now - self.offer_start
+        if self.offer_care is None or not 0.0 <= t < OFFER_SECONDS:
+            return None
+        go, hold = 0.3, 0.45
+        if t < go:
+            k = 1.0 - (1.0 - t / go) ** 2
+        elif t < hold or not self.offer_returns:
+            k = 1.0
+        else:
+            k = 1.0 - (t - hold) / (OFFER_SECONDS - hold)
+        if not self.offer_returns and t >= hold:
+            return None
+        (x0, y0), (x1, y1) = self.offer_from, self.offer_to
+        lift = math.sin(math.pi * k) * 50
+        return (int(x0 + (x1 - x0) * k), int(y0 + (y1 - y0) * k - lift))
+
+    def add_fx(self, name: str, position: tuple[int, int], start: float) -> None:
+        self.fx.append((name, position, start))
+
+    def prune(self, now: float) -> None:
+        while self.fx and now - self.fx[0][2] >= FX_SECONDS:
+            self.fx.popleft()
+
+    # -- queries --
+    def sliding(self, now: float) -> bool:
+        return self.slide_to is not None and now - self.slide_start < SLIDE_SECONDS
+
+    def glowing(self, care: Care, now: float) -> bool:
+        return self.glow_care is care and now < self.glow_until
+
+    def wobble_offset(self, care: Care, now: float) -> int:
+        t = now - self.wobble_start
+        if self.wobble_care is not care or not 0.0 <= t < WOBBLE_SECONDS:
+            return 0
+        return int(round(math.sin(t * 40.0) * 8.0 * (1.0 - t / WOBBLE_SECONDS)))
+
+    def pet_offset(self, now: float) -> tuple[int, int]:
+        dx = dy = 0
+        t = now - self.tell_start
+        if self.tell_need is not None and 0.0 <= t < TELL_SECONDS:
+            ox, oy = _tell_offset(self.tell_need, t)
+            dx, dy = dx + ox, dy + oy
+        t = now - self.shake_start
+        if 0.0 <= t < SHAKE_SECONDS:  # "not now": a gentle head shake
+            dx += int(math.sin(t * 30.0) * 11 * (1.0 - t / SHAKE_SECONDS))
+        t = now - self.hop_start
+        if 0.0 <= t < HOP_SECONDS:
+            dy -= int(math.sin(math.pi * t / HOP_SECONDS) * 30)
+        t = now - self.bite_start
+        if 0.0 <= t < BITE_SECONDS:
+            dip = math.sin(math.pi * t / BITE_SECONDS)
+            dx, dy = dx + int(dip * 14), dy + int(dip * 6)
+        t = now - self.throw_start
+        if THROW_SECONDS * 0.3 <= t < THROW_SECONDS * 0.7:  # jump to catch the ball
+            local = (t - THROW_SECONDS * 0.3) / (THROW_SECONDS * 0.4)
+            dy -= int(math.sin(math.pi * local) * 46)
+        return dx, dy
+
+    def active(self, now: float) -> bool:
+        if any(now - start < FX_SECONDS for _, _, start in self.fx):
+            return True
+        if self.sliding(now) or now < self.glow_until or now < self.pet_glow_until:
+            return True
+        timers = (
+            (self.tell_start, TELL_SECONDS),
+            (self.shake_start, SHAKE_SECONDS),
+            (self.hop_start, HOP_SECONDS),
+            (self.bite_start, BITE_SECONDS),
+            (self.throw_start, THROW_SECONDS),
+            (self.plaster_start, PLASTER_SECONDS),
+            (self.scrub_start, SCRUB_SECONDS),
+            (self.dim_start, DIM_SECONDS),
+            (self.wobble_start, WOBBLE_SECONDS),
+            (self.offer_start, OFFER_SECONDS),
+        )
+        return any(0.0 <= now - start < length + 0.05 for start, length in timers)
+
+
+class LilliCast:
+    """Lilli: shared cheer/think feedback plus a point pose (goals, hints)."""
+
+    def __init__(self, feedback: CastFeedback, art: CuccioloArt, clock: Callable[[], float]) -> None:
+        self.feedback = feedback
+        self._clock = clock
+        self._point = art.cast_pose("pose_point", LILLI_HEIGHT)
+        self._point_until = 0.0
+
+    @property
+    def pose(self) -> CastPose:
+        return self.feedback.pose
+
+    @property
+    def pointing(self) -> bool:
+        return self._clock() < self._point_until and self.feedback.pose is CastPose.IDLE
+
+    @property
+    def animating(self) -> bool:
+        return self.feedback.animating or self.pointing
+
+    def correct(self) -> None:
+        self._point_until = 0.0
+        self.feedback.correct()
+
+    def try_again(self) -> None:
+        self._point_until = 0.0
+        self.feedback.try_again()
+
+    def point(self, seconds: float) -> None:
+        self.feedback.reset()
+        self._point_until = self._clock() + seconds
+
+    def reset(self) -> None:
+        self._point_until = 0.0
+        self.feedback.reset()
+
+    def update(self) -> bool:
+        changed = self.feedback.update()
+        if self._point_until and self._clock() >= self._point_until:
+            self._point_until = 0.0
+            changed = True
+        return changed
+
+    def draw(self, surface: pygame.Surface) -> None:
+        if self.pointing and self._point is not None:
+            bob = int(math.sin((self._point_until - self._clock()) * 7.0) * 3)
+            surface.blit(self._point, self._point.get_rect(midbottom=(LILLI_MIDBOTTOM[0], LILLI_MIDBOTTOM[1] + bob)))
+            return
+        self.feedback.draw(surface, LILLI_MIDBOTTOM)
 
 
 class CuccioloRenderer:
-    """Own backdrop and bounded text surfaces; stateless drawing otherwise."""
+    """Compose frames from prepared art (no scaling, no text)."""
 
-    def __init__(
-        self,
-        typography: GreiaTypography,
-        resources: LocalizedResources | None = None,
-    ) -> None:
-        self._typography = typography
-        # Tab captions are resolved once (case policy applied by the bundle);
-        # without resources the tabs show their pictograms only.
-        self._tab_labels = {
-            tab_id: self._resolve_label(resources, f"label.{tab_id}")
-            for tab_id in _TAB_ICONS
-        }
-        self._backdrop_day: pygame.Surface | None = None
-        self._backdrop_night: pygame.Surface | None = None
-        # Bounded caches: key -> Surface
-        self._label_cache: BoundedCache[tuple[str, int, tuple[int, int, int]], pygame.Surface] = BoundedCache(
-            _MAX_LABEL_CACHE
-        )
-        self._value_cache: BoundedCache[tuple[str, int, tuple[int, int, int], bool], pygame.Surface] = BoundedCache(
-            _MAX_VALUE_CACHE
-        )
-        self._tab_cache: BoundedCache[tuple[str, bool, str], pygame.Surface] = BoundedCache(_MAX_LABEL_CACHE)
-        self._hud_cache: BoundedCache[tuple[int, bool], pygame.Surface] = BoundedCache(16)
-        # Feedback cache is small and bounded
-        self._feedback_cache: BoundedCache[tuple[str, int], pygame.Surface] = BoundedCache(8)
-        self._build_backdrops()
+    def __init__(self, art: CuccioloArt, cast: LilliCast) -> None:
+        self._art = art
+        self._cast = cast
 
-    @staticmethod
-    def _resolve_label(resources: LocalizedResources | None, key: str) -> str:
-        if resources is None:
-            return ""
-        try:
-            return resources.text(key).strip()
-        except LocalizationError:
-            return ""
-
-    def invalidate(self) -> None:
-        """Clear derived caches after resize/theme change."""
-        self._label_cache.clear()
-        self._value_cache.clear()
-        self._tab_cache.clear()
-        self._hud_cache.clear()
-        self._feedback_cache.clear()
-        self._build_backdrops()
-
-    def _build_backdrops(self) -> None:
-        # Use opaque surface + convert() once for fast blit; one per day/night mode.
-        day = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
-        day.fill(ROOM_WALL)
-        pygame.draw.rect(day, ROOM_FLOOR, (0, 420, REFERENCE_WIDTH, 180))
-        pygame.draw.line(day, (200, 170, 140), (0, 420), (REFERENCE_WIDTH, 420), 4)
-        rug_col = (255, 210, 220)
-        pygame.draw.ellipse(day, rug_col, (262, 380, 500, 120))
-        pygame.draw.ellipse(day, (255, 190, 205), (282, 390, 460, 100))
-        # convert() requires display initialized; guard for headless import
-        try:
-            if pygame.display.get_surface() is not None:
-                day = day.convert()
-        except Exception:
-            pass
-        self._backdrop_day = day
-
-        night = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
-        night.fill(NIGHT_WALL)
-        pygame.draw.rect(night, NIGHT_FLOOR, (0, 420, REFERENCE_WIDTH, 180))
-        pygame.draw.line(night, (45, 38, 65), (0, 420), (REFERENCE_WIDTH, 420), 4)
-        rug_col_n = (50, 45, 80)
-        pygame.draw.ellipse(night, rug_col_n, (262, 380, 500, 120))
-        pygame.draw.ellipse(night, (65, 58, 100), (282, 390, 460, 100))
-        try:
-            if pygame.display.get_surface() is not None:
-                night = night.convert()
-        except Exception:
-            pass
-        self._backdrop_night = night
-
-    # ------------------------------------------------------------------ #
-    # Public render entrypoint
-
-    def render(
+    def draw(
         self,
         surface: pygame.Surface,
-        pet: PetEntity,
-        happiness: int,
-        hunger: int,
-        cleanliness: int,
-        active_tab: str,
-        particles: list[Particle],
-        bubbles: list[tuple[float, float, float]],
-        ball_pos: list[float],
-        feedback_msg: str,
+        view: SceneView,
+        motion: SceneMotion,
+        now: float,
+        *,
+        sun_rect: pygame.Rect | None = None,
+        moon_rect: pygame.Rect | None = None,
+        tray_rect: Callable[[Care], pygame.Rect | None] | None = None,
     ) -> None:
-        # Backdrop
-        is_sleeping = pet.is_sleeping
-        backdrop = self._backdrop_night if is_sleeping else self._backdrop_day
-        if backdrop is not None:
-            surface.blit(backdrop, (0, 0))
-        else:
-            # Fallback without cache (headless)
-            wall_col = NIGHT_WALL if is_sleeping else ROOM_WALL
-            floor_col = NIGHT_FLOOR if is_sleeping else ROOM_FLOOR
-            surface.fill(wall_col)
-            pygame.draw.rect(surface, floor_col, (0, 420, REFERENCE_WIDTH, 180))
-            pygame.draw.line(surface, (200, 170, 140) if not is_sleeping else (45, 38, 65), (0, 420), (REFERENCE_WIDTH, 420), 4)
-            rug_col = (255, 210, 220) if not is_sleeping else (50, 45, 80)
-            pygame.draw.ellipse(surface, rug_col, (262, 380, 500, 120))
-            pygame.draw.ellipse(surface, (255, 190, 205) if not is_sleeping else (65, 58, 100), (282, 390, 460, 100))
+        shift = self._draw_rooms(surface, view, motion, now)
+        if view.screen is Screen.NAME and view.species is not None:
+            self._draw_pet(surface, view, motion, now, NAME_PET_FLOOR, shift=0)
+        elif view.screen is Screen.DAY and view.species is not None:
+            self._draw_stage(surface, view, motion, now, shift)
+        self._draw_fx(surface, motion, now)
+        if view.screen is Screen.DAY and tray_rect is not None and motion.glow_care is not None:
+            self._draw_tool_glow(surface, motion, now, tray_rect)
+        self._cast.draw(surface)
+        if view.dim:
+            self._draw_night(surface, motion, now)
+        if view.screen is Screen.DAY:
+            self._draw_day_strip(surface, sun_rect, moon_rect)
 
-        if is_sleeping:
-            # Deterministic night stars
-            random.seed(99)
-            for _ in range(25):
-                sx = random.randint(30, REFERENCE_WIDTH - 30)
-                sy = random.randint(20, 360)
-                pygame.draw.circle(surface, (255, 255, 200), (sx, sy), 3)
-            random.seed()
+    # -- rooms ------------------------------------------------------------------
 
-        card_bg = (255, 255, 255) if not is_sleeping else (45, 40, 70)
-        border_col = (61, 44, 31) if not is_sleeping else (120, 100, 150)
-        txt_col = DARK_TEXT if not is_sleeping else WHITE
+    def _draw_rooms(self, surface: pygame.Surface, view: SceneView, motion: SceneMotion, now: float) -> int:
+        if motion.sliding(now) and motion.slide_from is not None and motion.slide_to is not None:
+            k = (now - motion.slide_start) / SLIDE_SECONDS
+            ease = 1.0 - (1.0 - max(0.0, min(1.0, k))) ** 3
+            shift = int(REFERENCE_WIDTH * (1.0 - ease))
+            surface.blit(self._art.room(motion.slide_from), (shift - REFERENCE_WIDTH, 0))
+            surface.blit(self._art.room(motion.slide_to), (shift, 0))
+            return shift
+        surface.blit(self._art.room(view.room), (0, 0))
+        return 0
 
-        # Stats pills
-        stats_data = [
-            ("💖", happiness, 5, PINK, 138),
-            ("🍎", hunger, 5, (255, 150, 40), 246),
-            ("✨", cleanliness, 5, ACCENT_BLUE, 354),
-        ]
-        for s_icon, s_val, s_max, s_col, s_x in stats_data:
-            pill_rect = pygame.Rect(s_x, 10, 104, 66)
-            pygame.draw.rect(surface, card_bg, pill_rect, border_radius=16)
-            pygame.draw.rect(surface, border_col, pill_rect, width=2, border_radius=16)
+    # -- pet + care stage --------------------------------------------------------
 
-            i_surf = self._cached_render(s_icon, FontRole.DISPLAY, 36, txt_col)
-            surface.blit(i_surf, (s_x + 6, 12))
-            v_key = (f"{s_val}/{s_max}", 20, txt_col, is_sleeping)
-            v_surf = self._cached_value_render(f"{s_val}/{s_max}", FontRole.TITLE, 20, txt_col, is_sleeping)
-            surface.blit(v_surf, (s_x + 50, 18))
+    def _draw_stage(self, surface: pygame.Surface, view: SceneView, motion: SceneMotion, now: float, shift: int) -> None:
+        care = view.care
+        if care is None:
+            self._draw_pet(surface, view, motion, now, HOME_FLOOR, shift)
+            if motion.pet_glow_until > now:
+                self._draw_pet_glow(surface, pet_rect(HOME_FLOOR).move(shift, 0), now)
+            self._draw_offer(surface, view, motion, now)
+            return
+        stage = STAGES[care]
+        prop = stage.prop.move(shift, 0) if stage.prop is not None else None
+        if care is Care.BED and prop is not None:
+            back = self._art.private("bed_back.png", prop.size)
+            if back is not None:
+                surface.blit(back, prop)
+        if motion.pet_glow_until > now:
+            self._draw_pet_glow(surface, stage.target.move(shift, 0), now)
+        self._draw_pet(surface, view, motion, now, stage.floor, shift)
+        if care is Care.BED and prop is not None:
+            front = self._art.private("bed_front.png", prop.size)
+            if front is not None:
+                surface.blit(front, prop)
+        elif care is Care.FOOD and prop is not None:
+            amount = 1.0 - view.steps_done / 3.0
+            self._art.draw_bowl(surface, prop, view.species or "puppy", amount)
+        elif care is Care.BALL:
+            self._draw_ball(surface, motion, now, shift)
+        elif care is Care.BATH:
+            self._draw_sponge(surface, view, motion, now, shift)
 
-            bar_bg = pygame.Rect(s_x + 10, 50, 84, 14)
-            pygame.draw.rect(surface, (225, 225, 230) if not is_sleeping else (60, 55, 85), bar_bg, border_radius=7)
-            fill_w = int(84 * (s_val / float(s_max)))
-            if fill_w > 0:
-                bar_fill = pygame.Rect(s_x + 10, 50, fill_w, 14)
-                pygame.draw.rect(surface, s_col, bar_fill, border_radius=7)
+    def _draw_offer(self, surface: pygame.Surface, view: SceneView, motion: SceneMotion, now: float) -> None:
+        position = motion.offer_position(now)
+        if position is None or motion.offer_care is None:
+            return
+        icon = self._art.care_icon(motion.offer_care, view.species or "puppy", OFFER_ICON)
+        if icon is not None:
+            surface.blit(icon, icon.get_rect(center=position))
 
-        for s_idx, (spec_id, spec_icon) in enumerate([("cat", "🐱"), ("bunny", "🐰"), ("puppy", "🐶")]):
-            bx = 470 + s_idx * 78
-            is_sel = (pet.species == spec_id)
-            btn_bg = GOLD if is_sel else card_bg
-            btn_rect = pygame.Rect(bx, 10, 72, 66)
-            pygame.draw.rect(surface, btn_bg, btn_rect, border_radius=18)
-            pygame.draw.rect(surface, (220, 150, 20) if is_sel else border_col, btn_rect, width=3 if is_sel else 2, border_radius=18)
-            s_icon = self._cached_species_icon(spec_icon, 46, txt_col)
-            surface.blit(s_icon, s_icon.get_rect(center=btn_rect.center))
+    def _pet_image(self, view: SceneView, motion: SceneMotion, now: float) -> list[pygame.Surface]:
+        """Layers for the pet this frame (bath: clean art under fading mud)."""
 
-        hud_rect = pygame.Rect(775, 10, 230, 66)
-        pygame.draw.rect(surface, card_bg, hud_rect, border_radius=18)
-        pygame.draw.rect(surface, border_col, hud_rect, width=2, border_radius=18)
-        hud_col = (180, 90, 20) if not is_sleeping else GOLD
-        hud_str = f"⭐ {happiness}   🏆 {happiness * 20}"
-        h_surf = self._cached_hud(hud_str, 26, hud_col, is_sleeping)
-        surface.blit(h_surf, h_surf.get_rect(center=hud_rect.center))
+        species = view.species or "puppy"
+        if view.care is Care.BATH and view.variant == "dirty" and view.steps_done > 0:
+            layers = []
+            clean = self._art.pet(species, "default", PET_SIZE)
+            if clean is not None:
+                layers.append(clean)
+            level = FADE_LEVELS[min(len(FADE_LEVELS), view.steps_done) - 1]
+            faded = self._art.pet_fading(species, "dirty", PET_SIZE, level)
+            if faded is not None:
+                layers.append(faded)
+            return layers
+        image = self._art.pet(species, view.variant, PET_SIZE)
+        return [image] if image is not None else []
 
-        # Pet
-        _draw_pet(surface, pet)
+    def _draw_pet(
+        self,
+        surface: pygame.Surface,
+        view: SceneView,
+        motion: SceneMotion,
+        now: float,
+        floor: tuple[int, int],
+        shift: int,
+    ) -> None:
+        dx, dy = motion.pet_offset(now)
+        rect = pet_rect(floor).move(shift + dx, dy)
+        for layer in self._pet_image(view, motion, now):
+            surface.blit(layer, rect)
+        if view.care is Care.PLASTER and view.steps_done >= 1 and view.variant == "hurt":
+            self._draw_plaster(surface, view, motion, now, rect)
 
-        if active_tab == "feed" and not is_sleeping:
-            pygame.draw.rect(surface, WHITE, (290, 90, 444, 76), border_radius=22)
-            pygame.draw.rect(surface, PINK, (290, 90, 444, 76), width=3, border_radius=22)
-            f_treats = self._cached_render("🐟   🍓   🍪   🥛   🧁", FontRole.DISPLAY, 46, DARK_TEXT)
-            surface.blit(f_treats, f_treats.get_rect(center=(512, 128)))
-        elif active_tab == "bath":
-            for bx, by, br in bubbles:
-                pygame.draw.circle(surface, (220, 240, 255, 180), (int(bx), int(by)), int(br))
-                pygame.draw.circle(surface, WHITE, (int(bx - 4), int(by - 4)), int(br // 3))
-        elif active_tab == "play" and not is_sleeping:
-            bx, by = int(ball_pos[0]), int(ball_pos[1])
-            pygame.draw.circle(surface, (255, 90, 90), (bx, by), 26)
-            pygame.draw.ellipse(surface, (255, 220, 50), (bx - 13, by - 26, 26, 52))
-            pygame.draw.circle(surface, WHITE, (bx - 7, by - 7), 7)
+    def _draw_plaster(self, surface, view: SceneView, motion: SceneMotion, now: float, rect: pygame.Rect) -> None:
+        plaster = self._art.private("plaster.png", (PLASTER_SIZE, PLASTER_SIZE))
+        if plaster is None:
+            return
+        paw = SPECIES_BY_ID[view.species or "puppy"].paw
+        target = (rect.x + int(paw[0] * rect.width), rect.y + int(paw[1] * rect.height))
+        t = now - motion.plaster_start
+        if 0.0 <= t < PLASTER_SECONDS:  # flies in from the tray side
+            k = 1.0 - (1.0 - t / PLASTER_SECONDS) ** 2
+            start = (target[0] + 220, target[1] + 160)
+            target = (int(start[0] + (target[0] - start[0]) * k), int(start[1] + (target[1] - start[1]) * k))
+        surface.blit(plaster, plaster.get_rect(center=target))
 
-        for p in particles:
-            self._draw_particle(surface, p)
+    def _draw_ball(self, surface: pygame.Surface, motion: SceneMotion, now: float, shift: int) -> None:
+        ball = self._art.shared("prop.everyday.ball", BALL_SIZE)
+        if ball is None:
+            return
+        t = now - motion.throw_start
+        rest = (BALL_REST[0] + shift, BALL_REST[1])
+        catch = (BALL_CATCH[0] + shift, BALL_CATCH[1])
+        if 0.0 <= t < THROW_SECONDS:
+            half = THROW_SECONDS / 2
+            if t < half:  # up to the pet's jump
+                k = t / half
+                origin, target, lift = rest, catch, 120
+            else:  # and back down to rest
+                k = (t - half) / half
+                origin, target, lift = catch, rest, 60
+            x = origin[0] + (target[0] - origin[0]) * k
+            y = origin[1] + (target[1] - origin[1]) * k - math.sin(math.pi * k) * lift
+            surface.blit(ball, ball.get_rect(center=(int(x), int(y))))
+            return
+        surface.blit(ball, ball.get_rect(center=rest))
 
-        if feedback_msg:
-            f_rect = pygame.Rect(262, 440, 500, 50)
-            pygame.draw.rect(surface, WHITE, f_rect, border_radius=16)
-            pygame.draw.rect(surface, PINK, f_rect, width=3, border_radius=16)
-            t_msg = self._cached_feedback(feedback_msg, 26, DARK_TEXT)
-            surface.blit(t_msg, t_msg.get_rect(center=f_rect.center))
+    def _draw_sponge(self, surface: pygame.Surface, view: SceneView, motion: SceneMotion, now: float, shift: int) -> None:
+        sponge = self._art.shared("prop.everyday.sponge", SPONGE_SIZE)
+        if sponge is None:
+            return
+        t = now - motion.scrub_start
+        if 0.0 <= t < SCRUB_SECONDS:
+            spot = SPONGE_SPOTS[motion.scrub_spot % len(SPONGE_SPOTS)]
+            wiggle = int(math.sin(t * 30.0) * 10)
+            surface.blit(sponge, sponge.get_rect(center=(spot[0] + shift + wiggle, spot[1])))
+            return
+        if view.variant == "dirty":
+            surface.blit(sponge, sponge.get_rect(center=(760 + shift, 452)))
 
-        tabs = [(tab_id, icon, self._tab_labels[tab_id]) for tab_id, icon in _TAB_ICONS.items()]
-        for idx, (tab_id, tab_icon, tab_label) in enumerate(tabs):
-            tx = 95 + idx * 170
-            t_active = (active_tab == tab_id)
-            t_bg = PINK if t_active else WHITE
-            t_border = (220, 80, 130) if t_active else (210, 195, 185)
-            t_txt_col = WHITE if t_active else DARK_TEXT
+    def _draw_pet_glow(self, surface: pygame.Surface, rect: pygame.Rect, now: float) -> None:
+        if int(now * 4) % 2:
+            return
+        glow = self._art.glow((rect.width + 24, rect.height + 24))
+        surface.blit(glow, glow.get_rect(center=rect.center))
 
-            tab_rect = pygame.Rect(tx, 500, 155, 84)
-            pygame.draw.rect(surface, t_bg, tab_rect, border_radius=20)
-            pygame.draw.rect(surface, t_border, tab_rect, width=3, border_radius=20)
+    def _draw_tool_glow(self, surface, motion: SceneMotion, now: float, tray_rect) -> None:
+        care = motion.glow_care
+        if care is None or not motion.glowing(care, now) or int(now * 3) % 2:
+            return
+        rect = tray_rect(care)
+        if rect is None:
+            return
+        glow = self._art.glow((rect.width + 30, rect.height + 30))
+        surface.blit(glow, glow.get_rect(center=rect.center))
 
-            i_surf = self._cached_tab_icon(tab_icon, 40, t_txt_col, t_active)
-            surface.blit(i_surf, i_surf.get_rect(center=(tx + 77, 526)))
+    # -- overlays ------------------------------------------------------------------
 
-            l_surf = self._cached_tab_label(tab_label, 17, t_txt_col, t_active)
-            surface.blit(l_surf, l_surf.get_rect(center=(tx + 77, 564)))
+    def _draw_fx(self, surface: pygame.Surface, motion: SceneMotion, now: float) -> None:
+        for name, position, start in motion.fx:
+            frames = self._art.fx_frames(name)
+            t = now - start
+            if not frames or not 0.0 <= t < FX_SECONDS:
+                continue
+            frame = frames[min(len(frames) - 1, int(t / FX_SECONDS * len(frames)))]
+            surface.blit(frame, frame.get_rect(center=position))
 
-    # ------------------------------------------------------------------ #
-    # Cached text helpers
+    def _draw_night(self, surface: pygame.Surface, motion: SceneMotion, now: float) -> None:
+        veil = self._art.night()
+        t = now - motion.dim_start
+        alpha = 255 if t >= DIM_SECONDS or t < 0 else int(255 * t / DIM_SECONDS)
+        veil.set_alpha(alpha)
+        surface.blit(veil, (0, 0))
 
-    def _cached_render(self, text: str, role: FontRole, size: int, color: tuple[int, int, int]) -> pygame.Surface:
-        key = (text, int(size), tuple(color))
-        cached = self._label_cache.get(key)
-        if cached is not None:
-            return cached
-        surf = self._typography.render(text, role, size, color)
-        self._label_cache[key] = surf
-        return surf
-
-    def _cached_value_render(self, text: str, role: FontRole, size: int, color: tuple[int, int, int], is_sleeping: bool) -> pygame.Surface:
-        key = (text, int(size), tuple(color), bool(is_sleeping))
-        cached = self._value_cache.get(key)
-        if cached is not None:
-            return cached
-        surf = self._typography.render(text, role, size, color)
-        self._value_cache[key] = surf
-        return surf
-
-    def _cached_species_icon(self, text: str, size: int, color: tuple[int, int, int]) -> pygame.Surface:
-        key = (text, int(size), tuple(color))
-        cached = self._label_cache.get(key)
-        if cached is not None:
-            return cached
-        surf = self._typography.render(text, FontRole.DISPLAY, size, color)
-        self._label_cache[key] = surf
-        return surf
-
-    def _cached_hud(self, text: str, size: int, color: tuple[int, int, int], is_sleeping: bool) -> pygame.Surface:
-        key = (text, bool(is_sleeping))
-        cached = self._hud_cache.get(key)
-        if cached is not None:
-            return cached
-        surf = self._typography.render(text, FontRole.TITLE, size, color)
-        self._hud_cache[key] = surf
-        return surf
-
-    def _cached_feedback(self, text: str, size: int, color: tuple[int, int, int]) -> pygame.Surface:
-        key = (text, int(size))
-        cached = self._feedback_cache.get(key)
-        if cached is not None:
-            return cached
-        surf = self._typography.render(text, FontRole.TITLE, size, color)
-        self._feedback_cache[key] = surf
-        return surf
-
-    def _cached_tab_icon(self, text: str, size: int, color: tuple[int, int, int], active: bool) -> pygame.Surface:
-        key = (text, bool(active), f"icon:{color}")
-        cached = self._tab_cache.get(key)
-        if cached is not None:
-            return cached
-        surf = self._typography.render(text, FontRole.DISPLAY, size, color)
-        self._tab_cache[key] = surf
-        return surf
-
-    def _cached_tab_label(self, text: str, size: int, color: tuple[int, int, int], active: bool) -> pygame.Surface:
-        key = (text, bool(active), f"label:{color}")
-        cached = self._tab_cache.get(key)
-        if cached is not None:
-            return cached
-        surf = self._typography.render(text, FontRole.TITLE, size, color)
-        self._tab_cache[key] = surf
-        return surf
-
-    def _draw_particle(self, surface: pygame.Surface, particle: Particle) -> None:
-        if particle.life > 0:
-            sz = max(12, int(28 * particle.life))
-            # Particles are short-lived and size varies, avoid unbounded cache; direct render is bounded by MAX_PARTICLES
-            p_surf = self._typography.render(particle.symbol, FontRole.DISPLAY, sz, particle.color)
-            surface.blit(p_surf, (int(particle.x) - p_surf.get_width() // 2, int(particle.y) - p_surf.get_height() // 2))
-
-
-def _draw_pet(surface: pygame.Surface, pet: PetEntity) -> None:
-    """Stateless pet drawing, extracted from former PetEntity.draw."""
-
-    px = int(pet.x)
-    py = int(pet.y)
-
-    body_col = (255, 175, 110) if pet.species == "cat" else ((240, 235, 230) if pet.species == "bunny" else (225, 160, 100))
-    tummy_col = (255, 250, 245)
-
-    tail_wag = math.sin(pet.wag_angle) * 16.0
-    if pet.species == "cat":
-        pygame.draw.circle(surface, body_col, (px + 60 + int(tail_wag * 0.5), py + 35), 14)
-    elif pet.species == "puppy":
-        pygame.draw.ellipse(surface, (190, 120, 60), (px + 45, py + 20 - int(tail_wag), 20, 36))
-    else:
-        pygame.draw.circle(surface, WHITE, (px + 50, py + 35), 16)
-
-    pygame.draw.ellipse(surface, body_col, (px - 50, py - 20, 100, 90))
-    pygame.draw.ellipse(surface, tummy_col, (px - 32, py - 10, 64, 70))
-
-    pygame.draw.circle(surface, tummy_col, (px - 30, py + 65), 14)
-    pygame.draw.circle(surface, tummy_col, (px + 30, py + 65), 14)
-
-    pygame.draw.ellipse(surface, body_col, (px - 55, py - 95, 110, 95))
-
-    if pet.species == "cat":
-        pygame.draw.polygon(surface, body_col, [(px - 50, py - 75), (px - 45, py - 130), (px - 10, py - 85)])
-        pygame.draw.polygon(surface, PINK, [(px - 44, py - 80), (px - 40, py - 120), (px - 16, py - 88)])
-        pygame.draw.polygon(surface, body_col, [(px + 10, py - 85), (px + 45, py - 130), (px + 50, py - 75)])
-        pygame.draw.polygon(surface, PINK, [(px + 16, py - 88), (px + 40, py - 120), (px + 44, py - 80)])
-    elif pet.species == "bunny":
-        pygame.draw.ellipse(surface, body_col, (px - 45, py - 170, 32, 90))
-        pygame.draw.ellipse(surface, PINK, (px - 37, py - 160, 16, 70))
-        pygame.draw.ellipse(surface, body_col, (px + 15, py - 170, 32, 90))
-        pygame.draw.ellipse(surface, PINK, (px + 23, py - 160, 16, 70))
-    else:
-        pygame.draw.ellipse(surface, (170, 105, 50), (px - 65, py - 85, 34, 75))
-        pygame.draw.ellipse(surface, (170, 105, 50), (px + 31, py - 85, 34, 75))
-
-    pygame.draw.ellipse(surface, tummy_col, (px - 38, py - 45, 76, 45))
-
-    pygame.draw.circle(surface, (255, 130, 160), (px - 36, py - 30), 10)
-    pygame.draw.circle(surface, (255, 130, 160), (px + 36, py - 30), 10)
-
-    if pet.is_sleeping:
-        pygame.draw.arc(surface, DARK_TEXT, (px - 38, py - 60, 24, 18), 0, math.pi, 3)
-        pygame.draw.arc(surface, DARK_TEXT, (px + 14, py - 60, 24, 18), 0, math.pi, 3)
-    elif pet.blink_timer > 0.18:
-        pygame.draw.ellipse(surface, (30, 25, 35), (px - 36, py - 65, 24, 30))
-        pygame.draw.ellipse(surface, (30, 25, 35), (px + 12, py - 65, 24, 30))
-        pygame.draw.circle(surface, WHITE, (px - 28, py - 58), 6)
-        pygame.draw.circle(surface, WHITE, (px - 20, py - 48), 3)
-        pygame.draw.circle(surface, WHITE, (px + 20, py - 58), 6)
-        pygame.draw.circle(surface, WHITE, (px + 28, py - 48), 3)
-    else:
-        pygame.draw.line(surface, DARK_TEXT, (px - 36, py - 50), (px - 14, py - 50), 3)
-        pygame.draw.line(surface, DARK_TEXT, (px + 14, py - 50), (px + 36, py - 50), 3)
-
-    pygame.draw.polygon(surface, (245, 110, 140), [(px, py - 34), (px - 6, py - 40), (px + 6, py - 40)])
-
-    if pet.chew_timer > 0:
-        chew_h = int(abs(math.sin(pet.chew_timer * 18.0)) * 8) + 2
-        pygame.draw.ellipse(surface, (240, 80, 110), (px - 10, py - 30, 20, chew_h))
-    else:
-        pygame.draw.arc(surface, DARK_TEXT, (px - 14, py - 34, 14, 12), math.pi, 2 * math.pi, 2)
-        pygame.draw.arc(surface, DARK_TEXT, (px, py - 34, 14, 12), math.pi, 2 * math.pi, 2)
-
-    if pet.accessory == "bow":
-        bx, by = px - 35, py - 90
-        pygame.draw.polygon(surface, PINK, [(bx, by), (bx - 14, by - 10), (bx - 14, by + 10)])
-        pygame.draw.polygon(surface, PINK, [(bx, by), (bx + 14, by - 10), (bx + 14, by + 10)])
-        pygame.draw.circle(surface, (255, 80, 120), (bx, by), 6)
-    elif pet.accessory == "crown":
-        cx, cy = px, py - 100
-        pygame.draw.polygon(surface, GOLD, [(cx - 22, cy), (cx - 22, cy - 20), (cx - 11, cy - 8), (cx, cy - 24), (cx + 11, cy - 8), (cx + 22, cy - 20), (cx + 22, cy)])
-    elif pet.accessory == "glasses":
-        gx, gy = px - 24, py - 50
-        pygame.draw.circle(surface, (40, 40, 50), (gx, gy), 14, 3)
-        pygame.draw.circle(surface, (40, 40, 50), (gx + 48, gy), 14, 3)
-        pygame.draw.line(surface, (40, 40, 50), (gx + 14, gy), (gx + 34, gy), 3)
-    elif pet.accessory == "party_hat":
-        hx, hy = px, py - 95
-        pygame.draw.polygon(surface, (130, 90, 240), [(hx, hy - 45), (hx - 22, hy), (hx + 22, hy)])
-        pygame.draw.circle(surface, GOLD, (hx, hy - 45), 7)
+    def _draw_day_strip(self, surface: pygame.Surface, sun_rect, moon_rect) -> None:
+        if sun_rect is not None:
+            sun = self._art.shared("prop.nature.sun", sun_rect.width)
+            if sun is not None:
+                surface.blit(sun, sun_rect)
+        if moon_rect is not None:
+            moon = self._art.shared("prop.vocab.moon", moon_rect.width)
+            if moon is not None:
+                surface.blit(moon, moon_rect)
 
 
-__all__ = ["CuccioloRenderer"]
+__all__ = [
+    "CuccioloRenderer",
+    "HOP_SECONDS",
+    "LilliCast",
+    "SHAKE_SECONDS",
+    "SLIDE_SECONDS",
+    "SceneMotion",
+    "SceneView",
+    "Screen",
+    "TELL_SECONDS",
+    "THROW_SECONDS",
+]

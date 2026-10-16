@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Cucciolo Mio prop.pet.bowl (front layer): bowl wall in front of the food. -->
+  <defs>
+    <!-- ocean light (mix 35% white) -> ocean -->
+    <linearGradient id="bowl_front_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="bowl_front">
+    <path d="M42 152 C44 198 72 226 128 226 C184 226 212 198 214 152 A86 24 0 0 1 42 152 Z" fill="url(#bowl_front_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M58 176 Q66 204 96 214" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.55"/>
+    <!-- paw print, cream -->
+    <g id="paw" fill="#FFFBEB" stroke="#4B372F" stroke-width="2">
+      <ellipse cx="146" cy="200" rx="15" ry="12"/>
+      <circle cx="128" cy="182" r="6"/>
+      <circle cx="141" cy="176" r="6"/>
+      <circle cx="155" cy="177" r="6"/>
+      <circle cx="166" cy="186" r="6"/>
+    </g>
+  </g>
+</svg>

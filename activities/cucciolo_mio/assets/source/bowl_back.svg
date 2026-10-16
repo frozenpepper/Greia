@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Cucciolo Mio prop.pet.bowl (back layer): rim top + inside. Food is drawn between back and front. -->
+  <defs>
+    <!-- ocean light (mix 45% white) -> ocean light (mix 25% white) -->
+    <linearGradient id="bowl_back_rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A9CBEE"/>
+      <stop offset="1" stop-color="#77A9E0"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="230" rx="92" ry="12" fill="#6A5147" opacity="0.15"/>
+  </g>
+  <g id="bowl_back">
+    <ellipse cx="128" cy="152" rx="86" ry="24" fill="url(#bowl_back_rim)" stroke="#4B372F" stroke-width="3.5"/>
+    <!-- inside: ocean shade (mix 25% ink) -->
+    <ellipse cx="128" cy="155" rx="70" ry="16" fill="#4A7DB0" stroke="#4B372F" stroke-width="2.5"/>
+    <ellipse cx="128" cy="160" rx="56" ry="9" fill="#3F6C99" opacity="0.6"/>
+  </g>
+</svg>

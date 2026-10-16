@@ -99,37 +99,45 @@ class OrcaEventManifestTests(TestCase):
 
 
 class CuccioloQueuedPointerTests(TestCase):
-    def test_ball_drag_consumes_events_not_global_mouse_polling(self) -> None:
-        app = object.__new__(CuccioloApp)
-        app._screen = pygame.Surface((1024, 600))
-        app._canvas = Mock()
-        app._canvas.pointer.side_effect = lambda point: point
-        app._active_tab = "play"
-        app._ball_pos = [512.0, 440.0]
-        app._ball_last_pos = [512.0, 440.0]
-        app._ball_vel = [0.0, 0.0]
-        app._is_dragging_ball = False
-        app._pet = Mock()
-        app._handle_pointer_click = Mock()
-        with patch("activities.cucciolo_mio.cucciolo_app._is_safe_point", return_value=True):
-            app._handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, {
-                "button": 1, "pos": (512, 440)
-            }))
-            app._handle_event(pygame.event.Event(pygame.MOUSEMOTION, {"pos": (542, 420)}))
-            self.assertEqual(app._ball_pos, [542, 420])
-            app._handle_event(pygame.event.Event(pygame.MOUSEBUTTONUP, {
-                "button": 1, "pos": (542, 420)
-            }))
-            app._handle_pointer_click.assert_not_called()
-            self.assertFalse(app._is_dragging_ball)
-            self.assertGreater(app._ball_vel[0], 0)
+    """The reworked pet (one care day through the shared control kit) takes
+    taps from the queued Pygame events and never polls the global mouse."""
 
-            app._handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, {
-                "button": 1, "pos": (542, 420)
-            }))
-            app._handle_event(pygame.event.Event(pygame.WINDOWFOCUSLOST, {}))
-            self.assertFalse(app._is_dragging_ball)
-            self.assertEqual(app._ball_vel, [0.0, 0.0])
+    def test_care_tray_consumes_queued_events_not_global_mouse_polling(self) -> None:
+        import random
+
+        from activities.cucciolo_mio.cucciolo_content import CARE_FOR_NEED
+        from activities.cucciolo_mio.cucciolo_model import Phase
+        from activities.cucciolo_mio.cucciolo_services import PetProfile
+        from greia_platform.pygame_canvas import PygameReferenceCanvas
+        from greia_platform.typography import GreiaTypography
+
+        pygame.init()
+        screen = pygame.display.set_mode((1024, 600))
+        now = [100.0]
+        progress = Mock()
+        progress.load.return_value = PetProfile(species="puppy", name="moon")
+        app = CuccioloApp(
+            screen=screen,
+            canvas=PygameReferenceCanvas(screen),
+            typography=GreiaTypography(),
+            resources=None,
+            audio=Mock(),
+            progress=progress,
+            events=Mock(),
+            rng=random.Random(1),
+            clock=lambda: now[0],
+        )
+        while app.day.phase is not Phase.NEED and now[0] < 120.0:
+            now[0] += 0.1
+            app.step()
+        self.assertIs(app.day.phase, Phase.NEED)
+        target = app.controls.tray_rect(CARE_FOR_NEED[app.day.current_need]).center
+        with patch("pygame.mouse.get_pos", side_effect=AssertionError("polled")), patch(
+            "pygame.mouse.get_pressed", side_effect=AssertionError("polled")
+        ):
+            app.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": target}))
+            app.handle_event(pygame.event.Event(pygame.MOUSEBUTTONUP, {"button": 1, "pos": target}))
+        self.assertIs(app.day.phase, Phase.CARE)
 
     def test_played_event_matches_manifest(self) -> None:
         manifest = tomllib.loads(

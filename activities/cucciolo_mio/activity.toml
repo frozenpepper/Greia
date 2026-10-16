@@ -11,19 +11,32 @@ categories = ["play"]
 discovery_tags = ["care"]
 
 [education]
-categories = ["empathy", "daily_routines", "fine_motor", "creativity"]
-difficulty = 2
+# Caring routines and empathy: the child adopts and names a pet (library
+# puppy / kitten / guinea pig), then looks after it for one finite day. Each
+# need (hungry, muddy, playful, a little bump, sleepy) is shown only by the
+# pet's body language; the child reads it, chooses the matching care from a
+# picture tray (food, bath, ball, plaster + cuddle, bed) and does it with a
+# few taps. A wrong care gets a gentle "not now" (never sadness or decay).
+# The day always ends with bedtime. Three rungs (more needs, a fifth care)
+# adapt from the misses of each day.
+categories = ["empathy", "daily_routines"]
+difficulty = 1
 recommended_age_min = 3
-recommended_age_max = 7
+recommended_age_max = 5
+difficulty_min = 1
+difficulty_max = 3
+adaptive_difficulty = true
 skills = [
   { id = "emotional.empathy_caregiving", weight = 3 },
+  { id = "emotional.recognition.body_language", weight = 3 },
   { id = "habits.hygiene_and_nutrition", weight = 2 },
-  { id = "motor.pointer.drag_and_drop", weight = 2 },
+  { id = "motor.pointer.target_selection", weight = 1 },
 ]
 events = [
   { id = "pet.fed", kind = "milestone" },
   { id = "pet.groomed", kind = "milestone" },
   { id = "pet.played", kind = "milestone" },
+  { id = "pet.comforted", kind = "milestone" },
   { id = "pet.tucked_in", kind = "completion" },
 ]
 
@@ -33,11 +46,11 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "pointer"
+profile = "hybrid"
 
 [requirements]
 required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["touch"]
+optional_capabilities = ["keyboard", "touch"]
 
 [permissions]
 requested = []
