@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- quattro_stagioni prop: the big seasons tree, bare trunk and branches (base layer).
+       The four canopy layers (tree_canopy_*.svg) share this 512x512 canvas and overlay it.
+       Shared-library candidate prop.tree.seasonal_*; recipe GREIA_SVG_AUTHORING_RULES.md.
+       Wood #9A6A45 and contour from the meadow_day kit tree; branches are drawn as an ink
+       pass then a wood pass so every joint stays one seamless outlined silhouette. -->
+  <g id="shadow">
+    <ellipse cx="256" cy="490" rx="104" ry="15" fill="#6A5147" opacity="0.15"/>
+  </g>
+  <g id="ink_pass" fill="none" stroke="#4B372F" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M250 304 C236 272 210 248 186 230" stroke-width="33"/>
+    <path d="M186 230 C164 213 142 196 124 172" stroke-width="25"/>
+    <path d="M124 172 C118 163 115 155 115 146" stroke-width="18"/>
+    <path d="M180 224 C177 202 173 184 165 164" stroke-width="18"/>
+    <path d="M262 304 C278 270 304 244 330 224" stroke-width="33"/>
+    <path d="M330 224 C352 205 372 186 388 160" stroke-width="25"/>
+    <path d="M388 160 C392 152 394 145 394 136" stroke-width="18"/>
+    <path d="M338 218 C346 198 351 181 351 158" stroke-width="18"/>
+    <path d="M256 304 C258 262 260 232 260 202" stroke-width="29"/>
+    <path d="M260 202 C260 174 256 151 250 126" stroke-width="21"/>
+    <path d="M250 126 C248 112 248 100 252 88" stroke-width="16"/>
+    <path d="M259 212 C276 193 291 180 306 162" stroke-width="17"/>
+    <path d="M258 230 C241 207 225 194 210 180" stroke-width="17"/>
+    <path d="M206 490 C226 482 232 462 234 430 L238 332 C239 314 242 300 246 290 L266 290 C270 300 273 314 274 332 L278 430 C280 462 286 482 306 490 Z" fill="#4B372F" stroke-width="7"/>
+  </g>
+  <g id="wood_pass" fill="none" stroke="#9A6A45" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M250 304 C236 272 210 248 186 230" stroke-width="26"/>
+    <path d="M186 230 C164 213 142 196 124 172" stroke-width="18"/>
+    <path d="M124 172 C118 163 115 155 115 146" stroke-width="11"/>
+    <path d="M180 224 C177 202 173 184 165 164" stroke-width="11"/>
+    <path d="M262 304 C278 270 304 244 330 224" stroke-width="26"/>
+    <path d="M330 224 C352 205 372 186 388 160" stroke-width="18"/>
+    <path d="M388 160 C392 152 394 145 394 136" stroke-width="11"/>
+    <path d="M338 218 C346 198 351 181 351 158" stroke-width="11"/>
+    <path d="M256 304 C258 262 260 232 260 202" stroke-width="22"/>
+    <path d="M260 202 C260 174 256 151 250 126" stroke-width="14"/>
+    <path d="M250 126 C248 112 248 100 252 88" stroke-width="9"/>
+    <path d="M259 212 C276 193 291 180 306 162" stroke-width="10"/>
+    <path d="M258 230 C241 207 225 194 210 180" stroke-width="10"/>
+    <path d="M206 490 C226 482 232 462 234 430 L238 332 C239 314 242 300 246 290 L266 290 C270 300 273 314 274 332 L278 430 C280 462 286 482 306 490 Z" fill="#9A6A45" stroke="none"/>
+  </g>
+  <g id="details" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- wood light (mix 40% white) highlight, wood shade (mix 25% ink) -->
+    <path d="M244 474 C242 430 243 372 247 318" stroke="#C2A68F" stroke-width="5" opacity="0.85"/>
+    <path d="M272 340 L275 430 C277 456 283 474 296 484" stroke="#865D40" stroke-width="6" opacity="0.7"/>
+    <path d="M262 452 C266 442 266 432 262 422" stroke="#4B372F" stroke-width="2.2"/>
+    <path d="M250 392 C254 384 254 376 250 368" stroke="#4B372F" stroke-width="2.2"/>
+    <ellipse cx="264" cy="352" rx="7" ry="10" fill="#6B4A33" stroke="#4B372F" stroke-width="2.5"/>
+    <path d="M208 262 C200 252 192 246 184 242" stroke="#C2A68F" stroke-width="4" opacity="0.8"/>
+  </g>
+</svg>

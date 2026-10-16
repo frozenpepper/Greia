@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- quattro_stagioni prop: striped winter scarf, drawn on Tito's canonical 256 canvas so it
+       wraps character.tito below the muzzle at a fixed anchor (separate layer, SVG rules
+       8.3/8.4). Ocean #4A91D8 with cream stripes, contour mix(ocean, ink 55%).
+       Shared-library candidate prop.clothing.scarf; recipe GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- ocean light (mix 35% white) -> ocean -->
+    <linearGradient id="scarf_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="scarf" stroke="#4B5F7B" stroke-linejoin="round">
+    <path d="M144 190 C150 204 154 218 152 236 L174 236 C178 216 172 198 164 186 Z" fill="url(#scarf_fill)" stroke-width="3"/>
+    <path d="M151 214 L173 212 M152 226 L175 225" fill="none" stroke="#FFFBEB" stroke-width="5"/>
+    <path d="M154 236 L154 244 M161 236 L161 245 M168 236 L168 244" fill="none" stroke="#4B5F7B" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M66 172 C96 186 160 186 190 170 C196 178 196 190 190 198 C160 212 96 212 68 198 C62 190 62 180 66 172 Z" fill="url(#scarf_fill)" stroke-width="3.5"/>
+    <g fill="none" stroke="#FFFBEB" stroke-width="6">
+      <path d="M92 184 L90 204"/><path d="M118 188 L117 208"/><path d="M144 188 L145 208"/><path d="M168 182 L171 202"/>
+    </g>
+    <path d="M74 180 C88 186 104 189 116 190" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.7"/>
+  </g>
+</svg>

@@ -1,23 +1,44 @@
-"""Thin Greia composition root for Il Grande Albero delle Stagioni."""
+"""The Big Seasons Tree (Il Grande Albero delle Stagioni) — thin composition root.
+
+Build the collaborators (resources, audio, storage-backed progress, events,
+canvas) and enter the Activity lifecycle. The real work lives in
+:mod:`tree_app` (flow), :mod:`tree_model` (rules), :mod:`tree_content`
+(seasons, items, facts, ladder), :mod:`tree_layout` (geometry),
+:mod:`tree_renderer` and :mod:`tree_art` (presentation), :mod:`tree_controls`
+(shared control kit), :mod:`tree_audio` and :mod:`tree_services`.
+"""
 
 from __future__ import annotations
 
 from pathlib import Path
+import random
 
 import pygame
 
-from greia_platform.localization import activity_resources
+from greia_platform.activity_api import get_profile_locale
+from greia_platform.localization import LocalizedResources, activity_resources
+from greia_platform.pygame_canvas import PygameReferenceCanvas
+from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .tree_app import TreeActivity
     from .tree_audio import TreeAudio
-    from .tree_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, TreeModel
-    from .tree_renderer import TreeRenderer
+    from .tree_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from .tree_services import GreiaSeasonsEvents, GreiaSeasonsProgress
 else:
     from tree_app import TreeActivity
     from tree_audio import TreeAudio
-    from tree_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, TreeModel
-    from tree_renderer import TreeRenderer
+    from tree_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from tree_services import GreiaSeasonsEvents, GreiaSeasonsProgress
+
+__all__ = ["REFERENCE_HEIGHT", "REFERENCE_WIDTH", "TreeActivity", "TreeAudio", "main"]
+
+
+def _resources() -> LocalizedResources | None:
+    try:
+        return activity_resources(Path(__file__).resolve().parent, requested_locale=get_profile_locale())
+    except Exception:
+        return None
 
 
 def main() -> int:
@@ -27,22 +48,28 @@ def main() -> int:
         screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
     pygame.mouse.set_visible(True)
 
-    package_root = Path(__file__).resolve().parent
-    resources = activity_resources(package_root)
-    locale = resources.context.selected.language
-    pygame.display.set_caption(resources.text("activity.title"))
-
-    model = TreeModel()
-    audio = TreeAudio(package_root, locale=locale, resources=resources)
-    renderer = TreeRenderer(resources=resources)
-
+    resources = _resources()
+    locale = resources.context.selected.language if resources is not None else "en"
+    if resources is not None:
+        try:
+            pygame.display.set_caption(resources.text("activity.title"))
+        except Exception:
+            pass
+    rng = random.Random()
     app = TreeActivity(
         screen=screen,
-        renderer=renderer,
-        audio=audio,
-        model=model,
+        canvas=PygameReferenceCanvas(screen),
+        typography=GreiaTypography(),
+        resources=resources,
+        audio=TreeAudio(resources=resources, locale=locale, rng=rng),
+        progress=GreiaSeasonsProgress(),
+        events=GreiaSeasonsEvents(),
+        rng=rng,
     )
-    return app.run()
+    try:
+        return app.run()
+    finally:
+        pygame.quit()
 
 
 if __name__ == "__main__":

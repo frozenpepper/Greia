@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- quattro_stagioni Activity icon: the big seasons tree, its crown in four seasons
+       (blossom, apples, orange leaves, snow). Explore Collection -> leaf tile. Crown outline
+       from tree_canopy_*.svg; recipe GREIA_SVG_AUTHORING_RULES.md section 7 (one clipPath). -->
+  <defs>
+    <!-- leaf light (mix 35% white) -> leaf -->
+    <linearGradient id="seasons_icon_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#93D19E"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+    <clipPath id="seasons_icon_crown">
+      <path transform="translate(23 14) scale(0.41)" d="M130 282 C92 284 74 248 92 222 C66 200 72 156 106 148 C100 112 132 84 166 92 C178 60 222 46 252 64 C276 40 324 46 338 76 C372 70 404 96 400 132 C432 144 444 186 422 210 C440 240 420 278 386 280 C374 304 336 310 314 294 C296 312 260 314 244 296 C222 314 186 312 172 294 C158 302 138 298 130 282 Z"/>
+    </clipPath>
+  </defs>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#seasons_icon_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="128" cy="216" rx="48" ry="8" fill="#3B6F45" opacity="0.18"/>
+  </g>
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round">
+    <path d="M110 216 C118 208 120 190 121 140 L135 140 C136 190 138 208 146 216 Z" fill="#9A6A45" stroke-width="4"/>
+    <g clip-path="url(#seasons_icon_crown)">
+      <rect x="40" y="20" width="88" height="68" fill="#F7C1D2" stroke="none"/>
+      <rect x="128" y="20" width="88" height="68" fill="#7FC06A" stroke="none"/>
+      <rect x="128" y="88" width="88" height="78" fill="#F39A38" stroke="none"/>
+      <rect x="40" y="88" width="88" height="78" fill="#EEF3F9" stroke="none"/>
+      <path d="M128 20 L128 170 M40 88 L216 88" fill="none" stroke-width="3"/>
+      <path d="M60 76 C60 58 72 46 88 42" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+    </g>
+    <path transform="translate(23 14) scale(0.41)" d="M130 282 C92 284 74 248 92 222 C66 200 72 156 106 148 C100 112 132 84 166 92 C178 60 222 46 252 64 C276 40 324 46 338 76 C372 70 404 96 400 132 C432 144 444 186 422 210 C440 240 420 278 386 280 C374 304 336 310 314 294 C296 312 260 314 244 296 C222 314 186 312 172 294 C158 302 138 298 130 282 Z" fill="none" stroke-width="11"/>
+    <g fill="#FFFBEB" stroke="#9A6170" stroke-width="2">
+      <circle cx="104" cy="52" r="7.5"/><circle cx="114" cy="72" r="6.5"/><circle cx="84" cy="72" r="6.5"/>
+    </g>
+    <g fill="#FFC234" stroke="none"><circle cx="104" cy="52" r="2.6"/><circle cx="114" cy="72" r="2.3"/><circle cx="84" cy="72" r="2.3"/></g>
+    <g fill="#F46F61" stroke-width="2.5"><circle cx="152" cy="50" r="8.5"/><circle cx="178" cy="68" r="8"/><circle cx="148" cy="74" r="7"/></g>
+    <g stroke="#976333" stroke-width="2">
+      <path d="M0 -11 C8 -4 8 4 0 11 C-8 4 -8 -4 0 -11 Z" transform="translate(148 106) rotate(30)" fill="#F46F61"/>
+      <path d="M0 -11 C8 -4 8 4 0 11 C-8 4 -8 -4 0 -11 Z" transform="translate(176 104) rotate(-40)" fill="#FFC234"/>
+      <path d="M0 -11 C8 -4 8 4 0 11 C-8 4 -8 -4 0 -11 Z" transform="translate(158 126) rotate(70)" fill="#FFC234"/>
+    </g>
+    <g fill="#FFFFFF" stroke="#A9BCD3" stroke-width="2">
+      <circle cx="84" cy="104" r="6.5"/><circle cx="108" cy="106" r="5.5"/><circle cx="98" cy="126" r="6"/><circle cx="74" cy="120" r="4.5"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- quattro_stagioni prop: snowman (ground item for winter). Snow tokens from the
+       woodland_snow kit (#FFFFFF, shade #E3EBF5) with a darker snow contour so the white
+       masses read at card size; twig arms in meadow wood #9A6A45, carrot orange #F39A38.
+       Shared-library candidate prop.nature.snowman; recipe GREIA_SVG_AUTHORING_RULES.md. -->
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="56" ry="9" fill="#6A5147" opacity="0.15"/>
+  </g>
+  <g id="arms" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M86 150 L52 128 M64 136 L56 118" stroke="#4B372F" stroke-width="9"/>
+    <path d="M170 150 L204 126 M192 134 L200 116" stroke="#4B372F" stroke-width="9"/>
+    <path d="M86 150 L52 128 M64 136 L56 118" stroke="#9A6A45" stroke-width="4"/>
+    <path d="M170 150 L204 126 M192 134 L200 116" stroke="#9A6A45" stroke-width="4"/>
+  </g>
+  <g id="body" stroke="#7E93AC" stroke-width="3.5" stroke-linejoin="round">
+    <circle cx="128" cy="180" r="52" fill="#FFFFFF"/>
+    <path d="M150 226 C170 218 182 200 180 178 C172 198 156 210 134 214 Z" fill="#E3EBF5" stroke="none"/>
+    <circle cx="128" cy="98" r="38" fill="#FFFFFF"/>
+    <path d="M144 132 C158 126 166 112 165 96 C158 110 148 118 134 122 Z" fill="#E3EBF5" stroke="none"/>
+  </g>
+  <g id="face">
+    <circle cx="114" cy="90" r="5" fill="#342C35"/>
+    <circle cx="142" cy="90" r="5" fill="#342C35"/>
+    <circle cx="115.5" cy="88.5" r="1.6" fill="#FFFFFF"/>
+    <circle cx="143.5" cy="88.5" r="1.6" fill="#FFFFFF"/>
+    <path d="M128 100 L156 106 L128 110 Z" fill="#F39A38" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M114 118 Q128 126 142 118" fill="none" stroke="#72513F" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="102" cy="104" rx="7" ry="4.5" fill="#FDA4AF" opacity="0.5"/>
+    <ellipse cx="154" cy="104" rx="7" ry="4.5" fill="#FDA4AF" opacity="0.5"/>
+  </g>
+  <g id="buttons" fill="#342C35">
+    <circle cx="128" cy="158" r="5.5"/>
+    <circle cx="128" cy="180" r="5.5"/>
+    <circle cx="128" cy="202" r="5.5"/>
+  </g>
+</svg>

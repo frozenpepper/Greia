@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- quattro_stagioni prop: straw sun hat, drawn on Tito's canonical 256 canvas so it
+       overlays character.tito at a fixed anchor (separate layer, SVG rules 8.3/8.4).
+       Straw from sunshine #FFC234 steps, contour mix(sunshine, ink 55%), coral ribbon.
+       Shared-library candidate prop.clothing.sunhat; recipe GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- sunshine light (mix 45% white) -> straw #F4BF52 -->
+    <linearGradient id="sunhat_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE2A0"/>
+      <stop offset="1" stop-color="#F4BF52"/>
+    </linearGradient>
+  </defs>
+  <g id="hat" stroke="#8C6A2E" stroke-linejoin="round">
+    <path d="M58 84 C58 70 92 64 128 64 C164 64 198 70 198 84 C198 96 164 100 128 100 C92 100 58 96 58 84 Z" fill="url(#sunhat_fill)" stroke-width="3.5"/>
+    <path d="M150 98 C176 96 196 92 198 84 C194 90 176 94 150 94 Z" fill="#D9A43F" stroke="none" opacity="0.6"/>
+    <path d="M98 80 C96 58 108 40 128 40 C148 40 160 58 158 80 C148 84 108 84 98 80 Z" fill="url(#sunhat_fill)" stroke-width="3.5"/>
+    <path d="M99 70 C110 74 146 74 157 70 L158 80 C148 84 108 84 98 80 Z" fill="#F46F61" stroke-width="2.5"/>
+    <g fill="none" stroke="#D9A43F" stroke-width="2.2" stroke-linecap="round">
+      <path d="M78 86 C96 90 112 91 124 91"/><path d="M134 91 C150 91 166 89 180 86"/>
+      <path d="M112 50 C120 46 136 46 144 50"/>
+    </g>
+    <path d="M108 60 C110 52 116 46 124 44" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+    <path d="M160 74 C168 70 176 72 178 78 C172 80 166 79 160 76 Z" fill="#F46F61" stroke-width="2.2"/>
+  </g>
+</svg>

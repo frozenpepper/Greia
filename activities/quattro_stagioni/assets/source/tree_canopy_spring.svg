@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- quattro_stagioni prop: spring canopy (overlay for tree_trunk.svg, same canvas).
+       Blossom crown: rose blossom mass with white and pink flowers and a few fresh leaves.
+       Crown silhouette shared by the spring/summer/autumn canopies. Shared-library candidate
+       prop.tree.seasonal_spring; recipe GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- rose #F5D6DF light -> blossom #F5B3C8 (raspberry light step) -->
+    <linearGradient id="canopy_spring_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBE3EB"/>
+      <stop offset="1" stop-color="#F5B3C8"/>
+    </linearGradient>
+  </defs>
+  <g id="crown">
+    <path d="M130 282 C92 284 74 248 92 222 C66 200 72 156 106 148 C100 112 132 84 166 92 C178 60 222 46 252 64 C276 40 324 46 338 76 C372 70 404 96 400 132 C432 144 444 186 422 210 C440 240 420 278 386 280 C374 304 336 310 314 294 C296 312 260 314 244 296 C222 314 186 312 172 294 C158 302 138 298 130 282 Z" fill="url(#canopy_spring_fill)" stroke="#9A6170" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M314 294 C336 310 374 304 386 280 C420 278 440 240 422 210 C416 236 396 256 364 262 C346 278 326 286 314 294 Z" fill="#E596AF" opacity="0.5"/>
+    <g fill="none" stroke="#9A6170" stroke-width="2.5" stroke-linecap="round">
+      <path d="M150 170 C164 158 184 158 196 168"/>
+      <path d="M318 222 C332 210 352 210 364 220"/>
+      <path d="M112 226 C120 218 132 216 142 220"/>
+    </g>
+    <path d="M110 176 C112 140 140 116 170 118" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.85"/>
+  </g>
+  <g id="leaves" fill="#8CCB74" stroke="#51714A" stroke-width="2" stroke-linejoin="round">
+    <path d="M0 -9 C7 -5 7 5 0 9 C-7 5 -7 -5 0 -9 Z" transform="translate(212 196) rotate(-40)"/>
+    <path d="M0 -9 C7 -5 7 5 0 9 C-7 5 -7 -5 0 -9 Z" transform="translate(356 182) rotate(35)"/>
+    <path d="M0 -9 C7 -5 7 5 0 9 C-7 5 -7 -5 0 -9 Z" transform="translate(136 248) rotate(60)"/>
+    <path d="M0 -9 C7 -5 7 5 0 9 C-7 5 -7 -5 0 -9 Z" transform="translate(296 92) rotate(-20)"/>
+    <path d="M0 -9 C7 -5 7 5 0 9 C-7 5 -7 -5 0 -9 Z" transform="translate(262 268) rotate(80)"/>
+  </g>
+  <g id="blossoms_white" fill="#FFFBEB" stroke="#9A6170" stroke-linejoin="round">
+    <g transform="translate(160 206) scale(1.3)"><path d="M0 -11 C5 -11 7 -6 4 -3 C9 -4 12 1 9 5 C6 9 1 7 0 4 C-1 7 -6 9 -9 5 C-12 1 -9 -4 -4 -3 C-7 -6 -5 -11 0 -11 Z" stroke-width="2"/><circle r="3.4" fill="#FFC234" stroke="none"/></g>
+    <g transform="translate(244 140) scale(1.3)"><path d="M0 -11 C5 -11 7 -6 4 -3 C9 -4 12 1 9 5 C6 9 1 7 0 4 C-1 7 -6 9 -9 5 C-12 1 -9 -4 -4 -3 C-7 -6 -5 -11 0 -11 Z" stroke-width="2"/><circle r="3.4" fill="#FFC234" stroke="none"/></g>
+    <g transform="translate(330 150) scale(1.3)"><path d="M0 -11 C5 -11 7 -6 4 -3 C9 -4 12 1 9 5 C6 9 1 7 0 4 C-1 7 -6 9 -9 5 C-12 1 -9 -4 -4 -3 C-7 -6 -5 -11 0 -11 Z" stroke-width="2"/><circle r="3.4" fill="#FFC234" stroke="none"/></g>
+    <g transform="translate(386 232) scale(1.3)"><path d="M0 -11 C5 -11 7 -6 4 -3 C9 -4 12 1 9 5 C6 9 1 7 0 4 C-1 7 -6 9 -9 5 C-12 1 -9 -4 -4 -3 C-7 -6 -5 -11 0 -11 Z" stroke-width="2"/><circle r="3.4" fill="#FFC234" stroke="none"/></g>
+    <g transform="translate(206 258) scale(1.3)"><path d="M0 -11 C5 -11 7 -6 4 -3 C9 -4 12 1 9 5 C6 9 1 7 0 4 C-1 7 -6 9 -9 5 C-12 1 -9 -4 -4 -3 C-7 -6 -5 -11 0 -11 Z" stroke-width="2"/><circle r="3.4" fill="#FFC234" stroke="none"/></g>
+    <g transform="translate(118 168) scale(1.3)"><path d="M0 -11 C5 -11 7 -6 4 -3 C9 -4 12 1 9 5 C6 9 1 7 0 4 C-1 7 -6 9 -9 5 C-12 1 -9 -4 -4 -3 C-7 -6 -5 -11 0 -11 Z" stroke-width="2"/><circle r="3.4" fill="#FFC234" stroke="none"/></g>
+  </g>
+  <g id="blossoms_pink" fill="#F58FB0" stroke="#9A6170" stroke-linejoin="round">
+    <g transform="translate(200 98) scale(1.3)"><path d="M0 -11 C5 -11 7 -6 4 -3 C9 -4 12 1 9 5 C6 9 1 7 0 4 C-1 7 -6 9 -9 5 C-12 1 -9 -4 -4 -3 C-7 -6 -5 -11 0 -11 Z" stroke-width="2"/><circle r="3.4" fill="#FFC234" stroke="none"/></g>
+    <g transform="translate(296 202) scale(1.3)"><path d="M0 -11 C5 -11 7 -6 4 -3 C9 -4 12 1 9 5 C6 9 1 7 0 4 C-1 7 -6 9 -9 5 C-12 1 -9 -4 -4 -3 C-7 -6 -5 -11 0 -11 Z" stroke-width="2"/><circle r="3.4" fill="#FFC234" stroke="none"/></g>
+    <g transform="translate(392 130) scale(1.3)"><path d="M0 -11 C5 -11 7 -6 4 -3 C9 -4 12 1 9 5 C6 9 1 7 0 4 C-1 7 -6 9 -9 5 C-12 1 -9 -4 -4 -3 C-7 -6 -5 -11 0 -11 Z" stroke-width="2"/><circle r="3.4" fill="#FFC234" stroke="none"/></g>
+    <g transform="translate(320 270) scale(1.3)"><path d="M0 -11 C5 -11 7 -6 4 -3 C9 -4 12 1 9 5 C6 9 1 7 0 4 C-1 7 -6 9 -9 5 C-12 1 -9 -4 -4 -3 C-7 -6 -5 -11 0 -11 Z" stroke-width="2"/><circle r="3.4" fill="#FFC234" stroke="none"/></g>
+    <g transform="translate(250 220) scale(1.3)"><path d="M0 -11 C5 -11 7 -6 4 -3 C9 -4 12 1 9 5 C6 9 1 7 0 4 C-1 7 -6 9 -9 5 C-12 1 -9 -4 -4 -3 C-7 -6 -5 -11 0 -11 Z" stroke-width="2"/><circle r="3.4" fill="#FFC234" stroke="none"/></g>
+    <g transform="translate(108 252) scale(1.3)"><path d="M0 -11 C5 -11 7 -6 4 -3 C9 -4 12 1 9 5 C6 9 1 7 0 4 C-1 7 -6 9 -9 5 C-12 1 -9 -4 -4 -3 C-7 -6 -5 -11 0 -11 Z" stroke-width="2"/><circle r="3.4" fill="#FFC234" stroke="none"/></g>
+  </g>
+</svg>

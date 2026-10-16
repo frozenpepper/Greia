@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- quattro_stagioni prop: woolly winter hat, drawn on Tito's canonical 256 canvas so it
+       overlays character.tito at a fixed anchor (separate layer, never fused into the body,
+       SVG rules 8.3/8.4). Coral #F46F61 wool, cream #FFFBEB cuff and pom-pom.
+       Shared-library candidate prop.clothing.beanie; recipe GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- coral light (mix 35% white) -> coral -->
+    <linearGradient id="winter_hat_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A39A"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="hat" stroke="#4B372F" stroke-linejoin="round">
+    <path d="M96 82 C94 58 108 42 128 42 C148 42 162 58 160 82 Z" fill="url(#winter_hat_fill)" stroke-width="3.5"/>
+    <g fill="none" stroke="#C5584E" stroke-width="2.5" stroke-linecap="round">
+      <path d="M114 50 C112 60 112 70 113 80"/>
+      <path d="M128 46 L128 80"/>
+      <path d="M142 50 C144 60 144 70 143 80"/>
+    </g>
+    <path d="M104 56 C108 50 114 46 120 45" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+    <path d="M90 80 C108 74 148 74 166 80 C169 86 168 93 165 97 C148 91 108 91 91 97 C88 92 87 86 90 80 Z" fill="#FFFBEB" stroke-width="3"/>
+    <g fill="none" stroke="#E6D9B8" stroke-width="2.2" stroke-linecap="round">
+      <path d="M102 82 L102 92"/><path d="M115 80 L115 90"/><path d="M128 79 L128 89"/><path d="M141 80 L141 90"/><path d="M154 82 L154 92"/>
+    </g>
+    <circle cx="128" cy="34" r="12" fill="#FFFBEB" stroke-width="3"/>
+    <path d="M121 30 C123 26 127 24 131 25" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

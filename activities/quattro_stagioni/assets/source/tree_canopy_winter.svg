@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- quattro_stagioni prop: winter canopy (overlay for tree_trunk.svg, same canvas).
+       No leaves: snow lying on the bare branches, on the twig tips and round the trunk.
+       Snow tokens from the woodland_snow kit (#FFFFFF, contour #A9BCD3, shade #E3EBF5).
+       Shared-library candidate prop.tree.seasonal_winter; recipe GREIA_SVG_AUTHORING_RULES.md. -->
+  <g id="snow_contour" fill="none" stroke="#A9BCD3" stroke-linecap="round" stroke-linejoin="round">
+    <path transform="translate(6 -9)" d="M238 284 C224 264 208 248 190 236" stroke-width="17"/>
+    <path transform="translate(6 -9)" d="M182 222 C164 208 146 194 132 174" stroke-width="15"/>
+    <path transform="translate(-6 -9)" d="M274 284 C288 262 306 246 326 232" stroke-width="17"/>
+    <path transform="translate(-6 -9)" d="M334 216 C352 201 368 186 380 166" stroke-width="15"/>
+    <path transform="translate(-6 -9)" d="M262 214 C276 198 288 186 300 172" stroke-width="13"/>
+    <path transform="translate(6 -9)" d="M254 232 C240 214 226 202 214 190" stroke-width="13"/>
+  </g>
+  <g id="snow_fill" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round">
+    <path transform="translate(6 -9)" d="M238 284 C224 264 208 248 190 236" stroke-width="11"/>
+    <path transform="translate(6 -9)" d="M182 222 C164 208 146 194 132 174" stroke-width="9"/>
+    <path transform="translate(-6 -9)" d="M274 284 C288 262 306 246 326 232" stroke-width="11"/>
+    <path transform="translate(-6 -9)" d="M334 216 C352 201 368 186 380 166" stroke-width="9"/>
+    <path transform="translate(-6 -9)" d="M262 214 C276 198 288 186 300 172" stroke-width="7"/>
+    <path transform="translate(6 -9)" d="M254 232 C240 214 226 202 214 190" stroke-width="7"/>
+  </g>
+  <g id="snow_caps" fill="#FFFFFF" stroke="#A9BCD3" stroke-width="2.5" stroke-linejoin="round">
+    <path d="M102 146 C104 134 128 132 130 144 C128 150 106 152 102 146 Z"/>
+    <path d="M152 164 C154 152 178 150 180 162 C178 168 156 170 152 164 Z"/>
+    <path d="M380 136 C382 124 406 122 408 134 C406 140 384 142 380 136 Z"/>
+    <path d="M338 158 C340 146 364 144 366 156 C364 162 342 164 338 158 Z"/>
+    <path d="M238 88 C240 74 266 72 268 86 C266 94 242 96 238 88 Z"/>
+    <path d="M296 160 C298 150 318 148 320 158 C318 164 300 166 296 160 Z"/>
+    <path d="M198 180 C200 170 220 168 222 178 C220 184 202 186 198 180 Z"/>
+    <path d="M234 296 C238 280 274 278 280 294 C276 304 240 306 234 296 Z"/>
+  </g>
+  <g id="snow_mound">
+    <path d="M168 496 C176 474 214 464 240 470 C252 462 274 462 286 470 C312 464 340 476 346 496 Z" fill="#FFFFFF" stroke="#A9BCD3" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M290 488 C306 482 326 484 338 492" fill="none" stroke="#E3EBF5" stroke-width="5" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- quattro_stagioni prop: summer canopy (overlay for tree_trunk.svg, same canvas).
+       Dense green crown with ripe apples. Foliage tokens from the meadow_day kit tree
+       (#6DB25A base, #51714A contour, #A6D98F light, #56985B shade); apples coral #F46F61.
+       Shared-library candidate prop.tree.seasonal_summer; recipe GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- leaf light (#A6D98F) -> meadow foliage #6DB25A -->
+    <linearGradient id="canopy_summer_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD283"/>
+      <stop offset="1" stop-color="#6DB25A"/>
+    </linearGradient>
+  </defs>
+  <g id="crown">
+    <path d="M130 282 C92 284 74 248 92 222 C66 200 72 156 106 148 C100 112 132 84 166 92 C178 60 222 46 252 64 C276 40 324 46 338 76 C372 70 404 96 400 132 C432 144 444 186 422 210 C440 240 420 278 386 280 C374 304 336 310 314 294 C296 312 260 314 244 296 C222 314 186 312 172 294 C158 302 138 298 130 282 Z" fill="url(#canopy_summer_fill)" stroke="#51714A" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M314 294 C336 310 374 304 386 280 C420 278 440 240 422 210 C416 236 396 256 364 262 C346 278 326 286 314 294 Z" fill="#56985B" opacity="0.55"/>
+    <g fill="none" stroke="#51714A" stroke-width="2.5" stroke-linecap="round">
+      <path d="M150 170 C164 158 184 158 196 168"/>
+      <path d="M270 120 C284 108 304 108 316 118"/>
+      <path d="M318 222 C332 210 352 210 364 220"/>
+      <path d="M190 246 C204 234 224 234 236 244"/>
+      <path d="M112 226 C120 218 132 216 142 220"/>
+    </g>
+    <path d="M110 176 C112 140 140 116 170 118" fill="none" stroke="#C9EBB8" stroke-width="7" stroke-linecap="round" opacity="0.9"/>
+  </g>
+  <g id="apples" stroke="#4B372F" stroke-linejoin="round">
+    <g transform="translate(150 212)"><circle r="15" fill="#F46F61" stroke-width="2.5"/><path d="M0 -14 C1 -20 3 -23 6 -25" fill="none" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="-5" cy="-5" rx="4" ry="3" fill="#FFFFFF" opacity="0.75" stroke="none"/></g>
+    <g transform="translate(232 150)"><circle r="15" fill="#F46F61" stroke-width="2.5"/><path d="M0 -14 C1 -20 3 -23 6 -25" fill="none" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="-5" cy="-5" rx="4" ry="3" fill="#FFFFFF" opacity="0.75" stroke="none"/></g>
+    <g transform="translate(330 156)"><circle r="15" fill="#F46F61" stroke-width="2.5"/><path d="M0 -14 C1 -20 3 -23 6 -25" fill="none" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="-5" cy="-5" rx="4" ry="3" fill="#FFFFFF" opacity="0.75" stroke="none"/></g>
+    <g transform="translate(374 236)"><circle r="15" fill="#F46F61" stroke-width="2.5"/><path d="M0 -14 C1 -20 3 -23 6 -25" fill="none" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="-5" cy="-5" rx="4" ry="3" fill="#FFFFFF" opacity="0.75" stroke="none"/></g>
+    <g transform="translate(280 252)"><circle r="15" fill="#F46F61" stroke-width="2.5"/><path d="M0 -14 C1 -20 3 -23 6 -25" fill="none" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="-5" cy="-5" rx="4" ry="3" fill="#FFFFFF" opacity="0.75" stroke="none"/></g>
+    <g transform="translate(196 104)"><circle r="14" fill="#F46F61" stroke-width="2.5"/><path d="M0 -13 C1 -19 3 -22 6 -24" fill="none" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="-5" cy="-5" rx="4" ry="3" fill="#FFFFFF" opacity="0.75" stroke="none"/></g>
+    <g transform="translate(120 256)"><circle r="13" fill="#F46F61" stroke-width="2.5"/><path d="M0 -12 C1 -18 3 -21 6 -23" fill="none" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="-4" cy="-4" rx="3.5" ry="2.6" fill="#FFFFFF" opacity="0.75" stroke="none"/></g>
+  </g>
+</svg>

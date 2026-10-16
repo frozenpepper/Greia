@@ -11,18 +11,28 @@ categories = ["explore", "learn"]
 discovery_tags = ["nature"]
 
 [education]
+# Tito's big tree: the child picks a season and dresses the scene for it,
+# mission by mission (the tree, the weather, the meadow, a woodland friend
+# awake or asleep, Tito's clothes). Exactly one picture card belongs each
+# time; cards that do not belong are tried in the scene and come back. One
+# loop; a four-rung ladder (more missions, more cards) adapts from the
+# misses of each round.
 categories = ["nature_cycles", "weather", "early_learning"]
 difficulty = 1
 recommended_age_min = 3
+recommended_age_max = 5
+difficulty_min = 1
+difficulty_max = 4
+adaptive_difficulty = true
 skills = [
-  { id = "nature.cycles.day_night", weight = 3 },
-  { id = "nature.weather.recognition", weight = 3 },
   { id = "nature.seasons.awareness", weight = 3 },
-  { id = "motor.pointer.exploration", weight = 2 },
+  { id = "nature.weather.recognition", weight = 3 },
+  { id = "cognition.classification.belongs", weight = 2 },
+  { id = "lexicon.nature.seasons", weight = 1 },
 ]
 events = [
-  { id = "quattro_stagioni.cycle_explored", kind = "milestone" },
-  { id = "quattro_stagioni.all_seasons_discovered", kind = "completion" },
+  { id = "quattro_stagioni.season_dressed", kind = "completion" },
+  { id = "quattro_stagioni.all_seasons_discovered", kind = "milestone" },
 ]
 
 [runtime]
@@ -31,11 +41,11 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "pointer"
+profile = "hybrid"
 
 [requirements]
 required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["touch"]
+optional_capabilities = ["keyboard", "touch"]
 
 [permissions]
 requested = []

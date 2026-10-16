@@ -1,219 +1,674 @@
-"""Main interactive application loop for Il Grande Albero delle Stagioni."""
+"""Lifecycle, timing and shared-kit input for The Big Seasons Tree.
+
+Tito's big tree stands bare in a landscape. The child picks a season (four
+picture tiles), Tito says what that season is like, and then the child
+dresses the scene for it, one mission at a time: the tree (blossom, apples,
+orange leaves or snow), the weather, something in the meadow, a woodland
+friend (awake or fast asleep), Tito's clothes. Each mission shows picture
+cards and exactly one belongs:
+
+* the right card flies into the scene and becomes part of it (the canopy
+  appears, rain starts, the snowman stands); Tito cheers, the name is shown
+  (and spoken where an approved recording exists);
+* a card that does not belong flies in, wiggles "not here" and comes back
+  greyed; Tito thinks, and the right card hops (it glows after a second
+  miss); retries are unlimited;
+* idle ~6 s -> Tito points and the empty part of the scene glows; later the
+  right card hops, then glows.
+
+When the scene is dressed the weather plays for a moment, then the shared
+cast completion scene appears; "play again" returns to the season picker
+(the next season not yet dressed is focused). The ladder (more missions,
+more cards) adapts from the misses of each round.
+"""
 
 from __future__ import annotations
 
+from collections import deque
+from collections.abc import Callable
+from enum import StrEnum
 import random
 import time
-from typing import Protocol
-from uuid import uuid4
 
 import pygame
 
-from greia_platform.activity_api import activity_stop_requested, emit_activity_event, mark_activity_ready
+from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.activity_controls import (
+    ControlArt,
+    ControlKit,
+    ControlLayout,
+    ControlTheme,
+    KitPointer,
+    PointerPhase,
+    PygameControlInput,
+)
+from greia_platform.activity_feedback import CastFeedback
+from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
+from greia_platform.pygame_completion import (
+    CompletionContent,
+    CompletionOverlay,
+    CompletionPalette,
+    CompletionScene,
+    PygameCompletionScreen,
+)
+from greia_platform.typography import GreiaTypography
+from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 
 if __package__:
-    from .tree_audio import SpeechQueue, TreeAudio
-    from .tree_model import (
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        Particle,
-        Season,
-        TreeModel,
-        WeatherMode,
+    from .tree_art import SeasonsArt
+    from .tree_audio import TreeAudio
+    from .tree_content import ITEMS, REFERENCE_HEIGHT, REFERENCE_WIDTH, SEASONS, Item, Season, Slot, Weather
+    from .tree_controls import TreeControls
+    from .tree_layout import (
+        BANNER_ICON,
+        CARD_ICON,
+        CLOUDS,
+        CROWN_CENTER,
+        SLOT_SPOTS,
+        SUN_CENTER,
+        TILE_ICON,
+        TITO_HEIGHT,
+        TITO_TAP_RECT,
+        TREE_TAP_RECT,
     )
-    from .tree_renderer import TreeRenderer
+    from .tree_model import DressRound, Pick, PickOutcome, adapt_level
+    from .tree_renderer import FLY_SECONDS, TRY_HOLD_SECONDS, Flight, SceneMotion, SceneView, TitoCast, TreeRenderer
+    from .tree_services import EventPort, ProgressPort, SeasonsProgress
 else:
-    from tree_audio import SpeechQueue, TreeAudio
-    from tree_model import (
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        Particle,
-        Season,
-        TreeModel,
-        WeatherMode,
+    from tree_art import SeasonsArt
+    from tree_audio import TreeAudio
+    from tree_content import ITEMS, REFERENCE_HEIGHT, REFERENCE_WIDTH, SEASONS, Item, Season, Slot, Weather
+    from tree_controls import TreeControls
+    from tree_layout import (
+        BANNER_ICON,
+        CARD_ICON,
+        CLOUDS,
+        CROWN_CENTER,
+        SLOT_SPOTS,
+        SUN_CENTER,
+        TILE_ICON,
+        TITO_HEIGHT,
+        TITO_TAP_RECT,
+        TREE_TAP_RECT,
     )
-    from tree_renderer import TreeRenderer
+    from tree_model import DressRound, Pick, PickOutcome, adapt_level
+    from tree_renderer import FLY_SECONDS, TRY_HOLD_SECONDS, Flight, SceneMotion, SceneView, TitoCast, TreeRenderer
+    from tree_services import EventPort, ProgressPort, SeasonsProgress
+
+IDLE_HINT_SECONDS = 6.0
+FIRST_MISSION_DELAY = 0.6
+PLACE_PAUSE = 1.5
+FINALE_SECONDS = 2.8
+GLOW_SECONDS = 2.4
+MAX_SCHEDULED = 32
+FOREST = (40, 81, 58)  # theme text-ink token "forest"
+# What a tap on the dressed tree shakes loose (library FX).
+TREE_FX = {"tree_blossom": "bloom", "tree_apples": "sparkle", "tree_orange": "leaf_drift", "tree_snowy": "snow"}
+PLACE_FX = {Slot.TREE: "star_burst", Slot.SKY: "sparkle", Slot.GROUND: "star_burst", Slot.ANIMAL: "star_burst", Slot.CLOTHES: "sparkle"}
 
 
-class SeasonEventPort(Protocol):
-    def season_explored(self, season: Season) -> None: ...
-    def all_seasons_discovered(self) -> None: ...
+class AppState(StrEnum):
+    PICK = "pick"
+    PLAYING = "playing"
+    FINALE = "finale"
+    TERMINAL = "terminal"
 
 
-class GreiaSeasonEvents:
-    def __init__(self) -> None:
-        self._session = uuid4().hex
+class Timeline:
+    """Tiny bounded scheduler for the scripted moments."""
 
-    def season_explored(self, season: Season) -> None:
-        emit_activity_event(
-            "quattro_stagioni.cycle_explored",
-            {"season": season.value},
-            idempotency_key=f"seasons:{self._session}:{season.value}",
-        )
+    def __init__(self, clock: Callable[[], float]) -> None:
+        self._clock = clock
+        self._entries: deque[tuple[float, Callable[[], object]]] = deque(maxlen=MAX_SCHEDULED)
 
-    def all_seasons_discovered(self) -> None:
-        emit_activity_event(
-            "quattro_stagioni.all_seasons_discovered",
-            {"total": len(Season)},
-            idempotency_key=f"seasons:{self._session}:all",
-        )
+    def after(self, delay: float, action: Callable[[], object]) -> None:
+        self._entries.append((self._clock() + delay, action))
+
+    def run_due(self) -> bool:
+        now = self._clock()
+        due = [entry for entry in self._entries if entry[0] <= now]
+        if not due:
+            return False
+        for entry in due:
+            self._entries.remove(entry)
+        for _, action in sorted(due, key=lambda entry: entry[0]):
+            action()
+        return True
+
+    def clear(self) -> None:
+        self._entries.clear()
+
+    def __len__(self) -> int:
+        return len(self._entries)
 
 
 class TreeActivity:
-    """Greia Activity controller for Il Grande Albero delle Stagioni."""
+    """Coordinate the round model, kit controls, art, audio and lifecycle."""
 
     def __init__(
         self,
+        *,
         screen: pygame.Surface,
-        renderer: TreeRenderer,
+        canvas: PygameReferenceCanvas,
+        typography: GreiaTypography,
+        resources: LocalizedResources | None,
         audio: TreeAudio,
-        model: TreeModel,
-        events: SeasonEventPort | None = None,
+        progress: ProgressPort,
+        events: EventPort,
+        rng: random.Random | None = None,
+        clock: Callable[[], float] = time.monotonic,
+        kit: ControlKit | None = None,
+        art: SeasonsArt | None = None,
+        session_prefix: str | None = None,
     ) -> None:
         self.screen = screen
-        self.canvas = PygameReferenceCanvas(screen)
-        self.events = events if events is not None else GreiaSeasonEvents()
-        self.renderer = renderer
+        self.canvas = canvas
+        self.typography = typography
+        self.resources = resources
         self.audio = audio
-        self.model = model
-        self.speech_queue = SpeechQueue(self.audio)
-        self.clock = pygame.time.Clock()
-        self.running = True
+        self.progress = progress
+        self.events = events
+        self.rng = rng if rng is not None else random.Random()
+        self.clock = clock
+        self._session_prefix = session_prefix or f"{int(time.time())}"
+        self._rounds_played = 0
 
-        # Initial friendly welcome prompt from Tito
-        self.speech_queue.enqueue("welcome", delay_after=0.5)
+        saved = progress.load()
+        self.level = saved.level
+        self.dressed: set[Season] = set(saved.dressed)
+        self.last_season: Season | None = saved.last
+        self.rounds = saved.rounds
+
+        # Shared control kit (ADR 0037): explore Collection -> leaf accent.
+        self.kit = kit if kit is not None else ControlKit(typography, ControlTheme.for_accent("leaf"))
+        self.art = art if art is not None else SeasonsArt(art=ControlArt(max_entries=96))
+        feedback = CastFeedback("tito", height=TITO_HEIGHT, art=self.art.loader, clock=clock)
+        self.cast = TitoCast(feedback, self.art, clock)
+        self.renderer = TreeRenderer(self.art, self.cast)
+        self.motion = SceneMotion()
+        self.timeline = Timeline(clock)
+        self.controls = TreeControls(self.kit, on_card=self._on_card, on_season=self._on_season, on_listen=self._on_listen)
+        self._surfaces = SurfaceNavigator(self.controls.layer)
+        self._input = PygameControlInput(to_logical=canvas.pointer, is_safe=lambda pos: _safe_point(self.screen, pos))
+        self.controls.place_bar(ControlLayout.for_canvas(canvas, screen.get_size()))
+
+        self.round: DressRound | None = None
+        self.scene_season: Season = Season.SPRING
+        self.completion: PygameCompletionScreen | None = None
+        self.state = AppState.PICK
+        self.session_id = ""
+        self._running = True
+        self.ready_published = False
+        self._dirty = True
+        self._activated = False
+        self._busy = False
+        self._last_activity = clock()
+        self._last_step = clock()
+        self._idle_hints = 0
+        self._welcomed = False
+        self.enter_picker()
+
+    # -- main loop ----------------------------------------------------------------
 
     def run(self) -> int:
-        last_time = time.perf_counter()
-        ready_published = False
-
-        while self.running and not activity_stop_requested():
-            now = time.perf_counter()
-            dt = min(0.1, now - last_time)
-            last_time = now
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.running = False
-                elif event.type == pygame.VIDEORESIZE:
-                    self.screen = pygame.display.get_surface() or self.screen
-                    self.canvas = PygameReferenceCanvas(self.screen)
-                elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.FINGERDOWN):
-                    if event.type == pygame.MOUSEBUTTONDOWN and event.button != 1:
-                        continue
-                    pos = getattr(event, "pos", None)
-                    if pos is None:
-                        w, h = self.screen.get_size()
-                        pos = (int(event.x * w), int(event.y * h))
-                    self._handle_pointer_down(pos)
-
-            # Update simulation & speech
-            self.model.update(dt)
-            self.speech_queue.update(dt)
-
-            # Render scene
-            self.renderer.render(self.canvas.surface, self.model)
-            self.canvas.present()
-            pygame.display.flip()
-            if not ready_published:
-                mark_activity_ready()
-                ready_published = True
-            self.clock.tick(60)
-
-        pygame.quit()
+        ticker = pygame.time.Clock()
+        try:
+            while self._running and not activity_stop_requested():
+                for event in pygame.event.get():
+                    self.handle_event(event)
+                repeat = self._input.poll()
+                if repeat is not None:
+                    self._dispatch(repeat)
+                animating = self.step()
+                if self._dirty or animating:
+                    self.render()
+                    self.canvas.present()
+                    pygame.display.flip()
+                    self._dirty = False
+                    if not self.ready_published:
+                        mark_activity_ready()
+                        self.ready_published = True
+                ticker.tick(30 if animating else 15)
+        finally:
+            self.persist()
+            self.typography.clear()
         return 0
 
-    def _to_reference_pos(self, physical_pos: tuple[int, int]) -> tuple[int, int] | None:
-        vp = activity_viewport_for_surface(self.screen)
-        x, y = physical_pos
-        if not (0 <= x < vp.surface.width and 0 <= y < vp.surface.height):
-            return None
-        if any(r.x <= x < r.right and r.y <= y < r.bottom for r in vp.protected_regions):
-            return None
-        logical = self.canvas.pointer(physical_pos)
-        return (int(logical[0]), int(logical[1])) if logical is not None else None
+    def step(self) -> bool:
+        """Advance timers; return True while something on screen is moving."""
 
-    def _handle_pointer_down(self, physical_pos: tuple[int, int]) -> None:
-        point = self._to_reference_pos(physical_pos)
-        if point is None:
-            return
-        ref_x, ref_y = point
+        now = self.clock()
+        dt = now - self._last_step
+        self._last_step = now
+        if self.timeline.run_due():
+            self._dirty = True
+        if self.cast.update():
+            self._dirty = True
+        self.motion.prune(now)
+        for index in range(self.controls.card_count):
+            self.controls.nudge_card(index, self.motion.card_offset(index, now))
+        if self.renderer.weather is not None and self.state is not AppState.TERMINAL:
+            self.renderer.weather.update(dt)
+        if self.state is AppState.PLAYING:
+            self._maybe_hint(now)
+        if self.controls.layer.invalidation.should_draw:
+            self._dirty = True
+        if self.state is AppState.TERMINAL:
+            return False
+        return (
+            self.motion.active(now)
+            or self.cast.animating
+            or self.renderer.weather is not None
+            or self._has_live_sky()
+        )
 
-        # 1. Check Sun / Moon celestial tap
-        if self.renderer.celestial_rect.collidepoint(ref_x, ref_y):
-            is_day = self.model.toggle_day_night()
-            self.audio.play_sfx("chime")
-            if is_day:
-                self.speech_queue.enqueue("day", delay_after=0.4)
-            else:
-                self.speech_queue.enqueue("night", delay_after=0.4)
-            return
+    def _has_live_sky(self) -> bool:
+        # A placed sun bobs gently; keep drawing while it is in the sky.
+        round_ = self.round
+        return round_ is not None and round_.placed.get(Slot.SKY) == "sun" and self.state is not AppState.PICK
 
-        # 2. Check Weather selector buttons
-        for mode, rect in self.renderer.weather_buttons.items():
-            if rect.collidepoint(ref_x, ref_y):
-                self.model.set_weather(mode)
-                self.audio.play_sfx("pop")
-                self.speech_queue.enqueue(mode.value, delay_after=0.4)
-                return
+    def render(self) -> None:
+        surface = self.canvas.surface
+        if self.state is not AppState.TERMINAL:
+            now = self.clock()
+            placed = self.round.placed if (self.round is not None and self.state is not AppState.PICK) else {}
+            self.renderer.draw(surface, SceneView(self.scene_season, placed), self.motion, now)
+            glow = self.motion.card_glow
+            if glow is not None and glow[0] < self.controls.card_count:
+                self.renderer.draw_card_glow(surface, self.controls.card_rect(glow[0]))
+        self._surfaces.draw(surface)
 
-        # 3. Check Season selector buttons
-        for season, rect in self.renderer.season_buttons.items():
-            if rect.collidepoint(ref_x, ref_y):
-                was_new = season not in self.model.discovered_seasons
-                had_completed = self.model.completed_cycle
-                self.model.set_season(season)
-                if was_new:
-                    self.events.season_explored(season)
-                if not had_completed and self.model.completed_cycle:
-                    self.events.all_seasons_discovered()
-                self.audio.play_sfx("pop")
-                self.speech_queue.enqueue(season.value, delay_after=0.4)
-                return
-
-        # 4. Check Tito Fox tap
-        if self.renderer.tito_rect.collidepoint(ref_x, ref_y):
-            self.model.tap_tito()
-            self.audio.play_sfx("boing")
-            praise_cues = ["praise_1", "praise_2", "praise_3"]
-            self.speech_queue.enqueue(random.choice(praise_cues), delay_after=0.3)
-            return
-
-        # 5. Summer: check apple taps
-        if self.model.season == Season.SUMMER:
-            tx = self.renderer.tree_center_x
-            ty = self.renderer.tree_center_y
-            for idx, apple in enumerate(self.model.apples):
-                ax = tx + apple.tree_rel_x
-                ay = ty + apple.tree_rel_y + apple.fall_y
-                if abs(ref_x - ax) < 24 and abs(ref_y - ay) < 24:
-                    if self.model.tap_apple(idx):
-                        self.audio.play_sfx("thud")
-                        return
-
-        # 6. Winter: check snowman tap
-        if self.model.season == Season.WINTER:
-            snowman_rect = pygame.Rect(720, 360, 80, 120)
-            if snowman_rect.collidepoint(ref_x, ref_y):
-                if self.model.tap_snowman():
-                    self.audio.play_sfx("chime")
-                    return
-
-        # 7. Ambient tap on particles/screen: spawn tap sparkles!
-        self.audio.play_sfx("pop")
-        for _ in range(5):
-            self.model.particles.append(
-                Particle(
-                    x=ref_x + random.uniform(-15, 15),
-                    y=ref_y + random.uniform(-15, 15),
-                    vx=random.uniform(-40, 40),
-                    vy=random.uniform(-60, -10),
-                    kind="sparkle",
-                    color=(255, 230, 100),
-                    size=random.uniform(3, 7),
-                )
+    def persist(self) -> None:
+        self.progress.save(
+            SeasonsProgress(
+                level=self.level,
+                dressed=tuple(season for season in SEASONS if season in self.dressed),
+                last=self.last_season,
+                rounds=self.rounds,
             )
+        )
+
+    # -- input --------------------------------------------------------------------
+
+    def handle_event(self, event: pygame.event.Event) -> None:
+        if event.type == pygame.QUIT:
+            self._running = False
+            return
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            self._running = False
+            return
+        if event.type == pygame.VIDEORESIZE:
+            self._resize()
+            return
+        if event.type in (pygame.MOUSEMOTION, pygame.FINGERMOTION):
+            self._dirty = True  # keep the platform pointer live
+        translated = self._input.translate(event)
+        if translated is not None:
+            self._dispatch(translated)
+
+    def _resize(self) -> None:
+        self.screen = pygame.display.get_surface() or self.screen
+        self.canvas = PygameReferenceCanvas(self.screen)
+        self._input = PygameControlInput(to_logical=self.canvas.pointer, is_safe=lambda pos: _safe_point(self.screen, pos))
+        self.controls.place_bar(ControlLayout.for_canvas(self.canvas, self.screen.get_size()))
+        self._dirty = True
+
+    def _dispatch(self, kit_input) -> bool:
+        if not isinstance(kit_input, KitPointer) or kit_input.phase is not PointerPhase.MOVE:
+            self._note_activity()
+        result = self._surfaces.dispatch(kit_input)
+        if (
+            result is UiEventResult.IGNORED
+            and isinstance(kit_input, KitPointer)
+            and kit_input.phase is PointerPhase.DOWN
+        ):
+            self._ambient_tap(kit_input.position)
+        if self.controls.layer.invalidation.should_draw:
+            self._dirty = True
+        return result is not UiEventResult.IGNORED
+
+    def tap(self, logical: tuple[int, int]) -> bool:
+        """Deliver one complete tap at a logical position (tests/tools)."""
+
+        point = (int(logical[0]), int(logical[1]))
+        self._activated = False
+        self._dispatch(KitPointer(PointerPhase.DOWN, point))
+        self._dispatch(KitPointer(PointerPhase.UP, point))
+        return self._activated
+
+    def press(self, key: int) -> bool:
+        """Deliver one key press through the shared navigation mapping."""
+
+        self._activated = False
+        translated = self._input.translate(pygame.event.Event(pygame.KEYDOWN, key=key, mod=0, unicode=""))
+        if translated is not None:
+            self._dispatch(translated)
+        return self._activated
+
+    def _note_activity(self) -> None:
+        self._last_activity = self.clock()
+        self._idle_hints = 0
+
+    def _ambient_tap(self, point: tuple[int, int]) -> None:
+        """Free exploration: the tree rustles, Tito waves (never an answer)."""
+
+        if self.state is AppState.TERMINAL:
+            return
+        now = self.clock()
+        if TREE_TAP_RECT.collidepoint(point):
+            self.motion.shake_tree(now)
+            tree = self.round.placed.get(Slot.TREE) if (self.round is not None and self.state is not AppState.PICK) else None
+            self.motion.add_fx(TREE_FX.get(tree or "", "dust_puff"), CROWN_CENTER if tree else point, now)
+            self.audio.play("rustle")
+            self._dirty = True
+        elif TITO_TAP_RECT.collidepoint(point) and not self.cast.animating:
+            self.cast.wave_for(1.2)
+            self.audio.play("pop")
+            self._dirty = True
+
+    # -- season picker ------------------------------------------------------------
+
+    def enter_picker(self) -> None:
+        self.timeline.clear()
+        self.motion.reset()
+        self.cast.reset()
+        self.cast.waving = True
+        self.renderer.set_weather(None)
+        self.round = None
+        self.state = AppState.PICK
+        self._busy = False
+        self.scene_season = Season.SPRING
+        focus = SeasonsProgress(dressed=tuple(self.dressed), last=self.last_season).next_season()
+        emblems = {season: self.art.emblem(season, TILE_ICON, done=season in self.dressed) for season in SEASONS}
+        names = {season: self._text(season.name_key, season.value) for season in SEASONS}
+        self.controls.show_picker(emblems, names, focus, self._text("prompt.choose_season", "?"))
+        if not self._welcomed:
+            self._welcomed = True
+            self.audio.say("welcome")
+        self._note_activity()
+        self._dirty = True
+
+    def _on_season(self, season: Season) -> None:
+        if self.state is not AppState.PICK:
+            return
+        self._activated = True
+        self.audio.play("pop")
+        self.start_round(season)
+
+    # -- round flow -----------------------------------------------------------------
+
+    def start_round(self, season: Season) -> None:
+        self.timeline.clear()
+        self.motion.reset()
+        self.cast.reset()
+        self.cast.waving = False
+        self.renderer.set_weather(None)
+        self.scene_season = season
+        self.round = DressRound(season, self.level, self.rng)
+        self.controls.start_round(self.round.total)
+        self.controls.hide_cards()
+        self.controls.tell(self._text(season.name_key, season.value), self.art.emblem(season, BANNER_ICON, done=False))
+        self.state = AppState.PLAYING
+        self._rounds_played += 1
+        self.session_id = f"{self._session_prefix}-{self._rounds_played}-{self.rng.randrange(1_000_000):06d}"
+        if not self.audio.say(season.value):
+            self.audio.tito("ready.go")
+        self.cast.point(1.6)
+        self._busy = True
+        self.timeline.after(FIRST_MISSION_DELAY, self._show_mission)
+        self._note_activity()
+        self._dirty = True
+
+    def _show_mission(self) -> None:
+        round_ = self.round
+        if round_ is None or self.state is not AppState.PLAYING:
+            return
+        mission = round_.mission
+        if mission is None:
+            return
+        now = self.clock()
+        icons = [self.art.card_icon(ITEMS[item_id], CARD_ICON) for item_id in mission.options]
+        prompt = self._text(mission.slot.prompt_key, "?", season=self._text(round_.season.name_key, round_.season.value))
+        self.controls.show_cards(
+            icons,
+            prompt,
+            self.art.slot_icon(mission.slot, BANNER_ICON),
+            voiced=self.audio.has_clip(round_.season.value),
+        )
+        self.controls.set_progress(round_.index)
+        self.motion.glow_slot(mission.slot, now + 1.4)
+        self.cast.point(1.4)
+        self._busy = False
+        self._note_activity()
+        self._dirty = True
+
+    def _on_listen(self) -> None:
+        self._activated = True
+        round_ = self.round
+        if round_ is not None:
+            self.audio.say(round_.season.value)
+            self.cast.point(1.2)
+        self._dirty = True
+
+    def _on_card(self, index: int) -> None:
+        round_ = self.round
+        if round_ is None or self.state is not AppState.PLAYING or self._busy:
+            return
+        mission = round_.mission
+        if mission is None or not 0 <= index < len(mission.options):
+            return
+        item = ITEMS[mission.options[index]]
+        outcome = round_.choose(item.item_id)
+        if outcome.pick is Pick.IGNORED:
+            return
+        self._activated = True
+        if outcome.pick is Pick.RIGHT:
+            self._right(item, index)
+        else:
+            self._wrong(item, index, outcome)
+        self._dirty = True
+
+    def _flight(self, item: Item, index: int, slot: Slot, *, returning: bool) -> None:
+        now = self.clock()
+        origin = self.controls.card_rect(index).center
+        target = SUN_CENTER if item.weather is Weather.SUN else SLOT_SPOTS[slot].point
+        self.motion.fly(Flight(self.art.card_icon(item, CARD_ICON), origin, target, now, returning, item.item_id, slot))
+        self.audio.play("whoosh")
+
+    def _right(self, item: Item, index: int) -> None:
+        self._busy = True
+        self.motion.slot_glow = None
+        self.motion.card_glow = None
+        self._flight(item, index, item.slot, returning=False)
+        self.controls.hide_cards()
+        self.timeline.after(FLY_SECONDS, lambda: self._place(item))
+
+    def _place(self, item: Item) -> None:
+        round_ = self.round
+        if round_ is None or self.state is not AppState.PLAYING:
+            return
+        now = self.clock()
+        point = SLOT_SPOTS[item.slot].point
+        if item.weather is Weather.SUN:
+            point = SUN_CENTER
+        if item.weather is not None and item.weather is not Weather.SUN:
+            for index, (x, y, _width) in enumerate(CLOUDS):
+                self.motion.add_fx(PLACE_FX[item.slot], (x, y), now + index * 0.15)
+        else:
+            self.motion.add_fx(PLACE_FX[item.slot], point, now)
+            self.motion.add_fx("sparkle", (point[0] + 50, point[1] - 40), now + 0.15)
+        if item.weather is not None:
+            self.renderer.set_weather(item.weather, random.Random(self.rng.random()))
+        self.audio.play("place")
+        spoken = False
+        if item.speech is not None:
+            spoken = self.audio.say(item.speech)
+        if not spoken and item.vocab is not None:
+            spoken = self.audio.say_name(item.vocab)
+        if not spoken:
+            self.audio.praise()
+        self.cast.correct()
+        self.controls.tell(self._text(item.name_key, ""), self.art.card_icon(item, BANNER_ICON))
+        self.controls.set_progress(round_.index)
+        delay = PLACE_PAUSE + (0.8 if item.speech is not None else 0.0)
+        self.timeline.after(delay, self._finale if round_.complete else self._show_mission)
+        self._dirty = True
+
+    def _wrong(self, item: Item, index: int, outcome: PickOutcome) -> None:
+        self._busy = True
+        self.controls.disable_card(index)
+        self._flight(item, index, item.slot, returning=True)
+        misses = outcome.task_misses
+        self.timeline.after(FLY_SECONDS, lambda: self._not_here(item, misses))
+        self.timeline.after(FLY_SECONDS * 2 + TRY_HOLD_SECONDS, lambda: self._demonstrate(misses))
+
+    def _not_here(self, item: Item, misses: int) -> None:
+        if self.state is not AppState.PLAYING:
+            return
+        if item.slot is Slot.TREE:
+            self.motion.shake_tree(self.clock())
+        self.audio.play("boing")
+        self.cast.try_again()
+        if misses % 2 == 0:
+            self.audio.tito("encourage.retry")
+        self._dirty = True
+
+    def _demonstrate(self, misses: int) -> None:
+        """Show the way: the right card hops; after two misses it glows too."""
+
+        round_ = self.round
+        self._busy = False
+        if round_ is None or self.state is not AppState.PLAYING or round_.mission is None:
+            return
+        now = self.clock()
+        answer = round_.mission.options.index(round_.mission.answer)
+        self.motion.hop_card(answer, now)
+        if misses >= 2:
+            self.motion.glow_card(answer, now + GLOW_SECONDS)
+            self.motion.glow_slot(round_.mission.slot, now + GLOW_SECONDS)
+            self.cast.point(1.4)
+        self._note_activity()
+        self._dirty = True
+
+    def _finale(self) -> None:
+        round_ = self.round
+        if round_ is None or self.state is not AppState.PLAYING:
+            return
+        now = self.clock()
+        self.state = AppState.FINALE
+        self.controls.hide_cards()
+        self.controls.set_progress(round_.total)
+        self.controls.tell(
+            self._text(f"ready.{round_.season.value}", "★"),
+            self.art.emblem(round_.season, BANNER_ICON, done=True),
+        )
+        self.audio.play("fanfare")
+        self.audio.tito("celebrate.success")
+        self.cast.correct()
+        for offset, (dx, dy) in enumerate(((-160, -40), (0, -120), (170, -30), (-60, 60))):
+            self.motion.add_fx("star_burst" if offset % 2 == 0 else "sparkle", (CROWN_CENTER[0] + dx, CROWN_CENTER[1] + dy), now + offset * 0.25)
+        self.timeline.after(FINALE_SECONDS, self._complete)
+        self._dirty = True
+
+    def _complete(self) -> None:
+        round_ = self.round
+        if round_ is None or self.state is not AppState.FINALE:
+            return
+        played_level = round_.level
+        newly_all = len(self.dressed) < len(SEASONS)
+        self.level = adapt_level(round_.level, round_.misses)
+        self.dressed.add(round_.season)
+        self.last_season = round_.season
+        self.rounds = min(1_000_000, self.rounds + 1)
+        newly_all = newly_all and len(self.dressed) == len(SEASONS)
+        self.persist()
+        self.events.season_dressed(
+            self.session_id,
+            {
+                "season": round_.season.value,
+                "level": played_level + 1,
+                "missions": round_.total,
+                "misses": round_.misses,
+                "first_try": round_.first_try,
+            },
+        )
+        if newly_all:
+            self.events.all_seasons_dressed(self.session_id, {"total": len(SEASONS)})
+        self.completion = PygameCompletionScreen(
+            self.typography,
+            width=REFERENCE_WIDTH,
+            height=REFERENCE_HEIGHT,
+            palette=CompletionPalette(background=FOREST),
+            scene=CompletionScene(self.kit, character="tito", star_total=round_.total),
+        )
+        self.completion.prepare(
+            CompletionContent(
+                title=self._text("victory.title", "★"),
+                primary_label=self._text("btn.play_again", "↻"),
+                body_lines=(self._text(f"ready.{round_.season.value}", "★"),),
+                achievement_count=round_.total,
+            )
+        )
+        self._surfaces.push_overlay(CompletionOverlay(self.completion, on_primary=self._restart))
+        self.timeline.clear()
+        self.renderer.set_weather(None)
+        self.state = AppState.TERMINAL
+        self._busy = False
+        self._dirty = True
+
+    def _restart(self) -> None:
+        self._activated = True
+        if self.completion is not None:
+            self._surfaces.pop_overlay()
+            self.completion.clear()
+            self.completion = None
+        self.enter_picker()
+
+    # -- hints ----------------------------------------------------------------------
+
+    def _maybe_hint(self, now: float) -> None:
+        round_ = self.round
+        if round_ is None or self._busy or round_.mission is None:
+            return
+        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+            return
+        self._idle_hints += 1
+        mission = round_.mission
+        answer = mission.options.index(mission.answer)
+        self.cast.point(1.8)
+        self.motion.glow_slot(mission.slot, now + GLOW_SECONDS)
+        if self._idle_hints == 1:
+            self.audio.say(round_.season.value)
+        elif self._idle_hints == 2:
+            self.motion.hop_card(answer, now)
+        else:
+            self.motion.hop_card(answer, now)
+            self.motion.glow_card(answer, now + GLOW_SECONDS)
+        self._dirty = True
+
+    # -- helpers --------------------------------------------------------------------
+
+    def _text(self, key: str, default: str, **variables: object) -> str:
+        if self.resources is None:
+            return default
+        try:
+            return self.resources.text(key, variables or None) or default
+        except Exception:
+            return default
+
+
+def _safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
+    """True inside the play surface and outside the Greia protected region(s)."""
+
+    viewport = activity_viewport_for_surface(surface)
+    x, y = position
+    if not (0 <= x < viewport.surface.width and 0 <= y < viewport.surface.height):
+        return False
+    for protected in viewport.protected_regions:
+        if protected.x <= x < protected.right and protected.y <= y < protected.bottom:
+            return False
+    return True
+
+
+__all__ = ["AppState", "Timeline", "TreeActivity"]

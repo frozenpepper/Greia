@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- quattro_stagioni prop: autumn canopy (overlay for tree_trunk.svg, same canvas).
+       Orange crown with red and yellow leaf clusters and leaves falling. Autumn tokens from
+       the woodland_autumn kit (#F39A38 base, #976333 contour, coral #F46F61, sunshine #FFC234).
+       Shared-library candidate prop.tree.seasonal_autumn; recipe GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- orange light (mix 40% white) -> orange #F39A38 -->
+    <linearGradient id="canopy_autumn_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C27F"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="crown">
+    <path d="M130 282 C92 284 74 248 92 222 C66 200 72 156 106 148 C100 112 132 84 166 92 C178 60 222 46 252 64 C276 40 324 46 338 76 C372 70 404 96 400 132 C432 144 444 186 422 210 C440 240 420 278 386 280 C374 304 336 310 314 294 C296 312 260 314 244 296 C222 314 186 312 172 294 C158 302 138 298 130 282 Z" fill="url(#canopy_autumn_fill)" stroke="#976333" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M314 294 C336 310 374 304 386 280 C420 278 440 240 422 210 C416 236 396 256 364 262 C346 278 326 286 314 294 Z" fill="#D9822C" opacity="0.55"/>
+    <g fill="none" stroke="#976333" stroke-width="2.5" stroke-linecap="round">
+      <path d="M150 140 C164 128 184 128 196 138"/>
+      <path d="M232 238 C246 226 266 226 278 236"/>
+      <path d="M332 128 C344 118 362 118 372 126"/>
+    </g>
+    <path d="M110 176 C112 140 140 116 170 118" fill="none" stroke="#FCE1BC" stroke-width="7" stroke-linecap="round" opacity="0.9"/>
+  </g>
+  <g id="crown_leaves" stroke="#976333" stroke-width="2" stroke-linejoin="round">
+    <g fill="#F46F61" transform="translate(240 118) rotate(-30)"><path d="M0 -13 C9 -5 9 5 0 13 C-9 5 -9 -5 0 -13 Z"/></g>
+    <g fill="#FFC234" transform="translate(300 104) rotate(40)"><path d="M0 -13 C9 -5 9 5 0 13 C-9 5 -9 -5 0 -13 Z"/></g>
+    <g fill="#FFC234" transform="translate(150 214) rotate(70)"><path d="M0 -13 C9 -5 9 5 0 13 C-9 5 -9 -5 0 -13 Z"/></g>
+    <g fill="#F46F61" transform="translate(186 150) rotate(-60)"><path d="M0 -13 C9 -5 9 5 0 13 C-9 5 -9 -5 0 -13 Z"/></g>
+    <g fill="#F46F61" transform="translate(350 220) rotate(20)"><path d="M0 -13 C9 -5 9 5 0 13 C-9 5 -9 -5 0 -13 Z"/></g>
+    <g fill="#FFC234" transform="translate(386 168) rotate(-40)"><path d="M0 -13 C9 -5 9 5 0 13 C-9 5 -9 -5 0 -13 Z"/></g>
+    <g fill="#E8742F" transform="translate(268 250) rotate(90)"><path d="M0 -13 C9 -5 9 5 0 13 C-9 5 -9 -5 0 -13 Z"/></g>
+    <g fill="#F46F61" transform="translate(120 180) rotate(10)"><path d="M0 -13 C9 -5 9 5 0 13 C-9 5 -9 -5 0 -13 Z"/></g>
+    <g fill="#FFC234" transform="translate(318 268) rotate(-70)"><path d="M0 -13 C9 -5 9 5 0 13 C-9 5 -9 -5 0 -13 Z"/></g>
+    <g fill="#F46F61" transform="translate(210 272) rotate(30)"><path d="M0 -13 C9 -5 9 5 0 13 C-9 5 -9 -5 0 -13 Z"/></g>
+    <g fill="#E8742F" transform="translate(352 118) rotate(60)"><path d="M0 -13 C9 -5 9 5 0 13 C-9 5 -9 -5 0 -13 Z"/></g>
+    <g fill="#FFC234" transform="translate(206 92) rotate(-10)"><path d="M0 -13 C9 -5 9 5 0 13 C-9 5 -9 -5 0 -13 Z"/></g>
+  </g>
+  <g id="falling_leaves" stroke="#976333" stroke-width="2" stroke-linejoin="round">
+    <g fill="#F46F61" transform="translate(84 330) rotate(35)"><path d="M0 -12 C8 -5 8 5 0 12 C-8 5 -8 -5 0 -12 Z"/></g>
+    <g fill="#FFC234" transform="translate(402 342) rotate(-50)"><path d="M0 -12 C8 -5 8 5 0 12 C-8 5 -8 -5 0 -12 Z"/></g>
+    <g fill="#F39A38" transform="translate(140 404) rotate(80)"><path d="M0 -12 C8 -5 8 5 0 12 C-8 5 -8 -5 0 -12 Z"/></g>
+    <g fill="#F46F61" transform="translate(360 420) rotate(-15)"><path d="M0 -12 C8 -5 8 5 0 12 C-8 5 -8 -5 0 -12 Z"/></g>
+    <g fill="#FFC234" transform="translate(196 470) rotate(100)"><path d="M0 -12 C8 -5 8 5 0 12 C-8 5 -8 -5 0 -12 Z"/></g>
+    <g fill="#F39A38" transform="translate(322 476) rotate(60)"><path d="M0 -12 C8 -5 8 5 0 12 C-8 5 -8 -5 0 -12 Z"/></g>
+  </g>
+</svg>
