@@ -605,13 +605,20 @@ class GreiaLauncherPresentation(LauncherApplication):
                         self._release_boot_cover()
                     _needs_redraw = False
                     clock.tick(60)
+                elif self._present_ambient_frame(screen, pygame, time.monotonic()):
+                    # Small dirty-rect frame of bounded ambient animation
+                    # (Home greeter/scenery); it paces itself (<= 24 fps) and
+                    # is never due once its awake window has passed.
+                    pass
                 else:
                     # Adaptive idle pacing: poll quickly right after interaction
                     # so input latency stays imperceptible, then relax the wake
                     # cadence to keep idle CPU low on Atom-class devices.
-                    time.sleep(
-                        idle_sleep_seconds(frame_start - self._last_input_monotonic)
-                    )
+                    sleep_for = idle_sleep_seconds(frame_start - self._last_input_monotonic)
+                    ambient_wait = self._ambient_wait_seconds(time.monotonic())
+                    if ambient_wait is not None:
+                        sleep_for = min(sleep_for, ambient_wait)
+                    time.sleep(sleep_for)
         finally:
             if self.session is not None:
                 self.session.clear()
@@ -621,6 +628,22 @@ class GreiaLauncherPresentation(LauncherApplication):
 
     def _poll_input_hooks(self, pygame: Any) -> None:
         """Optional hook called before polling pygame events each frame."""
+
+    def _present_ambient_frame(self, screen: Any, pygame: Any, now: float) -> bool:
+        """Optional incremental frame for bounded ambient animation.
+
+        Called only when no full redraw is pending. An override restores and
+        redraws a few small rects and calls ``pygame.display.update(rects)``;
+        it returns True only when it presented something. The base Shell has
+        no ambient animation.
+        """
+
+        return False
+
+    def _ambient_wait_seconds(self, now: float) -> float | None:
+        """Seconds until the next ambient frame is due (``None`` = idle)."""
+
+        return None
 
     def _on_frame_presented(self, screen: Any, pygame: Any) -> None:
         """Optional presentation hook called immediately after each frame is flipped."""

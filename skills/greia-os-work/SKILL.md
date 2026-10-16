@@ -170,6 +170,8 @@ src/greia_platform/ui_*.py
 
 Collections provide semantic data; do not create category-specific copies of common Shell behavior.
 
+Interactive Home (2026-10-16): `home_animator.HomeAnimator` is the single owner of Home ambient motion (greeter reactions/blink/sleep, ≤3 falling apples, sun sparkles, two drifting clouds; ≤6 live effects, sprites pre-scaled once per layout). `home_animation_presentation.HomeAnimationMixin` draws it as an overlay after the cached Home blit and presents small dirty-rect frames through the Shell loop hooks `_present_ambient_frame` / `_ambient_wait_seconds` (`presentation.py`): ≤24 fps, awake window 20 s after input, then zero redraws (one `sleepy` swap at 60 s). Scenery geometry is `home_scenery.py` (scene-space facts mirrored from `home_landscape.svg`, switched off wherever it would touch a target/HUD). Portals and system chrome always win hit-testing. Other Shell presentation makes the greeter react via `_home_react(kind)` (`surprised`/`happy`/`cheer`/`wave`), never by drawing it. Add new ambient effects inside `HomeAnimator` (bounded, no per-tick surface work), not as new animating sources in the loop. Tests: `tests/test_launcher_home_animator.py`, `HomeAmbientPacingTests` in `tests/test_launcher_pacing_dirty_redraw.py`.
+
 ## Protected Activity Home/Back and lifecycle chrome
 
 Read:

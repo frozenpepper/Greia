@@ -255,12 +255,16 @@ def shared_character_audio_path(
     speaker: str,
     cue_id: str,
     locale: str,
+    *,
+    take: int = 0,
 ) -> Path | None:
     """Resolve an accepted shared character recording with English fallback.
 
     Character takes are shared OS resources, not per-Activity media, so this
     method operates in Greia's shared v0.2 library instead of loading an
     Activity localization bundle. No sound decoding or tamper verification.
+    ``take`` picks among the accepted takes of one cue (wrapping, so callers
+    can rotate variety without knowing how many exist); 0 is the first take.
     """
     speaker_id = _resource_key(speaker)
     if any(ch in speaker_id for ch in "._") or "-" in speaker_id:
@@ -275,9 +279,36 @@ def shared_character_audio_path(
         folder = root / language
         if not folder.is_dir():
             continue
-        for file in sorted(folder.glob(f"{speaker_id}__{language}__{cue}__*.wav")):
-            if file.is_file():
-                return file
+        takes = [
+            file
+            for file in sorted(folder.glob(f"{speaker_id}__{language}__{cue}__*.wav"))
+            if file.is_file()
+        ]
+        if takes:
+            return takes[max(0, int(take)) % len(takes)]
+    return None
+
+
+def shared_character_intro_path(
+    project_root: Path,
+    speaker: str,
+    locale: str,
+) -> Path | None:
+    """Resolve a character's accepted self-introduction (English fallback).
+
+    The v0.2 library keeps one ``character.intro.<id>`` take per language at
+    ``_intros/<language>/<speaker>.ogg``. Same resolution rules as
+    :func:`shared_character_audio_path`; ``None`` when no take exists.
+    """
+    speaker_id = _resource_key(speaker)
+    if any(ch in speaker_id for ch in "._") or "-" in speaker_id:
+        raise LocalizationError("speaker must be one simple character ID")
+    preferred = LocaleTag.parse(locale).language
+    root = project_root / "assets" / "audio" / "characters" / "shared" / "v0.2" / "_intros"
+    for language in dict.fromkeys((preferred, "en")):
+        file = root / language / f"{speaker_id}.ogg"
+        if file.is_file():
+            return file
     return None
 
 

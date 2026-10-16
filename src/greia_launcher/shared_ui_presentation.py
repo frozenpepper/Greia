@@ -16,6 +16,8 @@ from greia_platform.pygame_effects import transformed_rect
 from greia_platform.pygame_visual_assets import VisualSurfaceCacheError
 from greia_platform.responsive_layout import UiRect
 
+from .home_scenery import CLOUDS as SKY_CLOUDS, SceneCover
+
 
 @dataclass(frozen=True, slots=True)
 class ShellPanelLayout:
@@ -276,18 +278,48 @@ class SharedUiShellPanelMixin:
         )
 
     def _draw_shell_scene_backdrop(
-        self, screen: Any, pygame: Any, *, theme: Any = None
+        self, screen: Any, pygame: Any, *, theme: Any = None, sky_clouds: bool = True
     ) -> None:
         """Blit the cached storybook scene backdrop without the large tray.
 
         Used by surfaces whose content stands directly on the scene (profile
         picker, Collection Home). Clears the panel content bounds so callers
-        never lay out against a tray that is not drawn.
+        never lay out against a tray that is not drawn. ``sky_clouds=False``
+        leaves the sky empty for a surface that animates its own clouds
+        (the interactive Home, see :mod:`greia_launcher.home_animator`).
         """
 
         self._shared_panel_inner_rect = None
         self._shell_panel_layout = None
-        self._ensure_shared_panel_backdrop(screen, theme, pygame, panel=False)
+        self._ensure_shared_panel_backdrop(
+            screen, theme, pygame, panel=False, sky_clouds=sky_clouds
+        )
+
+    def _compose_resting_sky_clouds(
+        self, backdrop: Any, size: tuple[int, int], pygame: Any
+    ) -> None:
+        """Blit the meadow's sky clouds at rest (composition-time only).
+
+        The landscape rendition has an empty sky; static surfaces get the
+        same clouds the Home animator drifts, at their resting positions.
+        Missing cloud art just leaves a clear sky.
+        """
+
+        visual_cache = getattr(self, "_visual_cache", None)
+        if visual_cache is None:
+            return
+        cover = SceneCover.fit(size)
+        for spec in SKY_CLOUDS:
+            rect = cover.centered(spec.center, spec.size)
+            try:
+                cloud = visual_cache.get(
+                    spec.asset_id, variant="default", size=(rect.width, rect.height)
+                )
+            except _SHARED_VISUAL_ERRORS:
+                continue
+            except pygame.error:
+                continue
+            backdrop.blit(cloud, (rect.x, rect.y))
 
     def _shell_scene_layer(self, size: tuple[int, int], pygame: Any) -> Any | None:
         """Return the meadow scene COVER-fitted to ``size`` (composition-time only).
@@ -315,11 +347,8 @@ class SharedUiShellPanelMixin:
             self._shared_scene_disabled = True
             return None
         width, height = size
-        source_w, source_h = source.get_size()
-        scale = max(width / source_w, height / source_h)
-        crop_w = max(1, min(source_w, int(round(width / scale))))
-        crop_h = max(1, min(source_h, int(round(height / scale))))
-        crop = pygame.Rect((source_w - crop_w) // 2, source_h - crop_h, crop_w, crop_h)
+        cover = SceneCover.fit(size, source.get_size()).crop
+        crop = pygame.Rect(cover.x, cover.y, cover.width, cover.height)
         try:
             region = source.subsurface(crop)
             if region.get_size() == (width, height):
@@ -391,6 +420,7 @@ class SharedUiShellPanelMixin:
         bottom_margin: int = 18,
         max_width: int = 1180,
         panel: bool = True,
+        sky_clouds: bool = True,
     ) -> None:
         visual_cache = getattr(self, "_visual_cache", None)
         if visual_cache is None:
@@ -421,6 +451,7 @@ class SharedUiShellPanelMixin:
             (int(top), int(bottom_margin), int(max_width)) if panel else None,
             width,
             height,
+            sky_clouds,
         )
         backdrop = self._backdrop_cache.get(backdrop_key)
         if backdrop is None:
@@ -452,6 +483,8 @@ class SharedUiShellPanelMixin:
                 scene = self._shell_scene_layer((width, height), pygame)
                 if scene is not None:
                     backdrop.blit(scene, (0, 0))
+                    if sky_clouds:
+                        self._compose_resting_sky_clouds(backdrop, (width, height), pygame)
             if panel_surface is not None:
                 backdrop.blit(panel_surface, panel_rect)
             self._backdrop_cache[backdrop_key] = backdrop

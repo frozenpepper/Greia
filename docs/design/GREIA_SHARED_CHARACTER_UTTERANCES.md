@@ -214,7 +214,7 @@ character.intro.tito
 character.intro.momo
 ```
 
-Their final product placement is still deliberately undecided. Candidate uses include an optional meet-the-cast moment, tappable Home characters or a future gallery.
+**Placement (2026-10-16): the tappable Home greeter.** The child's cast greeter on Collection Home (`src/greia_launcher/home_animator.py`, `HomeGreeterVoice`) plays that character's introduction on the *first* tap of the Shell process; later taps rotate the accepted `praise.general` / `ready.go` takes. Speech goes through the launcher's single spoken-label channel and only starts when that channel is silent (never interrupts a clip; navigation labels may interrupt it), with a 3 s cooldown and at most 4 clips per minute (20 rapid taps ⇒ motion only after the 4th clip). The same reaction is reachable by keyboard/controller (greeter focus + Enter/south). Taps grant nothing. Other candidate uses (an optional meet-the-cast moment, a future gallery) remain open.
 
 Regardless of placement:
 

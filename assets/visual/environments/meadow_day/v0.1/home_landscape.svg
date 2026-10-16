@@ -25,11 +25,9 @@
     <circle cx="902" cy="206" r="64" fill="url(#home_landscape_sun_glow)"/>
     <circle cx="902" cy="206" r="32" fill="#FFD35C" stroke="#E9A93B" stroke-width="3"/>
     <path d="M884 194 C889 187 897 183 905 183" fill="none" stroke="#FFF1C2" stroke-width="5" stroke-linecap="round"/>
-    <g fill="#FFFDF6" stroke="#B9CBD8" stroke-width="2.5" stroke-linejoin="round">
-      <path d="M74 236 C68 222 85 211 99 219 C105 202 133 200 142 216 C155 208 175 216 172 231 C184 234 183 250 169 250 L83 250 C68 250 64 240 74 236 Z"/>
-      <path d="M622 38 C617 26 632 18 644 24 C651 11 675 11 681 24 C693 19 706 27 703 39 C713 42 712 54 700 54 L629 54 C616 54 612 44 622 38 Z"/>
-      <path d="M792 82 C787 70 801 63 812 68 C818 57 838 57 843 68 C853 64 864 71 861 82 C870 85 868 96 858 96 L800 96 C789 96 786 88 792 82 Z" opacity="0.9"/>
-    </g>
+    <!-- No baked clouds: the Shell draws the sky clouds as sprites
+         (cloud.large.01 / cloud.small.01) so Home can drift them; static
+         surfaces compose them at rest (greia_launcher.home_scenery). -->
   </g>
 
   <g id="far">

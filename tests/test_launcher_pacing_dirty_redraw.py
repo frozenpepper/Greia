@@ -276,3 +276,75 @@ class LauncherMotionCoalescingContractTests(unittest.TestCase):
         steady = source[present_at : present_at + 800]
         self.assertEqual(steady.count("pygame.display.flip()"), 1)
         self.assertIn("self._draw(screen, pygame)", steady)
+        # Ambient (Home) animation is an incremental branch of the same
+        # present path: it is only tried when no full redraw is pending and
+        # the idle sleep honours its next due time.
+        ambient_at = source.find("elif self._present_ambient_frame(")
+        self.assertGreater(ambient_at, present_at)
+        self.assertIn("self._ambient_wait_seconds(", source[ambient_at:])
+
+class HomeAmbientPacingTests(unittest.TestCase):
+    """Interactive Home animates briefly, then returns to zero redraws."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        pygame.init()
+        pygame.font.init()
+
+    def test_zero_ambient_draws_after_the_awake_window(self) -> None:
+        import greia_launcher.home_animation_presentation as home_presentation
+        from greia_launcher.home_animator import AWAKE_SECONDS, SLEEP_AFTER_SECONDS
+
+        clock = SimpleNamespace(now=5000.0)
+        patch = unittest.mock.patch.object(
+            home_presentation, "time", SimpleNamespace(monotonic=lambda: clock.now)
+        )
+        patch.start()
+        self.addCleanup(patch.stop)
+        screen = pygame.display.set_mode((1024, 600))
+        shell = GreiaChildShell(windowed=True)
+        if shell._visual_cache is None:
+            self.skipTest("shared visuals unavailable")
+        shell._activate_profile(shell.profiles[0], pygame)
+        shell._last_input_monotonic = clock.now
+        shell._draw(screen, pygame)
+        animator = shell._home_animator
+        self.assertIsNotNone(animator)
+        greeter = animator.greeter_rect
+        shell._handle_click((greeter.x + greeter.width // 2, greeter.y + 100), pygame)
+        tree = animator._scenery.tree_hit
+        shell._handle_click((tree.x + tree.width // 2, tree.y + tree.height // 2), pygame)
+        start = clock.now
+        shell._draw = MagicMock(wraps=shell._draw)  # type: ignore[method-assign]
+        updates: list[float] = []
+        real_update = pygame.display.update
+
+        def counting_update(rects=None):
+            updates.append(clock.now)
+            return real_update(rects)
+
+        def run_until(t: float, step: float = 0.04) -> int:
+            presented = 0
+            while clock.now < t:
+                clock.now += step
+                presented += int(shell._present_ambient_frame(screen, pygame, clock.now))
+            return presented
+
+        with unittest.mock.patch.object(pygame.display, "update", counting_update):
+            awake = run_until(start + AWAKE_SECONDS)
+            # Bounded frame rate while awake: <= 24 fps on average.
+            self.assertGreater(awake, 0)
+            self.assertLessEqual(awake, 24 * AWAKE_SECONDS + 1)
+            quiet = run_until(start + SLEEP_AFTER_SECONDS - 0.5)
+            self.assertEqual(quiet, 0)
+            self.assertLessEqual(
+                shell._ambient_wait_seconds(clock.now), SLEEP_AFTER_SECONDS
+            )
+            sleepy = run_until(start + SLEEP_AFTER_SECONDS + 0.5)
+            self.assertEqual(sleepy, 1)  # the single sleepy pose swap
+            after = run_until(start + SLEEP_AFTER_SECONDS + 120.0, step=0.5)
+            self.assertEqual(after, 0)
+            self.assertIsNone(shell._ambient_wait_seconds(clock.now))
+        shell._draw.assert_not_called()
+        self.assertEqual(len(updates), awake + sleepy)
+

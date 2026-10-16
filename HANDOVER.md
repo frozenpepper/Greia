@@ -61,6 +61,16 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-16 — Interactive Home: greeter reactions, apple tree, sun sparkles, drifting clouds
+
+**Evidence class: SOURCE + DESKTOP VISUAL REVIEW** (headless 1024x600 renders, macOS). No Acer deploy (another session's timed sweep was running there); Acer CPU/idle acceptance is still open.
+
+**Done:** new `src/greia_launcher/home_animator.py` (`HomeAnimator`, `HomeGreeterVoice`, bounded effects), `home_scenery.py` (cover-mapped scene geometry, collision-checked against portals/HUD), `home_animation_presentation.py` (`HomeAnimationMixin`, after `AchievementLibraryMixin` in `GreiaChildShell`). The greeter is no longer baked into the Home cache: it greets (`pose_cheer`), rests, blinks while awake, hops + speaks on tap (first tap per boot = accepted `_intros` clip, then `praise.general`/`ready.go`; non-interrupting, 3 s cooldown, ≤4/min), sleeps after 60 s and wakes on input; it is a keyboard/controller focus stop (Left from a first-column portal; Enter/south). Tap the tree → apple falls (≤3), sun → sparkles, cloud → puff. Loop: new `_present_ambient_frame`/`_ambient_wait_seconds` hooks; dirty rects restored from the cached Home frame; ≤24 fps; zero redraws after the 20 s awake window. `home_landscape.svg` lost its three baked clouds (re-rendered with `rsvg-convert`; `make visual-assets-check` PASS); static surfaces compose `cloud.large.01`/`cloud.small.01` at rest. `shared_character_audio_path(take=)` and `shared_character_intro_path` added; `SpokenLabelPlayer.play_if_idle`.
+
+**Measured (this Mac, dummy SDL):** busy dirty frame mean ≈1.5 ms (animator logic ≈0.1–0.2 ms), drift-only frame ≈0.1 ms, max dirty area 9.7 % of 1024x600, 0 `pygame.Surface` constructions and 0 transform calls over 200 ticks.
+
+**Next exact step:** on the Acer, Home idle `top` over 60 s (≤2.5 % target) and during cloud drift (≤12 %), then a hands-on tap check of greeter/tree/sun/cloud and controller focus.
+
 ## 2026-10-16 — Open-source cleanup: dead tests, docs archive, public entry points
 
 **Evidence class: SOURCE + documentation.** Focused tests only (`test_boot_progress_contract`, `test_hardware_enablement_build_contract`, `test_makefile_hygiene`, `tools/validate_project.py`: PASS on the local macOS checkout). No full `make verify` was run for this tranche: it takes about 85 minutes and two other sessions were running suites at the same time. No hardware.

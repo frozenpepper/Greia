@@ -132,6 +132,32 @@ class SpokenLabelPlayer:
         self._last_identity = identity
         if clip is None or not clip.is_file():
             return False
+        return self._play(clip, pygame, interrupt=True)
+
+    def is_busy(self) -> bool:
+        """Whether a clip is currently audible on the narration channel."""
+
+        try:
+            return bool(self._channel is not None and self._channel.get_busy())
+        except Exception:  # noqa: BLE001 - optional presentation must fail silent
+            return False
+
+    def play_if_idle(self, clip: Path | None, pygame: Any) -> bool:
+        """Play a character clip on the same channel only when it is silent.
+
+        Character speech (for example the tappable Home greeter) never
+        interrupts a playing label or another character line; it simply does
+        not start. The semantic label deduplication is reset so the next
+        navigation focus speaks normally (navigation may interrupt character
+        speech, never the reverse).
+        """
+
+        if clip is None or not clip.is_file() or self.is_busy():
+            return False
+        self._last_identity = None
+        return self._play(clip, pygame, interrupt=False)
+
+    def _play(self, clip: Path, pygame: Any, *, interrupt: bool) -> bool:
         try:
             if not pygame.mixer.get_init():
                 # Post-intro lazy mixer ownership: the display-only pre-frame
@@ -156,7 +182,10 @@ class SpokenLabelPlayer:
                 self._channel = pygame.mixer.find_channel(force=True)
             if self._channel is None:
                 return False
-            self._channel.stop()
+            if interrupt:
+                self._channel.stop()
+            elif self._channel.get_busy():
+                return False
             self._channel.play(sound)
             return True
         except (OSError, RuntimeError, ValueError, pygame.error):
@@ -207,6 +236,12 @@ class SpokenLabelController:
     @property
     def player(self) -> SpokenLabelPlayer:
         return self._player
+
+    @property
+    def root(self) -> Path:
+        """Greia OS root that owns the shared speech assets."""
+
+        return self._root
 
     def activity_focus(
         self, manifest: ActivityManifest, locale: str
