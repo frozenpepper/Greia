@@ -411,7 +411,7 @@ class VoloAppLoopTests(unittest.TestCase):
             for _ in range(8):
                 self._tick()
             self.assertLess(app.run.flier.y, y0)
-        for _ in range(int(13 / STEP)):
+        for _ in range(int(19 / STEP)):  # back-off: hints at 6 s and 18 s
             self._tick()
         self.assertTrue(app.motion.hint_glyphs)
         self.assertEqual(app.cast.mode, "point")

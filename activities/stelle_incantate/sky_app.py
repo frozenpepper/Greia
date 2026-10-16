@@ -34,7 +34,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -64,7 +64,6 @@ else:
     from sky_renderer import LINE_SECONDS, Band, SceneMotion, SkyCast, SkyRenderer
     from sky_services import EventPort, ProgressPort
 
-IDLE_HINT_SECONDS = 6.0
 GOAL_BEAT_SECONDS = 0.42
 RECOUNT_STEP_SECONDS = 0.16
 MAX_SCHEDULED = 48
@@ -183,7 +182,7 @@ class SkyActivity:
         self._praise_index = 0
         self._fact_opened: set[str] = set()
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self._start_figure()
 
     @property
@@ -295,7 +294,7 @@ class SkyActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     # -- figure flow ------------------------------------------------------------------
 
@@ -574,17 +573,17 @@ class SkyActivity:
         round_ = self.round
         if self.timeline.busy:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        self._idle_hints += 1
         if round_.phase is Phase.REVEALED:
-            self.cast.point(1.6)
+            self.cast.point(self._hints.animation_seconds(1.6))
             self.motion.add_fx("sparkle", NEXT_CENTER, now)
-        elif self._idle_hints == 1:
+        elif step == 1:
             # First hesitation: point and show where we are (not where to go).
             round_.note_hint()
             self._show_anchor()
-            self.cast.point(1.8)
+            self.cast.point(self._hints.animation_seconds(1.8))
         else:
             round_.note_hint()
             self._demonstrate(after_mistakes=False)

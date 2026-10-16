@@ -602,7 +602,7 @@ class AppLoopTests(unittest.TestCase):
         self.assertTrue(app.cast.pointing)
         self.assertIn(source.cell, app.motion.source_glow)
         self.assertNotIn(target.cell, app.motion.target_ring)
-        self.advance(app, 6.2)
+        self.advance(app, 12.2)  # back-off: 6 s, then a further 12 s
         self.assertIn(target.cell, app.motion.target_ring)
         self.assertEqual(app.session.hints, 2)
 

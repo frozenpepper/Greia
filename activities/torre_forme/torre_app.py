@@ -51,7 +51,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.input_core import InputEdge, InteractionProfile, PhysicalControl, SemanticAction, SemanticInputEvent
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
@@ -105,7 +105,6 @@ else:
     from torre_renderer import CELEBRATE_SECONDS, WOBBLE_SECONDS, DaniCast, Glide, SceneMotion, SceneView, TorreRenderer
     from torre_services import EventPort, ProgressPort, TorreProgress
 
-IDLE_HINT_SECONDS = 6.0
 INTRO_SECONDS = 0.6
 FINISH_SECONDS = CELEBRATE_SECONDS + 0.2
 GLOW_SECONDS = 2.6
@@ -236,7 +235,7 @@ class TorreActivity:
         self._welcomed = False
         self._dirty = True
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self._corrects = 0
         self.start_set()
 
@@ -525,7 +524,7 @@ class TorreActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     def _ambient_tap(self, point: tuple[int, int]) -> None:
         """Dani says the goal again when tapped; a tap elsewhere puts a block back."""
@@ -859,21 +858,22 @@ class TorreActivity:
         session = self.session
         if session is None or now < self._busy_until or self.dragging is not None:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        if not self._hints.is_due(now, self._last_activity):
             return
-        step = session.next_step()
-        if step is None:
+        plan = session.next_step()
+        if plan is None:
             return
-        self._idle_hints += 1
+        step = self._hints.fire(now)
+        glow = self._hints.animation_seconds(GLOW_SECONDS)
         session.note_hint()
-        self.cast.point(1.8)
-        if self._idle_hints == 1:
-            self.motion.target_glow = (step.placement, now + GLOW_SECONDS)
-        elif self._idle_hints == 2:
-            self.motion.target_glow = (step.placement, now + GLOW_SECONDS)
-            self.motion.tray_hops[step.kit_index] = now
-            if step.needs_turn(session.kit_block(step.kit_index)):
-                self.motion.turn_hints[step.kit_index] = now + TURN_HINT_SECONDS
+        self.cast.point(self._hints.animation_seconds(1.8))
+        if step == 1:
+            self.motion.target_glow = (plan.placement, now + glow)
+        elif step == 2:
+            self.motion.target_glow = (plan.placement, now + glow)
+            self.motion.tray_hops[plan.kit_index] = now
+            if plan.needs_turn(session.kit_block(plan.kit_index)):
+                self.motion.turn_hints[plan.kit_index] = now + self._hints.animation_seconds(TURN_HINT_SECONDS)
         else:
             self._demonstrate(now)
         self._dirty = True

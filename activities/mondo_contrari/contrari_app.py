@@ -39,7 +39,7 @@ from greia_platform.activity_controls import (
     PygameControlInput,
     mix,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -87,7 +87,6 @@ else:
     from contrari_scenes import MakeScene, PairScene, build_scenes
     from contrari_services import EventPort, ProgressPort
 
-IDLE_HINT_SECONDS = 6.0
 WELCOME_LEAD = 0.3
 WELCOME_MAX = 4.0
 POINT_SECONDS = 1.8
@@ -211,7 +210,7 @@ class ContrariActivity:
         self._drag_from: tuple[int, int] | None = None
         self._dragging = False
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self.audio.say("welcome")
         self._start_round(lead=min(WELCOME_MAX, self.audio.length("welcome") + WELCOME_LEAD))
 
@@ -341,7 +340,7 @@ class ContrariActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     # -- drag (make pairs) ------------------------------------------------------------
 
@@ -574,15 +573,15 @@ class ContrariActivity:
     def _maybe_hint(self, now: float) -> None:
         if self._busy or self.timeline.busy or self.session.phase is not Phase.ASKING:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        self._idle_hints += 1
-        if self._idle_hints == 1:
+        if step == 1:
             self.session.note_hint()
-        self.cast.point(POINT_SECONDS)
+        self.cast.point(self._hints.animation_seconds(POINT_SECONDS))
         if self.scene is not None:
             self.scene.pulse(now)
-        if self._idle_hints >= 2:
+        if step >= 2:
             ask = self.session.current_ask
             if ask is not None:
                 self.audio.say(ask.pole.value)

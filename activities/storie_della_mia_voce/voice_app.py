@@ -40,7 +40,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -98,7 +98,6 @@ else:
     from voice_renderer import DragState, Flight, HostCast, Motion, RecordingView, StoryRenderer, card_art
     from voice_services import DeleteConfirmation, SavedStory, StoryProgress, VoiceEvents, VoiceStorage, VoiceStorageError
 
-IDLE_HINT_SECONDS = 6.0
 DRAG_SLOP = 12
 CHECK_DELAY = 0.4
 WOBBLE_LOOK = 0.55
@@ -264,7 +263,7 @@ class StoryApp:
         self._activated = False
         self._busy = False
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self._greeted = False
         self.open_picker()
 
@@ -440,7 +439,7 @@ class StoryApp:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     def _text(self, key: str) -> str:
         if self.resources is None:
@@ -1284,21 +1283,20 @@ class StoryApp:
             return
         if self.state is Screen.TELL and self.record_state is not RecordState.IDLE:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        self._idle_hints += 1
-        if self._idle_hints > 3:
-            return
-        self.cast.point(HALO_SECONDS)
+        halo = self._hints.animation_seconds(HALO_SECONDS)
+        self.cast.point(halo)
         if self.state is Screen.ORDER and self.board is not None:
             hint = self.board.hint()
             if hint is not None:
                 slot, card = hint
-                until = now + HALO_SECONDS
+                until = now + halo
                 self.motion.halos[f"slot.{slot}"] = until
-                if self._idle_hints == 1:
+                if step == 1:
                     self._show_guide(now)
-                if self._idle_hints >= 2:
+                if step >= 2:
                     self.motion.halos[f"card.{card}"] = until
         self._dirty = True
 

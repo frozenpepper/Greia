@@ -43,7 +43,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -91,7 +91,6 @@ else:
     )
     from cucciolo_services import EventPort, PetProfile, ProgressPort
 
-IDLE_HINT_SECONDS = 6.0
 TELL_EVERY = 4.0
 DAY_START_CALM = 2.6
 NAME_DELAY = 1.2
@@ -216,7 +215,7 @@ class CuccioloApp:
         self._activated = False
         self._busy = False
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         if self.profile.adopted:
             self.start_day()
         else:
@@ -356,7 +355,7 @@ class CuccioloApp:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     # -- adoption -----------------------------------------------------------------
 
@@ -738,30 +737,33 @@ class CuccioloApp:
     # -- hints and life ---------------------------------------------------------------
 
     def _maybe_hint(self, now: float) -> None:
-        if self._busy or now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        if self._busy:
             return
         day = self.day
+        need = care = pick = False
         if self.screen_id is Screen.DAY and day is not None:
-            if day.phase is Phase.NEED and day.current_need is not None:
-                self._idle_hints += 1
-                self.cast.point(1.8)
-                self.motion.tell(day.current_need, now)
-                if self._idle_hints >= 3 and day.right_care is not None:
-                    self.motion.glow(day.right_care, now, GLOW_SECONDS)
-                self._dirty = True
-            elif day.phase is Phase.CARE:
-                self._idle_hints += 1
-                self.cast.point(1.8)
-                self.motion.pet_glow_until = now + 2.4
-                self._dirty = True
+            need = day.phase is Phase.NEED and day.current_need is not None
+            care = day.phase is Phase.CARE
+        else:
+            pick = self.screen_id in (Screen.ADOPT, Screen.NAME)
+        if not (need or care or pick):
             return
-        if self.screen_id in (Screen.ADOPT, Screen.NAME):
-            self._idle_hints += 1
-            self.cast.point(1.8)
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
+            return
+        self.cast.point(self._hints.animation_seconds(1.8))
+        if need:
+            assert day is not None and day.current_need is not None
+            self.motion.tell(day.current_need, now)
+            if step >= 3 and day.right_care is not None:
+                self.motion.glow(day.right_care, now, self._hints.animation_seconds(GLOW_SECONDS))
+        elif care:
+            self.motion.pet_glow_until = now + self._hints.animation_seconds(2.4)
+        else:
             chosen = self.selected_species if self.screen_id is Screen.ADOPT else self.selected_name
             if chosen is not None:
                 self.motion.add_fx("sparkle", self.controls.confirm.rect.center, now)
-            self._dirty = True
+        self._dirty = True
 
     def _maybe_tell(self, now: float) -> None:
         """While a need waits, the pet acts it out every few seconds (body language)."""

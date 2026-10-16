@@ -20,6 +20,7 @@ import time
 import pygame
 
 from .activity_controls import ControlArt
+from .frame_governor import FramePolicy
 
 CANONICAL_CAST = ("lilli", "leo", "flash", "dani", "tito", "momo")
 
@@ -148,4 +149,95 @@ class CastFeedback:
         return (0, 0)
 
 
-__all__ = ["CANONICAL_CAST", "CastFeedback", "CastPose"]
+class IdleHintScheduler:
+    """Back-off schedule for idle hints: a few, then silence until input.
+
+    Hints exist for a child who is stuck, not to nag one who walked away, and
+    each hint animates at full frame rate (costly on the reference floor).  The
+    schedule is therefore bounded: hint 1 after ``gaps[0]`` quiet seconds,
+    hint 2 a further ``gaps[1]``, hint 3 a further ``gaps[2]`` (default 6 / 12 /
+    24 s), then nothing until the next child input calls ``reset``.
+
+    The Activity keeps its own graduated hint content and uses the returned
+    1-based step to pick it (point, then demonstrate, ...).  ``poll`` is called
+    from ``step()``; it never sleeps or draws.  ``since`` lets an Activity that
+    tracks a "quiet since" stamp (speech ended, a round started) delay the next
+    hint without restarting the schedule.
+    """
+
+    DEFAULT_GAPS: tuple[float, ...] = (6.0, 12.0, 24.0)
+
+    def __init__(
+        self,
+        gaps: tuple[float, ...] = DEFAULT_GAPS,
+        *,
+        now: float = 0.0,
+        policy: FramePolicy | None = None,
+    ) -> None:
+        if not gaps or any(gap <= 0.0 for gap in gaps):
+            raise ValueError("idle hint gaps must be positive")
+        self._gaps = tuple(float(gap) for gap in gaps)
+        self._policy = policy if policy is not None else FramePolicy.from_environment()
+        self._anchor = float(now)
+        self._count = 0
+
+    @property
+    def count(self) -> int:
+        """Hints fired since the last child input (0 when none)."""
+
+        return self._count
+
+    @property
+    def max_hints(self) -> int:
+        return len(self._gaps)
+
+    @property
+    def exhausted(self) -> bool:
+        return self._count >= len(self._gaps)
+
+    def reset(self, now: float) -> None:
+        """A child input (or a new round) restarts the whole schedule."""
+
+        self._anchor = float(now)
+        self._count = 0
+
+    def is_due(self, now: float, since: float | None = None, *, patience: float = 1.0) -> bool:
+        """True when the next step's wait has elapsed (does not consume it).
+
+        ``patience`` stretches every gap (e.g. 1.5 for a harder level whose
+        child needs longer to think) without changing the back-off shape.
+
+        Use with ``fire`` when the Activity must first check that a hint
+        makes sense (a target exists) before spending one of the few steps.
+        """
+
+        if self._count >= len(self._gaps):
+            return False
+        anchor = self._anchor if since is None else max(self._anchor, since)
+        return now - anchor >= self._gaps[self._count] * patience
+
+    def fire(self, now: float) -> int:
+        """Consume the next step and return its 1-based number."""
+
+        if self._count >= len(self._gaps):
+            raise RuntimeError("idle hint schedule is exhausted")
+        self._count += 1
+        self._anchor = float(now)
+        return self._count
+
+    def poll(self, now: float, since: float | None = None, *, patience: float = 1.0) -> int:
+        """Return the new 1-based hint step when one is due, otherwise 0.
+
+        The wait for the next step is measured from the later of the previous
+        hint (or the last reset) and ``since``.
+        """
+
+        return self.fire(now) if self.is_due(now, since, patience=patience) else 0
+
+    def animation_seconds(self, nominal: float) -> float:
+        """Hint animation length, shortened on the low-end frame profile."""
+
+        return self._policy.hint_animation_seconds(nominal)
+
+
+__all__ = ["CANONICAL_CAST", "CastFeedback", "CastPose", "IdleHintScheduler"]

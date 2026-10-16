@@ -45,7 +45,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.input_core import InputEdge, InputSource, SemanticAction, SemanticInputEvent
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
@@ -123,7 +123,10 @@ else:
 STAGE_STATE_KEY = "teatrino.stage.v1"
 CURTAIN_SECONDS = 0.5
 COUNTDOWN_BEAT = 0.6
-IDLE_HINT_SECONDS = 8.0
+# The theatre waits longer than other Activities before its first nudge, then
+# backs off like the rest: 8 s, +12 s, +24 s, silent until the next input.
+HINT_GAPS = (8.0, 12.0, 24.0)
+HINT_GLOW_SECONDS = 3.0
 DRAG_SLOP = 10
 KEY_STEP = 28
 SCENE_COLUMNS, SCENE_ROWS = 4, 2
@@ -294,6 +297,8 @@ class TeatrinoApp:
         self._dragged = False
         self.speaker_id: str | None = None
         self._last_activity = clock()
+        self._hints = IdleHintScheduler(HINT_GAPS, now=self._last_activity)
+        self._hint_until = 0.0
         self._last_frame = clock()
         self._dirty = True
         self.running = True
@@ -511,8 +516,9 @@ class TeatrinoApp:
             self._dirty = True
         if self.controls.layer.invalidation.should_draw:
             self._dirty = True
-        # The idle hint glow can stay on indefinitely: it is ambient motion
-        # (reduced frame rate once the child is idle), not essential motion.
+        # The idle hint glow is a short, bounded invitation (ambient motion at
+        # the reduced frame rate once the child is idle), never a permanent one.
+        self._advance_hint(now)
         self._hinting = self._hint_target(now) is not None
         return (
             self.mode != StageMode.EDIT
@@ -554,6 +560,8 @@ class TeatrinoApp:
         is_pointer = isinstance(kit_input, KitPointer)
         if not is_pointer or kit_input.phase is not PointerPhase.MOVE:
             self._last_activity = self.clock()
+            self._hints.reset(self._last_activity)
+            self._hint_until = 0.0
         self._dirty = True
         if self.surfaces.overlays:
             result = self.surfaces.dispatch(kit_input)
@@ -1266,12 +1274,25 @@ class TeatrinoApp:
     # hints
     # ------------------------------------------------------------------
 
+    def _advance_hint(self, now: float) -> None:
+        """Open the next back-off glow window, or close an expired one."""
+
+        if self._hint_until and now >= self._hint_until:
+            self._hint_until = 0.0
+            self._dirty = True
+        if self.mode != StageMode.EDIT or self.surfaces.overlays or self.curtain.value > 0.0:
+            return
+        if not self._hint_until and self._hints.is_due(now, self._last_activity):
+            self._hints.fire(now)
+            self._hint_until = now + self._hints.animation_seconds(HINT_GLOW_SECONDS)
+            self._dirty = True
+
     def _hint_target(self, now: float) -> pygame.Rect | None:
         """After a quiet moment, glow the next useful thing (never an answer)."""
 
         if self.mode != StageMode.EDIT or self.surfaces.overlays or self.curtain.value > 0.0:
             return None
-        if now - self._last_activity < IDLE_HINT_SECONDS:
+        if now >= self._hint_until:
             return None
         if not self.stage.puppets:
             cards = [card.rect for card in self.controls.cards if card.visible]

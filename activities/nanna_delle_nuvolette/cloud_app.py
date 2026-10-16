@@ -44,7 +44,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.input_core import InputEdge, SemanticAction, SemanticInputEvent
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
@@ -111,7 +111,6 @@ else:
     )
     from cloud_services import BedtimeProgress, EventPort, ProgressPort
 
-IDLE_HINT_SECONDS = 6.0
 INTRO_SECONDS = 1.1
 YAWN_SECONDS = 1.6
 SETTLE_SECONDS = 1.2
@@ -234,7 +233,7 @@ class CloudActivity:
         self._dirty = True
         self._last_activity = clock()
         self._last_frame = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self.start_night()
 
     # -- main loop ----------------------------------------------------------------
@@ -483,7 +482,7 @@ class CloudActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     def _ambient_tap(self, point: tuple[int, int]) -> None:
         """Free, wordless exploration: the moon twinkles, Momo murmurs."""
@@ -761,19 +760,20 @@ class CloudActivity:
         night = self.night
         if night is None or now < self._busy_until or self.dragging is not None:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        if not self._hints.is_due(now, self._last_activity):
             return
         cloud = night.next_awake()
         if cloud is None:
             return
-        self._idle_hints += 1
-        self.cast.point(1.8)
-        self.motion.glow_bubble(cloud, now + GLOW_SECONDS)
+        step = self._hints.fire(now)
+        glow = self._hints.animation_seconds(GLOW_SECONDS)
+        self.cast.point(self._hints.animation_seconds(1.8))
+        self.motion.glow_bubble(cloud, now + glow)
         answer = night.answer_for(cloud)
-        if answer is not None and self._idle_hints >= 2:
+        if answer is not None and step >= 2:
             self.motion.hop_tile(answer, now)
-            if self._idle_hints >= 3:
-                self.motion.glow_tile(answer, now + GLOW_SECONDS)
+            if step >= 3:
+                self.motion.glow_tile(answer, now + glow)
         self._dirty = True
 
     # -- helpers --------------------------------------------------------------------

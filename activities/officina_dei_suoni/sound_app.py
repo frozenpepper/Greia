@@ -32,7 +32,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.input_core import SemanticInputEvent
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -79,8 +79,6 @@ else:
     )
 
 
-IDLE_HINT_SECONDS = 6.0
-MAX_IDLE_HINTS = 3
 POINT_SECONDS = 2.6
 SHAKE_SECONDS = 0.45
 FLIGHT_START = 0.20
@@ -158,7 +156,7 @@ class SoundWorkshopActivity:
         self._dirty = True
         self._last_tick = clock()
         self._quiet_since = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._quiet_since)
         self._point_until = 0.0
         self._hint_target: str | None = None
         self._shake: tuple[str, float] | None = None
@@ -330,6 +328,7 @@ class SoundWorkshopActivity:
 
     def _note_input(self) -> None:
         self._quiet_since = self.clock()
+        self._hints.reset(self._quiet_since)
 
     def _handle_pointer(self, raw_pos: tuple[int, int]) -> bool:
         """Deliver one complete tap at a physical position (tests/tools)."""
@@ -514,8 +513,7 @@ class SoundWorkshopActivity:
         if self.state is AppState.PLAYING:
             if (
                 not self.speech_queue.busy
-                and self._idle_hints < MAX_IDLE_HINTS
-                and now - self._quiet_since >= IDLE_HINT_SECONDS
+                and self._hints.is_due(now, self._quiet_since)
             ):
                 self._give_idle_hint(now)
                 changed = True
@@ -557,16 +555,16 @@ class SoundWorkshopActivity:
     def _give_idle_hint(self, now: float) -> None:
         if self.session.current_challenge is None:
             return
-        self._idle_hints += 1
+        self._hints.fire(now)
         self.session.record_hint()
-        self._point_until = now + POINT_SECONDS
+        self._point_until = now + self._hints.animation_seconds(POINT_SECONDS)
         self._speak_intro(opening=False, hint=True)
 
     def _after_step(self, now: float) -> None:
         self._picked = None
         self.state = AppState.PLAYING
         self.state_started = now
-        self._idle_hints = 0
+        self._hints.reset(self.clock())
         self.controls.sync(self.session)
         challenge = self.session.current_challenge
         if challenge is not None and challenge.target_word is not None:
@@ -589,7 +587,7 @@ class SoundWorkshopActivity:
             return
         self.state = AppState.PLAYING
         self.state_started = now
-        self._idle_hints = 0
+        self._hints.reset(self.clock())
         self._hint_target = None
         self.controls.sync(self.session)
         self._speak_intro(opening=False)
@@ -626,7 +624,7 @@ class SoundWorkshopActivity:
         self.controls.sync(self.session)
         self.state = AppState.PLAYING
         self.state_started = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self.clock())
         self._hint_target = None
         self._activated = True
         self._speak_intro(opening=True)

@@ -39,7 +39,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -93,7 +93,6 @@ else:
     )
     from woodland_services import EventPort, ProgressPort, WoodlandProgress
 
-IDLE_HINT_SECONDS = 6.0
 FOUND_PAUSE = 2.0
 COMPLETE_DELAY = 0.5
 DEMO_DELAY = 0.6
@@ -197,7 +196,7 @@ class WoodlandApp:
         self._activated = False
         self._busy = False
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self.start_round()
 
     # -- main loop ----------------------------------------------------------------
@@ -324,7 +323,7 @@ class WoodlandApp:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     # -- round flow -----------------------------------------------------------------
 
@@ -544,15 +543,15 @@ class WoodlandApp:
         round_ = self.round
         if round_ is None or self._busy or round_.target_spot is None:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        self._idle_hints += 1
         target = round_.target_spot
-        self.cast.point(1.8)
+        self.cast.point(self._hints.animation_seconds(1.8))
         self.motion.shake(target, now)
         self.motion.reveal(target, now, HINT_SECONDS, HINT_RISE)
         self.audio.play("rustle")
-        if self._idle_hints == 1:
+        if step == 1:
             self._say_target()
         else:
             self.motion.glow(target, now, GLOW_SECONDS)

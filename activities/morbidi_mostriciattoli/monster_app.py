@@ -46,6 +46,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
+from greia_platform.activity_feedback import IdleHintScheduler
 from greia_platform.input_core import InputEdge, SemanticAction, SemanticInputEvent
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
@@ -88,7 +89,6 @@ else:
     from monster_renderer import CastActor, Effects, FriendMotion, MonsterRenderer, body_rect
     from monster_services import EventPort, StoragePort
 
-IDLE_HINT_SECONDS = 6.0
 HALO_SECONDS = 1.8
 DRAFT_SAVE_IDLE = 2.5
 FEEDBACK_SECONDS = 2.0
@@ -197,7 +197,7 @@ class MonsterActivity:
         self._dirty = True
         self._activated = False
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(IdleHintScheduler.DEFAULT_GAPS[:2], now=self._last_activity)
         self._draft_revision = self.editor.revision
         self._draft_changed_at = clock()
         self._hello_at: float | None = clock() + 0.8
@@ -372,7 +372,7 @@ class MonsterActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     # -- layouts ---------------------------------------------------------------------------------
 
@@ -813,19 +813,19 @@ class MonsterActivity:
         self._dirty = True
 
     def _maybe_hint(self, now: float) -> None:
-        if self._idle_hints >= 2 or now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
-            return
-        self._hint()
+        step = self._hints.poll(now, self._last_activity)
+        if step:
+            self._hint(step)
 
-    def _hint(self, *, force: bool = False) -> None:
+    def _hint(self, step: int = 1, *, force: bool = False) -> None:
         """Graduated idle help: point at the choices, then at Save (+ voice)."""
 
         now = self.clock()
-        self._idle_hints += 1
         target = "tray" if self.editor.is_blank else "save"
-        self.host.point(HALO_SECONDS)
-        self.effects.halos[target] = now + HALO_SECONDS
-        if self._idle_hints >= 2 and not force and not self.editor.is_blank:
+        halo = self._hints.animation_seconds(HALO_SECONDS)
+        self.host.point(halo)
+        self.effects.halos[target] = now + halo
+        if step >= 2 and not force and not self.editor.is_blank:
             self.audio.host_says("nudge")
         self._dirty = True
 

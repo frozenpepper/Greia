@@ -80,10 +80,10 @@ class OrcaCast:
         self._point_until = 0.0
         self.feedback.try_again()
 
-    def point(self) -> None:
+    def point(self, seconds: float | None = None) -> None:
         self.feedback.reset()
         self._wave_until = 0.0
-        self._point_until = self._clock() + self.POINT_SECONDS
+        self._point_until = self._clock() + (self.POINT_SECONDS if seconds is None else seconds)
 
     def update(self, dt: float) -> None:
         """Advance the slide by one simulation step (``dt`` seconds)."""

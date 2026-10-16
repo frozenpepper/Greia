@@ -12,16 +12,16 @@ child did and reacts to the returned outcome (banner, Tito, sound, events).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 import random
 from typing import Sequence
 
+from greia_platform.activity_feedback import IdleHintScheduler
+
 try:
     from orca_content import (
         FIRST_MISSION_DELAY_SECONDS,
-        MISSION_HINT_REPEAT_SECONDS,
-        MISSION_HINT_SECONDS,
         MISSION_IDLE_RETIRE_SECONDS,
         MISSIONS_PER_STAR,
         NEXT_MISSION_DELAY_SECONDS,
@@ -31,8 +31,6 @@ try:
 except ImportError:
     from .orca_content import (
         FIRST_MISSION_DELAY_SECONDS,
-        MISSION_HINT_REPEAT_SECONDS,
-        MISSION_HINT_SECONDS,
         MISSION_IDLE_RETIRE_SECONDS,
         MISSIONS_PER_STAR,
         NEXT_MISSION_DELAY_SECONDS,
@@ -55,7 +53,8 @@ class Mission:
     orca_id: str
     food: FoodType | None = None
     age: float = 0.0
-    next_hint_at: float = MISSION_HINT_SECONDS
+    # Back-off nudges measured on the mission's own age (ADR 0037 section 6b).
+    hints: IdleHintScheduler = field(default_factory=IdleHintScheduler)
 
     @property
     def text_key(self) -> str:
@@ -120,8 +119,7 @@ class MissionDirector:
         mission.age += dt
         if mission.age >= MISSION_IDLE_RETIRE_SECONDS:
             return self._retire()
-        if mission.age >= mission.next_hint_at:
-            mission.next_hint_at = mission.age + MISSION_HINT_REPEAT_SECONDS
+        if mission.hints.poll(mission.age):
             return MissionOutcome.HINT
         return MissionOutcome.NONE
 
@@ -152,7 +150,7 @@ class MissionDirector:
 
         if self.current is None:
             return False
-        self.current.next_hint_at = self.current.age + MISSION_HINT_REPEAT_SECONDS
+        self.current.hints.reset(self.current.age)
         return True
 
     # -- internals ---------------------------------------------------------

@@ -566,6 +566,23 @@ class AppLoopTests(unittest.TestCase):
         app.tap(app.canvas.mapper.point(*app.controls.hint.rect.center))
         self.assertEqual(garden.summary.hints, hints + 1)  # one hint at a time
 
+    def test_idle_hints_back_off_then_stop_until_the_next_input(self) -> None:
+        app, now, _ = self._app(level=1)
+        self._advance(app, now, 6.2)
+        self.assertEqual(app._hints.count, 1)
+        self._advance(app, now, 12.0)
+        self.assertEqual(app._hints.count, 2)
+        self._advance(app, now, 24.0)
+        self.assertEqual(app._hints.count, 3)
+        shown = app.garden.summary.hints
+        self._advance(app, now, 120.0)  # a child who walked away is not nagged
+        self.assertEqual(app._hints.count, 3)
+        self.assertEqual(app.garden.summary.hints, shown)
+        app._note_activity()
+        self.assertEqual(app._hints.count, 0)
+        self._advance(app, now, 6.2)
+        self.assertEqual(app._hints.count, 1)
+
     def test_idle_hints_are_graduated(self) -> None:
         app, now, _ = self._app(level=1)
         app.audio.spoken.clear()
@@ -574,7 +591,7 @@ class AppLoopTests(unittest.TestCase):
         self.assertEqual(app.audio.spoken, ["nudge"])
         self.assertIsNone(app.motion.trail)  # first nudge only points and hops a berry
         self.assertTrue(app.motion.pulses)
-        self._advance(app, now, 6.2)
+        self._advance(app, now, 12.2)  # back-off: 6 s, then a further 12 s
         self.assertIsNotNone(app.motion.trail)
         self.assertEqual(app.garden.summary.hints, 1)
 

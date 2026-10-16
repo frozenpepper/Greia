@@ -595,7 +595,7 @@ class AppLoopTests(unittest.TestCase):
         self.assertEqual(app.audio.spoken, ["nudge"])
         self.assertIsNone(app.motion.demo)  # first nudge: point + glow only
         self.assertIn(0, app.motion.pulses)
-        self._advance(app, now, 6.3)
+        self._advance(app, now, 12.3)  # back-off: 6 s, then a further 12 s
         self.assertIsNotNone(app.motion.demo)
         self.assertIs(app.motion.demo[0].action, HintAction.PLACE)
         hints = app.board_state.summary.hints

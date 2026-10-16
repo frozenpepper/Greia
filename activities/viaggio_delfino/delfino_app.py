@@ -40,6 +40,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
+from greia_platform.activity_feedback import IdleHintScheduler
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizedResources,
@@ -115,7 +116,6 @@ CAST_HEIGHT = 150
 CAST_MIDBOTTOM = (76, REFERENCE_HEIGHT)
 PICKER_CAST_HEIGHT = 170
 #: Graduated help: idle this long → Tito points and the next target pulses.
-IDLE_HINT_SECONDS = 6.0
 HINT_SHOW_SECONDS = 2.6
 HINT_COOLDOWN_SECONDS = 10.0
 #: The wordless steering card stays at least this long with the welcome.
@@ -216,7 +216,7 @@ class DelfinoJourneyApp:
         self._suggested = self._suggest()
         self._newly_unlocked: str | None = None
         now = clock()
-        self._last_input = now
+        self._hints = IdleHintScheduler(now=now)
         self._hint_until = 0.0
         self._hint_cooldown = 0.0
         self._steer_hint_until = 0.0
@@ -274,7 +274,7 @@ class DelfinoJourneyApp:
         self.picker_cast.present(True)
         self.cast.present(False)
         now = self._clock()
-        self._hint_cooldown = now + IDLE_HINT_SECONDS
+        self._hints.reset(now)
         if self._newly_unlocked is not None:
             # A new journey just opened: celebrate it on its card.
             rect = self.picker.rect(self._newly_unlocked)
@@ -318,9 +318,8 @@ class DelfinoJourneyApp:
         self._touch_start = None
         self.picker_cast.present(False)
         now = self._clock()
-        self._last_input = now
+        self._hints.reset(now)
         self._hint_until = 0.0
-        self._hint_cooldown = now + IDLE_HINT_SECONDS
         self._happy_until = 0.0
         if not self._welcomed:
             # Tito's spoken goal once per launch, with the wordless how-to.
@@ -431,16 +430,15 @@ class DelfinoJourneyApp:
         self.picker_cast.update(dt)
 
     def _advance_picker(self, now: float) -> None:
-        if now >= self._hint_cooldown:
-            self.picker_cast.point()
-            self._hint_cooldown = now + HINT_COOLDOWN_SECONDS
+        if self._hints.poll(now):
+            self.picker_cast.point(self._hints.animation_seconds(self.picker_cast.POINT_SECONDS))
 
     def _advance_swim(self, dt: float, now: float) -> None:
         run = self.run_state
         assert run is not None
         if self.steering.active:
             run.dolphin.steer(self.steering.step(dt))
-            self._last_input = now  # a held key or stick is input too
+            self._hints.reset(now)  # a held key or stick is input too
         for event in run.update(dt):
             self._handle_world_event(event)
         if run.finished:
@@ -467,17 +465,18 @@ class DelfinoJourneyApp:
     def _maybe_idle_hint(self, run: JourneyRun, now: float) -> None:
         if now < self._hint_cooldown or now < self._talk_until:
             return
-        if now - self._last_input < IDLE_HINT_SECONDS:
+        if not self._hints.is_due(now):
             return
         target = run.next_target()
         if target is None or abs(target[0] - run.dolphin.x) > 760.0:
             return
         if abs(target[1] - run.dolphin.y) < 60.0:
             return
-        self.cast.point()
-        self._hint_until = now + HINT_SHOW_SECONDS
-        self._steer_hint_until = max(self._steer_hint_until, now + HINT_SHOW_SECONDS + 0.6)
-        self._hint_cooldown = now + HINT_COOLDOWN_SECONDS
+        self._hints.fire(now)
+        show = self._hints.animation_seconds(HINT_SHOW_SECONDS)
+        self.cast.point(self._hints.animation_seconds(self.cast.POINT_SECONDS))
+        self._hint_until = now + show
+        self._steer_hint_until = max(self._steer_hint_until, now + show + 0.6)
 
     def _leap_hint(self, run: JourneyRun) -> bool:
         if run.leaps > 0 or run.finished:
@@ -714,20 +713,20 @@ class DelfinoJourneyApp:
             return
         meaning = self.steering.handle(event)
         if meaning is SwimInput.LEAP:
-            self._last_input = self._clock()
+            self._hints.reset(self._clock())
             self.leap()
             return
         if meaning is SwimInput.STEER:
-            self._last_input = self._clock()
+            self._hints.reset(self._clock())
             return
         if event.type == pygame.MOUSEMOTION:
             logical = self._logical(event.pos)
             if logical is not None:
                 run.dolphin.aim(logical[1])
-                self._last_input = self._clock()
+                self._hints.reset(self._clock())
         elif event.type == pygame.MOUSEBUTTONDOWN and getattr(event, "button", 1) == 1:
             if self._logical(event.pos) is not None:
-                self._last_input = self._clock()
+                self._hints.reset(self._clock())
                 self.leap()
         elif event.type == pygame.FINGERDOWN:
             position = self._finger_position(event)
@@ -735,12 +734,12 @@ class DelfinoJourneyApp:
             if logical is not None:
                 self._touch_start = (self._clock(), position)
                 run.dolphin.aim(logical[1])
-                self._last_input = self._clock()
+                self._hints.reset(self._clock())
         elif event.type == pygame.FINGERMOTION:
             logical = self._logical(self._finger_position(event))
             if logical is not None:
                 run.dolphin.aim(logical[1])
-                self._last_input = self._clock()
+                self._hints.reset(self._clock())
         elif event.type == pygame.FINGERUP:
             start, self._touch_start = self._touch_start, None
             if start is None:
@@ -779,7 +778,7 @@ class DelfinoJourneyApp:
 
     def _route(self, kit_input: Any) -> None:
         if self.phase is Phase.PICKER and not (isinstance(kit_input, KitPointer) and kit_input.phase is PointerPhase.MOVE):
-            self._hint_cooldown = self._clock() + IDLE_HINT_SECONDS
+            self._hints.reset(self._clock())
         result = self._surfaces.dispatch(kit_input)
         if (
             self.phase is Phase.PICKER

@@ -40,7 +40,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback, CastPose
+from greia_platform.activity_feedback import CastFeedback, CastPose, IdleHintScheduler
 from greia_platform.activity_ui import ChildUiMetrics, draw_activity_pointer
 from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.input_core import InputEdge, SemanticAction, SemanticInputEvent
@@ -109,6 +109,7 @@ else:  # pragma: no cover - direct script fallback
 DRAG_SLOP = 8
 CARRY_STEP = 24
 PRAISE_AT = 5
+INTRO_HINT_SECONDS = 1.2
 _NAV = {
     SemanticAction.NAV_LEFT: (-1, 0),
     SemanticAction.NAV_RIGHT: (1, 0),
@@ -258,7 +259,7 @@ class GardenApp:
         self._praised = False
         now = clock()
         self._last_activity = now
-        self._hints = 0
+        self._hints = IdleHintScheduler(now=now)
         self._intro_done = False
         self._tray_hint_start = -10.0
         self._slot_hint_start = -10.0
@@ -495,7 +496,7 @@ class GardenApp:
 
     def _note_activity(self) -> None:
         self._last_activity = self._clock()
-        self._hints = 0
+        self._hints.reset(self._last_activity)
         self._tray_hint_start = -10.0
         self._slot_hint_start = -10.0
 
@@ -795,6 +796,7 @@ class GardenApp:
         self._praised = False
         self._intro_done = True
         self._last_activity = self._clock() - IDLE_HINT_SECONDS + 1.0
+        self._hints.reset(self._last_activity)
         self._sync()
 
     def _show_full_shelf(self) -> None:
@@ -1130,23 +1132,28 @@ class GardenApp:
         """Wordless invitations: Dani points, the tray hops, a hand shows the drag."""
         if self.mode != "garden" or self.surfaces.overlays or self.editor.dragging or self._press is not None:
             return
-        idle = now - self._last_activity
-        wait = 1.2 if not self._intro_done else IDLE_HINT_SECONDS * (1 if self._hints < 3 else 2)
-        if idle < wait:
+        if self._intro_done:
+            if not self._hints.is_due(now, self._last_activity):
+                return
+        elif now - self._last_activity < INTRO_HINT_SECONDS:
             return
         if not self.editor.shapes:
             self._tray_hint_start = now
-            self.cast.point(2.6)
+            self.cast.point(self._hints.animation_seconds(2.6))
             if not self._intro_done:
                 self.sounds.say("ready.go")
         elif self.editor.next_free_slot() is not None:
             self._slot_hint_start = now
-            self.cast.point(2.4)
+            self.cast.point(self._hints.animation_seconds(2.4))
         else:
             self._last_activity = now
             return
-        self._intro_done = True
-        self._hints += 1
+        if self._intro_done:
+            self._hints.fire(now)
+        else:
+            # The welcome invitation opens the back-off schedule, not a step of it.
+            self._intro_done = True
+            self._hints.reset(now)
         self._last_activity = now
 
     def _burst(self, asset_id: str, center: tuple[int, int], size: int) -> None:

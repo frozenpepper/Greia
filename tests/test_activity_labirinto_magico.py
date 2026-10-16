@@ -469,7 +469,7 @@ class AppLoopTests(unittest.TestCase):
         self.assertTrue(app.cast.pointing)
         self.assertEqual(app.audio.spoken, ["nudge"])
         self.assertIsNone(app.motion.firefly)  # first nudge only points
-        self._advance(app, now, 6.2)
+        self._advance(app, now, 12.2)  # back-off: 6 s, then a further 12 s
         self.assertIsNotNone(app.motion.firefly)
         self.assertEqual(app.maze.summary.hints, 2)
 

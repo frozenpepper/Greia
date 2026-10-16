@@ -34,7 +34,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -104,7 +104,6 @@ else:
     from ten_house_renderer import BADGE_HOLD_SECONDS, BondItem, Flight, HouseMotion, TenHouseCast, TenHouseRenderer
     from ten_house_services import EventPort, ProgressPort
 
-IDLE_HINT_SECONDS = 6.0
 POP_LEAD = 0.25
 POP_STAGGER = 0.12
 FLIGHT = 0.62
@@ -230,7 +229,7 @@ class TenHouseActivity:
         self._activated = False
         self._busy = False
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self._start_round()
 
     # -- main loop --------------------------------------------------------------
@@ -356,7 +355,7 @@ class TenHouseActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     # -- round flow ---------------------------------------------------------------
 
@@ -702,12 +701,12 @@ class TenHouseActivity:
         phase = self.session.phase
         if self._busy or self.timeline.busy or phase in {Phase.SOLVED, Phase.LEAVING}:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        self._idle_hints += 1
-        if self._idle_hints == 1:
+        if step == 1:
             self.session.note_hint()
-        self.cast.point(1.8)
+        self.cast.point(self._hints.animation_seconds(1.8))
         challenge = self.session.current_challenge
         assert challenge is not None
         if phase is Phase.ARRIVING:
@@ -720,7 +719,7 @@ class TenHouseActivity:
             self._sweep(range(self.session.lit, challenge.target))
         else:
             self._sweep(range(self.session.lit))
-        if self._idle_hints >= 2:
+        if step >= 2:
             cue = self._prompt_cue()
             if cue is not None:
                 self.audio.say(cue)

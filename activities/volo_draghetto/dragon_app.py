@@ -39,7 +39,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.input_core import (
     DEFAULT_INPUT_POLICY,
     ControllerAxis,
@@ -97,7 +97,6 @@ except ImportError:  # pragma: no cover - package import path
     from .dragon_renderer import CAST_HEIGHT, FlashCast, FlightMotion, FlightRenderer, MapRenderer
     from .dragon_services import EventPort, FlightProgress, ProgressPort
 
-IDLE_HINT_SECONDS = 6.0
 START_HINT_SECONDS = 4.5
 GUIDE_SECONDS = 3.0
 DRAG_SLOP = 14
@@ -181,7 +180,7 @@ class DragonFlightActivity:
         self._press_y = 0.0
         self._drag_y: float | None = None
         self._last_input = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_input)
         self._last_source = InputSource.KEYBOARD
         self._flight_started = clock()
         self._last_step = clock()
@@ -350,10 +349,10 @@ class DragonFlightActivity:
 
     def _note_input(self) -> None:
         self._last_input = self.clock()
-        if self._idle_hints:
+        if self._hints.count:
             self.motion.hint_glyphs = ()
             self.motion.ring_pulse_until = -1.0
-        self._idle_hints = 0
+        self._hints.reset(self._last_input)
 
     def _relayout(self) -> None:
         self.screen = pygame.display.get_surface() or self.screen
@@ -428,7 +427,7 @@ class DragonFlightActivity:
         now = self.clock()
         self._flight_started = now
         self._last_input = now
-        self._idle_hints = 0
+        self._hints.reset(now)
         self.session_id = f"{self.session_id.rsplit('-', 1)[0]}-{self.rng.randrange(1_000_000):06d}"
         self.motion.hint_glyphs = self._hint_glyphs()
         self.motion.hint_since = now
@@ -456,7 +455,7 @@ class DragonFlightActivity:
             self.audio.say("encourage.progress")
         elif kind is FlightEventKind.RING_MISSED:
             self.motion.add("dust_puff", event.x, event.y, now, 120)
-            self.motion.guide_until = now + GUIDE_SECONDS
+            self.motion.guide_until = now + self._hints.animation_seconds(GUIDE_SECONDS)
             self.motion.ring_pulse_until = now + GUIDE_SECONDS
             self.audio.play("miss")
             self.cast.think()
@@ -531,18 +530,18 @@ class DragonFlightActivity:
         run = self.run
         if run is None or run.phase is not FlightPhase.FLYING:
             return
-        if self._idle_hints == 0 and self.motion.hint_glyphs and now - self._flight_started > START_HINT_SECONDS:
-            if now - self._last_input < IDLE_HINT_SECONDS:
+        if self._hints.count == 0 and self.motion.hint_glyphs and now - self._flight_started > START_HINT_SECONDS:
+            if now - self._last_input < IdleHintScheduler.DEFAULT_GAPS[0]:
                 self.motion.hint_glyphs = ()
-        if now - self._last_input < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_input)
+        if not step:
             return
-        self._idle_hints += 1
         self.motion.hint_glyphs = self._hint_glyphs()
         self.motion.hint_since = now
-        self.motion.ring_pulse_until = now + 3.0
-        if self._idle_hints >= 2:
-            self.cast.point()
-            self.motion.guide_until = now + GUIDE_SECONDS
+        self.motion.ring_pulse_until = now + self._hints.animation_seconds(3.0)
+        if step >= 2:
+            self.cast.point(self._hints.animation_seconds(2.2))
+            self.motion.guide_until = now + self._hints.animation_seconds(GUIDE_SECONDS)
 
 
 def _safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:

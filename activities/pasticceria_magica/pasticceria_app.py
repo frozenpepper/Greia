@@ -38,6 +38,7 @@ import time
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.activity_feedback import IdleHintScheduler
 from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.activity_controls import (
     ControlArt,
@@ -122,8 +123,6 @@ else:
     )
     from pasticceria_services import BakeryProgress, EventPort, PicturePort, ProgressPort, picture_digest
 
-IDLE_HINT_SECONDS = 6.0
-MAX_IDLE_HINTS = 4
 ARRIVE_POINT_SECONDS = 1.8
 HAPPY_HOLD = 1.4
 DEMO_STEP = 0.42
@@ -246,7 +245,7 @@ class PasticceriaApp:
         self._busy = False
         self._draft_dirty_since: float | None = None
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self.start_round()
 
     # -- main loop --------------------------------------------------------------------
@@ -377,7 +376,7 @@ class PasticceriaApp:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     # -- a round of customers ------------------------------------------------------------
 
@@ -786,13 +785,13 @@ class PasticceriaApp:
 
     def _maybe_hint(self, now: float) -> None:
         game = self.round
-        if game is None or self._busy or not self.show_card or self._idle_hints >= MAX_IDLE_HINTS:
+        if game is None or self._busy or not self.show_card:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        self._idle_hints += 1
-        self.cast.point(2.0)
-        if self._idle_hints == 1:
+        self.cast.point(self._hints.animation_seconds(2.0))
+        if step == 1:
             self.motion.glow_card(now, 2.4)
             self._say_order()
         else:

@@ -33,7 +33,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -85,7 +85,6 @@ else:
     from treno_renderer import HOP_SECONDS, Hop, SceneMotion, TrainCast, TrainRenderer, chimney_position
     from treno_services import EventPort, ProgressPort
 
-IDLE_HINT_SECONDS = 6.0
 ARRIVE_SECONDS = 1.7
 DEPART_SECONDS = 1.6
 PUFF_EVERY = 0.24
@@ -207,7 +206,7 @@ class TrenoApp:
         self._drive_started = 0.0
         self._next_puff = 0.0
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self._order_until = 0.0
         self._start_station()
 
@@ -355,7 +354,7 @@ class TrenoApp:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     # -- station flow -------------------------------------------------------------
 
@@ -632,14 +631,14 @@ class TrenoApp:
         station = self.station
         if station.phase is not Phase.LOADING or self.timeline.busy or self._drive is not Drive.STOPPED:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        self._idle_hints += 1
-        if self._idle_hints == 1:
+        if step == 1:
             station.note_hint()
             self._present_order()
         else:
-            self.cast.point(1.8)
+            self.cast.point(self._hints.animation_seconds(1.8))
             waiting = station.next_platform_item()
             if station.loaded == 0 and waiting is not None:
                 for beat in range(3):

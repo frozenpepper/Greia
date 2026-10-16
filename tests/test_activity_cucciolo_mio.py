@@ -518,9 +518,9 @@ class AppLoopTests(unittest.TestCase):
         self.advance(6.3)
         self.assertTrue(app.cast.pointing)
         self.assertFalse(app.motion.glowing(right, self.clock.now))
-        self.advance(6.3)
+        self.advance(12.3)  # back-off: 6 s, then +12 s, then +24 s
         self.assertFalse(app.motion.glowing(right, self.clock.now))
-        self.advance(6.3)
+        self.advance(24.3)
         self.assertTrue(app.motion.glowing(right, self.clock.now))
         self.advance(60.0)
         self.assertIs(app.day.current_need, need)

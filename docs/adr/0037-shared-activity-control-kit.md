@@ -65,6 +65,10 @@ The Acer sweep (`docs/reviews/acer/2026-10-16_ACER_ACTIVITY_SWEEP.md` §3.4) mea
 * **Migration aids.** Loops that historically redrew every frame without complete dirty tracking use `FrameGovernor(redraw_on_input=True, keepalive_seconds=1.0)`: every non-motion input and every drag invalidates, and keepalive bounds how stale a missed state change can get. New Activities should track dirty state explicitly instead.
 * **Measurement.** `tools/measure_activity_idle_cpu.py` runs Activities headless (SDL dummy) and reports idle CPU via `getrusage` plus presents/s; it is a desktop proxy, not Atom evidence.
 
+### 6b. Idle-hint back-off (amendment 2026-10-16)
+
+Idle hints used to repeat at a fixed rhythm (many Activities never stopped), and each hint is essential full-rate motion, which keeps the reference-floor CPU busy and nags a child who walked away. One platform helper, `greia_platform.activity_feedback.IdleHintScheduler`, now owns the schedule for every Activity that nudges an idle child: hint 1 after 6 s without input, hint 2 a further 12 s later, hint 3 a further 24 s later, then **no more hints until the next child input** (`reset`). The Activity keeps its own graduated content per step (point, then demonstrate, then glow the target) and its own gating (busy, no valid target). `is_due`/`fire` let it check for a target before spending a step; `since` lets a "quiet since" stamp delay a step without restarting the schedule; `patience` stretches the gaps for slower levels; a shorter `gaps` tuple gives fewer steps (e.g. Morbidi Mostriciattoli keeps two). `animation_seconds(nominal)` applies `FramePolicy.hint_animation_cap_seconds` (1.5 s on `reference-floor`, none on `standard`) to every hint animation. Child-requested help (a help button) is not an idle hint and is not capped or counted. Sottomarino's single order highlight is a state flag that expires with its order, not a repeating hint, and is unchanged.
+
 ### 7. Relationship to existing decisions
 
 * ADR 0018: the kit is the Control level of Screen → Overlay → Control; no windows, z-order games or desktop widgets.

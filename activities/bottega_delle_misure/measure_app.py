@@ -34,7 +34,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -102,7 +102,6 @@ else:
     )
     from measure_services import EventPort, ProgressPort
 
-IDLE_HINT_SECONDS = 6.0
 COUNT_STEP_SECONDS = 0.5
 DEMO_LEAD_SECONDS = 0.9
 DEMO_HOLD_SECONDS = 1.6
@@ -227,7 +226,7 @@ class BottegaActivity:
         self._activated = False
         self._busy = False
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self._start_job()
 
     @property
@@ -339,7 +338,7 @@ class BottegaActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     def _sync(self, *, refocus: bool = False) -> None:
         self.controls.sync(self.task, refocus=refocus, busy=self._busy)
@@ -700,12 +699,12 @@ class BottegaActivity:
             }
         ):
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        self._idle_hints += 1
-        self.cast.point(1.8)
+        self.cast.point(self._hints.animation_seconds(1.8))
         self.motion.sign_hop = now
-        if self._idle_hints == 1:
+        if step == 1:
             task.note_hint()
             self.audio.say(prompt_cue(task))
             self._dirty = True

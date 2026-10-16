@@ -500,7 +500,7 @@ class QuattroAppLoopTests(unittest.TestCase):
         self._run(app, 6.3)
         self.assertEqual(app.friends[F].pose_name, "pose_point")
         self.assertIsNotNone(app.motion.pulse_start)
-        self._run(app, 6.2)
+        self._run(app, 12.2)  # back-off: 6 s, then a further 12 s
         self.assertIn(app.motion.glow_col, (0, 3))
 
     def test_whole_match_reaches_the_completion_scene_and_adapts(self) -> None:

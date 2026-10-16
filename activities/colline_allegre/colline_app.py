@@ -44,7 +44,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.input_core import SemanticAction
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
@@ -91,7 +91,6 @@ else:
     from colline_renderer import CELEBRATE_SECONDS, FLAG_BEHIND, Camera, CollineRenderer, DriverCast, SceneMotion, SceneView
     from colline_services import CollineProgress, EventPort, ProgressPort
 
-IDLE_HINT_SECONDS = 6.0
 TUMBLE_SECONDS = 1.4
 NEXT_COURSE_SECONDS = CELEBRATE_SECONDS + 0.6
 SIGN_HINT_SECONDS = 7.0
@@ -196,7 +195,7 @@ class CollineActivity:
         self._last_tick = clock()
         self._accumulator = 0.0
         self._last_input = clock()
-        self._idle_hints = 0
+        self._hint_schedule = IdleHintScheduler(now=self._last_input)
         self._last_speech = -SPEECH_GAP_SECONDS
         self._hinted_drop: int | None = None
         self.start_set()
@@ -355,7 +354,7 @@ class CollineActivity:
 
     def _note_input(self) -> None:
         self._last_input = self.clock()
-        self._idle_hints = 0
+        self._hint_schedule.reset(self._last_input)
 
     # -- set / course flow ----------------------------------------------------------------
 
@@ -567,18 +566,17 @@ class CollineActivity:
         if self.drive.go or self.drive.brake:
             self._last_input = now
             return
-        quiet = now - self._last_input
-        if quiet >= IDLE_HINT_SECONDS * (self._idle_hints + 1) and self._idle_hints < 3:
-            self._idle_hints += 1
-            self.driver.point(1.8)
-            if self._idle_hints == 1 or self.state is AppState.READY:
+        step = self._hint_schedule.poll(now, self._last_input)
+        if step:
+            self.driver.point(self._hint_schedule.animation_seconds(1.8))
+            if step == 1 or self.state is AppState.READY:
                 self._say("ready.go")
 
     def _go_hint(self, now: float) -> float:
         if self.state is AppState.READY:
-            strength = 0.6 if self._idle_hints else 0.35
+            strength = 0.6 if self._hint_schedule.count else 0.35
             return strength + strength * 0.8 * abs(_wave(now, 2.0))
-        if self.state is AppState.DRIVING and self._idle_hints and not self.drive.go:
+        if self.state is AppState.DRIVING and self._hint_schedule.count and not self.drive.go:
             return 0.5 + 0.5 * abs(_wave(now, 2.5))
         return 0.0
 

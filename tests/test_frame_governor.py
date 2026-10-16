@@ -53,6 +53,14 @@ class FramePolicyTests(unittest.TestCase):
             FramePolicy.reference_floor(),
         )
 
+    def test_hint_animation_is_capped_on_the_reference_floor_only(self) -> None:
+        floor = FramePolicy.reference_floor()
+        self.assertEqual(floor.hint_animation_seconds(2.6), 1.5)
+        self.assertEqual(floor.hint_animation_seconds(1.0), 1.0)
+        self.assertEqual(FramePolicy.standard().hint_animation_seconds(2.6), 2.6)
+        with self.assertRaises(ValueError):
+            FramePolicy(hint_animation_cap_seconds=0.0)
+
     def test_policy_bounds(self) -> None:
         with self.assertRaises(ValueError):
             FramePolicy(animation_fps=0.5)

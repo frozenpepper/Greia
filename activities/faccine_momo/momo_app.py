@@ -40,7 +40,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -116,7 +116,6 @@ else:
     from momo_renderer import Flight, FrameView, GuideCast, MomoRenderer, SceneMotion
     from momo_services import MomoEventPort, MomoProgress, NullMomoEvents, NullMomoProgress, ProgressPort
 
-IDLE_HINT_SECONDS = 6.0
 INTRO_LOCK = 0.45
 PROMPT_DELAY = 0.5
 THINK_SECONDS = 1.6
@@ -238,7 +237,7 @@ class MomoActivity:
         self._helped = False
         self._next_window: tuple[float, float] | None = None
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         if warmup:
             self._enter_warmup()
         else:
@@ -387,7 +386,7 @@ class MomoActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     # -- warm-up mirror ------------------------------------------------------------
 
@@ -642,9 +641,9 @@ class MomoActivity:
     def _maybe_hint(self, now: float) -> None:
         if self._busy or self.timeline.busy or self._next_window is not None:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        self._idle_hints += 1
         if self.state is AppState.WARMUP:
             if self.warm.ready:
                 self.motion.glow("go", GLOW_SECONDS)
@@ -656,9 +655,9 @@ class MomoActivity:
             return
         if self.visit.solved:
             return
-        if self._idle_hints == 1:
+        if step == 1:
             self.visit.note_hint()
-        self._cue(replay=self._idle_hints >= 2)
+        self._cue(replay=step >= 2)
 
     def _cue(self, *, replay: bool) -> None:
         """Draw attention to the cue (never to the answer)."""

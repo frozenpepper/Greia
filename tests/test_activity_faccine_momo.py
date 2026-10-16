@@ -522,7 +522,7 @@ class AppLoopTests(unittest.TestCase):
         self.assertTrue(app.guide.pointing)
         self.assertEqual(app.visit.records[0].hints, 1)
         self.assertNotIn("game_prompt", app.audio.spoken)
-        self.advance(app, 6.5)
+        self.advance(app, 12.5)  # back-off: the replay comes 12 s after the point
         self.assertIn("game_prompt", app.audio.spoken)
 
     def test_taps_in_protected_chrome_are_ignored(self) -> None:

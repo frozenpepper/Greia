@@ -414,7 +414,7 @@ class AppIntegrationTests(unittest.TestCase):
         self._advance(6.3)
         self.assertTrue(app.cast.pointing)
         self.assertFalse(app.motion.halos, "the first nudge does not show the answer")
-        self._advance(6.5)
+        self._advance(12.5)  # back-off: 6 s, then a further 12 s
         self.assertTrue(app.motion.halos or app.cast.pointing)
 
     def test_protected_chrome_region_is_ignored(self) -> None:

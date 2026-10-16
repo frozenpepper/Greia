@@ -31,7 +31,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.input_core import SemanticInputEvent
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -82,8 +82,6 @@ else:
     from alfabeto_trace import TraceEvent, TraceTracker
 
 
-IDLE_HINT_SECONDS = 6.0
-MAX_IDLE_HINTS = 3
 POINT_SECONDS = 2.6
 SHAKE_SECONDS = 0.45
 MEET_MIN_SECONDS = 2.2
@@ -170,7 +168,7 @@ class AlfabetoApp:
         self._dirty = True
         self._last_tick = clock()
         self._quiet_since = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._quiet_since)
         self._point_until = 0.0
         self._hint_target: str | None = None
         self._shake: tuple[str, float] | None = None
@@ -352,6 +350,7 @@ class AlfabetoApp:
 
     def _note_input(self) -> None:
         self._quiet_since = self.clock()
+        self._hints.reset(self._quiet_since)
 
     def _typed_letter(self, char: str) -> bool:
         """A physical letter key picks the matching tile (real letter recognition)."""
@@ -565,7 +564,7 @@ class AlfabetoApp:
         now = self.clock()
         step = self.round.step
         self.shown_step = step
-        self._idle_hints = 0
+        self._hints.reset(self.clock())
         self._hint_target = None
         self._celebrating_choice = None
         self._point_until = 0.0
@@ -648,8 +647,7 @@ class AlfabetoApp:
         elif self.state is AppState.PLAYING:
             if (
                 not self.speech_queue.busy
-                and self._idle_hints < MAX_IDLE_HINTS
-                and now - self._quiet_since >= IDLE_HINT_SECONDS
+                and self._hints.is_due(now, self._quiet_since)
                 and not (self.tracker is not None and (self.tracker.dragging or self._auto_trace))
             ):
                 self._give_idle_hint(now)
@@ -695,9 +693,9 @@ class AlfabetoApp:
         step = self.round.step
         if step is None:
             return
-        self._idle_hints += 1
+        self._hints.fire(now)
         self.round.record_hint()
-        self._point_until = now + POINT_SECONDS
+        self._point_until = now + self._hints.animation_seconds(POINT_SECONDS)
         self._quiet_since = now
         if step.kind is StepKind.TRACE:
             self._start_pulse_until = now + START_PULSE_SECONDS * 2

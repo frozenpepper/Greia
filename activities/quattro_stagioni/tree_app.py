@@ -43,7 +43,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -97,7 +97,6 @@ else:
     from tree_renderer import FLY_SECONDS, TRY_HOLD_SECONDS, Flight, SceneMotion, SceneView, TitoCast, TreeRenderer
     from tree_services import EventPort, ProgressPort, SeasonsProgress
 
-IDLE_HINT_SECONDS = 6.0
 FIRST_MISSION_DELAY = 0.6
 PLACE_PAUSE = 1.5
 FINALE_SECONDS = 2.8
@@ -206,7 +205,7 @@ class TreeActivity:
         self._busy = False
         self._last_activity = clock()
         self._last_step = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self._welcomed = False
         self.enter_picker()
 
@@ -352,7 +351,7 @@ class TreeActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     def _ambient_tap(self, point: tuple[int, int]) -> None:
         """Free exploration: the tree rustles, Tito waves (never an answer)."""
@@ -635,16 +634,16 @@ class TreeActivity:
         round_ = self.round
         if round_ is None or self._busy or round_.mission is None:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        self._idle_hints += 1
         mission = round_.mission
         answer = mission.options.index(mission.answer)
-        self.cast.point(1.8)
+        self.cast.point(self._hints.animation_seconds(1.8))
         self.motion.glow_slot(mission.slot, now + GLOW_SECONDS)
-        if self._idle_hints == 1:
+        if step == 1:
             self.audio.say(round_.season.value)
-        elif self._idle_hints == 2:
+        elif step == 2:
             self.motion.hop_card(answer, now)
         else:
             self.motion.hop_card(answer, now)

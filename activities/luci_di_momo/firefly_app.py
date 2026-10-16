@@ -37,7 +37,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback, CastPose
+from greia_platform.activity_feedback import CastFeedback, CastPose, IdleHintScheduler
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -85,7 +85,6 @@ else:
     from firefly_renderer import Badge, FieldMotion, FireflyRenderer, Flight, MomoCast
     from firefly_services import EventPort, ProgressPort
 
-IDLE_HINT_SECONDS = 6.0
 FIRST_LEAD_MAX = 7.5
 ROUND_LEAD = 0.5
 CUE = 0.9
@@ -206,7 +205,7 @@ class FireflyActivity:
         self._dirty = True
         self._activated = False
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         # The first glimpse waits for Momo's welcome ("look closely ...").
         self.audio.play_welcome()
         welcome = min(FIRST_LEAD_MAX, self.audio.speech_seconds("welcome") + 0.3)
@@ -350,7 +349,7 @@ class FireflyActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     # -- round flow ---------------------------------------------------------------
 
@@ -591,12 +590,12 @@ class FireflyActivity:
     def _maybe_hint(self, now: float) -> None:
         if self._busy or not self.asking or self.timeline.busy:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        self._idle_hints += 1
-        if self._idle_hints == 1:
+        if step == 1:
             self.session.note_hint()
-        self.cast.point(1.8)
+        self.cast.point(self._hints.animation_seconds(1.8))
         if self.controls.replay.enabled:
             self.motion.replay_pulse = now
         elif self.session.missed:
@@ -604,7 +603,7 @@ class FireflyActivity:
             if current is not None:
                 for index in range(current.quantity):
                     self.motion.halos[index] = now + 0.15 * index
-        if self._idle_hints >= 2:
+        if step >= 2:
             self.audio.play_prompt_choose()
         self._dirty = True
 

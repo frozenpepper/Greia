@@ -33,7 +33,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.input_core import (
     DEFAULT_INPUT_POLICY,
     ControllerAxis,
@@ -89,8 +89,6 @@ else:
     from foresta_services import EventPort, ForestProgress, ProgressPort  # type: ignore[no-redef]
 
 
-IDLE_HINT_SECONDS = 6.0
-MAX_IDLE_HINTS = 3
 POINT_SECONDS = 2.6
 INTRO_MAX_SECONDS = 2.6
 CAUGHT_MIN_SECONDS = 2.0
@@ -169,7 +167,7 @@ class ForestaApp:
         self._frame_key: tuple | None = None
         self._last_tick = clock()
         self._quiet_since = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._quiet_since)
         self._point_until = 0.0
         self._hint = False
         self._sparkle: tuple[tuple[int, int], float] | None = None
@@ -379,6 +377,7 @@ class ForestaApp:
 
     def _note_input(self) -> None:
         self._quiet_since = self.clock()
+        self._hints.reset(self._quiet_since)
 
     def _move_basket(self, dt: float) -> None:
         if dt <= 0:
@@ -498,7 +497,7 @@ class ForestaApp:
     # -- targets ---------------------------------------------------------------------------------
     def _enter_target(self, *, opening: bool = False) -> None:
         now = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self.clock())
         self._hint = False
         self._point_until = 0.0
         self._revealed = False
@@ -529,8 +528,7 @@ class ForestaApp:
                 self._quiet_since = now
             if (
                 not self.speech_queue.busy
-                and self._idle_hints < MAX_IDLE_HINTS
-                and now - self._quiet_since >= IDLE_HINT_SECONDS
+                and self._hints.is_due(now, self._quiet_since)
             ):
                 self._give_idle_hint(now)
         elif self.state is AppState.CAUGHT:
@@ -552,9 +550,9 @@ class ForestaApp:
         self._pulse_phase = int(now * 4)
 
     def _give_idle_hint(self, now: float) -> None:
-        self._idle_hints += 1
+        self._hints.fire(now)
         self.round.record_hint()
-        self._point_until = now + POINT_SECONDS
+        self._point_until = now + self._hints.animation_seconds(POINT_SECONDS)
         self._quiet_since = now
         self._hint = True
         for letter in self.field.falling:

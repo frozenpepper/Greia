@@ -408,7 +408,8 @@ class OrcaBayActivity:
         """Graduated help: Tito points and the invited orca gets a ripple."""
 
         self._hinted = True
-        self._cast.point()
+        mission = self._missions.current
+        self._cast.point(mission.hints.animation_seconds(self._cast.POINT_SECONDS) if mission is not None else None)
 
     def _advance_missions(self, dt: float) -> None:
         meals = list(self.pod.meals)

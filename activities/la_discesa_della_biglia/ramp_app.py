@@ -38,7 +38,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -72,7 +72,6 @@ else:
     from ramp_renderer import Drag, RunCast, RunMotion, RunRenderer
     from ramp_services import EventPort, ProgressPort
 
-IDLE_HINT_SECONDS = 6.0
 CELEBRATE_SECONDS = 2.0
 MISS_PAUSE_SECONDS = 0.9
 SNAP_DELAY_SECONDS = 1.3
@@ -188,7 +187,7 @@ class MarbleRunActivity:
         self._ready_published = False
         self._activated = False
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self._last_retry_voice = -100.0
         self._last_clack = -100.0
         self._said_go = False
@@ -449,7 +448,7 @@ class MarbleRunActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     def _relayout(self) -> None:
         self.screen = pygame.display.get_surface() or self.screen
@@ -750,16 +749,16 @@ class MarbleRunActivity:
     def _maybe_hint(self, now: float) -> None:
         if self.state is not AppState.BUILD or self.timeline.busy or self.drag is not None:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        self._idle_hints += 1
         assert self.cast is not None
-        if self._idle_hints == 1:
+        if step == 1:
             # First nudge: Tito points and the next spot glows (no answer shown).
-            step = HintPlanner.next_step(self.board_state)
-            self.cast.point(1.8)
-            if step.slot is not None:
-                self.motion.pulse(step.slot, now)
+            plan = HintPlanner.next_step(self.board_state)
+            self.cast.point(self._hints.animation_seconds(1.8))
+            if plan.slot is not None:
+                self.motion.pulse(plan.slot, now)
             else:
                 self.motion.go_pulse = now
             self.audio.say("nudge")

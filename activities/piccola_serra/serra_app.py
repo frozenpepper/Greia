@@ -38,7 +38,7 @@ import pygame
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
 from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.activity_controls import ControlKit, ControlLayout, ControlTheme, PygameControlInput
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -86,8 +86,6 @@ else:
     from serra_renderer import Flight, PlantView, SceneView, SerraMotion, SerraRenderer, TitoCast
     from serra_services import EventPort, ProgressPort
 
-IDLE_HINT_SECONDS = 6.0
-MAX_IDLE_HINTS = 4
 RETRY_VOICE_GAP = 8.0
 MAX_SCHEDULED = 32
 NEED_SETTLE = 0.6
@@ -189,7 +187,7 @@ class SerraActivity:
         self._ready_published = False
         self._activated = False
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self._help_presses = 0
         self._last_retry_voice = -100.0
         self._start_choose()
@@ -313,7 +311,7 @@ class SerraActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     def _relayout(self) -> None:
         self.screen = pygame.display.get_surface() or self.screen
@@ -662,14 +660,14 @@ class SerraActivity:
         self._show_hint(self._help_presses)
 
     def _maybe_hint(self, now: float) -> None:
-        if self.busy or self.timeline.busy or self.motion.flights or self._idle_hints >= MAX_IDLE_HINTS:
+        if self.busy or self.timeline.busy or self.motion.flights:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        self._idle_hints += 1
-        if self._idle_hints == 1:
+        if step == 1:
             self.audio.say("nudge")
-        self._show_hint(self._idle_hints)
+        self._show_hint(step)
 
     def _show_hint(self, level: int) -> None:
         now = self.clock()

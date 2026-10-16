@@ -45,7 +45,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.input_core import InputEdge, SemanticAction, SemanticInputEvent
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
@@ -116,7 +116,6 @@ else:
     )
     from mirror_services import EventPort, ProgressPort
 
-IDLE_HINT_SECONDS = 6.0
 INTRO_SECONDS = 0.6
 FINISH_SECONDS = CELEBRATE_SECONDS + 0.2
 GLOW_SECONDS = 2.6
@@ -238,7 +237,7 @@ class MirrorActivity:
         self._welcomed = False
         self._dirty = True
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self._prompted = False
         self._corrects = 0
         self.start_set()
@@ -505,7 +504,7 @@ class MirrorActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     def _ambient_tap(self, point: tuple[int, int]) -> None:
         """Lilli repeats the goal when tapped; a tap elsewhere puts a tile back."""
@@ -642,7 +641,7 @@ class MirrorActivity:
         now = self.clock()
         source = puzzle.source_of(focus.cell)
         if source is not None:
-            self.motion.glow_source(source.cell, now + GLOW_SECONDS)
+            self.motion.glow_source(source.cell, now + self._hints.animation_seconds(GLOW_SECONDS))
         if misses >= 2:
             self.cast.point(1.8)
             self.motion.ghost = (focus.cell, focus.piece, now + GLOW_SECONDS)
@@ -792,24 +791,24 @@ class MirrorActivity:
         session = self.session
         if session is None or now < self._busy_until or self.dragging is not None:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        if not self._hints.is_due(now, self._last_activity):
             return
         target = session.next_unmatched()
         puzzle = session.current_puzzle
         if target is None or puzzle is None:
             return
-        self._idle_hints += 1
+        step = self._hints.fire(now)
         session.note_hint()
-        self.cast.point(1.8)
+        self.cast.point(self._hints.animation_seconds(1.8))
         source = puzzle.source_of(target.cell)
         if source is not None:
-            self.motion.glow_source(source.cell, now + GLOW_SECONDS)
-        if self._idle_hints == 1 and not self._prompted:
+            self.motion.glow_source(source.cell, now + self._hints.animation_seconds(GLOW_SECONDS))
+        if step == 1 and not self._prompted:
             self.audio.say("prompt_place")
             self._prompted = True
-        if self._idle_hints >= 2:
-            self.motion.ring_target(target.cell, now + GLOW_SECONDS)
-        if self._idle_hints >= 3 and target.piece in puzzle.tray:
+        if step >= 2:
+            self.motion.ring_target(target.cell, now + self._hints.animation_seconds(GLOW_SECONDS))
+        if step >= 3 and target.piece in puzzle.tray:
             self.motion.tray_hops[puzzle.tray.index(target.piece)] = now
         self._dirty = True
 

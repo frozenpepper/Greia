@@ -479,8 +479,8 @@ class AppLoopTests(unittest.TestCase):
         self.advance(app, 6.2)
         self.assertTrue(app.cast.pointing)
         self.assertEqual(app.motion.bubble_glow[0], 0)
-        self.advance(app, 6.2)
-        self.assertEqual(app._idle_hints, 2)
+        self.advance(app, 12.2)  # back-off: 6 s, then a further 12 s
+        self.assertEqual(app._hints.count, 2)
 
     def test_full_night_reaches_the_completion_scene_then_another_night(self) -> None:
         app = self.make(level=2, locale="it")

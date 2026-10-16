@@ -558,7 +558,8 @@ class AquariumApp:
         if mission is not None:
             self._hinted_uid = mission.target_uid
         if self._cast is not None:
-            self._cast.point()
+            seconds = mission.hints.animation_seconds(self._cast.POINT_SECONDS) if mission is not None else None
+            self._cast.point(seconds)
 
     def _advance_missions(self, dt: float) -> None:
         if self._missions is None:

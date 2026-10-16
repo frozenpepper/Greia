@@ -581,8 +581,8 @@ class AppLoopTests(unittest.TestCase):
         self.assertTrue(app.cast.pointing)
         self.assertIsNotNone(app.motion.slot_glow)
         self.assertNotIn(answer, app.motion.card_hops)
-        # The second hint comes 12 s after the last input; a hop lasts 0.5 s.
-        self.advance(5.5)
+        # Back-off: the second hint comes 12 s after the first; a hop lasts 0.5 s.
+        self.advance(11.8)
         self.assertIn(answer, app.motion.card_hops)
 
     def test_second_miss_glows_the_right_card(self) -> None:

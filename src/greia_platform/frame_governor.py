@@ -109,6 +109,7 @@ class FramePolicy:
     ambient_fps: float = 12.0
     ambient_after_seconds: float = 8.0
     idle_poll_seconds: float = 0.05
+    hint_animation_cap_seconds: float | None = None
 
     def __post_init__(self) -> None:
         if not 1.0 <= self.animation_fps <= 120.0:
@@ -119,6 +120,8 @@ class FramePolicy:
             raise ValueError("ambient_after_seconds must not be negative")
         if not 0.005 <= self.idle_poll_seconds <= 0.25:
             raise ValueError("idle_poll_seconds must be within 0.005..0.25")
+        if self.hint_animation_cap_seconds is not None and self.hint_animation_cap_seconds <= 0.0:
+            raise ValueError("hint_animation_cap_seconds must be positive")
 
     @property
     def frame_period(self) -> float:
@@ -136,6 +139,17 @@ class FramePolicy:
 
         return self.ambient_fps == 0.0
 
+    def hint_animation_seconds(self, nominal: float) -> float:
+        """Length of an idle-hint animation on this hardware class.
+
+        A hint animation is essential motion at full ``animation_fps``; on the
+        reference floor ``hint_animation_cap_seconds`` keeps it short so a hint
+        cannot hold the CPU for several seconds (ADR 0037 section 6a).
+        """
+
+        cap = self.hint_animation_cap_seconds
+        return nominal if cap is None else min(nominal, cap)
+
     @classmethod
     def standard(cls) -> "FramePolicy":
         return cls()
@@ -151,7 +165,12 @@ class FramePolicy:
         instantly on the next input.
         """
 
-        return cls(animation_fps=24.0, ambient_fps=0.0, ambient_after_seconds=6.0)
+        return cls(
+            animation_fps=24.0,
+            ambient_fps=0.0,
+            ambient_after_seconds=6.0,
+            hint_animation_cap_seconds=1.5,
+        )
 
     @classmethod
     def for_profile(cls, name: str) -> "FramePolicy":

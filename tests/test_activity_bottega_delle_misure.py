@@ -595,7 +595,7 @@ class AppLoopTests(unittest.TestCase):
         self.assertTrue(app.cast.pointing)
         self.assertEqual(app.audio.spoken, ["prompt_compare_longer"])
         self.assertEqual(app.task.hints, 1)
-        for _ in range(300):  # the second hint comes about six seconds later
+        for _ in range(450):  # back-off: the second hint comes about twelve seconds later
             self._advance(app, now, 1 / 30)
             if app.motion.pulses:
                 break

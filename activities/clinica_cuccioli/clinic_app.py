@@ -36,7 +36,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -199,7 +199,7 @@ class ClinicActivity:
         self._activated = False
         self._busy = False
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self.audio.say("ready.go")
         self._start_patient()
 
@@ -332,7 +332,7 @@ class ClinicActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     # -- patient flow ----------------------------------------------------------------
 
@@ -530,12 +530,12 @@ class ClinicActivity:
         phase = self.day.phase
         if self._busy or self.timeline.busy or phase not in {Phase.FIND, Phase.CARE}:
             return
-        wait = level_spec(self.day.level).idle_hint_seconds
-        if now - self._last_activity < wait * (self._idle_hints + 1):
+        patience = level_spec(self.day.level).idle_hint_seconds / IdleHintScheduler.DEFAULT_GAPS[0]
+        step = self._hints.poll(now, self._last_activity, patience=patience)
+        if not step:
             return
-        self._idle_hints += 1
-        self.cast.point(1.8)
-        if self._idle_hints == 1:
+        self.cast.point(self._hints.animation_seconds(1.8))
+        if step == 1:
             # First nudge: Momo points and the patient wiggles (no answer shown).
             self.motion.hop_start = now
         elif phase is Phase.FIND:

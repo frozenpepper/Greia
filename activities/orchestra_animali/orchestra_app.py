@@ -40,7 +40,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.localization import LocalizationError, LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_completion import (
@@ -111,7 +111,6 @@ INVITE_LEAD = 1.0
 CALL_TAIL = 0.7
 ECHO_SETTLE = 0.35
 ECHO_TIMEOUT = 2.4
-IDLE_HINT_SECONDS = 6.0
 THINK_SECONDS = 1.7
 CHEER_HOLD = 2.6
 INTRO_STEP = 0.22
@@ -256,7 +255,7 @@ class OrchestraApp:
         self._first_window = True
         self._last_input = clock()
         self._echo_since = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_input)
         self._last_sway = 0
         self.playalong.load_saved()
         self._start_concert()
@@ -411,6 +410,7 @@ class OrchestraApp:
 
     def _note_input(self) -> None:
         self._last_input = self.clock()
+        self._hints.reset(self._last_input)
 
     def _resize(self) -> None:
         self.screen = pygame.display.get_surface() or self.screen
@@ -582,7 +582,7 @@ class OrchestraApp:
         self._judging = False
         self._echo_since = now
         self._last_input = now
-        self._idle_hints = 0
+        self._hints.reset(now)
         self.motion.bubble = Bubble(invitation.lead, "echo", invitation.pattern.span)
         self.motion.borrow(invitation.lead, "pose_point", now + 1.4)
         self.audio.say(BAND[invitation.lead].character, "ready.go")
@@ -661,14 +661,14 @@ class OrchestraApp:
         invitation = self.session.current
         if invitation is None or self.attempt or self.timeline.busy:
             return
-        if now - self._last_input < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_input)
+        if not step:
             return
-        self._idle_hints += 1
         self.session.note_hint()
         lead = invitation.lead
-        if self._idle_hints == 1:
+        if step == 1:
             # Point and pulse the first player: "it's your turn, start here".
-            self.motion.borrow(lead, "pose_point", now + 1.8)
+            self.motion.borrow(lead, "pose_point", now + self._hints.animation_seconds(1.8))
             first = invitation.pattern.beats[0].voice
             x, y = musician_anchor(first)
             self.motion.ring((x, y - CAST_HEIGHT // 2), now)

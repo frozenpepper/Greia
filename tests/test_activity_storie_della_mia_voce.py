@@ -431,7 +431,7 @@ class StoryCardsAppLoopTests(unittest.TestCase):
         advance(app, clock, 6.5)
         self.assertTrue(app.cast.pointing)
         self.assertTrue(any(key.startswith("slot.") for key in app.motion.halos))
-        advance(app, clock, 6.5)
+        advance(app, clock, 12.5)  # back-off: 6 s, then a further 12 s
         self.assertTrue(any(key.startswith("card.") for key in app.motion.halos))
 
     def test_without_microphone_the_child_orders_and_watches_the_pictures(self) -> None:

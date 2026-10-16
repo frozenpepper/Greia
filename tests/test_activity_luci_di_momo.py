@@ -437,7 +437,7 @@ class FireflyAppTests(unittest.TestCase):
         self.assertTrue(app.cast.pointing)
         self.assertIsNotNone(app.motion.replay_pulse)
         self.assertEqual(audio.speech.count("prompt_choose"), spoken)
-        self._advance(app, now, 6.2)
+        self._advance(app, now, 12.2)  # back-off: 6 s, then a further 12 s
         self.assertEqual(audio.speech.count("prompt_choose"), spoken + 1)
         current = app.session.current_round
         assert current is not None

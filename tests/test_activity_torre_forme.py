@@ -629,9 +629,9 @@ class AppLoopTests(unittest.TestCase):
         self.assertTrue(app.cast.pointing)
         self.assertEqual(app.motion.target_glow[0], step.placement)
         self.assertNotIn(step.kit_index, app.motion.tray_hops)
-        self.advance(app, 6.2)
+        self.advance(app, 12.2)  # back-off: 6 s, +12 s, +24 s
         self.assertEqual(app.session.hints, 2)
-        self.advance(app, 6.2)
+        self.advance(app, 24.2)
         self.assertIsNotNone(app.motion.glide)
 
     def test_first_visit_demonstrates_once(self) -> None:

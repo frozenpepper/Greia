@@ -542,7 +542,7 @@ class AppLoopTests(unittest.TestCase):
         self.assertIn("nudge", app.audio.spoken)
         self.assertIsNotNone(app.motion.symptom)
         self.assertIsNone(app.motion.tool)
-        self._advance(app, now, 6.3)
+        self._advance(app, now, 12.3)  # back-off: 6 s, then a further 12 s
         self.assertEqual(app.motion.tool[0], f"care.{CURE[app.visit.cycle.need].value}")
 
     def test_hint_button_points_first_then_shows_the_tool(self) -> None:

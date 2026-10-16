@@ -555,7 +555,7 @@ class AppLoopTests(unittest.TestCase):
         self.assertIn("nudge", app.audio.spoken)
         self.assertIsNone(app.motion.demo, "the first nudge only points")
         self.assertTrue(app.motion.pulses)
-        self._advance(app, now, 6.2)
+        self._advance(app, now, 12.2)  # back-off: 6 s, then a further 12 s
         self.assertIsNotNone(app.motion.demo)
 
     def test_layout_stays_clear_of_protected_chrome_at_every_size(self) -> None:

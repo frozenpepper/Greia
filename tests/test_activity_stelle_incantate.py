@@ -547,7 +547,7 @@ class AppLoopTests(unittest.TestCase):
         self.assertTrue(app.cast.pointing)
         self.assertIn(0, app.motion.pulses)  # first: where we are
         self.assertIsNone(app.motion.trail)
-        self._advance(app, now, 6.2)
+        self._advance(app, now, 12.2)  # back-off: 6 s, then a further 12 s
         self.assertEqual(round_.hints, 2)
         self.assertEqual(app.motion.trail[:2], (0, 1))  # then: the way
         self.assertFalse(round_.demonstrated)

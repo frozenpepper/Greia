@@ -13,16 +13,16 @@ and Activity events.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 import random
 from typing import Any, Callable, Sequence
 
+from greia_platform.activity_feedback import IdleHintScheduler
+
 if __package__:
     from .acquarium_content import (
         FIRST_MISSION_DELAY_SECONDS,
-        MISSION_HINT_REPEAT_SECONDS,
-        MISSION_HINT_SECONDS,
         MISSION_IDLE_RETIRE_SECONDS,
         MISSIONS_PER_PEARL,
         NEXT_MISSION_DELAY_SECONDS,
@@ -30,8 +30,6 @@ if __package__:
 else:
     from acquarium_content import (
         FIRST_MISSION_DELAY_SECONDS,
-        MISSION_HINT_REPEAT_SECONDS,
-        MISSION_HINT_SECONDS,
         MISSION_IDLE_RETIRE_SECONDS,
         MISSIONS_PER_PEARL,
         NEXT_MISSION_DELAY_SECONDS,
@@ -51,7 +49,8 @@ class Mission:
     species_id: str
     target_uid: int
     age: float = 0.0
-    next_hint_at: float = MISSION_HINT_SECONDS
+    # Back-off nudges measured on the mission's own age (ADR 0037 section 6b).
+    hints: IdleHintScheduler = field(default_factory=IdleHintScheduler)
 
     @property
     def text_key(self) -> str:
@@ -119,8 +118,7 @@ class MissionDirector:
         mission.age += dt
         if mission.age >= MISSION_IDLE_RETIRE_SECONDS:
             return self._retire()
-        if mission.age >= mission.next_hint_at:
-            mission.next_hint_at = mission.age + MISSION_HINT_REPEAT_SECONDS
+        if mission.hints.poll(mission.age):
             return MissionOutcome.HINT
         return MissionOutcome.NONE
 
@@ -145,7 +143,7 @@ class MissionDirector:
 
         if self.current is None:
             return False
-        self.current.next_hint_at = self.current.age + MISSION_HINT_REPEAT_SECONDS
+        self.current.hints.reset(self.current.age)
         return True
 
     # -- internals ---------------------------------------------------------

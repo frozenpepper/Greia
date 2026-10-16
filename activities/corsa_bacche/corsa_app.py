@@ -44,7 +44,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.input_core import (
     DEFAULT_INPUT_POLICY,
     ControllerAxis,
@@ -84,7 +84,6 @@ else:
     from corsa_renderer import CorsaMotion, CorsaRenderer, HintTrail, MomoCast
     from corsa_services import EventPort, ProgressPort
 
-IDLE_HINT_SECONDS = 6.0
 CELEBRATE_SECONDS = 2.0
 DEMO_LEAD_SECONDS = 0.6
 RETRY_VOICE_GAP = 8.0
@@ -200,7 +199,7 @@ class CorsaActivity:
         self._stick_dir: Direction | None = None
         self._full_frame = True  # next frame must repaint everything
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self._last_retry_voice = -100.0
         self._start_garden()
 
@@ -456,7 +455,7 @@ class CorsaActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     def _relayout(self) -> None:
         self.screen = pygame.display.get_surface() or self.screen
@@ -659,20 +658,20 @@ class CorsaActivity:
         garden = self.garden
         if garden.momo.moving or self.timeline.busy or garden.cleared or self.motion.trail is not None:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        self._idle_hints += 1
         assert self.cast is not None
-        self.cast.point(1.8)
+        self.cast.point(self._hints.animation_seconds(1.8))
         target = garden.next_berry()
         if target is not None:
             self.motion.pulse([target], now)
-        if self._idle_hints == 1:
+        if step == 1:
             self.audio.say("nudge")
             return
         # Later nudges show the way (counted for adaptation), longer each time.
         garden.summary.hints += 1
-        self._show_trail(avoid=True, cells=2 + self._idle_hints if self._idle_hints < 4 else None)
+        self._show_trail(avoid=True, cells=2 + step if step < 4 else None)
 
     def _text(self, key: str, default: str) -> str:
         if self.resources is None:

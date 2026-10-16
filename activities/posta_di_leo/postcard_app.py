@@ -38,6 +38,7 @@ import time
 
 import pygame
 
+from greia_platform.activity_feedback import IdleHintScheduler
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
 from greia_platform.frame_governor import FrameGovernor, FrameKind
 from greia_platform.activity_controls import (
@@ -105,7 +106,6 @@ else:
     from postcard_renderer import FLIP_SECONDS, SEND_SECONDS, CastActor, FxBurst, Motion, PostcardRenderer
     from postcard_services import EventPort, StoragePort
 
-IDLE_HINT_SECONDS = 6.0
 HALO_SECONDS = 1.8
 ADVANCE_DELAY = 0.45
 DRAFT_SAVE_IDLE = 2.5
@@ -259,7 +259,7 @@ class PostcardActivity:
         self._dirty = True
         self._activated = False
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self._caret_on = True
         self._caret_flip = clock()
         self._draft_saved_revision = self.draft.revision
@@ -608,7 +608,7 @@ class PostcardActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     def _text(self, key: str) -> str:
         if self.resources is None:
@@ -1323,14 +1323,13 @@ class PostcardActivity:
             return
         if self.step == "message" and self.draft.text:
             return  # writing is unhurried
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        self._idle_hints += 1
-        if self._idle_hints > 3:
-            return
-        until = now + HALO_SECONDS
+        halo = self._hints.animation_seconds(HALO_SECONDS)
+        until = now + halo
         missing = self._missing_step()
-        self.host.point(HALO_SECONDS)
+        self.host.point(halo)
         if missing is None:
             self.motion.halos["send"] = until
         elif missing != self.step:

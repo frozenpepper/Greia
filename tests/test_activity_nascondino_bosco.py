@@ -422,7 +422,7 @@ class AppLoopTests(unittest.TestCase):
         self.advance(6.3)
         self.assertTrue(app.cast.pointing)
         self.assertFalse(app.motion.glowing(target, self.clock.now))
-        self.advance(6.3)
+        self.advance(12.3)  # back-off: 6 s, then a further 12 s
         self.assertTrue(app.motion.glowing(target, self.clock.now))
 
     def test_second_miss_demonstrates_with_a_glow(self) -> None:

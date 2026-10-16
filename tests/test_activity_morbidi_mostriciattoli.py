@@ -655,7 +655,7 @@ class AppLoopTests(unittest.TestCase):
         now[0] += 7
         app.step_frame()
         self.assertIn("save", app.effects.halos)
-        now[0] += 7
+        now[0] += 13  # back-off: the nudging second hint comes 12 s after the first
         app.step_frame()
         self.assertIn("voice.nudge", app.audio.played)
 

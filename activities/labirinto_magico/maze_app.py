@@ -33,7 +33,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.input_core import (
     DEFAULT_INPUT_POLICY,
     ControllerAxis,
@@ -73,7 +73,6 @@ else:
     from maze_renderer import TITO_SCALE, FireflyFlight, MazeCast, MazeMotion, MazeRenderer
     from maze_services import EventPort, ProgressPort
 
-IDLE_HINT_SECONDS = 6.0
 CELEBRATE_SECONDS = 1.9
 DEMO_LEAD_SECONDS = 0.6
 HINT_CELLS = 3
@@ -185,7 +184,7 @@ class LabyrinthActivity:
         self._stick = (0.0, 0.0)
         self._stick_dir: Cell | None = None
         self._last_activity = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self._last_retry_voice = -100.0
         self._stars_this_maze = 0
         self._start_maze()
@@ -376,7 +375,7 @@ class LabyrinthActivity:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     def _relayout(self) -> None:
         self.screen = pygame.display.get_surface() or self.screen
@@ -648,18 +647,18 @@ class LabyrinthActivity:
     def _maybe_hint(self, now: float) -> None:
         if self._busy or self.walker.moving or self.timeline.busy or self.maze.solved:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        self._idle_hints += 1
         assert self.cast is not None
-        self.cast.point(1.8)
+        self.cast.point(self._hints.animation_seconds(1.8))
         self.motion.pulse([self.maze.next_target()], now)
-        if self._idle_hints == 1:
+        if step == 1:
             self.audio.say("nudge")
             return
         # Later nudges show the first steps of the way (counted for adaptation).
         self.maze.summary.hints += 1
-        self._send_firefly(HINT_CELLS + self._idle_hints - 2)
+        self._send_firefly(HINT_CELLS + step - 2)
 
 
 def _safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:

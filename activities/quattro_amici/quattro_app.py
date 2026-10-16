@@ -39,7 +39,7 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
+from greia_platform.activity_feedback import CastFeedback, IdleHintScheduler
 from greia_platform.input_core import InputEdge, SemanticAction, SemanticInputEvent
 from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
@@ -118,8 +118,6 @@ else:
         QuattroProgress,
     )
 
-IDLE_HINT_SECONDS = 6.0
-MAX_IDLE_HINTS = 3
 AUTO_HINT_SECONDS = 2.5
 HINT_GLOW_SECONDS = 3.0
 LEO_THINK_SECONDS = (0.7, 1.2)
@@ -262,7 +260,7 @@ class QuattroApp:
         self._turn_serial = 0
         self._last_activity = clock()
         self._last_step = clock()
-        self._idle_hints = 0
+        self._hints = IdleHintScheduler(now=self._last_activity)
         self._losses_in_a_row = 0
         self._game_serial = 0
         self._pending: DropResult | None = None
@@ -439,7 +437,7 @@ class QuattroApp:
 
     def _note_activity(self) -> None:
         self._last_activity = self.clock()
-        self._idle_hints = 0
+        self._hints.reset(self._last_activity)
 
     def tap(self, raw_pos: tuple[int, int]) -> bool:
         """Deliver one complete tap at a physical position (tests/tools)."""
@@ -784,20 +782,19 @@ class QuattroApp:
     def _maybe_hint(self, now: float) -> None:
         if self.phase not in (Phase.TURN, Phase.BETWEEN):
             return
-        if self._idle_hints >= MAX_IDLE_HINTS:
+        step = self._hints.poll(now, self._last_activity)
+        if not step:
             return
-        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
-            return
-        self._idle_hints += 1
+        point = self._hints.animation_seconds(1.8)
         if self.phase is Phase.BETWEEN:
-            self.friends[Player.FLASH].show("pose_point", 1.8)
+            self.friends[Player.FLASH].show("pose_point", point)
             self._dirty = True
             return
         player = self.model.current_player
-        self.friends[player].show("pose_point", 1.8)
+        self.friends[player].show("pose_point", point)
         self.motion.pulse_start = now
-        if self._idle_hints >= 2:
-            self._glow_suggestion(player)
+        if step >= 2:
+            self._glow_suggestion(player, self._hints.animation_seconds(HINT_GLOW_SECONDS))
         self._dirty = True
 
     def _auto_hint(self, serial: int) -> None:
@@ -806,12 +803,12 @@ class QuattroApp:
         if self._glow_suggestion(self.model.current_player):
             self.friends[self.model.current_player].show("pose_point", 1.6)
 
-    def _glow_suggestion(self, player: Player) -> bool:
+    def _glow_suggestion(self, player: Player, seconds: float = HINT_GLOW_SECONDS) -> bool:
         hint = suggest_column(self.model.board, player)
         if hint is None:
             return False
         self.motion.glow_col = hint[0]
-        self.motion.glow_until = self.clock() + HINT_GLOW_SECONDS
+        self.motion.glow_until = self.clock() + seconds
         self._dirty = True
         return True
 
