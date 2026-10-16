@@ -766,6 +766,11 @@ _VALIDATED_TREE_CACHE_LIMIT = 256
 _validated_tree_cache: dict[tuple[str, tuple[object, ...]], tuple[tuple[tuple[object, ...], ...], str]] = {}
 
 
+def clear_activity_validation_cache() -> None:
+    """Forget memoised tree validations (tests that observe cold validation)."""
+    _validated_tree_cache.clear()
+
+
 def _tree_fingerprint(root: Path) -> tuple[tuple[object, ...], ...]:
     """Cheap identity of a package tree: every entry's relative path, type,
     size, mtime_ns, ctime_ns and inode (``os.scandir``; symlinks not followed).

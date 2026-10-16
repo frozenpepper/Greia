@@ -354,6 +354,11 @@ class LauncherBootstrapTests(unittest.TestCase):
                 calls: list[str] = []
                 import greia_platform.activities as activities
 
+                # Earlier tests in the same process may have validated the same
+                # unchanged tree; the registry memoises that (60b47498). This
+                # test observes a cold fallback validation, so start cold.
+                activities.clear_activity_validation_cache()
+
                 real_validate = activities.ActivityRegistry._validate_tree
 
                 def _counting_validate(self_obj: object, root: object) -> None:  # type: ignore[no-untyped-def]
