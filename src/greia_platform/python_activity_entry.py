@@ -13,6 +13,11 @@ with ordinary script semantics:
   interpreter from prepending the working directory first, so the Activity
   directory cannot shadow ``greia_platform`` before this module is running).
 
+Before the script runs, the entry also routes ``pygame.mixer`` through the
+platform's idle mixer lease (:mod:`greia_platform.activity_mixer_lease`), so
+every Activity's audio device closes after 10 s of silence and reopens on the
+next sound without Activity code changes.
+
 This module grants nothing: it runs inside the same sandbox, environment and
 identity as the Activity and has no access the Activity itself lacks.
 """
@@ -40,9 +45,21 @@ def run_activity_script(argv: Sequence[str]) -> None:
     if not script.endswith(".py") or not os.path.isfile(script):
         raise ActivityEntryError(f"Activity entry script is not a .py file: {script}")
     apply_curated_interpreter_startup()
+    _install_mixer_lease()
     sys.argv[:] = [script, *argv[1:]]
     sys.path.insert(0, os.path.dirname(script))
     runpy.run_path(script, run_name="__main__")
+
+
+def _install_mixer_lease() -> None:
+    """Fail-soft: without the lease the mixer simply stays open, as before."""
+
+    try:
+        from .activity_mixer_lease import install_activity_mixer_lease
+
+        install_activity_mixer_lease()
+    except Exception as exc:  # noqa: BLE001 - never block the Activity launch
+        print(f"greia: idle audio release unavailable: {exc}", file=sys.stderr)
 
 
 def main(argv: Sequence[str] | None = None) -> int:

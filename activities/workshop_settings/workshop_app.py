@@ -189,8 +189,6 @@ class MyGreiaApp:
             step = -1 if event.mod & pygame.KMOD_SHIFT else 1
             self._on_tab(self._neighbour_tab(step), from_keyboard=True)
             return
-        if event.type == pygame.MOUSEMOTION:
-            self._dirty = True  # the Greia pointer is drawn with each frame
         translated = self._input.translate(event)
         if translated is not None:
             self._dispatch(translated)

@@ -28,9 +28,18 @@ an :class:`~greia_platform.input_wait.InputWaiter` for at most
 (hints, autosave) still run, but the loop no longer spins 20 times a second
 while the child looks at a still picture (Acer sweep at 15212f44: ~12% CPU).
 Any queued event (input, a timer, a worker's posted event) ends the wait at
-once.  While the Pygame mixer is audible the wait stays at the short
-``idle_poll_seconds`` so voice-completion polling keeps its old latency, and
-``wake_at()`` lets an Activity request an exact earlier wake.
+once: on the Acer the SDL wait returns within ~1 ms of the X event, and a
+first input after a still screen is handled ~3 ms later.  Input that arrives
+*while* a full frame renders (150-220 ms at 1024x600 on the Atom) waits for
+that frame, which is why a static screen must not render on a timer: on the
+reference floor ``keepalive_seconds`` therefore pauses with decorative motion
+once the child is idle (it measured 18% CPU and ~150-200 ms extra input
+latency in Painting).  While the Pygame mixer is audible the wait stays at the
+short ``idle_poll_seconds`` so voice-completion polling keeps its old
+latency, and ``wake_at()`` lets an Activity request an exact earlier wake.
+Every ``wait()`` also lets :mod:`greia_platform.activity_mixer_lease` close a
+mixer that has been silent for 10 s (an open SDL mixer alone costs ~5% CPU on
+the Atom).
 
 Typical loop::
 
@@ -57,6 +66,7 @@ from typing import Callable, Mapping
 
 import pygame
 
+from .activity_mixer_lease import release_idle_activity_audio
 from .input_wait import InputWaiter, PlatformInputWaiter, SlicedInputWaiter, audio_playing
 
 FRAME_PROFILE_ENV = "GREIA_FRAME_PROFILE"
@@ -237,6 +247,7 @@ class FrameGovernor:
         sleep: Callable[[float], None] = time.sleep,
         input_waiter: InputWaiter | None = None,
         audio_busy: Callable[[], bool] = audio_playing,
+        audio_idle: Callable[[], object] = release_idle_activity_audio,
     ) -> None:
         if keepalive_seconds is not None and keepalive_seconds <= 0.0:
             raise ValueError("keepalive_seconds must be positive")
@@ -255,11 +266,13 @@ class FrameGovernor:
                 )
         self._input_waiter = input_waiter
         self._audio_busy = audio_busy
+        self._audio_idle = audio_idle
         self._wake_at: float | None = None
         # Migration aids for loops that historically redrew every frame and
         # have no complete dirty tracking: every non-motion input (and motion
         # with a button held, i.e. a drag) invalidates, and ``keepalive``
-        # bounds how stale a state change missed by the Activity can get.
+        # bounds how stale a state change missed by the Activity can get
+        # while the child is active (see ``_keepalive_active``).
         self._redraw_on_input = bool(redraw_on_input)
         self._keepalive = keepalive_seconds
         now = clock()
@@ -267,6 +280,7 @@ class FrameGovernor:
         self._pointer = False
         self._animate_until = now
         self._last_input = now
+        self._keepalive_base = now
         self._last_present: float | None = None
         self._next_due: float | None = None  # when the loop should wake next
         self._last_wake: float | None = None
@@ -302,7 +316,7 @@ class FrameGovernor:
 
         kind = getattr(event, "type", None)
         if kind in _INPUT_EVENTS:
-            self._last_input = self._clock()
+            self._record_input()
             if kind == pygame.MOUSEMOTION:
                 self._pointer = True
                 if self._redraw_on_input and any(getattr(event, "buttons", ()) or ()):
@@ -315,7 +329,16 @@ class FrameGovernor:
     def note_input(self) -> None:
         """Record child input that did not arrive as a Pygame event."""
 
-        self._last_input = self._clock()
+        self._record_input()
+
+    def _record_input(self) -> None:
+        now = self._clock()
+        if self.ambient_frozen:
+            # The keepalive was paused: restart its period from this input so
+            # the child's first move gets a cheap pointer frame, not a timed
+            # full re-render of an unchanged screen.
+            self._keepalive_base = now
+        self._last_input = now
 
     def events(self) -> list[pygame.event.Event]:
         """Drain the Pygame queue (looked up at call time) and note each event."""
@@ -357,11 +380,8 @@ class FrameGovernor:
 
         now = self._clock()
         essential = dirty or self._dirty or animating or now < self._animate_until
-        if (
-            self._keepalive is not None
-            and self._last_present is not None
-            and now - self._last_present >= self._keepalive
-        ):
+        keepalive_due = self._keepalive_due()
+        if keepalive_due is not None and now >= keepalive_due:
             essential = True
         period = self.policy.frame_period
         if ambient and not essential and self.ambient_throttled:
@@ -391,6 +411,26 @@ class FrameGovernor:
         self.frames_presented += 1
         return kind
 
+    def _keepalive_active(self) -> bool:
+        """Keepalive frames run unless decoration is frozen (idle child, floor).
+
+        A keepalive frame is a full re-render on a timer.  On the reference
+        floor that is ~180 ms of CPU per second and any input arriving during
+        it waits for it, so once the child is idle the safety net pauses like
+        decorative motion does.  The next input restarts its period (a tap or
+        key also invalidates through ``redraw_on_input``; a plain pointer move
+        stays a cheap ``POINTER`` frame).
+        """
+
+        return self._keepalive is not None and not self.ambient_frozen
+
+    def _keepalive_due(self) -> float | None:
+        """When the next keepalive frame is due, or None while it is paused."""
+
+        if not self._keepalive_active() or self._last_present is None:
+            return None
+        return max(self._last_present, self._keepalive_base) + float(self._keepalive or 0.0)
+
     def wait(self, *, polling: bool = False) -> float:
         """Sleep until the next frame or poll is due; return the seconds slept.
 
@@ -402,6 +442,7 @@ class FrameGovernor:
         repeats.
         """
 
+        self._audio_idle()
         now = self._clock()
         # ``frame()`` re-arms the wake time every iteration; consume it so a
         # loop that polls without presenting never sleeps on a stale value.
@@ -437,8 +478,9 @@ class FrameGovernor:
         limit = policy.idle_block_seconds
         if self._audio_busy():
             limit = policy.idle_poll_seconds
-        if self._keepalive is not None and self._last_present is not None:
-            limit = min(limit, self._last_present + self._keepalive - now)
+        keepalive_due = self._keepalive_due()
+        if keepalive_due is not None:
+            limit = min(limit, keepalive_due - now)
         if self._wake_at is not None:
             limit = min(limit, self._wake_at - now)
             if limit <= 0.0:

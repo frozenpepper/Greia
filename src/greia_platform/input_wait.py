@@ -96,7 +96,7 @@ class SlicedInputWaiter:
             self._sleep(min(self._slice, remaining))
 
 
-def _sdl_library_candidates() -> list[str]:
+def sdl_library_candidates() -> list[str]:
     """Paths/sonames that may name the SDL2 instance Pygame already loaded."""
 
     package = os.path.dirname(pygame.__file__)
@@ -113,7 +113,7 @@ def load_initialized_sdl() -> ctypes.CDLL | None:
     is never used.
     """
 
-    for candidate in _sdl_library_candidates():
+    for candidate in sdl_library_candidates():
         try:
             library = ctypes.CDLL(candidate)
             was_init = library.SDL_WasInit
@@ -220,4 +220,5 @@ __all__ = [
     "audio_playing",
     "load_initialized_sdl",
     "queue_has_events",
+    "sdl_library_candidates",
 ]

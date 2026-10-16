@@ -288,6 +288,53 @@ class FrameGovernorTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             FrameGovernor(POLICY, keepalive_seconds=0.0)
 
+    def test_keepalive_pauses_with_frozen_decoration_and_restarts_from_input(self) -> None:
+        # Acer a8be76d7 follow-up: a 1 s keepalive re-rendered Painting's still
+        # screen every second (~180 ms per frame, ~18% CPU) and input arriving
+        # meanwhile waited for the render.
+        fake = FakeTime()
+        static = FramePolicy(animation_fps=20.0, ambient_fps=0.0, ambient_after_seconds=2.0)
+        frames = FrameGovernor(static, keepalive_seconds=1.0, redraw_on_input=True, clock=fake.clock, sleep=fake.sleep)
+        frames.frame()
+        start = fake.now
+        while fake.now - start < 10.0:
+            frames.frame()
+            frames.wait()
+        # Keepalive frames only while the child counts as active (< 2 s):
+        # the first frame and the one at +1 s, then nothing for 8 s.
+        self.assertEqual(frames.frames_presented, 2)
+        # The first move after the idle period is a cheap pointer frame, not
+        # a keepalive re-render of the unchanged screen.
+        frames.note_event(motion())
+        self.assertIs(frames.frame(), FrameKind.POINTER)
+        fake.now += 0.5
+        self.assertIs(frames.frame(), FrameKind.SKIP)
+        fake.now += 0.6
+        self.assertIs(frames.frame(), FrameKind.FULL)  # active again: keepalive resumed
+
+    def test_standard_keepalive_is_unchanged_by_idle(self) -> None:
+        fake = FakeTime()
+        frames = FrameGovernor(POLICY, keepalive_seconds=1.0, clock=fake.clock, sleep=fake.sleep)
+        frames.frame()
+        start = fake.now
+        while fake.now - start < 10.0:
+            frames.frame()
+            frames.wait()
+        self.assertGreaterEqual(frames.frames_presented, 10)
+
+    def test_wait_drives_the_idle_audio_release(self) -> None:
+        fake = FakeTime()
+        calls: list[float] = []
+        frames = FrameGovernor(
+            POLICY, clock=fake.clock, sleep=fake.sleep,
+            input_waiter=_FakeWaiter(fake), audio_busy=lambda: False,
+            audio_idle=lambda: calls.append(fake.now),
+        )
+        frames.frame()
+        frames.wait()
+        frames.wait(polling=True)
+        self.assertEqual(len(calls), 2)
+
     def test_polling_cadence_tracks_previous_wake_like_clock_tick(self) -> None:
         fake = FakeTime()
         frames = governor(fake)
