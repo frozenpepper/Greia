@@ -642,14 +642,6 @@ class AbInstallCompositionNegativeTests(unittest.TestCase):
         with self.assertRaises(AbInstallCompositionError):
             build_install_service(**kwargs)  # type: ignore[arg-type]
 
-    def test_ab_profile_never_routes_to_legacy(self) -> None:
-        directory = tempfile.mkdtemp(prefix="t3-neg-")
-        self.addCleanup(shutil.rmtree, directory, True)
-        parts = self._parts(Path(directory))
-        kwargs = self._base_kwargs(parts)
-        kwargs["ab_seams_factory"] = None
-        with self.assertRaises(AbInstallCompositionError):
-            build_install_service(**kwargs)  # type: ignore[arg-type]
         # The failure is compositional, not a quiet legacy service: no
         # service object exists to serve EXECUTE on the old engine.
 

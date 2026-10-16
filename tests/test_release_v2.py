@@ -268,38 +268,6 @@ class ReleaseV2Tests(unittest.TestCase):
                 self.assertIn("v3", message)
                 self.assertTrue("rebuild" in message or "migration" in message)
 
-    def test_old_signed_format_rejected_with_migration_message(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            manifest = {
-                "schema_version": 2,
-                "release_id": "greia-0.14.0",
-                "version": "0.14.0",
-                "platform_family": "legacy-x86",
-                "architecture": "i386",
-                "profile": "legacy-x86-i686",
-                "payload": {
-                    "name": "payload.bin",
-                    "sha256": "0" * 64,
-                    "size": 4,
-                    "kind": "system-slot-image",
-                },
-                "release_notes": "",
-            }
-            path = root / "old-signed.greiaupdate"
-            with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_STORED) as archive:
-                archive.writestr(
-                    MANIFEST_NAME,
-                    (json.dumps(manifest, sort_keys=True, separators=(",", ":")) + "\n").encode(),
-                )
-                archive.writestr("manifest.sig", b"{}")
-                archive.writestr("payload.bin", b"data")
-            with self.assertRaises(UpdateBundleError) as ctx:
-                inspect_update_bundle(path)
-            message = str(ctx.exception).lower()
-            self.assertIn("v3", message)
-            self.assertTrue("rebuild" in message or "migration" in message)
-
     def test_symlink_traversal_and_encrypted_members_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

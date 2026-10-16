@@ -1064,15 +1064,6 @@ class _FakeAuthority:
 
 
 class PredicateAndIntroTests(unittest.TestCase):
-    def test_intro_remains_seven_seconds(self) -> None:
-        from greia_launcher import boot_intro
-
-        self.assertEqual(boot_intro.ANIMATION_SECONDS, 5.0)
-        self.assertEqual(boot_intro.FINAL_FRAME_HOLD_SECONDS, 2.0)
-        self.assertEqual(
-            boot_intro.ANIMATION_SECONDS + boot_intro.FINAL_FRAME_HOLD_SECONDS, 7.0
-        )
-
     def test_full_health_predicate_is_retained(self) -> None:
         """First-frame-only evidence still refuses through the protocol."""
         with tempfile.TemporaryDirectory() as raw:

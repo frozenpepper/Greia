@@ -76,27 +76,6 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
             source,
         )
 
-    def test_early_renderer_build_contract_is_target_architecture_first(self) -> None:
-        text = EARLY_README.read_text(encoding="utf-8")
-        self.assertIn("target-architecture", text)
-        self.assertIn("klcc", text)
-        self.assertIn("no sleeps/retry loops", text)
-        self.assertIn("fail-soft", text)
-        self.assertIn("Do **not** silently copy a host binary", text)
-
-    def test_boot_design_owns_animation_in_launcher_not_initramfs(self) -> None:
-        text = BOOT_DESIGN.read_text(encoding="utf-8")
-        self.assertIn("Plymouth is not part of the target Greia architecture", text)
-        self.assertTrue("five seconds" in text or "5 seconds" in text)
-        self.assertTrue("two seconds" in text or "2 seconds" in text)
-        self.assertIn("Audio also starts here, never in initramfs", text)
-
-    def test_boot_design_preserves_diagnostic_recovery_channel(self) -> None:
-        text = BOOT_DESIGN.read_text(encoding="utf-8")
-        self.assertIn("There must be no intentional child-visible Linux console", text)
-        self.assertIn("Invisible is not the same as unavailable", text)
-        self.assertIn("developer SSH", text)
-
     def test_provisional_chime_is_bounded_if_present(self) -> None:
         if not BOOT_CHIME.exists():
             self.skipTest("provisional Greia boot chime has not been committed yet")

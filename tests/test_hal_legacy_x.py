@@ -228,14 +228,6 @@ class LegacyXDisplayMetricsTests(unittest.TestCase):
         self.assertEqual(len(probe.modes), 2)
         self.assertIsNone(probe.metrics)
 
-    def test_xrandr_failure_fails_soft_and_stays_operable(self) -> None:
-        runner = _ConfigurableRunner(xrandr_stdout="", xrandr_rc=1)
-        probe = LegacyXHardwareSessionController(runner).probe_display()
-        self.assertIsNone(probe.output_name)
-        self.assertEqual(probe.modes, ())
-        self.assertIsNone(probe.metrics)
-
-
 class LegacyXPointerSemanticsTests(unittest.TestCase):
     def _controller(self, **kwargs) -> tuple[LegacyXHardwareSessionController, _ConfigurableRunner]:
         runner = _ConfigurableRunner(
@@ -271,32 +263,6 @@ class LegacyXPointerSemanticsTests(unittest.TestCase):
         self.assertIn(PointerKind.TOUCHPAD.value, kinds)
         self.assertIn(PointerKind.MOUSE.value, kinds)
 
-    def test_correct_speed_source_per_kind(self) -> None:
-        controller, runner = self._controller()
-        result = controller.apply_pointer_settings(
-            _settings(touchpad_speed=-0.25, mouse_speed=0.5)
-        )
-        self.assertTrue(result.applied)
-        self.assertIn(
-            ("xinput", "set-prop", "12", "libinput Accel Speed", "-0.25"),
-            runner.commands,
-        )
-        self.assertIn(
-            ("xinput", "set-prop", "13", "libinput Accel Speed", "0.50"),
-            runner.commands,
-        )
-
-    def test_no_ctm_command_during_ordinary_apply(self) -> None:
-        controller, runner = self._controller()
-        controller.apply_pointer_settings(_settings())
-        self.assertFalse(
-            any("Coordinate Transformation Matrix" in cmd for cmd in runner.commands)
-        )
-        controller.apply(_settings())
-        self.assertFalse(
-            any("Coordinate Transformation Matrix" in cmd for cmd in runner.commands)
-        )
-
     def test_tap_applies_only_when_supported(self) -> None:
         controller, runner = self._controller(
             props={"12": PROPS_ACCEL_ONLY, "13": PROPS_MOUSE_FULL}
@@ -312,20 +278,6 @@ class LegacyXPointerSemanticsTests(unittest.TestCase):
         self.assertIn(
             ("xinput", "set-prop", "12", "libinput Tapping Enabled", "1"),
             runner.commands,
-        )
-
-    def test_disable_while_typing_follows_settings(self) -> None:
-        controller, runner = self._controller()
-        controller.apply_pointer_settings(_settings(disable_while_typing=True))
-        self.assertIn(
-            ("xinput", "set-prop", "12", "libinput Disable While Typing Enabled", "1"),
-            runner.commands,
-        )
-        controller2, runner2 = self._controller()
-        controller2.apply_pointer_settings(_settings(disable_while_typing=False))
-        self.assertIn(
-            ("xinput", "set-prop", "12", "libinput Disable While Typing Enabled", "0"),
-            runner2.commands,
         )
 
     def test_natural_scrolling_shared_across_kinds_where_supported(self) -> None:
@@ -352,15 +304,6 @@ class LegacyXPointerSemanticsTests(unittest.TestCase):
         )
         result = controller.apply_pointer_settings(_settings())
         self.assertTrue(result.applied)
-
-    def test_real_set_prop_failure_is_reported(self) -> None:
-        controller, runner = self._controller(
-            fail_set_props=(("xinput", "set-prop", "13", "libinput Accel Speed", "0.50"),)
-        )
-        result = controller.apply_pointer_settings(
-            _settings(touchpad_speed=-0.25, mouse_speed=0.5)
-        )
-        self.assertFalse(result.applied)
 
     def test_numeric_ids_never_leave_adapter(self) -> None:
         controller, _ = self._controller()

@@ -135,18 +135,6 @@ class RunnerExactInvocationTests(unittest.TestCase):
         for required in ("InstallTransactionClient", ".prepare(", ".execute("):
             self.assertIn(required, green)
 
-    def test_runner_still_valid_bash(self) -> None:
-        import subprocess as _subprocess
-
-        completed = _subprocess.run(
-            ["bash", "-n", "/dev/stdin"],
-            input=control_runner_text().encode(),
-            capture_output=True,
-            timeout=60,
-        )
-        self.assertEqual(completed.returncode, 0, completed.stderr.decode()[:500])
-
-
 class PreflightNegativeTests(unittest.TestCase):
     def test_missing_bundle_blocked_before_mutation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

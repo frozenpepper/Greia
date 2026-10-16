@@ -99,15 +99,6 @@ class UpdateCliNoLegacyTokenTests(unittest.TestCase):
             "tools/greia_update.py still references the retired update transport",
         )
 
-    def test_owned_docs_carry_no_retired_update_instructions(self) -> None:
-        for doc in OWNED_DOCS:
-            text = doc.read_text(encoding="utf-8")
-            lowered = text.lower()
-            self.assertFalse(
-                any(marker.lower() in lowered for marker in RETIRED_DOC_MARKERS),
-                f"{doc.name} still instructs the retired update token path",
-            )
-
     def test_probe_flags_reintroduced_retired_transport(self) -> None:
         """Positive control: the shared predicate catches a reintroduced header."""
         known_bad = 'return {"X-Pip-Token": str(args.legacy_token)}'

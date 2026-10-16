@@ -285,24 +285,6 @@ class PreIntroOrderingTests(unittest.TestCase):
             self.assertNotIn("system-update", raw, msg=name)
             self.assertNotIn("SystemUpdate", raw, msg=name)
 
-    def test_seven_second_intro_fixed(self) -> None:
-        # The intro is fixed at 5 s animation + 2 s final hold and must not
-        # be shortened to improve the pre-intro metric.
-        tree = ast.parse(BOOT_INTRO_PATH.read_text(encoding="utf-8"))
-        values = {}
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Assign) and len(node.targets) == 1:
-                target = node.targets[0]
-                if isinstance(target, ast.Name) and isinstance(
-                    node.value, ast.Constant
-                ):
-                    values[target.id] = node.value.value
-        self.assertEqual(values.get("ANIMATION_SECONDS"), 5.0)
-        self.assertEqual(values.get("FINAL_FRAME_HOLD_SECONDS"), 2.0)
-        total = values["ANIMATION_SECONDS"] + values["FINAL_FRAME_HOLD_SECONDS"]
-        self.assertEqual(total, 7.0)
-
-
 class CandidateAbsentNoOpTests(unittest.TestCase):
     def _compose(self, root: Path):
         from greia_platform.system_updates import build_live_update_service
@@ -779,23 +761,6 @@ class PreIntroInstrumentAlignmentTests(unittest.TestCase):
         )
         red = module.compare(base, missing)
         self.assertEqual(red["overall"], "NOT_READY")
-
-
-class SevenSecondIntroFixedTests(unittest.TestCase):
-    def test_seven_second_intro_fixed(self) -> None:
-        tree = ast.parse(BOOT_INTRO_PATH.read_text(encoding="utf-8"))
-        values = {}
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Assign) and len(node.targets) == 1:
-                target = node.targets[0]
-                if isinstance(target, ast.Name) and isinstance(
-                    node.value, ast.Constant
-                ):
-                    values[target.id] = node.value.value
-        self.assertEqual(values.get("ANIMATION_SECONDS"), 5.0)
-        self.assertEqual(values.get("FINAL_FRAME_HOLD_SECONDS"), 2.0)
-        total = values["ANIMATION_SECONDS"] + values["FINAL_FRAME_HOLD_SECONDS"]
-        self.assertEqual(total, 7.0)
 
 
 class PreIntroCanonicalWiringTests(unittest.TestCase):

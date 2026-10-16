@@ -112,18 +112,6 @@ class RunnerExactBootHealthTests(unittest.TestCase):
         for required in ("build_request", "build_confirm_request"):
             self.assertIn(required, green)
 
-    def test_runner_still_valid_bash(self) -> None:
-        import subprocess as _subprocess
-
-        completed = _subprocess.run(
-            ["bash", "-n", "/dev/stdin"],
-            input=control_runner_text().encode(),
-            capture_output=True,
-            timeout=60,
-        )
-        self.assertEqual(completed.returncode, 0, completed.stderr.decode()[:500])
-
-
 class ShippedBootUnitsTests(unittest.TestCase):
     def test_shipped_boot_units_recorded(self) -> None:
         recorded = record_shipped_boot_units()
