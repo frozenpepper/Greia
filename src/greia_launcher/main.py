@@ -67,6 +67,8 @@ from .composition import (
 )
 from .display_session import DisplaySessionError
 from .launch_feedback import launch_feedback
+from .foreground_cadence import ActivityForegroundCadence
+from .launch_timing import ready_timeout_for
 from .key_chord import KeyChordTracker
 from .lifecycle import ActivityExitReason, ActivityResult, ActivitySessionState
 from .parent_credential_client import ParentCredentialClient
@@ -251,6 +253,8 @@ def create_preparation_worker():  # type: ignore[no-untyped-def]
 class LauncherApplication:
     ERROR = (177, 44, 44)
     RESCAN_SECONDS = 2.0
+    #: State-dependent service cadence while an Activity owns the foreground.
+    FOREGROUND_CADENCE = ActivityForegroundCadence()
 
     def __init__(
         self,
@@ -689,6 +693,7 @@ class LauncherApplication:
             storage_service=runtime_services.storage_service,
             history_service=runtime_services.history_service,
             display_coordinator=display_coordinator,
+            ready_timeout_seconds=ready_timeout_for(runtime_services),
         )
 
     def _enter_running_state(self) -> None:
@@ -1199,7 +1204,7 @@ class LauncherApplication:
                 if (
                     not is_running
                     and not is_ready
-                    and now - _launch_feedback > 0.1
+                    and self.FOREGROUND_CADENCE.wait_screen_due(now, _launch_feedback)
                 ):
                     self._draw_launch_overlay(pygame, text=launch_feedback(getattr(self, "_active_locale", "en")).overlay)
                     pygame.display.flip()
@@ -1207,7 +1212,15 @@ class LauncherApplication:
                         pygame.display.get_surface(), pygame
                     )
                     _launch_feedback = now
-                time.sleep(0.02)
+                modal_active = picker_host is not None and (
+                    picker_host.visible
+                    or (not picker_host.prepared and now <= picker_prepare_deadline)
+                )
+                time.sleep(
+                    self.FOREGROUND_CADENCE.poll_interval(
+                        activity_session.state, modal_active=modal_active
+                    )
+                )
     
         finally:
             if picker_host is not None:

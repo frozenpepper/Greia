@@ -55,6 +55,10 @@ Environment=GREIA_OS_ROOT=/opt/greia-os
 Environment=PYTHONPATH=/opt/greia-os/src
 Environment=PYTHONNOUSERSITE=1
 Environment=PYTHONDONTWRITEBYTECODE=1
+# Read-only, root-owned, image-precompiled bytecode (compose_precompile_bytecode;
+# greia_platform.bytecode_cache). Activities inherit it only after the
+# runtime adapter re-verifies its ownership; a missing prefix is harmless.
+Environment=PYTHONPYCACHEPREFIX=/usr/lib/greia/pycache
 Environment=HOME=/var/lib/greia-kid
 Environment=GREIA_PROFILES_DIR=/var/lib/greia-profiles
 Environment=GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json

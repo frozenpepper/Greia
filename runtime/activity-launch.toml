@@ -1,0 +1,19 @@
+# Activity launch liveness policy (owner: src/greia_launcher/launch_timing.py).
+#
+# READY = the Activity has presented its first frame. The supervisor stops an
+# Activity that is still not READY after this many seconds (ready_timeout), and
+# the Shell shows its launch wait screen meanwhile. This is a liveness bound for
+# hung starts, NOT a performance target (target on the C0 floor is <= ~5-6 s).
+#
+# The bound is selected by the image's declared compatibility class
+# (/etc/greia-os/image-profile.json platform.compatibility_class); Greia never
+# benchmarks the machine. Values are clamped to [5, 60] seconds.
+schema_version = 1
+
+[ready_timeout_seconds]
+default = 15.0
+# C0 legacy-x86 reference floor (Atom N270 Acer, 1 core/2 HT): healthy
+# launches measured 13.5-20.6 s before the 2026-10-16 start-up fixes; keep
+# roughly 2x headroom over the slowest healthy start.
+C0 = 30.0
+C1 = 20.0

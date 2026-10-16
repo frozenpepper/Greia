@@ -38,6 +38,7 @@ from .composition import (
 from .display_session import DisplaySessionCoordinator
 from .event_broker import ActivityEventBroker
 from .feedback_presentation import SharedUiFeedbackMixin
+from .launch_timing import ready_timeout_for
 from .main import _development_hal, configure_launcher_logging
 from .navigation_chrome_presentation import SharedUiNavigationChromeMixin
 from .presentation import GreiaLauncherPresentation, parse_args
@@ -367,6 +368,7 @@ class GreiaChildShell(
             system_chrome_coordinator=self._system_chrome_coordinator(),
             audio_service=audio_service,
             usage_limit_guard=ActivityUsageLimitGuard(self._build_usage_limit_service()),
+            ready_timeout_seconds=ready_timeout_for(runtime_services),
             controller_set=(
                 self._shell_input.controllers
                 if getattr(self, "_shell_input", None) is not None

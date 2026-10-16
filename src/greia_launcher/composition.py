@@ -47,6 +47,11 @@ from greia_platform.storage import ActivityStorageService, StoragePolicy
 
 from .display_session import DisplaySessionCoordinator
 from .display_session_legacy_x import LegacyXDisplaySessionBackend
+from .launch_timing import (
+    DEFAULT_READY_TIMEOUT_SECONDS,
+    POLICY_FILE_NAME as LAUNCH_TIMING_POLICY_FILE_NAME,
+    resolve_ready_timeout_seconds,
+)
 from .runtime_adapter import (
     PythonRuntimeAdapter,
     PythonRuntimePolicy,
@@ -73,6 +78,8 @@ class LauncherRuntimeServices:
     history_service: PlatformHistoryService
     volume_budget: VolumeBudget = field(default_factory=VolumeBudget)
     achievement_service: ProfileAchievementService | None = None
+    #: READY liveness bound for this device class (see launch_timing).
+    activity_ready_timeout_seconds: float = DEFAULT_READY_TIMEOUT_SECONDS
 
 
 def provisional_installed_hal() -> GreiaHAL:
@@ -267,6 +274,9 @@ def build_launcher_runtime_services(
         storage_service=storage_service,
         history_service=history_service,
         achievement_service=achievement_service,
+        activity_ready_timeout_seconds=resolve_ready_timeout_seconds(
+            runtime_policy_path.parent / LAUNCH_TIMING_POLICY_FILE_NAME
+        ),
     )
 
 

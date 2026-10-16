@@ -7,6 +7,7 @@ from .composition import (
     provisional_installed_display_session,
     provisional_installed_system_chrome,
 )
+from .launch_timing import ready_timeout_for
 from .presentation import GreiaLauncherPresentation, parse_args
 from .trusted_chrome_supervisor import TrustedChromeActivitySupervisor
 
@@ -43,6 +44,7 @@ class TrustedGreiaLauncherPresentation(
             system_chrome_coordinator=(
                 provisional_installed_system_chrome() if installed else None
             ),
+            ready_timeout_seconds=ready_timeout_for(runtime_services),
             controller_set=(
                 self._shell_input.controllers
                 if getattr(self, "_shell_input", None) is not None

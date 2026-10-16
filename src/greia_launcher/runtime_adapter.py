@@ -15,6 +15,10 @@ from greia_platform.activity_backend_policy import (
     BackendFindingSeverity,
     scan_python_source_tree_backend_policy,
 )
+from greia_platform.bytecode_cache import (
+    PYCACHE_PREFIX_ENVIRONMENT,
+    TrustedBytecodePrefix,
+)
 from greia_platform.device_capabilities import DeviceCapabilityService
 
 from .lifecycle import (
@@ -26,6 +30,8 @@ from .lifecycle import (
 
 
 PRODUCTION_ROOT = Path("/opt/greia-os")
+#: Platform-owned interpreter entry; see greia_platform.python_activity_entry.
+PYTHON_ACTIVITY_ENTRY_MODULE = "greia_platform.python_activity_entry"
 _PLATFORM_OWNED_ENVIRONMENT = frozenset(
     {
         "DISPLAY",
@@ -196,6 +202,20 @@ class PythonRuntimePolicy:
 
 
 class PythonRuntimeAdapter:
+    """The one curated Python runtime family below the common Activity contracts.
+
+    Launch command: ``<python3> -P -m greia_platform.python_activity_entry
+    <main.py>``. The platform entry applies the curated interpreter start-up
+    policy before any Activity import, then runs the script as ``__main__``.
+
+    Bytecode: Activities never write bytecode (``PYTHONDONTWRITEBYTECODE``).
+    When the trusted launcher itself runs with the image-owned, root-owned
+    read-only ``sys.pycache_prefix`` (see ``greia_platform.bytecode_cache``),
+    the same prefix is handed to the Activity so platform/stdlib/built-in
+    Activity modules load precompiled, hash-checked bytecode. An absent or
+    untrusted prefix is simply not passed on.
+    """
+
     runtime_type = "python"
     lifecycle_support = RuntimeLifecycleSupport()
     required_device_capabilities = frozenset()
@@ -206,10 +226,14 @@ class PythonRuntimeAdapter:
         *,
         policy: PythonRuntimePolicy | None = None,
         process_factory: ProcessFactory = subprocess.Popen,
+        bytecode_prefix: TrustedBytecodePrefix | None = None,
     ):
         self._python_executable = python_executable
         self._policy = policy
         self._process_factory = process_factory
+        self._bytecode_prefix = (
+            bytecode_prefix if bytecode_prefix is not None else TrustedBytecodePrefix()
+        )
 
     def validate_package(self, manifest: ActivityManifest) -> None:
         if manifest.runtime_type != self.runtime_type:
@@ -308,13 +332,25 @@ class PythonRuntimeAdapter:
             )
 
     def command_for(self, manifest: ActivityManifest) -> RuntimeCommand:
+        environment: list[tuple[str, str]] = [
+            ("PYTHONNOUSERSITE", "1"),
+            ("PYTHONDONTWRITEBYTECODE", "1"),
+        ]
+        prefix = self._bytecode_prefix.for_current_process()
+        if prefix is not None:
+            environment.append((PYCACHE_PREFIX_ENVIRONMENT, str(prefix)))
         return RuntimeCommand(
-            command=(str(self.resolve_interpreter()), str(manifest.launch_path)),
-            cwd=manifest.root,
-            environment=(
-                ("PYTHONNOUSERSITE", "1"),
-                ("PYTHONDONTWRITEBYTECODE", "1"),
+            command=(
+                str(self.resolve_interpreter()),
+                # -P: never prepend the Activity working directory before the
+                # platform entry runs; the entry sets sys.path[0] itself.
+                "-P",
+                "-m",
+                PYTHON_ACTIVITY_ENTRY_MODULE,
+                str(manifest.launch_path),
             ),
+            cwd=manifest.root,
+            environment=tuple(environment),
         )
 
     def create_lifecycle_binding(

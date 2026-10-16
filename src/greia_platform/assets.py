@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import stat
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -100,6 +102,7 @@ class AssetCatalogue:
             raise AssetCatalogueError("visuals must be an array of tables")
 
         root = manifest_path.parent.parent
+        resolver = _AssetPathResolver(root)
         icons: dict[str, IconAsset] = {}
         visuals: dict[str, VisualAsset] = {}
         seen_ids: set[str] = set()
@@ -113,9 +116,9 @@ class AssetCatalogue:
                 asset_id=asset_id,
                 category=_text(entry, "category"),
                 alt_key=_text(entry, "alt_key"),
-                path_64=_safe_path(root, _text(entry, "path_64")),
-                path_128=_safe_path(root, _text(entry, "path_128")),
-                path_256=_safe_path(root, _text(entry, "path_256")),
+                path_64=resolver.resolve(_text(entry, "path_64")),
+                path_128=resolver.resolve(_text(entry, "path_128")),
+                path_256=resolver.resolve(_text(entry, "path_256")),
             )
             icons[asset_id] = icon
 
@@ -131,7 +134,7 @@ class AssetCatalogue:
                 asset_id=asset_id,
                 kind=kind,
                 role=_text(entry, "role"),
-                variants=_visual_variants(root, entry),
+                variants=_visual_variants(resolver, entry),
             )
 
         return cls(root, icons, visuals)
@@ -188,7 +191,7 @@ def _claim_id(asset_id: str, seen_ids: set[str]) -> None:
 
 
 def _visual_variants(
-    root: Path, entry: Mapping[str, object]
+    resolver: "_AssetPathResolver", entry: Mapping[str, object]
 ) -> tuple[tuple[str, Path], ...]:
     raw = entry.get("variants")
     if not isinstance(raw, dict) or not raw:
@@ -201,7 +204,7 @@ def _visual_variants(
             raise AssetCatalogueError(
                 f"visual variant {name!r} must be a non-empty path"
             )
-        variants.append((name, _safe_path(root, relative)))
+        variants.append((name, resolver.resolve(relative)))
     if "default" not in raw:
         raise AssetCatalogueError("visual variants must define default")
     variants.sort(key=lambda item: item[0])
@@ -219,6 +222,50 @@ def _text(entry: Mapping[str, object], key: str) -> str:
     if not isinstance(value, str) or not value:
         raise AssetCatalogueError(f"{key} must be a non-empty string")
     return value
+
+
+class _AssetPathResolver:
+    """Resolve catalogue paths under one real library root for one load.
+
+    Equivalent to :func:`_safe_path` (strict resolution plus the
+    escape-the-library check) but each distinct parent directory is resolved
+    once. Catalogues list hundreds of renditions in a few dozen directories,
+    and a full per-path ``realpath`` (one ``lstat`` per path component plus
+    pathlib objects) dominated the shared-visual catalogue load that every
+    Activity pays at start-up on the C0 floor. Symlinked or dot-leaf entries
+    take the original full-resolution path, so semantics are unchanged.
+    """
+
+    __slots__ = ("_root", "_root_prefix", "_directories")
+
+    def __init__(self, root: Path) -> None:
+        self._root = root
+        self._root_prefix = os.path.join(str(root), "")
+        self._directories: dict[str, str] = {}
+
+    def resolve(self, relative: str) -> Path:
+        directory, leaf = os.path.split(os.path.join(str(self._root), relative))
+        if leaf in {"", ".", ".."}:
+            return _safe_path(self._root, relative)
+        real_directory = self._directories.get(directory)
+        if real_directory is None:
+            try:
+                real_directory = os.path.realpath(directory, strict=True)
+            except (OSError, RuntimeError) as exc:
+                raise AssetCatalogueError(
+                    f"asset path does not resolve: {relative}"
+                ) from exc
+            self._directories[directory] = real_directory
+        candidate = os.path.join(real_directory, leaf)
+        try:
+            mode = os.lstat(candidate).st_mode
+        except OSError as exc:
+            raise AssetCatalogueError(f"asset path does not resolve: {relative}") from exc
+        if stat.S_ISLNK(mode):
+            return _safe_path(self._root, relative)
+        if not candidate.startswith(self._root_prefix):
+            raise AssetCatalogueError(f"asset path escapes library: {relative}")
+        return Path(candidate)
 
 
 def _safe_path(root: Path, relative: str) -> Path:

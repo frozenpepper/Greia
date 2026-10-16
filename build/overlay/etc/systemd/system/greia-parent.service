@@ -22,6 +22,9 @@ WorkingDirectory=/opt/greia-os
 Environment=GREIA_OS_ROOT=/opt/greia-os
 Environment=PYTHONPATH=/opt/greia-os/src
 Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+# Read-only image-precompiled bytecode; see greia-launcher.service.
+Environment=PYTHONPYCACHEPREFIX=/usr/lib/greia/pycache
 Environment=GREIA_PROFILES_DIR=/var/lib/greia-profiles
 Environment=GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
 Environment=GREIA_SYSTEM_SETTINGS_DIR=/var/lib/greia-system-settings

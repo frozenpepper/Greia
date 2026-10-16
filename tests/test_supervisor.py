@@ -363,7 +363,12 @@ class SupervisorTests(unittest.TestCase):
         self.assertEqual(len(calls), 1)
         command = calls[0][0][0]
         self.assertEqual(command[0], "/usr/bin/python3")
-        self.assertEqual(Path(command[1]), manifest.launch_path)
+        # The platform entry applies curated interpreter start-up policy
+        # before running the Activity script (greia_platform.python_activity_entry).
+        self.assertEqual(
+            command[1:4], ["-P", "-m", "greia_platform.python_activity_entry"]
+        )
+        self.assertEqual(Path(command[4]), manifest.launch_path)
         environment = calls[0][1]["env"]
         self.assertEqual(environment["PYTHONNOUSERSITE"], "1")
         self.assertEqual(environment["PYTHONDONTWRITEBYTECODE"], "1")

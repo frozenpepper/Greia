@@ -1025,6 +1025,27 @@ compose_footprint_hygiene() {
   find "$rootfs/var/log" -type f -exec truncate -s 0 '{}' +
 }
 
+# Image-owned, read-only Python bytecode prefix (greia_platform.bytecode_cache).
+# Footprint hygiene above deletes every in-tree __pycache__ and Greia processes
+# never write bytecode, so without this every Shell start and Activity launch
+# recompiled ~200+ modules (~3.2 s per launch on the Atom N270 reference).
+# Runs after hygiene so nothing deletes the prefix, and INSIDE the chroot so
+# the target interpreter (bytecode is CPython-version specific) writes
+# checked-hash bytecode for the exact runtime paths under
+# /usr/lib/greia/pycache. Activity folders stay bytecode-free; the launcher,
+# Parent and Activity runtime read the prefix via PYTHONPYCACHEPREFIX.
+# -B keeps the tool's own stdlib imports from recreating in-tree __pycache__.
+compose_precompile_bytecode() {
+  local rootfs="$1"
+  local project_root="${COMPOSE_PROJECT_ROOT:-$_COMPOSE_PROJECT_ROOT_DEFAULT}"
+  if ! chroot "$rootfs" /usr/bin/env -i PATH=/usr/sbin:/usr/bin:/sbin:/bin \
+      /usr/bin/python3 -I -B - --greia-root /opt/greia-os \
+      < "$project_root/tools/precompile_greia_bytecode.py"; then
+    echo "Greia bytecode precompilation failed; refusing image." >&2
+    return 1
+  fi
+}
+
 # Clone-neutral target state (single owner for role=target).
 # Raw images and installer/update payloads are cloned: leave all clone/machine
 # identity material empty here so disk-image packaging and the release-payload
@@ -1105,6 +1126,9 @@ compose_root() {
   compose_footprint_prune "$rootfs" || return 1
   compose_write_metadata_manifests "$rootfs" "$role" || return 1
   compose_footprint_hygiene "$rootfs" || return 1
+  if [[ "$role" == "target" ]]; then
+    compose_precompile_bytecode "$rootfs" || return 1
+  fi
   # Clone-neutral target state is composer-owned so both the thin disk-image
   # consumer and the release-payload staging path share it. The live-installer
   # role stays role-specific (see compose_prepare_clone_neutral_target).
