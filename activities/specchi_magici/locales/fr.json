@@ -5,13 +5,9 @@
   "strings": {
     "activity.title": "Miroirs magiques",
     "activity.specchi_magici.title": "Miroirs magiques",
-    "prompt.place": "Reproduis le reflet du motif dans le miroir magique !",
-    "prompt.hint": "Regarde comment chaque forme se reflète !",
-    "button.undo": "Annuler",
     "button.play_again": "Rejouer",
     "victory.title": "Galerie étincelante !",
-    "victory.subtitle": "Toutes les mosaïques reflètent leur magie avec Lilli !",
-    "button.listen": "Écouter"
+    "victory.subtitle": "Toutes les mosaïques reflètent leur magie avec Lilli !"
   },
   "audio": {}
 }

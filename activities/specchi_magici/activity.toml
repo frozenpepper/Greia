@@ -2,7 +2,7 @@
 id = "org.greia.specchi-magici"
 legacy_ids = []
 title_key = "activity.specchi_magici.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
@@ -11,8 +11,16 @@ categories = ["learn"]
 discovery_tags = ["puzzles", "making"]
 
 [education]
+# Half a mosaic is laid on one side of Lilli's magic mirror line; the child
+# builds the reflection on the glass from a small tile kit (shape, colour and,
+# from rung 3, orientation). The kit always mixes the needed tiles with near
+# misses and, for turned tiles, the unmirrored copy, so every placement is a
+# decision about what the mirror image is and where it goes. Five mosaics per
+# set; the ladder adapts between sets: vertical mirror with tiles at the line
+# -> more tiles and colours, picture on either side -> turned triangles and
+# half circles -> water (horizontal) mirror -> both mirrors at once.
 categories = ["geometry", "spatial_reasoning", "symmetry"]
-difficulty = 3
+difficulty = 2
 recommended_age_min = 5
 recommended_age_max = 7
 difficulty_min = 1
@@ -20,7 +28,7 @@ difficulty_max = 5
 adaptive_difficulty = true
 skills = [
   { id = "math.geometry.symmetry", weight = 3 },
-  { id = "math.geometry.shape_recognition", weight = 3 },
+  { id = "math.geometry.shape_recognition", weight = 2 },
   { id = "cognition.spatial_rotation", weight = 2 },
 ]
 events = [
@@ -34,11 +42,11 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "pointer"
+profile = "hybrid"
 
 [requirements]
-required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["touch"]
+required_capabilities = ["display", "pointer"]
+optional_capabilities = ["keyboard", "touch", "audio.basic"]
 
 [permissions]
 requested = []

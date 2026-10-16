@@ -1,7 +1,24 @@
 """Domain model for Specchi Magici (Magic Mirrors).
 
-Owns geometric symmetry invariants, exact vertical reflection across an 8x6 board,
-deterministic mosaic puzzle generation, bounded adaptation, and milestone/completion facts.
+Half a mosaic is laid on the picture side of a magic mirror line; the child
+completes the reflection by placing mosaic tiles on the mirror side. This
+module owns the geometry (exact reflections across a vertical line, a
+horizontal "water" line, or both), puzzle generation per difficulty rung,
+the per-mosaic placement rules, bounded adaptation and the milestone /
+completion facts. It knows nothing about Pygame.
+
+Board: ``GRID_COLS`` x ``GRID_ROWS`` cells. The vertical mirror runs between
+columns 2 and 3, the horizontal one between rows 1 and 2.
+
+Orientation: ``Piece.rotation`` 0..3 = the tile's point/dome/lobes face up,
+right, down, left. A vertical mirror swaps right/left, a horizontal one swaps
+up/down; circles, squares and rhombi look the same in every mirror, hearts
+only turn over in water.
+
+The tray is a *kit* of tile kinds with unlimited supply: it always offers the
+tiles the reflection needs plus decoys, never the answer alone. Rungs with
+oriented tiles also offer the *unreflected* copy, so choosing the mirrored
+orientation is a real decision.
 """
 
 from __future__ import annotations
@@ -11,13 +28,17 @@ from enum import StrEnum
 import random
 from typing import Final, Sequence
 
-
 REFERENCE_WIDTH: Final = 1024
 REFERENCE_HEIGHT: Final = 600
-CHALLENGE_COUNT: Final = 6
-GRID_COLS: Final = 8
-GRID_ROWS: Final = 6
+CHALLENGE_COUNT: Final = 5
+GRID_COLS: Final = 6
+GRID_ROWS: Final = 4
+HALF_COLS: Final = GRID_COLS // 2
+HALF_ROWS: Final = GRID_ROWS // 2
 HISTORY_LIMIT: Final = 8
+MAX_LEVEL: Final = 5
+MAX_TRAY: Final = 8
+COLOUR_COUNT: Final = 6
 
 
 class ShapeKind(StrEnum):
@@ -25,11 +46,24 @@ class ShapeKind(StrEnum):
     SQUARE = "square"
     TRIANGLE = "triangle"
     SEMICIRCLE = "semicircle"
+    RHOMBUS = "rhombus"
+    HEART = "heart"
+
+
+# Shapes whose look depends on ``rotation`` (hearts only turn upside down).
+ORIENTED: Final = frozenset({ShapeKind.TRIANGLE, ShapeKind.SEMICIRCLE, ShapeKind.HEART})
+SYMMETRIC: Final = (ShapeKind.CIRCLE, ShapeKind.SQUARE, ShapeKind.RHOMBUS, ShapeKind.HEART)
+
+
+class MirrorAxis(StrEnum):
+    VERTICAL = "vertical"
+    HORIZONTAL = "horizontal"
+    BOTH = "both"
 
 
 @dataclass(frozen=True, slots=True)
 class Piece:
-    """A geometric shape piece with color and discrete 90-degree rotation (0..3)."""
+    """One mosaic tile kind: shape, colour token index and 90-degree rotation."""
 
     kind: ShapeKind
     color_index: int
@@ -38,34 +72,53 @@ class Piece:
     def __post_init__(self) -> None:
         if not (0 <= self.rotation <= 3):
             raise ValueError("rotation must be in 0..3")
-        if not (0 <= self.color_index <= 5):
-            raise ValueError("color_index must be in 0..5")
+        if not (0 <= self.color_index < COLOUR_COUNT):
+            raise ValueError(f"color_index must be in 0..{COLOUR_COUNT - 1}")
+        if self.kind not in ORIENTED and self.rotation != 0:
+            raise ValueError(f"{self.kind} tiles have no orientation")
+        if self.kind is ShapeKind.HEART and self.rotation not in (0, 2):
+            raise ValueError("hearts are upright (0) or upside down (2)")
 
 
-def reflect_piece(piece: Piece) -> Piece:
-    """Compute the exact reflection across a vertical mirror axis."""
-    if piece.kind in {ShapeKind.CIRCLE, ShapeKind.SQUARE}:
-        return Piece(piece.kind, piece.color_index, 0)
+def reflect_vertical(piece: Piece) -> Piece:
+    """Mirror image across a vertical line: right <-> left."""
 
-    # For TRIANGLE and SEMICIRCLE:
-    # 0 (UP) -> 0 (UP)
-    # 1 (RIGHT) -> 3 (LEFT)
-    # 2 (DOWN) -> 2 (DOWN)
-    # 3 (LEFT) -> 1 (RIGHT)
-    mirrored_rot = (4 - piece.rotation) % 4
-    return Piece(piece.kind, piece.color_index, mirrored_rot)
+    if piece.kind in {ShapeKind.TRIANGLE, ShapeKind.SEMICIRCLE}:
+        return Piece(piece.kind, piece.color_index, (4 - piece.rotation) % 4)
+    return piece
+
+
+def reflect_horizontal(piece: Piece) -> Piece:
+    """Mirror image across a horizontal (water) line: up <-> down."""
+
+    if piece.kind in ORIENTED:
+        return Piece(piece.kind, piece.color_index, (6 - piece.rotation) % 4)
+    return piece
+
+
+# Backwards-compatible name used by older callers/tests: the vertical mirror.
+reflect_piece = reflect_vertical
 
 
 def mirror_col(col: int) -> int:
-    """Reflect column index across the central axis between columns 3 and 4."""
+    """Reflect a column across the vertical mirror (between columns 2 and 3)."""
+
     if not (0 <= col < GRID_COLS):
         raise ValueError(f"col must be in 0..{GRID_COLS - 1}")
     return (GRID_COLS - 1) - col
 
 
+def mirror_row(row: int) -> int:
+    """Reflect a row across the horizontal mirror (between rows 1 and 2)."""
+
+    if not (0 <= row < GRID_ROWS):
+        raise ValueError(f"row must be in 0..{GRID_ROWS - 1}")
+    return (GRID_ROWS - 1) - row
+
+
 @dataclass(frozen=True, slots=True)
 class CellPlacement:
-    """Piece placed at an authoritative grid coordinate (row, col)."""
+    """A piece at an authoritative grid coordinate (row, col)."""
 
     row: int
     col: int
@@ -77,28 +130,294 @@ class CellPlacement:
         if not (0 <= self.col < GRID_COLS):
             raise ValueError(f"col must be in 0..{GRID_COLS - 1}")
 
+    @property
+    def cell(self) -> tuple[int, int]:
+        return (self.row, self.col)
+
+
+def reflections(source: CellPlacement, axis: MirrorAxis) -> tuple[CellPlacement, ...]:
+    """Every mirror image of ``source`` for ``axis`` (one, or three for BOTH)."""
+
+    row, col, piece = source.row, source.col, source.piece
+    if axis is MirrorAxis.VERTICAL:
+        return (CellPlacement(row, mirror_col(col), reflect_vertical(piece)),)
+    if axis is MirrorAxis.HORIZONTAL:
+        return (CellPlacement(mirror_row(row), col, reflect_horizontal(piece)),)
+    return (
+        CellPlacement(row, mirror_col(col), reflect_vertical(piece)),
+        CellPlacement(mirror_row(row), col, reflect_horizontal(piece)),
+        CellPlacement(mirror_row(row), mirror_col(col), reflect_horizontal(reflect_vertical(piece))),
+    )
+
 
 @dataclass(frozen=True, slots=True)
 class MosaicPuzzle:
-    """One discrete symmetry puzzle on the 8x6 board."""
+    """One mosaic: the given half, the reflection to build and the tile kit."""
 
     puzzle_id: str
+    axis: MirrorAxis
     givens: tuple[CellPlacement, ...]
     required: tuple[CellPlacement, ...]
-    tray_pieces: tuple[Piece, ...]
+    tray: tuple[Piece, ...]
 
     def __post_init__(self) -> None:
         if not self.puzzle_id:
             raise ValueError("puzzle_id must not be empty")
-        if not self.givens:
-            raise ValueError("givens must not be empty")
-        if not self.required:
-            raise ValueError("required must not be empty")
+        if not self.givens or not self.required:
+            raise ValueError("a mosaic needs given and required tiles")
+        given_cells = {g.cell for g in self.givens}
+        required_cells = [r.cell for r in self.required]
+        if len(given_cells) != len(self.givens) or len(set(required_cells)) != len(required_cells):
+            raise ValueError("mosaic cells must be unique")
+        if given_cells & set(required_cells):
+            raise ValueError("given and required cells must not overlap")
+        if not self.tray or len(self.tray) > MAX_TRAY or len(set(self.tray)) != len(self.tray):
+            raise ValueError(f"the tray holds 1..{MAX_TRAY} distinct tile kinds")
+        if not {r.piece for r in self.required} <= set(self.tray):
+            raise ValueError("the tray must offer every tile the reflection needs")
+        if len(self.tray) < 2:
+            raise ValueError("the tray must leave a choice")
+
+    def target_at(self, cell: tuple[int, int]) -> CellPlacement | None:
+        for placement in self.required:
+            if placement.cell == cell:
+                return placement
+        return None
+
+    def source_of(self, cell: tuple[int, int]) -> CellPlacement | None:
+        """The given tile whose reflection belongs at ``cell``."""
+
+        for given in self.givens:
+            if any(image.cell == cell for image in reflections(given, self.axis)):
+                return given
+        return None
+
+    def target_side(self, cell: tuple[int, int]) -> bool:
+        """True for cells on the mirror side(s), where the child builds."""
+
+        row, col = cell
+        given_side_col = self.givens[0].col < HALF_COLS
+        given_side_row = self.givens[0].row < HALF_ROWS
+        if self.axis is MirrorAxis.VERTICAL:
+            return (col < HALF_COLS) != given_side_col
+        if self.axis is MirrorAxis.HORIZONTAL:
+            return (row < HALF_ROWS) != given_side_row
+        return (col < HALF_COLS) != given_side_col or (row < HALF_ROWS) != given_side_row
+
+
+# ---------------------------------------------------------------------------
+# Difficulty ladder
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class LevelSpec:
+    """One rung of the ladder (levels 1..5)."""
+
+    axis: MirrorAxis
+    sources: tuple[int, int]          # min/max given tiles
+    shapes: tuple[ShapeKind, ...]
+    oriented_min: int                 # given tiles that must face a mirrored way
+    colours: int                      # palette size per mosaic
+    decoys: int                       # extra tile kinds besides the needed ones
+    near_mirror: bool = False         # rung 1: tiles touch / almost touch the line
+    flip_chance: float = 0.0          # picture on the right (or bottom) instead
+    offer_unreflected: bool = False   # oriented tiles also come unmirrored
+    tray_max: int = MAX_TRAY          # keep the kit small enough to scan
+
+
+LEVELS: Final[dict[int, LevelSpec]] = {
+    1: LevelSpec(MirrorAxis.VERTICAL, (2, 3), (ShapeKind.CIRCLE, ShapeKind.SQUARE, ShapeKind.HEART), 0, 3, 1, near_mirror=True),
+    2: LevelSpec(MirrorAxis.VERTICAL, (3, 4), SYMMETRIC, 0, 4, 2, flip_chance=0.34),
+    3: LevelSpec(
+        MirrorAxis.VERTICAL, (3, 3), (*SYMMETRIC, ShapeKind.TRIANGLE, ShapeKind.SEMICIRCLE), 2, 4, 1,
+        flip_chance=0.34, offer_unreflected=True, tray_max=6,
+    ),
+    4: LevelSpec(
+        MirrorAxis.HORIZONTAL, (3, 3), (ShapeKind.CIRCLE, ShapeKind.SQUARE, ShapeKind.TRIANGLE, ShapeKind.SEMICIRCLE, ShapeKind.HEART),
+        2, 4, 1, offer_unreflected=True, tray_max=6,
+    ),
+    5: LevelSpec(
+        MirrorAxis.BOTH, (1, 2), (ShapeKind.CIRCLE, ShapeKind.SQUARE, ShapeKind.TRIANGLE, ShapeKind.SEMICIRCLE, ShapeKind.HEART, ShapeKind.RHOMBUS),
+        1, 3, 1, tray_max=6,
+    ),
+}
+
+
+class MirrorRoundFactory:
+    """Create mosaics for a rung from an injected RNG (deterministic per seed)."""
+
+    def __init__(self, rng: random.Random) -> None:
+        self._rng = rng
+
+    def build_set(self, level: int, *, count: int = CHALLENGE_COUNT) -> tuple[MosaicPuzzle, ...]:
+        _require_level(level)
+        return tuple(self.build(level, index) for index in range(count))
+
+    def build(self, level: int, index: int) -> MosaicPuzzle:
+        _require_level(level)
+        spec = LEVELS[level]
+        rng = self._rng
+        pid = f"L{level}-M{index + 1}-{rng.randrange(1_000_000):06d}"
+        low, high = spec.sources
+        count = low + (index % (high - low + 1)) if spec.axis is MirrorAxis.BOTH else rng.randint(low, high)
+        flipped = rng.random() < spec.flip_chance
+        cells = self._cells(spec, count, flipped)
+        palette = rng.sample(range(COLOUR_COUNT), spec.colours)
+        oriented_slots = set(rng.sample(range(count), min(count, spec.oriented_min)))
+        givens = tuple(
+            CellPlacement(row, col, self._piece(spec, palette, oriented=i in oriented_slots))
+            for i, (row, col) in enumerate(cells)
+        )
+        required = tuple(image for given in givens for image in reflections(given, spec.axis))
+        return MosaicPuzzle(pid, spec.axis, givens, required, self._tray(spec, givens, required, palette))
+
+    # -- generation helpers ---------------------------------------------------
+
+    def _region(self, spec: LevelSpec, flipped: bool) -> list[tuple[int, int]]:
+        if spec.axis is MirrorAxis.VERTICAL:
+            cols = range(HALF_COLS, GRID_COLS) if flipped else range(HALF_COLS)
+            if spec.near_mirror:
+                cols = (HALF_COLS, HALF_COLS + 1) if flipped else (HALF_COLS - 2, HALF_COLS - 1)
+            return [(r, c) for r in range(GRID_ROWS) for c in cols]
+        if spec.axis is MirrorAxis.HORIZONTAL:
+            rows = range(HALF_ROWS, GRID_ROWS) if flipped else range(HALF_ROWS)
+            return [(r, c) for r in rows for c in range(GRID_COLS)]
+        return [(r, c) for r in range(HALF_ROWS) for c in range(HALF_COLS)]
+
+    def _touches_mirror(self, spec: LevelSpec, cell: tuple[int, int]) -> bool:
+        row, col = cell
+        near_col = col in (HALF_COLS - 1, HALF_COLS)
+        near_row = row in (HALF_ROWS - 1, HALF_ROWS)
+        if spec.axis is MirrorAxis.VERTICAL:
+            return near_col
+        if spec.axis is MirrorAxis.HORIZONTAL:
+            return near_row
+        return near_col or near_row
+
+    def _cells(self, spec: LevelSpec, count: int, flipped: bool) -> list[tuple[int, int]]:
+        rng = self._rng
+        region = self._region(spec, flipped)
+        if spec.near_mirror:
+            # Rung 1: each tile in its own row, touching or one step from the line.
+            rows = rng.sample(range(GRID_ROWS), count)
+            cols = sorted({c for _, c in region}, key=lambda c: abs(c - (HALF_COLS - 0.5)))
+            return [(row, rng.choice(cols) if rng.random() < 0.5 else cols[0]) for row in rows]
+        # A small cluster grown from the mirror line reads as one designed mosaic.
+        start = rng.choice([cell for cell in region if self._touches_mirror(spec, cell)])
+        chosen = [start]
+        while len(chosen) < count:
+            frontier = [
+                cell
+                for cell in region
+                if cell not in chosen
+                and any(abs(cell[0] - r) <= 1 and abs(cell[1] - c) <= 1 for r, c in chosen)
+            ]
+            chosen.append(rng.choice(frontier))
+        return chosen
+
+    def _piece(self, spec: LevelSpec, palette: Sequence[int], *, oriented: bool) -> Piece:
+        rng = self._rng
+        colour = rng.choice(palette)
+        if oriented:
+            kinds = [k for k in spec.shapes if k in ORIENTED and _turns_in(k, spec.axis)]
+            kind = rng.choice(kinds)
+            return Piece(kind, colour, rng.choice(_mirror_sensitive_rotations(kind, spec.axis)))
+        kind = rng.choice(spec.shapes)
+        if kind in ORIENTED and spec.oriented_min:
+            return Piece(kind, colour, rng.choice(_rotations(kind)))
+        return Piece(kind, colour, 0)
+
+    def _tray(
+        self,
+        spec: LevelSpec,
+        givens: Sequence[CellPlacement],
+        required: Sequence[CellPlacement],
+        palette: Sequence[int],
+    ) -> tuple[Piece, ...]:
+        rng = self._rng
+        needed: list[Piece] = []
+        for placement in required:
+            if placement.piece not in needed:
+                needed.append(placement.piece)
+        tray = list(needed)
+        if spec.offer_unreflected:
+            # The unmirrored copy of an oriented tile: choosing the mirrored
+            # orientation becomes a real decision.
+            for given in givens:
+                if given.piece.kind in ORIENTED and given.piece not in tray and len(tray) < spec.tray_max:
+                    tray.append(given.piece)
+        wanted = max(2, min(spec.tray_max, len(tray) + spec.decoys))
+        attempts = 0
+        while len(tray) < wanted and attempts < 200:
+            attempts += 1
+            decoy = self._decoy(spec, needed, palette)
+            if decoy not in tray:
+                tray.append(decoy)
+        rng.shuffle(tray)
+        return tuple(tray)
+
+    def _decoy(self, spec: LevelSpec, needed: Sequence[Piece], palette: Sequence[int]) -> Piece:
+        """A near miss: a needed shape in another colour, or another shape."""
+
+        rng = self._rng
+        base = rng.choice(list(needed))
+        colours = list(palette) + [c for c in range(COLOUR_COUNT) if c not in palette][:1]
+        if rng.random() < 0.5:
+            kind = base.kind
+            colour = rng.choice([c for c in colours if c != base.color_index] or colours)
+        else:
+            kind = rng.choice([k for k in spec.shapes if k is not base.kind] or list(spec.shapes))
+            colour = base.color_index
+        rotation = 0
+        if kind in ORIENTED:
+            rotation = base.rotation if base.kind is kind else rng.choice(_rotations(kind))
+        return Piece(kind, colour, rotation)
+
+
+def _rotations(kind: ShapeKind) -> tuple[int, ...]:
+    if kind is ShapeKind.HEART:
+        return (0, 2)
+    if kind in ORIENTED:
+        return (0, 1, 2, 3)
+    return (0,)
+
+
+def _turns_in(kind: ShapeKind, axis: MirrorAxis) -> bool:
+    """Can this shape look different in the mirror for ``axis``?"""
+
+    if kind is ShapeKind.HEART:
+        return axis is not MirrorAxis.VERTICAL
+    return kind in ORIENTED
+
+
+def _mirror_sensitive_rotations(kind: ShapeKind, axis: MirrorAxis) -> tuple[int, ...]:
+    """Rotations whose reflection differs from the original for ``axis``."""
+
+    if kind is ShapeKind.HEART:
+        return (0, 2)
+    if axis is MirrorAxis.VERTICAL:
+        return (1, 3)
+    if axis is MirrorAxis.HORIZONTAL:
+        return (0, 2)
+    return (0, 1, 2, 3)
+
+
+# ---------------------------------------------------------------------------
+# Session
+# ---------------------------------------------------------------------------
+
+
+class PlaceOutcome(StrEnum):
+    CORRECT = "correct"
+    WRONG_PIECE = "wrong_piece"   # right spot, but another tile belongs there
+    WRONG_CELL = "wrong_cell"     # nothing belongs on that spot
+    IGNORED = "ignored"           # not a playable cell / no puzzle
 
 
 @dataclass(frozen=True, slots=True)
 class AttemptSummary:
-    """Evidence from one completed symmetry puzzle for adaptation."""
+    """Evidence from one finished mosaic for adaptation."""
 
     first_attempt_success: bool
     hints_used: int
@@ -110,95 +429,21 @@ class AttemptSummary:
 
 
 @dataclass(frozen=True, slots=True)
-class AttemptResult:
-    """Result returned by a piece placement or undo action."""
+class PlaceResult:
+    """What one placement did; ``focus`` is the target a hint should explain."""
 
-    correct: bool
-    puzzle_completed: bool
-    session_complete: bool
-    first_attempt_success: bool
-    hints_used: int
-    used_retry: bool
+    outcome: PlaceOutcome
+    focus: CellPlacement | None = None
+    puzzle_completed: bool = False
+    session_complete: bool = False
 
-
-class MirrorRoundFactory:
-    """Create deterministic symmetry puzzles from an injected RNG."""
-
-    def __init__(self, rng: random.Random) -> None:
-        self._rng = rng
-
-    def build_set(self, level: int, *, count: int = CHALLENGE_COUNT) -> tuple[MosaicPuzzle, ...]:
-        _require_level(level)
-        puzzles: list[MosaicPuzzle] = []
-        for index in range(count):
-            puzzles.append(self._generate_puzzle(level, index))
-        return tuple(puzzles)
-
-    def _generate_puzzle(self, level: int, index: int) -> MosaicPuzzle:
-        pid = f"L{level}-M{index + 1}-{self._rng.randrange(1_000_000):06d}"
-
-        # Determine piece shapes and counts per level
-        if level == 1:
-            kinds = [ShapeKind.CIRCLE, ShapeKind.SQUARE]
-            num_pieces = 2 + (index % 2)
-            rotations = [0]
-        elif level == 2:
-            kinds = [ShapeKind.CIRCLE, ShapeKind.SQUARE, ShapeKind.TRIANGLE]
-            num_pieces = 3
-            rotations = [0, 2]
-        elif level == 3:
-            kinds = [ShapeKind.CIRCLE, ShapeKind.SQUARE, ShapeKind.TRIANGLE, ShapeKind.SEMICIRCLE]
-            num_pieces = 3 + (index % 2)
-            rotations = [0, 1, 2, 3]
-        elif level == 4:
-            kinds = [ShapeKind.TRIANGLE, ShapeKind.SEMICIRCLE, ShapeKind.CIRCLE, ShapeKind.SQUARE]
-            num_pieces = 4
-            rotations = [0, 1, 2, 3]
-        else:
-            # Level 5
-            kinds = [ShapeKind.TRIANGLE, ShapeKind.SEMICIRCLE, ShapeKind.CIRCLE, ShapeKind.SQUARE]
-            num_pieces = 4
-            rotations = [0, 1, 2, 3]
-
-        # Generate left-side placements (cols 0..3)
-        available_cells = [(r, c) for r in range(GRID_ROWS) for c in range(4)]
-        picked_cells = self._rng.sample(available_cells, num_pieces)
-
-        givens_list: list[CellPlacement] = []
-        required_list: list[CellPlacement] = []
-
-        for r, c in picked_cells:
-            kind = self._rng.choice(kinds)
-            color_idx = self._rng.randint(0, 4)
-            rot = self._rng.choice(rotations) if kind in {ShapeKind.TRIANGLE, ShapeKind.SEMICIRCLE} else 0
-            left_piece = Piece(kind, color_idx, rot)
-            right_piece = reflect_piece(left_piece)
-
-            mc = mirror_col(c)
-
-            if level == 5 and self._rng.random() < 0.35:
-                # Two-sided symmetry: given on right side, required on left side
-                givens_list.append(CellPlacement(r, mc, right_piece))
-                required_list.append(CellPlacement(r, c, left_piece))
-            else:
-                # Standard: given on left, required on right
-                givens_list.append(CellPlacement(r, c, left_piece))
-                required_list.append(CellPlacement(r, mc, right_piece))
-
-        # Tray contains the exact required pieces, shuffled
-        tray = [req.piece for req in required_list]
-        self._rng.shuffle(tray)
-
-        return MosaicPuzzle(
-            puzzle_id=pid,
-            givens=tuple(givens_list),
-            required=tuple(required_list),
-            tray_pieces=tuple(tray),
-        )
+    @property
+    def correct(self) -> bool:
+        return self.outcome is PlaceOutcome.CORRECT
 
 
 class MirrorSession:
-    """Own active puzzle state, placed grid cells, tray inventory, undo, and facts."""
+    """Own the current mosaic, the placed tiles, misses and the facts of a set."""
 
     def __init__(
         self,
@@ -209,27 +454,23 @@ class MirrorSession:
     ) -> None:
         _require_level(level)
         if len(puzzles) != CHALLENGE_COUNT:
-            raise ValueError(f"a Specchi Magici session requires exactly {CHALLENGE_COUNT} puzzles")
+            raise ValueError(f"a Specchi Magici set has exactly {CHALLENGE_COUNT} mosaics")
         self._puzzles = tuple(puzzles)
         self.level = level
         self._index = 0
-        self._attempts_this_puzzle = 0
-        self._hints_this_puzzle = 0
-        self._used_retry_this_puzzle = False
         self._history = list(history[-HISTORY_LIMIT:])
         self._completion_consumed = False
         self._pending_milestone: dict[str, int] | None = None
+        self._finished = 0
+        self.placed: dict[tuple[int, int], Piece] = {}
+        self.misses = 0
+        self.hints = 0
 
-        # Interactive state for current puzzle
-        self.grid: dict[tuple[int, int], Piece] = {}
-        self.tray: list[Piece] = []
-        self.selected_tray_index: int | None = None
-        self.undo_stack: list[tuple[int, int]] = []
-        self._load_current_puzzle()
+    # -- state ------------------------------------------------------------------
 
     @property
     def current_puzzle(self) -> MosaicPuzzle | None:
-        if self.is_complete:
+        if self._index >= len(self._puzzles):
             return None
         return self._puzzles[self._index]
 
@@ -238,121 +479,96 @@ class MirrorSession:
         return self._index
 
     @property
+    def finished_count(self) -> int:
+        return self._finished
+
+    @property
+    def puzzle_done(self) -> bool:
+        puzzle = self.current_puzzle
+        return puzzle is not None and all(self.placed.get(r.cell) == r.piece for r in puzzle.required)
+
+    @property
     def is_complete(self) -> bool:
-        return self._index >= len(self._puzzles)
+        return self._finished >= len(self._puzzles)
 
     @property
     def history(self) -> tuple[AttemptSummary, ...]:
         return tuple(self._history)
 
-    def _load_current_puzzle(self) -> None:
-        p = self.current_puzzle
-        if p is None:
-            return
-        self.grid = {(g.row, g.col): g.piece for g in p.givens}
-        self.tray = list(p.tray_pieces)
-        self.selected_tray_index = 0 if self.tray else None
-        self.undo_stack = []
+    def piece_at(self, cell: tuple[int, int]) -> Piece | None:
+        """The tile shown at ``cell``: a given one or one the child placed."""
 
-    def select_tray_index(self, index: int) -> bool:
-        if 0 <= index < len(self.tray):
-            self.selected_tray_index = index
-            return True
-        return False
-
-    def place_selected_at(self, row: int, col: int) -> AttemptResult | None:
-        """Place the selected tray piece onto cell (row, col)."""
-        p = self.current_puzzle
-        if p is None or self.selected_tray_index is None:
+        puzzle = self.current_puzzle
+        if puzzle is None:
             return None
-        if not (0 <= row < GRID_ROWS and 0 <= col < GRID_COLS):
+        for given in puzzle.givens:
+            if given.cell == cell:
+                return given.piece
+        return self.placed.get(cell)
+
+    def is_open(self, cell: tuple[int, int]) -> bool:
+        """An empty mirror-side cell the child can build on."""
+
+        puzzle = self.current_puzzle
+        return puzzle is not None and puzzle.target_side(cell) and cell not in self.placed
+
+    def next_unmatched(self) -> CellPlacement | None:
+        """The missing reflection to hint at next (closest to the mirror first)."""
+
+        puzzle = self.current_puzzle
+        if puzzle is None:
             return None
-        if (row, col) in self.grid:
-            # Cell is already occupied
+        missing = [r for r in puzzle.required if self.placed.get(r.cell) != r.piece]
+        if not missing:
             return None
+        return min(missing, key=lambda r: (_mirror_distance(r.cell, puzzle.axis), r.row, r.col))
 
-        piece = self.tray[self.selected_tray_index]
-        self._attempts_this_puzzle += 1
+    # -- actions ----------------------------------------------------------------
 
-        # Find expected piece at (row, col)
-        expected = next((req for req in p.required if req.row == row and req.col == col), None)
+    def place(self, piece: Piece, cell: tuple[int, int]) -> PlaceResult:
+        """Try ``piece`` at ``cell``; only a matching reflection stays."""
 
-        if expected is None or expected.piece != piece:
-            # Incorrect placement: reject and wobble
-            self._hints_this_puzzle += 1
-            self._used_retry_this_puzzle = True
-            return AttemptResult(
-                correct=False,
-                puzzle_completed=False,
-                session_complete=False,
-                first_attempt_success=False,
-                hints_used=self._hints_this_puzzle,
-                used_retry=self._used_retry_this_puzzle,
-            )
+        puzzle = self.current_puzzle
+        if puzzle is None or self.puzzle_done or not self.is_open(cell):
+            return PlaceResult(PlaceOutcome.IGNORED)
+        target = puzzle.target_at(cell)
+        if target is None:
+            self.misses += 1
+            return PlaceResult(PlaceOutcome.WRONG_CELL, focus=self.next_unmatched())
+        if target.piece != piece:
+            self.misses += 1
+            return PlaceResult(PlaceOutcome.WRONG_PIECE, focus=target)
+        self.placed[cell] = piece
+        if not self.puzzle_done:
+            return PlaceResult(PlaceOutcome.CORRECT, focus=target)
+        self._record_finished()
+        return PlaceResult(PlaceOutcome.CORRECT, focus=target, puzzle_completed=True, session_complete=self.is_complete)
 
-        # Correct placement!
-        self.grid[(row, col)] = piece
-        self.tray.pop(self.selected_tray_index)
-        self.undo_stack.append((row, col))
-        self.selected_tray_index = 0 if self.tray else None
+    def note_hint(self) -> None:
+        self.hints += 1
 
-        # Check if all required pieces are placed
-        puzzle_done = all(self.grid.get((req.row, req.col)) == req.piece for req in p.required)
-        return self._evaluate_completion(puzzle_done)
+    def next_puzzle(self) -> bool:
+        """Show the next mosaic once the current one is finished."""
 
-    def undo(self) -> bool:
-        """Undo last correct piece placement."""
-        if not self.undo_stack:
+        if not self.puzzle_done or self._index >= len(self._puzzles):
             return False
-        row, col = self.undo_stack.pop()
-        piece = self.grid.pop((row, col), None)
-        if piece is not None:
-            self.tray.append(piece)
-            self.selected_tray_index = len(self.tray) - 1
-            return True
-        return False
+        self._index += 1
+        self.placed = {}
+        self.misses = 0
+        self.hints = 0
+        return self.current_puzzle is not None
 
-    def _evaluate_completion(self, puzzle_done: bool) -> AttemptResult:
-        if not puzzle_done:
-            return AttemptResult(
-                correct=True,
-                puzzle_completed=False,
-                session_complete=False,
-                first_attempt_success=not self._used_retry_this_puzzle,
-                hints_used=self._hints_this_puzzle,
-                used_retry=self._used_retry_this_puzzle,
-            )
-
-        first_attempt = self._attempts_this_puzzle == len(self.current_puzzle.required) and not self._used_retry_this_puzzle
-        summary = AttemptSummary(
-            first_attempt_success=first_attempt,
-            hints_used=self._hints_this_puzzle,
-            used_retry=self._used_retry_this_puzzle,
-        )
+    def _record_finished(self) -> None:
+        first = self.misses == 0
+        summary = AttemptSummary(first_attempt_success=first, hints_used=min(32, self.misses + self.hints), used_retry=self.misses > 0)
         self._history.append(summary)
         del self._history[:-HISTORY_LIMIT]
-
+        self._finished += 1
         self._pending_milestone = {
             "level": self.level,
             "puzzle_index": self._index + 1,
-            "first_attempt": int(first_attempt),
+            "first_attempt": int(first),
         }
-
-        self._index += 1
-        session_complete = self.is_complete
-        result = AttemptResult(
-            correct=True,
-            puzzle_completed=True,
-            session_complete=session_complete,
-            first_attempt_success=first_attempt,
-            hints_used=summary.hints_used,
-            used_retry=summary.used_retry,
-        )
-        self._attempts_this_puzzle = 0
-        self._hints_this_puzzle = 0
-        self._used_retry_this_puzzle = False
-        self._load_current_puzzle()
-        return result
 
     def consume_milestone(self) -> dict[str, int] | None:
         fact = self._pending_milestone
@@ -371,15 +587,26 @@ class MirrorSession:
         }
 
 
+def _mirror_distance(cell: tuple[int, int], axis: MirrorAxis) -> int:
+    row, col = cell
+    dc = min(abs(col - (HALF_COLS - 1)), abs(col - HALF_COLS))
+    dr = min(abs(row - (HALF_ROWS - 1)), abs(row - HALF_ROWS))
+    if axis is MirrorAxis.VERTICAL:
+        return dc
+    if axis is MirrorAxis.HORIZONTAL:
+        return dr
+    return dc + dr
+
+
 def adapt_level(current: int, history: Sequence[AttemptSummary]) -> int:
-    """Bounded between-set adaptation policy across levels 1..5."""
+    """Bounded between-set adaptation across levels 1..5."""
+
     _require_level(current)
     recent = tuple(history[-HISTORY_LIMIT:])
     if len(recent) >= HISTORY_LIMIT:
         strong = sum(item.first_attempt_success and item.hints_used <= 1 for item in recent)
         if strong >= 6:
-            return min(5, current + 1)
-
+            return min(MAX_LEVEL, current + 1)
     if len(recent) >= 3:
         last_three = recent[-3:]
         if all((not item.first_attempt_success) and item.hints_used >= 1 for item in last_three):
@@ -388,5 +615,5 @@ def adapt_level(current: int, history: Sequence[AttemptSummary]) -> int:
 
 
 def _require_level(level: int) -> None:
-    if not (1 <= level <= 5):
-        raise ValueError("level must be in 1..5")
+    if not (1 <= level <= MAX_LEVEL):
+        raise ValueError(f"level must be in 1..{MAX_LEVEL}")

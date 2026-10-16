@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Specchi Magici mosaic tile (Activity-private; shared-library candidate): square, orange token (prop.mosaic_tile.square variant orange).
+       Base orientation (point/dome/lobes up); the Activity rotates by 90-degree steps.
+       Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md -->
+  <defs>
+    <!-- orange light (mix 42% white) -> orange -->
+    <linearGradient id="mosaic_tile_square_orange" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C48C"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="tile">
+    <rect x="13" y="13" width="102" height="102" rx="16" fill="url(#mosaic_tile_square_orange)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+  </g>
+  <g id="highlight">
+    <rect x="25" y="25" width="30" height="12" rx="6" fill="#FFFFFF" opacity="0.8"/>
+  </g>
+</svg>

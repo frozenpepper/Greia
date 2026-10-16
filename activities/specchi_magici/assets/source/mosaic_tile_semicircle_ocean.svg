@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Specchi Magici mosaic tile (Activity-private; shared-library candidate): semicircle, ocean token (prop.mosaic_tile.semicircle variant ocean).
+       Base orientation (point/dome/lobes up); the Activity rotates by 90-degree steps.
+       Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md -->
+  <defs>
+    <!-- ocean light (mix 42% white) -> ocean -->
+    <linearGradient id="mosaic_tile_semicircle_ocean" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#96BFE8"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="tile">
+    <path d="M10 92 A54 54 0 0 1 118 92 Z" fill="url(#mosaic_tile_semicircle_ocean)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+  </g>
+  <g id="highlight">
+    <path d="M30 74 Q36 58 52 50" stroke-width="7" stroke-linecap="round" fill="none" stroke="#FFFFFF" opacity="0.8"/>
+  </g>
+</svg>

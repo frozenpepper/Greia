@@ -1,299 +1,344 @@
-"""Low-allocation, high-polish Pygame presentation for Specchi Magici."""
+"""Frame composition for Specchi Magici (blits only).
+
+``SceneView`` is the read-only state one frame needs, ``SceneMotion`` the
+small bounded set of running animations (tile drops, a declined tile's
+wobble, hint glows, tray hops, sparkles, the celebration wave) and
+``LilliCast`` wraps the shared ``CastFeedback`` with the hint ``pose_point``.
+Nothing here decodes, scales or renders text per frame: every surface comes
+prepared from ``MirrorArt``.
+"""
 
 from __future__ import annotations
 
-from typing import Final
+from collections import deque
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field
+import math
 
 import pygame
 
-from greia_platform.localization import LocalizationError, LocalizedResources
-from greia_platform.typography import FontRole, GreiaTypography
+from greia_platform.activity_feedback import CastFeedback, CastPose
 
 if __package__:
     from .mirror_art import MirrorArt
-    from .mirror_model import GRID_COLS, GRID_ROWS, MosaicPuzzle, MirrorSession, Piece, REFERENCE_WIDTH
+    from .mirror_layout import (
+        CELL,
+        LILLI_HEIGHT,
+        LILLI_MIDBOTTOM,
+        MIRROR_X,
+        MIRROR_Y,
+        GRID_RECT,
+        TILE_SIZE,
+        TRAY_TILE,
+        cell_rect,
+    )
+    from .mirror_model import HALF_COLS, HALF_ROWS, MirrorAxis, Piece
 else:
     from mirror_art import MirrorArt
-    from mirror_model import GRID_COLS, GRID_ROWS, MosaicPuzzle, MirrorSession, Piece, REFERENCE_WIDTH
+    from mirror_layout import (
+        CELL,
+        LILLI_HEIGHT,
+        LILLI_MIDBOTTOM,
+        MIRROR_X,
+        MIRROR_Y,
+        GRID_RECT,
+        TILE_SIZE,
+        TRAY_TILE,
+        cell_rect,
+    )
+    from mirror_model import HALF_COLS, HALF_ROWS, MirrorAxis, Piece
+
+DROP_SECONDS = 0.32
+WOBBLE_SECONDS = 0.9
+HOP_SECONDS = 0.55
+POKE_SECONDS = 0.4
+FX_FRAME_SECONDS = 0.12
+CELEBRATE_SECONDS = 2.2
+MAX_FX = 12
+MAX_GLOWS = 8
 
 
-CELL_SIZE: Final[int] = 52
-BOARD_TOP: Final[int] = 64
-BOARD_LEFT: Final[int] = 298
-MIRROR_X: Final[int] = 512
+class LilliCast:
+    """Lilli: shared cheer/think feedback plus the hint ``pose_point``.
 
-LISTEN_BTN_RECT: Final[pygame.Rect] = pygame.Rect(135, 492, 160, 50)
-UNDO_RECT: Final[pygame.Rect] = pygame.Rect(720, 492, 140, 50)
-MASCOT_RECT: Final[pygame.Rect] = pygame.Rect(20, 435, 110, 110)
+    She stands left of the mirror; the canonical point pose already points
+    right, at the board.
+    """
+
+    def __init__(self, feedback: CastFeedback, art: MirrorArt, clock: Callable[[], float]) -> None:
+        self.feedback = feedback
+        self._clock = clock
+        self._point = art.lilli("pose_point", LILLI_HEIGHT)
+        self._point_until = 0.0
+
+    @property
+    def pose(self) -> CastPose:
+        return self.feedback.pose
+
+    @property
+    def pointing(self) -> bool:
+        return self._clock() < self._point_until and self.feedback.pose is CastPose.IDLE
+
+    @property
+    def animating(self) -> bool:
+        return self.feedback.animating or self.pointing
+
+    def correct(self) -> None:
+        self._point_until = 0.0
+        self.feedback.correct()
+
+    def try_again(self) -> None:
+        self._point_until = 0.0
+        self.feedback.try_again()
+
+    def point(self, seconds: float) -> None:
+        self.feedback.reset()
+        self._point_until = self._clock() + seconds
+
+    def reset(self) -> None:
+        self._point_until = 0.0
+        self.feedback.reset()
+
+    def update(self) -> bool:
+        changed = self.feedback.update()
+        if self._point_until and self._clock() >= self._point_until:
+            self._point_until = 0.0
+            changed = True
+        return changed
+
+    def draw(self, surface: pygame.Surface) -> None:
+        if self.pointing and self._point is not None:
+            bob = int(math.sin((self._point_until - self._clock()) * 6.0) * 3)
+            surface.blit(self._point, self._point.get_rect(midbottom=(LILLI_MIDBOTTOM[0] + bob, LILLI_MIDBOTTOM[1])))
+            return
+        self.feedback.draw(surface, LILLI_MIDBOTTOM)
+
+
+@dataclass(slots=True)
+class SceneMotion:
+    """Running animations, each bounded and pruned by time."""
+
+    drops: dict[tuple[int, int], float] = field(default_factory=dict)
+    wobble: tuple[tuple[int, int], Piece, float] | None = None
+    source_glow: dict[tuple[int, int], float] = field(default_factory=dict)
+    target_ring: dict[tuple[int, int], float] = field(default_factory=dict)
+    ghost: tuple[tuple[int, int], Piece, float] | None = None
+    tray_hops: dict[int, float] = field(default_factory=dict)
+    pokes: dict[tuple[int, int], float] = field(default_factory=dict)
+    fx: deque = field(default_factory=lambda: deque(maxlen=MAX_FX))
+    celebrate: float | None = None
+
+    def reset(self) -> None:
+        self.drops.clear()
+        self.wobble = None
+        self.source_glow.clear()
+        self.target_ring.clear()
+        self.ghost = None
+        self.tray_hops.clear()
+        self.pokes.clear()
+        self.fx.clear()
+        self.celebrate = None
+
+    def clear_hints(self) -> None:
+        self.source_glow.clear()
+        self.target_ring.clear()
+        self.ghost = None
+
+    def glow_source(self, cell: tuple[int, int], until: float) -> None:
+        if len(self.source_glow) >= MAX_GLOWS:
+            self.source_glow.clear()
+        self.source_glow[cell] = until
+
+    def ring_target(self, cell: tuple[int, int], until: float) -> None:
+        if len(self.target_ring) >= MAX_GLOWS:
+            self.target_ring.clear()
+        self.target_ring[cell] = until
+
+    def add_fx(self, name: str, center: tuple[int, int], start: float) -> None:
+        self.fx.append((name, center, start))
+
+    def prune(self, now: float) -> None:
+        self.drops = {k: v for k, v in self.drops.items() if now - v < DROP_SECONDS}
+        if self.wobble is not None and now - self.wobble[2] >= WOBBLE_SECONDS:
+            self.wobble = None
+        self.source_glow = {k: v for k, v in self.source_glow.items() if v > now}
+        self.target_ring = {k: v for k, v in self.target_ring.items() if v > now}
+        if self.ghost is not None and self.ghost[2] <= now:
+            self.ghost = None
+        self.tray_hops = {k: v for k, v in self.tray_hops.items() if now - v < HOP_SECONDS}
+        self.pokes = {k: v for k, v in self.pokes.items() if now - v < POKE_SECONDS}
+        while self.fx and now - self.fx[0][2] > 3 * FX_FRAME_SECONDS + 1.0:
+            self.fx.popleft()
+
+    def active(self, now: float) -> bool:
+        return bool(
+            self.drops or self.wobble or self.source_glow or self.target_ring or self.ghost
+            or self.tray_hops or self.pokes or self.fx
+            or (self.celebrate is not None and now - self.celebrate < CELEBRATE_SECONDS)
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class SceneView:
+    """Everything one frame needs from the app (read-only)."""
+
+    axis: MirrorAxis
+    picture_cells: frozenset[tuple[int, int]]
+    tiles: Mapping[tuple[int, int], Piece]
+    tray: tuple[Piece, ...]
+    tray_rects: tuple[pygame.Rect, ...]
+    held: int | None = None
+    dragging: tuple[int, int] | None = None
+    hovered_tile: int | None = None
+    hovered_cell: tuple[int, int] | None = None
+    intro: float = 1.0
 
 
 class MirrorRenderer:
-    """Render the 8x6 symmetry grid, magic mirror beam, piece tray, and Lilli mascot."""
+    """Draw one frame of the mirror stage from a ``SceneView``."""
 
-    def __init__(
-        self,
-        art: MirrorArt,
-        typography: GreiaTypography,
-        resources: LocalizedResources,
-    ) -> None:
+    def __init__(self, art: MirrorArt, cast: LilliCast) -> None:
         self._art = art
-        self._typography = typography
-        self._resources = resources
-        # Resolved once: the speaker pictogram stays even if the caption is absent.
-        try:
-            caption = resources.text("button.listen").strip()
-        except LocalizationError:
-            caption = ""
-        self._listen_text = f"🔊 {caption}" if caption else "🔊"
-        self._undo_text = f"↩️ {self._caption('button.undo')}".strip()
-        self._prompt_text = self._caption("prompt.place")
+        self._cast = cast
 
-    def _caption(self, key: str) -> str:
-        try:
-            return self._resources.text(key).strip()
-        except LocalizationError:
-            return ""
+    def draw(self, surface: pygame.Surface, view: SceneView, motion: SceneMotion, now: float) -> None:
+        surface.blit(self._art.scene(view.picture_cells, view.axis, len(view.tray)), (0, 0))
+        self._board_tiles(surface, view, motion, now)
+        self._hints(surface, view, motion, now)
+        self._tray(surface, view, motion, now)
+        self._cast.draw(surface)
+        self._fx(surface, motion, now)
+        if view.dragging is not None and view.held is not None and 0 <= view.held < len(view.tray):
+            image = self._art.tile(view.tray[view.held], TILE_SIZE + 6)
+            surface.blit(image, image.get_rect(center=view.dragging))
 
-    def draw_scene(
-        self,
-        target: pygame.Surface,
-        session: MirrorSession,
-        *,
-        wobble_x: int = 0,
-        shimmer: bool = False,
-        hovered_cell: tuple[int, int] | None = None,
-        hovered_tray_idx: int | None = None,
-        hovered_undo: bool = False,
-    ) -> None:
-        target.blit(self._art.background, (0, 0))
-        self._draw_lilli(target)
+    # -- board ------------------------------------------------------------------
 
-        current = session.current_puzzle
-        if current is None:
-            return
+    def _board_tiles(self, surface: pygame.Surface, view: SceneView, motion: SceneMotion, now: float) -> None:
+        celebrate = motion.celebrate
+        for cell, piece in view.tiles.items():
+            rect = cell_rect(*cell)
+            dx = dy = 0
+            started = motion.drops.get(cell)
+            if started is not None:
+                t = min(1.0, (now - started) / DROP_SECONDS)
+                dy = -int(round(18 * (1 - t) * (1 - t)))
+            poke = motion.pokes.get(cell)
+            if poke is not None:
+                dx = int(round(math.sin((now - poke) * 40) * 4 * (1 - (now - poke) / POKE_SECONDS)))
+            if celebrate is not None:
+                # A happy wave that starts at the mirror line and runs outwards.
+                delay = 0.09 * _distance_from_mirror(cell, view.axis)
+                t = now - celebrate - delay
+                if 0 <= t < 0.5:
+                    dy -= int(round(math.sin(math.pi * t / 0.5) * 14))
+            if view.intro < 1.0:
+                dy += int(round((1.0 - view.intro) * 20))
+            image = self._art.tile(piece, TILE_SIZE)
+            surface.blit(image, image.get_rect(center=(rect.centerx + dx, rect.centery + dy)))
+        if motion.wobble is not None:
+            cell, piece, started = motion.wobble
+            t = (now - started) / WOBBLE_SECONDS
+            rect = cell_rect(*cell)
+            dx = int(round(math.sin(t * math.pi * 6) * 7 * (1 - t)))
+            image = self._art.ghost(piece, TILE_SIZE) if t > 0.6 else self._art.tile(piece, TILE_SIZE)
+            surface.blit(image, image.get_rect(center=(rect.centerx + dx, rect.centery)))
+        if celebrate is not None and now - celebrate < CELEBRATE_SECONDS:
+            flash = self._art.line_flash(view.axis)
+            alpha = int(255 * max(0.0, math.sin(math.pi * min(1.0, (now - celebrate) / 1.2))))
+            flash.set_alpha(alpha)
+            surface.blit(flash, GRID_RECT.inflate(40, 40).topleft)
 
-        # 1. Draw 8x6 Grid Board & Magic Mirror Axis
-        self._draw_board_and_mirror(
-            target,
-            session,
-            wobble_x=wobble_x,
-            shimmer=shimmer,
-            hovered_cell=hovered_cell,
-        )
+    def _hints(self, surface: pygame.Surface, view: SceneView, motion: SceneMotion, now: float) -> None:
+        pulse = 0.55 + 0.45 * math.sin(now * 5.5)
+        ring = self._art.glow_ring(CELL - 4)
+        ring.set_alpha(int(255 * pulse))
+        for cell in motion.source_glow:
+            surface.blit(ring, ring.get_rect(center=cell_rect(*cell).center))
+        for cell in motion.target_ring:
+            surface.blit(ring, ring.get_rect(center=cell_rect(*cell).center))
+        if motion.ghost is not None:
+            cell, piece, _ = motion.ghost
+            ghost = self._art.ghost(piece, TILE_SIZE)
+            ghost.set_alpha(int(150 + 105 * pulse))
+            surface.blit(ghost, ghost.get_rect(center=cell_rect(*cell).center))
+            ghost.set_alpha(None)
+        # Preview of the tile in hand over the cell under the pointer.
+        if (
+            view.held is not None
+            and view.hovered_cell is not None
+            and view.hovered_cell not in view.tiles
+            and view.hovered_cell not in view.picture_cells
+            and 0 <= view.held < len(view.tray)
+        ):
+            ghost = self._art.ghost(view.tray[view.held], TILE_SIZE)
+            surface.blit(ghost, ghost.get_rect(center=cell_rect(*view.hovered_cell).center))
 
-        # 2. Draw Prompt text
-        self._draw_prompt(target)
+    # -- tray -------------------------------------------------------------------
 
-        # 3. Draw Tray Pieces & Undo Button
-        self._draw_tray_and_controls(
-            target,
-            session,
-            hovered_tray_idx=hovered_tray_idx,
-            hovered_undo=hovered_undo,
-        )
+    def _tray(self, surface: pygame.Surface, view: SceneView, motion: SceneMotion, now: float) -> None:
+        for index, (piece, rect) in enumerate(zip(view.tray, view.tray_rects)):
+            dy = 0
+            hop = motion.tray_hops.get(index)
+            if hop is not None:
+                dy = -int(round(math.sin(math.pi * min(1.0, (now - hop) / HOP_SECONDS)) * 16))
+            held = index == view.held
+            if held:
+                ring = self._art.hand_ring(rect.width - 2)
+                surface.blit(ring, ring.get_rect(center=(rect.centerx, rect.centery - 6)))
+                dy -= 6
+            elif index == view.hovered_tile:
+                dy -= 3
+            if held and view.dragging is not None:
+                ghost = self._art.ghost(piece, TRAY_TILE)
+                surface.blit(ghost, ghost.get_rect(center=(rect.centerx, rect.centery + dy)))
+                continue
+            image = self._art.tile(piece, TRAY_TILE)
+            surface.blit(image, image.get_rect(center=(rect.centerx, rect.centery + dy)))
 
-        # 4. Progress badge
-        self._draw_progress_badge(target, session)
+    def _fx(self, surface: pygame.Surface, motion: SceneMotion, now: float) -> None:
+        for name, center, start in motion.fx:
+            if now < start:
+                continue
+            frames = self._art.fx_frames(name)
+            if not frames:
+                continue
+            index = int((now - start) / FX_FRAME_SECONDS)
+            if index >= len(frames) + 2:
+                continue
+            frame = frames[min(index, len(frames) - 1)]
+            surface.blit(frame, frame.get_rect(center=center))
 
-    def cell_rect(self, row: int, col: int) -> pygame.Rect:
-        x_offset = (col * CELL_SIZE) if col < 4 else ((col - 4) * CELL_SIZE + 214)
-        return pygame.Rect(BOARD_LEFT + x_offset, BOARD_TOP + row * CELL_SIZE, CELL_SIZE, CELL_SIZE)
 
-    def cell_at(self, point: tuple[int, int]) -> tuple[int, int] | None:
-        for r in range(GRID_ROWS):
-            for c in range(GRID_COLS):
-                rect = self.cell_rect(r, c)
-                if rect.collidepoint(point):
-                    return (r, c)
-        return None
+def _distance_from_mirror(cell: tuple[int, int], axis: MirrorAxis) -> int:
+    row, col = cell
+    dc = min(abs(col - (HALF_COLS - 1)), abs(col - HALF_COLS))
+    dr = min(abs(row - (HALF_ROWS - 1)), abs(row - HALF_ROWS))
+    if axis is MirrorAxis.VERTICAL:
+        return dc
+    if axis is MirrorAxis.HORIZONTAL:
+        return dr
+    return dc + dr
 
-    def tray_item_at(self, point: tuple[int, int], session: MirrorSession) -> int | None:
-        count = len(session.tray)
-        if count == 0:
-            return None
-        spacing = 68
-        tray_w = count * spacing
-        start_x = 512 - tray_w // 2
 
-        for i in range(count):
-            rect = pygame.Rect(start_x + i * spacing - 4, 476, 60, 80)
-            if rect.collidepoint(point):
-                return i
-        return None
+def mirror_points(axis: MirrorAxis) -> tuple[tuple[int, int], ...]:
+    """Where the sparkles run along the mirror line(s) at a celebration."""
 
-    def listen_contains(self, point: tuple[int, int]) -> bool:
-        return LISTEN_BTN_RECT.collidepoint(point) or MASCOT_RECT.collidepoint(point)
+    points: list[tuple[int, int]] = []
+    if axis in (MirrorAxis.VERTICAL, MirrorAxis.BOTH):
+        points += [(MIRROR_X, GRID_RECT.top + GRID_RECT.height * k // 4) for k in (0, 1, 2, 3, 4)]
+    if axis in (MirrorAxis.HORIZONTAL, MirrorAxis.BOTH):
+        points += [(GRID_RECT.left + GRID_RECT.width * k // 6, MIRROR_Y) for k in (0, 1, 2, 4, 5, 6)]
+    return tuple(points)
 
-    def undo_contains(self, point: tuple[int, int]) -> bool:
-        return UNDO_RECT.collidepoint(point)
 
-    def _draw_board_and_mirror(
-        self,
-        target: pygame.Surface,
-        session: MirrorSession,
-        *,
-        wobble_x: int = 0,
-        shimmer: bool = False,
-        hovered_cell: tuple[int, int] | None = None,
-    ) -> None:
-        board_rect = pygame.Rect(BOARD_LEFT - 14 + wobble_x, BOARD_TOP - 14, 448, GRID_ROWS * CELL_SIZE + 28)
-        # Drop shadow
-        pygame.draw.rect(target, (10, 5, 20), board_rect.move(0, 8), border_radius=20)
-
-        # Ornate golden baroque frame
-        pygame.draw.rect(target, (245, 158, 11), board_rect, width=6, border_radius=20)
-        pygame.draw.rect(target, (217, 119, 6), board_rect.inflate(-6, -6), width=2, border_radius=16)
-        pygame.draw.rect(target, (20, 12, 38), board_rect.inflate(-10, -10), border_radius=14)
-
-        # Corner golden rosettes
-        for cx, cy in [
-            (board_rect.left + 8, board_rect.top + 8),
-            (board_rect.right - 8, board_rect.top + 8),
-            (board_rect.left + 8, board_rect.bottom - 8),
-            (board_rect.right - 8, board_rect.bottom - 8),
-        ]:
-            pygame.draw.circle(target, (251, 191, 36), (cx, cy), 8)
-            pygame.draw.circle(target, (180, 83, 9), (cx, cy), 8, 2)
-
-        # Draw Cells
-        selected_piece = (
-            session.tray[session.selected_tray_index]
-            if (session.selected_tray_index is not None and session.selected_tray_index < len(session.tray))
-            else None
-        )
-
-        for r in range(GRID_ROWS):
-            for c in range(GRID_COLS):
-                rect = self.cell_rect(r, c).move(wobble_x, 0)
-                is_hovered = ((r, c) == hovered_cell)
-
-                # Left side (crystal blue tint), Right side (amethyst purple tint)
-                bg_col = (30, 24, 60) if c < 4 else (42, 26, 74)
-                pygame.draw.rect(target, bg_col, rect.inflate(-2, -2), border_radius=8)
-
-                border_c = (56, 189, 248) if is_hovered else (65, 45, 95)
-                border_w = 3 if is_hovered else 1
-                pygame.draw.rect(target, border_c, rect.inflate(-2, -2), width=border_w, border_radius=8)
-
-                # Draw placed piece
-                piece = session.grid.get((r, c))
-                if piece is not None:
-                    self._art.draw_piece(target, rect.centerx, rect.centery, 38, piece)
-                elif is_hovered and c >= 4 and selected_piece is not None:
-                    # Ghost preview of selected piece on target cell
-                    ghost = pygame.Surface((CELL_SIZE, CELL_SIZE), pygame.SRCALPHA)
-                    self._art.draw_piece(ghost, CELL_SIZE // 2, CELL_SIZE // 2, 34, selected_piece)
-                    ghost.set_alpha(140)
-                    target.blit(ghost, rect.topleft)
-
-        # Central Magic Mirror Shimmer Beam
-        beam_rect = pygame.Rect(MIRROR_X - 6 + wobble_x, BOARD_TOP - 20, 12, GRID_ROWS * CELL_SIZE + 40)
-        # Soft glowing outer aura
-        for r in range(16, 4, -3):
-            alpha = int(45 * (1.0 - r / 16.0))
-            aura = pygame.Surface((r * 2, beam_rect.height), pygame.SRCALPHA)
-            pygame.draw.rect(aura, (56, 189, 248, alpha), (0, 0, r * 2, beam_rect.height), border_radius=r)
-            target.blit(aura, (MIRROR_X - r + wobble_x, BOARD_TOP - 20))
-
-        beam_col = (255, 255, 255) if shimmer else (186, 230, 253)
-        pygame.draw.rect(target, beam_col, beam_rect, border_radius=6)
-        pygame.draw.rect(target, (56, 189, 248), beam_rect, width=2, border_radius=6)
-
-    def _draw_tray_and_controls(
-        self,
-        target: pygame.Surface,
-        session: MirrorSession,
-        *,
-        hovered_tray_idx: int | None = None,
-        hovered_undo: bool = False,
-    ) -> None:
-        count = len(session.tray)
-        if count > 0:
-            spacing = 68
-            tray_w = count * spacing
-            start_x = 512 - tray_w // 2
-
-            tray_bg = pygame.Rect(start_x - 16, 474, tray_w + 32, 88)
-            pygame.draw.rect(target, (10, 5, 20), tray_bg.move(0, 6), border_radius=22)
-            pygame.draw.rect(target, (24, 14, 46), tray_bg, border_radius=22)
-            pygame.draw.rect(target, (147, 51, 234), tray_bg, width=3, border_radius=22)
-
-            for i, piece in enumerate(session.tray):
-                cx = start_x + i * spacing + 30
-                cy = 518
-                is_selected = (session.selected_tray_index == i)
-                is_hovered = (i == hovered_tray_idx)
-                draw_cy = cy - 4 if (is_hovered or is_selected) else cy
-
-                if is_selected:
-                    pygame.draw.circle(target, (56, 189, 248), (cx, draw_cy), 30, 4)
-                    pygame.draw.circle(target, (255, 255, 255), (cx, draw_cy), 32, 2)
-                elif is_hovered:
-                    pygame.draw.circle(target, (216, 180, 254), (cx, draw_cy), 28, 3)
-
-                self._art.draw_piece(target, cx, draw_cy, 42, piece)
-
-        # Undo button
-        can_undo = len(session.undo_stack) > 0
-        u_draw = UNDO_RECT.move(0, -4) if (hovered_undo and can_undo) else UNDO_RECT
-
-        # Drop shadow
-        pygame.draw.rect(target, (10, 5, 20), UNDO_RECT.move(0, 4), border_radius=25)
-
-        if can_undo:
-            btn_col = (147, 51, 234)
-            border_col = (251, 191, 36)
-            text_col = (255, 255, 255)
-        else:
-            btn_col = (30, 41, 59)
-            border_col = (51, 65, 85)
-            text_col = (100, 116, 139)
-
-        pygame.draw.rect(target, btn_col, u_draw, border_radius=25)
-        pygame.draw.rect(target, border_col, u_draw, width=3 if can_undo else 2, border_radius=25)
-
-        undo_surf = self._typography.render(self._undo_text, FontRole.TITLE, 18, text_col)
-        target.blit(
-            undo_surf,
-            (
-                u_draw.centerx - undo_surf.get_width() // 2,
-                u_draw.centery - undo_surf.get_height() // 2,
-            ),
-        )
-
-    def _draw_prompt(self, target: pygame.Surface) -> None:
-        prompt_surf = self._typography.render(self._prompt_text, FontRole.TITLE, 26, (254, 240, 138))
-        p_x = REFERENCE_WIDTH // 2 - prompt_surf.get_width() // 2
-        p_y = 405
-        banner = pygame.Rect(p_x - 24, p_y - 6, prompt_surf.get_width() + 48, prompt_surf.get_height() + 12)
-        pygame.draw.rect(target, (15, 23, 42, 200), banner, border_radius=16)
-        pygame.draw.rect(target, (217, 119, 6), banner, width=2, border_radius=16)
-        target.blit(prompt_surf, (p_x, p_y))
-
-    def _draw_lilli(self, target: pygame.Surface) -> None:
-        if self._art.lilli is not None:
-            target.blit(self._art.lilli, (25, 435))
-
-        # Speech replay capsule beside Lilli
-        pygame.draw.rect(target, (10, 5, 20), LISTEN_BTN_RECT.move(0, 4), border_radius=25)
-        pygame.draw.rect(target, (254, 240, 138), LISTEN_BTN_RECT, border_radius=25)
-        pygame.draw.rect(target, (217, 119, 6), LISTEN_BTN_RECT, width=3, border_radius=25)
-
-        l_surf = self._typography.render(self._listen_text, FontRole.TITLE, 18, (120, 53, 15))
-        target.blit(
-            l_surf,
-            (LISTEN_BTN_RECT.centerx - l_surf.get_width() // 2, LISTEN_BTN_RECT.centery - l_surf.get_height() // 2),
-        )
-
-    def _draw_progress_badge(self, target: pygame.Surface, session: MirrorSession) -> None:
-        badge_rect = pygame.Rect(870, 24, 130, 44)
-        pygame.draw.rect(target, (15, 23, 42, 200), badge_rect, border_radius=22)
-        pygame.draw.rect(target, (254, 240, 138), badge_rect, width=2, border_radius=22)
-
-        txt = f"{session.puzzle_index + 1} / 6"
-        txt_surf = self._typography.render(txt, FontRole.TITLE, 22, (254, 240, 138))
-        target.blit(
-            txt_surf,
-            (badge_rect.centerx - txt_surf.get_width() // 2, badge_rect.centery - txt_surf.get_height() // 2),
-        )
-
+__all__ = [
+    "CELEBRATE_SECONDS",
+    "DROP_SECONDS",
+    "LilliCast",
+    "MirrorRenderer",
+    "SceneMotion",
+    "SceneView",
+    "WOBBLE_SECONDS",
+    "mirror_points",
+]

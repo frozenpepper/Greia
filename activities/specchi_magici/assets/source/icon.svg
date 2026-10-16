@@ -1,38 +1,50 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Specchi Magici (Magic Mirrors) Activity icon: a gilded magic mirror board,
+       a mosaic half on the left, its reflection being built on the glass.
+       Learn Collection -> orange tile. Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md -->
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#8b5cf6"/>
-      <stop offset="100%" stop-color="#5b21b6"/>
+    <!-- orange light (mix 42% white) -> orange -->
+    <linearGradient id="specchi_icon_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C38A"/>
+      <stop offset="1" stop-color="#F39A38"/>
     </linearGradient>
-    <linearGradient id="mirror" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#38bdf8"/>
-      <stop offset="50%" stop-color="#ffffff"/>
-      <stop offset="100%" stop-color="#38bdf8"/>
+    <!-- gold light -> gold (cast constants) -->
+    <linearGradient id="specchi_icon_frame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDDF92"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+    <!-- sky light (mix 45% white) -> sky -->
+    <linearGradient id="specchi_icon_glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E8F4FB"/>
+      <stop offset="1" stop-color="#CFEAF7"/>
+    </linearGradient>
+    <!-- coral light -> coral -->
+    <linearGradient id="specchi_icon_coral" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F9ABA3"/>
+      <stop offset="1" stop-color="#F46F61"/>
     </linearGradient>
   </defs>
-  <!-- Background card -->
-  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
-  
-  <!-- Mirror frame / plate -->
-  <rect x="36" y="36" width="184" height="184" rx="20" fill="#2e1065" stroke="#c084fc" stroke-width="4"/>
-  
-  <!-- Central Glowing Mirror Beam -->
-  <rect x="123" y="44" width="10" height="168" rx="5" fill="url(#mirror)"/>
-  
-  <!-- Left Shapes -->
-  <!-- Red Circle -->
-  <circle cx="78" cy="80" r="22" fill="#f43f5e" stroke="#fb7185" stroke-width="3"/>
-  <!-- Gold Triangle pointing Right -->
-  <polygon points="56,128 100,152 56,176" fill="#fbbf24" stroke="#fef08a" stroke-width="3"/>
-  
-  <!-- Right Shapes (Mirrored) -->
-  <!-- Red Circle -->
-  <circle cx="178" cy="80" r="22" fill="#f43f5e" stroke="#fb7185" stroke-width="3"/>
-  <!-- Gold Triangle pointing Left (Mirrored!) -->
-  <polygon points="200,128 156,152 200,176" fill="#fbbf24" stroke="#fef08a" stroke-width="3"/>
-  
-  <!-- Sparkles -->
-  <circle cx="128" cy="56" r="4" fill="#ffffff"/>
-  <circle cx="128" cy="200" r="4" fill="#ffffff"/>
-  <circle cx="128" cy="128" r="6" fill="#ffffff"/>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#specchi_icon_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="subject">
+    <ellipse cx="128" cy="218" rx="80" ry="9" fill="#8E5F33" opacity="0.18"/>
+    <rect x="34" y="46" width="188" height="164" rx="28" fill="url(#specchi_icon_frame)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M56 54 L110 54" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.8"/>
+    <rect x="50" y="62" width="156" height="132" rx="16" fill="#FFF6E3" stroke="#4B372F" stroke-width="3.5"/>
+    <path d="M128 64 L190 64 Q204 64 204 78 L204 178 Q204 192 190 192 L128 192 Z" fill="url(#specchi_icon_glass)"/>
+    <path d="M150 192 L186 64" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" opacity="0.6"/>
+    <rect x="50" y="62" width="156" height="132" rx="16" fill="none" stroke="#4B372F" stroke-width="3.5"/>
+    <path d="M64 82 L108 104 L64 126 Z" fill="url(#specchi_icon_coral)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M192 82 L148 104 L192 126 Z" fill="url(#specchi_icon_coral)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <circle cx="90" cy="162" r="19" fill="#4A91D8" stroke="#4B372F" stroke-width="4.5"/>
+    <ellipse cx="83" cy="155" rx="6" ry="4" fill="#FFFFFF" opacity="0.8" transform="rotate(-35 83 155)"/>
+    <circle cx="166" cy="162" r="19" fill="none" stroke="#4A91D8" stroke-width="4" stroke-dasharray="7 6" stroke-linecap="round"/>
+    <rect x="122" y="52" width="12" height="152" rx="6" fill="#FFFBEB" stroke="#F59E0B" stroke-width="3"/>
+  </g>
+  <g id="accent">
+    <path d="M128 30 L133 43 L146 48 L133 53 L128 66 L123 53 L110 48 L123 43 Z" fill="#FBBF24" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M196 142 L199 150 L207 153 L199 156 L196 164 L193 156 L185 153 L193 150 Z" fill="#FFFFFF" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
 </svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Specchi Magici mosaic tile (Activity-private; shared-library candidate): circle, grape token (prop.mosaic_tile.circle variant grape).
+       Base orientation (point/dome/lobes up); the Activity rotates by 90-degree steps.
+       Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md -->
+  <defs>
+    <!-- grape light (mix 42% white) -> grape -->
+    <linearGradient id="mosaic_tile_circle_grape" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C1A5E0"/>
+      <stop offset="1" stop-color="#9464C9"/>
+    </linearGradient>
+  </defs>
+  <g id="tile">
+    <circle cx="64" cy="64" r="51" fill="url(#mosaic_tile_circle_grape)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+  </g>
+  <g id="highlight">
+    <ellipse cx="45" cy="40" rx="14" ry="9" transform="rotate(-35 45 40)" fill="#FFFFFF" opacity="0.8"/>
+  </g>
+</svg>

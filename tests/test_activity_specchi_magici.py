@@ -1,39 +1,76 @@
+"""Specchi Magici (Magic Mirrors): geometry, mosaics, rules, art, services, app loop.
+
+Runs headlessly (SDL dummy drivers) against the real shared art catalogue,
+with an injected clock, in-memory progress and recorded events, so no child
+profile data, voices or windows are touched.
+"""
+
 from __future__ import annotations
 
+import json
+import os
 from pathlib import Path
 import random
 import sys
 import tomllib
 import unittest
 
+os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+
+ROOT = Path(__file__).resolve().parents[1]
+for entry in (ROOT, ROOT / "src"):
+    if str(entry) not in sys.path:
+        sys.path.insert(0, str(entry))
+
 import pygame
 
 import hermetic_volume
-
-
-ROOT = Path(__file__).resolve().parents[1]
-ACTIVITY_ROOT = ROOT / "activities" / "specchi_magici"
-for path in (ROOT / "src", ACTIVITY_ROOT):
-    value = str(path)
-    if value not in sys.path:
-        sys.path.insert(0, value)
-
-from mirror_model import (  # noqa: E402
-    AttemptSummary,
+from activities.specchi_magici.mirror_app import DRAG_THRESHOLD_PX, AppState, MirrorActivity
+from activities.specchi_magici.mirror_art import COLOUR_TOKENS, MirrorArt
+from activities.specchi_magici.mirror_audio import PACKAGE_CUES, MirrorAudio
+from activities.specchi_magici.mirror_layout import (
+    FRAME_RECT,
+    LILLI_TAP_RECT,
+    cell_at,
+    cell_rect,
+    tray_panel,
+    tray_rects,
+)
+from activities.specchi_magici.mirror_model import (
     CHALLENGE_COUNT,
     GRID_COLS,
     GRID_ROWS,
     HISTORY_LIMIT,
+    LEVELS,
+    MAX_LEVEL,
+    MAX_TRAY,
+    ORIENTED,
+    AttemptSummary,
+    CellPlacement,
+    MirrorAxis,
     MirrorRoundFactory,
     MirrorSession,
     MosaicPuzzle,
     Piece,
+    PlaceOutcome,
     ShapeKind,
     adapt_level,
     mirror_col,
-    reflect_piece,
+    mirror_row,
+    reflect_horizontal,
+    reflect_vertical,
+    reflections,
 )
-from mirror_services import GreiaMirrorProgress, MirrorProgress  # noqa: E402
+from activities.specchi_magici.mirror_services import STORAGE_KEY, GreiaMirrorProgress, MirrorProgress
+from greia_platform.activity_controls import ControlLayout
+from greia_platform.localization import activity_resources
+from greia_platform.pygame_canvas import PygameReferenceCanvas
+from greia_platform.system_chrome import ActivitySystemChromeLayout
+from greia_platform.typography import GreiaTypography
+
+ACTIVITY_ROOT = ROOT / "activities" / "specchi_magici"
+LOCALES = ("en", "it", "es", "fr")
 
 
 def setUpModule() -> None:
@@ -42,144 +79,211 @@ def setUpModule() -> None:
     hermetic_volume.install_for_module()
 
 
-class SymmetryInvariantsTests(unittest.TestCase):
-    def test_mirror_col_is_exact_involution(self) -> None:
-        for c in range(GRID_COLS):
-            mc = mirror_col(c)
-            self.assertEqual(mirror_col(mc), c)
-            self.assertEqual(c + mc, GRID_COLS - 1)
+# -- geometry ------------------------------------------------------------------------
 
-    def test_reflect_piece_is_exact_involution(self) -> None:
-        for kind in ShapeKind:
-            for color in range(5):
-                rotations = (0,) if kind in {ShapeKind.CIRCLE, ShapeKind.SQUARE} else (0, 1, 2, 3)
-                for rot in rotations:
-                    piece = Piece(kind, color, rot)
-                    reflected = reflect_piece(piece)
-                    self.assertEqual(reflect_piece(reflected), piece)
-                    if kind in {ShapeKind.CIRCLE, ShapeKind.SQUARE}:
-                        self.assertEqual(reflected.rotation, 0)
-                    elif kind in {ShapeKind.TRIANGLE, ShapeKind.SEMICIRCLE}:
-                        # Vertical reflection maps 1 (RIGHT) <-> 3 (LEFT) while 0 (UP) and 2 (DOWN) stay fixed
-                        if rot in {0, 2}:
-                            self.assertEqual(reflected.rotation, rot)
-                        elif rot == 1:
-                            self.assertEqual(reflected.rotation, 3)
-                        elif rot == 3:
-                            self.assertEqual(reflected.rotation, 1)
+
+class SymmetryTests(unittest.TestCase):
+    def test_mirror_indices_are_exact_involutions(self) -> None:
+        for col in range(GRID_COLS):
+            self.assertEqual(mirror_col(mirror_col(col)), col)
+        self.assertEqual(mirror_col(2), 3)
+        for row in range(GRID_ROWS):
+            self.assertEqual(mirror_row(mirror_row(row)), row)
+        self.assertEqual(mirror_row(1), 2)
+        with self.assertRaises(ValueError):
+            mirror_col(GRID_COLS)
+
+    def test_reflections_turn_only_what_a_mirror_turns(self) -> None:
+        for kind in (ShapeKind.CIRCLE, ShapeKind.SQUARE, ShapeKind.RHOMBUS):
+            piece = Piece(kind, 1)
+            self.assertEqual(reflect_vertical(piece), piece)
+            self.assertEqual(reflect_horizontal(piece), piece)
+        right = Piece(ShapeKind.TRIANGLE, 0, 1)
+        self.assertEqual(reflect_vertical(right), Piece(ShapeKind.TRIANGLE, 0, 3))
+        self.assertEqual(reflect_horizontal(right), right)
+        up = Piece(ShapeKind.SEMICIRCLE, 2, 0)
+        self.assertEqual(reflect_vertical(up), up)
+        self.assertEqual(reflect_horizontal(up), Piece(ShapeKind.SEMICIRCLE, 2, 2))
+        heart = Piece(ShapeKind.HEART, 4, 0)
+        self.assertEqual(reflect_vertical(heart), heart, "a heart is its own mirror image")
+        self.assertEqual(reflect_horizontal(heart), Piece(ShapeKind.HEART, 4, 2), "water turns it over")
+        for piece in (right, up, heart, Piece(ShapeKind.TRIANGLE, 5, 2)):
+            self.assertEqual(reflect_vertical(reflect_vertical(piece)), piece)
+            self.assertEqual(reflect_horizontal(reflect_horizontal(piece)), piece)
+
+    def test_piece_validation(self) -> None:
+        with self.assertRaises(ValueError):
+            Piece(ShapeKind.SQUARE, 0, 1)
+        with self.assertRaises(ValueError):
+            Piece(ShapeKind.HEART, 0, 1)
+        with self.assertRaises(ValueError):
+            Piece(ShapeKind.CIRCLE, 6)
+
+    def test_both_mirrors_give_three_images(self) -> None:
+        source = CellPlacement(0, 1, Piece(ShapeKind.TRIANGLE, 3, 1))
+        images = reflections(source, MirrorAxis.BOTH)
+        self.assertEqual({image.cell for image in images}, {(0, 4), (3, 1), (3, 4)})
+        self.assertEqual(
+            [image.piece.rotation for image in images], [3, 1, 3]
+        )
+
+    def test_puzzle_validation_rejects_a_tray_without_choice(self) -> None:
+        given = CellPlacement(0, 2, Piece(ShapeKind.CIRCLE, 0))
+        required = reflections(given, MirrorAxis.VERTICAL)
+        with self.assertRaises(ValueError):
+            MosaicPuzzle("p", MirrorAxis.VERTICAL, (given,), required, (given.piece,))
+        with self.assertRaises(ValueError):
+            MosaicPuzzle("p", MirrorAxis.VERTICAL, (given,), required, (Piece(ShapeKind.SQUARE, 0), Piece(ShapeKind.SQUARE, 1)))
+
+
+# -- ladder ----------------------------------------------------------------------------
 
 
 class MirrorRoundFactoryTests(unittest.TestCase):
-    def test_seed_is_deterministic_and_generates_six_unique_puzzles(self) -> None:
-        first = MirrorRoundFactory(random.Random(12345)).build_set(3)
-        second = MirrorRoundFactory(random.Random(12345)).build_set(3)
+    def test_same_seed_same_set(self) -> None:
+        first = MirrorRoundFactory(random.Random(42)).build_set(3)
+        second = MirrorRoundFactory(random.Random(42)).build_set(3)
         self.assertEqual(first, second)
         self.assertEqual(len(first), CHALLENGE_COUNT)
+        self.assertEqual(len({p.puzzle_id for p in first}), CHALLENGE_COUNT)
 
-        for p in first:
-            self.assertTrue(p.givens)
-            self.assertTrue(p.required)
-            self.assertEqual(len(p.givens), len(p.required))
-            self.assertEqual(len(p.tray_pieces), len(p.required))
+    def test_every_rung_keeps_its_promises(self) -> None:
+        for level, spec in LEVELS.items():
+            for seed in range(60):
+                for puzzle in MirrorRoundFactory(random.Random(seed)).build_set(level):
+                    with self.subTest(level=level, seed=seed, puzzle=puzzle.puzzle_id):
+                        self.assertIs(puzzle.axis, spec.axis)
+                        self.assertEqual(
+                            puzzle.required,
+                            tuple(image for given in puzzle.givens for image in reflections(given, puzzle.axis)),
+                        )
+                        low, high = spec.sources
+                        self.assertTrue(low <= len(puzzle.givens) <= high)
+                        for given in puzzle.givens:
+                            self.assertFalse(puzzle.target_side(given.cell))
+                        for target in puzzle.required:
+                            self.assertTrue(puzzle.target_side(target.cell))
+                        needed = {r.piece for r in puzzle.required}
+                        self.assertTrue(needed <= set(puzzle.tray))
+                        self.assertGreater(len(puzzle.tray), len(needed), "the kit never offers only the answer")
+                        self.assertLessEqual(len(puzzle.tray), min(MAX_TRAY, spec.tray_max))
+                        if spec.oriented_min:
+                            turned = [
+                                g for g in puzzle.givens
+                                if any(image.piece != g.piece for image in reflections(g, puzzle.axis))
+                            ]
+                            self.assertTrue(turned, "an oriented rung needs a tile the mirror turns")
+                        if spec.offer_unreflected:
+                            for given in puzzle.givens:
+                                if given.piece.kind in ORIENTED and given.piece not in needed:
+                                    self.assertIn(given.piece, puzzle.tray, "the unmirrored copy is a real choice")
 
-    def test_each_level_adheres_to_planned_invariants(self) -> None:
-        factory = MirrorRoundFactory(random.Random(999))
-        for level in range(1, 6):
-            puzzles = factory.build_set(level, count=6)
-            for p in puzzles:
-                if level == 1:
-                    # Circles & Squares only, no rotation
-                    for g in p.givens:
-                        self.assertIn(g.piece.kind, {ShapeKind.CIRCLE, ShapeKind.SQUARE})
-                        self.assertEqual(g.piece.rotation, 0)
+    def test_rung_one_tiles_sit_by_the_mirror_in_their_own_rows(self) -> None:
+        for seed in range(40):
+            for puzzle in MirrorRoundFactory(random.Random(seed)).build_set(1):
+                rows = [g.row for g in puzzle.givens]
+                self.assertEqual(len(rows), len(set(rows)))
+                self.assertTrue(all(g.col in (1, 2) for g in puzzle.givens))
+                self.assertTrue(all(g.piece.rotation == 0 for g in puzzle.givens))
+
+    def test_ladder_axes(self) -> None:
+        self.assertEqual(
+            [LEVELS[level].axis for level in range(1, MAX_LEVEL + 1)],
+            [MirrorAxis.VERTICAL, MirrorAxis.VERTICAL, MirrorAxis.VERTICAL, MirrorAxis.HORIZONTAL, MirrorAxis.BOTH],
+        )
+
+
+# -- session ---------------------------------------------------------------------------
+
+
+def _session(level: int = 2, seed: int = 9) -> MirrorSession:
+    return MirrorSession(MirrorRoundFactory(random.Random(seed)).build_set(level), level=level)
+
+
+def _wrong_piece_for(puzzle: MosaicPuzzle, target: CellPlacement) -> Piece:
+    return next(piece for piece in puzzle.tray if piece != target.piece)
 
 
 class MirrorSessionTests(unittest.TestCase):
-    def test_correct_placement_and_undo(self) -> None:
-        p1_left = Piece(ShapeKind.CIRCLE, 0, 0)
-        p1_right = reflect_piece(p1_left)
-        from mirror_model import CellPlacement
-        puzzle = MosaicPuzzle(
-            puzzle_id="test-p1",
-            givens=(CellPlacement(1, 1, p1_left),),
-            required=(CellPlacement(1, 6, p1_right),),
-            tray_pieces=(p1_right,),
+    def test_correct_tile_stays_and_wrong_ones_do_not(self) -> None:
+        session = _session()
+        puzzle = session.current_puzzle
+        target = puzzle.required[0]
+        wrong = session.place(_wrong_piece_for(puzzle, target), target.cell)
+        self.assertIs(wrong.outcome, PlaceOutcome.WRONG_PIECE)
+        self.assertEqual(wrong.focus, target)
+        self.assertNotIn(target.cell, session.placed)
+        empty = next(
+            (r, c) for r in range(GRID_ROWS) for c in range(GRID_COLS)
+            if puzzle.target_side((r, c)) and puzzle.target_at((r, c)) is None
         )
-        session = MirrorSession([puzzle] * 6, level=1)
+        stray = session.place(target.piece, empty)
+        self.assertIs(stray.outcome, PlaceOutcome.WRONG_CELL)
+        self.assertIsNotNone(stray.focus)
+        self.assertEqual(session.misses, 2)
+        given = puzzle.givens[0]
+        self.assertIs(session.place(given.piece, given.cell).outcome, PlaceOutcome.IGNORED, "the picture side is not for building")
+        right = session.place(target.piece, target.cell)
+        self.assertIs(right.outcome, PlaceOutcome.CORRECT)
+        self.assertEqual(session.placed[target.cell], target.piece)
+        self.assertIs(session.place(target.piece, target.cell).outcome, PlaceOutcome.IGNORED)
 
-        # Place piece at wrong coordinate (1, 5)
-        res = session.place_selected_at(1, 5)
-        self.assertIsNotNone(res)
-        assert res is not None
-        self.assertFalse(res.correct)
-        self.assertEqual(session.puzzle_index, 0)
-
-        # Place piece at correct coordinate (1, 6)
-        res = session.place_selected_at(1, 6)
-        self.assertIsNotNone(res)
-        assert res is not None
-        self.assertTrue(res.correct)
-        self.assertTrue(res.puzzle_completed)
-        self.assertEqual(session.puzzle_index, 1)
-
-        milestone = session.consume_milestone()
-        self.assertIsNotNone(milestone)
-        assert milestone is not None
-        self.assertEqual(milestone["puzzle_index"], 1)
-
-    def test_undo_restores_placed_piece_to_tray(self) -> None:
-        from mirror_model import CellPlacement
-        p1 = Piece(ShapeKind.CIRCLE, 0, 0)
-        p2 = Piece(ShapeKind.SQUARE, 1, 0)
-        puzzle = MosaicPuzzle(
-            puzzle_id="test-p2",
-            givens=(CellPlacement(0, 0, p1), CellPlacement(2, 2, p2)),
-            required=(CellPlacement(0, 7, p1), CellPlacement(2, 5, p2)),
-            tray_pieces=(p1, p2),
-        )
-        session = MirrorSession([puzzle] * 6, level=1)
-        self.assertEqual(len(session.tray), 2)
-
-        # Select p1 and place at (0, 7)
-        session.select_tray_index(0)
-        session.place_selected_at(0, 7)
-        self.assertEqual(len(session.tray), 1)
-        self.assertIn((0, 7), session.grid)
-
-        # Undo
-        self.assertTrue(session.undo())
-        self.assertEqual(len(session.tray), 2)
-        self.assertNotIn((0, 7), session.grid)
-
-    def test_completion_payload_is_one_shot(self) -> None:
-        factory = MirrorRoundFactory(random.Random(42))
-        session = MirrorSession(factory.build_set(1), level=1)
-
-        while not session.is_complete:
-            p = session.current_puzzle
-            assert p is not None
-            for req in p.required:
-                idx = next(i for i, piece in enumerate(session.tray) if piece == req.piece)
-                session.select_tray_index(idx)
-                session.place_selected_at(req.row, req.col)
-
+    def test_finishing_mosaics_records_facts_and_advances_on_request(self) -> None:
+        session = _session(level=1)
+        for index in range(CHALLENGE_COUNT):
+            puzzle = session.current_puzzle
+            result = None
+            for target in puzzle.required:
+                result = session.place(target.piece, target.cell)
+            self.assertTrue(result.puzzle_completed)
+            self.assertTrue(session.puzzle_done)
+            self.assertEqual(session.consume_milestone(), {"level": 1, "puzzle_index": index + 1, "first_attempt": 1})
+            self.assertIsNone(session.consume_milestone())
+            self.assertEqual(result.session_complete, index == CHALLENGE_COUNT - 1)
+            if index < CHALLENGE_COUNT - 1:
+                self.assertIsNone(session.consume_completion())
+                self.assertTrue(session.next_puzzle())
+                self.assertEqual(session.placed, {})
+        self.assertTrue(session.is_complete)
         payload = session.consume_completion()
-        self.assertIsNotNone(payload)
-        assert payload is not None
-        self.assertEqual(payload["level"], 1)
-        self.assertEqual(payload["first_attempt_count"], 6)
+        self.assertEqual(payload, {"level": 1, "first_attempt_count": CHALLENGE_COUNT, "retries": 0})
         self.assertIsNone(session.consume_completion())
+
+    def test_next_unmatched_starts_at_the_mirror(self) -> None:
+        session = _session(level=2, seed=4)
+        puzzle = session.current_puzzle
+        first = session.next_unmatched()
+        distances = [min(abs(r.col - 2), abs(r.col - 3)) for r in puzzle.required]
+        self.assertEqual(min(abs(first.col - 2), abs(first.col - 3)), min(distances))
+        session.place(first.piece, first.cell)
+        self.assertNotEqual(session.next_unmatched(), first)
+
+    def test_retries_and_hints_are_recorded(self) -> None:
+        session = _session(level=3)
+        puzzle = session.current_puzzle
+        target = puzzle.required[0]
+        session.place(_wrong_piece_for(puzzle, target), target.cell)
+        session.note_hint()
+        for required in puzzle.required:
+            session.place(required.piece, required.cell)
+        summary = session.history[-1]
+        self.assertFalse(summary.first_attempt_success)
+        self.assertTrue(summary.used_retry)
+        self.assertEqual(summary.hints_used, 2)
 
 
 class AdaptationTests(unittest.TestCase):
     def test_adaptation_across_levels(self) -> None:
         strong = [AttemptSummary(True, 0, False) for _ in range(HISTORY_LIMIT)]
         self.assertEqual(adapt_level(1, strong), 2)
-        self.assertEqual(adapt_level(5, strong), 5)
-
+        self.assertEqual(adapt_level(MAX_LEVEL, strong), MAX_LEVEL)
         struggling = [AttemptSummary(False, 2, True) for _ in range(3)]
         self.assertEqual(adapt_level(4, struggling), 3)
         self.assertEqual(adapt_level(1, struggling), 1)
+        self.assertEqual(adapt_level(3, strong[:5]), 3)
+
+
+# -- services ------------------------------------------------------------------------
 
 
 class _Storage:
@@ -199,32 +303,148 @@ class ProgressTests(unittest.TestCase):
         storage = _Storage({"schema_version": 1, "level": 99, "history": "corrupt"})
         repo = GreiaMirrorProgress(storage)
         self.assertEqual(repo.load(), MirrorProgress())
-
-        history = [AttemptSummary(True, 0, False) for _ in range(20)]
-        repo.save(3, history)
-        self.assertIsNotNone(storage.saved)
+        repo.save(3, [AttemptSummary(True, 0, False) for _ in range(20)])
         self.assertEqual(storage.saved["level"], 3)
         self.assertEqual(len(storage.saved["history"]), HISTORY_LIMIT)
 
+    def test_saves_from_the_previous_version_still_load(self) -> None:
+        legacy = {
+            "schema_version": 1,
+            "level": 4,
+            "history": [{"first_attempt_success": True, "hints_used": 0, "used_retry": False}] * 3,
+        }
+        self.assertEqual(STORAGE_KEY, "specchi_magici.progress.v1")
+        loaded = GreiaMirrorProgress(_Storage(legacy)).load()
+        self.assertEqual(loaded.level, 4)
+        self.assertEqual(len(loaded.history), 3)
 
-class ManifestTests(unittest.TestCase):
-    def test_manifest_declares_exact_milestone_completion_and_range(self) -> None:
+    def test_storage_failures_are_soft(self) -> None:
+        class Broken:
+            def kv_get(self, key):
+                raise OSError("disk")
+
+            def kv_set(self, key, value):
+                raise OSError("disk")
+
+        repo = GreiaMirrorProgress(Broken())
+        self.assertEqual(repo.load(), MirrorProgress())
+        repo.save(2, ())
+
+
+# -- package -------------------------------------------------------------------------
+
+
+class PackageTests(unittest.TestCase):
+    def test_manifest_claims_match_the_game(self) -> None:
         manifest = tomllib.loads((ACTIVITY_ROOT / "activity.toml").read_text(encoding="utf-8"))
+        education = manifest["education"]
         self.assertEqual(manifest["activity"]["id"], "org.greia.specchi-magici")
         self.assertEqual(manifest["activity"]["languages"], ["it", "en"])
-        self.assertEqual(manifest["input"]["profile"], "pointer")
-        self.assertEqual(manifest["education"]["difficulty_min"], 1)
-        self.assertEqual(manifest["education"]["difficulty_max"], 5)
+        self.assertEqual(manifest["input"]["profile"], "hybrid")
+        self.assertIn("symmetry", education["categories"])
+        self.assertEqual((education["recommended_age_min"], education["recommended_age_max"]), (5, 7))
+        self.assertEqual((education["difficulty_min"], education["difficulty_max"]), (1, MAX_LEVEL))
+        self.assertTrue(education["adaptive_difficulty"])
         self.assertEqual(
-            manifest["education"]["events"],
+            education["events"],
             [
                 {"id": "mirror.mosaic_completed", "kind": "milestone"},
                 {"id": "mirror.gallery_completed", "kind": "completion"},
             ],
         )
 
+    def test_locales_have_key_parity_and_the_child_strings(self) -> None:
+        bundles = {
+            locale: json.loads((ACTIVITY_ROOT / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
+            for locale in LOCALES
+        }
+        keys = set(bundles["en"]["strings"])
+        for locale, bundle in bundles.items():
+            self.assertEqual(set(bundle["strings"]), keys, locale)
+            self.assertTrue(all(value.strip() for value in bundle["strings"].values()))
+        for key in ("victory.title", "victory.subtitle", "button.play_again", "activity.specchi_magici.title"):
+            self.assertIn(key, keys)
 
-class _MockEvents:
+    def test_mosaic_tiles_have_sources_and_runtime_renditions(self) -> None:
+        pygame.init()
+        names = {f"mosaic_tile_{kind.value}_{token}" for kind in ShapeKind for token in COLOUR_TOKENS}
+        self.assertEqual(len(names), 36)
+        sources = {p.stem for p in (ACTIVITY_ROOT / "assets" / "source").glob("mosaic_tile_*.svg")}
+        self.assertEqual(sources, names)
+        for name in sorted(names):
+            image = pygame.image.load(str(ACTIVITY_ROOT / "assets" / "runtime" / f"{name}.png"))
+            self.assertEqual(image.get_size(), (128, 128), name)
+            svg = (ACTIVITY_ROOT / "assets" / "source" / f"{name}.svg").read_text(encoding="utf-8")
+            for forbidden in ("<image", "<text", "<filter", "<mask", "<style", "<script", "data:"):
+                self.assertNotIn(forbidden, svg, name)
+        icon = pygame.image.load(str(ACTIVITY_ROOT / "assets" / "icon.png"))
+        self.assertEqual(icon.get_size(), (256, 256))
+
+    def test_art_builds_bounded_surfaces(self) -> None:
+        pygame.init()
+        art = MirrorArt()
+        piece = Piece(ShapeKind.TRIANGLE, 2, 1)
+        self.assertEqual(art.tile(piece, 62).get_size(), (62, 62))
+        self.assertIs(art.tile(piece, 62), art.tile(piece, 62), "scaled once per content")
+        self.assertEqual(art.ghost(piece, 62).get_size(), (62, 62))
+        picture = frozenset((r, c) for r in range(GRID_ROWS) for c in range(3))
+        self.assertEqual(art.scene(picture, MirrorAxis.VERTICAL, 4).get_size(), (1024, 600))
+        for count in range(2, MAX_TRAY + 1):
+            art.scene(picture, MirrorAxis.VERTICAL, count)
+        self.assertLessEqual(len(art._scenes), 3)
+        self.assertTrue(art.fx_frames("sparkle"))
+        self.assertIsNotNone(art.lilli("pose_point", 120))
+
+    def test_layout_keeps_play_out_of_the_protected_chrome(self) -> None:
+        for size in ((1024, 600), (800, 480), (480, 320)):
+            screen = pygame.display.set_mode(size)
+            canvas = PygameReferenceCanvas(screen)
+            protected = ControlLayout.for_canvas(canvas, size).protected
+            self.assertFalse(FRAME_RECT.colliderect(protected), size)
+            self.assertFalse(LILLI_TAP_RECT.colliderect(protected), size)
+            for rect in tray_rects(MAX_TRAY):
+                self.assertTrue(tray_panel(MAX_TRAY).contains(rect))
+                self.assertFalse(rect.colliderect(protected))
+                self.assertLessEqual(rect.bottom, 600)
+        self.assertEqual(cell_at(cell_rect(2, 4).center), (2, 4))
+        self.assertIsNone(cell_at((5, 5)))
+
+    def test_audio_resolves_only_approved_recordings(self) -> None:
+        for locale in ("en", "it"):
+            resources = activity_resources(ACTIVITY_ROOT, requested_locale=locale)
+            audio = MirrorAudio(locale=locale, resources=resources)
+            with self.subTest(locale=locale):
+                self.assertTrue(set(PACKAGE_CUES) <= audio.cues, sorted(set(PACKAGE_CUES) - audio.cues))
+                self.assertIn("celebrate.success", audio.cues)
+                for cue in PACKAGE_CUES:
+                    self.assertTrue(str(audio._paths[cue]).endswith(f"{locale}/{cue}.wav"), audio._paths[cue])
+
+
+# -- app loop ----------------------------------------------------------------------------
+
+
+class FakeClock:
+    def __init__(self) -> None:
+        self.now = 1000.0
+
+    def __call__(self) -> float:
+        return self.now
+
+
+class MemoryProgress:
+    def __init__(self, level: int = 1) -> None:
+        self.saved = MirrorProgress(level=level)
+        self.saves = 0
+
+    def load(self) -> MirrorProgress:
+        return self.saved
+
+    def save(self, level: int, history) -> None:
+        self.saved = MirrorProgress(level, tuple(history))
+        self.saves += 1
+
+
+class RecordedEvents:
     def __init__(self) -> None:
         self.milestones: list[dict[str, int]] = []
         self.completions: list[dict[str, int]] = []
@@ -236,218 +456,196 @@ class _MockEvents:
         self.completions.append(payload)
 
 
-class _MockAudio:
-    def __init__(self) -> None:
-        self.played: list[str] = []
-
-    def play(self, cue: str) -> None:
-        self.played.append(cue)
-
-    def play_welcome(self) -> None:
-        self.played.append("welcome")
-
-    def play_prompt(self) -> None:
-        self.played.append("prompt")
-
-    def play_shape(self, kind: ShapeKind) -> None:
-        self.played.append(f"shape_{kind.value}")
-
-    def play_mosaic_complete(self) -> None:
-        self.played.append("mosaic_complete")
-
-    def play_feedback(self, correct: bool) -> None:
-        self.played.append("correct" if correct else "retry")
-
-
-class AppIntegrationTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        import os
-        os.environ["SDL_VIDEODRIVER"] = "dummy"
-        os.environ["SDL_AUDIODRIVER"] = "dummy"
+class AppLoopTests(unittest.TestCase):
+    def setUp(self) -> None:
         pygame.init()
-        if pygame.display.get_surface() is None:
-            pygame.display.set_mode((1024, 600))
+        self.screen = pygame.display.set_mode((1024, 600))
+        self.clock = FakeClock()
+        self.events = RecordedEvents()
 
-    def _build_app(self, level: int = 1):
-        from greia_platform.localization import ActivityLocaleSupport, LocalizedResources, resolve_activity_locale
-        from greia_platform.pygame_canvas import PygameReferenceCanvas
-        from greia_platform.typography import GreiaTypography
-        from mirror_app import MirrorActivity
-        from mirror_art import MirrorArt
-        from mirror_renderer import MirrorRenderer
-
-        screen = pygame.display.get_surface()
-        assert screen is not None
-        support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-        context = resolve_activity_locale("it", support)
-        assert context is not None
-        resources = LocalizedResources(ACTIVITY_ROOT, context)
-        typography = GreiaTypography()
-        canvas = PygameReferenceCanvas(screen)
-        art = MirrorArt(1024, 600)
-        renderer = MirrorRenderer(art, typography, resources)
-        storage = _Storage({"schema_version": 1, "level": level, "history": []})
-        progress = GreiaMirrorProgress(storage)
-        events = _MockEvents()
-        audio = _MockAudio()
-        rng = random.Random(99)
-        factory = MirrorRoundFactory(rng)
-        session = MirrorSession(factory.build_set(level), level=level)
-
-        simulated_time = [100.0]
-
-        def clock() -> float:
-            return simulated_time[0]
-
+    def make(self, *, level: int = 1, locale: str = "en", seed: int = 5) -> MirrorActivity:
+        self.progress = MemoryProgress(level)
+        resources = activity_resources(ACTIVITY_ROOT, requested_locale=locale)
         app = MirrorActivity(
-            screen=screen,
-            canvas=canvas,
-            session=session,
-            factory=factory,
-            renderer=renderer,
-            typography=typography,
+            screen=self.screen,
+            canvas=PygameReferenceCanvas(self.screen),
+            typography=GreiaTypography(),
             resources=resources,
-            progress=progress,
-            events=events,
-            audio=audio,
-            rng=rng,
-            session_id="mirror-session-1",
-            clock=clock,
+            audio=MirrorAudio(locale=locale, resources=resources),
+            progress=self.progress,
+            events=self.events,
+            rng=random.Random(seed),
+            clock=self.clock,
         )
-        return app, simulated_time, events, audio, progress
+        self.advance(app, 1.0)
+        self.assertIs(app.state, AppState.PLAYING)
+        return app
 
-    def test_full_session_to_completion_and_restart(self) -> None:
-        from mirror_app import AppState
+    def advance(self, app: MirrorActivity, seconds: float, dt: float = 0.05) -> None:
+        elapsed = 0.0
+        while elapsed < seconds:
+            self.clock.now += dt
+            elapsed += dt
+            app.step()
+            app.render()
 
-        app, sim_time, events, audio, progress = self._build_app(level=1)
+    def mouse(self, app: MirrorActivity, kind: int, pos: tuple[int, int]) -> None:
+        app.handle_event(pygame.event.Event(kind, {"button": 1, "pos": pos}))
 
-        for _ in range(6):
-            current = app.session.current_puzzle
-            assert current is not None
-            for req in current.required:
-                idx = next(i for i, piece in enumerate(app.session.tray) if piece == req.piece)
-                app.session.select_tray_index(idx)
-                rect = app.renderer.cell_rect(req.row, req.col)
-                app._handle_pointer((rect.centerx, rect.centery))
+    def tray_index(self, app: MirrorActivity, piece: Piece) -> int:
+        return app.session.current_puzzle.tray.index(piece)
 
-            sim_time[0] += 0.5
-            app._advance_state()
+    def place(self, app: MirrorActivity, target: CellPlacement) -> None:
+        app.tap(app._tray_rects[self.tray_index(app, target.piece)].center)
+        app.tap(cell_rect(*target.cell).center)
 
-        self.assertEqual(app.state, AppState.TERMINAL)
-        self.assertEqual(len(events.completions), 1)
-        self.assertEqual(len(events.milestones), 6)
+    def test_tap_tile_then_tap_cell_places_it(self) -> None:
+        app = self.make()
+        target = app.session.next_unmatched()
+        tile = self.tray_index(app, target.piece)
+        center = app._tray_rects[tile].center
+        self.mouse(app, pygame.MOUSEBUTTONDOWN, center)
+        self.mouse(app, pygame.MOUSEBUTTONUP, (center[0] + DRAG_THRESHOLD_PX - 4, center[1]))
+        self.assertEqual(app.held, tile, "a short press is a tap: the tile stays in hand")
+        app.tap(cell_rect(*target.cell).center)
+        self.assertIsNone(app.held)
+        self.assertEqual(app.session.placed[target.cell], target.piece)
+        self.assertEqual(app.cast.pose.value, "cheer")
+        self.assertIn(target.cell, app.motion.drops)
 
-        # Play Again
-        handled = app._handle_terminal_pointer(
-            (app.completion._primary_rect.centerx, app.completion._primary_rect.centery)
-        )
-        self.assertTrue(handled)
-        self.assertEqual(app.state, AppState.PLAYING)
-        self.assertEqual(app.session.puzzle_index, 0)
+    def test_drag_places_and_a_drop_on_nothing_puts_back(self) -> None:
+        app = self.make()
+        target = app.session.next_unmatched()
+        start = app._tray_rects[self.tray_index(app, target.piece)].center
+        app.drag(start, (900, 300))
+        self.assertIsNone(app.held)
+        self.assertEqual(app.session.placed, {})
+        app.drag(start, cell_rect(*target.cell).center)
+        self.assertEqual(app.session.placed[target.cell], target.piece)
 
-    def _key(self, app, key: int) -> None:
-        app._handle_event(pygame.event.Event(pygame.KEYDOWN, key=key))
+    def test_wrong_tile_wobbles_lilli_thinks_and_then_shows_the_way(self) -> None:
+        app = self.make(level=2)
+        puzzle = app.session.current_puzzle
+        target = app.session.next_unmatched()
+        wrong = _wrong_piece_for(puzzle, target)
+        app.tap(app._tray_rects[self.tray_index(app, wrong)].center)
+        app.tap(cell_rect(*target.cell).center)
+        self.assertEqual(app.cast.pose.value, "think")
+        self.assertIsNotNone(app.motion.wobble)
+        self.assertNotIn(target.cell, app.session.placed)
+        self.assertIsNone(app.motion.ghost, "the first miss never shows the answer")
+        self.advance(app, 0.7)
+        source = puzzle.source_of(target.cell)
+        self.assertIn(source.cell, app.motion.source_glow, "the picture tile to mirror glows")
+        self.assertIsNone(app.motion.ghost)
+        self.advance(app, 0.5)
+        app.tap(app._tray_rects[self.tray_index(app, wrong)].center)
+        app.tap(cell_rect(*target.cell).center)
+        self.advance(app, 0.7)
+        self.assertIsNotNone(app.motion.ghost, "from the second miss Lilli demonstrates")
+        self.assertEqual(app.motion.ghost[:2], (target.cell, target.piece))
+        self.assertTrue(app.cast.pointing)
+        self.assertNotIn(target.cell, app.session.placed, "she shows the spot; the child still places it")
+        self.assertEqual(app.session.misses, 2)
 
-    def _walk_focus_to_cell(self, app, row: int, col: int) -> None:
-        """Move the keyboard cell cursor to (row, col) with arrow presses only."""
-        for _ in range(40):
-            cur_r, cur_c = app._focus.cell
-            if (cur_r, cur_c) == (row, col):
-                return
-            if cur_c != col:
-                self._key(app, pygame.K_RIGHT if col > cur_c else pygame.K_LEFT)
+    def test_keyboard_and_controller_play(self) -> None:
+        from greia_platform.pygame_input import CONTROLLER_BUTTON_A
+
+        app = self.make(level=2)
+        target = app.session.next_unmatched()
+        tile = self.tray_index(app, target.piece)
+        app.press(pygame.K_LEFT)  # reveals the focus ring on the first tile
+        self.assertEqual(app.controls.layer.focused_id, "tile.0")
+        for _ in range(tile):
+            app.press(pygame.K_RIGHT)
+        self.assertEqual(app.controls.layer.focused_id, f"tile.{tile}")
+        app.press(pygame.K_SPACE)
+        self.assertEqual(app.held, tile)
+        self.assertIsNotNone(app.controls.focused_cell(), "focus moves on to the glass")
+        for _ in range(12):
+            cell = app.controls.focused_cell()
+            if cell == target.cell:
+                break
+            if cell[0] != target.cell[0]:
+                app.press(pygame.K_DOWN if target.cell[0] > cell[0] else pygame.K_UP)
             else:
-                self._key(app, pygame.K_DOWN if row > cur_r else pygame.K_UP)
-        self.fail("could not reach the cell with arrows")
+                app.press(pygame.K_RIGHT if target.cell[1] > cell[1] else pygame.K_LEFT)
+        self.assertEqual(app.controls.focused_cell(), target.cell)
+        app.handle_event(pygame.event.Event(pygame.CONTROLLERBUTTONDOWN, button=CONTROLLER_BUTTON_A))
+        self.assertEqual(app.session.placed.get(target.cell), target.piece)
+        self.assertTrue(app.controls.layer.focused_id.startswith("tile."), "back to the kit for the next tile")
+        # Escape puts a tile in hand back instead of leaving the Activity.
+        app.press(pygame.K_SPACE)
+        self.assertIsNotNone(app.held)
+        app.press(pygame.K_ESCAPE)
+        self.assertIsNone(app.held)
+        self.assertTrue(app._running)
 
-    def test_keyboard_plays_a_whole_puzzle_without_a_pointer(self) -> None:
-        from mirror_focus import FocusZone
+    def test_protected_chrome_and_focus_loss(self) -> None:
+        app = self.make()
+        protected = ActivitySystemChromeLayout.for_surface(1024, 600).protected_region
+        inside = (int(protected.x) + 2, int(protected.y) + 2)
+        self.mouse(app, pygame.MOUSEBUTTONDOWN, inside)
+        self.mouse(app, pygame.MOUSEBUTTONUP, inside)
+        self.assertTrue(app._running)
+        app.tap(app._tray_rects[0].center)
+        self.assertEqual(app.held, 0)
+        app.handle_event(pygame.event.Event(pygame.WINDOWFOCUSLOST))
+        self.assertIsNone(app.held)
+        self.assertEqual(app.session.placed, {})
 
-        app, sim_time, events, audio, _progress = self._build_app(level=1)
-        current = app.session.current_puzzle
-        assert current is not None
-        for req in current.required:
-            idx = next(i for i, piece in enumerate(app.session.tray) if piece == req.piece)
-            # Cursor starts hidden; the first arrow reveals it on the tray.
-            while app._focus.zone is not FocusZone.TRAY or app._focus.tray_index != idx or not app._focus.active:
-                if not app._focus.active:
-                    self._key(app, pygame.K_RIGHT)
-                elif app._focus.zone is not FocusZone.TRAY:
-                    self._key(app, pygame.K_DOWN)
-                elif app._focus.tray_index < idx:
-                    self._key(app, pygame.K_RIGHT)
-                else:
-                    self._key(app, pygame.K_LEFT)
-            self._key(app, pygame.K_SPACE)  # pick the piece up
-            self.assertEqual(app.session.selected_tray_index, idx)
-            self.assertIs(app._focus.zone, FocusZone.GRID)
-            self._walk_focus_to_cell(app, req.row, req.col)
-            self._key(app, pygame.K_SPACE)  # place it
-            sim_time[0] += 0.5
-            app._advance_state()
-        self.assertEqual(app.session.puzzle_index, 1)
-        self.assertEqual(len(events.milestones), 1)
+    def test_idle_hints_grow_without_giving_the_answer_first(self) -> None:
+        app = self.make(level=2)
+        target = app.session.next_unmatched()
+        source = app.session.current_puzzle.source_of(target.cell)
+        self.advance(app, 6.2)
+        self.assertTrue(app.cast.pointing)
+        self.assertIn(source.cell, app.motion.source_glow)
+        self.assertNotIn(target.cell, app.motion.target_ring)
+        self.advance(app, 6.2)
+        self.assertIn(target.cell, app.motion.target_ring)
+        self.assertEqual(app.session.hints, 2)
 
-    def test_controller_dpad_and_south_button_select_and_place(self) -> None:
-        from greia_platform.pygame_input import (
-            CONTROLLER_BUTTON_A,
-            CONTROLLER_BUTTON_DPAD_RIGHT,
-        )
+    def test_listen_button_and_lilli_replay_the_goal(self) -> None:
+        app = self.make()
+        app.audio.last_speech = None
+        app.tap(app.controls.listen.rect.center)
+        self.assertEqual(app.audio.last_speech, "prompt_place")
+        app.audio.last_speech = None
+        app.tap(LILLI_TAP_RECT.center)
+        self.assertEqual(app.audio.last_speech, "prompt_place")
 
-        app, _sim, _events, _audio, _progress = self._build_app(level=1)
-        pad = lambda b: app._handle_event(pygame.event.Event(pygame.CONTROLLERBUTTONDOWN, button=b))
-        pad(CONTROLLER_BUTTON_DPAD_RIGHT)  # reveal focus on the tray
-        pad(CONTROLLER_BUTTON_A)  # pick up piece 0
-        self.assertEqual(app.session.selected_tray_index, 0)
-        pad(CONTROLLER_BUTTON_DPAD_RIGHT)  # move the board cursor
-        self.assertIsNotNone(app._hovered_cell)
+    def test_full_set_reaches_the_completion_scene_then_plays_again(self) -> None:
+        app = self.make(level=1, locale="it")
+        for index in range(CHALLENGE_COUNT):
+            while app.session.next_unmatched() is not None and app.state is AppState.PLAYING:
+                self.place(app, app.session.next_unmatched())
+            self.assertIs(app.state, AppState.CELEBRATE)
+            self.assertEqual(app.controls.progress.current, index + 1)
+            self.advance(app, 3.0)
+        self.assertIs(app.state, AppState.TERMINAL)
+        self.assertIsNotNone(app.completion)
+        self.assertEqual(len(self.events.milestones), CHALLENGE_COUNT)
+        self.assertEqual(self.events.completions, [{"level": 1, "first_attempt_count": CHALLENGE_COUNT, "retries": 0}])
+        self.assertEqual(self.progress.saved.level, 1)
+        self.assertEqual(len(self.progress.saved.history), CHALLENGE_COUNT)
+        # "Play again": the replay button of the shared scene starts a new set.
+        app.tap(app.completion.primary_rect.center)
+        self.assertIsNone(app.completion)
+        self.advance(app, 1.0)
+        self.assertIs(app.state, AppState.PLAYING)
+        self.assertEqual(app.session.finished_count, 0)
+        self.assertEqual(len(app.session.history), CHALLENGE_COUNT, "evidence carries over for adaptation")
 
-    def test_keyboard_activate_restarts_from_the_completion_screen(self) -> None:
-        from mirror_app import AppState
-
-        app, _sim, _events, _audio, _progress = self._build_app(level=1)
-        app._finish_session()
-        self.assertEqual(app.state, AppState.TERMINAL)
-        self._key(app, pygame.K_SPACE)
-        self.assertEqual(app.state, AppState.PLAYING)
-        self.assertEqual(app.session.puzzle_index, 0)
-
-    def test_listen_button_replays_welcome(self) -> None:
-        from mirror_renderer import LISTEN_BTN_RECT
-
-        app, _sim_time, _events, audio, _progress = self._build_app(level=1)
-        audio.played.clear()
-
-        # Click listen button
-        handled = app._handle_pointer((LISTEN_BTN_RECT.centerx, LISTEN_BTN_RECT.centery))
-        self.assertTrue(handled)
-        self.assertIn("welcome", audio.played)
-
-    def test_audio_assets_and_speech_cues(self) -> None:
-        from mirror_audio import MirrorAudio
-
-        for locale in ("it", "en"):
-            audio = MirrorAudio(ACTIVITY_ROOT, locale=locale)
-            self.assertGreaterEqual(len(audio._speech_clips), 14, f"missing clips for {locale}")
-            for key in (
-                "welcome",
-                "prompt_place",
-                "correct_1",
-                "correct_2",
-                "correct_3",
-                "correct_4",
-                "correct_5",
-                "retry_1",
-                "retry_2",
-                "mosaic_complete",
-                "shape_circle",
-                "shape_square",
-                "shape_triangle",
-                "shape_semicircle",
-            ):
-                self.assertIn(key, audio._speech_clips, f"missing {key} in {locale}")
-
+    def test_renders_every_rung_at_supported_sizes(self) -> None:
+        for size in ((1024, 600), (800, 480), (480, 320)):
+            self.screen = pygame.display.set_mode(size)
+            for level in range(1, MAX_LEVEL + 1):
+                app = self.make(level=level)
+                app.tap(app._tray_rects[0].center)
+                self.advance(app, 0.2)
+                app.canvas.present()
+                self.assertEqual(app.screen.get_size(), size)
 
 
 class SimulatorSupervisorTests(unittest.TestCase):

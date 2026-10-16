@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Specchi Magici mosaic tile (Activity-private; shared-library candidate): rhombus, sunshine token (prop.mosaic_tile.rhombus variant sunshine).
+       Base orientation (point/dome/lobes up); the Activity rotates by 90-degree steps.
+       Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md -->
+  <defs>
+    <!-- sunshine light (mix 42% white) -> sunshine -->
+    <linearGradient id="mosaic_tile_rhombus_sunshine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDC89"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="tile">
+    <path d="M64 9 L117 64 L64 119 L11 64 Z" fill="url(#mosaic_tile_rhombus_sunshine)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+  </g>
+  <g id="highlight">
+    <path d="M56 30 L40 47" stroke-width="7" stroke-linecap="round" fill="none" stroke="#FFFFFF" opacity="0.8"/>
+  </g>
+</svg>
