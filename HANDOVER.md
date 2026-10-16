@@ -61,6 +61,20 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-16 — Acer reference device: in-place deploys, three sweeps, performance fixes
+
+**Evidence class: PHYSICAL (developer Acer Aspire One, Atom N270 i686, 1 GB, Debian 12, Python 3.11) for the measured items; input was remote `xdotool`, never physical-input evidence.** Full method, per-Activity tables and what was not verified: `docs/reviews/acer/2026-10-16_ACER_ACTIVITY_SWEEP.md` (sweep at 0148f113, re-sweep at 0f560c2e, third sweep at 15212f44, targeted re-measure at a8be76d7).
+
+**Deploy method:** `tools/dev_source_deploy.py deploy --target <operator>@<device>` (stage from `git archive HEAD` with the compose filter, parse-gate under the device Python, swap `/opt/greia-os` root-owned 555/444, rebuild the read-only bytecode prefix, restart, health). Documented in `docs/agents/GREIA_AGENT_OPERATIONS.md` §8. The old `tools/deploy_to_acer.py` is not this procedure.
+
+**Fixed on device (commits 2af434da … 5a30a895):** Shell crash on every launch (profile dir modes); launch path (startup imports, read-only bytecode prefix, ready timeout policy, deferred sound synthesis past READY, `SDL_FRAMEBUFFER_ACCELERATION=0`); `FrameGovernor` for all 45 Activities (low-end profile, decoration freeze, blocking idle wait); pointer save-under; idle-hint back-off 6/12/24 s; Shell memory bounds; Shell mixer idle-close; stale Collection strip on Home; Shape Garden and Pasticceria history keys over the 64-byte limit (badge never fired) plus a key-bounds test over every Activity and stderr reporting of rejected events; Foresta/Sillabe/Orchestra never settling.
+
+**Measured (first sweep → a8be76d7):** launch via Shell crash/16.3 s → 7.4 s median; Activity idle CPU 88% → ~7–16% (painting/writing 19%); Activity RSS 145–197 → 61–124 MB; Shell RSS flat at ~145 MB over a full catalogue walk; Shell CPU while an Activity runs 2.0–2.4%; Home idle 2.4%; pointer repaint 380/435 → 53/53 ms (painting/writing); NRestarts 0, no OOM. Writing "lost spaces" was a harness artefact (withdrawn).
+
+**Open:** Activity-side audio device keeps ~6% busy on static screens and the first input after a static screen arrives ~250 ms late (worker in progress on shared platform code); Home pointer ~230 ms median; first Home after a Shell restart ~50% CPU for 20–40 s; badge card waits for a tap (by design?) and its description touches the card's right edge; time-left pill re-check needs a configured play limit; new-Activity-folder creation under the Parent-owned profile tree not exercised on device. The device profile carries sweep history sessions, two Shape Garden creations, one badge/star.
+
+**Next exact step:** land the Activity audio-idle/wake-latency fix, redeploy with `tools/dev_source_deploy.py`, re-measure idle CPU and static-screen input latency, then `cleanup` the device backup.
+
 ## 2026-10-16 — Test suite: fast/full lanes, os.sync fix, leak fix, duplicate pruning
 
 **Evidence class: SOURCE** (local macOS runs, other agents' suites and builds running concurrently). No hardware.
