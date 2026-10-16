@@ -10,7 +10,8 @@ that alone costs 4.4-5.1% CPU on a fully static Activity screen
 removes it (0%).  Measured on the same device:
 
 * ``pygame.mixer.quit()`` takes 190-380 ms and releases the GIL;
-* reopening with the same format takes 91-97 ms and holds the GIL;
+* reopening with the same format takes 91-97 ms in isolation and 280-300 ms
+  inside a running Activity loop (re-measured at 87322f0d);
 * existing ``Sound`` objects keep their converted samples and play normally
   after a reopen with the same format;
 * ``Sound.play`` / ``Channel.play`` on a closed mixer **crash the process**
@@ -28,6 +29,14 @@ a closed SDL mixer.  The frame governor drives :func:`release_idle_activity_audi
 from its wait, so the check costs nothing on a busy loop and needs no Activity
 code.  The close runs on a short-lived worker thread so the Activity loop never
 stalls for it.
+
+The governor only asks for a close while the child is *idle* (no input for
+``FramePolicy.audio_hold_seconds``, 30 s, and no essential motion): closing
+while a child plays made the next voice line reopen the device on the loop
+thread mid-game (a 220-340 ms freeze in Baia delle Orche).  When the child
+comes back to a quiesced mixer the governor calls
+:func:`prepare_activity_audio`, which reopens it on a worker thread right
+after the response frame, so the first sound no longer pays for the reopen.
 
 The lease never closes while a channel or music is busy (paused channels count
 as busy), while another SDL audio device (e.g. a microphone capture) is open,
@@ -161,6 +170,8 @@ class ActivityMixerLease:
         self._next_poll = 0.0
         self._closer: threading.Thread | None = None
         self._closing = False
+        self._opener: threading.Thread | None = None
+        self._opening = False
         # Owed reopen: (frequency, size, channels) of the mixer we closed.
         self._quiesced: tuple[int, int, int] | None = None
         self._buffer = _DEFAULT_BUFFER
@@ -229,7 +240,7 @@ class ActivityMixerLease:
         """
 
         if not self._lock.acquire(blocking=False):
-            if self._closing:
+            if self._closing or self._opening:
                 yield False
                 return
             self._lock.acquire()
@@ -338,6 +349,9 @@ class ActivityMixerLease:
         closer = self._closer
         if closer is not None and closer.is_alive():
             return False
+        opener = self._opener
+        if opener is not None and opener.is_alive():
+            return False
         if self._busy():
             self._last_use = now
             return False
@@ -382,12 +396,47 @@ class ActivityMixerLease:
             self.quiesce_count += 1
             return True
 
+    def prewarm(self) -> bool:
+        """Reopen a quiesced mixer ahead of use; True when a reopen started.
+
+        The frame governor calls this when the child is active again, after
+        the frame that answers the input, so the first sound does not reopen
+        the device on the loop thread.  With ``background`` the reopen runs on
+        a worker thread; status calls meanwhile answer "silent" instead of
+        waiting, and a real mixer call simply waits for the reopen to finish.
+        """
+
+        if self._quiesced is None or self._disabled or self.is_open:
+            return False
+        for worker in (self._opener, self._closer):
+            if worker is not None and worker.is_alive():
+                return False
+        if not self._background:
+            self._reopen()
+            return True
+        self._opener = threading.Thread(target=self._reopen, name="greia-mixer-reopen", daemon=True)
+        self._opener.start()
+        return True
+
+    def _reopen(self) -> None:
+        with self._lock:
+            if self._disabled or self._quiesced is None or self.is_open:
+                return
+            self._opening = True
+            try:
+                self._ensure_open_locked()
+            except Exception:  # noqa: BLE001 - the next real use retries and reports
+                pass
+            finally:
+                self._opening = False
+                self._last_use = self._clock()
+
     def wait_for_close(self, timeout: float = 2.0) -> None:
         """Join a close in progress (before ``pygame.quit`` / interpreter exit)."""
 
-        closer = self._closer
-        if closer is not None and closer is not threading.current_thread():
-            closer.join(timeout)
+        for worker in (self._closer, self._opener):
+            if worker is not None and worker is not threading.current_thread():
+                worker.join(timeout)
 
     def shutdown(self) -> None:
         """Stop quiescing and owe nothing; the process is ending."""
@@ -410,10 +459,17 @@ def active_mixer_lease() -> ActivityMixerLease | None:
 
 
 def release_idle_activity_audio() -> bool:
-    """Frame-governor hook: close the mixer if it has been silent long enough."""
+    """Frame-governor hook (child idle): close the mixer if silent long enough."""
 
     lease = _ACTIVE
     return lease.poll() if lease is not None else False
+
+
+def prepare_activity_audio() -> bool:
+    """Frame-governor hook (child active): reopen a quiesced mixer off-loop."""
+
+    lease = _ACTIVE
+    return lease.prewarm() if lease is not None else False
 
 
 @contextmanager
@@ -762,6 +818,7 @@ __all__ = [
     "SdlAudioDevices",
     "active_mixer_lease",
     "install_activity_mixer_lease",
+    "prepare_activity_audio",
     "release_idle_activity_audio",
     "uninstall_activity_mixer_lease",
 ]

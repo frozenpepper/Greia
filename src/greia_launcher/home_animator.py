@@ -387,6 +387,10 @@ class HomeAnimator:
         self._drifting = True
         # Set by taps/reactions: the next frame is due immediately.
         self._changed = False
+        # RLE copies of the sprites for blits onto the (opaque) screen: an
+        # un-encoded alpha sprite costs ~0.22 us/pixel on the Atom, which made
+        # every Home pointer-move frame spend ~19 of its ~28 ms here.
+        self._fast: Any = None
 
     # ------------------------------------------------------------ placement
     @property
@@ -486,6 +490,8 @@ class HomeAnimator:
         self._items = []
         self._presented = []
         self._sleeping = False
+        if self._fast:
+            self._fast.clear()
 
     # ----------------------------------------------------------- hit-testing
     def hit(self, pos: tuple[int, int]) -> str | None:
@@ -740,8 +746,26 @@ class HomeAnimator:
         """Draw every live sprite (full-frame path, after the cached Home)."""
 
         for sprite, x, y in self._items:
-            surface.blit(sprite, (x, y))
+            surface.blit(self._presentable(sprite, surface), (x, y))
         self._presented = self._items
+
+    def _presentable(self, sprite: Any, surface: Any) -> Any:
+        """The sprite's RLE copy for an opaque target (bounded identity cache)."""
+
+        fast = self._fast
+        if fast is None:
+            try:
+                from greia_platform.pygame_blit import PreparedSurfaces
+            except Exception:  # noqa: BLE001 - provider-free use keeps plain blits
+                self._fast = False
+                return sprite
+            fast = self._fast = PreparedSurfaces(max_entries=48, max_pixels=1024 * 600)
+        if fast is False:
+            return sprite
+        try:
+            return fast.for_target(sprite, surface)
+        except Exception:  # noqa: BLE001 - presentation must never fail Home
+            return sprite
 
     def dirty_rects(self, pygame: Any) -> list[Any]:
         """Merged screen rects whose pixels differ from the presented frame."""
@@ -777,7 +801,7 @@ class HomeAnimator:
                 for sprite, x, y in self._items:
                     w, h = sprite.get_size()
                     if x < rect.right and rect.x < x + w and y < rect.bottom and rect.y < y + h:
-                        surface.blit(sprite, (x, y))
+                        surface.blit(self._presentable(sprite, surface), (x, y))
         finally:
             surface.set_clip(previous_clip)
         self._presented = self._items

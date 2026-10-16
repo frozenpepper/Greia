@@ -59,6 +59,26 @@ class PygameBlitTests(unittest.TestCase):
         direct.blit(sprite, (4, 3))
         self.assertLessEqual(_max_diff(direct, fast), 1)
 
+    def test_for_target_encodes_only_for_opaque_targets(self) -> None:
+        fast = PreparedSurfaces(max_entries=4)
+        sprite = _sprite()
+        opaque = self._background()
+        prepared = fast.for_target(sprite, opaque)
+        self.assertTrue(is_rle(prepared))
+        self.assertIs(fast.for_target(sprite, opaque), prepared)
+        # RLE alpha blits write opaque destination alpha: never onto SRCALPHA.
+        overlay = pygame.Surface((48, 36), pygame.SRCALPHA)
+        self.assertIs(fast.for_target(sprite, overlay), sprite)
+        direct, encoded = pygame.Surface((48, 36), pygame.SRCALPHA), pygame.Surface((48, 36), pygame.SRCALPHA)
+        direct.blit(sprite, (0, 0))
+        encoded.blit(prepared, (0, 0))
+        translucent = [(x, y) for y in range(30) for x in range(40) if 0 < sprite.get_at((x, y))[3] < 255]
+        if translucent:
+            point = translucent[0]
+            self.assertNotEqual(direct.get_at(point)[3], encoded.get_at(point)[3], "the SDL caveat this guards")
+        double = object()
+        self.assertIs(fast.for_target(double, opaque), double)
+
     def test_prepare_static_keeps_opaque_surfaces_opaque_and_colorkeys(self) -> None:
         opaque = pygame.Surface((10, 10))
         opaque.fill((1, 2, 3))

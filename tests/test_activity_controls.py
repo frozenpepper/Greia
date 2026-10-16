@@ -256,6 +256,36 @@ class CachedRenderingTests(_KitTestCase):
         a.selected = False
         self.assertIs(a.render(), normal)
 
+    def test_controls_present_rle_copies_on_opaque_targets_only(self) -> None:
+        # Acer 87322f0d: un-encoded kit composites cost 2 ms per button per
+        # frame (6-10 ms of every frame in Labirinto/Corsa).
+        from greia_platform.pygame_blit import is_rle
+
+        a = self._button("a", (100, 100, 200, 80))
+        layer = self.kit.layer([a])
+        opaque = pygame.Surface((400, 300))
+        opaque.fill((30, 90, 160))
+        reference = opaque.copy()
+        reference.blit(a.render(), (100, 100))
+        layer.draw(opaque)
+        painter = self.kit.painter
+        presented = painter.presentable(a.render(), opaque)
+        self.assertTrue(is_rle(presented))
+        self.assertIs(painter.presentable(a.render(), opaque), presented, "made once")
+        self.assertFalse(is_rle(a.render()), "the product itself stays composable")
+        for point in ((110, 110), (200, 140), (295, 175), (101, 101)):
+            got, want = opaque.get_at(point), reference.get_at(point)
+            self.assertLessEqual(max(abs(got[i] - want[i]) for i in range(3)), 1, point)
+        # Alpha targets (HUD overlays) get the plain product: RLE alpha blits
+        # would write opaque destination alpha there.
+        overlay = pygame.Surface((400, 300), pygame.SRCALPHA)
+        self.assertIs(painter.presentable(a.render(), overlay), a.render())
+        layer.draw(overlay)
+        edge = overlay.get_at((100, 100))
+        self.assertLess(edge[3], 255)
+        painter.clear()
+        self.assertIsNot(painter.presentable(a.render(), opaque), presented)
+
     def test_painter_cache_is_hard_bounded(self) -> None:
         painter = ControlPainter(self.typography, max_surfaces=8, max_labels=4)
         for width in range(40, 80):

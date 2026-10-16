@@ -57,6 +57,7 @@ from .input_core import (
     navigation_direction,
     normalize_stick,
 )
+from .pygame_blit import PreparedSurfaces
 from .pygame_input import PygameInputTranslator
 from .system_chrome import ActivitySystemChromeLayout
 from .typography import FontRole
@@ -208,6 +209,14 @@ class ControlPainter:
     an optional darker "lip" that gives tactile depth (no blur, no filters).
     They are drawn at 2× and smooth-scaled once, so edges are anti-aliased like
     the rsvg-rendered art. Every product is stored in a hard-bounded LRU cache.
+
+    Products stay plain per-pixel-alpha surfaces so they can be composed into
+    other surfaces. What a control *presents* goes through
+    :meth:`presentable`, which hands back an RLE-encoded copy (made once, in
+    a second bounded cache) whenever the target is an opaque surface such as
+    the Activity canvas: on the Atom reference floor an un-encoded alpha blit
+    costs ~0.22 us per pixel (2 ms for one 160x60 button), the RLE copy about
+    1/60th of that, with identical pixels (``pygame_blit``).
     """
 
     SUPERSAMPLE = 2
@@ -224,6 +233,9 @@ class ControlPainter:
         self._theme = theme
         self._surfaces: BoundedCache[tuple, pygame.Surface] = BoundedCache(max_surfaces)
         self._labels: BoundedCache[tuple, pygame.Surface] = BoundedCache(max_labels)
+        # RLE copies of presented products, keyed by product identity (the
+        # product cache above keeps each product immutable once built).
+        self._presentable = PreparedSurfaces(max_entries=max_surfaces, max_pixels=1024 * 600 * 2)
         self.build_count = 0
 
     @property
@@ -236,12 +248,27 @@ class ControlPainter:
         if theme != self._theme:
             self._theme = theme
             self._surfaces.clear()
+            self._presentable.clear()
 
     def clear(self) -> None:
         """Release every cached surface (e.g. after a display/renderer change)."""
 
         self._surfaces.clear()
         self._labels.clear()
+        self._presentable.clear()
+
+    def presentable(self, surface: pygame.Surface, target: pygame.Surface) -> pygame.Surface:
+        """Return the fastest surface that draws ``surface`` onto ``target``.
+
+        For an opaque target (the Activity canvas, the display) this is a
+        cached RLE-encoded copy; per-pixel-alpha targets (a ``HudOverlay`` work
+        surface, a composite being built) get ``surface`` itself, because
+        SDL's RLE alpha blit writes opaque destination alpha and would turn
+        anti-aliased edges into dark fringes there. ``surface`` must not be
+        drawn on afterwards (painter products never are).
+        """
+
+        return self._presentable.for_target(surface, target)
 
     @property
     def cached_surface_count(self) -> int:
@@ -743,7 +770,7 @@ class KitControl(Control):
         if not self.visible:
             return
         assert isinstance(target, pygame.Surface)
-        target.blit(self.render(), self._rect.topleft)
+        target.blit(self._painter.presentable(self.render(), target), self._rect.topleft)
 
     @abstractmethod
     def _content_key(self) -> tuple: ...
@@ -1600,7 +1627,7 @@ class ControlLayer(Screen):
         face = pygame.Rect(rect.x, rect.y, rect.width, rect.height - lip)
         ring = self._painter.focus_ring(face.size, item.focus_radius)
         pad = ControlPainter.FOCUS_PAD
-        target.blit(ring, (face.x - pad, face.y - pad))
+        target.blit(self._painter.presentable(ring, target), (face.x - pad, face.y - pad))
 
 
 def _is_interactive(target: FocusTarget) -> bool:

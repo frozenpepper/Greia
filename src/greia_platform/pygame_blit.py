@@ -23,7 +23,12 @@ RLE caveats (SDL semantics, not Greia policy):
 * SDL encodes lazily, at the first blit (``copy()`` keeps the request);
   ``set_alpha(x)`` without ``RLEACCEL`` drops the request, and SDL cannot
   RLE a per-pixel-alpha surface while a per-surface alpha is set. For fades use :class:`FadeSteps` (alpha baked
-  into a few RLE copies) instead of ``set_alpha`` per frame.
+  into a few RLE copies) instead of ``set_alpha`` per frame;
+* blit RLE surfaces onto *opaque* targets only (the canvas, the display, a
+  ``convert()``-ed cache).  Onto a per-pixel-alpha surface SDL's RLE alpha
+  blit writes opaque destination alpha, so translucent edges turn into dark
+  fringes there (measured on SDL 2.26.5 and 2.28.4);
+  :meth:`PreparedSurfaces.for_target` picks the right surface for a target.
 
 :class:`HudOverlay` covers the other common cost: a HUD/control layer drawn
 every frame over a moving scene. It composes the HUD once into a transparent
@@ -118,6 +123,21 @@ class PreparedSurfaces:
         while len(self._items) > self.max_entries or (self._pixels > self.max_pixels and len(self._items) > 1):
             self._forget(next(iter(self._items)))
         return prepared
+
+    def for_target(self, surface: pygame.Surface, target: pygame.Surface) -> pygame.Surface:
+        """``surface`` ready to blit onto ``target``.
+
+        The cached RLE copy for an opaque target; ``surface`` itself for a
+        per-pixel-alpha target (see the module notes) or for objects that are
+        not Pygame surfaces (provider-free test doubles).
+        """
+
+        if not isinstance(surface, pygame.Surface) or not isinstance(target, pygame.Surface):
+            return surface
+        if target.get_flags() & pygame.SRCALPHA:
+            return surface
+        prepared = self(surface)
+        return surface if prepared is None else prepared
 
     def faded(self, surface: pygame.Surface | None, fraction: float, *, steps: int = 8) -> pygame.Surface | None:
         """``surface`` at opacity ``fraction`` (0..1) from baked :class:`FadeSteps`.

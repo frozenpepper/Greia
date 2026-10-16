@@ -202,9 +202,14 @@ class PygameCompletionScreen:
         self._palette = resolved_palette
         self._content = content
         if self._scene is not None:
-            self._frame = self._build_scene_frame(content, resolved_palette, self._scene)
+            frame = self._build_scene_frame(content, resolved_palette, self._scene)
         else:
-            self._frame = self._build_frame(content, resolved_palette)
+            frame = self._build_frame(content, resolved_palette)
+        if pygame.display.get_init() and pygame.display.get_surface() is not None:
+            # Display format once: the opaque frame is blitted every presented
+            # frame while the completion screen is up.
+            frame = frame.convert()
+        self._frame = frame
 
     def clear(self) -> None:
         """Release terminal content when the Activity restarts."""
@@ -302,9 +307,10 @@ class PygameCompletionScreen:
         rect = button.rect  # type: ignore[attr-defined]
         lip = button.lip  # type: ignore[attr-defined]
         face = pygame.Rect(rect.x, rect.y, rect.width, rect.height - lip)
-        ring = scene.kit.painter.focus_ring(face.size, face.height // 2)
+        painter = scene.kit.painter
+        ring = painter.focus_ring(face.size, face.height // 2)
         pad = ControlPainter.FOCUS_PAD
-        target.blit(ring, (face.x - pad, face.y - pad))
+        target.blit(painter.presentable(ring, target), (face.x - pad, face.y - pad))
 
     # -- shared cast completion scene (ADR 0037) --------------------------------
 

@@ -1078,10 +1078,25 @@ class AchievementLibraryMixin:
         pygame.draw.rect(screen, theme.panel, rect, border_radius=20)
         pygame.draw.rect(screen, theme.accent, rect, width=6 if focused else 4, border_radius=20)
         icon = self._load_icon("yellow_star", max(30, size - 24), pygame)
-        screen.blit(icon, icon.get_rect(center=(rect.centerx, rect.centery - 4)))
-        count = self._typography.font(FontRole.CONTROL, max(12, base.width // 5)).render(
-            str(self._achievement_display_count(snapshot)), True, theme.text
+        screen.blit(
+            self._star_presentable(icon, screen),
+            icon.get_rect(center=(rect.centerx, rect.centery - 4)),
         )
+        # The star is repainted on every Home frame (pointer moves included):
+        # keep its count label instead of re-rendering the text each time.
+        count_key = (
+            str(self._achievement_display_count(snapshot)),
+            max(12, base.width // 5),
+            tuple(theme.text),
+        )
+        cached_count = getattr(self, "_star_count_label", None)
+        if cached_count is not None and cached_count[0] == count_key:
+            count = cached_count[1]
+        else:
+            count = self._typography.font(FontRole.CONTROL, count_key[1]).render(
+                count_key[0], True, theme.text
+            )
+            self._star_count_label = (count_key, count)
         pill = pygame.Rect(
             0,
             0,
@@ -1095,6 +1110,19 @@ class AchievementLibraryMixin:
             self._targets.append(
                 HitTarget("achievement_library", None, rect.inflate(8, 8))
             )
+
+    def _star_presentable(self, icon: Any, screen: Any) -> Any:
+        """The star icon's RLE copy for the opaque screen (Atom alpha-blit cost)."""
+
+        fast = getattr(self, "_star_fast", None)
+        if fast is None:
+            from greia_platform.pygame_blit import PreparedSurfaces
+
+            fast = self._star_fast = PreparedSurfaces(max_entries=4, max_pixels=256 * 256)
+        try:
+            return fast.for_target(icon, screen)
+        except Exception:  # noqa: BLE001 - presentation must never fail Home
+            return icon
 
     def _achievement_visible_entries(self) -> tuple[AchievementEntry, ...]:
         snapshot = self._achievement_snapshot

@@ -322,18 +322,65 @@ class FrameGovernorTests(unittest.TestCase):
             frames.wait()
         self.assertGreaterEqual(frames.frames_presented, 10)
 
-    def test_wait_drives_the_idle_audio_release(self) -> None:
+    def test_wait_releases_audio_only_once_the_child_is_idle(self) -> None:
+        # Acer 87322f0d: closing the mixer while a child played made the next
+        # voice line reopen it on the loop thread (a 220-340 ms freeze).
         fake = FakeTime()
-        calls: list[float] = []
+        idle: list[float] = []
+        active: list[float] = []
         frames = FrameGovernor(
             POLICY, clock=fake.clock, sleep=fake.sleep,
             input_waiter=_FakeWaiter(fake), audio_busy=lambda: False,
-            audio_idle=lambda: calls.append(fake.now),
+            audio_idle=lambda: idle.append(fake.now),
+            audio_active=lambda: active.append(fake.now),
         )
         frames.frame()
         frames.wait()
         frames.wait(polling=True)
-        self.assertEqual(len(calls), 2)
+        self.assertEqual((len(idle), len(active)), (0, 2), "just started: the child is here")
+        # Essential motion keeps the device without input.
+        fake.now += POLICY.audio_hold_seconds + 1.0
+        frames.frame(animating=True)
+        frames.wait()
+        self.assertEqual(len(idle), 0)
+        fake.now += 2.0
+        frames.frame()
+        frames.wait()
+        self.assertEqual(len(idle), 1, "idle child, still screen: release allowed")
+        # The child comes back: the governor asks for the device again.
+        frames.note_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE))
+        before = len(active)
+        frames.frame()
+        frames.wait()
+        self.assertEqual(len(active), before + 1)
+        self.assertTrue(frames.child_active)
+
+    def test_overslept_waits_are_paid_back_so_the_cap_is_reached(self) -> None:
+        # Acer 87322f0d: sleep-after-work plus ~3 ms oversleep per wake held
+        # 24 fps loops at 21-23 fps although each frame needed only 12-19 ms.
+        fake = FakeTime()
+
+        def late_sleep(seconds: float) -> None:
+            fake.slept.append(seconds)
+            fake.now += seconds + 0.003
+
+        frames = FrameGovernor(POLICY, clock=fake.clock, sleep=late_sleep)
+        start = fake.now
+        while fake.now - start < 5.0:
+            if frames.frame(animating=True) is FrameKind.FULL:
+                fake.now += 0.012  # render work
+            frames.wait()
+        self.assertIn(frames.frames_presented, range(99, 102))
+
+    def test_a_long_stall_re_anchors_instead_of_bursting(self) -> None:
+        fake = FakeTime()
+        frames = governor(fake)
+        frames.frame(animating=True)
+        fake.now += 0.5  # one very slow frame
+        self.assertIs(frames.frame(animating=True), FrameKind.FULL)
+        frames.wait()
+        # The next frame is a full period later, not an immediate catch-up.
+        self.assertAlmostEqual(fake.slept[-1], POLICY.frame_period, places=6)
 
     def test_polling_cadence_tracks_previous_wake_like_clock_tick(self) -> None:
         fake = FakeTime()

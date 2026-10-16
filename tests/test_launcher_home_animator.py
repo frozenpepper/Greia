@@ -252,6 +252,30 @@ class HomeShellAnimationTests(unittest.TestCase):
         self.assertEqual(len(scenery.clouds), 2)
         self.assertEqual(self.animator.greeter_rect, GREETER)
 
+    def test_sprites_reach_the_screen_rle_encoded_with_the_same_pixels(self) -> None:
+        # Acer 87322f0d: un-encoded greeter/cloud sprites cost ~19 ms of each
+        # ~28 ms Home pointer-move frame on the Atom.
+        from greia_platform.pygame_blit import is_rle
+
+        base = self.shell._cached_activities_surface.copy()
+        raw, fast = base.copy(), base.copy()
+        for sprite, x, y in self.animator._items:
+            raw.blit(sprite, (x, y))
+        self.animator.draw(fast)
+        self.assertTrue(self.animator._items)
+        for sprite, _x, _y in self.animator._items:
+            self.assertTrue(is_rle(self.animator._presentable(sprite, fast)))
+            self.assertFalse(is_rle(sprite), "the shared visual cache stays untouched")
+        worst = max(
+            max(abs(a - b) for a, b in zip(raw.get_at((x, y))[:3], fast.get_at((x, y))[:3]))
+            for y in range(0, SCREEN[1], 3)
+            for x in range(0, SCREEN[0], 3)
+        )
+        self.assertLessEqual(worst, 1)
+        overlay = pygame.Surface(SCREEN, pygame.SRCALPHA)
+        sprite = self.animator._items[0][0]
+        self.assertIs(self.animator._presentable(sprite, overlay), sprite)
+
     def test_two_hundred_ticks_construct_no_surfaces(self) -> None:
         self._busy()
         self._frame(0.0)  # first frame after the taps

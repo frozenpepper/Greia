@@ -223,6 +223,49 @@ class MixerLeaseStateTests(unittest.TestCase):
         self.assertEqual(answers, [False, False])
         self.assertEqual(lease.reported_init(), (22050, -16, 1))
 
+    def test_prewarm_reopens_a_quiesced_mixer_before_the_next_sound(self) -> None:
+        clock = FakeClock()
+        lease, backend = opened(clock)
+        self.assertFalse(lease.prewarm(), "an open mixer needs no reopen")
+        self.assertTrue(poll_at(lease, clock, 111.0))
+        self.assertTrue(lease.prewarm())
+        self.assertTrue(lease.is_open)
+        self.assertEqual(len(backend.inits), 2)
+        self.assertEqual(backend.inits[-1]["frequency"], 22050)
+        # The reopen counts as use: no immediate close again.
+        self.assertFalse(poll_at(lease, clock, 112.0))
+        with lease.use():
+            pass
+        self.assertEqual(len(backend.inits), 2, "the next sound pays no reopen")
+
+    def test_background_prewarm_status_queries_do_not_wait_for_it(self) -> None:
+        clock = FakeClock()
+        backend = FakeBackend()
+        lease = ActivityMixerLease(backend, quiet_seconds=10.0, clock=clock, background=False)
+        lease.owner_init(22050, -16, 1, 256)
+        poll_at(lease, clock, 111.0)
+        lease._background = True  # close synchronously above, reopen on a worker
+        answers: list[bool] = []
+        started, release = threading.Event(), threading.Event()
+        real_init = backend.init
+
+        def slow_init(**kwargs):
+            started.set()
+            release.wait(2.0)
+            real_init(**kwargs)
+
+        backend.init = slow_init
+        self.assertTrue(lease.prewarm())
+        self.assertTrue(started.wait(2.0))
+        with lease.if_open() as open_now:
+            answers.append(open_now)
+        self.assertFalse(lease.prewarm(), "one reopen at a time")
+        release.set()
+        lease.wait_for_close()
+        self.assertEqual(answers, [False])
+        self.assertTrue(lease.is_open)
+        self.assertEqual(lease.reopen_count, 1)
+
     def test_owner_quit_owes_no_reopen(self) -> None:
         clock = FakeClock()
         lease, backend = opened(clock)
