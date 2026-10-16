@@ -1,298 +1,256 @@
-"""Orchestra Animali — presentation owner.
+"""Orchestra Animali — presentation of the band stage.
 
-Owns the pre-baked stage backdrop (single bounded surface, ``convert()``
-once, invalidated on resize) and every draw helper for instruments,
-particles, rainbow piano keys and HUD. No gameplay or IO lives here.
+``BandMotion`` holds the transient, bounded presentation state (strikes,
+borrowed poses, lit bars, FX bursts, beat rings, the inviting musician's
+speech bubble). ``OrchestraRenderer`` blits the prepared ``OrchestraArt`` in
+one pass: stage → spotlight → musicians + instruments → lit bars → bubble →
+FX. Motion is offsets only; nothing is decoded, scaled or rendered as text
+per frame.
 """
 
 from __future__ import annotations
 
+from collections import deque
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass, field
 import math
+from typing import Final
 
 import pygame
 
-from greia_platform.activity_ui import mix
-from greia_platform.typography import FontRole
+from greia_platform.activity_feedback import CastFeedback, CastPose
 
 if __package__:
-    from .orchestra_content import (
-        DARK_TEXT,
-        KEYBOARD_SHORTCUTS,
-        RAINBOW_COLORS,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        STAGE_CURTAIN,
-        STAGE_CURTAIN_DARK,
-        STAGE_CURTAIN_GOLD,
-        STAGE_GOLD,
-        STAGE_WALL_BOTTOM,
-        STAGE_WALL_TOP,
-        STAGE_WOOD_BOTTOM,
-        STAGE_WOOD_TOP,
-        WHITE,
+    from .orchestra_art import OrchestraArt
+    from .orchestra_content import BAND, Dynamics, Tempo
+    from .orchestra_layout import (
+        BAR_RECTS,
+        BUBBLE_HEIGHT,
+        BUBBLE_ICON,
+        BUBBLE_MAX_X,
+        BUBBLE_MIN_X,
+        BUBBLE_TOKEN,
+        BUBBLE_TOP,
+        CAST_HEIGHT,
+        instrument_anchor,
+        musician_anchor,
     )
-    from .orchestra_model import InstrumentCard, Particle
+    from .orchestra_model import XYLOPHONE_VOICE
 else:  # pragma: no cover - runtime/script fallback
-    from orchestra_content import (
-        DARK_TEXT,
-        KEYBOARD_SHORTCUTS,
-        RAINBOW_COLORS,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        STAGE_CURTAIN,
-        STAGE_CURTAIN_DARK,
-        STAGE_CURTAIN_GOLD,
-        STAGE_GOLD,
-        STAGE_WALL_BOTTOM,
-        STAGE_WALL_TOP,
-        STAGE_WOOD_BOTTOM,
-        STAGE_WOOD_TOP,
-        WHITE,
+    from orchestra_art import OrchestraArt
+    from orchestra_content import BAND, Dynamics, Tempo
+    from orchestra_layout import (
+        BAR_RECTS,
+        BUBBLE_HEIGHT,
+        BUBBLE_ICON,
+        BUBBLE_MAX_X,
+        BUBBLE_MIN_X,
+        BUBBLE_TOKEN,
+        BUBBLE_TOP,
+        CAST_HEIGHT,
+        instrument_anchor,
+        musician_anchor,
     )
-    from orchestra_model import InstrumentCard, Particle
+    from orchestra_model import XYLOPHONE_VOICE
+
+STRIKE_SECONDS: Final = 0.32
+BAR_LIT_SECONDS: Final = 0.35
+RING_SECONDS: Final = 0.7
+MAX_FX: Final = 24
+MAX_RINGS: Final = 8
+BEAT_UNIT: Final = 62  # bubble pixels per beat (rhythm is drawn to scale)
+BUBBLE_PAD: Final = 16
+BUBBLE_KEEP: Final = 8
 
 
-BACKING_IMPORT_RECT = pygame.Rect(140, 12, 70, 56)
-BACKING_PLAY_RECT = pygame.Rect(220, 12, 120, 56)
+@dataclass(slots=True)
+class FxBurst:
+    name: str
+    center: tuple[int, int]
+    start: float
+    duration: float = 0.6
+    rise: float = 0.0
+
+
+@dataclass(slots=True)
+class Bubble:
+    """The inviting musician's bubble: ear (listen) or go (your turn) + tokens.
+
+    ``tokens`` are ``(voice, position_in_beats)``; the bubble spans
+    ``span_beats`` so a long gap looks long and a short gap looks short.
+    """
+
+    lead: int
+    mode: str
+    span_beats: float
+    tokens: list[tuple[int, float]] = field(default_factory=list)
+
+
+class BandMotion:
+    """Bounded transient presentation state for one stage."""
+
+    def __init__(self) -> None:
+        count = len(BAND)
+        self.strikes: list[float] = [-10.0] * count
+        self.borrowed: dict[int, tuple[str, float]] = {}
+        self.bars_lit: list[float] = [-10.0] * len(BAR_RECTS)
+        self.fx: deque[FxBurst] = deque(maxlen=MAX_FX)
+        self.rings: deque[tuple[tuple[int, int], float]] = deque(maxlen=MAX_RINGS)
+        self.spotlight: int | None = None
+        self.bubble: Bubble | None = None
+
+    def strike(self, index: int, now: float) -> None:
+        self.strikes[index] = now
+        self.borrow(index, "pose_play", now + STRIKE_SECONDS + 0.1)
+
+    def borrow(self, index: int, pose: str, until: float) -> None:
+        self.borrowed[index] = (pose, until)
+
+    def light_bar(self, index: int, now: float) -> None:
+        self.bars_lit[index] = now
+
+    def burst(self, name: str, center: tuple[int, int], now: float, *, duration: float = 0.6, rise: float = 0.0) -> None:
+        self.fx.append(FxBurst(name, center, now, duration, rise))
+
+    def ring(self, center: tuple[int, int], now: float) -> None:
+        self.rings.append((center, now))
+
+    def prune(self, now: float) -> None:
+        for index, (_, until) in list(self.borrowed.items()):
+            if until <= now:
+                del self.borrowed[index]
+        while self.fx and self.fx[0].start + self.fx[0].duration < now:
+            self.fx.popleft()
+        while self.rings and self.rings[0][1] + RING_SECONDS < now:
+            self.rings.popleft()
+
+    def active(self, now: float) -> bool:
+        return (
+            bool(self.borrowed)
+            or bool(self.fx)
+            or bool(self.rings)
+            or any(now - at < STRIKE_SECONDS for at in self.strikes)
+            or any(now - at < BAR_LIT_SECONDS for at in self.bars_lit)
+        )
+
+    def clear(self) -> None:
+        self.__init__()
+
+
+def sway(now: float, tempo: Tempo) -> int:
+    """Band sway in px (quantised so an idle stage redraws only on change)."""
+
+    period = tempo.beat_seconds * 2.0
+    return int(round(math.sin(2.0 * math.pi * now / period) * 3.0))
 
 
 class OrchestraRenderer:
-    """Stage renderer with one bounded backdrop cache."""
+    """Draw the band stage from prepared art (blits only)."""
 
-    def __init__(self, typography) -> None:
-        self._typography = typography
-        self._bg_cached: pygame.Surface | None = None
+    def __init__(self, art: OrchestraArt, feedback: Sequence[CastFeedback], *, clock: Callable[[], float]) -> None:
+        self.art = art
+        self.feedback = tuple(feedback)
+        self._clock = clock
+        self._bubbles: dict[tuple, pygame.Surface] = {}
 
-    # ------------------------------------------------------------------
-    # Backdrop cache — one surface, bounded, convert() once
-    # ------------------------------------------------------------------
+    def draw(self, surface: pygame.Surface, motion: BandMotion, *, tempo: Tempo, dynamics: Dynamics) -> None:
+        now = self._clock()
+        surface.blit(self.art.background, (0, 0))
+        if motion.spotlight is not None:
+            x, y = musician_anchor(motion.spotlight)
+            spot = self.art.spotlight
+            surface.blit(spot, spot.get_rect(center=(x, y - 4)))
+        bob = sway(now, tempo)
+        hop = CAST_HEIGHT * (0.1 if dynamics is Dynamics.LOUD else 0.045)
+        for index in range(len(BAND)):
+            self._draw_musician(surface, motion, index, now, bob if index % 2 == 0 else -bob, hop)
+        for index, rect in enumerate(BAR_RECTS):
+            if now - motion.bars_lit[index] < BAR_LIT_SECONDS:
+                surface.blit(self.art.bar_lit[index], rect.move(0, 3))
+        if motion.bubble is not None:
+            self._draw_bubble(surface, motion.bubble)
+        for center, start in motion.rings:
+            frames = self.art.fx_frames("beat_ring")
+            if frames:
+                frame = frames[int((now - start) / 0.18) % len(frames)]
+                surface.blit(frame, frame.get_rect(center=center))
+        for burst in motion.fx:
+            self._draw_burst(surface, burst, now)
 
-    def _create_stage_surface(self) -> pygame.Surface:
-        surf = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
-        for y in range(0, 430, 8):
-            ratio = y / 430.0
-            col = mix(STAGE_WALL_TOP, STAGE_WALL_BOTTOM, ratio)
-            pygame.draw.rect(surf, col, (0, y, REFERENCE_WIDTH, 8))
-        for y in range(430, REFERENCE_HEIGHT, 6):
-            ratio = (y - 430) / float(REFERENCE_HEIGHT - 430)
-            col = mix(STAGE_WOOD_TOP, STAGE_WOOD_BOTTOM, ratio)
-            pygame.draw.rect(surf, col, (0, y, REFERENCE_WIDTH, 6))
-        for px in range(0, REFERENCE_WIDTH, 120):
-            pygame.draw.line(surf, (80, 45, 20), (px, 430), (px, REFERENCE_HEIGHT), 2)
-        pygame.draw.line(surf, STAGE_GOLD, (0, 430), (REFERENCE_WIDTH, 430), 4)
-        pygame.draw.polygon(surf, STAGE_CURTAIN_DARK, [(0, 0), (140, 0), (90, 440), (0, 440)])
-        pygame.draw.polygon(surf, STAGE_CURTAIN, [(0, 0), (120, 0), (70, 430), (0, 430)])
-        pygame.draw.polygon(
-            surf, STAGE_CURTAIN_DARK, [(REFERENCE_WIDTH, 0), (REFERENCE_WIDTH - 140, 0), (REFERENCE_WIDTH - 90, 440), (REFERENCE_WIDTH, 440)]
-        )
-        pygame.draw.polygon(
-            surf, STAGE_CURTAIN, [(REFERENCE_WIDTH, 0), (REFERENCE_WIDTH - 120, 0), (REFERENCE_WIDTH - 70, 430), (REFERENCE_WIDTH, 430)]
-        )
-        pygame.draw.line(surf, STAGE_CURTAIN_GOLD, (70, 0), (35, 430), 3)
-        pygame.draw.line(surf, STAGE_CURTAIN_GOLD, (REFERENCE_WIDTH - 70, 0), (REFERENCE_WIDTH - 35, 430), 3)
-        for vx in range(120, 900, 130):
-            pygame.draw.circle(surf, STAGE_CURTAIN, (vx + 65, 30), 75)
-            pygame.draw.circle(surf, STAGE_CURTAIN_GOLD, (vx + 65, 30), 75, width=3)
-        try:
-            if pygame.display.get_init():
-                surf = surf.convert()
-        except Exception:
-            pass
-        return surf
+    # -- pieces ----------------------------------------------------------------------
 
-    def background(self) -> pygame.Surface:
-        if self._bg_cached is None:
-            self._bg_cached = self._create_stage_surface()
-        return self._bg_cached
-
-    def invalidate_background(self) -> None:
-        self._bg_cached = None
-
-    def draw_background(self, surface: pygame.Surface) -> None:
-        surface.blit(self.background(), (0, 0))
-
-    # ------------------------------------------------------------------
-    # Instruments
-    # ------------------------------------------------------------------
-
-    def draw_instruments(self, surface: pygame.Surface, instruments: list[InstrumentCard]) -> None:
-        for inst in instruments:
-            ox = int(inst.x)
-            oy = int(inst.y)
-            if inst.jump_timer > 0:
-                oy += int(-math.sin(inst.jump_timer * math.pi) * 22.0)
-            else:
-                oy += int(math.sin(inst.phase) * 3.0)
-            pygame.draw.ellipse(surface, (15, 12, 25), (ox - 48, int(inst.y) + 42, 96, 22))
-            pygame.draw.ellipse(surface, (180, 115, 60), (ox - 52, oy + 32, 104, 28))
-            pygame.draw.ellipse(surface, STAGE_GOLD, (ox - 52, oy + 32, 104, 28), width=3)
-            avatar_bg = (255, 255, 255)
-            border_col = STAGE_GOLD if inst.jump_timer > 0 else inst.color
-            border_w = 5 if inst.jump_timer > 0 else 3
-            if inst.jump_timer > 0:
-                pygame.draw.circle(surface, (254, 240, 138), (ox, oy), int(inst.radius + 8), width=4)
-            pygame.draw.circle(surface, avatar_bg, (ox, oy), int(inst.radius))
-            pygame.draw.circle(surface, border_col, (ox, oy), int(inst.radius), width=border_w)
-            char_surf = self._typography.render(inst.icon, FontRole.DISPLAY, 54, DARK_TEXT)
-            surface.blit(char_surf, (ox - char_surf.get_width() // 2, oy - char_surf.get_height() // 2 - 6))
-            if not inst.label:
-                continue
-            lbl_surf = self._typography.render(inst.label, FontRole.CONTROL, 14, (255, 255, 255))
-            badge_w = max(80, lbl_surf.get_width() + 16)
-            badge_rect = pygame.Rect(ox - badge_w // 2, oy + 30, badge_w, 24)
-            pygame.draw.rect(surface, (30, 24, 45), badge_rect, border_radius=8)
-            pygame.draw.rect(surface, STAGE_GOLD if inst.jump_timer > 0 else (203, 213, 225), badge_rect, width=2, border_radius=8)
-            surface.blit(lbl_surf, (badge_rect.centerx - lbl_surf.get_width() // 2, badge_rect.centery - lbl_surf.get_height() // 2))
-
-    # ------------------------------------------------------------------
-    # Particles
-    # ------------------------------------------------------------------
-
-    def draw_particles(self, surface: pygame.Surface, particles: list[Particle]) -> None:
-        for p in particles:
-            if p.life > 0:
-                sz = max(12, int(p.size * p.life))
-                txt_surf = self._typography.render(p.symbol, FontRole.BODY, sz, p.color)
-                surface.blit(txt_surf, (int(p.x) - txt_surf.get_width() // 2, int(p.y) - txt_surf.get_height() // 2))
-
-    # ------------------------------------------------------------------
-    # Piano keys
-    # ------------------------------------------------------------------
-
-    def draw_piano_keys(self, surface: pygame.Surface, key_highlight_timers: list[float], note_labels: list[str]) -> None:
-        for k_i in range(8):
-            kx = 64 + k_i * 112
-            key_rect = pygame.Rect(kx, 440, 104, 130)
-            hl = key_highlight_timers[k_i]
-            base_col = RAINBOW_COLORS[k_i]
-            pygame.draw.rect(surface, (20, 15, 25), (kx + 3, 444, 104, 130), border_radius=14)
-            fill_col = mix(base_col, WHITE, 0.4) if hl > 0 else base_col
-            pygame.draw.rect(surface, fill_col, key_rect, border_radius=14)
-            pygame.draw.rect(surface, WHITE, (kx + 8, 446, 88, 14), border_radius=6)
-            pygame.draw.rect(surface, (30, 41, 59), key_rect, width=3, border_radius=14)
-            badge_rect = pygame.Rect(kx + 32, 448, 40, 22)
-            pygame.draw.rect(surface, (255, 250, 240), badge_rect, border_radius=6)
-            pygame.draw.rect(surface, (30, 41, 59), badge_rect, width=1, border_radius=6)
-            sc_surf = self._typography.render(KEYBOARD_SHORTCUTS[k_i], FontRole.CONTROL, 14, DARK_TEXT)
-            surface.blit(sc_surf, (badge_rect.centerx - sc_surf.get_width() // 2, badge_rect.centery - sc_surf.get_height() // 2))
-            note_str = note_labels[k_i]
-            n_surf = self._typography.render(note_str, FontRole.DISPLAY, 26, (255, 255, 255) if hl <= 0 else DARK_TEXT)
-            surface.blit(n_surf, (kx + 52 - n_surf.get_width() // 2, 490))
-
-    # ------------------------------------------------------------------
-    # HUD + title — kept clear of trusted Home chrome (x < 120)
-    # ------------------------------------------------------------------
-    @staticmethod
-    def backing_import_contains(point: tuple[int, int]) -> bool:
-        return BACKING_IMPORT_RECT.collidepoint(point)
-
-    @staticmethod
-    def backing_play_contains(point: tuple[int, int]) -> bool:
-        return BACKING_PLAY_RECT.collidepoint(point)
-
-
-    def draw_hud(
-        self,
-        surface: pygame.Surface,
-        stars: int,
-        *,
-        title: str = "",
-        backing_enabled: bool = False,
-        backing_state: str = "empty",
-        backing_import_enabled: bool = True,
-        backing_import_state: str = "",
+    def _draw_musician(
+        self, surface: pygame.Surface, motion: BandMotion, index: int, now: float, bob: int, hop: float
     ) -> None:
-        import_border = (
-            (110, 115, 128)
-            if not backing_import_enabled
-            else (220, 38, 38)
-            if backing_import_state == "error"
-            else (16, 185, 129)
-            if backing_import_state == "imported"
-            else (56, 189, 248)
-        )
-        import_fill = (
-            (61, 65, 76)
-            if not backing_import_enabled
-            else (205, 240, 224)
-            if backing_import_state in {"pending", "imported"}
-            else (238, 248, 255)
-        )
-        pygame.draw.rect(
-            surface, import_fill, BACKING_IMPORT_RECT, border_radius=14
-        )
-        pygame.draw.rect(
-            surface,
-            import_border,
-            BACKING_IMPORT_RECT,
-            width=3,
-            border_radius=14,
-        )
-        ix, iy = BACKING_IMPORT_RECT.center
-        # Music note + down arrow: bring a saved recording/song into Orchestra.
-        import_icon = DARK_TEXT if backing_import_enabled else (160, 164, 174)
-        pygame.draw.circle(surface, import_icon, (ix - 11, iy + 8), 5)
-        pygame.draw.line(
-            surface, import_icon, (ix - 6, iy + 7), (ix - 6, iy - 14), 3
-        )
-        pygame.draw.line(
-            surface, import_icon, (ix - 6, iy - 14), (ix + 2, iy - 11), 3
-        )
-        pygame.draw.line(
-            surface, import_border, (ix + 15, iy - 13), (ix + 15, iy + 9), 4
-        )
-        pygame.draw.lines(
-            surface,
-            import_border,
-            False,
-            [(ix + 7, iy + 1), (ix + 15, iy + 10), (ix + 23, iy + 1)],
-            4,
-        )
-
-        play_fill = (232, 246, 236) if backing_enabled else (61, 65, 76)
-        play_border = (34, 197, 94) if backing_enabled else (110, 115, 128)
-        if backing_state == "playing":
-            play_fill = (205, 240, 224)
-        elif backing_state == "paused":
-            play_fill = (254, 240, 138)
-        pygame.draw.rect(
-            surface, play_fill, BACKING_PLAY_RECT, border_radius=14
-        )
-        pygame.draw.rect(
-            surface,
-            play_border,
-            BACKING_PLAY_RECT,
-            width=3,
-            border_radius=14,
-        )
-        px, py = BACKING_PLAY_RECT.center
-        icon_color = DARK_TEXT if backing_enabled else (160, 164, 174)
-        if backing_state == "playing":
-            pygame.draw.rect(
-                surface, icon_color, (px - 12, py - 12, 8, 24), border_radius=2
-            )
-            pygame.draw.rect(
-                surface, icon_color, (px + 4, py - 12, 8, 24), border_radius=2
-            )
+        x, y = musician_anchor(index)
+        since = now - motion.strikes[index]
+        lift = int(math.sin(math.pi * since / STRIKE_SECONDS) * hop) if 0 <= since < STRIKE_SECONDS else 0
+        feedback = self.feedback[index]
+        if feedback.pose is not CastPose.IDLE:
+            feedback.draw(surface, (x, y))
         else:
-            pygame.draw.polygon(
-                surface,
-                icon_color,
-                [(px - 8, py - 14), (px - 8, py + 14), (px + 16, py)],
-            )
+            pose = "happy"
+            borrowed = motion.borrowed.get(index)
+            if borrowed is not None and borrowed[1] > now:
+                pose = borrowed[0]
+            image = self.art.pose(index, pose)
+            if image is not None:
+                surface.blit(image, image.get_rect(midbottom=(x, y + bob - lift)))
+        instrument = self.art.instruments[index]
+        if instrument is not None:
+            ix, iy = instrument_anchor(index)
+            shake = int(math.sin(math.pi * since / STRIKE_SECONDS) * 9) if 0 <= since < STRIKE_SECONDS else 0
+            surface.blit(instrument, instrument.get_rect(midbottom=(ix, iy - shake)))
 
-        title_rect = pygame.Rect(360, 16, 304, 52)
-        pygame.draw.rect(surface, (255, 250, 240), title_rect, border_radius=14)
-        pygame.draw.rect(surface, (30, 41, 59), title_rect, width=2, border_radius=14)
-        title_str = " ".join(part for part in ("🎵", title, "🎶") if part)
-        t_surf = self._typography.render(title_str, FontRole.TITLE, 20, DARK_TEXT)
-        surface.blit(t_surf, (title_rect.centerx - t_surf.get_width() // 2, title_rect.centery - t_surf.get_height() // 2))
-        hud_rect = pygame.Rect(820, 12, 160, 56)
-        pygame.draw.rect(surface, (255, 250, 240), hud_rect, border_radius=16)
-        pygame.draw.rect(surface, (234, 179, 8), hud_rect, width=3, border_radius=16)
-        pygame.draw.circle(surface, (234, 179, 8), (hud_rect.left + 30, hud_rect.centery), 16)
-        hud_surf = self._typography.render(str(stars), FontRole.DISPLAY, 26, (180, 90, 20))
-        surface.blit(hud_surf, (hud_rect.left + 58, hud_rect.centery - hud_surf.get_height() // 2))
+    def _draw_burst(self, surface: pygame.Surface, burst: FxBurst, now: float) -> None:
+        elapsed = now - burst.start
+        if elapsed < 0:
+            return
+        frames = self.art.fx_frames(burst.name)
+        if not frames:
+            return
+        progress = min(1.0, elapsed / burst.duration)
+        frame = frames[min(len(frames) - 1, int(progress * len(frames)))]
+        x, y = burst.center
+        rect = frame.get_rect(center=(x, int(y - burst.rise * progress)))
+        alpha = 255 if progress < 0.6 else int(255 * (1.0 - progress) / 0.4)
+        frame.set_alpha(alpha)
+        surface.blit(frame, rect)
+        frame.set_alpha(255)
+
+    def _draw_bubble(self, surface: pygame.Surface, bubble: Bubble) -> None:
+        key = (bubble.mode, bubble.span_beats, tuple(bubble.tokens))
+        image = self._bubbles.get(key)
+        if image is None:
+            image = self._compose_bubble(bubble)
+            if len(self._bubbles) >= BUBBLE_KEEP:
+                self._bubbles.pop(next(iter(self._bubbles)))
+            self._bubbles[key] = image
+        x, _ = musician_anchor(bubble.lead)
+        half = image.get_width() // 2
+        cx = max(BUBBLE_MIN_X + half, min(BUBBLE_MAX_X - half, x))
+        rect = image.get_rect(midtop=(cx, BUBBLE_TOP))
+        surface.blit(image, rect)
+        tail = self.art.bubble_tail
+        tail_x = max(rect.left + 34, min(rect.right - 34, x))
+        surface.blit(tail, tail.get_rect(midtop=(tail_x, rect.bottom - 6)))
+
+    def _compose_bubble(self, bubble: Bubble) -> pygame.Surface:
+        lane = int(bubble.span_beats * BEAT_UNIT) + BUBBLE_TOKEN
+        width = BUBBLE_PAD * 3 + BUBBLE_ICON + lane
+        image = self.art.bubble(width).copy()
+        icon = self.art.listen_icon if bubble.mode == "listen" else self.art.go_icon
+        mid = BUBBLE_HEIGHT // 2
+        if icon is not None:
+            image.blit(icon, icon.get_rect(midleft=(BUBBLE_PAD, mid)))
+        left = BUBBLE_PAD * 2 + BUBBLE_ICON
+        for voice, at in bubble.tokens:
+            token = self.art.bar_token if voice == XYLOPHONE_VOICE else self.art.tokens[voice]
+            if token is None:
+                continue
+            offset = int(max(0.0, min(bubble.span_beats, at)) * BEAT_UNIT)
+            image.blit(token, token.get_rect(midleft=(left + offset, mid)))
+        return image
 
 
-__all__ = ["BACKING_IMPORT_RECT", "BACKING_PLAY_RECT", "OrchestraRenderer"]
+__all__ = ["BandMotion", "Bubble", "FxBurst", "OrchestraRenderer", "sway"]

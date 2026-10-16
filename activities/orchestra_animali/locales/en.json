@@ -4,23 +4,9 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Magic Orchestra",
-    "inst.piano": "Piano",
-    "inst.drums": "Drums",
-    "inst.trumpet": "Trumpet",
-    "inst.guitar": "Guitar",
-    "inst.maracas": "Maracas",
-    "prompt.free": "Tap the instruments or play the rainbow keys!",
-    "feedback.perfect": "Great job! Wonderful melody! 🌟🎶",
-    "hud.stars": "★ ",
-    "hud.title": "Magic Orchestra",
-    "note.c": "C",
-    "note.d": "D",
-    "note.e": "E",
-    "note.f": "F",
-    "note.g": "G",
-    "note.a": "A",
-    "note.b": "B",
-    "note.c_high": "C"
+    "victory.title": "What a concert!",
+    "victory.subtitle": "You played with the whole band!",
+    "button.play_again": "Play again"
   },
   "audio": {
     "activity.title": {

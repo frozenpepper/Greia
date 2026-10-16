@@ -1,4 +1,4 @@
-"""Orchestra trusted backing-track import/play-along contracts.
+"""Orchestra trusted backing-track import/play-along contracts (``PlayAlong``).
 
 Execution is intentionally deferred to the accumulated desktop acceptance.
 """
@@ -16,12 +16,12 @@ import pygame
 
 from greia_platform.creation_client import CreationTransfer
 
-from activities.orchestra_animali.orchestra_app import OrchestraApp
 from activities.orchestra_animali.orchestra_audio import (
     BackingTrackPlayer,
     ImportedBackingTrack,
 )
 from activities.orchestra_animali.orchestra_backing import BackingTrackRecord
+from activities.orchestra_animali.orchestra_playalong import PlayAlong
 
 
 def _wav(seconds: float, *, rate: int = 8000) -> bytes:
@@ -124,51 +124,40 @@ class FakeChannel:
 
 
 class OrchestraBackingFlowTests(unittest.TestCase):
-    def make_app(self):
-        app = object.__new__(OrchestraApp)
-        app.creations = FakeCreations()
-        app.backing_store = FakeStore()
-        app.backing_player = FakePlayer()
-        app.backing_record = None
-        app.backing_request = None
-        app.backing_next_poll = 0.0
-        app.backing_import_state = ""
-        app.backing_feedback_until = 0.0
-        app.backing_notes_played = 0
-        app.instruments = []
-        app.key_highlight_timers = [0.0] * 8
-        app.particles = []
-        return app
+    def make_flow(self):
+        self.events = []
+        return PlayAlong(
+            creations=FakeCreations(),
+            store=FakeStore(),
+            player=FakePlayer(),
+            on_concert=lambda live: self.events.append(("concert.performed", {"live_inputs": live})),
+        )
 
     def test_import_request_is_unavailable_without_trusted_store(self):
-        app = self.make_app()
-        app.backing_store = None
-        app._request_backing_track()
-        self.assertEqual(app.creations.requests, [])
-        self.assertIsNone(app.backing_request)
+        flow = self.make_flow()
+        flow.store = None
+        flow.request(10.0)
+        self.assertEqual(flow.creations.requests, [])
+        self.assertIsNone(flow.request_id)
 
     def test_picker_is_wav_and_semantically_scoped(self):
-        app = self.make_app()
-        app.backing_player.track = object()
-        with mock.patch(
-            "activities.orchestra_animali.orchestra_app.time.monotonic",
-            return_value=10.0,
-        ):
-            app._request_backing_track()
+        flow = self.make_flow()
+        flow.player.track = object()
+        flow.request(10.0)
         self.assertEqual(
-            app.creations.requests,
+            flow.creations.requests,
             [(("audio/wav",), ("narration", "song", "music"))],
         )
-        self.assertEqual(app.backing_request, "request-backing")
-        self.assertGreaterEqual(app.backing_next_poll, 10.12)
-        self.assertEqual(app.backing_player.stops, 1)
+        self.assertEqual(flow.request_id, "request-backing")
+        self.assertGreaterEqual(flow.next_poll, 10.12)
+        self.assertEqual(flow.player.stops, 1)
 
     def test_valid_selection_persists_before_active_track_changes(self):
-        app = self.make_app()
+        flow = self.make_flow()
         old_track = object()
-        app.backing_player.track = old_track
+        flow.player.track = old_track
         payload = _wav(1.0)
-        app.creations.transfer = CreationTransfer(
+        flow.creations.transfer = CreationTransfer(
             {
                 "media_type": "audio/wav",
                 "role": "narration",
@@ -177,18 +166,33 @@ class OrchestraBackingFlowTests(unittest.TestCase):
             },
             payload,
         )
-        self.assertTrue(app._accept_backing_track("one-use"))
-        self.assertEqual(len(app.backing_store.saved), 1)
-        self.assertIsInstance(app.backing_player.track, ImportedBackingTrack)
-        self.assertEqual(app.backing_record.role, "narration")
+        self.assertTrue(flow.accept("one-use"))
+        self.assertEqual(len(flow.store.saved), 1)
+        self.assertIsInstance(flow.player.track, ImportedBackingTrack)
+        self.assertEqual(flow.record.role, "narration")
+
+    def test_ready_poll_imports_and_shows_brief_feedback(self):
+        flow = self.make_flow()
+        payload = _wav(0.5)
+        flow.creations.transfer = CreationTransfer(
+            {"media_type": "audio/wav", "role": "song", "sha256": hashlib.sha256(payload).hexdigest()},
+            payload,
+        )
+        flow.request(1.0)
+        flow.creations.reply = SimpleNamespace(state="ready", selection_token="tok")
+        self.assertTrue(flow.poll(2.0))
+        self.assertEqual(flow.import_state, "imported")
+        self.assertIsNone(flow.request_id)
+        self.assertTrue(flow.update(5.0))
+        self.assertEqual(flow.import_state, "")
 
     def test_failed_persistence_preserves_previous_track(self):
-        app = self.make_app()
+        flow = self.make_flow()
         old_track = object()
-        app.backing_player.track = old_track
-        app.backing_store.fail = True
+        flow.player.track = old_track
+        flow.store.fail = True
         payload = _wav(1.0)
-        app.creations.transfer = CreationTransfer(
+        flow.creations.transfer = CreationTransfer(
             {
                 "media_type": "audio/wav",
                 "role": "music",
@@ -196,14 +200,14 @@ class OrchestraBackingFlowTests(unittest.TestCase):
             },
             payload,
         )
-        self.assertFalse(app._accept_backing_track("one-use"))
-        self.assertIs(app.backing_player.track, old_track)
-        self.assertEqual(app.backing_player.loaded, [])
+        self.assertFalse(flow.accept("one-use"))
+        self.assertIs(flow.player.track, old_track)
+        self.assertEqual(flow.player.loaded, [])
 
     def test_wrong_role_or_digest_preserves_previous_track(self):
-        app = self.make_app()
+        flow = self.make_flow()
         old_track = object()
-        app.backing_player.track = old_track
+        flow.player.track = old_track
         payload = _wav(1.0)
         for record in (
             {
@@ -217,35 +221,32 @@ class OrchestraBackingFlowTests(unittest.TestCase):
                 "sha256": "bad",
             },
         ):
-            app.creations.transfer = CreationTransfer(record, payload)
-            self.assertFalse(app._accept_backing_track("bad"))
-            self.assertIs(app.backing_player.track, old_track)
+            flow.creations.transfer = CreationTransfer(record, payload)
+            self.assertFalse(flow.accept("bad"))
+            self.assertIs(flow.player.track, old_track)
 
     def test_completed_backing_emits_concert_only_after_live_input(self):
-        app = self.make_app()
-        events = []
-        app._safe_emit = lambda event_id, key, payload=None: events.append(
-            (event_id, payload)
-        )
-        app.backing_player.refresh_result = True
-        app.backing_notes_played = 3
-        app._update_state()
-        self.assertEqual(
-            events,
-            [("concert.performed", {"live_inputs": 3})],
-        )
-        self.assertEqual(app.backing_notes_played, 0)
+        flow = self.make_flow()
+        flow.player.refresh_result = True
+        flow.notes_played = 3
+        flow.update(1.0)
+        self.assertEqual(self.events, [("concert.performed", {"live_inputs": 3})])
+        self.assertEqual(flow.notes_played, 0)
 
     def test_completed_backing_without_live_input_is_not_a_concert(self):
-        app = self.make_app()
-        events = []
-        app._safe_emit = lambda event_id, key, payload=None: events.append(
-            (event_id, payload)
-        )
-        app.backing_player.refresh_result = True
-        app.backing_notes_played = 0
-        app._update_state()
-        self.assertEqual(events, [])
+        flow = self.make_flow()
+        flow.player.refresh_result = True
+        flow.notes_played = 0
+        flow.update(1.0)
+        self.assertEqual(self.events, [])
+
+    def test_notes_count_only_while_the_track_plays(self):
+        flow = self.make_flow()
+        flow.player.state = "ready"
+        flow.note_played()
+        flow.player.state = "playing"
+        flow.note_played()
+        self.assertEqual(flow.notes_played, 1)
 
 
 class BackingTrackAudioTests(unittest.TestCase):

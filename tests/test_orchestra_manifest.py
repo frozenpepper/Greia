@@ -1,4 +1,4 @@
-"""Orchestra source/manifest contract for free-play backing-track mode."""
+"""Orchestra source/manifest contract: free play + echo invitations + backing track."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -20,9 +20,15 @@ class OrchestraManifestTests(unittest.TestCase):
             education["events"],
             [
                 {"id": "instrument.played", "kind": "milestone"},
+                {"id": "rhythm.echoed", "kind": "milestone"},
+                {"id": "band.concert_completed", "kind": "completion"},
                 {"id": "concert.performed", "kind": "creation"},
             ],
         )
+        self.assertTrue(education["adaptive_difficulty"])
+        self.assertNotIn("recommended_age_max", education)
+        skills = {item["id"] for item in education["skills"]}
+        self.assertIn("music.rhythm.echo_imitation", skills)
         self.assertEqual(raw["creations"]["consumes"], ["audio/wav"])
 
 

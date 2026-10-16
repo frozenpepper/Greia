@@ -4,23 +4,9 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Orchestre magique",
-    "inst.piano": "Piano",
-    "inst.drums": "Batterie",
-    "inst.trumpet": "Trompette",
-    "inst.guitar": "Guitare",
-    "inst.maracas": "Maracas",
-    "prompt.free": "Touche les instruments ou joue avec les touches arc-en-ciel !",
-    "feedback.perfect": "Bravo ! Quelle belle mélodie ! 🌟🎶",
-    "hud.stars": "★ ",
-    "hud.title": "Orchestre magique",
-    "note.c": "Do",
-    "note.d": "Ré",
-    "note.e": "Mi",
-    "note.f": "Fa",
-    "note.g": "Sol",
-    "note.a": "La",
-    "note.b": "Si",
-    "note.c_high": "Do"
+    "victory.title": "Quel concert !",
+    "victory.subtitle": "Tu as joué avec tout l'orchestre !",
+    "button.play_again": "Rejouer"
   },
   "audio": {}
 }

@@ -14,12 +14,21 @@ discovery_tags = ["music"]
 categories = ["music", "rhythm", "creativity"]
 difficulty = 2
 recommended_age_min = 3
+difficulty_min = 1
+difficulty_max = 5
+adaptive_difficulty = true
 skills = [
-  { id = "music.rhythm.perception", weight = 3 },
+  { id = "music.rhythm.echo_imitation", weight = 3 },
+  { id = "music.rhythm.perception", weight = 2 },
   { id = "music.instrument_association", weight = 2 },
+  { id = "music.dynamics.loud_soft", weight = 1 },
+  { id = "music.tempo.fast_slow", weight = 1 },
+  { id = "creativity.musical_play", weight = 2 },
 ]
 events = [
   { id = "instrument.played", kind = "milestone" },
+  { id = "rhythm.echoed", kind = "milestone" },
+  { id = "band.concert_completed", kind = "completion" },
   { id = "concert.performed", kind = "creation" },
 ]
 
