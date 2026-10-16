@@ -144,7 +144,7 @@ class ForestRenderer:
             if fade < 0.999:
                 fruit.set_alpha(int(255 * fade))
                 target.blit(fruit, fruit.get_rect(center=centre))
-                fruit.set_alpha(None)
+                fruit.set_alpha(255)
             else:
                 target.blit(fruit, fruit.get_rect(center=centre))
 
@@ -223,14 +223,14 @@ class ForestRenderer:
             if burst is not None:
                 burst.set_alpha(int(255 * max(0.0, 1.0 - t)))
                 target.blit(burst, burst.get_rect(center=(position[0], position[1] - int(30 * t))))
-                burst.set_alpha(None)
+                burst.set_alpha(255)
         if state.bump is not None:
             position, t = state.bump
             puff = self._art.fx("fx.dust_puff", 96)
             if puff is not None:
                 puff.set_alpha(int(220 * max(0.0, 1.0 - t)))
                 target.blit(puff, puff.get_rect(center=(position[0], position[1] - int(20 * t))))
-                puff.set_alpha(None)
+                puff.set_alpha(255)
         if state.finale is not None:
             # Two confetti bursts drifting down over the glade (one cached size each).
             for (x, y0), size, delay in (((520, 230), 280, 0.0), ((820, 200), 220, 0.35)):

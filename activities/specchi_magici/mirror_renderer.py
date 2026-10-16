@@ -262,7 +262,7 @@ class MirrorRenderer:
             ghost = self._art.ghost(piece, TILE_SIZE)
             ghost.set_alpha(int(150 + 105 * pulse))
             surface.blit(ghost, ghost.get_rect(center=cell_rect(*cell).center))
-            ghost.set_alpha(None)
+            ghost.set_alpha(255)
         # Preview of the tile in hand over the cell under the pointer.
         if (
             view.held is not None

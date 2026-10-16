@@ -309,7 +309,7 @@ class CloudRenderer:
             glow = self._art.moon_glow(120)
             glow.set_alpha(int(255 * max(0.0, min(1.0, view.moon_glow))))
             surface.blit(glow, glow.get_rect(center=MOON_CENTER))
-            glow.set_alpha(None)
+            glow.set_alpha(255)
         drift = int(round((1.0 - _ease(view.intro)) * 60))
         for cloud in view.clouds:
             self._cloud(surface, cloud, view, motion, now, drift)
@@ -337,7 +337,7 @@ class CloudRenderer:
             previous = self._art.backdrop(motion.fade_from)
             previous.set_alpha(int(255 * (1.0 - k)))
             surface.blit(previous, (0, 0))
-            previous.set_alpha(None)
+            previous.set_alpha(255)
 
     def _cloud(
         self,
@@ -413,7 +413,7 @@ class CloudRenderer:
         frame = frames[0]
         frame.set_alpha(int(255 * min(1.0, 4 * (1.0 - t))))
         surface.blit(frame, frame.get_rect(center=(int(x), int(y))))
-        frame.set_alpha(None)
+        frame.set_alpha(255)
 
 
 __all__ = [

@@ -331,7 +331,7 @@ class PostcardRenderer:
             halo = self.art.halo(rect.size)
             halo.set_alpha(alpha)
             target.blit(halo, halo.get_rect(center=rect.center))
-            halo.set_alpha(None)
+            halo.set_alpha(255)
 
     def _halo_rect(self, key: str, layout: ComposerLayout) -> pygame.Rect | None:
         if key == "send":
