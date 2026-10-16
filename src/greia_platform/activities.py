@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import os
 import logging
 import tomllib
 from dataclasses import dataclass
@@ -455,15 +456,45 @@ class ActivityRegistry:
                 raise ActivityValidationError(
                     "Activity source is not the authoritative configured source for this package"
                 )
-        self._validate_tree(root)
+        digest = self._validated_tree_digest(root)
         manifest = self._parse_manifest(root)
         self._validate_manifest(manifest, configured)
         return ActivityRegistration(
             manifest=manifest,
-            package_digest=package_digest(root),
+            package_digest=digest,
             package_trust=configured.trust,
             source_id=configured.source_id,
         )
+
+    def _validated_tree_digest(self, root: Path) -> str:
+        """Tree validation + package digest, reused while the tree is unchanged.
+
+        Every discovery (Parent catalogue, policy, system status, launcher)
+        re-validates every package: an ``ast.parse`` of each Python file plus a
+        SHA-256 of every byte. On the Atom N270 reference floor that is ~25 s
+        for the built-in catalogue and it serialises the single-threaded Parent
+        API. The result is memoised per (package root, runtime tree policy)
+        against a stat fingerprint of every entry (see ``_tree_fingerprint``);
+        any change re-runs the full validation. Failures are never cached.
+        """
+        runtime = self._runtime
+        policy = (
+            tuple(sorted(runtime.forbidden_path_names)),
+            tuple(sorted(runtime.forbidden_file_names)),
+            tuple(sorted(runtime.forbidden_suffixes)),
+            runtime.maximum_activity_bytes,
+        )
+        key = (str(root), policy)
+        fingerprint = _tree_fingerprint(root)
+        cached = _validated_tree_cache.get(key)
+        if cached is not None and cached[0] == fingerprint:
+            return cached[1]
+        self._validate_tree(root)
+        digest = package_digest(root)
+        if key not in _validated_tree_cache and len(_validated_tree_cache) >= _VALIDATED_TREE_CACHE_LIMIT:
+            _validated_tree_cache.pop(next(iter(_validated_tree_cache)))
+        _validated_tree_cache[key] = (fingerprint, digest)
+        return digest
 
     def _source_for(self, root: Path) -> ActivitySource:
         matches = [
@@ -729,6 +760,34 @@ class ActivityRegistry:
             raise ActivityValidationError(
                 "unknown Activity permissions: " + ", ".join(sorted(unknown_permissions))
             )
+
+
+_VALIDATED_TREE_CACHE_LIMIT = 256
+_validated_tree_cache: dict[tuple[str, tuple[object, ...]], tuple[tuple[tuple[object, ...], ...], str]] = {}
+
+
+def _tree_fingerprint(root: Path) -> tuple[tuple[object, ...], ...]:
+    """Cheap identity of a package tree: every entry's relative path, type,
+    size, mtime_ns, ctime_ns and inode (``os.scandir``; symlinks not followed).
+    A content rewrite that preserves size and mtime still moves ctime, which
+    unprivileged code cannot set."""
+    base = str(root)
+    prefix = len(base) + 1
+    items: list[tuple[object, ...]] = []
+    stack = [base]
+    while stack:
+        directory = stack.pop()
+        with os.scandir(directory) as entries:
+            for entry in entries:
+                stat = entry.stat(follow_symlinks=False)
+                kind = "l" if entry.is_symlink() else "d" if entry.is_dir(follow_symlinks=False) else "f"
+                items.append(
+                    (entry.path[prefix:], kind, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns, stat.st_ino)
+                )
+                if kind == "d":
+                    stack.append(entry.path)
+    items.sort()
+    return tuple(items)
 
 
 def package_digest(root: Path) -> str:

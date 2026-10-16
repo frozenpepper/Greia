@@ -144,6 +144,13 @@ def main() -> int:
         profiles_dir=args.profiles_dir,
         active_profile_status_path=args.active_profile_status_path,
     )
+    # Warm the Activity validation cache (ActivityRegistry._validated_tree_digest)
+    # before accepting requests: a cold discovery of the built-in catalogue costs
+    # ~20 s on the Atom reference floor and would block the first Parent client.
+    try:
+        app.registry.discover(fail_closed=False)
+    except Exception:  # discovery problems are reported by the real requests
+        pass
     ProductionParentApiHTTPServer((args.bind, args.port), app).serve_forever()
     return 0
 
