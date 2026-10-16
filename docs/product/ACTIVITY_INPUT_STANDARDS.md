@@ -137,7 +137,7 @@ Children should discover that the keyboard works as well as the mouse without re
 - Arrows that do nothing in this Activity are drawn dimmed rather than omitted, so the picture still looks like the child's keyboard.
 - It is shown at start (a few seconds) and again as part of the idle hints (lighting the acting keys one after another), then hides; it reappears whenever the child presses one of its keys.
 - **The drawn key lights up while the real key (or the matching controller D-pad / south button) is pressed**, so the child sees the mapping.
-- It is language-neutral (no letters or words, no controller brand symbols), small and unobtrusive, never covers gameplay or the protected chrome, and is display-only (not a focus target or a touch target).
+- It is language-neutral (no letters or words, no controller brand symbols), small and unobtrusive yet legible for a 4–7-year-old (keycaps about 28–32 px visible at 1024×600 and no smaller than about 24 px at 800×480), never covers gameplay or the protected chrome, and is display-only (not a focus target or a touch target).
 - Plain focus navigation (arrows move the focus ring, Space activates) does not require the hint; an Activity may show it in its last idle-hint step.
 - Activities that use other keys (letters on a xylophone, typing letters) are outside this rule until a letter-keycap set exists; Writing (`text`) is exempt.
 

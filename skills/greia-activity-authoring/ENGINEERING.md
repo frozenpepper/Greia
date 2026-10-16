@@ -411,7 +411,7 @@ Do not introduce a heavyweight animation framework for a few simple effects.
 ### 7.6 Working targets
 
 ```text
-smooth gameplay target: ~30 fps on Atom-class floor
+smooth gameplay target: 24 fps cap on the reference floor (FramePolicy.reference_floor); <=40 ms frame work
 added input latency:     <= 50 ms
 static/paused idle CPU:  near zero where architecture permits
 ```

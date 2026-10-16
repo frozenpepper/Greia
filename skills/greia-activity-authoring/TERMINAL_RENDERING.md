@@ -68,28 +68,32 @@ while running:
     if is_victory:
         draw_victory_overlay()
     present()
-    clock.tick(30)
+    frames.wait()  # FrameGovernor; never a bare Clock.tick in Activities
 ```
 
 This keeps paying the complete active-game cost after the game has ended.
 
-Good:
+Good (the `FrameGovernor` from `greia_platform.frame_governor` decides; see the authoring skill §11):
 
 ```python
 while running:
-    handle_input()
+    for event in frames.events():
+        handle_input(event)
 
     if state is TERMINAL:
-        if terminal_dirty:
+        frame = frames.frame(dirty=terminal_dirty)
+        if frame is FrameKind.FULL:
             completion.draw(surface)
             present()
             terminal_dirty = False
-        poll_responsively_without_repainting()
+        frames.wait()  # static: blocks for input instead of repainting
         continue
 
     update_active_world()
-    draw_active_world()
-    present()
+    if frames.frame(dirty=world_changed, animating=True) is FrameKind.FULL:
+        draw_active_world()
+        present()
+    frames.wait()
 ```
 
 ### 3.2 No per-frame full-screen alpha overlay
