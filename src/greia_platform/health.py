@@ -44,6 +44,39 @@ def collect_health(
     )
 
 
+def installed_os_identity(
+    build_info: Path = Path("/etc/greia-os/build-info"),
+    image_profile: Path = Path("/etc/greia-os/image-profile.json"),
+) -> dict[str, object]:
+    """Which Greia release this device runs, for update checks by Parent clients.
+
+    Reads the image's own build records; absent fields are ``None`` (for
+    example on a development host)."""
+    values: dict[str, str] = {}
+    try:
+        for line in build_info.read_text(encoding="utf-8").splitlines():
+            if "=" in line and not line.lstrip().startswith("#"):
+                name, raw = line.split("=", 1)
+                values[name.strip()] = raw.strip().strip('"')
+    except OSError:
+        pass
+    architecture = None
+    try:
+        import json
+
+        profile = json.loads(image_profile.read_text(encoding="utf-8"))
+        architecture = profile.get("base", {}).get("architecture")
+    except (OSError, ValueError, AttributeError):
+        pass
+    return {
+        "version": values.get("GREIA_OS_VERSION"),
+        "profile": values.get("PIP_BUILD_PROFILE"),
+        "platform_family": values.get("PIP_PLATFORM_FAMILY"),
+        "architecture": architecture if isinstance(architecture, str) else None,
+        "build_phase": values.get("PIP_BUILD_PHASE"),
+    }
+
+
 def _read_memory() -> tuple[int, int]:
     # 1. Try Linux /proc/meminfo
     try:

@@ -224,3 +224,19 @@ resource measurements on the C0 floor
 The shared-token initialization ownership debt is closed at the source boundary: API v1 owns retirement, production inherits it, and the legacy standalone server retains compatibility behavior only within its own class. The API-v1 and legacy sides have dedicated regression tests, but those tests still require exact-head local execution before this descendant can claim a source PASS.
 
 This foundation does not falsely close R12 or any later platform/release obligation.
+
+## 14. Client-facing catalogue and identity fields (2026-10-16)
+
+- `GET /api/v1/activities` entries carry `titles`: `{locale: display title}` for
+  every language the Activity declares, read through `LocalizationBundle` from
+  the same `locales/<locale>.json` the child Shell uses (`activity.title`, else
+  the manifest `title_key` string). Clients choose a locale and fall back to
+  their own humanised id when a title is missing. Owner:
+  `greia_platform.localization.activity_titles`.
+- `GET /api/v1/system` carries `os`: `{version, profile, platform_family,
+  architecture, build_phase}` from `/etc/greia-os/build-info` and
+  `image-profile.json`, so Parent clients can compare the installed release
+  with a published update channel. Owner: `greia_platform.health.installed_os_identity`.
+- Activity discovery memoises tree validation and package digests per package
+  stat fingerprint (`ActivityRegistry._validated_tree_digest`); on the Atom
+  reference floor the Parent catalogue calls dropped from ~20 s to ~0.65 s.

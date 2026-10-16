@@ -14,6 +14,7 @@ from greia_parent.api_server import (
 from greia_parent.protocol import API_BASE, api_index_payload
 from greia_parent.server import parse_args
 from greia_parent.static_client import ParentStaticClient
+from greia_platform.localization import activity_titles
 from greia_platform.activities import (
     ActivityManifest,
     ActivityRegistration,
@@ -111,6 +112,8 @@ class PackageParentApiApplication(ParentApiApplication):
                 "activity_id": registration.manifest.activity_id,
                 "version": registration.manifest.version,
                 "title_key": registration.manifest.title_key,
+                # Localized display titles by locale (same bundles the Shell uses).
+                "titles": activity_titles(registration.manifest.root, registration.manifest.title_key, tuple(registration.manifest.languages)),
                 "icon_id": registration.manifest.icon_id,
                 "categories": list(registration.manifest.categories),
                 "launcher_categories": list(

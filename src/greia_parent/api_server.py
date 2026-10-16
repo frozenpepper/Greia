@@ -25,6 +25,7 @@ from greia_parent.server import (
 )
 from greia_parent.static_client import ParentStaticClient, StaticClientAsset
 from greia_parent.web_client import render_parent_web_app
+from greia_platform.localization import activity_titles
 from greia_platform.activities import ActivityManifest
 from greia_platform.audio import AudioSettingsError
 from greia_platform.activity_discovery import (
@@ -253,6 +254,8 @@ class ParentApiApplication(ParentStatusApplication):
                 "activity_id": manifest.activity_id,
                 "version": manifest.version,
                 "title_key": manifest.title_key,
+                # Localized display titles by locale (same bundles the Shell uses).
+                "titles": activity_titles(manifest.root, manifest.title_key, tuple(manifest.languages)),
                 "icon_id": manifest.icon_id,
                 "categories": list(manifest.categories),
                 "presentation_categories": list(manifest.launcher_categories),

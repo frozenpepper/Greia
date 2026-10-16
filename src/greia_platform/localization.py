@@ -745,3 +745,47 @@ def _audio_table(package_root: Path, raw: object) -> Mapping[str, LocalizedAudio
             caption = _resource_key(caption)
         result[key] = LocalizedAudioCue(path=path, caption_key=caption)
     return result
+
+
+# Display titles for every language an Activity ships, for management clients
+# (Parent API) that list the whole catalogue. Reads the same per-Activity
+# bundles the child Shell uses; cached per package while the bundle files are
+# unchanged (stat fingerprint) and bounded.
+_ACTIVITY_TITLES_CACHE_LIMIT = 256
+_activity_titles_cache: dict[str, tuple[tuple[tuple[str, int, int], ...], dict[str, str]]] = {}
+
+
+def activity_titles(package_root: Path, title_key: str, languages: tuple[str, ...]) -> dict[str, str]:
+    """Return ``{locale: title}`` for the Activity's declared languages.
+
+    The title is the bundle's ``activity.title`` string, else the manifest
+    ``title_key`` string. Missing or invalid bundles are skipped (callers fall
+    back to their own humanised id), so a damaged translation never hides an
+    Activity from Parent management.
+    """
+    root = Path(package_root)
+    fingerprint_items: list[tuple[str, int, int]] = []
+    for language in languages:
+        try:
+            stat = (root / "locales" / f"{language}.json").stat()
+            fingerprint_items.append((language, stat.st_size, stat.st_mtime_ns))
+        except OSError:
+            fingerprint_items.append((language, -1, -1))
+    fingerprint = tuple(fingerprint_items)
+    key = f"{root}|{title_key}"
+    cached = _activity_titles_cache.get(key)
+    if cached is not None and cached[0] == fingerprint:
+        return dict(cached[1])
+    titles: dict[str, str] = {}
+    for language in languages:
+        try:
+            bundle = LocalizationBundle.load(root, LocaleTag.parse(language))
+        except (LocalizationError, ValueError, OSError):
+            continue
+        title = bundle.strings.get("activity.title") or bundle.strings.get(title_key)
+        if isinstance(title, str) and title.strip():
+            titles[language] = title.strip()
+    if key not in _activity_titles_cache and len(_activity_titles_cache) >= _ACTIVITY_TITLES_CACHE_LIMIT:
+        _activity_titles_cache.pop(next(iter(_activity_titles_cache)))
+    _activity_titles_cache[key] = (fingerprint, dict(titles))
+    return titles

@@ -19,7 +19,7 @@ from greia_platform.hardware import (
     HardwareSettingsStore,
     read_apply_status,
 )
-from greia_platform.health import collect_health
+from greia_platform.health import collect_health, installed_os_identity
 from greia_platform.profiles import ActiveProfileSession, ProfileError, ProfileStore
 from greia_platform.trust import ActivitySource, PackageTrust
 from greia_parent.progress import ParentProgressReader
@@ -265,6 +265,7 @@ class ParentStatusApplication:
             # controls needed to diagnose or remove it.
             payload = collect_health(None, self.runtime.api_version).as_json_dict()
             payload["activity_catalogue_error"] = str(exc)
+        payload["os"] = installed_os_identity()
         profiles = self.profiles_payload()
         active = self.active_session.read()
         payload["profiles"] = profiles

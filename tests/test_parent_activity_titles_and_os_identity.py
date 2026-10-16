@@ -1,0 +1,47 @@
+"""Parent clients get localized Activity titles and the installed OS identity."""
+import tempfile
+import unittest
+from pathlib import Path
+
+from greia_platform import localization
+from greia_platform.health import installed_os_identity
+from greia_platform.localization import activity_titles
+
+REPO = Path(__file__).resolve().parents[1]
+
+
+class ActivityTitlesTests(unittest.TestCase):
+    def setUp(self):
+        localization._activity_titles_cache.clear()
+
+    def test_titles_come_from_each_declared_bundle(self):
+        root = REPO / "activities" / "baia_delle_orche"
+        titles = activity_titles(root, "activity.baia_delle_orche.title", ("it", "en"))
+        self.assertEqual(titles["it"], "Baia delle Orche")
+        self.assertEqual(titles["en"], "Orca Bay")
+
+    def test_missing_bundle_is_skipped_not_fatal(self):
+        root = REPO / "activities" / "baia_delle_orche"
+        titles = activity_titles(root, "activity.baia_delle_orche.title", ("it", "xx"))
+        self.assertEqual(set(titles), {"it"})
+
+
+class OsIdentityTests(unittest.TestCase):
+    def test_reads_build_info_and_image_profile(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            info = Path(tmp) / "build-info"
+            info.write_text("GREIA_OS_VERSION=0.13.0-phase0-dev\nPIP_BUILD_PROFILE=legacy-x86-i686-dev\nPIP_PLATFORM_FAMILY=legacy-x86\n")
+            profile = Path(tmp) / "image-profile.json"
+            profile.write_text('{"base": {"architecture": "i386"}}')
+            identity = installed_os_identity(info, profile)
+        self.assertEqual(identity["version"], "0.13.0-phase0-dev")
+        self.assertEqual(identity["profile"], "legacy-x86-i686-dev")
+        self.assertEqual(identity["architecture"], "i386")
+
+    def test_absent_records_are_none(self):
+        identity = installed_os_identity(Path("/nonexistent/a"), Path("/nonexistent/b"))
+        self.assertIsNone(identity["version"])
+
+
+if __name__ == "__main__":
+    unittest.main()
