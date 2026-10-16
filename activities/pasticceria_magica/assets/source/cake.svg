@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 300" width="420" height="300">
+  <!-- Pasticceria Magica private prop: plain round layer cake on a plate, the child's decorating surface.
+       The frosting top is the ellipse cx 210 cy 110 rx 190 ry 70 (pasticceria_layout relies on it). -->
+  <defs>
+    <!-- orange light (mix 70% white) -> orange light (mix 45% white): sponge -->
+    <linearGradient id="cake_sponge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FCE6CC"/>
+      <stop offset="1" stop-color="#F8C891"/>
+    </linearGradient>
+    <!-- raspberry light (mix 65% white) -> raspberry light (mix 45% white): frosting -->
+    <linearGradient id="cake_icing_top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F9DCE6"/>
+      <stop offset="1" stop-color="#F3BFD2"/>
+    </linearGradient>
+    <!-- sky light -> sky: plate -->
+    <linearGradient id="cake_plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#DCEFF9"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="210" cy="293" rx="176" ry="9" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="plate">
+    <ellipse cx="210" cy="262" rx="205" ry="30" fill="url(#cake_plate)" stroke="#4B372F" stroke-width="3.5"/>
+    <ellipse cx="210" cy="258" rx="184" ry="22" fill="none" stroke="#B9D3E4" stroke-width="2"/>
+  </g>
+  <g id="cake">
+    <path d="M20 110 L20 238 A190 34 0 0 0 400 238 L400 110 Z" fill="url(#cake_sponge)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M356 150 L392 140 L392 246 C380 256 366 262 352 266 Z" fill="#E9AF73" opacity="0.55"/>
+    <path d="M20 186.0 L30 198.8 L40 203.9 L50 207.6 L60 210.6 L70 213.0 L80 215.2 L90 217.0 L100 218.6 L110 220.0 L120 221.2 L130 222.3 L140 223.2 L150 224.0 L160 224.6 L170 225.1 L180 225.5 L190 225.8 L200 225.9 L210 226.0 L220 225.9 L230 225.8 L240 225.5 L250 225.1 L260 224.6 L270 224.0 L280 223.2 L290 222.3 L300 221.2 L310 220.0 L320 218.6 L330 217.0 L340 215.2 L350 213.0 L360 210.6 L370 207.6 L380 203.9 L390 198.8 L400 186.0 L400 199.0 L390 211.8 L380 216.9 L370 220.6 L360 223.6 L350 226.0 L340 228.2 L330 230.0 L320 231.6 L310 233.0 L300 234.2 L290 235.3 L280 236.2 L270 237.0 L260 237.6 L250 238.1 L240 238.5 L230 238.8 L220 238.9 L210 239.0 L200 238.9 L190 238.8 L180 238.5 L170 238.1 L160 237.6 L150 237.0 L140 236.2 L130 235.3 L120 234.2 L110 233.0 L100 231.6 L90 230.0 L80 228.2 L70 226.0 L60 223.6 L50 220.6 L40 216.9 L30 211.8 L20 199.0 Z" fill="#FFFBEB" stroke="#B07A55" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M40 160 C38 190 40 214 46 236" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.55"/>
+    <path d="M20 110 L22 127.1 L24 138.3 L26 141.5 L28 144.1 L30 146.4 L32 148.5 L34 150.4 L36 152.1 L38 153.7 L40 155.3 L42 156.7 L44 158.1 L46 159.3 L48 160.6 L50 161.8 L52 176.1 L54 181.8 L56 185.8 L58 188.6 L60 190.6 L62 191.9 L64 192.5 L66 192.3 L68 191.3 L70 189.2 L72 185.4 L74 172.9 L76 173.6 L78 174.3 L80 175 L82 175.7 L84 176.4 L86 177 L88 177.7 L90 178.3 L92 178.9 L94 179.4 L96 180 L98 180.5 L100 181.1 L102 181.6 L104 182.1 L106 182.6 L108 183.1 L110 183.5 L112 184 L114 184.4 L116 184.8 L118 204 L120 211 L122 215.5 L124 218.5 L126 220.3 L128 221.1 L130 221 L132 219.9 L134 217.6 L136 213.8 L138 207.6 L140 189.1 L142 189.4 L144 189.6 L146 189.9 L148 190.2 L150 190.4 L152 190.7 L154 190.9 L156 191.1 L158 191.3 L160 191.5 L162 191.7 L164 191.9 L166 192.1 L168 192.3 L170 192.4 L172 192.6 L174 192.7 L176 192.9 L178 193 L180 193.1 L182 193.2 L184 193.3 L186 193.4 L188 193.5 L190 193.6 L192 193.7 L194 193.8 L196 204.9 L198 208.8 L200 211.2 L202 212.8 L204 213.7 L206 214 L208 213.7 L210 212.9 L212 211.3 L214 208.9 L216 205 L218 193.9 L220 193.9 L222 193.9 L224 193.8 L226 193.8 L228 193.7 L230 193.6 L232 193.5 L234 193.4 L236 193.3 L238 193.2 L240 193.1 L242 193 L244 192.9 L246 192.7 L248 192.6 L250 192.4 L252 192.3 L254 192.1 L256 191.9 L258 191.7 L260 191.5 L262 191.3 L264 191.1 L266 210.8 L268 217.5 L270 221.6 L272 224.1 L274 225.4 L276 225.6 L278 224.9 L280 223 L282 220 L284 215.3 L286 208.1 L288 187.8 L290 187.5 L292 187.1 L294 186.8 L296 186.4 L298 186 L300 185.6 L302 185.2 L304 184.8 L306 184.4 L308 184 L310 183.5 L312 183.1 L314 182.6 L316 182.1 L318 181.6 L320 181.1 L322 180.5 L324 180 L326 179.4 L328 178.9 L330 178.3 L332 177.7 L334 177 L336 189.7 L338 193.6 L340 195.8 L342 197 L344 197.3 L346 196.9 L348 195.8 L350 194 L352 191.3 L354 187.6 L356 182.1 L358 167.9 L360 167 L362 166 L364 165 L366 164 L368 162.9 L370 161.8 L372 160.6 L374 159.3 L376 158.1 L378 156.7 L380 155.3 L382 153.7 L384 152.1 L386 150.4 L388 148.5 L390 146.4 L392 144.1 L394 141.5 L396 138.3 L398 127.1 L400 110 A190 70 0 0 0 20 110 Z" fill="#EDA5BF" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="210" cy="110" rx="186" ry="66" fill="url(#cake_icing_top)" stroke="#C97B98" stroke-width="2.5"/>
+    <ellipse cx="128" cy="78" rx="58" ry="13" fill="#FFFFFF" opacity="0.6" transform="rotate(-8 128 78)"/>
+  </g>
+</svg>

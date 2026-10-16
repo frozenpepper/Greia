@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 290 206" width="290" height="206">
+  <!-- Pasticceria Magica private prop: the customer's order bubble. The order is drawn into the
+       inner area x 18-272, y 16-154; the tail points down at the customer. -->
+  <defs>
+    <!-- cream -> cream (warm step) -->
+    <linearGradient id="bubble_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFDF5"/>
+      <stop offset="1" stop-color="#FFF3DC"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <path d="M36 12 L258 12 C272 12 284 24 284 38 L284 144 C284 158 272 170 258 170 L150 170 L130 198 L120 170 L36 170 C22 170 10 158 10 144 L10 38 C10 24 22 12 36 12 Z" fill="#6A5147" opacity="0.12"/>
+  </g>
+  <g id="bubble">
+    <path d="M32 6 L254 6 C268 6 280 18 280 32 L280 138 C280 152 268 164 254 164 L146 164 L126 194 L116 164 L32 164 C18 164 6 152 6 138 L6 32 C6 18 18 6 32 6 Z" fill="url(#bubble_fill)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M30 18 L130 18" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+  </g>
+</svg>

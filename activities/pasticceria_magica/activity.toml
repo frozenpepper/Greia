@@ -11,18 +11,35 @@ categories = ["learn", "create"]
 discovery_tags = ["numbers", "making"]
 
 [education]
-categories = ["math", "counting", "problem_solving", "creativity"]
-difficulty = 3
-recommended_age_min = 4
-recommended_age_max = 8
+# Counting and early patterns at a bakery counter. Five cast customers come
+# one by one, each with a picture order: a numeral with that many toppings
+# (one or two kinds) or the start of a repeating row (AB, AAB, ABB, ABC) to
+# finish on the cake. The child decorates from a small picture pantry; every
+# topping counts aloud with a rising tone and a numeral badge. Serving a
+# wrong cake gets a gentle "let's count together" demonstration, later a
+# ghost hint; retries are unlimited. Five rungs: one topping up to 3 with
+# pictures -> up to 5 -> two toppings -> numeral only up to 5 each -> two
+# toppings up to 9 in all, with AB -> AAB/ABB -> ABC patterns; each round
+# adapts from its misses. The round ends on the shared completion scene; the
+# child can then decorate a cake freely and save it to My Creations.
+categories = ["math", "counting", "patterns", "creativity"]
+difficulty = 1
+recommended_age_min = 3
+recommended_age_max = 6
+difficulty_min = 1
+difficulty_max = 5
+adaptive_difficulty = true
 skills = [
-  { id = "math.counting.quantities_to_10", weight = 3 },
-  { id = "math.logic.patterns", weight = 2 },
-  { id = "motor.pointer.drag_and_drop", weight = 2 },
+  { id = "math.counting.cardinality", weight = 3 },
+  { id = "math.quantity.numeral_match", weight = 2 },
+  { id = "math.patterns.repeating", weight = 2 },
+  { id = "creativity.visual_composition", weight = 1 },
 ]
 events = [
-  { id = "recipe.completed", kind = "completion" },
+  { id = "recipe.completed", kind = "milestone" },
   { id = "pattern.solved", kind = "milestone" },
+  { id = "round.completed", kind = "completion" },
+  { id = "creation.completed", kind = "creation" },
 ]
 
 [runtime]
@@ -31,14 +48,19 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "pointer"
+profile = "hybrid"
 
 [requirements]
 required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["touch"]
+optional_capabilities = ["keyboard", "touch"]
 
 [permissions]
 requested = []
 
 [storage]
 schema_version = 1
+
+[creations]
+# Save publishes one flattened 1024x600 "composition" PNG of the child's own
+# cake; the cake draft itself stays private.
+produces = ["image/png"]

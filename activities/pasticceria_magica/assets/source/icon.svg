@@ -1,25 +1,59 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Pasticceria Magica Activity icon: learn Collection (orange tile), a frosted cake with three strawberries
+       on top (counting toppings for a customer's order) and one sparkle. -->
   <defs>
-    <linearGradient id="frosting" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FF80AB"/>
-      <stop offset="100%" stop-color="#F48FB1"/>
+    <!-- orange light (mix 35% white) -> orange -->
+    <linearGradient id="bakery_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BE7E"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+    <!-- orange light (70% white) -> orange light (45% white) -->
+    <linearGradient id="bakery_sponge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FCE6CC"/>
+      <stop offset="1" stop-color="#F8C891"/>
+    </linearGradient>
+    <!-- raspberry light 65% -> 45% white -->
+    <linearGradient id="bakery_icing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F9DCE6"/>
+      <stop offset="1" stop-color="#F3BFD2"/>
+    </linearGradient>
+    <!-- library strawberry light -> red -->
+    <linearGradient id="bakery_berry" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#FB7185"/>
+      <stop offset="1" stop-color="#F43F5E"/>
     </linearGradient>
   </defs>
-  <!-- Cupcake Cup Base -->
-  <polygon points="76,140 180,140 164,220 92,220" fill="#FFE082" stroke="#FFB300" stroke-width="6"/>
-  <line x1="100" y1="140" x2="110" y2="220" stroke="#FFB300" stroke-width="4"/>
-  <line x1="128" y1="140" x2="128" y2="220" stroke="#FFB300" stroke-width="4"/>
-  <line x1="156" y1="140" x2="146" y2="220" stroke="#FFB300" stroke-width="4"/>
-  <!-- Swirled Frosting -->
-  <path d="M60 144 C50 120 80 110 96 116 C90 90 130 80 148 94 C160 75 198 86 194 116 C210 120 210 144 196 144 Z" fill="url(#frosting)"/>
-  <path d="M78 120 C95 105 160 105 178 120" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity="0.6"/>
-  <!-- Ruby Cherry on Top -->
-  <circle cx="128" cy="68" r="20" fill="#D50000" stroke="#B71C1C" stroke-width="3"/>
-  <circle cx="122" cy="62" r="5" fill="#FF8A80"/>
-  <path d="M136 54 Q154 34 168 38" fill="none" stroke="#2E7D32" stroke-width="5" stroke-linecap="round"/>
-  <!-- Magic Sprinkles & Star Sparkles -->
-  <rect x="88" y="128" width="10" height="4" rx="2" fill="#00E676" transform="rotate(25 88 128)"/>
-  <rect x="140" y="112" width="10" height="4" rx="2" fill="#FFEA00" transform="rotate(-30 140 112)"/>
-  <rect x="166" y="130" width="10" height="4" rx="2" fill="#00B0FF" transform="rotate(40 166 130)"/>
-  <polygon points="198,60 202,68 210,68 204,74 206,82 198,77 190,82 192,74 186,68 194,68" fill="#FFD54F"/>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#bakery_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="128" cy="206" rx="84" ry="10" fill="#7F5F33" opacity="0.18"/>
+  </g>
+  <g id="subject">
+    <ellipse cx="128" cy="194" rx="96" ry="15" fill="#FFFFFF" stroke="#4B372F" stroke-width="4.5"/>
+    <path d="M46 132 L46 180 A82 17 0 0 0 210 180 L210 132 Z" fill="url(#bakery_sponge)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M46 160 A82 17 0 0 0 210 160 L210 168 A82 17 0 0 1 46 168 Z" fill="#FFFBEB" stroke="#B07A55" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M46 132 C46 141 50 148 58 151 C63 152 65 154 65 159 C65 168 77 168 77 159 C77 155 80 154 86 155 C97 157 105 158 113 158 C117 158 119 160 119 166 C119 176 131 176 131 166 C131 161 133 159 139 159 C151 158 161 157 171 154 C175 153 177 155 177 160 C177 167 189 167 189 160 C189 154 192 152 198 150 C206 146 210 140 210 132 A82 29 0 0 0 46 132 Z" fill="#EDA5BF" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="132" rx="79" ry="26" fill="url(#bakery_icing)" stroke="#C97B98" stroke-width="2.5"/>
+    <ellipse cx="92" cy="122" rx="20" ry="5" fill="#FFFFFF" opacity="0.6"/>
+    <g transform="translate(57.4 75.4) scale(0.27)">
+      <path d="M128 232 C94 220 48 174 42 124 C38 90 64 70 96 72 C110 73 120 78 128 84 C136 78 146 73 160 72 C192 70 218 90 214 124 C208 174 162 220 128 232 Z" fill="url(#bakery_berry)" stroke="#4B372F" stroke-width="11" stroke-linejoin="round"/>
+      <ellipse cx="82" cy="128" rx="13" ry="22" fill="#FFFFFF" opacity="0.7" transform="rotate(20 82 128)"/>
+      <path d="M128 92 C114 96 94 98 76 88 C90 80 102 78 112 76 C104 66 102 58 106 50 C118 56 124 64 128 72 C132 64 138 56 150 50 C154 58 152 66 144 76 C154 78 166 80 180 88 C162 98 142 96 128 92 Z" fill="#59B86A" stroke="#4B372F" stroke-width="10" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(129.4 75.4) scale(0.27)">
+      <path d="M128 232 C94 220 48 174 42 124 C38 90 64 70 96 72 C110 73 120 78 128 84 C136 78 146 73 160 72 C192 70 218 90 214 124 C208 174 162 220 128 232 Z" fill="url(#bakery_berry)" stroke="#4B372F" stroke-width="11" stroke-linejoin="round"/>
+      <ellipse cx="82" cy="128" rx="13" ry="22" fill="#FFFFFF" opacity="0.7" transform="rotate(20 82 128)"/>
+      <path d="M128 92 C114 96 94 98 76 88 C90 80 102 78 112 76 C104 66 102 58 106 50 C118 56 124 64 128 72 C132 64 138 56 150 50 C154 58 152 66 144 76 C154 78 166 80 180 88 C162 98 142 96 128 92 Z" fill="#59B86A" stroke="#4B372F" stroke-width="10" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(88.3 60.1) scale(0.31)">
+      <path d="M128 232 C94 220 48 174 42 124 C38 90 64 70 96 72 C110 73 120 78 128 84 C136 78 146 73 160 72 C192 70 218 90 214 124 C208 174 162 220 128 232 Z" fill="url(#bakery_berry)" stroke="#4B372F" stroke-width="11" stroke-linejoin="round"/>
+      <ellipse cx="82" cy="128" rx="13" ry="22" fill="#FFFFFF" opacity="0.7" transform="rotate(20 82 128)"/>
+      <path d="M128 92 C114 96 94 98 76 88 C90 80 102 78 112 76 C104 66 102 58 106 50 C118 56 124 64 128 72 C132 64 138 56 150 50 C154 58 152 66 144 76 C154 78 166 80 180 88 C162 98 142 96 128 92 Z" fill="#59B86A" stroke="#4B372F" stroke-width="10" stroke-linejoin="round"/>
+    </g>
+  </g>
+  <g id="accent">
+    <path d="M206 40 C208 52 212 56 224 58 C212 60 208 64 206 76 C204 64 200 60 188 58 C200 56 204 52 206 40 Z" fill="#FBBF24" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+  </g>
 </svg>

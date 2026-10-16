@@ -1,15 +1,22 @@
-"""Shared control-kit wiring for Pasticceria Magica (ADR 0037 pilot).
+"""Shared control-kit wiring for Magic Bakery (ADR 0037).
 
-Mode tabs are a ``ToolStrip``; the score/stars HUD is two ``HudChip``s; pantry
-toppings and pattern candidates are tile ``IconButton``s; Clear and Serve are
-captioned tile buttons; feedback is a ``PromptBanner``. Every control is
-focusable from the keyboard/controller through the shared ``ControlLayer``.
-Rules stay in ``PasticceriaModel``; the app owns what each control does.
+Every interactive element goes through ``greia_platform.activity_controls``:
+
+* the pantry - one picture tile per topping (shared ``prop.food.*`` art, no
+  words); only the toppings of the current order are shown;
+* take one off (``undo`` glyph) and the serve bell (primary, on the counter);
+* ``ProgressDots`` for the five customers of a round;
+* in the make-your-own-cake ending: the whole pantry, take one off, Save to
+  My Creations (primary, ``share`` glyph), a new cake and play again.
+
+Keyboard / D-pad / stick focus and the focus ring come from the kit. Focus
+never jumps to the right topping: it starts on the first tile and then stays
+where the child left it.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 import pygame
 
@@ -20,195 +27,190 @@ from greia_platform.activity_controls import (
     ControlKit,
     ControlLayer,
     ControlLayout,
-    HudChip,
     IconButton,
-    PromptBanner,
-    ToolStrip,
+    ProgressDots,
 )
-from greia_platform.localization import LocalizationError
 
 if __package__:
-    from .pasticceria_content import TOPPINGS
+    from .pasticceria_art import BakeryArt
+    from .pasticceria_content import ORDERS_PER_ROUND, TOPPING_IDS
+    from .pasticceria_layout import SIDE_BUTTON, SIDE_ICON, TILE_ICON, UNDO_ICON, UNDO_RECT, pantry_rects
 else:
-    from pasticceria_content import TOPPINGS
+    from pasticceria_art import BakeryArt
+    from pasticceria_content import ORDERS_PER_ROUND, TOPPING_IDS
+    from pasticceria_layout import SIDE_BUTTON, SIDE_ICON, TILE_ICON, UNDO_ICON, UNDO_RECT, pantry_rects
 
-MODES = ("orders", "patterns", "free")
-_MODE_ICONS = {"orders": "🧁", "patterns": "🍪", "free": "🎨"}
-
-# Gameplay geometry in the 1024x600 reference canvas (unchanged rules/targets).
-TOPPING_RECTS: tuple[pygame.Rect, ...] = tuple(
-    pygame.Rect(720 + (index % 2) * 135, 140 + (index // 2) * 95, 125, 85)
-    for index in range(len(TOPPINGS))
-)
-CANDIDATE_RECTS: tuple[pygame.Rect, ...] = tuple(
-    pygame.Rect(330 + index * 135, 380, 110, 110) for index in range(3)
-)
-CLEAR_RECT = pygame.Rect(712, 458, 128, 108)
-SERVE_RECT = pygame.Rect(852, 458, 150, 108)
-FEEDBACK_RECT = pygame.Rect(166, 504, 524, 62)
-CAST_MIDBOTTOM = (86, 598)
-CAST_HEIGHT = 168
+BAR_HEIGHT = 64
+BAR_ICON = 40
 
 
-class PasticceriaControls:
-    """Own the bakery's kit controls and their ``ControlLayer``."""
+def topping_control(topping_id: str) -> str:
+    return f"topping.{topping_id}"
+
+
+class BakeryControls:
+    """Own the kit controls and the single ``ControlLayer`` of every screen."""
 
     def __init__(
         self,
         kit: ControlKit,
-        resources,
-        layout: ControlLayout,
+        art: BakeryArt,
         *,
-        mode: str,
-        on_mode: Callable[[str], object],
+        text: Callable[[str], str],
         on_topping: Callable[[str], object],
-        on_candidate: Callable[[int], object],
-        on_clear: Callable[[], object],
+        on_undo: Callable[[], object],
         on_serve: Callable[[], object],
+        on_save: Callable[[], object],
+        on_new_cake: Callable[[], object],
+        on_new_round: Callable[[], object],
     ) -> None:
         self._kit = kit
-        self._resources = resources
-        self._layout = layout
-        self.tabs: ToolStrip = kit.tool_strip(
-            "mode",
-            [(mode_id, self._label(f"tab.{mode_id}"), kit.text_icon(_MODE_ICONS[mode_id], 30)) for mode_id in MODES],
-            selected=mode,
-            on_select=on_mode,
-        )
-        self.stars: HudChip = kit.hud_chip("hud.stars", pygame.Rect(0, 0, 120, 56), icon=kit.star(40))
-        self.score: HudChip = kit.hud_chip("hud.score", pygame.Rect(0, 0, 140, 56), icon=kit.glyph("trophy", 38))
-        self.toppings: tuple[IconButton, ...] = tuple(
-            kit.icon_button(
-                f"topping.{topping_id}",
-                rect,
-                icon=kit.text_icon(icon, 50),
+        self.pantry: dict[str, IconButton] = {
+            topping_id: kit.icon_button(
+                topping_control(topping_id),
+                pygame.Rect(0, 0, 10, 10),
+                icon=art.topping(topping_id, TILE_ICON),
                 shape=BodyShape.TILE,
-                on_activate=(lambda chosen=topping_id: on_topping(chosen)),
+                on_activate=(lambda t=topping_id: on_topping(t)),
             )
-            for (topping_id, icon, _), rect in zip(TOPPINGS, TOPPING_RECTS)
-        )
-        self.candidates: tuple[IconButton, ...] = tuple(
-            kit.icon_button(
-                f"candidate.{index}",
-                rect,
-                icon=None,
-                shape=BodyShape.TILE,
-                on_activate=(lambda chosen=index: on_candidate(chosen)),
-            )
-            for index, rect in enumerate(CANDIDATE_RECTS)
-        )
-        self.clear: IconButton = kit.icon_button(
-            "clear",
-            CLEAR_RECT,
-            icon=kit.glyph("clear", 50),
-            caption=self._label("action.clear"),
-            shape=BodyShape.TILE,
-            on_activate=on_clear,
-        )
+            for topping_id in TOPPING_IDS
+        }
+        self.undo: IconButton = kit.icon_button("undo", UNDO_RECT, icon=kit.glyph("undo", UNDO_ICON), on_activate=on_undo)
         self.serve: IconButton = kit.icon_button(
             "serve",
-            SERVE_RECT,
-            icon=kit.glyph("bell", 54),
-            caption=self._label("action.serve"),
+            SIDE_BUTTON,
+            icon=kit.glyph("bell", SIDE_ICON),
+            caption=text("action.serve"),
             shape=BodyShape.TILE,
             role=ButtonRole.PRIMARY,
             on_activate=on_serve,
         )
-        self.feedback: PromptBanner = kit.prompt_banner("feedback", FEEDBACK_RECT, text_size=26)
-        self.feedback.visible = False
-        self.layer: ControlLayer = kit.layer(
-            (
-                *self.tabs.controls,
-                self.stars,
-                self.score,
-                *self.toppings,
-                *self.candidates,
-                self.clear,
-                self.serve,
-                self.feedback,
-            ),
-            layer_id="pasticceria.controls",
+        self.save: IconButton = kit.icon_button(
+            "save",
+            SIDE_BUTTON,
+            icon=kit.glyph("share", SIDE_ICON),
+            caption=text("action.save"),
+            shape=BodyShape.TILE,
+            role=ButtonRole.PRIMARY,
+            on_activate=on_save,
         )
-        self._candidate_symbols: tuple[str, ...] = ()
-        self._mode = mode
-        self.relayout(layout)
-        self.sync_mode(mode)
-        self.layer.focus(f"mode.{mode}")
+        self.new_cake: IconButton = kit.icon_button(
+            "new_cake", pygame.Rect(0, 0, 10, 10), icon=kit.glyph("new", BAR_ICON), on_activate=on_new_cake
+        )
+        self.new_round: IconButton = kit.icon_button(
+            "new_round",
+            pygame.Rect(0, 0, 10, 10),
+            icon=kit.glyph("replay", BAR_ICON),
+            role=ButtonRole.PRIMARY,
+            on_activate=on_new_round,
+        )
+        self.progress: ProgressDots = kit.progress_dots("progress", pygame.Rect(0, 0, 120, 40), total=ORDERS_PER_ROUND)
+        self.layer: ControlLayer = kit.layer((), layer_id="pasticceria.controls")
+        self._layout: ControlLayout | None = None
+        self._visible_pantry: tuple[str, ...] = ()
+        self._free = False
 
-    def _label(self, key: str) -> str:
-        if self._resources is None:
-            return ""
-        try:
-            return self._resources.text(key).strip()
-        except LocalizationError:
-            return ""
+    # -- layout -----------------------------------------------------------------------
 
-    # -- geometry --
     def relayout(self, layout: ControlLayout) -> None:
-        """Fit tabs (left) and HUD chips (right) into the bar beside the chrome."""
+        """Top bar beside the protected chrome: round dots left, ending buttons right."""
 
         self._layout = layout
-        height = layout.control_height(64, maximum=72)
+        height = layout.control_height(BAR_HEIGHT, maximum=76)
         bar = layout.top_bar(height)
-        chip_h = max(44, height - 10)
-        for chip, digits in ((self.stars, 2), (self.score, 3)):
-            chip.rect = pygame.Rect(0, 0, 10, chip_h)
-            chip.rect = pygame.Rect(0, 0, chip.preferred_width(digits=digits), chip_h)
-        chip_widths = [self.stars.rect.width, self.score.rect.width]
-        chip_rects = layout.row(bar, chip_widths, align=Align.END, height=chip_h, gap=8)
-        self.stars.rect, self.score.rect = chip_rects
-        tabs_bar = pygame.Rect(bar.left, bar.top, chip_rects[0].left - 18 - bar.left, height)
-        for slot in self.tabs.slots:
-            slot.rect = pygame.Rect(0, 0, 10, height)
-        preferred = [slot.preferred_width() for slot in self.tabs.slots]
-        minimum = [slot.compact_width() for slot in self.tabs.slots]
-        widths, compact = layout.fit(tabs_bar.width, preferred, minimum, 10)
-        for slot, rect in zip(self.tabs.slots, layout.row(tabs_bar, widths, gap=10)):
-            slot.rect = rect
-            slot.compact = compact
+        dots_h = max(34, int(height * 0.62))
+        dots_w = ProgressDots.preferred_width(self.progress.total, dots_h)
+        self.progress.rect = pygame.Rect(bar.left, bar.centery - dots_h // 2, dots_w, dots_h)
+        size = height
+        right = layout.row(bar, [size, size], align=Align.END, height=size, gap=12)
+        self.new_cake.rect, self.new_round.rect = right
         self.layer.invalidation.invalidate()
 
-    # -- state --
-    def sync_mode(self, mode: str) -> None:
-        if mode != self.tabs.selected:
-            self.tabs.select(mode)
-        self._mode = mode
-        building = mode in {"orders", "free"}
-        for button in (*self.toppings, self.clear, self.serve):
-            button.visible = building
-        for button in self.candidates:
-            button.visible = mode == "patterns"
+    # -- screens ------------------------------------------------------------------------
+
+    def show_round(self, pantry: Sequence[str]) -> None:
+        """One order: its pantry tiles, take one off, the serve bell and the dots."""
+
+        self._free = False
+        self._place_pantry(tuple(pantry), free=False)
+        self.serve.enabled = False
+        self.undo.enabled = False
+        self._show((*self._pantry_buttons(), self.undo, self.serve, self.progress))
+
+    def show_free(self) -> None:
+        """Make your own cake: the whole pantry, take one off, save, new cake, play again."""
+
+        self._free = True
+        self._place_pantry(TOPPING_IDS, free=True)
+        self._show((*self._pantry_buttons(), self.undo, self.save, self.new_cake, self.new_round))
+
+    def show_none(self) -> None:
+        self.layer.set_targets(())
+        self.layer.invalidation.invalidate()
+
+    def set_busy(self, busy: bool) -> None:
+        """While a scripted moment plays, the counter controls rest."""
+
+        for button in (*self._pantry_buttons(), self.undo, self.serve):
+            button.visible = not busy
         self.layer.ensure_focus()
         self.layer.invalidation.invalidate()
 
-    def sync(self, model) -> None:
-        """Mirror model values into controls; content-keyed caches make it cheap."""
+    def set_cake_state(self, *, can_undo: bool, can_serve: bool) -> None:
+        if self.undo.enabled != can_undo or self.serve.enabled != can_serve:
+            self.undo.enabled = can_undo
+            self.serve.enabled = can_serve
+            self.layer.invalidation.invalidate()
 
-        if model.mode != self._mode:
-            self.sync_mode(model.mode)
-        self.stars.value = model.stars
-        self.score.value = model.score
-        if model.mode == "patterns":
-            _, _, candidates = model.current_pattern
-            symbols = tuple(candidates)
-            if symbols != self._candidate_symbols:
-                self._candidate_symbols = symbols
-                for button, symbol in zip(self.candidates, symbols):
-                    button.icon = self._kit.text_icon(symbol, 52)
-        text = model.feedback_text or ""
-        self.feedback.visible = bool(text)
-        if text and text != self.feedback.text:
-            self.feedback.set_text(text)
+    def set_free_state(self, *, can_undo: bool, can_save: bool, can_new: bool, selected: str | None) -> None:
+        self.undo.enabled = can_undo
+        self.save.enabled = can_save
+        self.new_cake.enabled = can_new
+        for topping_id, button in self.pantry.items():
+            button.selected = topping_id == selected
+        self.layer.invalidation.invalidate()
+
+    def set_progress(self, done: int) -> None:
+        self.progress.set_progress(done)
+        self.layer.invalidation.invalidate()
+
+    def tile_rect(self, topping_id: str) -> pygame.Rect | None:
+        button = self.pantry.get(topping_id)
+        if button is None or not button.visible or topping_id not in self._visible_pantry:
+            return None
+        return button.rect
+
+    @property
+    def visible_pantry(self) -> tuple[str, ...]:
+        return self._visible_pantry
+
+    # -- helpers ------------------------------------------------------------------------
+
+    def _place_pantry(self, pantry: tuple[str, ...], *, free: bool) -> None:
+        self._visible_pantry = pantry
+        for button in self.pantry.values():
+            button.visible = False
+            button.enabled = False
+            button.selected = False
+        for topping_id, rect in zip(pantry, pantry_rects(len(pantry), free=free)):
+            button = self.pantry[topping_id]
+            button.rect = rect
+            button.visible = True
+            button.enabled = True
+        for button in (self.undo, self.serve):
+            button.visible = True
+
+    def _pantry_buttons(self) -> tuple[IconButton, ...]:
+        return tuple(self.pantry[topping_id] for topping_id in self._visible_pantry)
+
+    def _show(self, targets) -> None:
+        focused, visible = self.layer.focused_id, self.layer.focus_visible
+        self.layer.set_targets(targets)
+        first = topping_control(self._visible_pantry[0]) if self._visible_pantry else None
+        if focused is None or not self.layer.focus(focused, visible=visible):
+            self.layer.focus(first, visible=visible)
+        self.layer.ensure_focus()
+        self.layer.invalidation.invalidate()
 
 
-__all__ = [
-    "CANDIDATE_RECTS",
-    "CAST_HEIGHT",
-    "CAST_MIDBOTTOM",
-    "CLEAR_RECT",
-    "FEEDBACK_RECT",
-    "MODES",
-    "PasticceriaControls",
-    "SERVE_RECT",
-    "TOPPING_RECTS",
-]
+__all__ = ["BakeryControls", "topping_control"]

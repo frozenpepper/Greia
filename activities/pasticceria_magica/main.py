@@ -1,139 +1,94 @@
+"""Magic Bakery (Pasticceria Magica) - thin Greia composition root.
+
+Build the collaborators (resources, audio, storage-backed progress, events,
+the My Creations picture adapter, canvas) and enter the Activity lifecycle.
+The real work lives in :mod:`pasticceria_app` (flow), :mod:`pasticceria_model`
+(orders, cakes, rounds, ladder), :mod:`pasticceria_content` (toppings, cast,
+ladder data), :mod:`pasticceria_layout` (geometry), :mod:`pasticceria_renderer`
+and :mod:`pasticceria_art` (presentation), :mod:`pasticceria_controls`
+(shared control kit), :mod:`pasticceria_audio` and :mod:`pasticceria_services`.
+"""
+
 from __future__ import annotations
 
 from pathlib import Path
+import random
 
 import pygame
 
-from greia_platform.activity_api import get_profile_locale, get_storage
-from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.localization import ActivityLocaleSupport, LocalizedResources, resolve_activity_locale
+from greia_platform.activity_api import get_creations, get_profile_locale, get_storage
+from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import GreiaTypography
 
 if __package__:
-    from .pasticceria_app import PasticceriaApp, SoundManager
-    from .pasticceria_content import (
-        BAKERY_COUNTER,
-        BAKERY_WALL,
-        CAKE_SLOTS,
-        COUNTER_TOP,
-        DARK_TEXT,
-        GOLD,
-        PASTEL_PINK,
-        PINK,
-        PLATE_COLOR,
-        PLATE_RIM,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        SHELF_COLOR,
-        STORAGE_KEY,
-        TOPPINGS,
-        WHITE,
-    )
-    from .pasticceria_model import PasticceriaModel
-    from .pasticceria_renderer import Particle, PasticceriaRenderer
+    from .pasticceria_app import PasticceriaApp
+    from .pasticceria_audio import BakeryAudio
+    from .pasticceria_content import LEVELS, REFERENCE_HEIGHT, REFERENCE_WIDTH, TOPPINGS
+    from .pasticceria_services import GreiaBakeryEvents, GreiaBakeryPictures, GreiaBakeryProgress
 else:
-    from pasticceria_app import PasticceriaApp, SoundManager
-    from pasticceria_content import (
-        BAKERY_COUNTER,
-        BAKERY_WALL,
-        CAKE_SLOTS,
-        COUNTER_TOP,
-        DARK_TEXT,
-        GOLD,
-        PASTEL_PINK,
-        PINK,
-        PLATE_COLOR,
-        PLATE_RIM,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        SHELF_COLOR,
-        STORAGE_KEY,
-        TOPPINGS,
-        WHITE,
-    )
-    from pasticceria_model import PasticceriaModel
-    from pasticceria_renderer import Particle, PasticceriaRenderer
+    from pasticceria_app import PasticceriaApp
+    from pasticceria_audio import BakeryAudio
+    from pasticceria_content import LEVELS, REFERENCE_HEIGHT, REFERENCE_WIDTH, TOPPINGS
+    from pasticceria_services import GreiaBakeryEvents, GreiaBakeryPictures, GreiaBakeryProgress
 
-# Re-export compatibility surface (tests/tools may import these from main).
 __all__ = [
-    "main",
+    "BakeryAudio",
+    "LEVELS",
     "PasticceriaApp",
-    "PasticceriaModel",
-    "PasticceriaRenderer",
-    "SoundManager",
-    "Particle",
-    "REFERENCE_WIDTH",
     "REFERENCE_HEIGHT",
-    "STORAGE_KEY",
-    "BAKERY_WALL",
-    "BAKERY_COUNTER",
-    "COUNTER_TOP",
-    "PLATE_COLOR",
-    "PLATE_RIM",
-    "SHELF_COLOR",
-    "WHITE",
-    "DARK_TEXT",
-    "GOLD",
-    "PINK",
-    "PASTEL_PINK",
+    "REFERENCE_WIDTH",
     "TOPPINGS",
-    "CAKE_SLOTS",
+    "main",
 ]
 
 
-def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
-    # Compatibility alias: real guard lives in pasticceria_app.
-    if __package__:
-        from .pasticceria_app import _is_safe_point as _real
-    else:
-        from pasticceria_app import _is_safe_point as _real
-    return _real(surface, position)
+def _resources() -> LocalizedResources | None:
+    try:
+        return activity_resources(Path(__file__).resolve().parent, requested_locale=get_profile_locale())
+    except Exception:
+        return None
+
+
+def _storage():
+    try:
+        return get_storage()
+    except Exception:
+        return None
+
+
+def _creations():
+    try:
+        return get_creations()
+    except Exception:
+        # Standalone authoring has no trusted session broker, so saving to My
+        # Creations is absent instead of falling back to a writable path.
+        return None
 
 
 def main() -> int:
-    """Thin composition root: build Greia context, model, renderer and run the app."""
     pygame.init()
+    screen = pygame.display.get_surface()
+    if screen is None:
+        screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
+    pygame.mouse.set_visible(True)
+
+    resources = _resources()
+    locale = resources.context.selected.language if resources is not None else "en"
+    rng = random.Random()
+    storage = _storage()
+    app = PasticceriaApp(
+        screen=screen,
+        canvas=PygameReferenceCanvas(screen),
+        typography=GreiaTypography(),
+        resources=resources,
+        audio=BakeryAudio(locale=locale, rng=rng),
+        progress=GreiaBakeryProgress(storage),
+        events=GreiaBakeryEvents(),
+        pictures=GreiaBakeryPictures(storage, _creations()),
+        rng=rng,
+    )
     try:
-        screen = pygame.display.get_surface()
-        if screen is None:
-            # Fullscreen path when launched by Greia; windowed fallback for simulator/dev.
-            try:
-                screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-            except pygame.error:
-                screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
-        pygame.mouse.set_visible(False)
-
-        metrics = ChildUiMetrics.for_size(*screen.get_size())
-        canvas = PygameReferenceCanvas(screen)
-        typography = GreiaTypography()
-
-        # Localization
-        package_root = Path(__file__).resolve().parent
-        support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-        profile_lang = get_profile_locale()
-        context = resolve_activity_locale(profile_lang, support)
-        resources = LocalizedResources(package_root, context) if context else None
-
-        # Domain model with persisted progress.
-        model = PasticceriaModel()
-        try:
-            storage = get_storage()
-            saved = storage.kv_get(STORAGE_KEY, {})
-            model.load_saved(saved)
-        except Exception:
-            pass
-
-        renderer = PasticceriaRenderer(typography, resources)
-        app = PasticceriaApp(
-            screen=screen,
-            canvas=canvas,
-            metrics=metrics,
-            typography=typography,
-            model=model,
-            renderer=renderer,
-            resources=resources,
-        )
         return app.run()
     finally:
         pygame.quit()

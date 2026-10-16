@@ -1,0 +1,328 @@
+"""Approved speech plus small synthesized effects for Magic Bakery.
+
+Speech uses only recorded, approved clips, with the usual
+locale -> base language -> English -> silence fallback:
+
+* the cast's shared takes (``celebrate.success``, ``praise.general``,
+  ``encourage.retry``, ``encourage.progress``, ``ready.go``) for the
+  customer at the counter and for Momo the baker;
+* topping names from the shared vocabulary bank (``shared_vocab_audio_path``)
+  and spoken numbers from the shared numbers bank when the platform offers
+  one (``shared_number_audio_path``, P7 F6). Neither bank has these words
+  yet, so orders and counting stay pictorial and silent today and become
+  spoken as soon as approved clips land - no Activity change needed.
+
+Effects (topping pop, take-off, "not that one" hum, serve bell, happy jingle,
+gentle "hmm", shop door chime, rising counting tones, swoosh) are synthesized
+once at start-up. Every call fails soft without a mixer.
+"""
+
+from __future__ import annotations
+
+from collections import OrderedDict, deque
+import math
+from pathlib import Path
+import random
+from typing import Final
+
+import pygame
+
+from greia_platform import localization
+from greia_platform.localization import shared_character_audio_path, shared_vocab_audio_path
+from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+
+SPEECH_CHANNEL: Final = 0
+FIRST_SFX_CHANNEL: Final = 2
+LAST_SFX_CHANNEL: Final = 4
+PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+CAST_CUES: Final = ("ready.go", "celebrate.success", "praise.general", "encourage.retry", "encourage.progress")
+CAST_CACHE_LIMIT: Final = 2  # the customer at the counter and the next one (or Momo)
+WORD_CACHE_LIMIT: Final = 12
+SPEECH_QUEUE_LIMIT: Final = 6
+COUNT_TONES: Final = 12
+EFFECTS: Final = ("pop", "unpop", "nope", "bell", "yum", "hmm", "door", "swoosh", "save")
+# C major from C5 upward: one step per counted topping.
+_SCALE: Final = (523.25, 587.33, 659.25, 698.46, 783.99, 880.0, 987.77, 1046.5, 1174.66, 1318.51, 1396.91, 1567.98)
+
+
+class BakeryAudio:
+    """Own the sound bank, the cast takes and the spoken-word queue for one session."""
+
+    def __init__(
+        self,
+        *,
+        locale: str = "en",
+        project_root: Path = PROJECT_ROOT,
+        rng: random.Random | None = None,
+    ) -> None:
+        self.locale = locale.split("-")[0].split("_")[0] or "en"
+        self._project_root = project_root
+        self._rng = rng if rng is not None else random.Random()
+        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._cast: OrderedDict[str, dict[str, list[pygame.mixer.Sound]]] = OrderedDict()
+        self._words: OrderedDict[str, pygame.mixer.Sound | None] = OrderedDict()
+        self._queue: deque[pygame.mixer.Sound] = deque(maxlen=SPEECH_QUEUE_LIMIT)
+        self._available = False
+        self.last_speech: str | None = None
+        self.last_effect: str | None = None
+        try:
+            if pygame.mixer.get_init() is not None:
+                pygame.mixer.set_num_channels(max(pygame.mixer.get_num_channels(), LAST_SFX_CHANNEL + 1))
+                self._build_sounds()
+                self._available = True
+        except (pygame.error, RuntimeError, OSError):
+            self._available = False
+
+    # -- cast ---------------------------------------------------------------------
+
+    def cast(self, character: str, cue: str) -> bool:
+        """Play one approved shared take of ``character`` (random variant)."""
+
+        self.last_speech = f"{character}:{cue}"
+        if not self._available:
+            return False
+        takes = self._takes(character).get(cue)
+        if not takes:
+            return False
+        self._queue.clear()
+        return self._speak(self._rng.choice(takes))
+
+    def prepare_cast(self, character: str) -> None:
+        """Load a character's takes ahead of its entrance (bounded cache)."""
+
+        if self._available:
+            self._takes(character)
+
+    # -- words --------------------------------------------------------------------
+
+    def has_number(self, value: int) -> bool:
+        return self._number_path(value) is not None
+
+    def say_number(self, value: int) -> bool:
+        """Count aloud with the shared numbers bank; False (silent) without it."""
+
+        self.last_speech = f"number.{int(value)}"
+        sound = self._word(f"number.{int(value)}", lambda: self._number_path(value))
+        if sound is None:
+            return False
+        self._queue.clear()
+        return self._speak(sound)
+
+    def say_order(self, items: tuple[tuple[int, str], ...]) -> bool:
+        """Queue "<number> <topping>" for each order line that has recordings."""
+
+        self.last_speech = "order"
+        queued = False
+        self._queue.clear()
+        for amount, topping_id in items:
+            for key, resolve in (
+                (f"number.{amount}", lambda a=amount: self._number_path(a)),
+                (f"noun.{topping_id}", lambda t=topping_id: self._noun_path(t)),
+            ):
+                sound = self._word(key, resolve)
+                if sound is not None:
+                    self._queue.append(sound)
+                    queued = True
+        if queued:
+            self.update()
+        return queued
+
+    def say_topping(self, topping_id: str) -> bool:
+        sound = self._word(f"noun.{topping_id}", lambda: self._noun_path(topping_id))
+        if sound is None:
+            return False
+        self._queue.clear()
+        return self._speak(sound)
+
+    def update(self) -> None:
+        """Feed the next queued word once the speech channel is free."""
+
+        if not self._available or not self._queue:
+            return
+        try:
+            if not pygame.mixer.Channel(SPEECH_CHANNEL).get_busy():
+                self._speak(self._queue.popleft())
+        except (pygame.error, RuntimeError):
+            self._queue.clear()
+
+    # -- effects ------------------------------------------------------------------
+
+    def play(self, name: str) -> None:
+        self.last_effect = name
+        if not self._available:
+            return
+        sound = self._sounds.get(name)
+        if sound is None:
+            return
+        try:
+            for index in range(FIRST_SFX_CHANNEL, LAST_SFX_CHANNEL + 1):
+                channel = pygame.mixer.Channel(index)
+                if not channel.get_busy():
+                    channel.play(sound)
+                    return
+            pygame.mixer.Channel(FIRST_SFX_CHANNEL).play(sound)
+        except (pygame.error, RuntimeError):
+            return
+
+    def count_tone(self, value: int) -> None:
+        """Rising tone for the n-th counted topping (heard even without words)."""
+
+        self.play(f"count{max(1, min(COUNT_TONES, int(value)))}")
+
+    # -- loading ------------------------------------------------------------------
+
+    def _speak(self, sound: pygame.mixer.Sound | None) -> bool:
+        if sound is None:
+            return False
+        try:
+            pygame.mixer.Channel(SPEECH_CHANNEL).play(sound)
+        except (pygame.error, RuntimeError):
+            return False
+        return True
+
+    def _takes(self, character: str) -> dict[str, list[pygame.mixer.Sound]]:
+        cached = self._cast.get(character)
+        if cached is not None:
+            self._cast.move_to_end(character)
+            return cached
+        takes: dict[str, list[pygame.mixer.Sound]] = {}
+        for cue in CAST_CUES:
+            try:
+                first = shared_character_audio_path(self._project_root, character, cue, self.locale)
+            except Exception:
+                first = None
+            if first is None:
+                continue
+            # Sibling takes of the same family in the same accepted folder.
+            pattern = "__".join(first.name.split("__")[:3]) + "__*.wav"
+            sounds: list[pygame.mixer.Sound] = []
+            for path in sorted(first.parent.glob(pattern))[:3]:
+                try:
+                    sounds.append(pygame.mixer.Sound(str(path)))
+                except (pygame.error, OSError):
+                    continue
+            if sounds:
+                takes[cue] = sounds
+        self._cast[character] = takes
+        while len(self._cast) > CAST_CACHE_LIMIT:
+            self._cast.popitem(last=False)
+        return takes
+
+    def _word(self, key: str, resolve) -> pygame.mixer.Sound | None:
+        if not self._available:
+            return None
+        if key in self._words:
+            self._words.move_to_end(key)
+            return self._words[key]
+        sound = None
+        path = resolve()
+        if path is not None:
+            try:
+                sound = pygame.mixer.Sound(str(path))
+            except (pygame.error, OSError):
+                sound = None
+        self._words[key] = sound
+        while len(self._words) > WORD_CACHE_LIMIT:
+            self._words.popitem(last=False)
+        return sound
+
+    def _noun_path(self, topping_id: str) -> Path | None:
+        try:
+            return shared_vocab_audio_path(self._project_root, topping_id, self.locale)
+        except Exception:
+            return None
+
+    def _number_path(self, value: int) -> Path | None:
+        # The shared numbers bank (P7 F6) is pending owner voice approval; use
+        # it as soon as the platform publishes its resolver.
+        resolver = getattr(localization, "shared_number_audio_path", None)
+        if not callable(resolver):
+            return None
+        try:
+            path = resolver(self._project_root, int(value), self.locale)
+        except Exception:
+            return None
+        return path if isinstance(path, Path) else None
+
+    def _build_sounds(self) -> None:
+        spec = current_pcm16_mixer_spec()
+        if spec is None:
+            return
+        rate, channels = spec
+        self._sounds["pop"] = _sweep(rate, channels, 0.09, 600.0, 1200.0, 6500)
+        self._sounds["unpop"] = _sweep(rate, channels, 0.11, 900.0, 420.0, 5200)
+        self._sounds["nope"] = _notes(rate, channels, ((0.0, 0.14, 392.0), (0.14, 0.2, 330.0)), 0.4, 5200)
+        self._sounds["bell"] = _bell(rate, channels)
+        self._sounds["yum"] = _notes(
+            rate, channels, ((0.0, 0.16, 659.25), (0.12, 0.16, 783.99), (0.24, 0.3, 1046.5)), 0.7, 6200
+        )
+        self._sounds["hmm"] = _sweep(rate, channels, 0.32, 440.0, 360.0, 4200)
+        self._sounds["door"] = _notes(rate, channels, ((0.0, 0.3, 1318.51), (0.16, 0.4, 1046.5)), 0.8, 4800)
+        self._sounds["swoosh"] = _swoosh(rate, channels)
+        self._sounds["save"] = _notes(
+            rate, channels, ((0.0, 0.14, 783.99), (0.1, 0.14, 987.77), (0.2, 0.3, 1174.66)), 0.6, 5600
+        )
+        for index, frequency in enumerate(_SCALE[:COUNT_TONES], start=1):
+            self._sounds[f"count{index}"] = _notes(rate, channels, ((0.0, 0.16, frequency),), 0.32, 5600)
+
+
+def _notes(
+    rate: int,
+    channels: int,
+    notes: tuple[tuple[float, float, float], ...],
+    duration: float,
+    volume: int,
+) -> pygame.mixer.Sound:
+    """Soft bell-like notes: (start, length, frequency)."""
+
+    buffer = bytearray()
+    for index in range(int(rate * duration)):
+        t = index / rate
+        value = 0.0
+        for start, length, frequency in notes:
+            local = t - start
+            if 0.0 <= local < length * 2.5:
+                attack = min(1.0, local / 0.012)
+                value += math.sin(2.0 * math.pi * frequency * local) * attack * math.exp(-3.2 * local / length)
+        append_mono_pcm16(buffer, int(value * volume), channels)
+    return pygame.mixer.Sound(buffer=bytes(buffer))
+
+
+def _sweep(rate: int, channels: int, duration: float, start: float, end: float, volume: int) -> pygame.mixer.Sound:
+    buffer = bytearray()
+    phase = 0.0
+    for index in range(int(rate * duration)):
+        t = index / rate
+        frequency = start + (end - start) * (t / duration)
+        phase += 2.0 * math.pi * frequency / rate
+        envelope = math.sin(math.pi * t / duration)
+        append_mono_pcm16(buffer, int(math.sin(phase) * envelope * volume), channels)
+    return pygame.mixer.Sound(buffer=bytes(buffer))
+
+
+def _bell(rate: int, channels: int) -> pygame.mixer.Sound:
+    """Counter service bell: a bright struck tone with an inharmonic partial."""
+
+    buffer = bytearray()
+    for index in range(int(rate * 0.7)):
+        t = index / rate
+        env = math.exp(-5.5 * t) * min(1.0, t / 0.004)
+        value = math.sin(2 * math.pi * 1568.0 * t) * 0.7 + math.sin(2 * math.pi * 1568.0 * 2.76 * t) * 0.3
+        append_mono_pcm16(buffer, int(value * env * 6500), channels)
+    return pygame.mixer.Sound(buffer=bytes(buffer))
+
+
+def _swoosh(rate: int, channels: int) -> pygame.mixer.Sound:
+    noise = random.Random(11)
+    buffer = bytearray()
+    smooth = 0.0
+    duration = 0.36
+    for index in range(int(rate * duration)):
+        t = index / rate
+        smooth += (noise.uniform(-1.0, 1.0) - smooth) * (0.08 + 0.3 * t / duration)
+        envelope = math.sin(math.pi * t / duration)
+        append_mono_pcm16(buffer, int(smooth * envelope * 8000), channels)
+    return pygame.mixer.Sound(buffer=bytes(buffer))
+
+
+__all__ = ["BakeryAudio", "CAST_CUES", "COUNT_TONES", "EFFECTS"]

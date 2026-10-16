@@ -1,24 +1,45 @@
+"""Lifecycle, timing and shared-kit input for Magic Bakery (Pasticceria Magica).
+
+One round is five cast customers. Each one walks to the counter and shows an
+order bubble:
+
+* a counting order - a numeral with that many pictures of a topping (lower
+  rungs) or the numeral and one picture (upper rungs), one or two toppings;
+* a pattern order - the start of a repeating row (strawberry, blueberry,
+  strawberry ...) with ``?`` places the child completes on the cake.
+
+The child decorates from a small picture pantry; every topping counts aloud
+with a rising tone and a numeral badge (and the spoken number once the shared
+numbers bank exists). Tapping a topping on the cake (or the take-one-off
+button) removes it. The bell serves:
+
+* right -> the customer cheers (``pose_cheer`` + their approved praise
+  take), confetti, the cake slides off to be boxed and the customer leaves;
+* not yet -> the customer thinks (``pose_think``), then the shop counts the
+  cake together (badges + tones, the matching card row glows) and the extra
+  or wrong toppings wobble; from the second miss faint ghosts show where a
+  topping still belongs. Retries are unlimited and nothing is lost.
+
+Idle ~6 s -> the customer points at the bubble and it glows; later the next
+needed pantry tile glows. After five customers the shared completion scene
+offers another round or "my cake": free decorating with the whole pantry,
+kept as a draft and saved as a picture to My Creations on request. The next
+round's rung adapts from this round's misses.
+"""
+
 from __future__ import annotations
 
-import io
-import math
+from collections import deque
+from collections.abc import Callable
+from dataclasses import dataclass
 import random
-import struct
 import time
-from pathlib import Path
-import wave
 
 import pygame
 
-from greia_platform.activity_api import (
-    activity_stop_requested,
-    emit_activity_event,
-    get_profile_locale,
-    get_storage,
-    get_theme,
-    mark_activity_ready,
-)
+from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
 from greia_platform.activity_controls import (
+    ControlArt,
     ControlKit,
     ControlLayout,
     ControlTheme,
@@ -26,358 +47,801 @@ from greia_platform.activity_controls import (
     PointerPhase,
     PygameControlInput,
 )
-from greia_platform.activity_feedback import CastFeedback
-from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.ui_core import SurfaceNavigator, UiEventResult
-from greia_platform.localization import (
-    ActivityLocaleSupport,
-    LocalizationError,
-    LocalizedResources,
-    resolve_activity_locale,
-)
+from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
+from greia_platform.pygame_completion import (
+    CompletionContent,
+    CompletionOverlay,
+    CompletionPalette,
+    CompletionScene,
+    PygameCompletionScreen,
+)
+from greia_platform.pygame_png import PygamePngError, encode_surface_png
 from greia_platform.typography import GreiaTypography
+from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 
 if __package__:
-    from .pasticceria_content import CAKE_SLOTS, GOLD, REFERENCE_HEIGHT, REFERENCE_WIDTH, STORAGE_KEY, TOPPINGS
-    from .pasticceria_controls import CANDIDATE_RECTS, CAST_HEIGHT, CAST_MIDBOTTOM, PasticceriaControls
-    from .pasticceria_model import PasticceriaModel
-    from .pasticceria_renderer import PasticceriaRenderer
+    from .pasticceria_art import BakeryArt, bakery_visual_resolver
+    from .pasticceria_audio import BakeryAudio
+    from .pasticceria_content import BAKER, COUNT, ORDERS_PER_ROUND, REFERENCE_HEIGHT, REFERENCE_WIDTH, TOPPING_IDS
+    from .pasticceria_controls import BakeryControls
+    from .pasticceria_layout import (
+        BUBBLE_RECT,
+        CUSTOMER_MIDBOTTOM,
+        FREE_POINTS,
+        FROSTING_CENTER,
+        TOPPING_SIZE,
+        WALK_DISTANCE,
+        from_frosting,
+        on_frosting,
+        place_point,
+        sprite_rect,
+        to_frosting,
+    )
+    from .pasticceria_model import BakeryRound, DemoStep, FreeCake, Verdict, adapt_level
+    from .pasticceria_renderer import (
+        CAKE_EXIT,
+        CAKE_SLIDE_SECONDS,
+        WALK_SECONDS,
+        BakeryRenderer,
+        CounterCast,
+        SceneMotion,
+        SceneView,
+        Screen,
+    )
+    from .pasticceria_services import BakeryProgress, EventPort, PicturePort, ProgressPort, picture_digest
 else:
-    from pasticceria_content import CAKE_SLOTS, GOLD, REFERENCE_HEIGHT, REFERENCE_WIDTH, STORAGE_KEY, TOPPINGS
-    from pasticceria_controls import CANDIDATE_RECTS, CAST_HEIGHT, CAST_MIDBOTTOM, PasticceriaControls
-    from pasticceria_model import PasticceriaModel
-    from pasticceria_renderer import PasticceriaRenderer
+    from pasticceria_art import BakeryArt, bakery_visual_resolver
+    from pasticceria_audio import BakeryAudio
+    from pasticceria_content import BAKER, COUNT, ORDERS_PER_ROUND, REFERENCE_HEIGHT, REFERENCE_WIDTH, TOPPING_IDS
+    from pasticceria_controls import BakeryControls
+    from pasticceria_layout import (
+        BUBBLE_RECT,
+        CUSTOMER_MIDBOTTOM,
+        FREE_POINTS,
+        FROSTING_CENTER,
+        TOPPING_SIZE,
+        WALK_DISTANCE,
+        from_frosting,
+        on_frosting,
+        place_point,
+        sprite_rect,
+        to_frosting,
+    )
+    from pasticceria_model import BakeryRound, DemoStep, FreeCake, Verdict, adapt_level
+    from pasticceria_renderer import (
+        CAKE_EXIT,
+        CAKE_SLIDE_SECONDS,
+        WALK_SECONDS,
+        BakeryRenderer,
+        CounterCast,
+        SceneMotion,
+        SceneView,
+        Screen,
+    )
+    from pasticceria_services import BakeryProgress, EventPort, PicturePort, ProgressPort, picture_digest
+
+IDLE_HINT_SECONDS = 6.0
+MAX_IDLE_HINTS = 4
+ARRIVE_POINT_SECONDS = 1.8
+HAPPY_HOLD = 1.4
+DEMO_STEP = 0.42
+DEMO_LEAD = 0.55
+WOBBLE_HOLD = 0.6
+DRAFT_SAVE_SECONDS = 2.0
+MAX_SCHEDULED = 48
+PLUM = (86, 58, 100)  # theme ink "plum"
 
 
-def _synth_wav(samples: list[int], rate: int = 22050) -> bytes:
-    buf = io.BytesIO()
-    with wave.open(buf, "wb") as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(rate)
-        raw = b"".join(struct.pack("<h", max(-32767, min(32767, s))) for s in samples)
-        w.writeframes(raw)
-    return buf.getvalue()
+class Timeline:
+    """Tiny bounded scheduler for the scripted moments."""
 
+    def __init__(self, clock: Callable[[], float]) -> None:
+        self._clock = clock
+        self._entries: deque[tuple[float, Callable[[], object]]] = deque(maxlen=MAX_SCHEDULED)
 
-class SoundManager:
-    """Bounded prebuilt procedural sound bank for the bakery."""
+    def after(self, delay: float, action: Callable[[], object]) -> None:
+        self._entries.append((self._clock() + delay, action))
 
-    def __init__(self) -> None:
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
-        self._enabled = False
-        try:
-            if not pygame.mixer.get_init():
-                pygame.mixer.init(22050, -16, 1, 512)
-            self._init_sounds()
-            self._enabled = True
-        except Exception:
-            self._enabled = False
-
-    def _init_sounds(self) -> None:
-        drop_samples = [
-            int(math.sin(2 * math.pi * (450 + (900 - i) * 0.8) * (i / 22050.0)) * max(0.0, 1.0 - (i / 22050.0) / 0.06) * 14000)
-            for i in range(1300)
-        ]
-        self._sounds["drop"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(drop_samples)))
-
-        chime_samples: list[int] = []
-        for i in range(6000):
-            t = i / 22050.0
-            f = 587.33 if t < 0.09 else (880.0 if t < 0.18 else 1174.66)
-            env = max(0.0, 1.0 - t / 0.27)
-            chime_samples.append(int(math.sin(2 * math.pi * f * t) * env * 12000))
-        self._sounds["chime"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(chime_samples)))
-
-        ding_samples: list[int] = []
-        for i in range(8000):
-            t = i / 22050.0
-            f = 1046.50
-            env = math.exp(-6.0 * t)
-            harm = math.sin(2 * math.pi * f * t) * 0.7 + math.sin(2 * math.pi * f * 2.75 * t) * 0.3
-            ding_samples.append(int(harm * env * 15000))
-        self._sounds["ding"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(ding_samples)))
-
-        fanfare_samples: list[int] = []
-        notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]
-        for i in range(12000):
-            t = i / 22050.0
-            idx = min(len(notes) - 1, int(t / 0.08))
-            env = max(0.0, 1.0 - t / 0.54)
-            fanfare_samples.append(int(math.sin(2 * math.pi * notes[idx] * t) * env * 14000))
-        self._sounds["fanfare"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(fanfare_samples)))
-
-    def play(self, name: str) -> None:
-        if self._enabled and name in self._sounds:
-            try:
-                self._sounds[name].play()
-            except Exception:
-                pass
-
-
-def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
-    vp = activity_viewport_for_surface(surface)
-    x, y = position
-    if not (0 <= x < vp.surface.width and 0 <= y < vp.surface.height):
-        return False
-    for protected in vp.protected_regions:
-        if protected.x <= x < protected.right and protected.y <= y < protected.bottom:
+    def run_due(self) -> bool:
+        now = self._clock()
+        due = [entry for entry in self._entries if entry[0] <= now]
+        if not due:
             return False
-    return True
+        for entry in due:
+            self._entries.remove(entry)
+        for _, action in sorted(due, key=lambda entry: entry[0]):
+            action()
+        return True
+
+    @property
+    def busy(self) -> bool:
+        return bool(self._entries)
+
+    def clear(self) -> None:
+        self._entries.clear()
+
+
+@dataclass(frozen=True, slots=True)
+class ServeResult:
+    """What one press of the bell did (for tests and tools)."""
+
+    verdict: Verdict
+    customer: str
 
 
 class PasticceriaApp:
-    """Lifecycle owner for the Magic Bakery Activity.
-
-    Owns screen/canvas/metrics/typography, model, renderer and input
-    routing. Delegates rules to the pure model, scene presentation to the
-    renderer and every interactive control to the shared control kit
-    (ADR 0037), so tabs, pantry, Clear/Serve and pattern answers work with
-    pointer, touch, keyboard and controller alike. Publishes READY after
-    the first flip in the same loop.
-    """
+    """Coordinate rounds, the free cake, kit controls, art, audio and lifecycle."""
 
     def __init__(
         self,
+        *,
         screen: pygame.Surface,
         canvas: PygameReferenceCanvas,
-        metrics: ChildUiMetrics,
         typography: GreiaTypography,
-        model: PasticceriaModel,
-        renderer: PasticceriaRenderer,
-        resources,
-        *,
+        resources: LocalizedResources | None,
+        audio: BakeryAudio,
+        progress: ProgressPort,
+        events: EventPort,
+        pictures: PicturePort,
+        rng: random.Random | None = None,
+        clock: Callable[[], float] = time.monotonic,
         kit: ControlKit | None = None,
-        clock=time.monotonic,
+        art: BakeryArt | None = None,
+        session_prefix: str | None = None,
     ) -> None:
-        self._screen = screen
-        self._canvas = canvas
-        self._metrics = metrics
-        self._typography = typography
-        self._model = model
-        self._renderer = renderer
-        self._resources = resources
-        self._theme = get_theme()
-        self._sounds = SoundManager()
-        try:
-            self._storage = get_storage()
-        except Exception:
-            self._storage = None
+        self.screen = screen
+        self.canvas = canvas
+        self.typography = typography
+        self.resources = resources
+        self.audio = audio
+        self.progress_port = progress
+        self.events = events
+        self.pictures = pictures
+        self.rng = rng if rng is not None else random.Random()
+        self.clock = clock
+        self._session_prefix = session_prefix or f"{int(time.time())}"
+        self._rounds_played = 0
+
+        self.progress: BakeryProgress = progress.load()
+        self.free_cake: FreeCake = self.progress.free_cake
+        self._saved_signature: tuple | None = None
+        self.selected_topping: str = TOPPING_IDS[0]
+
+        # Shared control kit (ADR 0037): primary Collection "learn" -> orange.
+        self.kit = kit if kit is not None else ControlKit(
+            typography, ControlTheme.for_accent("orange"), art=ControlArt(bakery_visual_resolver)
+        )
+        self.art = art if art is not None else BakeryArt(self.kit.painter, art=ControlArt(max_entries=64))
+        self.cast = CounterCast(self.art, clock)
+        self.renderer = BakeryRenderer(self.art, self.cast)
+        self.motion = SceneMotion()
+        self.timeline = Timeline(clock)
+        self.controls = BakeryControls(
+            self.kit,
+            self.art,
+            text=lambda key: self._text(key, ""),
+            on_topping=self._on_topping,
+            on_undo=self._on_undo,
+            on_serve=self._on_serve,
+            on_save=self._on_save,
+            on_new_cake=self._on_new_cake,
+            on_new_round=self._on_new_round,
+        )
+        self._surfaces = SurfaceNavigator(self.controls.layer)
+        self._input = PygameControlInput(to_logical=canvas.pointer, is_safe=lambda pos: _safe_point(self.screen, pos))
+        self.controls.relayout(ControlLayout.for_canvas(canvas, screen.get_size()))
+
+        self.screen_id = Screen.ROUND
+        self.round: BakeryRound | None = None
+        self.show_card = False
+        self.completion: PygameCompletionScreen | None = None
+        self.session_id = ""
+        self.last_serve: ServeResult | None = None
         self._running = True
-        self._ready_published = False
+        self.ready_published = False
+        self._dirty = True
+        self._activated = False
+        self._busy = False
+        self._draft_dirty_since: float | None = None
+        self._last_activity = clock()
+        self._idle_hints = 0
+        self.start_round()
 
-        # Shared control kit: primary Collection "learn" -> orange accent.
-        self._kit = kit if kit is not None else ControlKit(typography, ControlTheme.for_accent("orange"))
-        self._cast = CastFeedback("momo", height=CAST_HEIGHT, art=self._kit.art, clock=clock)
-        self._controls = PasticceriaControls(
-            self._kit,
-            resources,
-            ControlLayout.for_canvas(canvas, screen.get_size()),
-            mode=model.mode,
-            on_mode=self._select_mode,
-            on_topping=self._place_topping,
-            on_candidate=self._choose_candidate,
-            on_clear=self._clear_cake,
-            on_serve=self._handle_serve,
-        )
-        self._surfaces = SurfaceNavigator(self._controls.layer)
-        self._input = PygameControlInput(
-            to_logical=self._canvas_pointer,
-            is_safe=lambda pos: _is_safe_point(self._screen, pos),
-        )
+    # -- main loop --------------------------------------------------------------------
 
-    @property
-    def controls(self) -> PasticceriaControls:
-        return self._controls
-
-    # -- public lifecycle --
     def run(self) -> int:
-        clock = pygame.time.Clock()
-        while self._running and not activity_stop_requested():
-            for event in pygame.event.get():
-                self.handle_event(event)
-            repeat = self._input.poll()
-            if repeat is not None:
-                self._surfaces.dispatch(repeat)
-            self._step_frame()
-            self._draw()
-            self._canvas.present(clear=self._theme.background)
-            pygame.display.flip()
-            if not self._ready_published:
-                mark_activity_ready()
-                self._ready_published = True
-            clock.tick(30)
-        self._save_storage()
+        ticker = pygame.time.Clock()
+        try:
+            while self._running and not activity_stop_requested():
+                for event in pygame.event.get():
+                    self.handle_event(event)
+                repeat = self._input.poll()
+                if repeat is not None:
+                    self._dispatch(repeat)
+                animating = self.step()
+                if self._dirty or animating:
+                    self.render()
+                    self.canvas.present()
+                    pygame.display.flip()
+                    self._dirty = False
+                    if not self.ready_published:
+                        mark_activity_ready()
+                        self.ready_published = True
+                ticker.tick(30 if animating else 15)
+        finally:
+            self.persist()
+            self.typography.clear()
         return 0
+
+    def step(self) -> bool:
+        """Advance timers; return True while something on screen is moving."""
+
+        now = self.clock()
+        if self.timeline.run_due():
+            self._dirty = True
+        if self.cast.update():
+            self._dirty = True
+        self.audio.update()
+        self.motion.prune(now)
+        if self.screen_id is Screen.ROUND:
+            self._maybe_hint(now)
+        if self._draft_dirty_since is not None and now - self._draft_dirty_since >= DRAFT_SAVE_SECONDS:
+            self.persist()
+        if self.controls.layer.invalidation.should_draw:
+            self._dirty = True
+        if self.screen_id is Screen.END:
+            return False
+        return self.motion.active(now) or self.cast.animating
+
+    def render(self) -> None:
+        surface = self.canvas.surface
+        if self.screen_id is not Screen.END:
+            self.renderer.draw(surface, self.view(), self.motion, self.clock(), tile_rect=self.controls.tile_rect)
+        self._surfaces.draw(surface)
+
+    def view(self) -> SceneView:
+        if self.screen_id is Screen.FREE:
+            return SceneView(Screen.FREE, free_cake=self.free_cake)
+        game = self.round
+        if game is None or self.screen_id is Screen.END:
+            return SceneView(self.screen_id)
+        return SceneView(Screen.ROUND, order=game.order, cake=game.cake, show_card=self.show_card)
+
+    def persist(self) -> None:
+        self.progress.free_cake = self.free_cake
+        self.progress_port.save(self.progress)
+        self._draft_dirty_since = None
+
+    # -- input ------------------------------------------------------------------------
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.QUIT:
             self._running = False
             return
-        if event.type == pygame.KEYDOWN and self.handle_key(event):
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            self._running = False
             return
         if event.type == pygame.VIDEORESIZE:
-            self.handle_resize(event)
+            self._resize()
             return
+        if event.type in (pygame.MOUSEMOTION, pygame.FINGERMOTION):
+            self._dirty = True  # keep the platform pointer live
         translated = self._input.translate(event)
-        if translated is None:
-            return
-        result = self._surfaces.dispatch(translated)
+        if translated is not None:
+            self._dispatch(translated)
+
+    def _resize(self) -> None:
+        self.screen = pygame.display.get_surface() or self.screen
+        self.canvas = PygameReferenceCanvas(self.screen)
+        self._input = PygameControlInput(to_logical=self.canvas.pointer, is_safe=lambda pos: _safe_point(self.screen, pos))
+        self.controls.relayout(ControlLayout.for_canvas(self.canvas, self.screen.get_size()))
+        self._dirty = True
+
+    def _dispatch(self, kit_input) -> bool:
+        if not isinstance(kit_input, KitPointer) or kit_input.phase is not PointerPhase.MOVE:
+            self._note_activity()
+        result = self._surfaces.dispatch(kit_input)
         if (
             result is UiEventResult.IGNORED
-            and isinstance(translated, KitPointer)
-            and translated.phase is PointerPhase.UP
+            and isinstance(kit_input, KitPointer)
+            and kit_input.phase is PointerPhase.UP
+            and self.completion is None
         ):
-            self._cake_tap(translated.position)
+            self._cake_tap(kit_input.position)
+        if self.controls.layer.invalidation.should_draw:
+            self._dirty = True
+        return result is not UiEventResult.IGNORED
 
-    def handle_key(self, event: pygame.event.Event) -> bool:
-        """Handle Activity shortcut keys; True when consumed."""
-        if event.key == pygame.K_ESCAPE:
-            self._running = False
-            return True
-        shortcuts = {pygame.K_1: "orders", pygame.K_2: "patterns", pygame.K_3: "free"}
-        mode = shortcuts.get(event.key)
-        if mode is not None:
-            self._select_mode(mode)
-            return True
-        return False
+    def tap(self, logical: tuple[int, int]) -> bool:
+        """Deliver one complete tap at a logical position (tests/tools)."""
 
-    def handle_resize(self, event: pygame.event.Event) -> None:
-        # Reacquire the display surface and rebuild canvas/metrics; renderer invalidates converts.
-        self._screen = pygame.display.get_surface() or self._screen
-        self._metrics = ChildUiMetrics.for_size(*self._screen.get_size())
-        self._canvas = PygameReferenceCanvas(self._screen)
-        self._renderer.on_resize()
-        self._controls.relayout(ControlLayout.for_canvas(self._canvas, self._screen.get_size()))
-
-    def handle_pointer(self, screen_pos: tuple[int, int]) -> None:
-        """Deliver one complete tap at a physical position (tests/tools)."""
-        if not _is_safe_point(self._screen, screen_pos):
-            return
-        logical = self._canvas.pointer(screen_pos)
-        if logical is None:
-            return
         point = (int(logical[0]), int(logical[1]))
-        if not self._controls.layer.tap(point):
-            self._cake_tap(point)
+        self._activated = False
+        self._dispatch(KitPointer(PointerPhase.DOWN, point))
+        self._dispatch(KitPointer(PointerPhase.UP, point))
+        return self._activated
 
-    def _canvas_pointer(self, position: tuple[int, int]) -> tuple[float, float] | None:
-        return self._canvas.pointer(position)
+    def press(self, key: int) -> bool:
+        """Deliver one key press through the shared navigation mapping."""
 
-    # -- control callbacks --
-    def _select_mode(self, mode: str) -> None:
-        self._model.switch_mode(mode)
-        self._controls.sync_mode(self._model.mode)
-        self._sounds.play("drop")
+        self._activated = False
+        translated = self._input.translate(pygame.event.Event(pygame.KEYDOWN, key=key, mod=0, unicode=""))
+        if translated is not None:
+            self._dispatch(translated)
+        return self._activated
 
-    def _place_topping(self, topping_id: str) -> None:
-        placed = self._model.place_topping(topping_id)
-        if placed is not None:
-            _, _, px, py = placed
-            self._sounds.play("drop")
-            self._renderer.spawn_at(px, py, "✨", GOLD, 1)
+    def _note_activity(self) -> None:
+        self._last_activity = self.clock()
+        self._idle_hints = 0
 
-    def _clear_cake(self) -> None:
-        self._model.clear_toppings()
-        self._sounds.play("drop")
-        self._model.feedback_text = ""
-        self._model.feedback_timer = 0
+    # -- a round of customers ------------------------------------------------------------
 
-    def _choose_candidate(self, index: int) -> None:
-        if self._model.mode != "patterns":
+    def start_round(self) -> None:
+        self.timeline.clear()
+        self.motion.reset()
+        self._close_completion()
+        self.round = BakeryRound.planned(self.progress.level, self.rng)
+        self._rounds_played += 1
+        self.session_id = f"{self._session_prefix}-{self._rounds_played}-{self.rng.randrange(1_000_000):06d}"
+        self.screen_id = Screen.ROUND
+        self.controls.set_progress(0)
+        self._arrive(first=True)
+
+    def _arrive(self, *, first: bool = False) -> None:
+        game = self.round
+        if game is None:
             return
-        _, correct_sym, candidates = self._model.current_pattern
-        if not 0 <= index < len(candidates):
-            return
-        rect = CANDIDATE_RECTS[index]
-        if candidates[index] == correct_sym:
-            self._sounds.play("chime")
-            self._model.apply_correct_pattern()
-            self._renderer.spawn_at(rect.centerx, rect.centery, "🌟", GOLD, 20)
-            self._model.feedback_text = self._localized_text("feedback.pattern_correct", "🌟")
-            self._model.feedback_timer = 2.5
-            self._cast.correct()
-            self._safe_emit("pattern.solved", f"pat-{time.time()}")
-        else:
-            self._sounds.play("drop")
-            self._model.feedback_text = self._localized_text("feedback.try_again", "💕")
-            self._model.feedback_timer = 1.5
-            self._cast.try_again()
+        now = self.clock()
+        self.show_card = False
+        self.motion.ghosts = ()
+        self.motion.nudge = ()
+        self.cast.set_character(game.customer)
+        self.cast.reset()
+        self.motion.walk(now, -WALK_DISTANCE, 0)
+        self.motion.drop_cake(now)
+        self.controls.show_round(game.order.pantry)
+        self._set_busy(True)
+        self.audio.play("door")
+        if first:
+            self.audio.cast(game.customer, "ready.go")
+        self.timeline.after(WALK_SECONDS, self._greet)
+        self._dirty = True
 
-    def _cake_tap(self, logical: tuple[int, int]) -> None:
-        """Tap on a placed topping removes it (orders/free modes only)."""
-        if self._model.mode not in {"orders", "free"}:
+    def _greet(self) -> None:
+        game = self.round
+        if game is None or self.screen_id is not Screen.ROUND:
             return
-        removed = self._model.remove_at((int(logical[0]), int(logical[1])))
+        now = self.clock()
+        self.show_card = True
+        self.motion.show_card(now)
+        self.motion.add_fx("sparkle", (BUBBLE_RECT.right - 30, BUBBLE_RECT.top + 20), now)
+        self.cast.point(ARRIVE_POINT_SECONDS)
+        self._say_order()
+        self._set_busy(False)
+        self._sync_cake_controls()
+        self._note_activity()
+        self._dirty = True
+
+    def _say_order(self) -> None:
+        game = self.round
+        if game is None:
+            return
+        order = game.order
+        if order.kind == COUNT:
+            self.audio.say_order(tuple((item.amount, item.topping_id) for item in order.items))
+
+    def _on_topping(self, topping_id: str) -> None:
+        if self.screen_id is Screen.FREE:
+            self._free_place(topping_id)
+            return
+        game = self.round
+        if game is None or self.screen_id is not Screen.ROUND or self._busy:
+            return
+        placement = game.place(topping_id)
+        self._activated = True
+        now = self.clock()
+        if placement is None:
+            self.audio.play("nope")
+            return
+        self._hint_marks_changed(placement.index, placed=True)
+        base, size = place_point(game.order.kind, placement.index)
+        self.audio.play("pop")
+        if game.order.counts_aloud:
+            # Count aloud: a rising tone, the numeral badge, the spoken number.
+            self.audio.count_tone(placement.ordinal)
+            self.motion.badge(placement.index, placement.ordinal, now)
+            self.audio.say_number(placement.ordinal)
+        self.motion.add_fx("sparkle", (base[0], base[1] - size // 2), now)
+        self._sync_cake_controls()
+        self._dirty = True
+
+    def _on_undo(self) -> None:
+        if self.screen_id is Screen.FREE:
+            if self.free_cake.undo() is not None:
+                self._activated = True
+                self.audio.play("unpop")
+                self._free_changed()
+            return
+        game = self.round
+        if game is None or self._busy:
+            return
+        removed = game.cake.undo()
         if removed is not None:
-            tx, ty = removed
-            self._sounds.play("drop")
-            self._renderer.spawn_at(tx, ty, "✨", GOLD, 8)
+            self._activated = True
+            self._hint_marks_changed(removed, placed=False)
+            self.audio.play("unpop")
+            self._sync_cake_controls()
+            self._dirty = True
 
-    def _localized_text(self, key: str, neutral: str) -> str:
-        """Resolve feedback copy; without it only the pictogram is shown."""
-        if self._resources is not None:
-            try:
-                return self._resources.text(key)
-            except LocalizationError:
-                pass
-        return neutral
+    def _cake_tap(self, point: tuple[int, int]) -> None:
+        """A tap on the cake: take that topping off (or, when free, put one there)."""
 
-    def _handle_serve(self) -> None:
-        self._sounds.play("ding")
-        if self._model.mode == "orders":
-            is_correct = self._model.check_order_correct()
-            if is_correct:
-                self._sounds.play("fanfare")
-                # capture before mutate for particle origin consistent
-                self._model.apply_correct_order()
-                self._renderer.spawn_random_center(["🍰", "✨", "🍓", "💖"], GOLD, 30)
-                self._model.feedback_text = self._localized_text("feedback.perfect", "✨🍰")
-                self._model.feedback_timer = 3.0
-                self._cast.correct()
-                self._safe_emit("recipe.completed", f"recipe-{time.time()}")
-            else:
-                self._sounds.play("drop")
-                self._model.feedback_text = self._localized_text("feedback.try_again", "💕")
-                self._model.feedback_timer = 2.5
-                self._cast.try_again()
-        else:
-            self._sounds.play("fanfare")
-            self._renderer.spawn_random_center(["✨"], GOLD, 25)
-            self._model.feedback_text = self._localized_text("feedback.masterpiece", "✨")
-            self._model.feedback_timer = 2.5
-            self._cast.correct()
-
-    def _step_frame(self) -> None:
-        # Model feedback tick, cast reaction and renderer particles.
-        self._model.tick(0.035)
-        self._cast.update()
-        self._renderer.update()
-
-    def _draw(self) -> None:
-        surf = self._canvas.surface
-        self._renderer.render(surf, self._model)
-        self._controls.sync(self._model)
-        self._cast.draw(surf, CAST_MIDBOTTOM)
-        self._surfaces.draw(surf)
-        self._renderer.render_effects(surf)
-
-    def _safe_emit(self, ev_id: str, ikey: str, payload: object = None) -> None:
-        try:
-            emit_activity_event(ev_id, idempotency_key=ikey, payload=payload)
-        except Exception:
-            pass
-
-    def _save_storage(self) -> None:
-        if self._storage is None:
+        if self.screen_id is Screen.FREE:
+            self._free_tap(point)
             return
+        game = self.round
+        if game is None or self.screen_id is not Screen.ROUND or self._busy:
+            return
+        places = [(index, *place_point(game.order.kind, index)) for index, _ in game.cake.placements()]
+        for index, base, size in sorted(places, key=lambda item: -item[1][1]):  # front-most first
+            if sprite_rect(base, size).inflate(-size // 5, -size // 5).collidepoint(point):
+                if game.cake.remove(index):
+                    self._activated = True
+                    self._hint_marks_changed(index, placed=False)
+                    self.audio.play("unpop")
+                    self.motion.add_fx("sparkle", (base[0], base[1] - size // 2), self.clock())
+                    self._sync_cake_controls()
+                    self._dirty = True
+                return
+
+    def _on_serve(self) -> None:
+        game = self.round
+        if game is None or self.screen_id is not Screen.ROUND or self._busy:
+            return
+        verdict = game.serve()
+        if verdict is None:
+            return
+        self._activated = True
+        self.last_serve = ServeResult(verdict, game.customer)
+        self.audio.play("bell")
+        self._note_activity()
+        if verdict.correct:
+            self._celebrate(game)
+        else:
+            self._not_yet(game, verdict)
+        self._dirty = True
+
+    def _celebrate(self, game: BakeryRound) -> None:
+        now = self.clock()
+        customer = game.customer
+        self.cast.correct()
+        self.audio.play("yum")
+        self.audio.cast(customer, "praise.general" if game.misses == 0 else "celebrate.success")
+        self.motion.add_fx("confetti", (FROSTING_CENTER[0], FROSTING_CENTER[1] - 40), now)
+        self.motion.add_fx("heart_pop", (CUSTOMER_MIDBOTTOM[0], CUSTOMER_MIDBOTTOM[1] - 220), now)
+        self.controls.set_progress(game.served)
+        self._set_busy(True)
+        order = game.order
+        self.progress.orders_served += 1
+        self.events.order_served(
+            "recipe.completed" if order.kind == COUNT else "pattern.solved",
+            self.session_id,
+            {"order": game.index + 1, "kind": order.kind, "level": game.level, "misses": game.misses},
+        )
+        self.timeline.after(HAPPY_HOLD, self._leave)
+
+    def _leave(self) -> None:
+        game = self.round
+        if game is None:
+            return
+        now = self.clock()
+        self.show_card = False
+        self.motion.walk(now, 0, -WALK_DISTANCE)
+        self.motion.slide_cake(now, 0, CAKE_EXIT)
+        self.audio.play("swoosh")
+        nxt = game.customers[game.index + 1] if game.index + 1 < game.total else None
+        if nxt is not None:
+            self.audio.prepare_cast(nxt)
+        self.timeline.after(max(WALK_SECONDS, CAKE_SLIDE_SECONDS) + 0.1, self._after_leave)
+        self._dirty = True
+
+    def _after_leave(self) -> None:
+        game = self.round
+        if game is None:
+            return
+        if game.next_customer():
+            self._arrive()
+        else:
+            self._finish_round()
+
+    def _not_yet(self, game: BakeryRound, verdict: Verdict) -> None:
+        """Gentle try-again: think, count the cake together, show what is off."""
+
+        self.cast.try_again()
+        self.audio.play("hmm")
+        if game.misses == 1:
+            self.audio.cast(game.customer, "encourage.retry")
+        self._set_busy(True)
+        now = self.clock()
+        self.motion.glow_card(now, DEMO_LEAD)
+        steps = game.order.demonstration(game.cake)
+        for number, step in enumerate(steps):
+            self.timeline.after(DEMO_LEAD + number * DEMO_STEP, lambda st=step: self._demo_step(st))
+        end = DEMO_LEAD + len(steps) * DEMO_STEP
+        misses = game.misses
+        self.timeline.after(end, lambda: self._demo_finish(verdict, misses))
+
+    def _demo_step(self, step: DemoStep) -> None:
+        if self.screen_id is not Screen.ROUND:
+            return
+        now = self.clock()
+        if step.number > 0:
+            self.motion.badge(step.index, step.number, now)
+            self.audio.count_tone(step.number)
+            self.audio.say_number(step.number)
+        else:
+            self.motion.shake((step.index,), now)
+            if step.tone:
+                self.audio.count_tone(step.tone)
+            else:
+                self.audio.play("pop")
+        self.motion.highlight_row(step.row, now + DEMO_STEP + 0.05)
+        self._dirty = True
+
+    def _demo_finish(self, verdict: Verdict, misses: int) -> None:
+        game = self.round
+        if game is None or self.screen_id is not Screen.ROUND:
+            return
+        now = self.clock()
+        self.motion.shake(verdict.wrong, now)
+        if misses >= 2:
+            self.motion.ghosts = game.order.ghosts(game.cake, verdict)
+            self.motion.nudge = verdict.wrong
+        if verdict.wrong:
+            self.audio.play("nope")
+        self.timeline.after(WOBBLE_HOLD, self._unlock)
+        self._dirty = True
+
+    def _unlock(self) -> None:
+        if self.screen_id is not Screen.ROUND:
+            return
+        self._set_busy(False)
+        self._sync_cake_controls()
+        self._note_activity()
+        self._dirty = True
+
+    def _finish_round(self) -> None:
+        game = self.round
+        if game is None:
+            return
+        old_level = self.progress.level
+        self.progress.level = adapt_level(old_level, game.total_misses)
+        self.progress.rounds += 1
+        self.persist()
+        self.events.round_completed(
+            self.session_id,
+            {
+                "orders": game.total,
+                "first_try": game.first_try,
+                "misses": game.total_misses,
+                "level": old_level,
+                "next_level": self.progress.level,
+            },
+        )
+        self.timeline.clear()
+        self.cast.reset()
+        self.show_card = False
+        self.completion = PygameCompletionScreen(
+            self.typography,
+            width=REFERENCE_WIDTH,
+            height=REFERENCE_HEIGHT,
+            palette=CompletionPalette(background=PLUM),
+            scene=CompletionScene(
+                self.kit, character=BAKER, star_total=ORDERS_PER_ROUND, secondary_glyph="cupcake"
+            ),
+        )
+        self.completion.prepare(
+            CompletionContent(
+                title=self._text("victory.title", "★"),
+                primary_label=self._text("btn.play_again", "↻"),
+                body_lines=(self._text("victory.subtitle", ""),) if self._text("victory.subtitle", "") else (),
+                achievement_count=game.served,
+                secondary_label=self._text("btn.own_cake", "+"),
+            )
+        )
+        self._surfaces.push_overlay(
+            CompletionOverlay(self.completion, on_primary=self.start_round, on_secondary=self.start_free)
+        )
+        self.controls.show_none()
+        self.screen_id = Screen.END
+        self.audio.cast(BAKER, "celebrate.success")
+        self._busy = False
+        self._dirty = True
+
+    def _close_completion(self) -> None:
+        if self.completion is not None:
+            self._surfaces.pop_overlay()
+            self.completion.clear()
+            self.completion = None
+
+    # -- my own cake ---------------------------------------------------------------------
+
+    def start_free(self) -> None:
+        self.timeline.clear()
+        self.motion.reset()
+        self._close_completion()
+        self.round = None
+        self.screen_id = Screen.FREE
+        self.show_card = False
+        self.cast.set_character(BAKER)
+        self.cast.reset()
+        self.cast.wave(1.6)
+        self.motion.drop_cake(self.clock())
+        self.controls.show_free()
+        self.controls.save.visible = self.pictures.available
+        self._busy = False
+        self.audio.cast(BAKER, "ready.go")
+        self._sync_free_controls()
+        self._note_activity()
+        self._dirty = True
+
+    def _free_place(self, topping_id: str) -> None:
+        self._activated = True
+        self.selected_topping = topping_id
+        taken = [(t.u, t.v) for t in self.free_cake.toppings]
+        spot = next(
+            (p for p in FREE_POINTS if all((p[0] - u) ** 2 + (p[1] - v) ** 2 > 0.02 for u, v in taken)),
+            None,
+        )
+        if spot is None:
+            spot = (self.rng.uniform(-0.75, 0.75), self.rng.uniform(-0.55, 0.65))
+        self._free_put(topping_id, spot)
+
+    def _free_tap(self, point: tuple[int, int]) -> None:
+        toppings = self.free_cake.toppings
+        for index in sorted(range(len(toppings)), key=lambda i: -toppings[i].v):
+            base = from_frosting(toppings[index].u, toppings[index].v)
+            if sprite_rect(base, TOPPING_SIZE).inflate(-12, -12).collidepoint(point):
+                self.free_cake.remove(index)
+                self._activated = True
+                self.audio.play("unpop")
+                self._free_changed()
+                return
+        if on_frosting(point):
+            self._activated = True
+            self._free_put(self.selected_topping, to_frosting(point))
+
+    def _free_put(self, topping_id: str, spot: tuple[float, float]) -> None:
+        placed = self.free_cake.place(topping_id, spot[0], spot[1])
+        if placed is None:
+            self.audio.play("nope")
+            self._sync_free_controls()
+            return
+        base = from_frosting(placed.u, placed.v)
+        self.audio.play("pop")
+        self.motion.add_fx("sparkle", (base[0], base[1] - TOPPING_SIZE // 2), self.clock())
+        self._free_changed()
+
+    def _free_changed(self) -> None:
+        if self._draft_dirty_since is None:
+            self._draft_dirty_since = self.clock()
+        self._sync_free_controls()
+        self._dirty = True
+
+    def _on_save(self) -> None:
+        if self.screen_id is not Screen.FREE or self.free_cake.empty or not self.pictures.available:
+            return
+        self._activated = True
+        now = self.clock()
         try:
-            data = self._model.to_save_dict()
-            data["timestamp"] = time.time()
-            self._storage.kv_set(STORAGE_KEY, data)
+            payload = encode_surface_png(self.renderer.picture(self.free_cake))
+        except (PygamePngError, pygame.error, ValueError):
+            payload = b""
+        digest = picture_digest(payload) if payload else ""
+        ok = bool(payload) and (digest == self.progress.shared_digest or self.pictures.publish(payload))
+        if not ok:
+            self.cast.try_again()
+            self.audio.play("nope")
+            self._dirty = True
+            return
+        if digest != self.progress.shared_digest:
+            self.progress.shared_digest = digest
+            self.events.picture_shared(digest, {"media_type": "image/png", "toppings": len(self.free_cake.toppings)})
+        self._saved_signature = self.free_cake.signature()
+        self.persist()
+        self.cast.correct()
+        self.audio.play("save")
+        self.audio.cast(BAKER, "praise.general")
+        self.motion.add_fx("star_burst", self.controls.save.rect.center, now)
+        self._sync_free_controls()
+        self._dirty = True
+
+    def _on_new_cake(self) -> None:
+        if self.screen_id is not Screen.FREE or not self._can_start_new_cake():
+            return
+        self._activated = True
+        self.free_cake.clear()
+        self._saved_signature = None
+        self.audio.play("swoosh")
+        self.motion.drop_cake(self.clock())
+        self._free_changed()
+        self.persist()
+
+    def _on_new_round(self) -> None:
+        if self.screen_id is not Screen.FREE:
+            return
+        self._activated = True
+        self.persist()
+        self.start_round()
+
+    def _can_start_new_cake(self) -> bool:
+        return not self.free_cake.empty and self.free_cake.signature() == self._saved_signature
+
+    # -- hints ----------------------------------------------------------------------------
+
+    def _maybe_hint(self, now: float) -> None:
+        game = self.round
+        if game is None or self._busy or not self.show_card or self._idle_hints >= MAX_IDLE_HINTS:
+            return
+        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+            return
+        self._idle_hints += 1
+        self.cast.point(2.0)
+        if self._idle_hints == 1:
+            self.motion.glow_card(now, 2.4)
+            self._say_order()
+        else:
+            self.motion.glow_tile(game.order.next_needed(game.cake), now, 3.0)
+        self._dirty = True
+
+    # -- helpers ----------------------------------------------------------------------------
+
+    def _hint_marks_changed(self, index: int, *, placed: bool) -> None:
+        """A place changed: its nudge is done; its ghost goes once something is put there."""
+
+        if placed:
+            self.motion.ghosts = tuple(ghost for ghost in self.motion.ghosts if ghost[0] != index)
+        self.motion.nudge = tuple(place for place in self.motion.nudge if place != index)
+
+    def _set_busy(self, busy: bool) -> None:
+        self._busy = busy
+        self.controls.set_busy(busy)
+
+    def _sync_cake_controls(self) -> None:
+        game = self.round
+        if game is None:
+            return
+        self.controls.set_cake_state(can_undo=not game.cake.empty, can_serve=game.order.ready(game.cake))
+
+    def _sync_free_controls(self) -> None:
+        self.controls.set_free_state(
+            can_undo=not self.free_cake.empty,
+            can_save=not self.free_cake.empty,
+            can_new=self._can_start_new_cake(),
+            selected=self.selected_topping,
+        )
+
+    def _text(self, key: str, default: str) -> str:
+        if self.resources is None:
+            return default
+        try:
+            return self.resources.text(key) or default
         except Exception:
-            pass
+            return default
 
 
-__all__ = ["PasticceriaApp", "SoundManager"]
+def _safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
+    """True inside the play surface and outside the Greia protected region(s)."""
+
+    viewport = activity_viewport_for_surface(surface)
+    x, y = position
+    if not (0 <= x < viewport.surface.width and 0 <= y < viewport.surface.height):
+        return False
+    for protected in viewport.protected_regions:
+        if protected.x <= x < protected.right and protected.y <= y < protected.bottom:
+            return False
+    return True
+
+
+__all__ = ["PasticceriaApp", "ServeResult", "Timeline"]

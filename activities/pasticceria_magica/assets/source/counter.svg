@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 180" width="760" height="180">
+  <!-- Pasticceria Magica private prop: the shop counter. Drawn at logical (264, 420) over the shared
+       bakery room; its right end runs off the screen edge, its rounded left end faces the customer. -->
+  <defs>
+    <!-- wood light -> wood -->
+    <linearGradient id="counter_top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#DDAE86"/>
+      <stop offset="1" stop-color="#B98257"/>
+    </linearGradient>
+    <!-- cream -> peach light -->
+    <linearGradient id="counter_front" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF6E3"/>
+      <stop offset="1" stop-color="#FBE6CC"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="400" cy="176" rx="380" ry="5" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="front">
+    <path d="M14 22 L764 22 L764 176 L30 176 C21 176 14 169 14 160 Z" fill="url(#counter_front)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M14 38 L764 38 L764 44 A16 12 0 0 1 728 44 A16 12 0 0 1 696 44 A16 12 0 0 1 664 44 A16 12 0 0 1 632 44 A16 12 0 0 1 600 44 A16 12 0 0 1 568 44 A16 12 0 0 1 536 44 A16 12 0 0 1 504 44 A16 12 0 0 1 472 44 A16 12 0 0 1 440 44 A16 12 0 0 1 408 44 A16 12 0 0 1 376 44 A16 12 0 0 1 344 44 A16 12 0 0 1 312 44 A16 12 0 0 1 280 44 A16 12 0 0 1 248 44 A16 12 0 0 1 216 44 A16 12 0 0 1 184 44 A16 12 0 0 1 152 44 A16 12 0 0 1 120 44 A16 12 0 0 1 88 44 A16 12 0 0 1 56 44 A16 12 0 0 1 24 44 L14 44 Z" fill="#E994B3" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M14 132 L764 132" fill="none" stroke="#F1D3B0" stroke-width="3" stroke-linecap="round"/>
+    <path d="M14 158 L764 158 L764 176 L30 176 C21 176 14 169 14 160 Z" fill="#C99169" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+  <g id="top">
+    <rect x="2" y="2" width="770" height="26" rx="12" fill="url(#counter_top)" stroke="#4B372F" stroke-width="3.5"/>
+    <path d="M18 9 L756 9" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+  </g>
+</svg>
