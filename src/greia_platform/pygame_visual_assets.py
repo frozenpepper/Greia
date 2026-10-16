@@ -37,6 +37,12 @@ class PygameVisualSurfaceCache(Generic[SurfaceT]):
     `image_loader` and `image_scaler` are injected so the cache remains
     provider-free in unit tests and does not initialize a display by itself.
     Use `for_pygame()` in Pygame consumers.
+
+    The entry bound alone does not bound memory: one entry may be a 32x32
+    glyph or a full-display scene layer. ``max_total_pixels`` adds an LRU
+    pixel budget so a long session that visits every Collection/Activity
+    plateaus at a known byte cost (about 4 bytes per pixel) instead of
+    retaining up to ``max_entries`` display-sized renditions.
     """
 
     def __init__(
@@ -47,12 +53,15 @@ class PygameVisualSurfaceCache(Generic[SurfaceT]):
         image_scaler: Callable[[SurfaceT, tuple[int, int]], SurfaceT],
         max_entries: int = 12,
         max_surface_pixels: int = _DEFAULT_MAX_SURFACE_PIXELS,
+        max_total_pixels: int | None = None,
         display_converter: Callable[[SurfaceT], SurfaceT] | None = None,
     ) -> None:
         if max_entries < 1:
             raise ValueError("max_entries must be positive")
         if max_surface_pixels < 1:
             raise ValueError("max_surface_pixels must be positive")
+        if max_total_pixels is not None and max_total_pixels < max_surface_pixels:
+            raise ValueError("max_total_pixels must hold at least one maximal surface")
         self.catalogue = catalogue
         self._image_loader = image_loader
         self._image_scaler = image_scaler
@@ -61,9 +70,22 @@ class PygameVisualSurfaceCache(Generic[SurfaceT]):
         # every frame. Provider-free consumers simply leave it as None.
         self._display_converter = display_converter
         self.max_surface_pixels = int(max_surface_pixels)
-        self._surfaces: BoundedCache[VisualSurfaceKey, SurfaceT] = BoundedCache(
-            max_entries
+        self.max_total_pixels = (
+            None if max_total_pixels is None else int(max_total_pixels)
         )
+        self._total_pixels = 0
+        self._surfaces: BoundedCache[VisualSurfaceKey, SurfaceT] = BoundedCache(
+            max_entries, on_evict=self._forget_pixels
+        )
+
+    def _forget_pixels(self, key: VisualSurfaceKey, _surface: SurfaceT) -> None:
+        self._total_pixels -= key.size[0] * key.size[1]
+
+    @property
+    def cached_pixels(self) -> int:
+        """Pixels currently retained (cached surfaces are exactly key-sized)."""
+
+        return self._total_pixels
 
     @classmethod
     def for_pygame(
@@ -72,6 +94,7 @@ class PygameVisualSurfaceCache(Generic[SurfaceT]):
         *,
         max_entries: int = 12,
         max_surface_pixels: int = _DEFAULT_MAX_SURFACE_PIXELS,
+        max_total_pixels: int | None = None,
         display_converter: Callable[[object], object] | None = None,
     ) -> "PygameVisualSurfaceCache[object]":
         """Create a cache using Pygame's PNG loader and one-time smooth scaler.
@@ -95,6 +118,7 @@ class PygameVisualSurfaceCache(Generic[SurfaceT]):
             ),
             max_entries=max_entries,
             max_surface_pixels=max_surface_pixels,
+            max_total_pixels=max_total_pixels,
             display_converter=display_converter,
         )
 
@@ -141,6 +165,12 @@ class PygameVisualSurfaceCache(Generic[SurfaceT]):
                 converted = surface
             surface = converted
         self._surfaces[key] = surface
+        self._total_pixels += normalized_size[0] * normalized_size[1]
+        budget = self.max_total_pixels
+        if budget is not None:
+            # Evict least-recently-used renditions, never the one just made.
+            while self._total_pixels > budget and len(self._surfaces) > 1:
+                self._surfaces.pop_oldest()
         return surface
 
     def clear(self) -> None:

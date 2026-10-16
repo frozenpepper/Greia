@@ -174,6 +174,45 @@ focused = "visual/{focused.name}"
         with self.assertRaisesRegex(VisualSurfaceCacheError, "too large"):
             cache.get("ui.panel.base", size=(101, 100))
 
+    def test_total_pixel_budget_evicts_least_recent_renditions(self) -> None:
+        temporary, catalogue, _default, _focused = self.make_catalogue()
+        self.addCleanup(temporary.cleanup)
+        loads: list[Path] = []
+        cache = PygameVisualSurfaceCache(
+            catalogue,
+            image_loader=lambda path: loads.append(path) or object(),
+            image_scaler=lambda surface, size: surface,
+            max_entries=50,
+            max_surface_pixels=10_000,
+            max_total_pixels=25_000,
+        )
+
+        cache.get("ui.panel.base", size=(100, 100))
+        cache.get("ui.panel.base", variant="focused", size=(100, 100))
+        cache.get("ui.panel.base", size=(100, 100))  # refresh LRU position
+        self.assertEqual(cache.cached_pixels, 20_000)
+        cache.get("ui.panel.base", size=(100, 90))  # 29,000 > budget
+        self.assertEqual(len(cache), 2)
+        self.assertEqual(cache.cached_pixels, 19_000)
+        cache.get("ui.panel.base", size=(100, 100))  # recent: still cached
+        self.assertEqual(len(loads), 3)
+        cache.get("ui.panel.base", variant="focused", size=(100, 100))
+        self.assertEqual(len(loads), 4)  # the least recent one was evicted
+        cache.clear()
+        self.assertEqual(cache.cached_pixels, 0)
+
+    def test_total_pixel_budget_must_fit_one_maximal_surface(self) -> None:
+        temporary, catalogue, _default, _focused = self.make_catalogue()
+        self.addCleanup(temporary.cleanup)
+        with self.assertRaises(ValueError):
+            PygameVisualSurfaceCache(
+                catalogue,
+                image_loader=lambda path: object(),
+                image_scaler=lambda surface, size: surface,
+                max_surface_pixels=10_000,
+                max_total_pixels=9_999,
+            )
+
     def test_runtime_rejects_svg_catalogue_paths(self) -> None:
         temporary, catalogue, _default, _focused = self.make_catalogue(
             default_suffix=".svg"

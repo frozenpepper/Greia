@@ -177,6 +177,20 @@ class BoundedCache(Generic[K, V]):
             if self._on_evict is not None:
                 self._on_evict(old_key, old_value)
 
+    def pop_oldest(self) -> tuple[K, V] | None:
+        """Evict the least-recently-used entry (running ``on_evict``).
+
+        Lets an owner enforce a secondary budget, such as total pixels,
+        on top of the entry bound. Returns ``None`` when empty.
+        """
+
+        if not self._items:
+            return None
+        old_key, old_value = self._items.popitem(last=False)
+        if self._on_evict is not None:
+            self._on_evict(old_key, old_value)
+        return old_key, old_value
+
     def clear(self) -> None:
         if self._on_evict is not None:
             for key, value in self._items.items():

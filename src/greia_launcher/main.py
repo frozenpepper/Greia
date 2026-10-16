@@ -97,6 +97,10 @@ EXPECTED_LAUNCH_START_ERRORS: tuple[type[Exception], ...] = (
     subprocess.SubprocessError,
 )
 _LAUNCH_ERROR_TEXT_LIMIT = 400
+# Shared-visual surface budget for the child Shell: 4 Mpx (about 16 MiB at
+# 32 bpp). A full catalogue walk at 1024x600 measured about 2.9 Mpx, so this
+# bounds the long-session plateau without evicting the normal working set.
+SHELL_VISUAL_CACHE_MAX_PIXELS = 4 * 1024 * 1024
 
 
 def configure_launcher_logging(
@@ -432,6 +436,10 @@ class LauncherApplication:
             PygameVisualSurfaceCache.for_pygame(
                 state.asset_set.catalogue,
                 max_entries=96,
+                # Entry count alone allowed up to 96 display-sized renditions;
+                # the pixel budget makes the Shell's shared-art plateau a
+                # known byte cost on the 1 GB reference floor.
+                max_total_pixels=SHELL_VISUAL_CACHE_MAX_PIXELS,
                 # Convert decoded PNG renditions to display-native surfaces once
                 # so every later frame blit uses pygame's fast paths instead of
                 # the generic per-pixel fallback on low-resource devices.
@@ -1055,6 +1063,12 @@ class LauncherApplication:
         self._last_result = None
         self._selected = 0
         self._mode = "activities"
+        # The picker's full-screen composition is invisible for the whole
+        # profile session; rebuild it on the next logout instead of holding a
+        # display-sized surface behind Home and every Activity.
+        self._cached_profiles_surface = None
+        self._cached_profiles_key = None
+        self._cached_profiles_targets = []
 
     def _logout(self, pygame: Any) -> None:
         try:

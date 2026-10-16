@@ -101,6 +101,20 @@ class SharedUiFeedbackMixin:
         screen.blit(label, label_rect)
         return True
 
+    def _launch_selected(self, pygame: Any) -> None:
+        """Run the launch lifecycle, then release the composed wait screen.
+
+        The storybook wait screen is a full-display opaque surface (about
+        2.4 MB at 1024x600). It is only useful before READY of the launch that
+        composed it, so it is dropped as soon as that lifecycle returns rather
+        than being retained behind Home until the next launch.
+        """
+
+        try:
+            super()._launch_selected(pygame)  # type: ignore[misc]
+        finally:
+            self._launch_overlay_cache = None
+
     def _launching_manifest(self) -> Any | None:
         """The Activity being started (the base launch indexes the registry)."""
 
@@ -130,7 +144,8 @@ class SharedUiFeedbackMixin:
                 self._storybook_launch_disabled = True
                 return False
             cache = (key, composed)
-            # Bounded: exactly one composed wait screen is ever retained.
+            # Bounded: at most one composed wait screen is retained, and only
+            # for the duration of one launch (see ``_launch_selected``).
             self._launch_overlay_cache = cache
         surface, dots_center, dot_radius = cache[1]
         screen.blit(surface, (0, 0))
