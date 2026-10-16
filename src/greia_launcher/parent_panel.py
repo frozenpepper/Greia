@@ -2658,7 +2658,8 @@ class ParentSettingsOverlay:
             screen, badge_rect, (246, 236, 209), (255, 250, 240), pygame,
             (241, 185, 35), 2, radius=12,
         )
-        badge_text = f"{self._copy("AUDIO_LEVEL_LABEL")}: {pct}%"
+        level_label = self._copy("AUDIO_LEVEL_LABEL")
+        badge_text = f"{level_label}: {pct}%"
         badge = panel_layout.fit_single_line(
             typography, badge_text, FontRole.CONTROL, 17, (61, 44, 31), meter_w - 24
         )
