@@ -650,86 +650,9 @@ class AppLoopTests(unittest.TestCase):
 
 class SimulatorSupervisorTests(unittest.TestCase):
     def test_simulator_supervises_specchi_magici(self) -> None:
-        import os
-        import tempfile
-        import time
-        from greia_launcher.child_shell import ProfileVisualActivitySupervisor
-        from greia_launcher.composition import build_launcher_runtime_services
-        from greia_launcher.runtime_adapter import PythonRuntimePolicy
-        from greia_platform.activities import ActivityRegistry, RuntimeCatalogue
-        from greia_platform.trust import ActivitySource, PackageTrust
-        from greia_simulator.device import DEFAULT_CAPABILITIES, SimulatedDeviceProfile
-        from greia_simulator.runtime import SimulatorPythonRuntimeAdapter
-        from greia_simulator.workspace import SimulatorWorkspace
+        from simulator_supervision import supervise_builtin_activity
 
-        runtime = RuntimeCatalogue.load(ROOT / "runtime" / "child-runtime.toml")
-        # Honor TMPDIR (device /tmp is noexec); no exec artifact or
-        # explicit broker socket lives here — broker defaults already
-        # handle sun_path length with a /tmp fallback. T02-SPAWN-HYGIENE.
-        with tempfile.TemporaryDirectory() as directory:
-            base = Path(directory)
-            workspace = SimulatorWorkspace(ROOT, base / "state")
-            device = SimulatedDeviceProfile(1024, 600, DEFAULT_CAPABILITIES)
-            adapter = SimulatorPythonRuntimeAdapter(
-                device,
-                policy=PythonRuntimePolicy.load(ROOT / "runtime" / "child-runtime.toml"),
-            )
-            source = ActivitySource(ROOT / "activities", PackageTrust.BUILT_IN, "builtin")
-            registrations = ActivityRegistry([source], runtime).discover_registrations()
-            registration = next(r for r in registrations if r.manifest.activity_id == "org.greia.specchi-magici")
-            manifest = registration.manifest
-
-            services = build_launcher_runtime_services(
-                runtime,
-                tuple(r.manifest for r in registrations),
-                runtime_policy_path=ROOT / "runtime" / "child-runtime.toml",
-                permission_policy_path=ROOT / "runtime" / "permission-policy.toml",
-                storage_policy_path=ROOT / "runtime" / "storage-policy.toml",
-                history_policy_path=ROOT / "runtime" / "history-policy.toml",
-                progression_policy_path=ROOT / "runtime" / "progression-policy.toml",
-                hal=device.to_hal(),
-                runtime_adapters=(adapter,),
-            )
-            profile = workspace.profile_store().context(workspace.profiles()[0].profile_id)
-            authority = services.permission_broker.issue(registration)
-            supervisor = ProfileVisualActivitySupervisor(
-                runtime_manager=services.runtime_manager,
-                storage_service=services.storage_service,
-                history_service=services.history_service,
-                display_coordinator=None,
-            )
-            environment = workspace.environment()
-            environment.update(
-                {
-                    "SDL_VIDEODRIVER": "dummy",
-                    "SDL_AUDIODRIVER": "dummy",
-                    "PYGAME_HIDE_SUPPORT_PROMPT": "1",
-                }
-            )
-            import unittest.mock as mock
-            with mock.patch.dict(os.environ, environment, clear=False):
-                session = supervisor.start(manifest, profile, authority)
-                deadline = time.monotonic() + 10.0
-                while (
-                    session.result is None
-                    and session.ready_at is None
-                    and time.monotonic() < deadline
-                ):
-                    supervisor.poll(session)
-                    time.sleep(0.02)
-                self.assertIsNone(session.result, session.result)
-                self.assertIsNotNone(session.ready_at)
-
-                # Request stop
-                result = supervisor.request_stop(session)
-                deadline = time.monotonic() + 5.0
-                while result is None and time.monotonic() < deadline:
-                    time.sleep(0.02)
-                    result = supervisor.poll(session)
-                self.assertIsNotNone(result)
-                assert result is not None
-                self.assertTrue(result.ready)
-                self.assertTrue(result.succeeded)
+        supervise_builtin_activity(self, "org.greia.specchi-magici")
 
 
 if __name__ == "__main__":

@@ -5,7 +5,6 @@ import json
 import os
 import sys
 import tempfile
-import time
 import unittest
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
@@ -19,7 +18,7 @@ if sys.path[:1] != [_src]:
     sys.path.insert(0, _src)
 
 import greia_simulator.workspace as simulator_workspace
-from greia_launcher.child_shell import GreiaChildShell, ProfileVisualActivitySupervisor
+from greia_launcher.child_shell import GreiaChildShell
 from greia_launcher.composition import build_launcher_runtime_services
 from greia_launcher.runtime_adapter import (
     PythonRuntimeAdapter,
@@ -48,6 +47,12 @@ from greia_simulator.device import (
 from greia_simulator.python_activity import normalize_display_request, run_activity
 from greia_simulator.runtime import SimulatorPythonRuntimeAdapter
 from greia_simulator.workspace import SimulatorWorkspace
+from simulator_supervision import (
+    load_tolerant_supervisor,
+    reap_on_cleanup,
+    stop_gracefully,
+    wait_until_ready,
+)
 
 
 REPO = Path(__file__).resolve().parents[1]
@@ -168,33 +173,6 @@ def _services_for(
         runtime_adapters=(adapter,),
     )
     return adapter, services
-
-
-def _real_activity_ready_seconds() -> float:
-    """Bounded ready window for the real-activity integration leg.
-
-    Device evidence (Acer reference host, T03 isolation): the child needs
-    ~7.9s warm from start to ready (pygame cold import plus dummy-SDL init
-    on i686) against an 8.0s ceiling, so cold runs miss the window with no
-    product defect present. Linux hosts below the 2 GiB line (the
-    documented low-resource reference floor) therefore get a bounded 30s
-    window; every other host keeps the strict 8s. The supervisor's own 15s
-    ready deadline stays the backstop, so a hung child still fails fast
-    through ``session.result`` instead of lingering here.
-    """
-    if sys.platform == "linux":
-        try:
-            with open("/proc/meminfo", encoding="utf-8") as handle:
-                for line in handle:
-                    if line.startswith("MemTotal:"):
-                        total_kb = int(line.split()[1])
-                        break
-                else:
-                    return 8.0
-        except (OSError, ValueError):
-            return 8.0
-        return 30.0 if total_kb < 2 * 1024 * 1024 else 8.0
-    return 8.0
 
 
 class GreiaSimulatorDeviceTests(unittest.TestCase):
@@ -833,7 +811,7 @@ pygame.quit()
             )
             profile = workspace.profile_store().context(workspace.profiles()[0].profile_id)
             authority = services.permission_broker.issue(registration)
-            supervisor = ProfileVisualActivitySupervisor(
+            supervisor = load_tolerant_supervisor(
                 runtime_manager=services.runtime_manager,
                 storage_service=services.storage_service,
                 history_service=services.history_service,
@@ -848,26 +826,9 @@ pygame.quit()
             )
             with mock.patch.dict(os.environ, environment, clear=False):
                 session = supervisor.start(registration.manifest, profile, authority)
-                deadline = time.monotonic() + _real_activity_ready_seconds()
-                while (
-                    session.result is None
-                    and session.ready_at is None
-                    and time.monotonic() < deadline
-                ):
-                    supervisor.poll(session)
-                    time.sleep(0.02)
-                self.assertIsNone(session.result, session.result)
-                self.assertIsNotNone(session.ready_at)
-
-                result = supervisor.request_stop(session)
-                deadline = time.monotonic() + 5.0
-                while result is None and time.monotonic() < deadline:
-                    time.sleep(0.02)
-                    result = supervisor.poll(session)
-                self.assertIsNotNone(result)
-                assert result is not None
-                self.assertTrue(result.ready)
-                self.assertTrue(result.succeeded)
+                reap_on_cleanup(self, supervisor, session)
+                wait_until_ready(self, supervisor, session)
+                stop_gracefully(self, supervisor, session)
 
             storage = services.storage_service.open(
                 profile,
