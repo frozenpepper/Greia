@@ -4,22 +4,10 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Costruiamo i Ponti",
-    "btn.cross": "🐾 Attraversa!",
-    "btn.clear": "🧹 Pulisci",
-    "btn.play_again": "🎉 Prossimo Livello!",
-    "level.river": "Fiume Verde 🌊",
-    "level.canyon": "Canyon Roccioso 🏔️",
-    "level.space": "Abisso Stellare 🌌",
-    "victory.title": "Evviva! Il ponte è solidissimo! 🐾🎉",
-    "victory.subtitle": "Il cucciolo ha raggiunto il picnic sano e salvo!",
-    "block.wood": "Legno",
-    "block.stone": "Pietra",
-    "block.shroom": "Fungo",
-    "block.rainbow": "Arcobaleno",
-    "ui.clear": "Pulisci",
-    "ui.go": "Vai!",
-    "ui.well_done": "Ottimo lavoro!",
-    "ui.play_again": "Gioca ancora"
+    "activity.costruiamo_ponti.title": "Costruiamo i Ponti",
+    "btn.go": "Via!",
+    "btn.play_again": "Gioca ancora",
+    "victory.title": "Tutti gli amici sono arrivati al picnic!"
   },
   "audio": {
     "activity.title": {

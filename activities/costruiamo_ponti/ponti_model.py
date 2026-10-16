@@ -1,243 +1,501 @@
-from __future__ import annotations
+"""Bridge Builders -- bridge state, the crossing test, hints and the visit (no Pygame).
 
-"""Pure bridge-building domain state for Costruiamo Ponti.
+``BridgeState`` is what the child edits: which tray plank stands on which
+*seat* (the near edge of a span: the left bank, an island or a pillar) and
+which rock holds a pillar. Planks are hinged drawbridges: during building they
+stand upright on their seat and the GO test lowers them, so the result of a
+choice is only revealed by the test, never marked beforehand.
 
-No pygame, storage or audio imports. The model owns selection,
-slot placement, traveler crossing physics and level progression.
-Presentation and platform side-effects live in renderer/app owners.
+``BridgeState.evaluate`` is the whole physics: walking from the left bank, the
+friend stops at the first span that is empty, whose plank is too short, or
+whose thin wooden plank bends under a heavy load. ``HintPlanner`` compares the
+bridge with the closest working arrangement (planks of the same length and
+material are interchangeable) and names the single next helpful step.
+``Visit`` walks one set of four crossings; ``PontiProgress`` is the save.
 """
 
-from dataclasses import dataclass, field
-import math
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import StrEnum
+from functools import lru_cache
+import itertools
+from typing import Final
 
 if __package__:
-    from .ponti_content import (
-        BLOCKS,
-        BRIDGE_END_X,
-        BRIDGE_START_X,
-        BRIDGE_Y,
-        LEVELS,
-    )
+    from .ponti_content import CROSSING_SETS, CROSSINGS_PER_SET, Crossing, CrossingSet, PieceKind
 else:
-    from ponti_content import (
-        BLOCKS,
-        BRIDGE_END_X,
-        BRIDGE_START_X,
-        BRIDGE_Y,
-        LEVELS,
-    )
+    from ponti_content import CROSSING_SETS, CROSSINGS_PER_SET, Crossing, CrossingSet, PieceKind
 
-VALID_BLOCK_IDS = frozenset(str(b["id"]) for b in BLOCKS)
+SNAP_AFTER_MISSES: Final = 3  # from the third miss on a crossing, the demonstration also does the step
+BANK: Final = "bank"
+
+
+def island_seat(index: int) -> str:
+    return f"island{index}"
+
+
+def spot_seat(index: int) -> str:
+    return f"spot{index}"
+
+
+class Fit(StrEnum):
+    """How one plank meets its span (only revealed by the test)."""
+
+    JUST_RIGHT = "just_right"
+    LONG = "long"  # reaches and sticks out onto the far side
+    SHORT = "short"
+    EMPTY = "empty"
+
+
+class Failure(StrEnum):
+    EMPTY = "empty"  # no plank: the friend stops at the edge
+    SHORT = "short"  # the plank does not reach: the friend stops at the edge
+    BEND = "bend"  # thin wood under a heavy load: it bends, the friend steps back
 
 
 @dataclass(frozen=True, slots=True)
-class PontiStepOutcome:
-    """Result of one physics tick for audio/effects/progression routing."""
+class Span:
+    """One stretch of water between two supports (units from the left edge)."""
 
-    audio: tuple[str, ...] = ()
-    level_completed: bool = False
-    victory: bool = False
-    stars: int | None = None
-    fell: bool = False
-    special: str | None = None  # "shroom" | "rainbow" when correct special placed
-    celebration_tick: bool = False
+    seat: str
+    start: float  # right edge of the near support
+    end: float  # left edge of the far support
+
+    @property
+    def width(self) -> float:
+        return self.end - self.start
+
+
+@dataclass(frozen=True, slots=True)
+class SpanResult:
+    span: Span
+    piece: int | None
+    fit: Fit
+    holds: bool  # False when a thin plank bends under a heavy friend
+
+
+@dataclass(frozen=True, slots=True)
+class TrialResult:
+    """What the GO test reveals, span by span, up to the first problem."""
+
+    results: tuple[SpanResult, ...]
+    failure: Failure | None
+    failed_index: int | None
+
+    @property
+    def success(self) -> bool:
+        return self.failure is None
+
+
+@dataclass(frozen=True, slots=True)
+class Arrangement:
+    """A comparable bridge: pillar rocks used + seat -> plank signature."""
+
+    pillars: frozenset[int]
+    planks: tuple[tuple[str, tuple[str, int, bool]], ...]
+
+    def seat_map(self) -> dict[str, tuple[str, int, bool]]:
+        return dict(self.planks)
+
+
+class HintAction(StrEnum):
+    PLACE_PLANK = "place_plank"
+    PLACE_PILLAR = "place_pillar"
+    REMOVE_PILLAR = "remove_pillar"
+    GO = "go"
+
+
+@dataclass(frozen=True, slots=True)
+class HintStep:
+    action: HintAction
+    seat: str | None = None
+    spot: int | None = None
+    signature: tuple[str, int, bool] | None = None  # the plank to use
 
 
 @dataclass(slots=True)
-class PontiModel:
-    """Own deterministic bridge gameplay state.
+class CrossingSummary:
+    tests: int = 0
+    misses: int = 0
+    hints: int = 0
 
-    Traveler motion, slot correctness and level progression are pure
-    calculations. Callers translate semantic outcomes into audio,
-    particles or Greia event/storage actions.
-    """
 
-    total_stars: int = 0
-    level_idx: int = 0
-    selected_block_id: str = "wood"
-    slots: list[str | None] = field(default_factory=list)
-    flash_state: str = "neutral"
-    flash_motion: str = "idle_bounce"
-    flash_pos: list[float] = field(default_factory=lambda: [90.0, 260.0])
-    flash_target_step: int = 0
-    flash_anim_timer: float = 0.0
-    is_victory: bool = False
+class BridgeState:
+    """The child's planks and pillars on one crossing."""
 
-    def __post_init__(self) -> None:
-        if self.total_stars < 0:
-            self.total_stars = 0
-        if self.selected_block_id not in VALID_BLOCK_IDS:
-            self.selected_block_id = "wood"
-        # Initialise slots for the starting level when empty.
-        if not self.slots:
-            self.setup_level(self.level_idx if self.level_idx < len(LEVELS) else 0)
-        elif len(self.slots) != len(self.required):
-            # Repair inconsistent external state.
-            self.setup_level(self.level_idx)
+    def __init__(self, crossing: Crossing) -> None:
+        self.crossing = crossing
+        count = len(crossing.pieces)
+        self.seat_of: list[str | None] = [None] * count  # plank -> seat, pillar -> spot seat
+        self.selected: int | None = 0 if count else None
+        self.summary = CrossingSummary()
+        self.revision = 0
 
-    @property
-    def cur_level(self) -> dict[str, object]:
-        return LEVELS[self.level_idx % len(LEVELS)]
+    # -- queries ---------------------------------------------------------------
 
-    @property
-    def required(self) -> list[str]:
-        req = self.cur_level["required"]
-        assert isinstance(req, list)
-        return req  # type: ignore[return-value]
+    def piece(self, index: int):
+        return self.crossing.pieces[index]
 
-    @property
-    def num_slots(self) -> int:
-        return len(self.required)
+    def is_pillar(self, index: int) -> bool:
+        return self.piece(index).kind is PieceKind.PILLAR
 
-    @property
-    def slot_w(self) -> int:
-        return (BRIDGE_END_X - BRIDGE_START_X) // max(1, self.num_slots)
+    def in_tray(self, index: int) -> bool:
+        return self.seat_of[index] is None
 
-    @property
-    def can_start_crossing(self) -> bool:
-        return self.flash_state in ("neutral", "blink") and not self.is_victory
+    def tray_pieces(self) -> list[int]:
+        return [index for index, where in enumerate(self.seat_of) if where is None]
 
-    def setup_level(self, idx: int) -> None:
-        """Reset traveler and slots for level ``idx`` while keeping durable stars."""
-        # Keep idx in range via modulo for level data, but store raw idx for victory check.
-        self.level_idx = idx
-        cur = LEVELS[idx % len(LEVELS)]
-        required = cur["required"]
-        assert isinstance(required, list)
-        self.slots = [None for _ in required]
-        self.flash_state = "neutral"
-        self.flash_motion = "idle_bounce"
-        self.flash_pos = [90.0, 260.0]
-        self.flash_target_step = 0
-        self.flash_anim_timer = 0.0
+    def occupant(self, seat: str) -> int | None:
+        for index, where in enumerate(self.seat_of):
+            if where == seat and not self.is_pillar(index):
+                return index
+        return None
 
-    def select_block(self, block_id: str) -> None:
-        if block_id not in VALID_BLOCK_IDS:
-            raise ValueError(f"unknown ponti block: {block_id}")
-        if self.is_victory:
-            return
-        if self.flash_state not in ("neutral", "blink"):
-            return
-        self.selected_block_id = block_id
+    def pillar_at(self, spot: int) -> int | None:
+        seat = spot_seat(spot)
+        for index, where in enumerate(self.seat_of):
+            if where == seat and self.is_pillar(index):
+                return index
+        return None
 
-    def place_block(self, slot_idx: int) -> bool:
-        if self.is_victory:
+    def pillar_spots(self) -> list[int]:
+        return [spot for spot in range(len(self.crossing.spots)) if self.pillar_at(spot) is not None]
+
+    def spans(self) -> tuple[Span, ...]:
+        """Current spans, left to right, given the islands and placed pillars."""
+
+        crossing = self.crossing
+        supports: list[tuple[float, float, str]] = [
+            (start, start + width, island_seat(index)) for index, (start, width) in enumerate(crossing.islands)
+        ]
+        supports += [(crossing.spots[spot], crossing.spots[spot] + 1, spot_seat(spot)) for spot in self.pillar_spots()]
+        supports.sort()
+        result: list[Span] = []
+        edge, seat = 0.0, BANK
+        for start, end, support_seat in supports:
+            if start > edge:
+                result.append(Span(seat, edge, start))
+            edge, seat = max(edge, end), support_seat
+        if crossing.gap > edge:
+            result.append(Span(seat, edge, float(crossing.gap)))
+        return tuple(result)
+
+    def seats(self) -> tuple[str, ...]:
+        return tuple(span.seat for span in self.spans())
+
+    def evaluate(self) -> TrialResult:
+        heavy = self.crossing.heavy
+        results: list[SpanResult] = []
+        for index, span in enumerate(self.spans()):
+            piece = self.occupant(span.seat)
+            if piece is None:
+                results.append(SpanResult(span, None, Fit.EMPTY, False))
+                return TrialResult(tuple(results), Failure.EMPTY, index)
+            plank = self.piece(piece)
+            if plank.length < span.width:
+                results.append(SpanResult(span, piece, Fit.SHORT, False))
+                return TrialResult(tuple(results), Failure.SHORT, index)
+            fit = Fit.JUST_RIGHT if plank.length == span.width else Fit.LONG
+            holds = plank.strong or not heavy
+            results.append(SpanResult(span, piece, fit, holds))
+            if not holds:
+                return TrialResult(tuple(results), Failure.BEND, index)
+        return TrialResult(tuple(results), None, None)
+
+    def arrangement(self) -> Arrangement:
+        seats = set(self.seats())
+        planks = tuple(
+            sorted(
+                (where, self.piece(index).signature)
+                for index, where in enumerate(self.seat_of)
+                if where is not None and not self.is_pillar(index) and where in seats
+            )
+        )
+        return Arrangement(frozenset(self.pillar_spots()), planks)
+
+    # -- edits -----------------------------------------------------------------
+
+    def select(self, index: int) -> bool:
+        if not (0 <= index < len(self.seat_of)) or not self.in_tray(index):
             return False
-        if self.flash_state not in ("neutral", "blink"):
+        self.selected = index
+        return True
+
+    def tray_choice(self, *, pillar: bool) -> int | None:
+        """The selected tray piece when it is of the wanted kind, else the first one."""
+
+        selected = self.selected
+        if selected is not None and self.in_tray(selected) and self.is_pillar(selected) == pillar:
+            return selected
+        for index in self.tray_pieces():
+            if self.is_pillar(index) == pillar:
+                return index
+        return None
+
+    def place_plank(self, index: int, seat: str) -> int | None:
+        """Stand plank ``index`` on ``seat``; a plank already there goes back to the tray."""
+
+        if self.is_pillar(index) or seat not in self.seats():
+            raise ValueError("planks stand on seats")
+        displaced = self.occupant(seat)
+        if displaced == index:
+            return None
+        if displaced is not None:
+            self.seat_of[displaced] = None
+        self.seat_of[index] = seat
+        self._reselect(prefer=displaced)
+        self.revision += 1
+        return displaced
+
+    def place_pillar(self, index: int, spot: int) -> bool:
+        if not self.is_pillar(index) or not (0 <= spot < len(self.crossing.spots)):
+            raise ValueError("pillars stand on rocks")
+        if self.pillar_at(spot) is not None or self._blocked(spot):
             return False
-        if not (0 <= slot_idx < self.num_slots):
+        self.seat_of[index] = spot_seat(spot)
+        self._drop_orphans()
+        self._reselect()
+        self.revision += 1
+        return True
+
+    def remove(self, index: int) -> bool:
+        """Send a piece back to the tray (a pillar takes its plank back too)."""
+
+        if self.seat_of[index] is None:
             return False
-        if self.slots[slot_idx] == self.selected_block_id:
-            return False
-        self.slots[slot_idx] = self.selected_block_id
+        self.seat_of[index] = None
+        self._drop_orphans()
+        self.selected = index
+        self.revision += 1
         return True
 
     def clear(self) -> None:
-        if self.is_victory:
-            return
-        if self.flash_state not in ("neutral", "blink"):
-            return
-        self.slots = [None for _ in self.required]
+        self.seat_of = [None] * len(self.seat_of)
+        self.selected = 0 if self.seat_of else None
+        self.revision += 1
 
-    def start_crossing(self) -> bool:
-        if not self.can_start_crossing:
+    def _blocked(self, spot: int) -> bool:
+        """A rock is unusable when another pillar's unit overlaps it."""
+
+        start = self.crossing.spots[spot]
+        return any(abs(self.crossing.spots[other] - start) < 1 for other in self.pillar_spots() if other != spot)
+
+    def _drop_orphans(self) -> None:
+        seats = set(self.seats())
+        for index, where in enumerate(self.seat_of):
+            if where is not None and not self.is_pillar(index) and where not in seats:
+                self.seat_of[index] = None
+
+    def _reselect(self, prefer: int | None = None) -> None:
+        if prefer is not None and self.in_tray(prefer):
+            self.selected = prefer
+            return
+        tray = self.tray_pieces()
+        if self.selected is not None and self.selected in tray:
+            return
+        self.selected = tray[0] if tray else None
+
+    # -- working arrangements ---------------------------------------------------
+
+    @property
+    def solutions(self) -> tuple[Arrangement, ...]:
+        """Every arrangement that gets the friend across (cached per crossing)."""
+
+        return solve(self.crossing)
+
+
+@lru_cache(maxsize=32)
+def solve(crossing: Crossing) -> tuple[Arrangement, ...]:
+    pillars = [index for index, piece in enumerate(crossing.pieces) if piece.kind is PieceKind.PILLAR]
+    planks = [index for index, piece in enumerate(crossing.pieces) if piece.kind is PieceKind.PLANK]
+    found: dict[Arrangement, None] = {}
+    spot_ids = range(len(crossing.spots))
+    for count in range(len(pillars) + 1):
+        for spots in itertools.combinations(spot_ids, count):
+            probe = BridgeState(crossing)
+            ok = all(probe.place_pillar(pillar, spot) for pillar, spot in zip(pillars, spots))
+            if not ok:
+                continue
+            seats = probe.seats()
+            for chosen in itertools.permutations(planks, len(seats)):
+                trial = BridgeState(crossing)
+                for pillar, spot in zip(pillars, spots):
+                    trial.place_pillar(pillar, spot)
+                for plank, seat in zip(chosen, seats):
+                    trial.place_plank(plank, seat)
+                if trial.evaluate().success:
+                    found[trial.arrangement()] = None
+    return tuple(found)
+
+
+def _exact_fits(crossing: Crossing, arrangement: Arrangement) -> int:
+    probe = BridgeState(crossing)
+    pillars = [i for i, piece in enumerate(crossing.pieces) if piece.kind is PieceKind.PILLAR]
+    for pillar, spot in zip(pillars, sorted(arrangement.pillars)):
+        probe.place_pillar(pillar, spot)
+    widths = {span.seat: span.width for span in probe.spans()}
+    return sum(1 for seat, signature in arrangement.planks if widths.get(seat) == signature[1])
+
+
+class HintPlanner:
+    """Name the single next step from the child's bridge towards one that works."""
+
+    @staticmethod
+    def closest(state: BridgeState) -> Arrangement | None:
+        solutions = state.solutions
+        if not solutions:
+            return None
+        current = state.arrangement()
+        here = current.seat_map()
+
+        def score(solution: Arrangement) -> tuple[int, int]:
+            wanted = solution.seat_map()
+            matches = len(current.pillars & solution.pillars) * 2
+            matches -= len(current.pillars - solution.pillars) * 2
+            matches += sum(1 for seat, signature in wanted.items() if here.get(seat) == signature)
+            return (matches, _exact_fits(state.crossing, solution))
+
+        return max(solutions, key=score)
+
+    @classmethod
+    def next_step(cls, state: BridgeState) -> HintStep:
+        if state.evaluate().success:
+            return HintStep(HintAction.GO)
+        target = cls.closest(state)
+        if target is None:
+            return HintStep(HintAction.GO)
+        current = state.arrangement()
+        for spot in sorted(current.pillars - target.pillars):
+            return HintStep(HintAction.REMOVE_PILLAR, spot=spot)
+        for spot in sorted(target.pillars - current.pillars):
+            return HintStep(HintAction.PLACE_PILLAR, spot=spot)
+        here = current.seat_map()
+        order = {seat: index for index, seat in enumerate(state.seats())}
+        for seat, signature in sorted(target.seat_map().items(), key=lambda item: order.get(item[0], 99)):
+            if here.get(seat) != signature:
+                return HintStep(HintAction.PLACE_PLANK, seat=seat, signature=signature)
+        return HintStep(HintAction.GO)
+
+    @classmethod
+    def piece_for(cls, state: BridgeState, step: HintStep) -> int | None:
+        """The tray (or misplaced) piece that carries out ``step``."""
+
+        if step.action is HintAction.PLACE_PILLAR:
+            return state.tray_choice(pillar=True)
+        if step.action is HintAction.REMOVE_PILLAR and step.spot is not None:
+            return state.pillar_at(step.spot)
+        if step.action is not HintAction.PLACE_PLANK or step.signature is None:
+            return None
+        matching = [i for i in state.tray_pieces() if state.piece(i).signature == step.signature]
+        if matching:
+            return matching[0]
+        target = cls.closest(state)
+        wanted = target.seat_map() if target is not None else {}
+        for index, where in enumerate(state.seat_of):
+            if where is None or state.is_pillar(index) or state.piece(index).signature != step.signature:
+                continue
+            if wanted.get(where) != step.signature:
+                return index
+        return None
+
+    @classmethod
+    def apply(cls, state: BridgeState, step: HintStep) -> bool:
+        piece = cls.piece_for(state, step)
+        if piece is None:
             return False
-        self.flash_state = "happy"
-        self.flash_motion = "happy_hop"
-        self.flash_target_step = 0
-        self.flash_anim_timer = 0.0
-        return True
-
-    def restart_after_victory(self) -> None:
-        """Reset to level 0 after terminal victory; keeps durable stars."""
-        self.is_victory = False
-        self.level_idx = 0
-        self.setup_level(0)
-
-    def step(self) -> PontiStepOutcome:
-        """Advance one fixed 0.04s tick. Mirrors original main loop physics."""
-        if self.is_victory:
-            return PontiStepOutcome()
-
-        # Happy hop crossing the bridge gap slot by slot.
-        # Keep historical variable naming for contract parity: bridge_end_x
-        # target_x = bridge_end_x + 50
-        if self.flash_motion == "happy_hop" and self.flash_state == "happy":
-            self.flash_anim_timer += 0.04
-            if self.flash_target_step < self.num_slots:
-                target_x = BRIDGE_START_X + (self.flash_target_step + 0.5) * self.slot_w - 48
-            else:
-                bridge_end_x = BRIDGE_END_X
-                target_x = bridge_end_x + 50
-            dx = target_x - self.flash_pos[0]
-            if dx > 4:
-                self.flash_pos[0] += 6.0
-                self.flash_pos[1] = 260.0 - abs(math.sin(self.flash_anim_timer * 8.0)) * 25.0
-            else:
-                if self.flash_target_step < self.num_slots:
-                    placed = self.slots[self.flash_target_step]
-                    expected = self.required[self.flash_target_step]
-                    if placed != expected:
-                        self.flash_state = "surprised"
-                        self.flash_motion = "surprised_wobble"
-                        self.flash_anim_timer = 0.0
-                        return PontiStepOutcome(audio=("boing",), fell=True)
-                    # Correct block – special audio/particles for shroom/rainbow.
-                    if placed == "shroom":
-                        self.flash_target_step += 1
-                        return PontiStepOutcome(audio=("boing",), special="shroom")
-                    if placed == "rainbow":
-                        self.flash_target_step += 1
-                        return PontiStepOutcome(special="rainbow")
-                    self.flash_target_step += 1
-                    return PontiStepOutcome()
-                # Reached right cliff – celebrate and award.
-                self.flash_state = "happy"
-                self.flash_motion = "celebrate_pop"
-                self.flash_anim_timer = 0.0
-                self.total_stars += 1
-                return PontiStepOutcome(audio=("win",), level_completed=True, stars=self.total_stars)
-
-        elif self.flash_motion == "surprised_wobble" and self.flash_state == "surprised":
-            self.flash_anim_timer += 0.04
-            if self.flash_anim_timer < 0.45:
-                self.flash_pos[1] += 9.0
-            else:
-                t = (self.flash_anim_timer - 0.45) / 0.85
-                if t < 1.0:
-                    self.flash_pos[0] = self.flash_pos[0] * (1 - 0.08) + 90.0 * 0.08
-                    self.flash_pos[1] = 360.0 - math.sin(t * math.pi) * 140.0
-                else:
-                    self.flash_pos = [90.0, 260.0]
-                    self.flash_state = "neutral"
-                    self.flash_motion = "idle_bounce"
-            return PontiStepOutcome()
-
-        elif self.flash_motion == "celebrate_pop":
-            self.flash_anim_timer += 0.04
-            self.flash_pos[1] = 260.0 - abs(math.sin(self.flash_anim_timer * 6.0)) * 20.0
-            celebration_tick = True
-            if self.flash_anim_timer > 2.0:
-                self.level_idx += 1
-                if self.level_idx >= len(LEVELS):
-                    self.is_victory = True
-                    return PontiStepOutcome(victory=True, celebration_tick=celebration_tick)
-                self.setup_level(self.level_idx)
-                return PontiStepOutcome(celebration_tick=celebration_tick)
-            return PontiStepOutcome(celebration_tick=celebration_tick)
-
-        return PontiStepOutcome()
-
-    def slot_rect(self, slot_idx: int) -> tuple[int, int, int, int]:
-        """Return logical slot rect (x,y,w,h) for rendering hit parity."""
-        # Rendering rect (x+6, w-12, h 64) matches original visual slot.
-        sx = BRIDGE_START_X + slot_idx * self.slot_w
-        return (sx + 6, BRIDGE_Y, self.slot_w - 12, 64)
-
-    def slot_input_rect(self, slot_idx: int) -> tuple[int, int, int, int]:
-        """Input hit rect slightly larger than visual slot (original behavior)."""
-        sx = BRIDGE_START_X + slot_idx * self.slot_w
-        return (sx + 4, BRIDGE_Y, self.slot_w - 8, 70)
+        if step.action is HintAction.REMOVE_PILLAR:
+            return state.remove(piece)
+        if step.action is HintAction.PLACE_PILLAR and step.spot is not None:
+            return state.place_pillar(piece, step.spot)
+        if step.action is HintAction.PLACE_PLANK and step.seat is not None:
+            state.place_plank(piece, step.seat)
+            return True
+        return False
 
 
-__all__ = ["PontiModel", "PontiStepOutcome", "VALID_BLOCK_IDS"]
+# -- progress + visit ------------------------------------------------------------
+
+
+@dataclass(slots=True)
+class PontiProgress:
+    """Profile-scoped save: which set comes next and simple lifetime counters.
+
+    ``legacy_stars`` keeps the first release's star count untouched (child data
+    is never dropped by a migration).
+    """
+
+    next_set: int = 0
+    crossings_solved: int = 0
+    sets_completed: int = 0
+    legacy_stars: int = 0
+
+
+class Visit:
+    """One set of four crossings, played to the shared completion scene."""
+
+    def __init__(self, progress: PontiProgress, sets: tuple[CrossingSet, ...] = CROSSING_SETS) -> None:
+        self.progress = progress
+        self._sets = sets
+        self.set_index = progress.next_set % len(sets)
+        self.index = 0
+        self.state = BridgeState(self.crossing_set.crossings[0])
+
+    @property
+    def crossing_set(self) -> CrossingSet:
+        return self._sets[self.set_index]
+
+    @property
+    def crossing(self) -> Crossing:
+        return self.state.crossing
+
+    @property
+    def total(self) -> int:
+        return CROSSINGS_PER_SET
+
+    @property
+    def completed(self) -> int:
+        return self.index
+
+    @property
+    def complete(self) -> bool:
+        return self.index >= self.total
+
+    def finish_crossing(self) -> None:
+        self.progress.crossings_solved += 1
+        self.index += 1
+
+    def next_crossing(self) -> None:
+        if not self.complete:
+            self.state = BridgeState(self.crossing_set.crossings[self.index])
+
+    def finish_set(self) -> None:
+        self.progress.sets_completed += 1
+        self.progress.next_set = (self.set_index + 1) % len(self._sets)
+
+    def start_next_set(self) -> None:
+        self.set_index = self.progress.next_set % len(self._sets)
+        self.index = 0
+        self.state = BridgeState(self.crossing_set.crossings[0])
+
+
+__all__ = [
+    "Arrangement",
+    "BANK",
+    "BridgeState",
+    "CrossingSummary",
+    "Failure",
+    "Fit",
+    "HintAction",
+    "HintPlanner",
+    "HintStep",
+    "PontiProgress",
+    "SNAP_AFTER_MISSES",
+    "Span",
+    "SpanResult",
+    "TrialResult",
+    "Visit",
+    "island_seat",
+    "solve",
+    "spot_seat",
+]

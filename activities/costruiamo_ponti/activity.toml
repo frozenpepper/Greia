@@ -2,12 +2,12 @@
 id = "org.greia.costruiamo-ponti"
 legacy_ids = []
 title_key = "activity.costruiamo_ponti.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
 [presentation]
-categories = ["create", "play"]
+categories = ["learn", "play"]
 discovery_tags = ["building", "puzzles"]
 
 [achievement_art]
@@ -16,19 +16,32 @@ emblems = [
 ]
 
 [education]
-categories = ["spatial_reasoning", "physics_intuition", "construction"]
-difficulty = 4
+# Bridge Builders: measuring and early engineering. A friend must cross a
+# river to the picnic; the child compares plank lengths with the gap (one
+# board = one unit of water), stands planks on the river's hinges, stands a
+# pillar on a rock when a gap is too wide for any plank, and chooses a stone
+# slab when the friend carries a heavy pumpkin. GO is the test: a short plank
+# stops the friend at the edge, a thin plank bends under a heavy load. Four
+# fixed sets of four crossings (long enough -> two rivers -> pillars -> heavy
+# friends); no adaptive difficulty. Stops bring a demonstration, never a
+# penalty, and nothing is timed.
+categories = ["measurement", "physics_intuition", "construction"]
+difficulty = 3
 recommended_age_min = 5
-recommended_age_max = 10
-# Three fixed bridge designs, not an adaptive D2-D6 progression.
+recommended_age_max = 7
 skills = [
-  { id = "spatial.construction.bridge", weight = 3 },
-  { id = "physics.balance.structural", weight = 2 },
-  { id = "motor.pointer.target_selection", weight = 2 },
+  { id = "math.comparison.length_height", weight = 3 },
+  { id = "math.measurement.non_standard_units", weight = 3 },
+  { id = "math.comparison.weight", weight = 2 },
+  { id = "physics.structure.support", weight = 2 },
+  { id = "cognition.planning.test_and_fix", weight = 1 },
 ]
 events = [
-  { id = "bridge.block_placed", kind = "milestone" },
-  { id = "bridge.level_completed", kind = "completion" },
+  { id = "bridge.plank_placed", kind = "milestone" },
+  { id = "bridge.test_started", kind = "milestone" },
+  { id = "bridge.level_completed", kind = "completion" },  # one crossing (platform star/achievement key)
+  { id = "bridge.crossing_missed", kind = "milestone" },
+  { id = "bridge.set_completed", kind = "completion" },
 ]
 
 [runtime]
@@ -37,14 +50,19 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
+# Drag/tap on the river plus kit focus (arrows / D-pad / stick + Space /
+# south button) over tray, spans, rocks and GO: every action works without a
+# pointer.
 profile = "hybrid"
 
 [requirements]
-required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["keyboard", "touch"]
+required_capabilities = ["display"]
+optional_capabilities = ["keyboard", "pointer", "touch", "audio.basic"]
 
 [permissions]
 requested = []
 
 [storage]
+# Platform save schema stays 1: the progress payload carries its own version
+# (ponti_services.SCHEMA_VERSION) and keeps the first release's star count.
 schema_version = 1

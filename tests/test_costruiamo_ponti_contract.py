@@ -1,183 +1,638 @@
+"""Tests for Costruiamo Ponti / Bridge Builders (manifest, authored crossings,
+the bridge test, hints, the GO timeline, saves and the real app loop).
+
+The first release's copy-the-icon contract (per-slot answer icons, fixed
+``target_x = bridge_end_x + 50`` hop, ``SceneActorDefinition`` Flash, pointer
+required) is superseded by the 2026-10-16 rethink; these tests assert the
+measuring/engineering loop that replaced it.
+"""
+
 from __future__ import annotations
 
+import itertools
+import json
+import os
 from pathlib import Path
+import sys
 import tomllib
 import unittest
+from unittest import mock
 
+os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+
+import pygame  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 ACTIVITY = ROOT / "activities" / "costruiamo_ponti"
+for path in (ROOT / "src", ACTIVITY):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+from ponti_content import (  # noqa: E402
+    ALL_CROSSINGS,
+    CROSSING_SETS,
+    CROSSINGS_PER_SET,
+    MAX_TRAY,
+    Crossing,
+    PieceKind,
+    wood,
+)
+from ponti_layout import BANK_TOP, UNIT, CrossingView  # noqa: E402
+from ponti_model import (  # noqa: E402
+    SNAP_AFTER_MISSES,
+    BridgeState,
+    Failure,
+    Fit,
+    HintAction,
+    HintPlanner,
+    PontiProgress,
+    Visit,
+    solve,
+)
+from ponti_run import BridgeRun, RunPhase  # noqa: E402
+from ponti_services import (  # noqa: E402
+    SCHEMA_VERSION,
+    STORAGE_KEY,
+    GreiaPontiEvents,
+    GreiaPontiProgress,
+    progress_from_payload,
+    progress_payload,
+)
+
+LOCALES = ("en", "it", "es", "fr")
 
 
-class CostruiamoPontiContractTests(unittest.TestCase):
-    def test_manifest_declares_interaction_without_extra_authority(self) -> None:
-        with (ACTIVITY / "activity.toml").open("rb") as handle:
-            raw = tomllib.load(handle)
-        self.assertEqual(raw["activity"]["id"], "org.greia.costruiamo-ponti")
-        self.assertEqual(raw["input"]["profile"], "hybrid")
-        self.assertEqual(raw["requirements"]["required_capabilities"], ["display", "pointer", "audio.basic"])
-        self.assertEqual(raw["permissions"]["requested"], [])
-        self.assertNotIn("adaptive_difficulty", raw["education"])
-        self.assertNotIn("difficulty_max", raw["education"])
+def _arrangements(crossing: Crossing):
+    """Every complete bridge: pillar rocks (if any) x every plank choice per span."""
 
-    def test_activity_uses_shared_logical_canvas_and_platform_navigation(self) -> None:
-        combined = "\n".join(p.read_text(encoding="utf-8") for p in sorted(ACTIVITY.glob("*.py")))
-        self.assertIn("PygameReferenceCanvas", combined)
-        self.assertIn("activity_viewport_for_surface", combined)
-        self.assertIn("canvas.pointer(event.pos)", combined)
-        self.assertIn("ChildUiMetrics.for_size", combined)
-        self.assertIn("get_theme()", combined)
-        self.assertIn("activity_stop_requested()", combined)
-
-    def test_genuine_new_block_placement_not_repeat_click(self) -> None:
-        from activities.costruiamo_ponti.ponti_model import PontiModel
-        model = PontiModel()
-        self.assertTrue(model.place_block(0))
-        self.assertFalse(model.place_block(0))
-        other = next(x for x in ("wood", "stone", "rainbow", "shroom") if x != model.selected_block_id)
-        model.select_block(other)
-        self.assertTrue(model.place_block(0))
-        self.assertEqual(model.slots[0], other)
-
-    def test_materials_and_runtime_assets_exist(self) -> None:
-        runtime_dir = ACTIVITY / "assets" / "runtime"
-        self.assertTrue((runtime_dir / "block_wood.png").is_file())
-        self.assertTrue((runtime_dir / "block_stone.png").is_file())
-        self.assertTrue((runtime_dir / "block_shroom.png").is_file())
-        self.assertTrue((runtime_dir / "block_rainbow.png").is_file())
-        self.assertTrue((runtime_dir / "trampoline.png").is_file())
-        self.assertTrue((runtime_dir / "goal_flag.png").is_file())
-        self.assertTrue((runtime_dir / "bank_river.png").is_file())
-        self.assertTrue((runtime_dir / "bank_canyon.png").is_file())
-        self.assertTrue((runtime_dir / "bank_space.png").is_file())
-
-    def test_reference_geometry_is_semantic_and_bounded(self) -> None:
-        combined = "\n".join(p.read_text(encoding="utf-8") for p in sorted(ACTIVITY.glob("*.py")))
-        self.assertIn("REFERENCE_WIDTH = 1024", combined)
-        self.assertIn("REFERENCE_HEIGHT = 600", combined)
-        self.assertIn("SceneActorDefinition", combined)
-        self.assertIn("character.flash", combined)
-
-    def test_crossing_reaches_right_cliff_and_celebrates(self) -> None:
-        combined = "\n".join(p.read_text(encoding="utf-8") for p in sorted(ACTIVITY.glob("*.py")))
-        self.assertIn("target_x = bridge_end_x + 50", combined)
-        self.assertIn("flash_motion = \"celebrate_pop\"", combined)
-        self.assertIn("flash_anim_timer = 0.0", combined)
+    pillars = [i for i, p in enumerate(crossing.pieces) if p.kind is PieceKind.PILLAR]
+    planks = [i for i, p in enumerate(crossing.pieces) if p.kind is PieceKind.PLANK]
+    for count in range(len(pillars) + 1):
+        for spots in itertools.combinations(range(len(crossing.spots)), count):
+            probe = BridgeState(crossing)
+            for pillar, spot in zip(pillars, spots):
+                probe.place_pillar(pillar, spot)
+            seats = probe.seats()
+            for chosen in itertools.permutations(planks, len(seats)):
+                state = BridgeState(crossing)
+                for pillar, spot in zip(pillars, spots):
+                    state.place_pillar(pillar, spot)
+                for plank, seat in zip(chosen, seats):
+                    state.place_plank(plank, seat)
+                yield state
 
 
-class CostruiamoPontiInputAndPointerTests(unittest.TestCase):
-    """Real app: keyboard/controller path and the platform pointer."""
+class _Storage:
+    def __init__(self, value=None) -> None:
+        self.values = {} if value is None else {STORAGE_KEY: value}
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        import os
-        import sys
+    def kv_get(self, key, default=None):
+        return self.values.get(key, default)
 
-        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
-        for path in (ROOT / "src", ROOT):
-            if str(path) not in sys.path:
-                sys.path.insert(0, str(path))
-        import pygame
+    def kv_set(self, key, value) -> None:
+        self.values[key] = json.loads(json.dumps(value))
 
-        pygame.init()
-        cls.screen = pygame.display.set_mode((1024, 600))
 
-    def _app(self):
-        from activities.costruiamo_ponti.ponti_app import PontiApp
+class _Audio:
+    def __init__(self) -> None:
+        self.spoken: list[str] = []
+        self.sounds: list[str] = []
+        self.speakers: list[str] = []
 
-        return PontiApp(screen=self.screen)
+    def use_speaker(self, speaker: str) -> None:
+        self.speakers.append(speaker)
 
-    def _key(self, app, key: int) -> None:
-        import pygame
+    def say(self, cue: str) -> None:
+        self.spoken.append(cue)
 
-        app._handle_event(pygame.event.Event(pygame.KEYDOWN, key=key))
+    def play(self, name: str) -> None:
+        self.sounds.append(name)
 
-    def test_keyboard_selects_material_places_blocks_and_crosses(self) -> None:
-        import pygame
 
-        app = self._app()
-        model = app._model
-        # First arrow reveals the cursor on the selected material (wood).
-        self._key(app, pygame.K_RIGHT)
-        self.assertTrue(app._focus.active)
-        self._key(app, pygame.K_RIGHT)  # stone
-        self._key(app, pygame.K_SPACE)
-        self.assertEqual(model.selected_block_id, "stone")
-        # Up from the palette lands on the bridge slots; Space places the block.
-        self._key(app, pygame.K_UP)
-        self.assertEqual(app._focus.target(model.num_slots).kind, "slot")
-        self._key(app, pygame.K_SPACE)
-        placed = [slot for slot in model.slots if slot == "stone"]
-        self.assertEqual(len(placed), 1)
-        # Up again reaches the Clear/Go row; Clear empties the bridge.
-        self._key(app, pygame.K_UP)
-        self.assertIn(app._focus.target(model.num_slots).kind, {"clear", "go"})
-        while app._focus.target(model.num_slots).kind != "clear":
-            self._key(app, pygame.K_LEFT)
-        self._key(app, pygame.K_SPACE)
-        self.assertEqual(model.slots, [None] * model.num_slots)
-        # Go starts the crossing.
-        self._key(app, pygame.K_RIGHT)
-        self.assertEqual(app._focus.target(model.num_slots).kind, "go")
-        self._key(app, pygame.K_RETURN)
-        self.assertEqual(model.flash_state, "happy")
+class _Events:
+    def __init__(self) -> None:
+        self.calls: dict[str, list[tuple]] = {}
 
-    def test_controller_dpad_and_south_button_drive_the_same_path(self) -> None:
-        import pygame
-        from greia_platform.pygame_input import (
-            CONTROLLER_BUTTON_A,
-            CONTROLLER_BUTTON_DPAD_RIGHT,
-            CONTROLLER_BUTTON_DPAD_UP,
+    def __getattr__(self, name: str):
+        if name.startswith("_"):
+            raise AttributeError(name)
+        return lambda *args: self.calls.setdefault(name, []).append(args)
+
+
+class ManifestAndLocaleTests(unittest.TestCase):
+    def test_manifest_claims_match_the_measuring_loop(self) -> None:
+        data = tomllib.loads((ACTIVITY / "activity.toml").read_text(encoding="utf-8"))
+        self.assertEqual(data["activity"]["id"], "org.greia.costruiamo-ponti")
+        self.assertEqual(data["activity"]["version"], "0.2.0")
+        self.assertEqual(set(data["activity"]["languages"]), {"it", "en"})  # ES/FR stay staged
+        self.assertEqual(data["input"]["profile"], "hybrid")
+        self.assertEqual(data["requirements"]["required_capabilities"], ["display"])
+        self.assertEqual(data["permissions"]["requested"], [])
+        education = data["education"]
+        self.assertEqual((education["recommended_age_min"], education["recommended_age_max"]), (5, 7))
+        # A fixed authored ladder: no adaptive range is claimed.
+        self.assertNotIn("adaptive_difficulty", education)
+        self.assertNotIn("difficulty_min", education)
+        self.assertNotIn("difficulty_max", education)
+        skills = {skill["id"] for skill in education["skills"]}
+        self.assertIn("math.comparison.length_height", skills)
+        self.assertIn("math.comparison.weight", skills)
+        events = {event["id"]: event["kind"] for event in education["events"]}
+        self.assertEqual(
+            events,
+            {
+                "bridge.plank_placed": "milestone",
+                "bridge.test_started": "milestone",
+                "bridge.level_completed": "completion",  # kept: platform policies count it
+                "bridge.crossing_missed": "milestone",
+                "bridge.set_completed": "completion",
+            },
         )
 
-        app = self._app()
-        pad = lambda b: app._handle_event(pygame.event.Event(pygame.CONTROLLERBUTTONDOWN, button=b))
-        pad(CONTROLLER_BUTTON_DPAD_RIGHT)  # reveal
-        pad(CONTROLLER_BUTTON_DPAD_RIGHT)  # stone
+    def test_four_locale_parity_without_emoji_or_retired_copy(self) -> None:
+        bundles = {
+            locale: json.loads((ACTIVITY / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
+            for locale in LOCALES
+        }
+        keys = set(bundles["en"]["strings"])
+        self.assertEqual(
+            keys, {"activity.title", "activity.costruiamo_ponti.title", "btn.go", "btn.play_again", "victory.title"}
+        )
+        for locale, bundle in bundles.items():
+            with self.subTest(locale=locale):
+                self.assertEqual(set(bundle["strings"]), keys)
+                for value in bundle["strings"].values():
+                    self.assertTrue(value.strip())
+                    self.assertTrue(all(ord(ch) < 0x2000 for ch in value), value)
+                    self.assertNotEqual(value, value.upper(), "case comes from the platform policy (ADR 0034)")
+        self.assertEqual(bundles["es"]["audio"], {})
+        self.assertEqual(bundles["fr"]["audio"], {})
+        for locale in ("en", "it"):
+            path = bundles[locale]["audio"]["activity.title"]["path"]
+            self.assertTrue((ACTIVITY / path).is_file())
+        source = "\n".join(path.read_text(encoding="utf-8") for path in ACTIVITY.glob("*.py"))
+        for retired in ("block.shroom", "rainbow", "trampoline", "btn.cross", "set_visible(False)", "ui.clear"):
+            self.assertNotIn(retired, source)
+        self.assertIn("CastFeedback(friend", source)
+        self.assertIn("CompletionScene(self.kit", source)
+        self.assertFalse((ACTIVITY / "ponti_focus.py").exists())
+
+
+class AuthoredCrossingTests(unittest.TestCase):
+    def test_four_sets_of_four_with_trays_that_fit(self) -> None:
+        self.assertEqual(len(CROSSING_SETS), 4)
+        for crossing_set in CROSSING_SETS:
+            self.assertEqual(len(crossing_set.crossings), CROSSINGS_PER_SET)
+        ids = [crossing.crossing_id for crossing in ALL_CROSSINGS]
+        self.assertEqual(len(ids), len(set(ids)))
+        for crossing in ALL_CROSSINGS:
+            self.assertLessEqual(len(crossing.pieces), MAX_TRAY)
+            view = CrossingView(crossing)
+            self.assertGreater(view.home_x - 60, 0, crossing.crossing_id)
+            self.assertLess(view.picnic_x + 100, 1024, crossing.crossing_id)
+        # A standing plank never reaches the HUD bar.
+        self.assertGreater(BANK_TOP - 4 * UNIT, 92)
+
+    def test_every_crossing_is_solvable_and_needs_a_decision(self) -> None:
+        for crossing in ALL_CROSSINGS:
+            with self.subTest(crossing=crossing.crossing_id):
+                self.assertTrue(solve(crossing))
+                self.assertFalse(BridgeState(crossing).evaluate().success)
+                outcomes = [state.evaluate().success for state in _arrangements(crossing)]
+                self.assertIn(True, outcomes)
+                self.assertIn(False, outcomes, "some complete bridge must fail, or there is no decision")
+
+    def test_the_ladder_introduces_one_idea_per_set(self) -> None:
+        long_enough, two_rivers, pillars, heavy = CROSSING_SETS
+        for crossing in long_enough.crossings:
+            self.assertEqual((crossing.islands, crossing.spots, crossing.heavy), ((), (), False))
+        for crossing in two_rivers.crossings:
+            self.assertTrue(crossing.islands)
+            # Using the longest plank first never works: lengths must be matched.
+            for solution in solve(crossing):
+                self.assertEqual(len(solution.planks), 2)
+        for crossing in pillars.crossings:
+            self.assertEqual(crossing.pillars, 1)
+            longest = max(p.length for p in crossing.pieces if p.kind is PieceKind.PLANK)
+            self.assertGreater(crossing.gap, longest, "too wide for any plank: a pillar is needed")
+            self.assertTrue(all(solution.pillars for solution in solve(crossing)))
+        heavy_ones = [crossing for crossing in heavy.crossings if crossing.heavy]
+        self.assertGreaterEqual(len(heavy_ones), 3)
+        for crossing in heavy_ones:
+            for solution in solve(crossing):
+                self.assertTrue(all(signature[2] for _, signature in solution.planks), "heavy loads need stone")
+        self.assertIn(False, [crossing.heavy for crossing in heavy.crossings], "stone is not always the answer")
+
+
+class BridgeStateTests(unittest.TestCase):
+    def test_fits_short_long_empty_and_bend(self) -> None:
+        crossing = Crossing("t", 3, (wood(2), wood(3), wood(4)), "flash")
+        state = BridgeState(crossing)
+        self.assertEqual(state.evaluate().failure, Failure.EMPTY)
+        state.place_plank(0, "bank")
+        result = state.evaluate()
+        self.assertEqual((result.failure, result.results[0].fit), (Failure.SHORT, Fit.SHORT))
+        state.place_plank(1, "bank")
+        self.assertTrue(state.in_tray(0), "a swapped plank goes back to the tray")
+        self.assertEqual(state.evaluate().results[0].fit, Fit.JUST_RIGHT)
+        state.place_plank(2, "bank")
+        self.assertTrue(state.evaluate().success)
+        self.assertEqual(state.evaluate().results[0].fit, Fit.LONG)
+        heavy = BridgeState(Crossing("h", 3, (wood(3),), "momo", heavy=True))
+        heavy.place_plank(0, "bank")
+        self.assertEqual(heavy.evaluate().failure, Failure.BEND)
+
+    def test_pillar_splits_the_gap_and_takes_its_plank_back(self) -> None:
+        crossing = CROSSING_SETS[2].crossings[2]  # gap 6, rocks at 1 and 3
+        state = BridgeState(crossing)
+        self.assertEqual([span.width for span in state.spans()], [6])
+        self.assertTrue(state.place_pillar(0, 1))
+        self.assertEqual([(span.seat, span.width) for span in state.spans()], [("bank", 3), ("spot1", 2)])
+        state.place_plank(1, "spot1")
+        self.assertTrue(state.place_pillar(0, 0), "the one pillar moves to the other rock")
+        self.assertEqual(state.pillar_spots(), [0])
+        self.assertTrue(state.in_tray(1), "its plank comes back to the tray")
+        state.place_plank(1, "spot0")
+        state.remove(0)
+        self.assertTrue(state.in_tray(1), "a removed pillar takes its plank back")
+        self.assertEqual(state.selected, 0)
+
+    def test_following_hints_always_reaches_a_working_bridge(self) -> None:
+        for crossing in ALL_CROSSINGS:
+            for start in itertools.islice(_arrangements(crossing), 6):
+                with self.subTest(crossing=crossing.crossing_id):
+                    for _ in range(10):
+                        step = HintPlanner.next_step(start)
+                        if step.action is HintAction.GO:
+                            break
+                        self.assertTrue(HintPlanner.apply(start, step), step)
+                    self.assertTrue(start.evaluate().success)
+
+
+class RunTimelineTests(unittest.TestCase):
+    @staticmethod
+    def _run(state: BridgeState) -> tuple[BridgeRun, list[str]]:
+        run = BridgeRun(state, CrossingView(state.crossing))
+        moments: list[str] = []
+        for _ in range(400):
+            moments += run.advance(1 / 30)
+            if run.finished:
+                break
+        return run, moments
+
+    def test_success_lowers_sparkles_and_arrives_at_the_picnic(self) -> None:
+        state = BridgeState(CROSSING_SETS[0].crossings[0])  # gap 2
+        state.place_plank(1, "bank")  # just right
+        run, moments = self._run(state)
+        self.assertIs(run.phase, RunPhase.ARRIVED)
+        self.assertEqual(moments[0], "landed")
+        self.assertIn("pass:1", moments)
+        self.assertEqual(moments[-1], "arrive")
+        self.assertEqual(run.angle(), 0.0)
+        self.assertEqual(run.traveler_midbottom()[0], run.view.arrive_x)
+
+    def test_short_plank_stops_the_friend_at_the_edge_never_in_the_water(self) -> None:
+        state = BridgeState(CROSSING_SETS[0].crossings[1])  # gap 3
+        state.place_plank(1, "bank")  # 2: too short
+        run, moments = self._run(state)
+        self.assertIs(run.phase, RunPhase.STOPPED)
+        self.assertEqual(moments[-1], "stop")
+        self.assertLess(run.x, run.view.left_x)
+        self.assertEqual(run.traveler_midbottom()[1], BANK_TOP + 4)
+        run.start_return()
+        for _ in range(200):
+            if "home" in run.advance(1 / 30):
+                break
+        self.assertIs(run.phase, RunPhase.HOME)
+        self.assertEqual(run.angle(), 90.0)
+        self.assertEqual(run.x, run.view.home_x)
+
+    def test_thin_plank_bends_under_a_heavy_friend(self) -> None:
+        state = BridgeState(CROSSING_SETS[3].crossings[0])  # heavy, gap 2
+        state.place_plank(0, "bank")  # thin wood
+        run, moments = self._run(state)
+        self.assertIn("bend", moments)
+        self.assertIs(run.phase, RunPhase.STOPPED)
+        self.assertGreater(run.sag, 10)
+        self.assertGreater(run.traveler_midbottom()[1], BANK_TOP - 20 + 4)
+
+
+class SaveAndEventTests(unittest.TestCase):
+    def test_first_release_stars_migrate_and_schema_three_round_trips(self) -> None:
+        legacy = progress_from_payload({"stars": 5})
+        self.assertEqual((legacy.legacy_stars, legacy.next_set), (5, 0))
+        payload = progress_payload(PontiProgress(next_set=2, crossings_solved=9, sets_completed=2, legacy_stars=5))
+        self.assertEqual(payload["schema_version"], SCHEMA_VERSION)
+        self.assertEqual(payload["stars"], 5)
+        again = progress_from_payload(json.loads(json.dumps(payload)))
+        self.assertEqual((again.next_set, again.crossings_solved, again.sets_completed, again.legacy_stars), (2, 9, 2, 5))
+        self.assertEqual(progress_from_payload("junk"), PontiProgress())
+        self.assertEqual(progress_from_payload({"schema_version": 3, "next_set": 99}).next_set, 99 % 4)
+
+    def test_storage_adapter_uses_the_original_key_and_never_raises(self) -> None:
+        storage = _Storage({"stars": 3})
+        adapter = GreiaPontiProgress(storage)
+        progress = adapter.load()
+        self.assertEqual(progress.legacy_stars, 3)
+        adapter.save(progress)
+        self.assertEqual(storage.values[STORAGE_KEY]["stars"], 3)
+        self.assertEqual(STORAGE_KEY, "costruiamo_ponti.progress.v2")
+
+        class Broken:
+            def kv_get(self, *args):
+                raise OSError("disk")
+
+            def kv_set(self, *args):
+                raise OSError("disk")
+
+        broken = GreiaPontiProgress(Broken())
+        self.assertEqual(broken.load(), PontiProgress())
+        broken.save(PontiProgress())
+
+    def test_event_keys_are_scoped_per_visit(self) -> None:
+        sent = []
+        with mock.patch("ponti_services.emit_activity_event", lambda *a, **k: sent.append((a, k))):
+            events = GreiaPontiEvents()
+            events.crossing_completed("v1", "le1", 1)
+            events.crossing_completed("v2", "le1", 1)
+            events.plank_placed("v1", "le1", 2, False)
+        keys = [call[1]["idempotency_key"] for call in sent]
+        self.assertEqual(len(keys), len(set(keys)))
+        self.assertEqual(sent[0][0][0], "bridge.level_completed")
+
+
+class AppLoopTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        pygame.init()
+        pygame.display.set_mode((1024, 600))
+
+    def _app(self, size=(1024, 600), next_set=0, storage=None, locale="en"):
+        from greia_platform.localization import activity_resources
+        from greia_platform.pygame_canvas import PygameReferenceCanvas
+        from greia_platform.typography import GreiaTypography
+        from ponti_app import BridgeActivity
+
+        screen = pygame.display.set_mode(size)
+        now = [500.0]
+        storage = storage if storage is not None else _Storage()
+        progress = GreiaPontiProgress(storage)
+        loaded = progress.load()
+        loaded.next_set = next_set
+        app = BridgeActivity(
+            screen=screen,
+            canvas=PygameReferenceCanvas(screen),
+            visit=Visit(loaded),
+            typography=GreiaTypography(),
+            resources=activity_resources(ACTIVITY, requested_locale=locale),
+            audio=_Audio(),
+            progress=progress,
+            events=_Events(),
+            clock=lambda: now[0],
+        )
+        return app, now, storage
+
+    @staticmethod
+    def _advance(app, now, seconds: float, step: float = 1 / 30) -> None:
+        for _ in range(max(1, int(seconds / step))):
+            now[0] += step
+            app.step(step)
+
+    def _until(self, app, now, states, limit: float = 12.0) -> None:
+        for _ in range(int(limit * 30)):
+            if app.state in states:
+                return
+            self._advance(app, now, 1 / 30)
+        self.fail(f"never reached {states}, stuck in {app.state}")
+
+    def _key_activate(self, app, control_id: str) -> None:
+        self.assertTrue(app.controls.layer.focus(control_id, visible=True), control_id)
+        self.assertTrue(app.press(pygame.K_SPACE), control_id)
+
+    def _solve_with_keys(self, app, now) -> None:
+        """Build the bridge with keyboard activation only (tray -> span/rock, GO)."""
+
+        from ponti_app import AppState
+        from ponti_controls import seat_id, spot_id, tray_id
+
+        bridge = app.bridge
+        for _ in range(10):
+            step = HintPlanner.next_step(bridge)
+            if step.action is HintAction.GO:
+                break
+            piece = HintPlanner.piece_for(bridge, step)
+            if step.action is HintAction.REMOVE_PILLAR:
+                self._key_activate(app, spot_id(step.spot))
+                continue
+            if bridge.in_tray(piece):
+                self._key_activate(app, tray_id(piece))
+                self.assertEqual(bridge.selected, piece)
+            else:
+                self._key_activate(app, tray_id(piece))  # call it back first
+            if step.action is HintAction.PLACE_PILLAR:
+                self._key_activate(app, spot_id(step.spot))
+            else:
+                self._key_activate(app, seat_id(bridge.seats().index(step.seat)))
+        self._key_activate(app, "go")
+        self.assertIs(app.state, AppState.RUNNING)
+        self._until(app, now, {AppState.CELEBRATE})
+        app.render()
+
+    def test_keyboard_plays_every_set_to_the_completion_scene_and_moves_on(self) -> None:
+        from ponti_app import AppState
+
+        for next_set in range(len(CROSSING_SETS)):
+            app, now, storage = self._app(next_set=next_set)
+            first_visit = app._visit_id
+            for index in range(CROSSINGS_PER_SET):
+                self.assertEqual(app.controls.progress.current, index)
+                self._solve_with_keys(app, now)
+                self.assertIn("arrive", app.audio.spoken)
+                self._advance(app, now, 2.4)
+            self.assertIs(app.state, AppState.TERMINAL)
+            self.assertEqual(len(app.events.calls["crossing_completed"]), CROSSINGS_PER_SET)
+            self.assertEqual(len(app.events.calls["set_completed"]), 1)
+            self.assertIn("complete", app.audio.spoken)
+            saved = storage.values[STORAGE_KEY]
+            self.assertEqual((saved["crossings_solved"], saved["sets_completed"]), (CROSSINGS_PER_SET, 1))
+            self.assertEqual(saved["next_set"], (next_set + 1) % len(CROSSING_SETS))
+            app.render()
+            self.assertTrue(app.tap(app.canvas.mapper.point(*app.completion.primary_rect.center)))
+            self.assertIs(app.state, AppState.BUILD)
+            self.assertEqual(app.visit.set_index, (next_set + 1) % len(CROSSING_SETS))
+            self.assertNotEqual(app._visit_id, first_visit)
+
+    def test_space_on_completion_plays_the_next_set(self) -> None:
+        from ponti_app import AppState
+
+        app, now, _ = self._app()
+        for _ in range(CROSSINGS_PER_SET):
+            self._solve_with_keys(app, now)
+            self._advance(app, now, 2.4)
+        self.assertIs(app.state, AppState.TERMINAL)
+        app.press(pygame.K_SPACE)
+        self.assertIs(app.state, AppState.BUILD)
+        self.assertEqual(app.visit.set_index, 1)
+
+    def test_controller_dpad_and_south_button_drive_the_same_path(self) -> None:
+        from greia_platform.pygame_input import CONTROLLER_BUTTON_A, CONTROLLER_BUTTON_DPAD_UP
+
+        app, now, _ = self._app()
+        pad = lambda button: app._handle_event(pygame.event.Event(pygame.CONTROLLERBUTTONDOWN, button=button))
+        app.controls.layer.focus("tray.1", visible=True)
         pad(CONTROLLER_BUTTON_A)
-        self.assertEqual(app._model.selected_block_id, "stone")
+        self.assertEqual(app.bridge.selected, 1)
         pad(CONTROLLER_BUTTON_DPAD_UP)
+        self.assertTrue(app.controls.layer.focused_id.startswith(("seat.", "spot.")), app.controls.layer.focused_id)
         pad(CONTROLLER_BUTTON_A)
-        self.assertIn("stone", app._model.slots)
+        self.assertEqual(app.bridge.seat_of[1], "bank")
 
-    def test_focus_ring_is_drawn_and_hidden_by_the_pointer(self) -> None:
-        import pygame
+    def test_pointer_tap_and_drag_build_the_bridge(self) -> None:
+        app, now, _ = self._app(next_set=2)  # pillars: pillar, 2, 2 on a gap of 5
+        mapper = app.canvas.mapper
+        self.assertTrue(app.tap(mapper.point(*app.controls.tray[0].rect.center)))
+        self.assertTrue(app.tap(mapper.point(*app.view.spot_rect(0).center)))
+        self.assertEqual(app.bridge.pillar_spots(), [0])
+        spans = app.bridge.spans()
+        self.assertTrue(app.drag_to(mapper.point(*app.controls.tray[1].rect.center), mapper.point(*app.view.seat_rect(spans[0]).center)))
+        self.assertEqual(app.bridge.seat_of[1], "bank")
+        self.assertTrue(app.drag_to(mapper.point(*app.controls.tray[2].rect.center), mapper.point(*app.view.seat_rect(spans[1]).center)))
+        self.assertTrue(app.bridge.evaluate().success)
+        # Dragging a plank off the bridge returns it; tapping a faded tile calls one back.
+        self.assertTrue(app.drag_to(mapper.point(*app.view.seat_rect(spans[1]).center), mapper.point(900, 250)))
+        self.assertTrue(app.bridge.in_tray(2))
+        self.assertTrue(app.tap(mapper.point(*app.controls.tray[1].rect.center)))
+        self.assertTrue(app.bridge.in_tray(1))
 
-        app = self._app()
-        self._key(app, pygame.K_LEFT)
-        app._draw(0.0, 0.0)
-        rect = app._renderer.focus_rect("block", 0, app._model.num_slots)
-        ring_pixel = app._canvas.surface.get_at((rect.left - 5, rect.centery))[:3]
-        self.assertEqual(ring_pixel, (14, 116, 144))
-        app._handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=(500, 20)))
-        self.assertFalse(app._focus.active)
+    def test_a_lifted_pillar_is_never_dropped_on_a_span(self) -> None:
+        app, now, _ = self._app(next_set=2)
+        app.bridge.select(0)  # the pillar
+        app._on_seat(0)
+        self.assertTrue(app.bridge.in_tray(0))
+        self.assertIn("clack", app.audio.sounds)
+        self.assertIn("spot:0", app.motion.pulses)
+
+    def test_a_stop_thinks_shows_the_missing_length_returns_and_demonstrates(self) -> None:
+        from greia_platform.activity_feedback import CastPose
+        from ponti_app import AppState
+
+        app, now, _ = self._app()  # le1: gap 2, planks 1/2/3
+        app._on_tray(0)
+        app._on_seat(0)  # the 1-board plank
+        app._on_go()
+        self._until(app, now, {AppState.PAUSE})
+        self.assertIs(app.cast.feedback.pose, CastPose.THINK)
+        self.assertEqual(app.motion.missing, (1.0, 2.0))
+        self.assertEqual(app.events.calls["crossing_missed"][0][-1], "short")
+        self.assertIn("retry", app.audio.spoken)
+        app.render()
+        self._until(app, now, {AppState.BUILD})
+        self.assertEqual(app.bridge.seat_of[0], "bank", "the child's plank stays for fixing")
+        self.assertIsNotNone(app.motion.demo)
+        self.assertIs(app.motion.demo[0].action, HintAction.PLACE_PLANK)
+        app.render()
+        hints = app.bridge.summary.hints
+        self.assertTrue(app.tap(app.canvas.mapper.point(*app.controls.hint.rect.center)))
+        self.assertEqual(app.bridge.summary.hints, hints + 1)
+
+    def test_repeated_stops_also_carry_out_the_demonstrated_step(self) -> None:
+        from ponti_app import AppState
+
+        app, now, _ = self._app()
+        for _ in range(SNAP_AFTER_MISSES):
+            app.bridge.place_plank(0, "bank")
+            app._sync()
+            app._on_go()
+            self._until(app, now, {AppState.BUILD})
+        self._advance(app, now, 1.6)
+        self.assertTrue(app.bridge.evaluate().success)
+
+    def test_idle_hints_are_graduated(self) -> None:
+        app, now, _ = self._app()
+        self._advance(app, now, 6.2)
+        self.assertTrue(app.cast.pointing)
+        self.assertIn("nudge", app.audio.spoken)
+        self.assertIsNone(app.motion.demo, "the first nudge only points")
+        self.assertTrue(app.motion.pulses)
+        self._advance(app, now, 6.2)
+        self.assertIsNotNone(app.motion.demo)
+
+    def test_layout_stays_clear_of_protected_chrome_at_every_size(self) -> None:
+        from greia_platform.activity_controls import ControlLayout
+
+        for size in ((1024, 600), (800, 480), (480, 320), (1280, 800)):
+            app, now, _ = self._app(size=size, next_set=1)
+            with self.subTest(size=size):
+                layout = ControlLayout.for_canvas(app.canvas, size)
+                controls = app.controls
+                for control in (*controls.tray, controls.go, controls.hint, controls.progress):
+                    if control.visible:
+                        self.assertFalse(control.rect.colliderect(layout.protected), control.control_id)
+                for tile in controls.tray[: len(app.bridge.crossing.pieces)]:
+                    self.assertGreaterEqual(tile.rect.height * layout.scale, 40)
+                    self.assertLessEqual(tile.rect.bottom, 600)
+                for span in app.bridge.spans():
+                    self.assertFalse(app.view.seat_rect(span).colliderect(layout.protected))
+                self.assertGreaterEqual(BANK_TOP - 4 * UNIT, controls.screen.bar.bottom)
+                app.render()
+
+    def test_pointer_in_the_protected_region_is_ignored(self) -> None:
+        app, now, _ = self._app()
+        before = list(app.bridge.seat_of)
+        self.assertFalse(app.tap((10, 10)))
+        self.assertEqual(app.bridge.seat_of, before)
+
+    def test_frames_are_blits_only_after_warm_up(self) -> None:
+        from ponti_app import AppState
+
+        app, now, _ = self._app(next_set=3)
+        app.bridge.place_plank(0, "bank")  # thin wood under a heavy friend: lower, walk, bend
+        app._sync()
+        app.render()
+        app._on_go()
+        self._advance(app, now, 0.1)
+        app.render()
+        built = app.kit.painter.build_count
+        scene = app.scene
+        frames = app.art.plank(app.bridge.piece(0))
+        for _ in range(45):
+            self._advance(app, now, 1 / 30)
+            app.render()
+        self.assertIn(app.state, (AppState.RUNNING, AppState.PAUSE))
+        self.assertEqual(app.kit.painter.build_count, built)
+        self.assertIs(app.scene, scene)
+        self.assertIs(app.art.plank(app.bridge.piece(0)), frames)
+        self.assertLessEqual(len(app.motion.fx), 12)
 
     def test_platform_pointer_is_drawn_during_play_and_on_the_completion_screen(self) -> None:
-        import pygame
-        from unittest import mock
+        from ponti_app import AppState
 
-        app = self._app()
-        target = app._canvas.target
+        app, now, _ = self._app()
+        target = app.canvas.target
         color = (254, 202, 87)  # draw_activity_pointer default body colour
-        position = (300, 200)
-        with mock.patch("pygame.mouse.get_focused", return_value=True), mock.patch(
-            "pygame.mouse.get_pos", return_value=position
-        ):
-            app._draw(0.0, 0.0)
-            app._canvas.present()
-            self.assertEqual(tuple(target.get_at((position[0] + 8, position[1])))[:3], color)
-            # Completion screen: the pointer must keep following the mouse.
-            app._model.is_victory = True
-            app._present_completion()
-        for next_position in ((600, 300), (200, 450)):
+        for position in ((300, 200), (600, 300)):
             with mock.patch("pygame.mouse.get_focused", return_value=True), mock.patch(
-                "pygame.mouse.get_pos", return_value=next_position
+                "pygame.mouse.get_pos", return_value=position
             ):
-                app._present_completion()
-                self.assertEqual(
-                    tuple(target.get_at((next_position[0] + 8, next_position[1])))[:3], color
-                )
+                app.render()
+                app.canvas.present()
+                self.assertEqual(tuple(target.get_at((position[0] + 8, position[1])))[:3], color)
+        for _ in range(CROSSINGS_PER_SET):
+            self._solve_with_keys(app, now)
+            self._advance(app, now, 2.4)
+        self.assertIs(app.state, AppState.TERMINAL)
+        with mock.patch("pygame.mouse.get_focused", return_value=True), mock.patch(
+            "pygame.mouse.get_pos", return_value=(200, 450)
+        ):
+            app.render()
+            app.canvas.present()
+            self.assertEqual(tuple(target.get_at((208, 450)))[:3], color)
+
+    def test_italian_go_label_and_friend_voice(self) -> None:
+        app, now, _ = self._app(locale="it")
+        self.assertEqual(app.controls.go.label, "VIA!")
+        self.assertEqual(app.audio.speakers[-1], CROSSING_SETS[0].crossings[0].traveler)
 
 
 if __name__ == "__main__":

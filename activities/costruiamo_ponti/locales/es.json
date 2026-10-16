@@ -4,22 +4,10 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Constructores de puentes",
-    "btn.cross": "🐾 ¡Cruzar!",
-    "btn.clear": "🧹 Borrar",
-    "btn.play_again": "🎉 ¡Siguiente nivel!",
-    "level.river": "Río verde 🌊",
-    "level.canyon": "Cañón rocoso 🏔️",
-    "level.space": "Abismo cósmico 🌌",
-    "victory.title": "¡Hurra! ¡El puente es muy resistente! 🐾🎉",
-    "victory.subtitle": "¡El perrito ha llegado sano y salvo al pícnic!",
-    "block.wood": "Madera",
-    "block.stone": "Piedra",
-    "block.shroom": "Seta",
-    "block.rainbow": "Arcoíris",
-    "ui.clear": "Limpiar",
-    "ui.go": "¡Ya!",
-    "ui.well_done": "¡Muy bien!",
-    "ui.play_again": "Jugar otra vez"
+    "activity.costruiamo_ponti.title": "Constructores de puentes",
+    "btn.go": "¡Ya!",
+    "btn.play_again": "Jugar otra vez",
+    "victory.title": "¡Todos los amigos llegaron al pícnic!"
   },
   "audio": {}
 }

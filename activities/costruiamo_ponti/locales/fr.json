@@ -4,22 +4,10 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Bâtisseurs de ponts",
-    "btn.cross": "🐾 Traverser !",
-    "btn.clear": "🧹 Effacer",
-    "btn.play_again": "🎉 Niveau suivant !",
-    "level.river": "Rivière verte 🌊",
-    "level.canyon": "Canyon rocheux 🏔️",
-    "level.space": "Gouffre cosmique 🌌",
-    "victory.title": "Hourra ! Le pont est très solide ! 🐾🎉",
-    "victory.subtitle": "Le chiot a traversé jusqu'au pique-nique sans danger !",
-    "block.wood": "Bois",
-    "block.stone": "Pierre",
-    "block.shroom": "Champignon",
-    "block.rainbow": "Arc-en-ciel",
-    "ui.clear": "Effacer",
-    "ui.go": "Allez !",
-    "ui.well_done": "Bravo !",
-    "ui.play_again": "Rejouer"
+    "activity.costruiamo_ponti.title": "Bâtisseurs de ponts",
+    "btn.go": "Partez !",
+    "btn.play_again": "Rejouer",
+    "victory.title": "Tous les amis sont arrivés au pique-nique !"
   },
   "audio": {}
 }

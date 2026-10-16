@@ -1,33 +1,48 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
   <defs>
-    <linearGradient id="water_ponti" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#4FC3F7"/>
-      <stop offset="100%" stop-color="#0288D1"/>
+    <!-- orange light (mix 35% white) -> orange -->
+    <linearGradient id="bridge_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BD7E"/>
+      <stop offset="1" stop-color="#F39A38"/>
     </linearGradient>
-    <linearGradient id="arch" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#FF7043"/>
-      <stop offset="50%" stop-color="#FFCA28"/>
-      <stop offset="100%" stop-color="#42A5F5"/>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="bridge_river" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
     </linearGradient>
   </defs>
-  <!-- River Background Band -->
-  <path d="M28 175 C70 160 186 160 228 175 L228 220 C186 210 70 210 28 220 Z" fill="url(#water_ponti)"/>
-  <!-- Left & Right Island Cliffs -->
-  <path d="M24 135 L68 135 L76 225 L24 225 Z" fill="#8D6E63"/>
-  <path d="M20 130 L72 130 C72 130 68 145 20 145 Z" fill="#66BB6A"/>
-  <path d="M188 135 L232 135 L232 225 L180 225 Z" fill="#8D6E63"/>
-  <path d="M184 130 L236 130 C236 130 232 145 184 145 Z" fill="#66BB6A"/>
-  <!-- Bridge Arch Structure -->
-  <path d="M56 142 C85 85 171 85 200 142" fill="none" stroke="#D7CCC8" stroke-width="20" stroke-linecap="round"/>
-  <path d="M56 136 C85 80 171 80 200 136" fill="none" stroke="url(#arch)" stroke-width="14" stroke-linecap="round"/>
-  <!-- Planks / Railings -->
-  <line x1="88" y1="102" x2="88" y2="148" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
-  <line x1="128" y1="88" x2="128" y2="152" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
-  <line x1="168" y1="102" x2="168" y2="148" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
-  <!-- Goal Flag -->
-  <g transform="translate(196, 68)">
-    <line x1="0" y1="0" x2="0" y2="64" stroke="#455A64" stroke-width="5" stroke-linecap="round"/>
-    <polygon points="0,4 32,16 0,28" fill="#FF5252"/>
-    <circle cx="0" cy="0" r="5" fill="#FFD700"/>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#bridge_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="128" cy="218" rx="96" ry="9" fill="#8E5F33" opacity="0.18"/>
+  </g>
+  <g id="river" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M80 146 L176 146 L176 206 C176 212 172 214 166 214 L90 214 C84 214 80 212 80 206 Z" fill="url(#bridge_river)" stroke="#4B5F7B" stroke-width="4"/>
+    <path d="M100 168 Q111 161 122 168 M132 188 Q143 181 154 188" fill="none" stroke="#FFFFFF" stroke-width="5" opacity="0.85"/>
+  </g>
+  <!-- banks: orange shade (mix 25% ink) under leaf grass; plank: orange light steps; river contour: ocean material contour -->
+  <g id="banks" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round">
+    <path d="M40 134 L82 134 C88 134 92 138 92 144 L92 206 C92 211 89 214 84 214 L40 214 C35 214 32 211 32 206 L32 142 C32 137 35 134 40 134 Z" fill="#C98136"/>
+    <path d="M174 134 L216 134 C221 134 224 137 224 142 L224 206 C224 211 221 214 216 214 L172 214 C167 214 164 211 164 206 L164 144 C164 138 168 134 174 134 Z" fill="#C98136"/>
+    <path d="M40 134 L82 134 C88 134 92 138 92 144 L92 152 L32 152 L32 142 C32 137 35 134 40 134 Z" fill="#59B86A"/>
+    <path d="M174 134 L216 134 C221 134 224 137 224 142 L224 152 L164 152 L164 144 C164 138 168 134 174 134 Z" fill="#59B86A"/>
+    <path d="M42 140 L80 140 M176 140 L214 140" fill="none" stroke="#A4D8AD" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="58" cy="180" rx="9" ry="4.5" fill="#DDA56C" stroke="none"/>
+    <ellipse cx="196" cy="190" rx="9" ry="4.5" fill="#DDA56C" stroke="none"/>
+  </g>
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="50" y="104" width="156" height="30" rx="9" fill="#F8C792" stroke-width="5"/>
+    <rect x="102" y="106.5" width="52" height="25" fill="#F5AE60" stroke="none"/>
+    <path d="M102 106 L102 132 M154 106 L154 132" fill="none" stroke-width="4"/>
+    <path d="M62 112 L90 112 M114 112 L142 112 M166 112 L194 112" fill="none" stroke="#FBE3C4" stroke-width="4.5"/>
+    <circle cx="76" cy="122" r="5" fill="#976433" stroke-width="3"/>
+    <circle cx="128" cy="122" r="5" fill="#976433" stroke-width="3"/>
+    <circle cx="180" cy="122" r="5" fill="#976433" stroke-width="3"/>
+  </g>
+  <g id="accent">
+    <path d="M128 30 Q132 52 152 56 Q132 60 128 82 Q124 60 104 56 Q124 52 128 30 Z" fill="#FBBF24" stroke="#9A742A" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M178 52 Q180 62 190 64 Q180 66 178 76 Q176 66 166 64 Q176 62 178 52 Z" fill="#FFFFFF" opacity="0.9"/>
   </g>
 </svg>

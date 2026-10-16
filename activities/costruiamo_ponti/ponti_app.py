@@ -1,422 +1,859 @@
-from __future__ import annotations
+"""Lifecycle, input and feedback timeline for Bridge Builders.
 
-"""Lifecycle coordinator for Costruiamo Ponti.
+One visit is one set of four crossings. On each crossing a cast friend waits
+on the left bank and the picnic waits on the right. The child lifts a plank
+from the tray (planks are drawn at the river's own scale: one board = one
+dash of water) and stands it on a span's hinge, or stands a pillar on a river
+rock (drag and drop, or tap a piece then its place; arrows / D-pad / stick +
+Space / south button move the kit focus over tray, spans, rocks and GO).
+Nothing on the screen says whether a choice is right: GO is the test. The
+planks swing down, the friend walks across, and the bridge shows what
+happened -- the picnic, or a gentle stop at the edge of a plank that falls
+short (the missing dashes light up), or a thin plank bending under a heavy
+pumpkin -- then the friend walks home and the planks stand up again.
 
-Owns the Pygame event loop, Greia canvas/metrics/typography,
-model ↔ renderer ↔ audio sequencing and READY publishing after the
-first presented frame in the same loop.
+Feedback grammar (ADR 0037): at the picnic = the friend's ``pose_cheer`` +
+confetti + praise (just-right planks sparkle on the way); a stop = the
+friend's ``pose_think`` + dust puff, then a demonstration of one next step (a
+ghost plank or pillar travelling from the tray to its place); from the third
+stop on a crossing the demonstrated step is also carried out. Idle for ~6 s:
+the friend points and the next place glows; idle again (or the hint button):
+the demonstration. Never timed, never punished; a set ends on the shared cast
+completion scene.
 """
 
-import io
-import math
-import random
-import struct
+from __future__ import annotations
+
+from collections import deque
+from collections.abc import Callable
+from dataclasses import dataclass
+from enum import StrEnum
 import time
-import wave
-from pathlib import Path
+from uuid import uuid4
 
 import pygame
 
-from greia_platform.activity_api import (
-    activity_stop_requested,
-    emit_activity_event,
-    get_storage,
-    get_theme,
-    get_ui_preferences,
-    mark_activity_ready,
+from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.activity_controls import (
+    ControlKit,
+    ControlLayout,
+    ControlTheme,
+    KitPointer,
+    PointerPhase,
+    PygameControlInput,
 )
-from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.input_core import InputEdge, InteractionProfile, SemanticAction
+from greia_platform.activity_feedback import CastFeedback
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
-from greia_platform.pygame_input import PygameInputTranslator
+from greia_platform.pygame_completion import (
+    CompletionContent,
+    CompletionOverlay,
+    CompletionPalette,
+    CompletionScene,
+    PygameCompletionScreen,
+)
 from greia_platform.typography import GreiaTypography
+from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 
 if __package__:
-    from .ponti_content import (
-        BLOCKS,
-        BRIDGE_START_X,
-        BRIDGE_Y,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        STORAGE_KEY,
-    )
-    from .ponti_focus import FocusTarget, PontiFocus
-    from .ponti_model import PontiModel
-    from .ponti_renderer import PontiRenderer
+    from .ponti_art import BridgeArt
+    from .ponti_audio import BridgeAudio
+    from .ponti_content import COMPLETION_FRIEND, PieceKind
+    from .ponti_controls import BridgeControls, seat_id, spot_id, tray_id
+    from .ponti_layout import BANK_TOP, CAST_HEIGHT, REFERENCE_HEIGHT, REFERENCE_WIDTH, UNIT, CrossingView
+    from .ponti_model import SNAP_AFTER_MISSES, BridgeState, Failure, Fit, HintAction, HintPlanner, HintStep, Visit
+    from .ponti_renderer import BridgeMotion, BridgeRenderer, Drag, TravelerCast
+    from .ponti_run import BridgeRun
+    from .ponti_services import EventPort, ProgressPort
 else:
-    from ponti_content import (
-        BLOCKS,
-        BRIDGE_START_X,
-        BRIDGE_Y,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        STORAGE_KEY,
-    )
-    from ponti_focus import FocusTarget, PontiFocus
-    from ponti_model import PontiModel
-    from ponti_renderer import PontiRenderer
+    from ponti_art import BridgeArt
+    from ponti_audio import BridgeAudio
+    from ponti_content import COMPLETION_FRIEND, PieceKind
+    from ponti_controls import BridgeControls, seat_id, spot_id, tray_id
+    from ponti_layout import BANK_TOP, CAST_HEIGHT, REFERENCE_HEIGHT, REFERENCE_WIDTH, UNIT, CrossingView
+    from ponti_model import SNAP_AFTER_MISSES, BridgeState, Failure, Fit, HintAction, HintPlanner, HintStep, Visit
+    from ponti_renderer import BridgeMotion, BridgeRenderer, Drag, TravelerCast
+    from ponti_run import BridgeRun
+    from ponti_services import EventPort, ProgressPort
+
+IDLE_HINT_SECONDS = 6.0
+CELEBRATE_SECONDS = 2.2
+PAUSE_SECONDS = 1.4
+SNAP_DELAY_SECONDS = 1.3
+RETRY_VOICE_GAP = 8.0
+DRAG_SLOP = 12
+DROP_REACH = 36  # logical px around a target that still counts as "on it"
+MAX_SCHEDULED = 32
+DUSK = (52, 96, 70)
 
 
-def _synth_wav(samples: list[int], rate: int = 22050) -> bytes:
-    buf = io.BytesIO()
-    with wave.open(buf, "wb") as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(rate)
-        raw = bytearray()
-        for s in samples:
-            clamped = max(-32768, min(32767, int(s)))
-            raw.extend(struct.pack("<h", clamped))
-        w.writeframes(raw)
-    return buf.getvalue()
+class AppState(StrEnum):
+    BUILD = "build"
+    RUNNING = "running"  # planks swing down, the friend walks
+    PAUSE = "pause"  # the walk stopped; showing what happened
+    RETURN = "return"  # the friend walks home, planks stand up
+    CELEBRATE = "celebrate"
+    TERMINAL = "terminal"
 
 
-class BridgeAudio:
-    """Small prebuilt procedural sound-effect bank."""
+class Timeline:
+    """Tiny bounded scheduler for scripted moments (celebrate, pause, snap)."""
 
-    def __init__(self) -> None:
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+    def __init__(self, clock: Callable[[], float]) -> None:
+        self._clock = clock
+        self._entries: deque[tuple[float, Callable[[], object]]] = deque(maxlen=MAX_SCHEDULED)
+
+    def after(self, delay: float, action: Callable[[], object]) -> None:
+        self._entries.append((self._clock() + delay, action))
+
+    def run_due(self) -> bool:
+        now = self._clock()
+        due = [entry for entry in self._entries if entry[0] <= now]
+        for entry in due:
+            self._entries.remove(entry)
+        for _, action in sorted(due, key=lambda entry: entry[0]):
+            action()
+        return bool(due)
+
+    @property
+    def busy(self) -> bool:
+        return bool(self._entries)
+
+    def clear(self) -> None:
+        self._entries.clear()
+
+
+@dataclass(slots=True)
+class Press:
+    """A pointer press on gameplay not yet a tap or a drag."""
+
+    target: str  # "tray" | "seat" | "spot"
+    index: int
+    origin: tuple[int, int]
+
+
+class BridgeActivity:
+    """Coordinate the bridge model, the GO test, kit controls, art, voice and lifecycle."""
+
+    def __init__(
+        self,
+        *,
+        screen: pygame.Surface,
+        canvas: PygameReferenceCanvas,
+        visit: Visit,
+        typography: GreiaTypography,
+        resources: LocalizedResources,
+        audio: BridgeAudio,
+        progress: ProgressPort,
+        events: EventPort,
+        clock: Callable[[], float] = time.monotonic,
+        kit: ControlKit | None = None,
+        art: BridgeArt | None = None,
+    ) -> None:
+        self.screen = screen
+        self.canvas = canvas
+        self.visit = visit
+        self.typography = typography
+        self.resources = resources
+        self.audio = audio
+        self.progress = progress
+        self.events = events
+        self.clock = clock
+        self._visit_id = uuid4().hex
+
+        # Shared control kit (ADR 0037): learn Collection -> orange accent.
+        self.kit = kit if kit is not None else ControlKit(typography, ControlTheme.for_accent("orange"))
+        self.art = art if art is not None else BridgeArt(self.kit)
+        self.controls = BridgeControls(
+            self.kit,
+            self.art,
+            ControlLayout.for_canvas(canvas, screen.get_size()),
+            go_label=resources.text("btn.go"),
+            on_tray=self._on_tray,
+            on_seat=self._on_seat,
+            on_spot=self._on_spot,
+            on_go=self._on_go,
+            on_hint=self._on_hint,
+        )
+        self._surfaces = SurfaceNavigator(self.controls.layer)
+        self._input = self._make_input()
+        self.motion = BridgeMotion()
+        self.timeline = Timeline(clock)
+        self.completion: PygameCompletionScreen | None = None
+        self.cast: TravelerCast | None = None
+        self.renderer: BridgeRenderer | None = None
+        self.scene: pygame.Surface
+        self.view = CrossingView(visit.crossing)
+        self.state = AppState.BUILD
+        self.run_: BridgeRun | None = None
+        self.drag: Drag | None = None
+        self._press: Press | None = None
+        self._running = True
+        self._ready_published = False
+        self._activated = False
+        self._last_activity = clock()
+        self._idle_hints = 0
+        self._last_retry_voice = -100.0
+        self._said_go = False
+        self._start_crossing()
+
+    @property
+    def bridge(self) -> BridgeState:
+        return self.visit.state
+
+    # -- main loop ------------------------------------------------------------
+
+    def run(self) -> int:
+        ticker = pygame.time.Clock()
+        last = self.clock()
         try:
-            if not pygame.mixer.get_init():
-                pygame.mixer.init(frequency=22050, size=-16, channels=1, buffer=512)
-            self._init_sounds()
-        except Exception:
-            pass
+            while self._running and not activity_stop_requested():
+                for event in pygame.event.get():
+                    self._handle_event(event)
+                repeat = self._input.poll()
+                if repeat is not None:
+                    self._surfaces.dispatch(repeat)
+                now = self.clock()
+                animating = self.step(min(0.1, now - last))
+                last = now
+                self.render()
+                self.canvas.present()
+                pygame.display.flip()
+                if not self._ready_published:
+                    mark_activity_ready()
+                    self._ready_published = True
+                if self.state is AppState.TERMINAL:
+                    ticker.tick(15)
+                else:
+                    ticker.tick(30 if animating else 20)
+        finally:
+            self.progress.save(self.visit.progress)
+            self.typography.clear()
+        return 0
 
-    def _init_sounds(self) -> None:
-        rate = 22050
-        thud_samples: list[int] = []
-        for i in range(int(rate * 0.08)):
-            t = i / rate
-            env = math.exp(-14.0 * t)
-            val = math.sin(2.0 * math.pi * 220.0 * t)
-            thud_samples.append(int(32767.0 * 0.25 * env * val))
-        self._sounds["place"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(thud_samples)))
+    def step(self, dt: float) -> bool:
+        """Advance the test, timers and motion; return True while something moves."""
 
-        boing_samples: list[int] = []
-        for i in range(int(rate * 0.22)):
-            t = i / rate
-            env = math.exp(-4.5 * t)
-            freq = 300.0 + 500.0 * (t / 0.22)
-            val = math.sin(2.0 * math.pi * freq * t)
-            boing_samples.append(int(32767.0 * 0.32 * env * val))
-        self._sounds["boing"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(boing_samples)))
+        now = self.clock()
+        self.timeline.run_due()
+        if self.cast is not None:
+            self.cast.update()
+        self.motion.prune(now)
+        if self.state in (AppState.RUNNING, AppState.RETURN) and self.run_ is not None:
+            for moment in self.run_.advance(dt):
+                self._on_moment(moment, now)
+        self._maybe_hint(now)
+        cast_moving = self.cast is not None and self.cast.animating
+        return (
+            self.state in (AppState.RUNNING, AppState.PAUSE, AppState.RETURN, AppState.CELEBRATE)
+            or self.motion.active(now)
+            or cast_moving
+            or self.drag is not None
+        )
 
-        win_samples: list[int] = []
-        for i in range(int(rate * 0.50)):
-            t = i / rate
-            env = math.exp(-1.8 * t)
-            freq = 523.0 if t < 0.12 else (659.0 if t < 0.24 else (784.0 if t < 0.36 else 1046.0))
-            val = math.sin(2.0 * math.pi * freq * t)
-            win_samples.append(int(32767.0 * 0.30 * env * val))
-        self._sounds["win"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(win_samples)))
+    def render(self) -> None:
+        surface = self.canvas.surface
+        if self.state is not AppState.TERMINAL and self.renderer is not None:
+            self.renderer.draw(
+                surface,
+                self.scene,
+                self.bridge,
+                self.view,
+                self.motion,
+                self.clock(),
+                run=self.run_ if self.state is not AppState.BUILD else None,
+                drag=self.drag,
+                targets=self._target_rects(),
+                go_rect=self.controls.go.rect,
+            )
+        self._surfaces.draw(surface)
 
-    def play(self, name: str) -> None:
-        snd = self._sounds.get(name)
-        if snd is not None:
-            try:
-                snd.play()
-            except Exception:
-                pass
+    def _target_rects(self) -> dict[str, pygame.Rect]:
+        bridge = self.bridge
+        rects = {f"seat:{span.seat}": self.view.span_band(span) for span in bridge.spans()}
+        for spot in range(len(bridge.crossing.spots)):
+            rects[f"spot:{spot}"] = self.view.spot_rect(spot)
+        for index in range(len(bridge.crossing.pieces)):
+            rects[f"tray:{index}"] = self.controls.tray[index].rect
+        return rects
+
+    # -- input ------------------------------------------------------------------
+
+    def _make_input(self) -> PygameControlInput:
+        return PygameControlInput(to_logical=self.canvas.pointer, is_safe=lambda pos: _safe_point(self.screen, pos))
+
+    def _handle_event(self, event: pygame.event.Event) -> None:
+        if event.type == pygame.QUIT:
+            self._running = False
+            return
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            self._running = False
+            return
+        if event.type == pygame.VIDEORESIZE:
+            self._relayout()
+            return
+        if event.type == pygame.WINDOWFOCUSLOST:
+            self._cancel_pointer()
+            return
+        translated = self._input.translate(event)
+        if translated is None:
+            return
+        if isinstance(translated, KitPointer):
+            self._pointer(translated)
+            return
+        self._note_activity()
+        if self._surfaces.dispatch(translated) is not UiEventResult.IGNORED:
+            self._activated = True
+
+    def _pointer(self, pointer: KitPointer) -> None:
+        if self.state is AppState.TERMINAL:
+            self._surfaces.dispatch(pointer)
+            return
+        phase = pointer.phase
+        if phase is PointerPhase.CANCEL:
+            self._cancel_pointer()
+            self._surfaces.dispatch(pointer)
+            return
+        if phase is PointerPhase.DOWN:
+            self._note_activity()
+            self.controls.layer.focus_visible = False
+            hit = self._gameplay_hit(pointer.position) if self.state is AppState.BUILD else None
+            if hit is not None:
+                self._press = Press(hit[0], hit[1], pointer.position)
+                return
+            self._surfaces.dispatch(pointer)
+            return
+        if phase is PointerPhase.MOVE:
+            if self._press is not None and self.drag is None:
+                dx = pointer.position[0] - self._press.origin[0]
+                dy = pointer.position[1] - self._press.origin[1]
+                if dx * dx + dy * dy > DRAG_SLOP * DRAG_SLOP:
+                    self._start_drag(pointer.position)
+            if self.drag is not None:
+                self.drag.position = pointer.position
+                self.drag.hover = self._drop_target(pointer.position, self.drag.piece)
+                return
+            if self._press is None:
+                self._surfaces.dispatch(pointer)
+            return
+        press, self._press = self._press, None
+        if self.drag is not None:
+            self._drop(pointer.position)
+            return
+        if press is not None:
+            {"tray": self._on_tray, "seat": self._on_seat, "spot": self._on_spot}[press.target](press.index)
+            return
+        self._surfaces.dispatch(pointer)
+
+    def _gameplay_hit(self, position: tuple[int, int]) -> tuple[str, int] | None:
+        for index, button in enumerate(self.controls.tray):
+            if button.visible and button.enabled and button.rect.collidepoint(position):
+                return ("tray", index)
+        for spot in range(len(self.bridge.crossing.spots)):
+            if self.view.spot_rect(spot).collidepoint(position):
+                return ("spot", spot)
+        for index, span in enumerate(self.bridge.spans()):
+            if self.view.seat_rect(span).collidepoint(position):
+                return ("seat", index)
+        return None
+
+    def _drop_target(self, position: tuple[int, int], piece: int) -> str | None:
+        """Target id ("seat:<seat>" / "spot:<k>") the dragged piece would land on."""
+
+        bridge = self.bridge
+        best: tuple[int, str] | None = None
+        if bridge.is_pillar(piece):
+            candidates = [(f"spot:{k}", self.view.spot_rect(k).union(self.view.pillar_rect(k))) for k in range(len(bridge.crossing.spots))]
+        else:
+            candidates = [(f"seat:{span.seat}", self.view.seat_rect(span)) for span in bridge.spans()]
+        for target, rect in candidates:
+            if not rect.inflate(2 * DROP_REACH, 2 * DROP_REACH).collidepoint(position):
+                continue
+            distance = (rect.centerx - position[0]) ** 2 + (rect.centery - position[1]) ** 2
+            if best is None or distance < best[0]:
+                best = (distance, target)
+        return best[1] if best is not None else None
+
+    def _start_drag(self, position: tuple[int, int]) -> None:
+        press = self._press
+        bridge = self.bridge
+        if press is None:
+            return
+        piece: int | None
+        if press.target == "tray":
+            if not bridge.in_tray(press.index):
+                return  # a faded tile (piece already on the bridge) only calls it back
+            piece = press.index
+            bridge.select(piece)
+        elif press.target == "spot":
+            piece = bridge.pillar_at(press.index)
+        else:
+            spans = bridge.spans()
+            piece = bridge.occupant(spans[press.index].seat) if press.index < len(spans) else None
+        if piece is None:
+            return
+        self.drag = Drag(piece, position, press.target != "tray", self._drop_target(position, piece))
+        self._press = None
+        self.audio.play("pick")
+        self._sync()
+
+    def _drop(self, position: tuple[int, int]) -> None:
+        drag, self.drag = self.drag, None
+        if drag is None:
+            return
+        bridge = self.bridge
+        target = self._drop_target(position, drag.piece)
+        self._activated = True
+        placed = False
+        if target is not None:
+            kind, _, name = target.partition(":")
+            if kind == "spot":
+                spot = int(name)
+                current = bridge.seat_of[drag.piece]
+                if current is not None:
+                    bridge.remove(drag.piece)
+                placed = bridge.place_pillar(drag.piece, spot)
+                if not placed and current is not None:
+                    self.audio.play("remove")
+            else:
+                if name in bridge.seats():
+                    bridge.place_plank(drag.piece, name)
+                    placed = True
+        elif drag.from_bridge:
+            bridge.remove(drag.piece)
+            self.audio.play("remove")
+        if placed:
+            self._placed(drag.piece)
+        self._sync(refocus=True)
+
+    def _cancel_pointer(self) -> None:
+        self._press = None
+        if self.drag is not None:
+            self.drag = None
+            self._sync()
+
+    def tap(self, raw_pos: tuple[int, int]) -> bool:
+        """Deliver one complete tap at a physical position (tests/tools)."""
+
+        if not _safe_point(self.screen, raw_pos):
+            return False
+        self._activated = False
+        for event_type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+            self._handle_event(pygame.event.Event(event_type, pos=raw_pos, button=1))
+        return self._activated
+
+    def drag_to(self, raw_from: tuple[int, int], raw_to: tuple[int, int], steps: int = 6) -> bool:
+        """Deliver a complete drag between physical positions (tests/tools)."""
+
+        self._activated = False
+        self._handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=raw_from, button=1))
+        for index in range(1, steps + 1):
+            x = raw_from[0] + (raw_to[0] - raw_from[0]) * index / steps
+            y = raw_from[1] + (raw_to[1] - raw_from[1]) * index / steps
+            self._handle_event(pygame.event.Event(pygame.MOUSEMOTION, pos=(int(x), int(y)), rel=(0, 0), buttons=(1, 0, 0)))
+        self._handle_event(pygame.event.Event(pygame.MOUSEBUTTONUP, pos=raw_to, button=1))
+        return self._activated
+
+    def press(self, key: int) -> bool:
+        """Deliver one key press (tests/tools); returns whether something acted."""
+
+        self._activated = False
+        for event_type in (pygame.KEYDOWN, pygame.KEYUP):
+            self._handle_event(pygame.event.Event(event_type, key=key, mod=0, unicode="", scancode=0))
+        return self._activated
+
+    def _note_activity(self) -> None:
+        self._last_activity = self.clock()
+        self._idle_hints = 0
+
+    def _relayout(self) -> None:
+        self.screen = pygame.display.get_surface() or self.screen
+        self.canvas = PygameReferenceCanvas(self.screen)
+        self._input = self._make_input()
+        self._cancel_pointer()
+        self.controls.relayout(ControlLayout.for_canvas(self.canvas, self.screen.get_size()))
+        self._sync()
+
+    # -- crossing flow --------------------------------------------------------------
+
+    def _start_crossing(self) -> None:
+        self.timeline.clear()
+        self.motion.clear()
+        self.run_ = None
+        self.drag = None
+        self._press = None
+        self._said_go = False
+        self.state = AppState.BUILD
+        crossing = self.visit.crossing
+        self.view = CrossingView(crossing)
+        self.controls.set_crossing(crossing)
+        self.art.prepare(crossing)
+        self.scene = self.art.compose_scene(crossing, self.view)
+        friend = crossing.traveler
+        feedback = CastFeedback(friend, height=CAST_HEIGHT, art=self.art.art, clock=self.clock)
+        load = self.art.load(int(CAST_HEIGHT * 0.46)) if crossing.heavy else None
+        self.cast = TravelerCast(
+            feedback,
+            self.art.cast_pose(friend, "pose_point", CAST_HEIGHT),
+            self.art.cast_pose(friend, "pose_wave", CAST_HEIGHT),
+            load,
+            self.clock,
+        )
+        self.renderer = BridgeRenderer(self.art, self.cast, CAST_HEIGHT)
+        self.audio.use_speaker(friend)
+        self.cast.wave()
+        self._sync(refocus=True)
+        self._note_activity()
+
+    def _sync(self, *, refocus: bool = False) -> None:
+        editable = self.state is AppState.BUILD and self.drag is None
+        self.controls.sync(self.bridge, self.view, editable=self.state is AppState.BUILD, done=self.visit.completed)
+        if refocus and editable:
+            self.controls.focus_default(self.bridge)
+
+    def _selected_tray_piece(self) -> int | None:
+        bridge = self.bridge
+        selected = bridge.selected
+        return selected if selected is not None and bridge.in_tray(selected) else None
+
+    def _on_tray(self, piece: int) -> None:
+        bridge = self.bridge
+        if self.state is not AppState.BUILD or piece >= len(bridge.crossing.pieces):
+            return
+        self._activated = True
+        self._note_activity()
+        if bridge.in_tray(piece):
+            bridge.select(piece)
+            self.audio.play("pick")
+        else:
+            bridge.remove(piece)  # call a piece back from the bridge
+            self.audio.play("remove")
+        self._sync()
+
+    def _on_seat(self, span_index: int) -> None:
+        bridge = self.bridge
+        spans = bridge.spans()
+        if self.state is not AppState.BUILD or span_index >= len(spans):
+            return
+        self._activated = True
+        self._note_activity()
+        seat = spans[span_index].seat
+        selected = self._selected_tray_piece()
+        if selected is not None and not bridge.is_pillar(selected):
+            bridge.place_plank(selected, seat)
+            self._placed(selected)
+        elif (occupant := bridge.occupant(seat)) is not None:
+            bridge.remove(occupant)
+            self.audio.play("remove")
+        else:
+            self._soft_no(selected)
+            return
+        self._sync()
+        if self.controls.layer.focus_visible:
+            self.controls.focus_default(bridge)
+
+    def _on_spot(self, spot: int) -> None:
+        bridge = self.bridge
+        if self.state is not AppState.BUILD or spot >= len(bridge.crossing.spots):
+            return
+        self._activated = True
+        self._note_activity()
+        pillar = bridge.pillar_at(spot)
+        selected = self._selected_tray_piece()
+        if pillar is not None:
+            bridge.remove(pillar)
+            self.audio.play("remove")
+        elif selected is not None and bridge.is_pillar(selected) and bridge.place_pillar(selected, spot):
+            self._placed(selected)
+        else:
+            self._soft_no(selected)
+            return
+        self._sync()
+        if self.controls.layer.focus_visible:
+            self.controls.focus_default(bridge)
+
+    def _soft_no(self, selected: int | None) -> None:
+        """A gentle 'not there': show where the lifted piece can go instead."""
+
+        now = self.clock()
+        bridge = self.bridge
+        self.audio.play("clack")
+        if selected is not None and bridge.is_pillar(selected):
+            for spot in range(len(bridge.crossing.spots)):
+                self.motion.pulse(f"spot:{spot}", now)
+        elif selected is not None:
+            for span in bridge.spans():
+                self.motion.pulse(f"seat:{span.seat}", now)
+        else:
+            for index in bridge.tray_pieces():
+                self.motion.pulse(f"tray:{index}", now)
+
+    def _placed(self, piece: int) -> None:
+        now = self.clock()
+        bridge = self.bridge
+        self.motion.pops[piece] = now
+        self.audio.play("place")
+        where = bridge.seat_of[piece]
+        if where is None:
+            return
+        item = bridge.piece(piece)
+        if item.kind is PieceKind.PILLAR:
+            centre = self.view.pillar_rect(int(where.removeprefix("spot"))).midtop
+        else:
+            centre = (self.view.seat_x(where) - 6, BANK_TOP - item.length * UNIT // 2)
+            self.events.plank_placed(self._visit_id, bridge.crossing.crossing_id, item.length, item.strong)
+        self.motion.add_fx("sparkle", centre, 96, now)
+
+    def _on_go(self) -> None:
+        if self.state is not AppState.BUILD:
+            return
+        self._activated = True
+        self._note_activity()
+        bridge = self.bridge
+        bridge.summary.tests += 1
+        self.run_ = BridgeRun(bridge, self.view)
+        self.motion.demo = None
+        self.motion.pulses.clear()
+        self.motion.missing = None
+        self.state = AppState.RUNNING
+        self.audio.play("go")
+        self.audio.play("creak")
+        if not self._said_go:
+            self._said_go = True
+            self.audio.say("go")
+        self.events.test_started(self._visit_id, bridge.crossing.crossing_id, bridge.summary.tests)
+        self._sync()
+
+    def _on_moment(self, moment: str, now: float) -> None:
+        run = self.run_
+        assert run is not None
+        if moment == "landed":
+            self.audio.play("thunk")
+        elif moment.startswith("pass:"):
+            plank = run.plank_for(int(moment.split(":", 1)[1]))
+            if plank is not None and plank.fit is Fit.JUST_RIGHT:
+                self.motion.add_fx("sparkle", ((plank.seat_x + plank.tip_x) // 2, plank.top - 26), 110, now)
+                self.audio.play("sparkle")
+        elif moment == "bend":
+            self.audio.play("bend")
+        elif moment == "arrive":
+            self._crossing_solved()
+        elif moment == "stop":
+            self._stopped()
+        elif moment == "home":
+            self._back_to_build()
+
+    def _crossing_solved(self) -> None:
+        now = self.clock()
+        bridge = self.bridge
+        assert self.cast is not None
+        self.state = AppState.CELEBRATE
+        self.cast.correct()
+        self.audio.play("arrive")
+        self.audio.say("arrive")
+        picnic = (self.view.picnic_x, BANK_TOP - 70)
+        self.motion.add_fx("confetti", (picnic[0] - 30, picnic[1] - 60), 190, now)
+        self.motion.add_fx("star_burst", picnic, 120, now)
+        self.events.crossing_completed(self._visit_id, bridge.crossing.crossing_id, bridge.summary.tests)
+        self.visit.finish_crossing()
+        self.progress.save(self.visit.progress)
+        self._sync()
+        self.timeline.after(CELEBRATE_SECONDS, self._after_celebration)
+
+    def _stopped(self) -> None:
+        now = self.clock()
+        bridge = self.bridge
+        run = self.run_
+        assert self.cast is not None and run is not None
+        bridge.summary.misses += 1
+        result = run.result
+        failure = result.failure or Failure.EMPTY
+        failed = result.results[result.failed_index or 0]
+        self.state = AppState.PAUSE
+        self.cast.try_again()
+        self.audio.play("stop")
+        x, y = run.traveler_midbottom()
+        self.motion.add_fx("dust_puff", (x + 40, y - 10), 90, now)
+        if failure is Failure.SHORT and failed.piece is not None:
+            reach = failed.span.start + bridge.piece(failed.piece).length
+            self.motion.missing = (reach, failed.span.end)
+        elif failure is Failure.EMPTY:
+            self.motion.missing = (failed.span.start, failed.span.end)
+        if now - self._last_retry_voice >= RETRY_VOICE_GAP:
+            self._last_retry_voice = now
+            self.audio.say("retry")
+        self.events.crossing_missed(self._visit_id, bridge.crossing.crossing_id, bridge.summary.tests, failure.value)
+        self._sync()
+        self.timeline.after(PAUSE_SECONDS, self._start_return)
+
+    def _start_return(self) -> None:
+        if self.state is not AppState.PAUSE or self.run_ is None:
+            return
+        self.run_.start_return()
+        self.state = AppState.RETURN
+
+    def _back_to_build(self) -> None:
+        if self.state is not AppState.RETURN:
+            return
+        self.state = AppState.BUILD
+        self.run_ = None
+        self.motion.missing = None
+        self._sync(refocus=self.controls.layer.focus_visible)
+        self._note_activity()
+        self._demonstrate(snap=self.bridge.summary.misses >= SNAP_AFTER_MISSES)
+
+    def _after_celebration(self) -> None:
+        if self.visit.complete:
+            self._complete_set()
+            return
+        self.visit.next_crossing()
+        self._start_crossing()
+
+    def _complete_set(self) -> None:
+        progress = self.visit.progress
+        set_id = self.visit.crossing_set.set_id
+        self.visit.finish_set()
+        self.progress.save(progress)
+        self.events.set_completed(self._visit_id, set_id, self.visit.completed)
+        self.timeline.clear()
+        self.motion.clear()
+        self.audio.play("fanfare")
+        self.audio.use_speaker(COMPLETION_FRIEND)
+        self.audio.say("complete")
+        self.completion = PygameCompletionScreen(
+            self.typography,
+            width=REFERENCE_WIDTH,
+            height=REFERENCE_HEIGHT,
+            palette=CompletionPalette(background=DUSK),
+            scene=CompletionScene(self.kit, character=COMPLETION_FRIEND, star_total=self.visit.total),
+        )
+        self.completion.prepare(
+            CompletionContent(
+                title=self.resources.text("victory.title"),
+                primary_label=self.resources.text("btn.play_again"),
+                achievement_count=self.visit.completed,
+            )
+        )
+        self._surfaces.push_overlay(CompletionOverlay(self.completion, on_primary=self._restart))
+        self.state = AppState.TERMINAL
+
+    def _restart(self) -> None:
+        """Play the next set (one transaction for keyboard/controller/pointer)."""
+
+        self._activated = True
+        self._surfaces.pop_overlay()
+        if self.completion is not None:
+            self.completion.clear()
+            self.completion = None
+        self._visit_id = uuid4().hex
+        self.visit.start_next_set()
+        self._start_crossing()
+
+    # -- hints ----------------------------------------------------------------------
+
+    def _on_hint(self) -> None:
+        if self.state is not AppState.BUILD:
+            return
+        self._activated = True
+        self._note_activity()
+        self._demonstrate(snap=False)
+
+    @staticmethod
+    def _target_key(step: HintStep) -> str | None:
+        if step.action is HintAction.PLACE_PLANK and step.seat is not None:
+            return f"seat:{step.seat}"
+        if step.spot is not None:
+            return f"spot:{step.spot}"
+        return None
+
+    def _demonstrate(self, *, snap: bool) -> None:
+        """Show the single next step; on repeated stops, also carry it out."""
+
+        if self.state is not AppState.BUILD:
+            return
+        now = self.clock()
+        bridge = self.bridge
+        step = HintPlanner.next_step(bridge)
+        bridge.summary.hints += 1
+        assert self.cast is not None
+        self.cast.point(2.0)
+        self.audio.play("hint")
+        if step.action is HintAction.GO:
+            self.motion.go_pulse = now
+            self.controls.layer.focus("go")
+            return
+        piece = HintPlanner.piece_for(bridge, step)
+        origin = None
+        if piece is not None and bridge.in_tray(piece) and step.action is not HintAction.REMOVE_PILLAR:
+            origin = self.controls.tray[piece].rect.center
+        self.motion.demo = (step, now, origin)
+        key = self._target_key(step)
+        if key is not None:
+            self.motion.pulse(key, now)
+        if self.controls.layer.focus_visible:
+            self._focus_for(step, piece)
+        if snap:
+            self.timeline.after(SNAP_DELAY_SECONDS, lambda: self._snap(step))
+
+    def _snap(self, step: HintStep) -> None:
+        if self.state is not AppState.BUILD or self.drag is not None:
+            return
+        piece = HintPlanner.piece_for(self.bridge, step)
+        if piece is not None and HintPlanner.apply(self.bridge, step):
+            self.motion.demo = None
+            if step.action is HintAction.REMOVE_PILLAR:
+                self.audio.play("remove")
+            else:
+                self._placed(piece)
+            self._sync()
+            if HintPlanner.next_step(self.bridge).action is HintAction.GO:
+                self.motion.go_pulse = self.clock()
+
+    def _focus_for(self, step: HintStep, piece: int | None) -> None:
+        bridge = self.bridge
+        if step.action is HintAction.REMOVE_PILLAR and step.spot is not None:
+            self.controls.layer.focus(spot_id(step.spot))
+            return
+        if piece is not None and bridge.in_tray(piece) and bridge.selected != piece:
+            bridge.select(piece)
+            self._sync()
+            self.controls.layer.focus(tray_id(piece))
+            return
+        if step.action is HintAction.PLACE_PILLAR and step.spot is not None:
+            self.controls.layer.focus(spot_id(step.spot))
+        elif step.seat is not None and step.seat in bridge.seats():
+            self.controls.layer.focus(seat_id(bridge.seats().index(step.seat)))
+
+    def _maybe_hint(self, now: float) -> None:
+        if self.state is not AppState.BUILD or self.timeline.busy or self.drag is not None:
+            return
+        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+            return
+        self._idle_hints += 1
+        assert self.cast is not None
+        if self._idle_hints == 1:
+            # First nudge: the friend points and the next place glows (no answer shown).
+            step = HintPlanner.next_step(self.bridge)
+            self.cast.point(1.8)
+            key = self._target_key(step)
+            if key is not None:
+                self.motion.pulse(key, now)
+            else:
+                self.motion.go_pulse = now
+            self.audio.say("nudge")
+            return
+        self._demonstrate(snap=False)
 
 
-def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
-    vp = activity_viewport_for_surface(surface)
+def _safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
+    viewport = activity_viewport_for_surface(surface)
     x, y = position
-    if not (0 <= x < vp.surface.width and 0 <= y < vp.surface.height):
+    if not (0 <= x < viewport.surface.width and 0 <= y < viewport.surface.height):
         return False
-    for protected in vp.protected_regions:
+    for protected in viewport.protected_regions:
         if protected.x <= x < protected.right and protected.y <= y < protected.bottom:
             return False
     return True
 
 
-# canvas.pointer(event.pos) — historical contract string preserved for tooling parity
-
-
-_FOCUS_STEPS = {
-    SemanticAction.NAV_LEFT: (-1, 0),
-    SemanticAction.NAV_RIGHT: (1, 0),
-    SemanticAction.NAV_UP: (0, -1),
-    SemanticAction.NAV_DOWN: (0, 1),
-}
-
-
-class PontiApp:
-    """Coordinate Greia lifecycle, input, domain stepping and rendering."""
-
-    def __init__(
-        self,
-        screen: pygame.Surface,
-        canvas: PygameReferenceCanvas | None = None,
-        metrics: ChildUiMetrics | None = None,
-        typography: GreiaTypography | None = None,
-        model: PontiModel | None = None,
-        renderer: PontiRenderer | None = None,
-        audio: BridgeAudio | None = None,
-        resources: LocalizedResources | None = None,
-    ) -> None:
-        self._screen = screen
-        self._canvas = canvas or PygameReferenceCanvas(screen)
-        self._metrics = metrics or ChildUiMetrics.for_size(*screen.get_size())
-        self._typography = typography or GreiaTypography()
-        # Theme/UI preferences retained for Greia platform contract parity.
-        try:
-            self._theme = get_theme()
-            self._ui_prefs = get_ui_preferences()
-        except Exception:
-            self._theme = None  # type: ignore[assignment]
-            self._ui_prefs = None  # type: ignore[assignment]
-
-        storage = get_storage()
-        saved: dict | None = None
-        try:
-            raw = storage.kv_get(STORAGE_KEY) if storage else {}
-            saved = raw if isinstance(raw, dict) else {}
-        except Exception:
-            saved = {}
-        total_stars = 0
-        if isinstance(saved, dict):
-            val = saved.get("stars", 0)
-            if isinstance(val, int) and val >= 0:
-                total_stars = val
-
-        self._model = model or PontiModel(total_stars=total_stars)
-        # Ensure renderer shares the same typography for bounded cache sharing.
-        self._renderer = renderer or PontiRenderer(self._typography, resources=resources)
-        self._audio = audio or BridgeAudio()
-        self._storage = storage
-        self._running = True
-        self._ready_published = False
-        self._completion_presented = False
-        self._start_time = time.time()
-        self._clock = pygame.time.Clock()
-        # Arrows / D-pad move this cursor over the same targets a pointer can
-        # press; Space / south button act on it (hybrid profile, ADR 0020).
-        self._focus = PontiFocus()
-        self._translator = PygameInputTranslator(InteractionProfile.NAVIGATION)
-
-    def _present_completion(self) -> None:
-        """Present the completion screen; re-present every frame so the pointer follows the mouse."""
-        if not self._completion_presented:
-            self._renderer.prepare_completion()
-            self._renderer.draw_completion(self._canvas.surface)
-            self._completion_presented = True
-        self._canvas.present()
-        pygame.display.flip()
-
-    def run(self) -> int:
-        while self._running and not activity_stop_requested():
-            frame_start = time.monotonic()
-            elapsed = time.time() - self._start_time
-            now = time.time()
-            for event in pygame.event.get():
-                self._handle_event(event)
-
-            if self._model.is_victory:
-                self._present_completion()
-                time.sleep(0.04)
-                continue
-
-            # Physics step – mirrors original fixed 0.04 tick.
-            outcome = self._model.step()
-            for name in outcome.audio:
-                self._audio.play(name)
-            if outcome.special == "shroom":
-                # Original spawned 12 shroom particles at flash pos.
-                self._renderer.spawn_particles(
-                    x=self._model.flash_pos[0] + 48,
-                    y=self._model.flash_pos[1] + 80,
-                    color=(239, 68, 68),
-                    count=12,
-                    vx_range=(-4, 4),
-                    vy_range=(-6, -2),
-                    size_range=(4, 7),
-                    life=0.8,
-                )
-            elif outcome.special == "rainbow":
-                self._renderer.spawn_particles(
-                    x=self._model.flash_pos[0] + 48,
-                    y=self._model.flash_pos[1] + 70,
-                    color=(250, 204, 21),
-                    count=12,
-                    vx_range=(-3, 3),
-                    vy_range=(-4, 0),
-                    size_range=(3, 6),
-                    life=0.8,
-                )
-            if outcome.fell:
-                # No extra particles for fall beyond the step change itself.
-                pass
-            if outcome.celebration_tick:
-                # Victory star burst while celebrating.
-                if self._renderer.particle_count < 30:
-                    self._renderer.spawn_particles(
-                        x=self._model.flash_pos[0] + random.uniform(10, 80),
-                        y=self._model.flash_pos[1] + random.uniform(0, 40),
-                        color=random.choice([(250, 204, 21), (34, 197, 94), (59, 130, 246), (239, 68, 68)]),
-                        count=1,
-                        vx_range=(-3, 3),
-                        vy_range=(-5, -1),
-                        size_range=(4, 9),
-                        life=1.2,
-                    )
-            if outcome.level_completed:
-                if self._storage is not None:
-                    try:
-                        self._storage.kv_set(STORAGE_KEY, {"stars": self._model.total_stars})
-                    except Exception:
-                        pass
-                try:
-                    emit_activity_event("bridge.level_completed", {"level": self._model.level_idx, "stars": self._model.total_stars})
-                except Exception:
-                    pass
-            if outcome.victory:
-                self._completion_presented = False
-
-            self._renderer.update_particles()
-            self._draw(elapsed, now)
-
-            # Present first usable frame before READY – required in same loop.
-            self._canvas.present()
-            pygame.display.flip()
-            if not self._ready_published:
-                mark_activity_ready()
-                self._ready_published = True
-
-            elapsed_frame = time.monotonic() - frame_start
-            delay = max(0.002, (1.0 / 30.0) - elapsed_frame)
-            time.sleep(delay)
-
-        return 0
-
-    def _draw(self, elapsed: float, now: float) -> None:
-        self._renderer.draw(self._canvas.surface, self._model, elapsed, now)
-        if self._focus.active and not self._model.is_victory:
-            target = self._focus.target(self._model.num_slots)
-            self._renderer.draw_focus_ring(
-                self._canvas.surface,
-                self._renderer.focus_rect(target.kind, target.index, self._model.num_slots),
-            )
-
-    def _focus_center_x(self, target: FocusTarget) -> float:
-        return self._renderer.focus_rect(target.kind, target.index, self._model.num_slots).centerx
-
-    def _handle_semantic(self, action: SemanticAction) -> None:
-        """Apply an arrows / D-pad / Space / south-button intent."""
-        if self._model.is_victory:
-            if action is SemanticAction.ACTIVATE:
-                self._model.restart_after_victory()
-                self._renderer.reset_transients()
-                self._completion_presented = False
-            return
-        step = _FOCUS_STEPS.get(action)
-        if step is not None:
-            if not self._focus.active:
-                ids = [str(block["id"]) for block in BLOCKS]
-                self._focus.reveal(ids.index(self._model.selected_block_id))
-            else:
-                self._focus.move(step[0], step[1], self._model.num_slots, self._focus_center_x)
-            return
-        if action is not SemanticAction.ACTIVATE:
-            return
-        if not self._focus.active:
-            ids = [str(block["id"]) for block in BLOCKS]
-            self._focus.reveal(ids.index(self._model.selected_block_id))
-            return
-        target = self._focus.target(self._model.num_slots)
-        rect = self._renderer.focus_rect(target.kind, target.index, self._model.num_slots)
-        # One rule path: a confirmed focus target is exactly a press at its centre.
-        self._press(rect.center)
-
-    def _handle_event(self, event: pygame.event.Event) -> None:
-        if event.type == pygame.QUIT:
-            self._running = False
-        elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            self._running = False
-        elif event.type == pygame.VIDEORESIZE:
-            self._screen = pygame.display.get_surface() or self._screen
-            self._metrics = ChildUiMetrics.for_size(*self._screen.get_size())
-            self._canvas = PygameReferenceCanvas(self._screen)
-            self._renderer.invalidate()
-            self._completion_presented = False
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            self._focus.hide()
-            self._handle_pointer(event.pos)
-        else:
-            semantic = self._translator.digital(event)
-            if semantic is not None and semantic.edge is InputEdge.PRESSED:
-                self._handle_semantic(semantic.action)
-
-    def _handle_pointer(self, screen_pos: tuple[int, int]) -> None:
-        if not _is_safe_point(self._screen, screen_pos):
-            return
-        pointer = self._canvas.pointer(screen_pos)
-        if pointer is None:
-            return
-        self._press((int(pointer[0]), int(pointer[1])))
-
-    def _press(self, point: tuple[int, int]) -> None:
-        """Apply a press at a logical point (pointer, touch or focus activation)."""
-
-        if self._model.is_victory:
-            if self._renderer.play_again_contains(point):
-                self._model.restart_after_victory()
-                self._renderer.reset_transients()
-                self._completion_presented = False
-            return
-
-        # Palette selection
-        hit = self._renderer.palette_hit(point)
-        if hit is not None:
-            self._model.select_block(hit)
-            self._audio.play("place")
-            return
-
-        # Bridge slots tapping
-        slot_idx = self._renderer.slot_hit(point, self._model.num_slots)
-        if slot_idx is not None and self._model.flash_state in ("neutral", "blink"):
-            placed = self._model.place_block(slot_idx)
-            if placed:
-                self._audio.play("place")
-                try:
-                    emit_activity_event(
-                        "bridge.block_placed",
-                        {
-                            "level": self._model.level_idx,
-                            "slot": slot_idx,
-                            "material": self._model.selected_block_id,
-                        },
-                    )
-                except Exception:
-                    pass
-                slot_w = self._model.slot_w
-                sx = BRIDGE_START_X + slot_idx * slot_w
-                cx = sx + slot_w // 2
-                cy = BRIDGE_Y + 35
-                self._renderer.spawn_particles(
-                    x=cx,
-                    y=cy,
-                    color=(254, 240, 138),
-                    count=10,
-                    vx_range=(-3, 3),
-                    vy_range=(-4, -1),
-                    size_range=(4, 8),
-                    life=1.0,
-                )
-            return
-
-        # GO button (cross bridge)
-        if self._renderer.go_contains(point) and self._model.flash_state in ("neutral", "blink"):
-            self._model.start_crossing()
-            return
-
-        # Clear button
-        if self._renderer.clear_contains(point) and self._model.flash_state in ("neutral", "blink"):
-            self._model.clear()
-            self._audio.play("place")
-            return
-
-
-__all__ = ["PontiApp", "BridgeAudio"]
+__all__ = ["AppState", "BridgeActivity", "Timeline"]
