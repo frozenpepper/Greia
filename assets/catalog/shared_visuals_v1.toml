@@ -1,6 +1,6 @@
 catalog_id = "greia.shared-visuals.v1"
-catalog_version = "0.7.0"
-source_sha256 = "e381c611875ad6ac55e1bccc25e42b06eec33d7de1a5d8490acd228b95a3d3cf"
+catalog_version = "0.8.0"
+source_sha256 = "424943dca04fb53bf61e3b6f28fb73a5432b2e2483450b80671dbb8039afb7dd"
 generated_note = "Build-time PNG renditions from explicit reviewed SVG masters; runtime must not discover or rasterize SVG source."
 
 [[visuals]]
@@ -3082,6 +3082,60 @@ role = "error"
 
 [visuals.variants]
 default = "visual/runtime/v1/ui/error_cloud.png"
+
+[[visuals]]
+id = "ui.keycap.arrow_down"
+kind = "ui"
+role = "keycap"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/keycaps/arrow_down.png"
+lit = "visual/runtime/v1/ui/keycaps/arrow_down_lit.png"
+
+[[visuals]]
+id = "ui.keycap.arrow_left"
+kind = "ui"
+role = "keycap"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/keycaps/arrow_left.png"
+lit = "visual/runtime/v1/ui/keycaps/arrow_left_lit.png"
+
+[[visuals]]
+id = "ui.keycap.arrow_right"
+kind = "ui"
+role = "keycap"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/keycaps/arrow_right.png"
+lit = "visual/runtime/v1/ui/keycaps/arrow_right_lit.png"
+
+[[visuals]]
+id = "ui.keycap.arrow_up"
+kind = "ui"
+role = "keycap"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/keycaps/arrow_up.png"
+lit = "visual/runtime/v1/ui/keycaps/arrow_up_lit.png"
+
+[[visuals]]
+id = "ui.keycap.enter"
+kind = "ui"
+role = "keycap"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/keycaps/enter.png"
+lit = "visual/runtime/v1/ui/keycaps/enter_lit.png"
+
+[[visuals]]
+id = "ui.keycap.space"
+kind = "ui"
+role = "keycap"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/keycaps/space.png"
+lit = "visual/runtime/v1/ui/keycaps/space_lit.png"
 
 [[visuals]]
 id = "ui.loading.orbit"

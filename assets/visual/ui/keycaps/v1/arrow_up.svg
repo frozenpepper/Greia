@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- ui.keycap.arrow_up default: keyboard arrow key; sand skirt, cream top, ink arrow -->
+  <g id="key" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="8" y="10" width="80" height="76" rx="16" fill="#EEDDBA" stroke-width="4"/>
+    <rect x="14" y="13" width="68" height="60" rx="12" fill="#FFFBEB" stroke-width="3"/>
+    <path d="M22 22 L36 22" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.85"/>
+  </g>
+  <g id="symbol" transform="translate(0 0)">
+    <path d="M48 25 L64 43 L54 43 L54 60 L42 60 L42 43 L32 43 Z" fill="#4B372F" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+</svg>

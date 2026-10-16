@@ -2,10 +2,11 @@
 
 One experience: build a fluffy monster friend, name it, keep it.
 
-1. **Build** — ten picture drawers on the left (body, colour, pattern, eyes,
+1. **Build** — ten picture drawers on the right (body, colour, pattern, eyes,
    mouth, horns/ears, arms, feet, accessory, name tag). The open drawer shows
    big tiles on the right, each a real preview of *this* friend wearing that
-   part. Every pick pops onto the friend, who boings and giggles; tickling the
+   part (drawers and tiles sit side by side: one short pointer move). Every
+   pick pops onto the friend, who boings and giggles; tickling the
    friend makes it laugh; it blinks on its own. Undo and a surprise dice sit
    in the top bar.
 2. **Name** — the name-tag drawer offers big syllable bubbles (up to three),

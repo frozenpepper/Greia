@@ -10,7 +10,10 @@ The Activity draws its own board; every interactive element goes through
 * the turn banner is a display-only ``PromptBanner`` (the goal pictogram —
   N discs on a golden band — plus a short turn line for readers);
 * games of the match are ``ProgressDots``;
-* "next game" is a primary round ``IconButton`` with the shared go glyph.
+* "next game" is a primary round ``IconButton`` with the shared go glyph;
+* a ``KeyboardHint`` (left / down / right + Space keycaps) beside the board
+  teaches that the arrows choose a column and Space or arrow-down drops; the
+  drawn key lights while the real key is pressed (ADR 0037 §4b).
 
 Game rules stay in the model; this class only maps controls to the app's
 callbacks and mirrors state into control enablement/visibility.
@@ -19,6 +22,7 @@ callbacks and mirrors state into control enablement/visibility.
 from __future__ import annotations
 
 from collections.abc import Callable
+import time
 
 import pygame
 
@@ -33,6 +37,7 @@ from greia_platform.activity_controls import (
     ProgressDots,
     PromptBanner,
 )
+from greia_platform.activity_keyboard_hint import KeyboardHint, KeyCap
 from greia_platform.localization import LocalizedResources
 
 if __package__:
@@ -45,6 +50,19 @@ else:
     from quattro_layout import BoardGeometry, next_button_rect
 
 MAX_COLUMNS = 7
+
+# Keyboard hint: arrows pick the column, arrow-down or Space drops the disc.
+KEY_HINT_KEYS = frozenset({KeyCap.LEFT, KeyCap.RIGHT, KeyCap.DOWN, KeyCap.SPACE})
+KEY_HINT_KEY = 36
+# Right of the board near its top row (where discs drop), above Leo (head ~ y 330).
+KEY_HINT_CENTER = (900, 244)
+
+
+def key_hint_rect() -> pygame.Rect:
+    width, height = KeyboardHint.preferred_size(KEY_HINT_KEYS, key=KEY_HINT_KEY)
+    rect = pygame.Rect(0, 0, width, height)
+    rect.center = KEY_HINT_CENTER
+    return rect
 
 
 def column_id(col: int) -> str:
@@ -75,6 +93,7 @@ class QuattroControls:
         on_column: Callable[[int], object],
         on_mode: Callable[[str], object],
         on_next: Callable[[], object],
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._kit = kit
         self._art = art
@@ -100,6 +119,7 @@ class QuattroControls:
             on_activate=on_next,
         )
         self.next_game.visible = False
+        self.keys: KeyboardHint = kit.keyboard_hint("keys", key_hint_rect(), active=KEY_HINT_KEYS, clock=clock)
         self.layer: ControlLayer = kit.layer(layer_id="quattro.controls")
         self._layout = layout
         self.set_geometry(geometry)
@@ -116,7 +136,7 @@ class QuattroControls:
             for col in range(geometry.cols)
         )
         self.next_game.rect = next_button_rect(geometry)
-        self.layer.set_targets((*self.columns, *self.mode.controls, self.banner, self.progress, self.next_game))
+        self.layer.set_targets((*self.columns, *self.mode.controls, self.banner, self.progress, self.next_game, self.keys))
 
     def relayout(self, layout: ControlLayout) -> None:
         """Top bar beside protected chrome: who-plays strip, turn banner, games."""

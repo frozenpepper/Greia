@@ -8,7 +8,12 @@ counters that every Activity used to hand-draw:
 * ``ToolStrip`` — exclusive tool/mode selection made of focusable ``ToolSlot``s;
 * ``HudChip`` — non-interactive icon + number counter;
 * ``ProgressDots`` — non-interactive round progress (done / current / to do);
-* ``PromptBanner`` — icon + short text with an optional replay-voice button.
+* ``PromptBanner`` — icon + short text with an optional replay-voice button;
+* ``KeyboardHint`` (``activity_keyboard_hint``) — drawn keycaps that light up
+  with the real keys, teaching that the keyboard works as well as the mouse.
+
+``ControlLayout.cluster`` places related actions (go + brake, left + right)
+as one compact mouse-first cluster with a slot for the keyboard hint.
 
 The kit builds on the existing UI seams instead of introducing a framework:
 controls implement ``ui_core.Control``; ``ControlLayer`` is a ``ui_core.Screen``
@@ -35,7 +40,7 @@ from enum import StrEnum
 import math
 from pathlib import Path
 import time
-from typing import Protocol, Union, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, Union, runtime_checkable
 
 import pygame
 
@@ -56,6 +61,9 @@ from .pygame_input import PygameInputTranslator
 from .system_chrome import ActivitySystemChromeLayout
 from .typography import FontRole
 from .ui_core import BoundedCache, Control, InvalidationTracker, Screen, UiEventResult
+
+if TYPE_CHECKING:
+    from .activity_keyboard_hint import KeyboardHint
 
 Rgb = tuple[int, int, int]
 
@@ -1737,6 +1745,138 @@ class ControlLayout:
             x += int(width) + spacing
         return rects
 
+    def cluster(
+        self,
+        sizes: Sequence[tuple[int, int]],
+        *,
+        anchor: "ClusterAnchor | str" = "bottom_right",
+        shape: "ClusterShape | str" = "row",
+        gap: int | None = None,
+        hint_size: tuple[int, int] | None = None,
+    ) -> "ControlCluster":
+        """Place related actions as one compact, mouse-first cluster (ADR 0037 §4a).
+
+        Controls a child uses together (go + brake, left + right, jump + act)
+        must sit side by side so a mouse or touchpad needs minimal travel
+        between them; split-screen two-thumb layouts are not used. ``sizes``
+        are the preferred logical sizes in order; each is raised to the
+        physical touch floor (touch stays supported by *size*, not spread).
+        ``ROW`` puts them side by side; ``CROSS`` arranges four directions as
+        a D-pad (up, left, right, down, optional centre). The gap is clamped to
+        at most one button width. ``hint_size`` reserves a slot for a
+        ``KeyboardHint`` on the inner side of the cluster, so the keys that
+        drive these controls are drawn next to them. The group anchors to the
+        bottom-right (default) or bottom-centre of the play area, inside the
+        margins and outside the protected Home/Back region.
+        """
+
+        anchor = ClusterAnchor(anchor)
+        shape = ClusterShape(shape)
+        if not sizes:
+            raise ValueError("a cluster needs at least one control")
+        if shape is ClusterShape.CROSS and len(sizes) not in {4, 5}:
+            raise ValueError("a CROSS cluster takes up, left, right, down and an optional centre")
+        floor = int(math.ceil(self.MIN_TOUCH_PHYSICAL / max(0.01, self.scale)))
+        items = [(max(int(w), floor), max(int(h), floor)) for w, h in sizes]
+        narrowest = min(w for w, _ in items)
+        spacing = self.gap if gap is None else int(gap)
+        spacing = max(4, min(spacing, narrowest))
+        hint_gap = spacing * 2
+
+        def measure(scale: float) -> tuple[list[tuple[int, int]], int, int]:
+            scaled = [(max(floor, int(w * scale)), max(floor, int(h * scale))) for w, h in items]
+            if shape is ClusterShape.ROW:
+                width = sum(w for w, _ in scaled) + spacing * (len(scaled) - 1)
+                height = max(h for _, h in scaled)
+            else:
+                cell = max(max(w, h) for w, h in scaled)
+                scaled = [(cell, cell)] * len(scaled)
+                width = height = 3 * cell + 2 * spacing
+            return scaled, width, height
+
+        hint_w, hint_h = (0, 0) if hint_size is None else (int(hint_size[0]), int(hint_size[1]))
+        available_w = self.width - 2 * self.margin - (hint_w + hint_gap if hint_size else 0)
+        available_h = self.height - 2 * self.margin - (self.protected.bottom if self.protected.width else 0)
+        scale = 1.0
+        scaled, width, height = measure(scale)
+        while (width > available_w or height > available_h) and scale > 0.3:
+            scale -= 0.05
+            scaled, width, height = measure(scale)
+
+        group_w = width + (hint_w + hint_gap if hint_size else 0)
+        group_h = max(height, hint_h)
+        bottom = self.height - self.margin
+        if anchor is ClusterAnchor.BOTTOM_RIGHT:
+            right = self.width - self.margin
+        else:
+            right = self.width // 2 + group_w // 2
+        group = pygame.Rect(right - group_w, bottom - group_h, group_w, group_h)
+        if group.colliderect(self.protected):
+            group.left = self.protected.right + self.gap
+        bounds = pygame.Rect(group.right - width, group.bottom - height, width, height)
+        hint = None
+        if hint_size is not None:
+            hint = pygame.Rect(group.left, 0, hint_w, hint_h)
+            hint.centery = bounds.centery
+            hint.bottom = min(hint.bottom, group.bottom)
+
+        rects: list[pygame.Rect] = []
+        if shape is ClusterShape.ROW:
+            x = bounds.left
+            for w, h in scaled:
+                rects.append(pygame.Rect(x, bounds.bottom - h - (height - h) // 2, w, h))
+                x += w + spacing
+        else:
+            cell = scaled[0][0]
+            step = cell + spacing
+            cells = [(1, 0), (0, 1), (2, 1), (1, 2), (1, 1)][: len(scaled)]
+            rects = [pygame.Rect(bounds.left + cx * step, bounds.top + cy * step, cell, cell) for cx, cy in cells]
+        return ControlCluster(tuple(rects), bounds, hint, spacing)
+
+
+class ClusterAnchor(StrEnum):
+    """Where a mouse-first control cluster sits in the play area."""
+
+    BOTTOM_RIGHT = "bottom_right"
+    BOTTOM_CENTER = "bottom_center"
+
+
+class ClusterShape(StrEnum):
+    """How the related controls of one cluster are arranged."""
+
+    ROW = "row"
+    CROSS = "cross"
+
+
+@dataclass(frozen=True, slots=True)
+class ControlCluster:
+    """Result of ``ControlLayout.cluster``: control rects, their bounds, hint slot."""
+
+    rects: tuple[pygame.Rect, ...]
+    bounds: pygame.Rect
+    hint: pygame.Rect | None
+    gap: int
+
+    @property
+    def max_gap(self) -> int:
+        """Largest edge-to-edge distance from any control to its nearest neighbour."""
+
+        if len(self.rects) < 2:
+            return 0
+        worst = 0
+        for index, rect in enumerate(self.rects):
+            nearest = min(
+                _edge_distance(rect, other) for other_index, other in enumerate(self.rects) if other_index != index
+            )
+            worst = max(worst, nearest)
+        return worst
+
+
+def _edge_distance(a: pygame.Rect, b: pygame.Rect) -> int:
+    dx = max(0, max(a.left, b.left) - min(a.right, b.right))
+    dy = max(0, max(a.top, b.top) - min(a.bottom, b.bottom))
+    return int(math.hypot(dx, dy))
+
 
 # --------------------------------------------------------------------------
 # Facade
@@ -1804,6 +1944,13 @@ class ControlKit:
     def layer(self, targets: Iterable[FocusTarget] = (), **kwargs) -> ControlLayer:
         return ControlLayer(self.painter, targets, **kwargs)
 
+    def keyboard_hint(self, control_id: str, rect: pygame.Rect, **kwargs) -> "KeyboardHint":
+        """Drawn keycaps that teach which keys act (``activity_keyboard_hint``)."""
+
+        from .activity_keyboard_hint import KeyboardHint
+
+        return KeyboardHint(self.painter, control_id, rect, art=self.art, **kwargs)
+
     def clear(self) -> None:
         self.painter.clear()
         self.art.clear()
@@ -1813,6 +1960,9 @@ __all__ = [
     "Align",
     "BodyShape",
     "ButtonRole",
+    "ClusterAnchor",
+    "ClusterShape",
+    "ControlCluster",
     "ControlArt",
     "ControlKit",
     "ControlLayer",

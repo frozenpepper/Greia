@@ -4,7 +4,7 @@
 **Scope:** child-facing controls inside Activities (buttons, pills, tool/mode strips, HUD counters, progress, prompts, result feedback, completion)
 **Extends:** ADR 0018 (lightweight UI foundation), ADR 0019 (platform-owned Home/Back chrome), ADR 0020 (runtime-neutral input and controllers), ADR 0026 (resolution-adaptive layout), ADR 0034 (CAPITAL child text)
 **Evidence/audits:** `docs/reviews/activities/2026-10-15_activity_design_audit/GROUP_A_*.md` and `GROUP_B_*.md` (cross-cutting sections), `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md`
-**Implementation (SOURCE):** `src/greia_platform/activity_controls.py`, `src/greia_platform/activity_feedback.py`, `src/greia_platform/pygame_completion.py`; art under `assets/visual/ui/controls/v1/` and cast `pose_think` masters.
+**Implementation (SOURCE):** `src/greia_platform/activity_controls.py`, `src/greia_platform/activity_feedback.py`, `src/greia_platform/activity_keyboard_hint.py`, `src/greia_platform/pygame_completion.py`; art under `assets/visual/ui/controls/v1/` and cast `pose_think` masters.
 
 ## Context
 
@@ -22,6 +22,7 @@ Every Activity drew its own buttons, pills, toolbars and HUD counters (at least 
 | `HudChip` | icon + number counter | no |
 | `ProgressDots` | done (accent) / current (ringed) / to-do dots | no |
 | `PromptBanner` | icon + short text, optional replay-voice `IconButton` (the Activity owns the cue) | replay yes |
+| `KeyboardHint` | drawn keycaps (arrows / Space / Enter) that light with the real keys (§4b) | no |
 | `CastFeedback` | canonical cast friend: `correct()` → `pose_cheer`, `try_again()` → new gentle `pose_think`, then idle; optional Activity-owned sound hooks | — |
 | Completion scene | `PygameCompletionScreen(..., scene=CompletionScene(kit, character=...))`: card art, cheering cast, earned/unearned stars, replay (primary) + optional next (secondary) | buttons yes |
 
@@ -40,6 +41,14 @@ Each control renders `normal`, `hover`, `pressed`, `disabled`, `selected` (and `
 ### 4. Layout outside protected chrome
 
 `ControlLayout.for_canvas(canvas, physical_size)` maps the platform Home/Back protected region (`ActivitySystemChromeLayout`) into the reference-canvas logical space; `for_surface` does the same for physical-resolution Activities. `top_bar` starts after the protected edge, `bottom_bar` sits on the bottom margin, `clear_of_chrome` pushes overlapping content down, `control_height` raises heights toward a 40 px physical touch floor (capped by the caller's band), and `fit` keeps labels (shrinking them) before falling back to icon-only compact controls. The same authored layout therefore holds at 1024×600, 800×480, 480×320 and 1280×800 without per-device coordinates (ADR 0026).
+
+### 4a. Mouse-first control clusters (amendment 2026-10-16)
+
+Owner direction: Greia is used with a mouse or touchpad, so controls used together must be close together (Colline Allegre's GO and BRAKE pedals in opposite bottom corners are the counter-example). Product rule: `ACTIVITY_INPUT_STANDARDS.md` § *Mouse-first control placement*. `ControlLayout.cluster(sizes, anchor=BOTTOM_RIGHT|BOTTOM_CENTER, shape=ROW|CROSS, gap=None, hint_size=None) -> ControlCluster` places related actions as one group: each size is raised to the physical touch floor, the gap is clamped to at most one button width, an oversized group shrinks (never below the floor) to fit inside the margins, the group anchors bottom-right or bottom-centre and is moved clear of the protected Home/Back region, and `hint_size` reserves a `KeyboardHint` slot on the inner side (`ControlCluster.hint`). `ControlCluster.max_gap` measures compactness for tests and audits. Split-screen two-thumb layouts are not used; previous/next paging arrows that flank the content they move are the only allowed spread pair.
+
+### 4b. Keyboard hint (amendment 2026-10-16)
+
+`KeyboardHint` (`greia_platform.activity_keyboard_hint`, factory `ControlKit.keyboard_hint`) is a display-only kit control that draws the acting keys as keycaps from shared art (`ui.keycap.{arrow_up,arrow_down,arrow_left,arrow_right,space,enter}`, variants `default`/`lit`, catalogue 0.8.0): an inverted-T arrow cluster whenever any arrow acts (non-acting arrows dimmed), the Space bar and optionally Enter. Lighting is driven by the input layer, never by raw devices: `observe(PhysicalControl, InputEdge)`, `observe_event(pygame_event)` (through `PygameInputTranslator.physical_digital`; controller D-pad lights the arrows and the south button lights Space, matching ADR 0020's mappings) or `observe_semantic(SemanticInputEvent)`; observing never consumes the event. A tap stays lit for `lit_hold` (0.2 s); a key press reveals the hint for `show_seconds`; `show(seconds|None)`/`hide()` and `demonstrate()` (idle-hint step: light each acting key in turn) control visibility. Frame-governed loops call `update()` once per iteration (True = redraw), pass `deadline()` to `FrameGovernor.wake_at`, and may treat `animating` as essential motion. Cost: keycaps are scaled once per size and state through `ControlArt`; each lit-state composite is built once into the painter's bounded cache, so `draw` is one blit and nothing rasterises SVG or builds fonts at runtime; missing art falls back to painter-drawn keycaps with the same geometry. When required: `ACTIVITY_INPUT_STANDARDS.md` § *Keyboard affordance*.
 
 ### 5. Art versus code
 

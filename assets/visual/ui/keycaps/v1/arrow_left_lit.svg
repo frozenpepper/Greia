@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- ui.keycap.arrow_left lit (pressed, sunshine top): keyboard arrow key; sand skirt, cream top, ink arrow -->
+  <defs>
+    <!-- sunshine light (mix 40% white) -> sunshine -->
+    <linearGradient id="key_arrow_left_lit_top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDA85"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="key" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="8" y="10" width="80" height="76" rx="16" fill="#DBA633" stroke-width="4"/>
+    <rect x="14" y="19" width="68" height="60" rx="12" fill="url(#key_arrow_left_lit_top)" stroke-width="3"/>
+    <path d="M22 28 L36 28" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.85"/>
+  </g>
+  <g id="symbol" transform="translate(0 6)">
+    <path d="M48 25 L64 43 L54 43 L54 60 L42 60 L42 43 L32 43 Z" fill="#4B372F" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" transform="rotate(270 48 43)"/>
+  </g>
+</svg>

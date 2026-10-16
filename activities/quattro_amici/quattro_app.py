@@ -120,6 +120,7 @@ else:
 
 AUTO_HINT_SECONDS = 2.5
 HINT_GLOW_SECONDS = 3.0
+KEY_HINT_START_SECONDS = 8.0  # keyboard hint shown at start (ADR 0037 §4b)
 LEO_THINK_SECONDS = (0.7, 1.2)
 GLIDE_SECONDS_PER_COLUMN = 0.12
 WIN_LEAD = 0.15
@@ -248,7 +249,9 @@ class QuattroApp:
             on_column=self._on_column,
             on_mode=self._on_mode,
             on_next=self._on_next,
+            clock=clock,
         )
+        self.controls.keys.show(KEY_HINT_START_SECONDS)
         self._surfaces = SurfaceNavigator(self.controls.layer)
         self._input = PygameControlInput(to_logical=canvas.pointer, is_safe=lambda pos: _is_safe_pointer(self.screen, pos))
         self._completions: dict[str, PygameCompletionScreen] = {}
@@ -277,6 +280,9 @@ class QuattroApp:
                 if repeat is not None:
                     self._dispatch(repeat)
                 animating = self.step()
+                key_deadline = self.controls.keys.deadline()
+                if key_deadline is not None:
+                    frames.wake_at(key_deadline)
                 frame = frames.frame(dirty=self._dirty, animating=animating)
                 if frame is FrameKind.FULL:
                     self.render()
@@ -315,6 +321,8 @@ class QuattroApp:
             if friend.update():
                 self._dirty = True
         self.motion.prune(now)
+        if self.controls.keys.update():
+            self._dirty = True
         self._maybe_hint(now)
         if self.controls.layer.invalidation.should_draw:
             self._dirty = True
@@ -362,6 +370,8 @@ class QuattroApp:
         if event.type == pygame.VIDEORESIZE:
             self._resize()
             return
+        if self.controls.keys.observe_event(event):
+            self._dirty = True
         translated = self._input.translate(event)
         if translated is not None:
             self._dispatch(translated)
@@ -795,6 +805,8 @@ class QuattroApp:
         self.motion.pulse_start = now
         if step >= 2:
             self._glow_suggestion(player, self._hints.animation_seconds(HINT_GLOW_SECONDS))
+        if self._is_human(player):
+            self.controls.keys.demonstrate()
         self._dirty = True
 
     def _auto_hint(self, serial: int) -> None:

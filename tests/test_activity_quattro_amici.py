@@ -452,6 +452,24 @@ class QuattroAppLoopTests(unittest.TestCase):
         self.assertIsNotNone(app.motion.drop)
         self.assertEqual(app.model.history[0].col, start + 1)
 
+    def test_keyboard_hint_shows_at_start_and_lights_the_pressed_key(self) -> None:
+        from greia_platform.activity_keyboard_hint import KeyCap
+
+        app, *_ = self._app(script=[4])
+        keys = app.controls.keys
+        self.assertTrue(keys.visible, "the arrows + Space hint is shown at start")
+        self.assertEqual(keys.active, {KeyCap.LEFT, KeyCap.RIGHT, KeyCap.DOWN, KeyCap.SPACE})
+        for column in app.controls.columns:
+            self.assertFalse(keys.rect.colliderect(column.rect), "the hint never covers the board")
+        self.assertFalse(keys.rect.colliderect(app.controls._layout.protected))
+        app._handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RIGHT, mod=0, unicode="", scancode=0))
+        self.assertIn(KeyCap.RIGHT, keys.lit)
+        app._handle_event(pygame.event.Event(pygame.KEYUP, key=pygame.K_RIGHT, mod=0, unicode="", scancode=0))
+        self._run(app, 0.5)
+        self.assertNotIn(KeyCap.RIGHT, keys.lit)
+        self._run(app, 12.0)
+        self.assertFalse(keys.visible, "the hint hides again after a while")
+
     def test_tap_drops_in_the_tapped_column_and_protected_chrome_is_ignored(self) -> None:
         app, *_ = self._app(script=[4])
         x = app.geometry.column_x(1)

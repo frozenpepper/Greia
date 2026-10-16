@@ -96,6 +96,7 @@ Registered in `assets/catalog/shared_visuals_v1_source.toml` (catalogue 0.7.0); 
 | Creatures: pets, marine, woodland (neutral + state variants) | `creatures/<role>/v1/` | `runtime/v1/creatures/<role>/` | `creature.<role>.<name>` (kind `character`, role `pet`/`marine`/`woodland`) |
 | Cast extras: sad, angry, silly, pose_wave, pose_play for the six mascots | beside the canonical masters | `runtime/v1/characters/` | variants of `character.<id>` |
 | HUD glyphs | `hud/v1/` | `runtime/v1/hud/` | `icon.hud.<name>` (control-kit glyphs keep `ui/controls/v1`; `icon.hud.broom` is an alias of `icon.hud.clear`) |
+| Keyboard-hint keycaps (catalogue 0.8.0; arrows 96×96, Space 240×96; `default` + `lit`) | `ui/keycaps/v1/` | `runtime/v1/ui/keycaps/` | `ui.keycap.{arrow_up,arrow_down,arrow_left,arrow_right,space,enter}` (consumed by `KeyboardHint`, ADR 0037 §4b) |
 | FX frames | `fx/v1/` | `runtime/v1/fx/` | `fx.<name>` (`default` = peak frame, `frame_2`/`frame_3` continue) |
 
 One drawing per animal: `prop.vocab.{cat,dog,bear,frog,mouse,butterfly,snail,turtle,whale,octopus,crab}` are catalogue aliases that declare the same source/output as the matching `creature.*` default (the builder permits identical source/output/size across IDs and renders once). Do not add a second drawing for an animal that already has a creature.

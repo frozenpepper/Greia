@@ -77,7 +77,7 @@ def plate_between(left: pygame.Rect, right: pygame.Rect, *, width: int = 320, he
 
 @dataclass(frozen=True, slots=True)
 class StudioLayout:
-    """Drawers left, the monster's stage centre, option tiles right."""
+    """The monster's stage left; drawers and option tiles side by side on the right."""
 
     top: TopBar
     undo: pygame.Rect
@@ -96,10 +96,15 @@ class StudioLayout:
     @classmethod
     def build(cls, protected: pygame.Rect, *, button: int) -> "StudioLayout":
         top = TopBar.build(protected, button)
-        column = pygame.Rect(MARGIN, CONTENT_TOP, 2 * DRAWER_TILE + GAP, REFERENCE_HEIGHT - MARGIN - CONTENT_TOP)
+        # Mouse-first (ADR 0037 §4a): the drawers and the option tray are used
+        # in alternation (open a drawer, pick an option), so they sit side by
+        # side on the right; the stage keeps the left. Same sizes as before.
+        height = REFERENCE_HEIGHT - MARGIN - CONTENT_TOP
+        tray = pygame.Rect(REFERENCE_WIDTH - MARGIN - 240, CONTENT_TOP, 240, height)
+        column_w = 2 * DRAWER_TILE + GAP
+        column = pygame.Rect(tray.left - 12 - column_w, CONTENT_TOP, column_w, height)
         drawers = grid(column, len(CATEGORY_ORDER) + 1, 2, max_tile=DRAWER_TILE, gap=GAP)
-        tray = pygame.Rect(REFERENCE_WIDTH - MARGIN - 240, CONTENT_TOP, 240, REFERENCE_HEIGHT - MARGIN - CONTENT_TOP)
-        stage = pygame.Rect(column.right + 12, CONTENT_TOP, tray.left - 12 - (column.right + 12), column.height)
+        stage = pygame.Rect(MARGIN, CONTENT_TOP, column.left - 12 - MARGIN, height)
         surprise = top.left(1, button)
         save = top.right(1, button)
         return cls(

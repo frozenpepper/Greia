@@ -1,5 +1,5 @@
 catalog_id = "greia.shared-visuals.v1"
-catalog_version = "0.7.0"
+catalog_version = "0.8.0"
 status = "candidate-runtime-rendition-source"
 runtime_consumed = false
 notes = "Explicit build-time selection of reviewed SVG masters for raster runtime renditions. This file is not directory discovery."
@@ -1323,6 +1323,124 @@ source = "visual/ui/controls/v1/completion_card.svg"
 output = "visual/runtime/v1/ui/controls/completion_card.png"
 width = 760
 height = 440
+
+# Keyboard-hint keycaps (ADR 0037 §4b keyboard affordance; KeyboardHint control).
+# default = resting key, lit = pressed (sunshine top, shorter lip). Drawn at ~40-56 px;
+# rendered at 96 px height so one smoothscale keeps them crisp at 1024x600 and 1280x800.
+
+[[visuals]]
+id = "ui.keycap.arrow_up"
+kind = "ui"
+role = "keycap"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/keycaps/v1/arrow_up.svg"
+output = "visual/runtime/v1/ui/keycaps/arrow_up.png"
+width = 96
+height = 96
+
+[[visuals.variants]]
+name = "lit"
+source = "visual/ui/keycaps/v1/arrow_up_lit.svg"
+output = "visual/runtime/v1/ui/keycaps/arrow_up_lit.png"
+width = 96
+height = 96
+
+[[visuals]]
+id = "ui.keycap.arrow_down"
+kind = "ui"
+role = "keycap"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/keycaps/v1/arrow_down.svg"
+output = "visual/runtime/v1/ui/keycaps/arrow_down.png"
+width = 96
+height = 96
+
+[[visuals.variants]]
+name = "lit"
+source = "visual/ui/keycaps/v1/arrow_down_lit.svg"
+output = "visual/runtime/v1/ui/keycaps/arrow_down_lit.png"
+width = 96
+height = 96
+
+[[visuals]]
+id = "ui.keycap.arrow_left"
+kind = "ui"
+role = "keycap"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/keycaps/v1/arrow_left.svg"
+output = "visual/runtime/v1/ui/keycaps/arrow_left.png"
+width = 96
+height = 96
+
+[[visuals.variants]]
+name = "lit"
+source = "visual/ui/keycaps/v1/arrow_left_lit.svg"
+output = "visual/runtime/v1/ui/keycaps/arrow_left_lit.png"
+width = 96
+height = 96
+
+[[visuals]]
+id = "ui.keycap.arrow_right"
+kind = "ui"
+role = "keycap"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/keycaps/v1/arrow_right.svg"
+output = "visual/runtime/v1/ui/keycaps/arrow_right.png"
+width = 96
+height = 96
+
+[[visuals.variants]]
+name = "lit"
+source = "visual/ui/keycaps/v1/arrow_right_lit.svg"
+output = "visual/runtime/v1/ui/keycaps/arrow_right_lit.png"
+width = 96
+height = 96
+
+[[visuals]]
+id = "ui.keycap.space"
+kind = "ui"
+role = "keycap"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/keycaps/v1/space.svg"
+output = "visual/runtime/v1/ui/keycaps/space.png"
+width = 240
+height = 96
+
+[[visuals.variants]]
+name = "lit"
+source = "visual/ui/keycaps/v1/space_lit.svg"
+output = "visual/runtime/v1/ui/keycaps/space_lit.png"
+width = 240
+height = 96
+
+[[visuals]]
+id = "ui.keycap.enter"
+kind = "ui"
+role = "keycap"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/keycaps/v1/enter.svg"
+output = "visual/runtime/v1/ui/keycaps/enter.png"
+width = 96
+height = 96
+
+[[visuals.variants]]
+name = "lit"
+source = "visual/ui/keycaps/v1/enter_lit.svg"
+output = "visual/runtime/v1/ui/keycaps/enter_lit.png"
+width = 96
+height = 96
 
 # Collection-page Activity cards (flat recipe; same 288x304 body/slab/shadow
 # grammar as ui.portal.collection, so ui.portal.collection_focus fits them).
