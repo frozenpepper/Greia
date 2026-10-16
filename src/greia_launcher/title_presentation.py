@@ -217,7 +217,60 @@ def contain_fit_icon_surface(
     return target
 
 
-_DISCLOSURE_SURFACES: dict[tuple[str, int, tuple[int, int, int], tuple[int, int, int], tuple[int, int, int]], Any] = {}
+_DISCLOSURE_SURFACES: dict[tuple[Any, ...], Any] = {}
+_DISCLOSURE_CACHE_LIMIT = 64
+_ELLIPSIS = "\u2026"
+
+
+def _clip_to_width(font: Any, text: str, width: int, *, ellipsis: bool) -> str:
+    """Return the longest prefix of ``text`` that fits ``width`` pixels."""
+
+    if font.size(text)[0] <= width:
+        return text
+    suffix = _ELLIPSIS if ellipsis else ""
+    end = len(text)
+    while end > 1 and font.size(text[:end].rstrip() + suffix)[0] > width:
+        end -= 1
+    return text[:end].rstrip() + suffix
+
+
+def wrap_title_lines(
+    font: Any, title: str, usable_width: int, max_lines: int | None = None
+) -> list[str]:
+    """Greedy word wrap of ``title`` into lines no wider than ``usable_width``.
+
+    A single word wider than the line is split by characters instead of
+    overflowing. With ``max_lines`` the text is truncated and the last line
+    ends in an ellipsis, so the result is always a bounded-height block.
+    """
+
+    lines: list[str] = []
+    current = ""
+    for word in title.split():
+        candidate = f"{current} {word}".strip() if current else word
+        if font.size(candidate)[0] <= usable_width:
+            current = candidate
+            continue
+        if current:
+            lines.append(current)
+            current = ""
+        while font.size(word)[0] > usable_width and len(word) > 1:
+            piece = _clip_to_width(font, word, usable_width, ellipsis=False)
+            if not piece or piece == word:
+                break
+            lines.append(piece)
+            word = word[len(piece):]
+        current = word
+    if current:
+        lines.append(current)
+    if not lines:
+        lines = [title]
+    if max_lines is not None and len(lines) > max_lines:
+        kept = lines[:max_lines]
+        rest = " ".join(lines[max_lines - 1 :])
+        kept[-1] = _clip_to_width(font, rest, usable_width, ellipsis=True)
+        lines = kept
+    return lines
 
 
 def render_full_title_disclosure_surface(
@@ -227,8 +280,16 @@ def render_full_title_disclosure_surface(
     theme: Any,
     max_width: int,
     pygame: Any,
+    max_lines: int | None = None,
+    min_size: tuple[int, int] = (0, 0),
 ) -> Any:
-    """Render a clean Greia-native full title tooltip / callout pill."""
+    """Render a clean Greia-native full title tooltip / callout pill.
+
+    The pill is never wider than ``max_width``. ``max_lines`` bounds its
+    height (ellipsis on overflow); ``None`` keeps the complete wrapped title.
+    Surfaces are cached per (title, width, font height, lines, theme colours)
+    so hovering never constructs fonts or re-renders text per frame.
+    """
     full_title = full_title.strip()
     if not full_title:
         return pygame.Surface((1, 1), pygame.SRCALPHA)
@@ -236,6 +297,9 @@ def render_full_title_disclosure_surface(
     cache_key = (
         full_title,
         max_width,
+        font.get_height(),
+        max_lines,
+        min_size,
         getattr(theme, "text", (30, 30, 30)),
         getattr(theme, "panel", (255, 255, 255)),
         getattr(theme, "accent", (66, 133, 244)),
@@ -243,24 +307,8 @@ def render_full_title_disclosure_surface(
     if cache_key in _DISCLOSURE_SURFACES:
         return _DISCLOSURE_SURFACES[cache_key]
 
-    # Word wrap for tooltip if title is very long
-    words = full_title.split()
-    lines: list[str] = []
-    current_line = ""
-    usable_w = max(60, max_width - 24)
-
-    for word in words:
-        test = f"{current_line} {word}".strip() if current_line else word
-        if font.size(test)[0] <= usable_w:
-            current_line = test
-        else:
-            if current_line:
-                lines.append(current_line)
-            current_line = word
-    if current_line:
-        lines.append(current_line)
-    if not lines:
-        lines = [full_title]
+    usable_w = max(24, max_width - 24)
+    lines = wrap_title_lines(font, full_title, usable_w, max_lines)
 
     line_h = font.get_linesize()
     text_surfaces = [font.render(line, True, theme.text) for line in lines]
@@ -269,8 +317,8 @@ def render_full_title_disclosure_surface(
 
     pad_x = 12
     pad_y = 7
-    pill_w = text_w + pad_x * 2
-    pill_h = text_h + pad_y * 2
+    pill_w = max(text_w + pad_x * 2, min(min_size[0], max_width))
+    pill_h = max(text_h + pad_y * 2, min_size[1])
 
     pill = pygame.Surface((pill_w, pill_h), pygame.SRCALPHA)
     pill.fill((0, 0, 0, 0))
@@ -288,10 +336,10 @@ def render_full_title_disclosure_surface(
 
     for i, ts in enumerate(text_surfaces):
         tx = (pill_w - ts.get_width()) // 2
-        ty = pad_y + i * line_h
+        ty = (pill_h - text_h) // 2 + i * line_h
         pill.blit(ts, (tx, ty))
 
-    if len(_DISCLOSURE_SURFACES) > 64:
+    if len(_DISCLOSURE_SURFACES) > _DISCLOSURE_CACHE_LIMIT:
         _DISCLOSURE_SURFACES.clear()
     _DISCLOSURE_SURFACES[cache_key] = pill
     return pill

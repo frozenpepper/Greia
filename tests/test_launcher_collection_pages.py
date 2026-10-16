@@ -42,6 +42,11 @@ from greia_launcher.collection_page_layout import (
     collection_grid_shape,
     page_dot_positions,
 )
+from greia_launcher.home_layout import achievement_button_rect, usage_pill_band
+from greia_launcher.title_presentation import (
+    render_full_title_disclosure_surface,
+    wrap_title_lines,
+)
 from greia_platform.activity_discovery import AdaptiveCollectionPlanner
 from greia_platform.responsive_layout import UiRect
 
@@ -122,6 +127,99 @@ class CollectionPageLayoutTests(unittest.TestCase):
         self.assertEqual((count, active), (12, 11))
 
 
+LONG_TITLES = (
+    "Super Avventura Spaziale dei Draghetti nel Regno delle Fiabe Incantate",
+    "La bottega delle meraviglie di Greia e dei suoi amici",
+    "Supercalifragilistichespiralidosissimo",
+    "Enciclopedia di Greia",
+    "The Great Adventure of the Tiny Dragon in Storybook Land",
+    "Ok",
+)
+
+
+class TitleDisclosureGeometryTests(unittest.TestCase):
+    """The hover title must never cover another caption or protected chrome."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        pygame.init()
+        pygame.font.init()
+
+    def test_tooltip_covers_only_its_own_caption_at_every_card_position(self) -> None:
+        theme = SimpleNamespace(panel=(250, 246, 238), accent=(239, 77, 83), text=(33, 37, 41))
+        for width, height in VIEWPORTS:
+            layout, badge = _layout(width, height)
+            screen = UiRect(0, 0, width, height)
+            star = achievement_button_rect(width, height)
+            usage = usage_pill_band(width, height, left_limit=layout.back.right)
+            font_px = max(12, min(15, layout.label_font_px))
+            font = pygame.font.Font(None, font_px + 4)
+            chrome = [
+                layout.header_band,
+                layout.back,
+                layout.previous,
+                layout.next,
+                layout.dots,
+                badge,
+                star,
+                usage,
+            ]
+            for index in range(layout.capacity):
+                zone = layout.title_disclosure_zone(index)
+                self.assertEqual(zone.cover, layout.labels[index])
+                for title in LONG_TITLES:
+                    with self.subTest(viewport=(width, height), card=index, title=title[:18]):
+                        pill = render_full_title_disclosure_surface(
+                            title,
+                            font=font,
+                            theme=theme,
+                            max_width=zone.bounds.width,
+                            pygame=pygame,
+                            max_lines=2,
+                            min_size=(zone.cover.width, zone.cover.height),
+                        )
+                        rect = zone.place(*pill.get_size())
+                        self.assertTrue(screen.contains(rect), rect)
+                        self.assertLessEqual(rect.width, zone.bounds.width)
+                        self.assertGreaterEqual(rect.width, zone.cover.width)
+                        # Hides its own caption entirely (no stale text peeks out).
+                        self.assertTrue(rect.contains(zone.cover), (rect, zone.cover))
+                        for other_index, other in enumerate(layout.labels):
+                            if other_index != index:
+                                self.assertFalse(rect.intersects(other), (index, other_index))
+                        for other_index, hit in enumerate(layout.cards):
+                            if other_index != index:
+                                self.assertFalse(rect.intersects(hit), (index, other_index))
+                        # Never above the caption: its own card art stays visible.
+                        self.assertGreaterEqual(rect.y, layout.cards[index].bottom)
+                        for protected in chrome:
+                            self.assertFalse(rect.intersects(protected), (rect, protected))
+
+    def test_long_titles_wrap_to_at_most_two_lines_with_ellipsis(self) -> None:
+        font = pygame.font.Font(None, 20)
+        for title in LONG_TITLES:
+            for usable in (60, 110, 180):
+                with self.subTest(title=title[:18], usable=usable):
+                    lines = wrap_title_lines(font, title, usable, 2)
+                    self.assertLessEqual(len(lines), 2)
+                    for line in lines:
+                        self.assertLessEqual(font.size(line)[0], usable)
+        short = wrap_title_lines(font, "Ok", 180, 2)
+        self.assertEqual(short, ["Ok"])
+        self.assertTrue(wrap_title_lines(font, LONG_TITLES[0], 110, 2)[-1].endswith("\u2026"))
+
+    def test_tooltip_surface_is_cached_per_title_and_size(self) -> None:
+        theme = SimpleNamespace(panel=(250, 246, 238), accent=(239, 77, 83), text=(33, 37, 41))
+        font = pygame.font.Font(None, 20)
+        first = render_full_title_disclosure_surface(
+            LONG_TITLES[1], font=font, theme=theme, max_width=160, pygame=pygame, max_lines=2
+        )
+        again = render_full_title_disclosure_surface(
+            LONG_TITLES[1], font=font, theme=theme, max_width=160, pygame=pygame, max_lines=2
+        )
+        self.assertIs(first, again)
+
+
 class ThemeFolderPlanningTests(unittest.TestCase):
     def test_folder_needs_enough_members_and_never_swallows_the_page(self) -> None:
         planner = AdaptiveCollectionPlanner()
@@ -199,6 +297,42 @@ class CollectionPageRenderTests(_ShellCase):
                 )
                 self.assertTrue(any(t.action == "activity_category_back" for t in shell._targets))
                 self.assertTrue(any(t.action == "activity_category" for t in shell._targets))
+
+    def test_hover_title_never_overlaps_neighbouring_captions(self) -> None:
+        """Rendered check: hovering a card leaves every other caption pixel-identical."""
+
+        for size in ((1024, 600), (800, 480)):
+            shell, screen = self._shell(size)
+            items = [_sample(f"org.test.long{i}", collections=("play",)) for i in range(6)]
+            for item, title in zip(items, LONG_TITLES):
+                item.title_key = title
+            self._use_catalogue(shell, items)
+            shell._synthetic_pointer_active = False
+            shell._pointer_position = (0, 0)
+            shell._draw(screen, pygame)
+            layout = shell._collection_page_layout
+
+            def captions(skip: int) -> list[bytes]:
+                return [
+                    pygame.image.tobytes(screen.subsurface(pygame.Rect(l.x, l.y, l.width, l.height)), "RGB")
+                    for i, l in enumerate(layout.labels)
+                    if i != skip
+                ]
+
+            for index in range(layout.capacity):
+                with self.subTest(viewport=size, card=index):
+                    shell._synthetic_pointer_active = False
+                    shell._pointer_position = (0, 0)
+                    shell._cached_activities_key = None
+                    shell._draw(screen, pygame)
+                    before = captions(index)
+                    hit = layout.hits[index]
+                    shell._synthetic_pointer_active = True
+                    shell._pointer_position = (hit.x + hit.width // 2, hit.y + hit.height // 3)
+                    shell._cached_activities_key = None
+                    shell._draw(screen, pygame)
+                    # Boolean compare: a bytes diff of full captions is enormous.
+                    self.assertTrue(before == captions(index), "another caption was covered")
 
     def test_installed_sea_activities_share_one_folder(self) -> None:
         shell, screen = self._shell()

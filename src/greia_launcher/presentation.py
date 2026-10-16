@@ -42,6 +42,7 @@ from .catalogue_view import (
 from .title_presentation import (
     contain_fit_icon_surface,
     render_activity_card_label,
+    render_full_title_disclosure_surface,
 )
 from .main import (
     HitTarget,
@@ -1285,6 +1286,22 @@ class GreiaLauncherPresentation(LauncherApplication):
         right = screen.get_width() - (96 if has_topright_badge else 20)
         return pygame.Rect(left - 4, 0, max(0, right - left + 8), 84)
 
+    def _title_disclosure_zone(self, presented_index: int, pygame: Any) -> Any:
+        """Return a ``TitleDisclosureZone`` for the hover title, or ``None``.
+
+        The zone's ``bounds`` is the only region the tooltip may use and its
+        ``cover`` the caption slot it must fully hide; ``None`` means free
+        placement.
+
+        Page presentations that own a caption layout (Collection pages)
+        override this so the tooltip cannot cover neighbouring labels.
+        """
+
+        return None
+
+    def _title_disclosure_font_px(self) -> int:
+        return 15
+
     def _draw_activity_title_disclosure(
         self, screen: Any, theme: Any, pygame: Any
     ) -> None:
@@ -1296,6 +1313,7 @@ class GreiaLauncherPresentation(LauncherApplication):
             pointer_active = self._is_pointer_active(pygame)
 
             target_activity = None
+            target_activity_index = -1
             target_rect = None
 
             if pointer_active and self._cached_activities_targets:
@@ -1303,6 +1321,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                     if target.action == "presented_activity" and target.rect.collidepoint(pointer):
                         if 0 <= target.value < len(activities):
                             target_activity = activities[target.value]
+                            target_activity_index = target.value
                             target_rect = target.rect
                             break
 
@@ -1317,68 +1336,58 @@ class GreiaLauncherPresentation(LauncherApplication):
             if not full_title:
                 return
 
-            font = self._font(15, pygame)
             width, height = screen.get_size()
-            max_w = min(320, width - 40)
+            zone = self._title_disclosure_zone(target_activity_index, pygame)
+            font = self._font(self._title_disclosure_font_px(), pygame)
+            max_w = zone.bounds.width if zone is not None else min(320, width - 40)
+            # Cached per (title, width, font, lines): no per-frame text work.
+            pill = render_full_title_disclosure_surface(
+                full_title,
+                font=font,
+                theme=theme,
+                max_width=max_w,
+                pygame=pygame,
+                max_lines=2,
+                min_size=(zone.cover.width, zone.cover.height) if zone is not None else (0, 0),
+            )
+            pw, ph = pill.get_size()
 
-            # Word wrap for tooltip if title is very long
-            words = full_title.strip().split()
-            lines: list[str] = []
-            current_line = ""
-            usable_w = max(60, max_w - 24)
-
-            for word in words:
-                test = f"{current_line} {word}".strip() if current_line else word
-                if font.size(test)[0] <= usable_w:
-                    current_line = test
+            if zone is not None:
+                # Collection page: stay inside the hovered card's own caption
+                # column so no neighbouring caption, header control or dot
+                # can be covered (ADR 0026: geometry from the page layout).
+                placed = zone.place(pw, ph)
+                px, py = placed.x, placed.y
+            else:
+                px = target_rect.centerx - pw // 2
+                px = max(16, min(width - pw - 16, px))
+                # Prefer above the card, then below; skip any spot that would
+                # cover another card or leave the area under the header.
+                others = [
+                    t.rect
+                    for t in self._cached_activities_targets
+                    if t.action == "presented_activity" and t.rect != target_rect
+                ]
+                py = target_rect.top - ph - 6
+                for candidate in (py, target_rect.bottom + 6):
+                    spot = pygame.Rect(px, candidate, pw, ph)
+                    if (
+                        candidate >= 65
+                        and spot.bottom <= height - 4
+                        and spot.collidelist(others) < 0
+                    ):
+                        py = candidate
+                        break
                 else:
-                    if current_line:
-                        lines.append(current_line)
-                    current_line = word
-            if current_line:
-                lines.append(current_line)
-            if not lines:
-                lines = [full_title]
-
-            line_h = font.get_linesize()
-            text_surfaces = [font.render(line, True, theme.text) for line in lines]
-            text_w = max(s.get_width() for s in text_surfaces)
-            text_h = len(text_surfaces) * line_h
-
-            pad_x = 12
-            pad_y = 7
-            pw = text_w + pad_x * 2
-            ph = text_h + pad_y * 2
-
-            px = target_rect.centerx - pw // 2
-            px = max(16, min(width - pw - 16, px))
-
-            # Smart placement: above the card if possible, otherwise below
-            py = target_rect.top - ph - 6
-            if py < 65:
-                py = target_rect.bottom + 6
+                    py = max(65, min(height - ph - 4, target_rect.bottom + 6))
 
             # 1. Tactile shadow
             shadow_rect = pygame.Rect(px + 2, py + 3, pw, ph)
             pygame.draw.rect(
                 screen, _mix(theme.background, (0, 0, 0), 0.16), shadow_rect, border_radius=12
             )
-
-            # 2. Pill background
-            pill_rect = pygame.Rect(px, py, pw, ph)
-            bg_color = (
-                min(255, getattr(theme, "panel", (255, 255, 255))[0] + 12),
-                min(255, getattr(theme, "panel", (255, 255, 255))[1] + 12),
-                min(255, getattr(theme, "panel", (255, 255, 255))[2] + 12),
-            )
-            pygame.draw.rect(screen, bg_color, pill_rect, border_radius=12)
-            pygame.draw.rect(screen, theme.accent, pill_rect, width=2, border_radius=12)
-
-            # 3. Text lines
-            for i, ts in enumerate(text_surfaces):
-                tx = px + (pw - ts.get_width()) // 2
-                ty = py + pad_y + i * line_h
-                screen.blit(ts, (tx, ty))
+            # 2. Cached pill (background, outline and text lines).
+            screen.blit(pill, (px, py))
         except Exception:
             pass
 

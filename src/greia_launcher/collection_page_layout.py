@@ -93,6 +93,30 @@ def page_dot_positions(page_count: int, page_index: int) -> tuple[int, int]:
 
 
 @dataclass(frozen=True, slots=True)
+class TitleDisclosureZone:
+    """Where a card's full-title tooltip may be drawn.
+
+    ``bounds`` is the whole permitted region; ``cover`` is the card's own
+    caption slot that the tooltip must fully hide (so the shorter, shrunk
+    caption never peeks out around it).
+    """
+
+    bounds: UiRect
+    cover: UiRect
+
+    def place(self, width: int, height: int) -> UiRect:
+        """Return the pill rect of ``width`` x ``height`` for this zone.
+
+        Centred under the card inside ``bounds``, top-aligned with the caption
+        it covers (growth, if any, goes down into the row gap only).
+        """
+
+        width = min(width, self.bounds.width)
+        x = max(self.bounds.x, min(self.bounds.right - width, self.cover.x + self.cover.width // 2 - width // 2))
+        return UiRect(x, self.cover.y, width, height)
+
+
+@dataclass(frozen=True, slots=True)
 class CollectionPageLayout:
     """Resolved geometry for one Collection page frame.
 
@@ -148,6 +172,42 @@ class CollectionPageLayout:
 
         left = self.back.x - 6
         return UiRect(left, 0, max(0, self.header_right + 6 - left), self.header_bottom + 2)
+
+    def title_disclosure_zone(self, local_index: int) -> TitleDisclosureZone:
+        """Return the only region the full-title tooltip of one card may use.
+
+        The tooltip replaces the hovered card's *own* caption: it starts at the
+        caption slot and may widen into the empty gap towards the neighbouring
+        captions (never into them) and into the row gap below, but never above
+        the caption (that would cover the card art) and never past the page
+        arrows. No other caption, header control or dots can therefore be
+        covered at any viewport, whatever the title length.
+        """
+
+        label = self.labels[local_index]
+        column = local_index % self.columns
+        left_limit = self.previous.right + 2
+        right_limit = self.next.x - 2
+        if column > 0:
+            left_limit = max(left_limit, self.labels[local_index - 1].right + 2)
+        if column < self.columns - 1 and local_index + 1 < len(self.labels):
+            right_limit = min(right_limit, self.labels[local_index + 1].x - 2)
+        # Centre the widening on the caption so the pill stays under its card.
+        reach = min(label.x - left_limit, right_limit - label.right)
+        reach = max(0, reach)
+        row = local_index // self.columns
+        if row + 1 < self.rows and (row + 1) * self.columns < len(self.hits):
+            below_gap = self.hits[(row + 1) * self.columns].y - label.bottom
+        else:
+            below_gap = self.dots.y - label.bottom
+        extra_below = max(0, min(below_gap // 2 - 2, 8))
+        bounds = UiRect(
+            label.x - reach,
+            label.y,
+            label.width + 2 * reach,
+            label.height + extra_below,
+        )
+        return TitleDisclosureZone(bounds, label)
 
     @classmethod
     def compute(

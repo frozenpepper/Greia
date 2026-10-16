@@ -150,6 +150,24 @@ class CollectionPageMixin:
             self._collection_layout_cache[key] = layout
         return layout
 
+    def _title_disclosure_zone(self, presented_index: int, pygame: Any) -> Any:
+        """Confine the hover title to the hovered card's own caption column."""
+
+        layout = self._collection_page_layout
+        if not self._collection_page_active() or layout is None:
+            return super()._title_disclosure_zone(presented_index, pygame)
+        local = presented_index - self._activity_scroll_start
+        if not 0 <= local < len(layout.labels):
+            return super()._title_disclosure_zone(presented_index, pygame)
+        return layout.title_disclosure_zone(local)
+
+    def _title_disclosure_font_px(self) -> int:
+        layout = self._collection_page_layout
+        if not self._collection_page_active() or layout is None:
+            return super()._title_disclosure_font_px()
+        # Two tooltip lines must fit the caption slot they replace.
+        return max(12, min(15, layout.label_font_px))
+
     def _display_size(self, pygame: Any) -> tuple[int, int]:
         surface = pygame.display.get_surface()
         if surface is None:
