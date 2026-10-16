@@ -97,6 +97,23 @@ def install_test_process_hygiene() -> None:
     writers' re-read verification still execute unchanged.
     """
     os.sync = _no_host_sync
+    _pin_source_packages()
+
+
+# tools/ holds scripts named like the src packages (tools/greia_parent.py,
+# tools/greia_simulator.py). Several tests put tools/ at the front of
+# sys.path at import time; once discovery has imported them, a later
+# ``import greia_parent`` would load the script instead of the package and
+# fail depending on discovery order. Importing the real packages first pins
+# them in sys.modules.
+_SHADOWED_PACKAGES = ("greia_parent", "greia_simulator")
+
+
+def _pin_source_packages() -> None:
+    import importlib
+
+    for name in _SHADOWED_PACKAGES:
+        importlib.import_module(name)
 
 
 def _no_host_sync() -> None:
