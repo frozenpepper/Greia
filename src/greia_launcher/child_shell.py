@@ -38,6 +38,7 @@ from .composition import (
 from .display_session import DisplaySessionCoordinator
 from .event_broker import ActivityEventBroker
 from .feedback_presentation import SharedUiFeedbackMixin
+from .home_layout import usage_pill_rect
 from .launch_timing import ready_timeout_for
 from .main import _development_hal, configure_launcher_logging
 from .navigation_chrome_presentation import SharedUiNavigationChromeMixin
@@ -453,17 +454,17 @@ class GreiaChildShell(
         clock_diameter = max(24, min(32, height // 18))
         horizontal_padding = 12
         gap = 8
-        pill_width = min(
-            max(120, width - 120),
-            clock_diameter + gap + label.get_width() + horizontal_padding * 2,
-        )
         pill_height = max(clock_diameter + 10, label.get_height() + 14)
-        pill = pygame.Rect(
-            max(8, width - pill_width - 14),
-            12,
-            pill_width,
+        # Left of the achievement star on the same row (it used to sit under
+        # the star, which hid the end of the text); never past the profile badge.
+        geometry = usage_pill_rect(
+            width,
+            height,
+            clock_diameter + gap + label.get_width() + horizontal_padding * 2,
             pill_height,
+            left_limit=14 + self._home_profile_badge_size(height),
         )
+        pill = pygame.Rect(geometry.x, geometry.y, geometry.width, geometry.height)
         pygame.draw.rect(screen, theme.panel, pill, border_radius=pill_height // 2)
         pygame.draw.rect(
             screen,

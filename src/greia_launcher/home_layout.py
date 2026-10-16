@@ -47,6 +47,56 @@ def layout_scale(width: int, height: int) -> float:
     )
 
 
+# Top-right Shell corner: the achievement star sits in the corner and the
+# Home time-left pill sits to its left on the same row (never underneath it).
+CORNER_MARGIN = 14
+CORNER_TOP = 10
+_CORNER_GAP = 10
+
+
+def achievement_button_rect(width: int, height: int) -> UiRect:
+    """The badge-library star button, anchored to the top-right corner."""
+
+    size = max(58, min(76, height // 8))
+    return UiRect(width - size - CORNER_MARGIN, CORNER_TOP, size, size)
+
+
+def usage_pill_rect(
+    width: int,
+    height: int,
+    content_width: int,
+    pill_height: int,
+    *,
+    left_limit: int,
+) -> UiRect:
+    """Time-left pill: right-aligned against the star, vertically centred on it.
+
+    ``content_width`` is the pill's preferred width; it shrinks (never below the
+    clock plus a few characters) so it stays right of ``left_limit`` (the
+    profile badge edge). The caller scales the label to the returned width.
+    """
+
+    star = achievement_button_rect(width, height)
+    right = star.x - _CORNER_GAP
+    available = max(80, right - left_limit - _CORNER_GAP)
+    pill_width = max(80, min(content_width, available))
+    top = star.y + max(0, (star.height - pill_height) // 2)
+    return UiRect(right - pill_width, top, pill_width, pill_height)
+
+
+def usage_pill_band(width: int, height: int, *, left_limit: int) -> UiRect:
+    """The largest area the time-left pill can occupy (for layout avoidance)."""
+
+    clock = max(24, min(32, height // 18))
+    font = max(15, min(21, height // 30))
+    pill_height = max(clock + 10, int(font * 1.45) + 14)
+    return usage_pill_rect(width, height, 10_000, pill_height, left_limit=left_limit)
+
+
+def overlaps(a: UiRect, b: UiRect) -> bool:
+    return a.x < b.x + b.width and b.x < a.x + a.width and a.y < b.y + b.height and b.y < a.y + a.height
+
+
 def portal_icon_rect(portal: UiRect) -> UiRect:
     """Return the icon square centred in the portal art's cream window."""
 

@@ -19,7 +19,13 @@ from greia_platform.responsive_layout import UiRect
 
 from .catalogue_view import ALL_ACTIVITIES_ID, _category_title
 from .collection_hues import COLLECTION_HUES, HUE_RGB
-from .home_layout import CollectionHomeLayout, portal_icon_rect
+from .home_layout import (
+    CollectionHomeLayout,
+    achievement_button_rect,
+    overlaps,
+    portal_icon_rect,
+    usage_pill_band,
+)
 from .main import HitTarget
 from .shared_ui_presentation import CAPTION_CREAM, CAPTION_INK, draw_caption_pill
 
@@ -218,8 +224,9 @@ class CollectionFirstHomeMixin:
             reserved.append(UiRect(14, 10, badge, badge))
         # Achievement star (AchievementLibraryMixin) plus its count pill, or
         # the gentle error badge, occupy the same top-right corner.
-        star = max(58, min(76, height // 8))
-        reserved.append(UiRect(width - star - 14, 10, star + 4, star + 4))
+        star = achievement_button_rect(width, height)
+        reserved.append(UiRect(star.x, star.y, star.width + 4, star.height + 4))
+
         return tuple(reserved)
 
     @staticmethod
@@ -265,13 +272,23 @@ class CollectionFirstHomeMixin:
             self._home_collection_selected, len(collections) - 1
         )
 
+        reserved = self._home_reserved_rects(width, height)
         layout = CollectionHomeLayout.compute(
-            width,
-            height,
-            len(collections),
-            self._home_columns(pygame),
-            reserved=self._home_reserved_rects(width, height),
+            width, height, len(collections), self._home_columns(pygame), reserved=reserved
         )
+        # On very small screens the portal grid reaches the top row; then keep
+        # it clear of the time-left pill too (larger screens are unaffected).
+        band = usage_pill_band(
+            width, height, left_limit=14 + self._home_profile_badge_size(height)
+        )
+        if any(overlaps(band, hit) for hit in layout.hits):
+            layout = CollectionHomeLayout.compute(
+                width,
+                height,
+                len(collections),
+                self._home_columns(pygame),
+                reserved=(*reserved, band),
+            )
 
         # The child's own cast friend greets them from the free margin.
         greeter = getattr(self, "_draw_profile_greeter", None)

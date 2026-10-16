@@ -12,6 +12,8 @@ from typing import Any
 from greia_platform.assets import AssetCatalogueError
 from greia_platform.pygame_visual_assets import VisualSurfaceCacheError
 
+from .home_layout import achievement_button_rect
+
 
 _SHARED_FEEDBACK_ERRORS = (
     VisualSurfaceCacheError,
@@ -247,9 +249,12 @@ class SharedUiFeedbackMixin:
 
         from .main import HitTarget
 
+        # Below the top-right HUD row (badge star + time-left pill), so the
+        # gentle error cloud never covers the time readout.
+        hud_row = achievement_button_rect(width, height)
         rect = pygame.Rect(
             width - badge_width - 10,
-            max(8, min(18, height // 40)),
+            hud_row.y + hud_row.height + 6,
             badge_width,
             badge_height,
         )

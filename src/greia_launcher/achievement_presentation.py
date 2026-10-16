@@ -15,6 +15,7 @@ from greia_platform.history import HistoryError
 from greia_platform.pygame_achievements import PygameAchievementBadgeRenderer
 from greia_platform.typography import FontRole
 
+from .home_layout import achievement_button_rect
 from .achievement_localization import (
     achievement_ui_strings,
     resolve_achievement_locale,
@@ -334,8 +335,9 @@ class AchievementLibraryMixin:
         snapshot = self._achievement_snapshot or self._refresh_achievements()
         if snapshot is None:
             return
-        size = max(58, min(76, screen.get_height() // 8))
-        rect = pygame.Rect(screen.get_width() - size - 14, 10, size, size)
+        corner = achievement_button_rect(screen.get_width(), screen.get_height())
+        size = corner.width
+        rect = pygame.Rect(corner.x, corner.y, corner.width, corner.height)
         pygame.draw.rect(screen, theme.panel, rect, border_radius=20)
         pygame.draw.rect(screen, theme.accent, rect, width=4, border_radius=20)
         icon = self._load_icon("yellow_star", max(30, size - 24), pygame)
