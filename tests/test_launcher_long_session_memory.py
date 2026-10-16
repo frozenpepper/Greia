@@ -114,7 +114,12 @@ def _retained_surface_bytes() -> int:
     for owner in gc.get_objects():
         for item in gc.get_referents(owner):
             if isinstance(item, pygame.Surface) and id(item) not in seen:
-                seen[id(item)] = item.get_width() * item.get_height() * item.get_bytesize()
+                try:
+                    seen[id(item)] = item.get_width() * item.get_height() * item.get_bytesize()
+                except pygame.error:
+                    # A display Surface left behind by an earlier test that quit
+                    # the display no longer owns pixels; it retains nothing.
+                    seen[id(item)] = 0
     return sum(seen.values())
 
 

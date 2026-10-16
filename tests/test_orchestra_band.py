@@ -274,7 +274,8 @@ class OrchestraAppLoopTests(unittest.TestCase):
         self.advance(6.2)
         self.assertEqual(self.app.motion.borrowed[lead][0], "pose_point")
         self.assertTrue(self.app.motion.rings)
-        self.advance(6.2)
+        # IdleHintScheduler backs off: the second hint comes a further 12 s later.
+        self.advance(12.2)
         self.assertIs(self.app.phase, Phase.LISTEN)
         self.assertGreaterEqual(self.app.session.current.hints, 2)
 

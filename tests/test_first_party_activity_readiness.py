@@ -125,12 +125,14 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
                 # Thin bootstraps (e.g. acquario_magico/main.py) delegate the
                 # actual flip to app._draw() which internally presents. Treat a
                 # draw/present call in the same loop as presentation proxy.
+                # ``_present`` is the dirty-rectangle Activities' own helper
+                # that flips (full frame) or pushes just the changed regions.
                 draw_calls = [
                     node
                     for node in ast.walk(function)
                     if isinstance(node, ast.Call)
                     and _call_name(node)
-                    and _call_name(node)[-1] in {"_draw", "draw", "present"}
+                    and _call_name(node)[-1] in {"_draw", "draw", "present", "_present"}
                     and _nearest_parent(
                         node, parents, (ast.While, ast.For, ast.AsyncFor)
                     )
