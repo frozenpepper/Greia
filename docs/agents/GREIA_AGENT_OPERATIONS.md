@@ -254,6 +254,28 @@ For a physical gate:
 
 If the target is unreachable, return the completed source/Simulator evidence and classify the physical lane `INCOMPLETE`. Do not invent a substitute.
 
+### Developer Acer: in-place source deploy (no installer)
+
+Use this to test a frozen `HEAD` on an already-installed developer Acer without reimaging. It needs operator key authentication and `sudo -n` provisioned by the owner; never touch `sshd`, sudoers or `authorized_keys`, and keep addresses and credentials out of commands you record. The older `tools/deploy_to_acer.py` is a password-based extract-in-place script that leaves `/opt/greia-os` owned by `greiakid`; it does not follow this procedure and must not be used for it.
+
+**Device facts.** Atom N270, i686, 1 GB RAM, no swap, Python 3.11, Xorg 1024x600. There is no `rsync`, and `/var/tmp` is a 32 MB tmpfs, so stage under `/var/lib/greia/deploy`.
+
+**Procedure.**
+
+1. Build the bundle on the host from `git archive HEAD` (never the dirty worktree), filtered by the image composition rules in `build/lib/compose.sh` (`compose_install_target_content` / `compose_install_runtime_assets`): `src`, `runtime`, `activities`, and the runtime asset subset only (`assets/audio boot catalog/*.toml fonts icons scenes visual/runtime`), no `__pycache__`, no `source/`. Pack with `COPYFILE_DISABLE=1 tar --no-xattrs`; macOS AppleDouble (`._*`) files otherwise land in Activity folders and fail validation or break the extract. Regenerate the built-in index with `tools/build_activity_index.py` from the staged Activities.
+2. Copy the bundle to `/var/lib/greia/deploy`, extract there, and **parse-gate** it: compile every `.py` with the device's own Python 3.11 (`python3 -I -B`, in memory, no bytecode written). Stop on the first failure; the live tree is untouched so far.
+3. Stop `greia-launcher` and `greia-parent`. Keep exactly one backup in `/var/lib/greia/deploy/prev`, then swap the staged tree into `/opt/greia-os` and the new index into `/usr/share/greia/activity-index-v1.json`. The installed tree is root-owned with directories `555` and files `444`; reproduce that ownership and mode (the composer does `chown -R root:root` + `chmod -R a-w`). Install any changed units from `build/overlay/etc/systemd/system/` and run `systemctl daemon-reload`.
+4. Rebuild the read-only bytecode prefix on the device with the device interpreter: `sudo /usr/bin/python3 -I -B tools/precompile_greia_bytecode.py --greia-root /opt/greia-os` (source and rules in that script's docstring; checked-hash bytecode that no longer matches the source is ignored, so skipping this is safe but makes launch timings meaningless).
+5. Start `greia-launcher` and `greia-parent`, then check health with `systemctl show greia-launcher -p NRestarts --value` (see "active is not health" below), the Shell on screen, and that the deployed file contains the change. Fix forward from the journal if needed; delete `/var/lib/greia/deploy/prev` only after verification passes.
+
+**Observation.**
+
+- Screenshots: the `greia_remote.py screenshot` path needs `/etc/greia-os/developer-display.json`, which in-place deploys do not guarantee. Fall back to `PIL.ImageGrab` run as `greiakid` with `DISPLAY=:0`.
+- Input: `xdotool` run as `greiakid` on `DISPLAY=:0`. It is remote coordinate injection, never physical-input evidence (rule 8 above).
+- Launcher warnings and uncaught tracebacks now reach the journal as `greia-launcher: ...` entries (`greia_launcher.main.configure_launcher_logging`); you no longer need the `session.err` redirect for Shell crashes.
+- Measurement method (launch to READY from `sessions.ready_at`, 1 Hz `/proc` CPU/RSS sampler, idle/interaction windows, STANDALONE DIAGNOSTIC labelling, play-limit and parent-policy constraints): `docs/reviews/acer/2026-10-16_ACER_ACTIVITY_SWEEP.md`. Its re-sweep section lists what a deploy of a given SHA changed and what was not verified on device.
+- Write the deployed `HEAD` SHA to `/opt/greia-os/.deployed-sha` (the convention the sweep reviews rely on; no repository tool writes it) and quote it in every evidence note.
+
 ---
 
 ## 9. Failure-preservation rules
@@ -558,6 +580,10 @@ Two boot loops in this session both presented as `active`. The climb in
 `NRestarts` was the only reliable signal.
 
 ### The session swallows the traceback
+
+(Since 2af434da the Shell's warnings and uncaught crashes are also routed to the
+journal by `configure_launcher_logging`; read `journalctl -t greia-launcher`
+first. The redirect below remains for crashes before logging is configured.)
 
 `greia-x-session` runs `python3 -m greia_launcher.child_shell`, and when it
 exits non-zero the journal records only `exited with status 1` before trying
