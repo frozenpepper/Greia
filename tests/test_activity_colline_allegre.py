@@ -453,6 +453,34 @@ class AppLoopTests(CollineBase):
             if app.state is AppState.TERMINAL:
                 return
 
+    def test_frame_uses_rle_layers_and_a_cached_hud_overlay(self) -> None:
+        from greia_platform.pygame_blit import is_rle
+
+        app = self.make_app()
+        app.render()
+        hud = app.controls.hud
+        composed = hud.compositions
+        self.now[0] += 0.05
+        app.step()
+        app.render()
+        self.assertEqual(hud.compositions, composed, "a still HUD is not re-composed every frame")
+        app.hold(go=True)
+        self.advance(app, 0.2)
+        app.render()
+        self.assertGreater(hud.compositions, composed, "a held pedal re-composes the HUD")
+        ride = app.ride
+        assert ride is not None
+        backdrop = app.art.backdrop(ride.layout.spec.biome)
+        for layer in (backdrop.far, backdrop.mid):
+            if layer is not None:
+                self.assertTrue(is_rle(layer[0]))
+        self.assertTrue(is_rle(app.art.chunk(ride.layout, 0).surface))
+        self.assertTrue(is_rle(app.art.vehicle("happy", 0.2)))
+        app.controls.place(ControlLayout.for_canvas(app.canvas, app.screen.get_size()))
+        before = hud.compositions
+        app.render()
+        self.assertGreater(hud.compositions, before, "a re-layout invalidates the cached HUD")
+
     def test_app_plays_a_whole_set_to_the_completion_scene_and_restarts(self) -> None:
         app = self.make_app()
         self.assertIs(app.state, AppState.READY)

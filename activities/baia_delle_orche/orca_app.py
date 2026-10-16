@@ -36,6 +36,7 @@ from greia_platform.activity_controls import (
     PygameControlInput,
 )
 from greia_platform.input_core import InputEdge, SemanticAction, SemanticInputEvent
+from greia_platform.pygame_blit import HudOverlay
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 from greia_platform.frame_governor import FrameGovernor, FrameKind
@@ -162,6 +163,9 @@ class OrcaBayActivity:
             on_hint=self._request_hint,
         )
         self._surfaces = SurfaceNavigator(self._controls.layer)
+        # The kit controls are composed once into an RLE overlay and re-composed
+        # only when the layer is invalidated (greia_platform.pygame_blit).
+        self._hud = HudOverlay()
         self._input = self._make_input()
         self._missions = MissionDirector(rng=rng, enabled=missions_enabled)
         self._cast = OrcaCast(self._kit.art, height=CAST_HEIGHT, clock=clock)
@@ -686,7 +690,10 @@ class OrcaBayActivity:
             )
         else:
             renderer.draw_fact_bubble(surface, None, (0, 0), 0)
-        self._surfaces.draw(surface)
+        if self._surfaces.overlays:
+            self._surfaces.draw(surface)
+        else:
+            self._hud.draw(surface, None, self._surfaces.draw, stale=self._controls.layer.invalidation.should_draw)
         self.canvas.present()
 
     def _save(self) -> None:

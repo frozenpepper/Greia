@@ -178,8 +178,11 @@ class SubmarineApp:
             screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.NOFRAME)
         self.screen = screen
         self.canvas = PygameReferenceCanvas(screen)
-        # 24-bit depth without alpha so colour-keyed layers blit solidly.
-        self.canvas.surface = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), 0, 24)
+        # Opaque (no alpha channel) so colour-keyed layers blit solidly, in the
+        # display's own format: a 24-bit canvas forced SDL's slowest blit and
+        # conversion paths (~65 ms a frame on the Atom reference floor).
+        canvas_surface = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), 0, 32)
+        self.canvas.surface = canvas_surface.convert() if pygame.display.get_surface() is not None else canvas_surface
         self._clock = clock
 
         self.store = store if store is not None else SubmarineProgressStore()

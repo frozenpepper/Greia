@@ -18,6 +18,7 @@ import math
 import pygame
 
 from greia_platform.activity_feedback import CastFeedback, CastPose
+from greia_platform.pygame_blit import PreparedSurfaces
 
 if __package__:
     from .ramp_art import MARBLE_FRAMES, RunArt
@@ -53,6 +54,7 @@ class RunCast:
         wave: pygame.Surface | None,
         clock: Callable[[], float],
     ) -> None:
+        self._fast = PreparedSurfaces(max_entries=96)  # RLE copies of per-frame sprites (pygame_blit)
         self.feedback = feedback
         self._point = point
         self._wave = wave
@@ -98,7 +100,7 @@ class RunCast:
         if self.feedback.pose is CastPose.IDLE:
             extra = self._point if self.pointing else self._wave if self.waving else None
             if extra is not None:
-                target.blit(extra, extra.get_rect(midbottom=midbottom))
+                target.blit(self._fast(extra), extra.get_rect(midbottom=midbottom))
                 return
         self.feedback.draw(target, midbottom)
 
@@ -173,6 +175,7 @@ class RunRenderer:
     """Draw one board frame from the prepared scene and sprites."""
 
     def __init__(self, art: RunArt, cast: RunCast) -> None:
+        self._fast = PreparedSurfaces(max_entries=96)  # RLE copies of per-frame sprites (pygame_blit)
         self.art = art
         self.cast = cast
 
@@ -200,18 +203,18 @@ class RunRenderer:
         # Last run's path, so the child can see where the marble went.
         for point in trail[::2]:
             dot = sprites.trail
-            surface.blit(dot, dot.get_rect(center=view.point(*point)))
+            surface.blit(self._fast(dot), dot.get_rect(center=view.point(*point)))
 
         # Shining slots (empty) + hint pulses / drag hover.
         hover = drag.hover_slot if drag is not None else None
         for index, centre in enumerate(board.slots):
             rect = view.slot_rect(centre)
             if index in motion.pulses or index == hover:
-                surface.blit(sprites.slot_glow, sprites.slot_glow.get_rect(center=rect.center))
+                surface.blit(self._fast(sprites.slot_glow), sprites.slot_glow.get_rect(center=rect.center))
             if state.occupant(index) is None:
-                surface.blit(sprites.slot_shine, sprites.slot_shine.get_rect(center=rect.center))
+                surface.blit(self._fast(sprites.slot_shine), sprites.slot_shine.get_rect(center=rect.center))
                 if sprites.slot is not None:
-                    surface.blit(sprites.slot, rect)
+                    surface.blit(self._fast(sprites.slot), rect)
 
         # Pieces.
         for placement in state.placements():
@@ -252,7 +255,7 @@ class RunRenderer:
                 spin = 0.0
             frame = sprites.marble[int(round(spin / (2 * math.pi) * MARBLE_FRAMES)) % MARBLE_FRAMES]
             mx, my = view.point(*position)
-            surface.blit(frame, frame.get_rect(center=(mx, my)))
+            surface.blit(self._fast(frame), frame.get_rect(center=(mx, my)))
         sprites.basket_front.blit(surface, (bx, by))
 
         # FX bursts.
@@ -262,12 +265,12 @@ class RunRenderer:
                 continue
             index = min(len(frames) - 1, int((now - start) / FX_SECONDS * len(frames)))
             frame = frames[index]
-            surface.blit(frame, frame.get_rect(center=position))
+            surface.blit(self._fast(frame), frame.get_rect(center=position))
 
         # GO pulse (hint: "now press GO").
         if go_rect is not None and now - motion.go_pulse < PULSE_SECONDS:
             glow = self.art.glow((go_rect.width + 30, go_rect.height + 30))
-            surface.blit(glow, glow.get_rect(center=go_rect.center))
+            surface.blit(self._fast(glow), glow.get_rect(center=go_rect.center))
 
         self.cast.draw(surface, cast_midbottom)
 
@@ -275,7 +278,7 @@ class RunRenderer:
             sprite = sprites.piece(state.kind(drag.piece), state.facings[drag.piece])
             if sprite is not None:
                 shadow = sprites.marble_shadow
-                surface.blit(shadow, shadow.get_rect(center=(drag.position[0], drag.position[1] + view.length(30))))
+                surface.blit(self._fast(shadow), shadow.get_rect(center=(drag.position[0], drag.position[1] + view.length(30))))
                 sprite.blit(surface, drag.position)
 
     def _draw_demo(self, surface: pygame.Surface, state: BoardState, view: BoardView, motion: RunMotion, now: float) -> None:
@@ -300,13 +303,13 @@ class RunRenderer:
                 ghost.blit(surface, (x, y + lift))
             hand = self.art.art.image("icon.hud.drag_hint", view.length(70))
             if hand is not None and origin is not None:
-                surface.blit(hand, hand.get_rect(topleft=(x - view.length(6), y + view.length(4))))
+                surface.blit(self._fast(hand), hand.get_rect(topleft=(x - view.length(6), y + view.length(4))))
             return
         glyph = self.art.art.image(
             "icon.hud.rotate" if step.action is HintAction.TURN else "icon.hud.undo", view.length(64)
         )
         if glyph is not None:
-            surface.blit(glyph, glyph.get_rect(midbottom=(x, y - view.length(34) + lift)))
+            surface.blit(self._fast(glyph), glyph.get_rect(midbottom=(x, y - view.length(34) + lift)))
 
 
 __all__ = ["Drag", "RunCast", "RunMotion", "RunRenderer"]

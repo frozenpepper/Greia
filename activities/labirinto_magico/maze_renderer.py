@@ -17,6 +17,7 @@ import math
 import pygame
 
 from greia_platform.activity_feedback import CastFeedback, CastPose
+from greia_platform.pygame_blit import PreparedSurfaces
 
 if __package__:
     from .maze_art import MazeArt
@@ -49,6 +50,7 @@ class MazeCast:
         wave: pygame.Surface | None,
         clock: Callable[[], float],
     ) -> None:
+        self._fast = PreparedSurfaces(max_entries=96)  # RLE copies of per-frame sprites (pygame_blit)
         self.feedback = feedback
         self._point = point
         self._wave = wave
@@ -94,7 +96,7 @@ class MazeCast:
         if self.feedback.pose is CastPose.IDLE:
             extra = self._point if self.pointing else self._wave if self.waving else None
             if extra is not None:
-                target.blit(extra, extra.get_rect(midbottom=midbottom))
+                target.blit(self._fast(extra), extra.get_rect(midbottom=midbottom))
                 return
         self.feedback.draw(target, midbottom)
 
@@ -184,6 +186,7 @@ class MazeRenderer:
     """Draw one maze frame from the prepared scene and sprites."""
 
     def __init__(self, art: MazeArt, cast: MazeCast) -> None:
+        self._fast = PreparedSurfaces(max_entries=96)  # RLE copies of per-frame sprites (pygame_blit)
         self.art = art
         self.cast = cast
 
@@ -209,7 +212,7 @@ class MazeRenderer:
             return int(x), int(y)
 
         def halo(square: Cell) -> None:
-            surface.blit(sprites.halo, sprites.halo.get_rect(center=anchor(square)))
+            surface.blit(self._fast(sprites.halo), sprites.halo.get_rect(center=anchor(square)))
 
         # Tent (the goal): glows when open, wears a bubble of missing stars.
         gx, gy = anchor(layout.goal)
@@ -221,10 +224,10 @@ class MazeRenderer:
             halo(layout.goal)
         if sprites.tent is not None:
             rect = sprites.tent.get_rect(midbottom=(gx, gy + int(cell * FEET) + tent_lift))
-            surface.blit(sprites.tent, rect)
+            surface.blit(self._fast(sprites.tent), rect)
             if missing:
                 badge = self.art.badge(missing, cell)
-                surface.blit(badge, badge.get_rect(midbottom=(gx, rect.top + cell // 6)))
+                surface.blit(self._fast(badge), badge.get_rect(midbottom=(gx, rect.top + cell // 6)))
 
         # Garden door (locked until Tito carries the key).
         if layout.door is not None and not maze.door_open and sprites.door is not None:
@@ -235,7 +238,7 @@ class MazeRenderer:
                 shake = int(round(math.sin(elapsed * 40.0) * cell * 0.05))
             if layout.door in motion.pulses:
                 halo(layout.door)
-            surface.blit(sprites.door, sprites.door.get_rect(midbottom=(dx + shake, dy + int(cell * FEET))))
+            surface.blit(self._fast(sprites.door), sprites.door.get_rect(midbottom=(dx + shake, dy + int(cell * FEET))))
 
         bob = math.sin(now * 3.0) * cell * 0.05 if motion.ambient else 0.0
         if layout.key is not None and not maze.has_key and sprites.key is not None:
@@ -243,7 +246,7 @@ class MazeRenderer:
                 halo(layout.key)
             kx, ky = anchor(layout.key)
             lift = _hop(now - motion.pulses.get(layout.key, -10.0), PULSE_SECONDS, cell * 0.18)
-            surface.blit(sprites.key, sprites.key.get_rect(center=(kx, int(ky + bob) + lift)))
+            surface.blit(self._fast(sprites.key), sprites.key.get_rect(center=(kx, int(ky + bob) + lift)))
 
         for index, star in enumerate(layout.stars):
             if star in maze.collected:
@@ -253,21 +256,21 @@ class MazeRenderer:
             sx, sy = anchor(star)
             lift = _hop(now - motion.pulses.get(star, -10.0), PULSE_SECONDS, cell * 0.18)
             wobble = math.sin(now * 3.0 + index * 1.7) * cell * 0.05 if motion.ambient else 0.0
-            surface.blit(sprites.star, sprites.star.get_rect(center=(sx, int(sy + wobble) + lift)))
+            surface.blit(self._fast(sprites.star), sprites.star.get_rect(center=(sx, int(sy + wobble) + lift)))
 
         # Firefly guide: flies a few squares of the way and leaves glowing dots.
         flight = motion.firefly
         if flight is not None:
             for square in flight.route[1 : flight.reached(now)]:
                 if is_cell(square) or square == flight.route[-1]:
-                    surface.blit(sprites.trail, sprites.trail.get_rect(center=anchor(square)))
+                    surface.blit(self._fast(sprites.trail), sprites.trail.get_rect(center=anchor(square)))
             spot = flight.position(now)
             if spot is not None and sprites.firefly is not None:
                 fx, fy = geometry.center(*spot)
                 flutter = math.sin(now * 14.0) * cell * 0.06
                 center = (int(fx), int(fy - cell * 0.25 + flutter))
-                surface.blit(sprites.glow, sprites.glow.get_rect(center=center))
-                surface.blit(sprites.firefly, sprites.firefly.get_rect(center=center))
+                surface.blit(self._fast(sprites.glow), sprites.glow.get_rect(center=center))
+                surface.blit(self._fast(sprites.firefly), sprites.firefly.get_rect(center=center))
 
         # Pre-reader guide: which ways are open right now (never which is right).
         row, col = walker.position()
@@ -281,7 +284,7 @@ class MazeRenderer:
                 distance = cell * 0.62 + geometry.gap * 0.5 + nudge
                 ax = tx + direction[1] * distance
                 ay = ty + direction[0] * distance
-                surface.blit(arrow, arrow.get_rect(center=(int(ax), int(ay))))
+                surface.blit(self._fast(arrow), arrow.get_rect(center=(int(ax), int(ay))))
 
         # FX burst behind Tito so his cheer stays visible.
         for name, position, start in motion.fx:
@@ -290,7 +293,7 @@ class MazeRenderer:
                 continue
             index = min(len(frames) - 1, int((now - start) / FX_SECONDS * len(frames)))
             frame = frames[index]
-            surface.blit(frame, frame.get_rect(center=position))
+            surface.blit(self._fast(frame), frame.get_rect(center=position))
 
         # Tito (hops while walking; squashes into a hedge on a bump).
         lift = 0

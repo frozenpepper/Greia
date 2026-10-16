@@ -25,6 +25,7 @@ import pygame
 
 from greia_platform.activity_controls import BodyShape, ControlKit
 from greia_platform.localization import LocalizationError, LocalizedResources
+from greia_platform.pygame_blit import PreparedSurfaces
 from greia_platform.typography import GreiaTypography
 
 try:
@@ -111,6 +112,9 @@ class OrcaRenderer:
         self._name_tags: dict[str, Optional[pygame.Surface]] = {}
         self._fact_bubbles: dict[str, Optional[pygame.Surface]] = {}
         self._glow: dict[int, pygame.Surface] = {}
+        # RLE copies of every sprite blitted per frame (greia_platform.pygame_blit):
+        # un-encoded per-pixel-alpha blits cost ~0.22 us/pixel on the Atom.
+        self._fast = PreparedSurfaces(max_entries=96)
         # Last drawn fact bubble (tap it to hear the next fact).
         self.fact_banner_rect = pygame.Rect(0, 0, 0, 0)
 
@@ -133,7 +137,7 @@ class OrcaRenderer:
             lit = rung.get(index, 0.0) > t_now
             bob = int(math.sin(t_now * 2.0 + index) * 3) + (5 if lit else 0)
             bell = self._bell(index, lit)
-            surface.blit(bell, bell.get_rect(center=(cx, cy + bob)))
+            surface.blit(self._fast(bell), bell.get_rect(center=(cx, cy + bob)))
 
     def _bell(self, index: int, lit: bool) -> pygame.Surface:
         key = (index, lit)
@@ -165,13 +169,13 @@ class OrcaRenderer:
             if toy.kind == "ball":
                 ball = self.assets.rotated(_BALL, (54, 54), int(toy.rotation))
                 if ball is not None:
-                    surface.blit(ball, ball.get_rect(center=(int(toy.x), int(toy.y) - 10)))
+                    surface.blit(self._fast(ball), ball.get_rect(center=(int(toy.x), int(toy.y) - 10)))
                 else:
                     pygame.draw.circle(surface, (244, 111, 97), (int(toy.x), int(toy.y)), 24)
             elif toy.kind == "ring":
                 hoop = self.assets.fitted(_HOOP, HOOP_SIZE)
                 if hoop is not None:
-                    surface.blit(hoop, hoop.get_rect(center=(int(toy.x), int(toy.y))))
+                    surface.blit(self._fast(hoop), hoop.get_rect(center=(int(toy.x), int(toy.y))))
 
     # ------------------------------------------------------------------
     # Orcas
@@ -195,7 +199,7 @@ class OrcaRenderer:
             center = (int(orca.x), int(orca.y))
             if pod.night_mode:
                 glow = self._night_glow(max(look.box) // 2 // 8 * 8 + 16)
-                surface.blit(glow, glow.get_rect(center=center))
+                surface.blit(self._fast(glow), glow.get_rect(center=center))
             if orca.id == hint_orca:
                 self._draw_hint_ripple(surface, center, look.box, t_now)
             variant = "default"
@@ -206,7 +210,7 @@ class OrcaRenderer:
             angle = self._sprite_angle(orca)
             sprite = self.assets.orca(orca.id, variant, orca.facing > 0, angle)
             if sprite is not None:
-                surface.blit(sprite, sprite.get_rect(center=center))
+                surface.blit(self._fast(sprite), sprite.get_rect(center=center))
             else:
                 w, h = look.box
                 pygame.draw.ellipse(surface, (44, 59, 85), (center[0] - w // 2, center[1] - h // 3, w, h * 2 // 3))
@@ -256,7 +260,7 @@ class OrcaRenderer:
         height = int(box[1] * 0.9) // 8 * 8 + step
         if self._kit is not None:
             ring = self._kit.painter.focus_ring((width, height), min(width, height) // 2)
-            surface.blit(ring, ring.get_rect(center=center))
+            surface.blit(self._fast(ring), ring.get_rect(center=center))
         else:
             pygame.draw.ellipse(surface, (255, 194, 52), pygame.Rect(0, 0, width, height).move(center[0] - width // 2, center[1] - height // 2), 5)
 
@@ -271,7 +275,7 @@ class OrcaRenderer:
         bottom = int(orca.y) - look.box[1] // 2 + 6 + bob
         rect = bubble.get_rect(midbottom=(cx, bottom))
         rect.clamp_ip(pygame.Rect(0, 80, REFERENCE_WIDTH, REFERENCE_HEIGHT - 80))
-        surface.blit(bubble, rect)
+        surface.blit(self._fast(bubble), rect)
 
     def _craving_bubble(self, food: str) -> Optional[pygame.Surface]:
         if food in self._cravings:
@@ -301,7 +305,7 @@ class OrcaRenderer:
         rise = int(min(1.0, (NAME_TAG_SECONDS - orca.name_t) * 6.0) * 6)
         rect = tag.get_rect(midbottom=(int(orca.x), int(orca.y) - look.box[1] // 2 - rise))
         rect.clamp_ip(surface.get_rect().inflate(-8, -8))
-        surface.blit(tag, rect)
+        surface.blit(self._fast(tag), rect)
 
     def _build_name_tag(self, name_key: str) -> Optional[pygame.Surface]:
         if self._kit is None:
@@ -327,7 +331,7 @@ class OrcaRenderer:
         for food in foods:
             sprite = self.assets.food(food.kind, 42)
             if sprite is not None:
-                surface.blit(sprite, sprite.get_rect(center=(int(food.x), int(food.y))))
+                surface.blit(self._fast(sprite), sprite.get_rect(center=(int(food.x), int(food.y))))
             else:
                 pygame.draw.circle(surface, (243, 154, 56), (int(food.x), int(food.y)), 10)
 
@@ -345,7 +349,7 @@ class OrcaRenderer:
             size = int(_FX_BOX.get(effect["kind"], 80) * effect.get("scale", 1.0)) // 8 * 8
             image = self.assets.shared_fit(f"fx.{effect['kind']}", (max(16, size), max(16, size)), frame)
             if image is not None:
-                surface.blit(image, image.get_rect(center=(int(effect["x"]), int(effect["y"]))))
+                surface.blit(self._fast(image), image.get_rect(center=(int(effect["x"]), int(effect["y"]))))
 
     # ------------------------------------------------------------------
     # Tito's fact bubble
@@ -367,7 +371,7 @@ class OrcaRenderer:
             return
         rect = bubble.get_rect(bottomleft=(anchor[0] + 18, bottom))
         rect.top = min(rect.top, anchor[1] - 40)
-        surface.blit(bubble, rect)
+        surface.blit(self._fast(bubble), rect)
         if self._kit is not None:
             painter = self._kit.painter
             tail = [(rect.left + 2, rect.bottom - 46), (anchor[0] + 2, anchor[1]), (rect.left + 2, rect.bottom - 22)]

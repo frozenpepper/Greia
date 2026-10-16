@@ -18,6 +18,7 @@ import math
 import pygame
 
 from greia_platform.activity_feedback import CastFeedback, CastPose
+from greia_platform.pygame_blit import PreparedSurfaces
 
 if __package__:
     from .corsa_art import MOMO_SHARE, CorsaArt, fruit_for
@@ -50,6 +51,7 @@ class MomoCast:
         wave: pygame.Surface | None,
         clock: Callable[[], float],
     ) -> None:
+        self._fast = PreparedSurfaces(max_entries=96)  # RLE copies of per-frame sprites (pygame_blit)
         self.feedback = feedback
         self._point = point
         self._wave = wave
@@ -95,7 +97,7 @@ class MomoCast:
         if self.feedback.pose is CastPose.IDLE:
             extra = self._point if self.pointing else self._wave if self.waving else None
             if extra is not None:
-                target.blit(extra, extra.get_rect(midbottom=midbottom))
+                target.blit(self._fast(extra), extra.get_rect(midbottom=midbottom))
                 return
         self.feedback.draw(target, midbottom)
 
@@ -184,6 +186,7 @@ class CorsaRenderer:
     """Draw one garden frame from the prepared scene and sprites."""
 
     def __init__(self, art: CorsaArt, cast: MomoCast) -> None:
+        self._fast = PreparedSurfaces(max_entries=96)  # RLE copies of per-frame sprites (pygame_blit)
         self.art = art
         self.cast = cast
 
@@ -212,9 +215,9 @@ class CorsaRenderer:
             goal = trail.route[-1]
             for a, b in zip(shown, shown[1:]):
                 middle = ((a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0)
-                surface.blit(sprites.trail, sprites.trail.get_rect(center=anchor(*middle)))
+                surface.blit(self._fast(sprites.trail), sprites.trail.get_rect(center=anchor(*middle)))
                 if b != goal:
-                    surface.blit(sprites.trail, sprites.trail.get_rect(center=anchor(*b)))
+                    surface.blit(self._fast(sprites.trail), sprites.trail.get_rect(center=anchor(*b)))
 
         # Berries: a gentle sway; a pulsed berry glows and hops.
         for index, berry in enumerate(garden.layout.berries):
@@ -222,14 +225,14 @@ class CorsaRenderer:
                 continue
             bx, by = anchor(*berry)
             if berry in motion.pulses:
-                surface.blit(sprites.halo, sprites.halo.get_rect(center=(bx, by)))
+                surface.blit(self._fast(sprites.halo), sprites.halo.get_rect(center=(bx, by)))
             image = sprites.berries.get(fruit_for(berry))
             if image is None:
                 continue
             lift = _hop(now - motion.pulses.get(berry, -10.0), PULSE_SECONDS, cell * 0.18)
             lift = min(lift, _hop(now - motion.intro - index * INTRO_HOP_STEP, 0.5, cell * 0.16))
             sway = math.sin(now * 2.4 + index * 1.3) * cell * 0.03 if motion.ambient else 0.0
-            surface.blit(image, image.get_rect(center=(bx, int(by + sway) + lift)))
+            surface.blit(self._fast(image), image.get_rect(center=(bx, int(by + sway) + lift)))
 
         # FX bursts behind the characters so Momo's cheer stays visible.
         for name, position, start in motion.fx:
@@ -237,7 +240,7 @@ class CorsaRenderer:
             if not frames:
                 continue
             frame = frames[min(len(frames) - 1, int((now - start) / FX_SECONDS * len(frames)))]
-            surface.blit(frame, frame.get_rect(center=position))
+            surface.blit(self._fast(frame), frame.get_rect(center=position))
 
         # Critters and Momo, back to front.
         drawables: list[tuple[float, int]] = [(garden.momo.position()[0], -1)]
@@ -254,7 +257,7 @@ class CorsaRenderer:
             mx, my = anchor(*garden.momo.position())
             bubble = sprites.bubble
             bob = int(math.sin(now * 5.0) * cell * 0.03)
-            surface.blit(bubble, bubble.get_rect(midbottom=(mx + int(cell * 0.42), my - int(cell * 0.62) + bob)))
+            surface.blit(self._fast(bubble), bubble.get_rect(midbottom=(mx + int(cell * 0.42), my - int(cell * 0.62) + bob)))
 
     def sprite_regions(
         self,
@@ -336,7 +339,7 @@ class CorsaRenderer:
         x, y = geometry.center(row, col)
         center = (int(x), int(y))
         if index in motion.critter_pulses:
-            surface.blit(sprites.halo, sprites.halo.get_rect(center=center))
+            surface.blit(self._fast(sprites.halo), sprites.halo.get_rect(center=center))
         image = sprites.critters.get((critter.kind, critter.asleep))
         if image is None:
             return
@@ -344,7 +347,7 @@ class CorsaRenderer:
         if critter.walker.moving:
             lift = -int(abs(math.sin(now * 8.0 + index)) * cell * 0.05)
         lift = min(lift, _hop(now - motion.critter_pulses.get(index, -10.0), PULSE_SECONDS * 0.5, cell * 0.12))
-        surface.blit(image, image.get_rect(midbottom=(center[0], center[1] + feet + lift)))
+        surface.blit(self._fast(image), image.get_rect(midbottom=(center[0], center[1] + feet + lift)))
 
 
 __all__ = ["CorsaMotion", "CorsaRenderer", "FEET", "HintTrail", "MomoCast"]

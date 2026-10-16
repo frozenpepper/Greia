@@ -15,6 +15,11 @@
   the seat, then rotated in 3-degree steps into a bounded cache. Wheels are
   pre-turned in 10-degree steps (the rim has a 90-degree symmetry).
 * Stars, mushrooms, friends and FX are the shared library.
+* Everything blitted per frame is prepared with
+  ``greia_platform.pygame_blit.prepare_static`` (display format + SDL RLE):
+  on the Atom an un-encoded per-pixel-alpha blit costs ~0.22 us/pixel, so
+  the two parallax bands and the ground strips alone took ~190 ms a frame.
+  Fades use baked ``FadeSteps`` instead of per-frame ``set_alpha``.
 
 Missing art degrades to simple vector fallbacks; nothing raises.
 """
@@ -30,6 +35,7 @@ from typing import Final
 import pygame
 
 from greia_platform.activity_controls import ControlArt
+from greia_platform.pygame_blit import FadeSteps, prepare_static
 from greia_platform.ui_core import BoundedCache
 
 if __package__:
@@ -183,7 +189,7 @@ class Backdrop:
         strip = pygame.Surface((REFERENCE_WIDTH * 2, bounds.height), pygame.SRCALPHA)
         strip.blit(band, (0, 0))
         strip.blit(pygame.transform.flip(band, True, False), (REFERENCE_WIDTH, 0))
-        return _convert(strip), bounds.top
+        return prepare_static(strip), bounds.top
 
     def draw(self, surface: pygame.Surface, cam_x: float, cam_y: float) -> None:
         surface.blit(self.sky, (0, 0))
@@ -226,6 +232,7 @@ class CollineArt:
         self._wheels: dict[int, pygame.Surface] = {}
         self._misc: BoundedCache[tuple, pygame.Surface | None] = BoundedCache(40)
         self._fx: dict[str, tuple[pygame.Surface, ...]] = {}
+        self._sign_glow: FadeSteps | None = None
 
     @property
     def loader(self) -> ControlArt:
@@ -311,7 +318,7 @@ class CollineArt:
             if drop.sign_x - SIGN_SIZE <= x0 + CHUNK_WIDTH and drop.sign_x + SIGN_SIZE >= x0 and sign is not None:
                 ground = layout.height(drop.sign_x)
                 surface.blit(sign, sign.get_rect(midbottom=(int(drop.sign_x - x0), int(ground - top + 8))))
-        return Chunk(_convert(surface), top, solid_from, style.ground)
+        return Chunk(prepare_static(surface), top, solid_from, style.ground)
 
     @staticmethod
     def _texture(surface: pygame.Surface, style: BiomeStyle, x0: int, local, height: int) -> None:
@@ -409,7 +416,7 @@ class CollineArt:
         if cached is not None:
             return cached
         base = self.composite(pose)
-        rotated = base if step == 0 else pygame.transform.rotozoom(base, -step * ANGLE_STEP_DEG, 1.0)
+        rotated = prepare_static(base if step == 0 else pygame.transform.rotozoom(base, -step * ANGLE_STEP_DEG, 1.0))
         self._rotated[key] = rotated
         return rotated
 
@@ -446,7 +453,7 @@ class CollineArt:
             base = pygame.Surface((WHEEL_SIZE, WHEEL_SIZE), pygame.SRCALPHA)
             pygame.draw.circle(base, (79, 82, 88), (WHEEL_SIZE // 2, WHEEL_SIZE // 2), WHEEL_SIZE // 2 - 1)
             pygame.draw.circle(base, CREAM, (WHEEL_SIZE // 2, WHEEL_SIZE // 2), WHEEL_SIZE // 4)
-        image = base if step == 0 else pygame.transform.rotozoom(base, -step * WHEEL_STEP_DEG, 1.0)
+        image = prepare_static(base if step == 0 else pygame.transform.rotozoom(base, -step * WHEEL_STEP_DEG, 1.0))
         self._wheels[step] = image
         return image
 
@@ -464,14 +471,17 @@ class CollineArt:
         bounds = base.get_bounding_rect()
         cropped = base.subsurface(bounds).copy()
         width = max(1, round(cropped.get_width() * height / max(1, cropped.get_height())))
-        image = pygame.transform.smoothscale(cropped, (width, height))
+        image = prepare_static(pygame.transform.smoothscale(cropped, (width, height)))
         self._misc[key] = image
         return image
 
     # -- props ---------------------------------------------------------------------------
 
     def star(self, size: int = STAR_SIZE) -> pygame.Surface | None:
-        return self._cached(("star", size), lambda: self._art.image("prop.vocab.star", size))
+        return self._blitted(("star", size), lambda: self._art.image("prop.vocab.star", size))
+
+    def star_off(self, size: int) -> pygame.Surface | None:
+        return self._blitted(("star_off", size), lambda: self._art.image("ui.control.star", size, variant="off"))
 
     def mushroom(self, squash: float = 0.0) -> pygame.Surface | None:
         step = int(round(max(0.0, min(1.0, squash)) * 4))
@@ -485,16 +495,17 @@ class CollineArt:
                 base, (int(MUSHROOM_SIZE * (1.0 + 0.05 * step)), int(MUSHROOM_SIZE * factor))
             )
 
-        return self._cached(("mushroom", step), build)
+        return self._blitted(("mushroom", step), build)
 
     def flag(self, on: bool) -> pygame.Surface | None:
-        return self.private("checkpoint_on" if on else "checkpoint")
+        name = "checkpoint_on" if on else "checkpoint"
+        return self._blitted(("private", name), lambda: self.private(name))
 
     def arch(self) -> pygame.Surface | None:
-        return self.private("finish_arch")
+        return self._blitted(("private", "finish_arch"), lambda: self.private("finish_arch"))
 
     def picnic(self) -> pygame.Surface | None:
-        return self.private("picnic")
+        return self._blitted(("private", "picnic"), lambda: self.private("picnic"))
 
     def sign(self) -> pygame.Surface | None:
         """The "slow down" sign: the private board with the shared snail on it."""
@@ -511,7 +522,14 @@ class CollineArt:
 
         return self._cached(("sign",), build)
 
-    def sign_glow(self) -> pygame.Surface:
+    def sign_glow(self) -> FadeSteps:
+        """The pulsing glow behind a hinted sign, pre-faded (``FadeSteps.at(alpha)``)."""
+
+        if self._sign_glow is None:
+            self._sign_glow = FadeSteps(self._sign_glow_surface(), steps=8)
+        return self._sign_glow
+
+    def _sign_glow_surface(self) -> pygame.Surface:
         def build() -> pygame.Surface:
             size = SIGN_SIZE + 40
             ss = 2
@@ -526,7 +544,7 @@ class CollineArt:
         return result
 
     def friend(self, character: str, variant: str) -> pygame.Surface | None:
-        return self._cached(
+        return self._blitted(
             ("friend", character, variant), lambda: self._art.image(f"character.{character}", FRIEND_HEIGHT, variant=variant)
         )
 
@@ -542,7 +560,7 @@ class CollineArt:
         for variant in ("default", "frame_2", "frame_3"):
             image = self._art.image(f"fx.{name}", size, variant=variant)
             if image is not None:
-                frames.append(image)
+                frames.append(prepare_static(image))
         self._fx[name] = tuple(frames)
         return self._fx[name]
 
@@ -553,6 +571,15 @@ class CollineArt:
         self._misc[key] = image
         return image
 
+    def _blitted(self, key: tuple, build) -> pygame.Surface | None:
+        """Like ``_cached`` for surfaces blitted every frame: an RLE copy of ``build()``."""
+
+        def prepared() -> pygame.Surface | None:
+            image = build()
+            return prepare_static(image) if image is not None else None
+
+        return self._cached(("blit", *key), prepared)
+
     def clear(self) -> None:
         self._chunks.clear()
         self._rotated.clear()
@@ -560,6 +587,7 @@ class CollineArt:
         self._composites.clear()
         self._wheels.clear()
         self._fx.clear()
+        self._sign_glow = None
         self._backdrop = None
 
 

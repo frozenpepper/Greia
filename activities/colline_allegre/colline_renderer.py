@@ -6,7 +6,8 @@ going up, the "slow down" sign glowing, the finish celebration) and
 ``DriverCast`` turns the shared ``CastFeedback`` grammar into the pose Tito
 shows in his seat (cheer, think, point, surprised in the air). Every surface
 comes prepared from ``CollineArt``; nothing here decodes, scales or renders
-text.
+text, and nothing calls ``set_alpha`` per frame (fades are baked
+``FadeSteps``; see ``greia_platform.pygame_blit``).
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ import math
 import pygame
 
 from greia_platform.activity_feedback import CastFeedback, CastPose
+from greia_platform.pygame_blit import FadeSteps
 
 if __package__:
     from .colline_art import CollineArt
@@ -186,7 +188,7 @@ class CollineRenderer:
     def __init__(self, art: CollineArt, driver: DriverCast) -> None:
         self._art = art
         self._driver = driver
-        self._shadow = self._make_shadow()
+        self._shadow = FadeSteps(self._make_shadow(), steps=8)
 
     @staticmethod
     def _make_shadow() -> pygame.Surface:
@@ -231,12 +233,12 @@ class CollineRenderer:
         if not 0 <= index < len(run.layout.drops):
             return
         drop = run.layout.drops[index]
-        glow = self._art.sign_glow()
-        ground = run.layout.height(drop.sign_x)
         pulse = 0.55 + 0.45 * math.sin(now * 6.0)
-        glow.set_alpha(int(255 * pulse))
+        glow = self._art.sign_glow().at(pulse)
+        if glow is None:
+            return
+        ground = run.layout.height(drop.sign_x)
         surface.blit(glow, glow.get_rect(midtop=(int(drop.sign_x - cam_x), int(ground - 128 - cam_y))))
-        glow.set_alpha(255)
 
     def _finish(self, surface, view: SceneView, motion: SceneMotion, cam_x, cam_y, now: float) -> None:
         run = view.run
@@ -315,10 +317,9 @@ class CollineRenderer:
         veh = run.vehicle
         ground = run.layout.height(veh.x)
         gap = max(0.0, ground - (veh.y + 55.0))
-        if gap < 260:
-            self._shadow.set_alpha(int(255 * max(0.25, 1.0 - gap / 260.0)))
-            surface.blit(self._shadow, self._shadow.get_rect(center=(int(veh.x - cam_x), int(ground - cam_y + 4))))
-            self._shadow.set_alpha(255)
+        shadow = self._shadow.at(max(0.25, 1.0 - gap / 260.0)) if gap < 260 else None
+        if shadow is not None:
+            surface.blit(shadow, shadow.get_rect(center=(int(veh.x - cam_x), int(ground - cam_y + 4))))
         body = self._art.vehicle(self._driver.pose(run), veh.angle)
         surface.blit(body, body.get_rect(center=(int(veh.x - cam_x), int(veh.y - cam_y))))
         wheel = self._art.wheel(veh.wheel_spin)
@@ -352,9 +353,7 @@ class CollineRenderer:
             if now < appear:
                 continue
             filled = slot < motion.result_stars
-            image = self._art.star(RESULT_STAR_SIZE) if filled else self._art.loader.image(
-                "ui.control.star", RESULT_STAR_SIZE, variant="off"
-            )
+            image = self._art.star(RESULT_STAR_SIZE) if filled else self._art.star_off(RESULT_STAR_SIZE)
             if image is None:
                 continue
             t = min(1.0, (now - appear) / 0.25)

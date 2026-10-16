@@ -268,13 +268,15 @@ class CollineActivity:
             now = self.clock()
             view = SceneView(run, run.layout.spec.friend, self.camera.x, self.camera.y)
             self.renderer.draw(surface, view, self.motion, now)
-            self.controls.draw_pedals(
+            self.controls.draw_hud(
                 surface,
+                self._surfaces.draw,
                 go=self.drive.go and self.state is AppState.DRIVING,
                 brake=self.drive.brake and self.state is AppState.DRIVING,
                 go_hint=self._go_hint(now),
                 brake_hint=self._brake_hint(now),
             )
+            return
         self._surfaces.draw(surface)
 
     def persist(self) -> None:

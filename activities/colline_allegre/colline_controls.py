@@ -10,8 +10,11 @@
   controls, so the app drives their ``pressed`` state and draws them; they
   are not focus targets (arrows / Space / D-pad / south button drive).
 
-Every body is a kit body rendered once into the kit's bounded caches; the
-only per-frame work is blitting and moving the road marker.
+Every body is a kit body rendered once into the kit's bounded caches. While
+driving, the top bar and the pedals are composed once into a
+``greia_platform.pygame_blit.HudOverlay`` (re-composed only when the layer is
+invalidated or a pedal's held state changes), so the per-frame work is one
+RLE blit plus the moving road marker.
 """
 
 from __future__ import annotations
@@ -19,6 +22,8 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import pygame
+
+from greia_platform.pygame_blit import FadeSteps, HudOverlay
 
 from greia_platform.activity_controls import (
     BodyShape,
@@ -60,6 +65,8 @@ class CourseRoad(KitControl):
         self._kit = kit
         self.friend = "leo"
         self.progress = 0.0
+        # True while an owner draws the moving marker itself (over a cached HUD).
+        self.live_marker = False
 
     def _content_key(self) -> tuple:
         return (self.friend,)
@@ -98,6 +105,14 @@ class CourseRoad(KitControl):
             return
         assert isinstance(target, pygame.Surface)
         target.blit(self.render(), self._rect.topleft)
+        if not self.live_marker:
+            self.draw_marker(target)
+
+    def draw_marker(self, target: pygame.Surface) -> None:
+        """The mini buggy at ``progress`` along the road."""
+
+        if not self.visible:
+            return
         marker = self._art.mini_buggy(int(self._rect.height * 0.62))
         if marker is not None:
             left, right, y = self._track()
@@ -161,7 +176,8 @@ class CollineControls:
             "brake", BRAKE_RECT, icon=self._brake_kit.glyph("stop", int(BRAKE_RECT.width * 0.44)), role=ButtonRole.PRIMARY
         )
         self.layer: ControlLayer = kit.layer((self.progress, self.road, self.stars, self.listen), layer_id="colline.controls")
-        self._glow: pygame.Surface | None = None
+        self._glow: FadeSteps | None = None
+        self.hud = HudOverlay()
 
     def place(self, layout: ControlLayout) -> None:
         """Lay the top bar out beside the protected Home region.
@@ -206,19 +222,54 @@ class CollineControls:
             control.visible = playing or control is self.progress
         self.layer.invalidation.invalidate()
 
+    def draw_hud(
+        self,
+        surface: pygame.Surface,
+        draw_layer: Callable[[pygame.Surface], object],
+        *,
+        go: bool,
+        brake: bool,
+        go_hint: float,
+        brake_hint: float,
+    ) -> None:
+        """Pedals, then the top bar (``draw_layer``), from the cached HUD overlay.
+
+        A hinted (pulsing) pedal is drawn live under the overlay; otherwise the
+        pedals are part of it. The road marker moves every frame and is drawn
+        on top.
+        """
+
+        hinted = go_hint > 0.0 or brake_hint > 0.0
+        if hinted:
+            self.draw_pedals(surface, go=go, brake=brake, go_hint=go_hint, brake_hint=brake_hint)
+        else:
+            self.go.pressed = go
+            self.brake.pressed = brake
+
+        def compose(target: pygame.Surface) -> None:
+            if not hinted:
+                self.go.draw(target)
+                self.brake.draw(target)
+            draw_layer(target)
+
+        self.road.live_marker = True
+        try:
+            self.hud.draw(surface, (go, brake, hinted), compose, stale=self.layer.invalidation.should_draw)
+        finally:
+            self.road.live_marker = False
+        self.road.draw_marker(surface)
+
     def draw_pedals(self, surface: pygame.Surface, *, go: bool, brake: bool, go_hint: float, brake_hint: float) -> None:
         """Pedals with their held state; a pulsing gold ring when hinted (0..1)."""
 
         for button, held, hint in ((self.go, go, go_hint), (self.brake, brake, brake_hint)):
-            if hint > 0.0:
-                glow = self._pedal_glow()
-                glow.set_alpha(int(255 * hint))
+            glow = self._pedal_glow().at(hint) if hint > 0.0 else None
+            if glow is not None:
                 surface.blit(glow, glow.get_rect(center=button.rect.center))
-                glow.set_alpha(255)
             button.pressed = held
             button.draw(surface)
 
-    def _pedal_glow(self) -> pygame.Surface:
+    def _pedal_glow(self) -> FadeSteps:
         if self._glow is None:
             size = GO_RECT.width + 2 * PEDAL_GLOW_PAD
             ss = 2
@@ -226,7 +277,7 @@ class CollineControls:
             center = (size * ss // 2, size * ss // 2)
             pygame.draw.circle(big, (255, 214, 102, 130), center, size * ss // 2)
             pygame.draw.circle(big, (245, 158, 11), center, size * ss // 2 - 6 * ss, width=6 * ss)
-            self._glow = pygame.transform.smoothscale(big, (size, size))
+            self._glow = FadeSteps(pygame.transform.smoothscale(big, (size, size)), steps=8)
         return self._glow
 
 

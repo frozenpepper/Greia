@@ -19,6 +19,7 @@ import pygame
 
 from greia_platform.activity_controls import BodyShape, ControlKit
 from greia_platform.child_text import display_text
+from greia_platform.pygame_blit import PreparedSurfaces
 
 if __package__:
     from .foresta_art import INK, ForestArt, accent
@@ -58,6 +59,7 @@ class ForestRenderer:
     """Render the forest; geometry comes from ``ForestLayout``."""
 
     def __init__(self, art: ForestArt) -> None:
+        self._fast = PreparedSurfaces(max_entries=96)  # RLE copies of per-frame sprites (pygame_blit)
         self._art = art
         self.cast = None  # CastFeedback, injected by the app (shares the kit art cache)
         self.kit: ControlKit | None = None
@@ -104,19 +106,19 @@ class ForestRenderer:
 
     # -- frame --------------------------------------------------------------------------
     def draw_scene(self, target: pygame.Surface, geometry: ForestLayout, state: SceneState, *, draw_controls) -> None:
-        target.blit(self._art.background, (0, 0))
+        target.blit(self._fast(self._art.background), (0, 0))
         self._draw_letters(target, state, front=False)
         basket_rect = self._basket_rect(geometry, state.basket_x)
         self._draw_peeking(target, basket_rect, state.caught)
         self._draw_letters(target, state, front=True)
         basket = self._art.private("basket", BASKET_SIZE)
         if basket is not None:
-            target.blit(basket, basket_rect)
+            target.blit(self._fast(basket), basket_rect)
         else:
             pygame.draw.rect(target, (184, 119, 53), basket_rect.inflate(-20, -30), border_radius=16)
         self._draw_leo(target, state)
         if self._art.canopy is not None:
-            target.blit(self._art.canopy, (0, 0))
+            target.blit(self._fast(self._art.canopy), (0, 0))
         self._draw_sign(target, geometry, state)
         draw_controls(target)
         self._draw_fx(target, state)
@@ -175,14 +177,14 @@ class ForestRenderer:
             if letter.glow and letter.state is FallState.FALLING:
                 pulse = 1.0 + 0.08 * (state.pulse_phase % 2)
                 glow = self._art.glow(int(FRUIT_SIZE * 1.7 * pulse))
-                target.blit(glow, glow.get_rect(center=centre))
+                target.blit(self._fast(glow), glow.get_rect(center=centre))
             fade = letter.fade
             if fade < 0.999:
-                fruit.set_alpha(int(255 * fade))
-                target.blit(fruit, fruit.get_rect(center=centre))
-                fruit.set_alpha(255)
+                faded = self._fast.faded(fruit, fade)
+                if faded is not None:
+                    target.blit(faded, fruit.get_rect(center=centre))
             else:
-                target.blit(fruit, fruit.get_rect(center=centre))
+                target.blit(self._fast(fruit), fruit.get_rect(center=centre))
 
     def _draw_peeking(self, target: pygame.Surface, basket: pygame.Rect, caught: Sequence[WordCard]) -> None:
         """Letters caught this round peek over the rim (a tangible tally)."""
@@ -197,12 +199,12 @@ class ForestRenderer:
             x = basket.centerx if count == 1 else int(basket.left + 30 + index * step)
             lift = 12 if index % 2 else 0
             fruit = self._art.fruit(card.letter, PEEK_SIZE, card.color)
-            target.blit(fruit, fruit.get_rect(midbottom=(x, mouth_y + 22 - lift)))
+            target.blit(self._fast(fruit), fruit.get_rect(midbottom=(x, mouth_y + 22 - lift)))
 
     def _draw_leo(self, target: pygame.Surface, state: SceneState) -> None:
         cast = self.cast
         if state.leo_pointing and self._point is not None and (cast is None or not cast.animating):
-            target.blit(self._point, self._point.get_rect(midbottom=LEO_MIDBOTTOM))
+            target.blit(self._fast(self._point), self._point.get_rect(midbottom=LEO_MIDBOTTOM))
             return
         if cast is not None:
             cast.draw(target, LEO_MIDBOTTOM)
@@ -212,10 +214,10 @@ class ForestRenderer:
         if state.speaking or state.hint:
             pulse = 1.0 + (0.05 * (state.pulse_phase % 2) if state.hint else 0.0)
             glow = self._art.glow(int(max(sign.width, sign.height) * 1.25 * pulse))
-            target.blit(glow, glow.get_rect(center=sign.center))
+            target.blit(self._fast(glow), glow.get_rect(center=sign.center))
         body = self._sign_body(sign)
         if body is not None:
-            target.blit(body, sign.topleft)
+            target.blit(self._fast(body), sign.topleft)
         else:
             pygame.draw.rect(target, SIGN_FILL, sign, border_radius=28)
             pygame.draw.rect(target, INK, sign, width=4, border_radius=28)
@@ -230,10 +232,10 @@ class ForestRenderer:
         side = box.width if state.revealed else min(box.width, box.height) - 14
         picture = self._art.picture(card.picture, side)
         if picture is not None:
-            target.blit(picture, picture.get_rect(center=box.move(0, lift).center))
+            target.blit(self._fast(picture), picture.get_rect(center=box.move(0, lift).center))
         if state.revealed:
             word = self.word_surface(card, geometry.word.width)
-            target.blit(word, word.get_rect(center=geometry.word.center))
+            target.blit(self._fast(word), word.get_rect(center=geometry.word.center))
 
     def _draw_recap(self, target: pygame.Surface, geometry: ForestLayout, caught: Sequence[WordCard]) -> None:
         """Finale: the round's letters, in two rows of three, on the sign."""
@@ -249,7 +251,7 @@ class ForestRenderer:
                 inner.centery + int((row - (rows - 1) / 2) * cell),
             )
             fruit = self._art.fruit(card.letter, int(cell * 0.92), card.color)
-            target.blit(fruit, fruit.get_rect(center=centre))
+            target.blit(self._fast(fruit), fruit.get_rect(center=centre))
 
     def _draw_fx(self, target: pygame.Surface, state: SceneState) -> None:
         if state.sparkle is not None:
@@ -257,16 +259,16 @@ class ForestRenderer:
             # One cached size; the burst rises and fades (no per-frame scaling).
             burst = self._art.fx("fx.star_burst", SPARKLE_SIZE)
             if burst is not None:
-                burst.set_alpha(int(255 * max(0.0, 1.0 - t)))
-                target.blit(burst, burst.get_rect(center=(position[0], position[1] - int(30 * t))))
-                burst.set_alpha(255)
+                faded = self._fast.faded(burst, max(0.0, 1.0 - t))
+                if faded is not None:
+                    target.blit(faded, burst.get_rect(center=(position[0], position[1] - int(30 * t))))
         if state.bump is not None:
             position, t = state.bump
             puff = self._art.fx("fx.dust_puff", 96)
             if puff is not None:
-                puff.set_alpha(int(220 * max(0.0, 1.0 - t)))
-                target.blit(puff, puff.get_rect(center=(position[0], position[1] - int(20 * t))))
-                puff.set_alpha(255)
+                faded = self._fast.faded(puff, 220 / 255 * max(0.0, 1.0 - t))
+                if faded is not None:
+                    target.blit(faded, puff.get_rect(center=(position[0], position[1] - int(20 * t))))
         if state.finale is not None:
             # Two confetti bursts drifting down over the glade (one cached size each).
             for (x, y0), size, delay in (((520, 230), 280, 0.0), ((820, 200), 220, 0.35)):
@@ -275,7 +277,7 @@ class ForestRenderer:
                     continue
                 confetti = self._art.fx("fx.confetti", size)
                 if confetti is not None:
-                    target.blit(confetti, confetti.get_rect(center=(x, y0 + int(min(t, 2.5) * 40))))
+                    target.blit(self._fast(confetti), confetti.get_rect(center=(x, y0 + int(min(t, 2.5) * 40))))
 
 
 __all__ = ["ForestRenderer", "SceneState"]

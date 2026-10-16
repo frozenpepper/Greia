@@ -19,6 +19,7 @@ import math
 import pygame
 
 from greia_platform.activity_feedback import CastFeedback, CastPose
+from greia_platform.pygame_blit import PreparedSurfaces
 
 if __package__:
     from .ponti_art import ANGLE_STEP, BridgeArt, rotate_point, rotated_center
@@ -53,6 +54,7 @@ class TravelerCast:
         load: pygame.Surface | None,
         clock: Callable[[], float],
     ) -> None:
+        self._fast = PreparedSurfaces(max_entries=96)  # RLE copies of per-frame sprites (pygame_blit)
         self.feedback = feedback
         self._point = point
         self._wave = wave
@@ -104,13 +106,13 @@ class TravelerCast:
         if self.feedback.pose is CastPose.IDLE:
             extra = self._point if self.pointing else self._wave if self.waving else None
             if extra is not None:
-                target.blit(extra, extra.get_rect(midbottom=midbottom))
+                target.blit(self._fast(extra), extra.get_rect(midbottom=midbottom))
                 drawn = True
         if not drawn:
             self.feedback.draw(target, midbottom)
         if self.load is not None:
             # Held overhead: the heavy load is the visible "weight" cue.
-            target.blit(self.load, self.load.get_rect(midbottom=(midbottom[0], midbottom[1] - int(height * 0.8))))
+            target.blit(self._fast(self.load), self.load.get_rect(midbottom=(midbottom[0], midbottom[1] - int(height * 0.8))))
 
 
 @dataclass(slots=True)
@@ -173,6 +175,7 @@ class BridgeRenderer:
     """Draw one crossing frame from the prepared scene and sprites."""
 
     def __init__(self, art: BridgeArt, cast: TravelerCast, cast_height: int) -> None:
+        self._fast = PreparedSurfaces(max_entries=96)  # RLE copies of per-frame sprites (pygame_blit)
         self.art = art
         self.cast = cast
         self.cast_height = cast_height
@@ -201,7 +204,7 @@ class BridgeRenderer:
         for target_id, rect in targets.items():
             if target_id in motion.pulses or target_id == hover:
                 glow = art.glow((rect.width + 36, rect.height + 36))
-                surface.blit(glow, glow.get_rect(center=rect.center))
+                surface.blit(self._fast(glow), glow.get_rect(center=rect.center))
 
         # Pillars on their rocks (with their own rope post).
         for spot in state.pillar_spots():
@@ -219,7 +222,7 @@ class BridgeRenderer:
             for unit in range(int(span.start), int(math.ceil(span.end))):
                 gold = missing is not None and missing[0] <= unit < missing[1]
                 dash = art.dash_missing if gold else art.dash
-                surface.blit(dash, dash.get_rect(center=(view.x(unit + 0.5), BANK_TOP - 6)))
+                surface.blit(self._fast(dash), dash.get_rect(center=(view.x(unit + 0.5), BANK_TOP - 6)))
 
         # Planks: standing (build), swinging down / lying across (test).
         angle = run.angle() if run is not None else 90.0
@@ -242,16 +245,16 @@ class BridgeRenderer:
             if not frames:
                 continue
             frame = frames[min(len(frames) - 1, int((now - start) / FX_SECONDS * len(frames)))]
-            surface.blit(frame, frame.get_rect(center=position))
+            surface.blit(self._fast(frame), frame.get_rect(center=position))
 
         if go_rect is not None and now - motion.go_pulse < PULSE_SECONDS:
             glow = art.glow((go_rect.width + 30, go_rect.height + 30))
-            surface.blit(glow, glow.get_rect(center=go_rect.center))
+            surface.blit(self._fast(glow), glow.get_rect(center=go_rect.center))
 
         if drag is not None:
             piece = state.piece(drag.piece)
             sprite = art.pillar() if state.is_pillar(drag.piece) else art.plank(piece).flat
-            surface.blit(sprite, sprite.get_rect(center=drag.position))
+            surface.blit(self._fast(sprite), sprite.get_rect(center=drag.position))
 
     def _draw_plank(
         self,
@@ -275,14 +278,14 @@ class BridgeRenderer:
         if run is not None and laid is not None and run.sag > 0 and laid is run.bending and angle < 1:
             for x, strip in frames.strips:
                 dy = run.sag_at(laid, seat_x + x + strip.get_width() / 2)
-                surface.blit(strip, (seat_x + x, BANK_TOP - thick + int(round(dy))))
+                surface.blit(self._fast(strip), (seat_x + x, BANK_TOP - thick + int(round(dy))))
             tip = (seat_x + length, BANK_TOP - thick // 2)
         else:
             step = int(round(angle / ANGLE_STEP))
             snapped = step * ANGLE_STEP
             image = frames.rotations[step]
             cx, cy = rotated_center(length, thick, snapped)
-            surface.blit(image, image.get_rect(center=(int(seat_x + cx), int(BANK_TOP + cy + lift))))
+            surface.blit(self._fast(image), image.get_rect(center=(int(seat_x + cx), int(BANK_TOP + cy + lift))))
             tx, ty = rotate_point(length, -thick / 2, snapped)
             tip = (int(seat_x + tx), int(BANK_TOP + ty + lift))
         post = self.art.post_top(seat_x)
@@ -321,7 +324,7 @@ class BridgeRenderer:
             glyph = art.art.image("icon.hud.undo", 60)
             if glyph is not None:
                 lift = _hop(now - start, 0.9, 12)
-                surface.blit(glyph, glyph.get_rect(midbottom=(view.pillar_rect(step.spot).centerx, BANK_TOP - 12 + lift)))
+                surface.blit(self._fast(glyph), glyph.get_rect(midbottom=(view.pillar_rect(step.spot).centerx, BANK_TOP - 12 + lift)))
             return
         else:
             return
@@ -329,9 +332,9 @@ class BridgeRenderer:
             position = (int(origin[0] + (end[0] - origin[0]) * t), int(origin[1] + (end[1] - origin[1]) * t))
         else:
             position = end
-        surface.blit(ghost, ghost.get_rect(center=position))
+        surface.blit(self._fast(ghost), ghost.get_rect(center=position))
         if hand is not None and origin is not None:
-            surface.blit(hand, hand.get_rect(topleft=(position[0] - 6, position[1] + 4)))
+            surface.blit(self._fast(hand), hand.get_rect(topleft=(position[0] - 6, position[1] + 4)))
 
 
 __all__ = ["BridgeMotion", "BridgeRenderer", "Drag", "TravelerCast"]

@@ -26,6 +26,7 @@ from typing import Final
 import pygame
 
 from greia_platform.activity_controls import ControlArt, ControlKit, mix
+from greia_platform.pygame_blit import is_rle, prepare_static
 
 if __package__:
     from .ramp_content import (
@@ -132,6 +133,12 @@ class Sprite:
 
     surface: pygame.Surface
     anchor: tuple[int, int]
+
+    def __post_init__(self) -> None:
+        # Blitted every frame: RLE-encode once (~0.22 us/pixel un-encoded on
+        # the Atom; see greia_platform.pygame_blit).
+        if self.surface.get_flags() & pygame.SRCALPHA and not is_rle(self.surface):
+            object.__setattr__(self, "surface", prepare_static(self.surface))
 
     def blit(self, target: pygame.Surface, at: tuple[int, int]) -> None:
         target.blit(self.surface, (at[0] - self.anchor[0], at[1] - self.anchor[1]))

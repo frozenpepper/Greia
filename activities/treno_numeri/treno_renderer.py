@@ -20,6 +20,7 @@ import time
 import pygame
 
 from greia_platform.activity_feedback import CastFeedback, CastPose
+from greia_platform.pygame_blit import PreparedSurfaces, prepare_static
 
 if __package__:
     from .treno_art import WAGON_POP_SIZE, TrainArt
@@ -94,7 +95,7 @@ class TrainCast:
 
     def __init__(self, feedback: CastFeedback, point: pygame.Surface | None, clock: Callable[[], float]) -> None:
         self.feedback = feedback
-        self._point = point
+        self._point = prepare_static(point) if point is not None else None
         self._clock = clock
         self._point_until = 0.0
 
@@ -239,6 +240,9 @@ class TrainRenderer:
         self.art = art
         self.cast = cast
         self._clock = clock
+        # RLE copies of every sprite blitted per frame (greia_platform.pygame_blit):
+        # un-encoded per-pixel-alpha blits cost ~0.22 us/pixel on the Atom.
+        self._fast = PreparedSurfaces(max_entries=96)
 
     def draw(self, target: pygame.Surface, station: Station, motion: SceneMotion) -> None:
         now = self._clock()
@@ -265,13 +269,13 @@ class TrainRenderer:
         lift = int(10 * math.sin(math.pi * age / SIGN_HOP_SECONDS)) if 0 <= age < SIGN_HOP_SECONDS else 0
         x, y = SIGN_POS[0], SIGN_POS[1] - lift
         if self.art.sign is not None:
-            target.blit(self.art.sign, (x, y))
+            target.blit(self._fast(self.art.sign), (x, y))
         if station.task is TaskKind.COUNT_OUT:
             face = self.art.order_face(station.order, dots=station.spec.sign_dots)
         else:
             face = self.art.same_face()
         fx, fy, fw, fh = SIGN_FACE
-        target.blit(face, face.get_rect(center=(x + fx + fw // 2, y + fy + fh // 2)))
+        target.blit(self._fast(face), face.get_rect(center=(x + fx + fw // 2, y + fy + fh // 2)))
 
     # -- train -----------------------------------------------------------------------
 
@@ -290,10 +294,10 @@ class TrainRenderer:
             wheel = self.art.wheel(WAGON_WHEEL_SIZE, frame)
             if wheel is not None:
                 for wx in WAGON_WHEELS_X:
-                    target.blit(wheel, wheel.get_rect(center=(left + wx, RAIL_Y - WAGON_WHEEL_SIZE // 2)))
+                    target.blit(self._fast(wheel), wheel.get_rect(center=(left + wx, RAIL_Y - WAGON_WHEEL_SIZE // 2)))
             back = self.art.wagon_back[wagon]
             if back is not None:
-                target.blit(back, (left, WAGON_TOP))
+                target.blit(self._fast(back), (left, WAGON_TOP))
             for bay in range(WAGON_WELLS):
                 slot = wagon * WAGON_WELLS + bay
                 item = station.item_in_slot(slot)
@@ -302,28 +306,28 @@ class TrainRenderer:
                 popping = now - motion.pops.get(item.item_id, -10.0) < POP_SECONDS
                 image = self.art.item(station.kind, WAGON_POP_SIZE if popping else WAGON_ITEM_SIZE)
                 if image is not None:
-                    target.blit(image, image.get_rect(midbottom=slot_position(slot, offset + shake)))
+                    target.blit(self._fast(image), image.get_rect(midbottom=slot_position(slot, offset + shake)))
             front = self.art.wagon_front[wagon]
             if front is not None:
-                target.blit(front, (left, WAGON_TOP))
+                target.blit(self._fast(front), (left, WAGON_TOP))
             if marks:
                 for slot in motion.missing_slots:
                     if slot // WAGON_WELLS == wagon:
                         x, y = slot_position(slot, offset + shake)
                         ghost = self.art.missing_ghost
-                        target.blit(ghost, ghost.get_rect(center=(x, y - WAGON_ITEM_SIZE // 2)))
+                        target.blit(self._fast(ghost), ghost.get_rect(center=(x, y - WAGON_ITEM_SIZE // 2)))
                 for slot in motion.extra_slots:
                     if slot // WAGON_WELLS == wagon:
                         x, y = slot_position(slot, offset + shake)
                         ring = self.art.extra_ring
-                        target.blit(ring, ring.get_rect(center=(x, y - WAGON_ITEM_SIZE // 2)))
+                        target.blit(self._fast(ring), ring.get_rect(center=(x, y - WAGON_ITEM_SIZE // 2)))
         loco_left = int(LOCO_X + offset)
         for wx, size in LOCO_WHEELS:
             wheel = self.art.wheel(size, frame)
             if wheel is not None:
-                target.blit(wheel, wheel.get_rect(center=(loco_left + wx, RAIL_Y - size // 2)))
+                target.blit(self._fast(wheel), wheel.get_rect(center=(loco_left + wx, RAIL_Y - size // 2)))
         if self.art.locomotive is not None:
-            target.blit(self.art.locomotive, (loco_left, LOCO_TOP))
+            target.blit(self._fast(self.art.locomotive), (loco_left, LOCO_TOP))
 
     def _draw_pairs(self, target: pygame.Surface, station: Station, motion: SceneMotion, now: float) -> None:
         """SAME demonstration: one-to-one links from the order wagon to the child's."""
@@ -357,7 +361,7 @@ class TrainRenderer:
         if appear <= 0.0:
             return
         dy = -40.0 * (1.0 - _ease_out(appear))
-        target.blit(image, image.get_rect(center=(int(item.x), int(item.y + dy))))
+        target.blit(self._fast(image), image.get_rect(center=(int(item.x), int(item.y + dy))))
 
     def _draw_hop(self, target: pygame.Surface, station: Station, hop: Hop, motion: SceneMotion, now: float) -> None:
         t = max(0.0, min(1.0, (now - hop.start) / HOP_SECONDS))
@@ -370,7 +374,7 @@ class TrainRenderer:
         size = ITEM_SIZE if k < 0.25 else 82 if k < 0.5 else WAGON_POP_SIZE if k < 0.75 else WAGON_ITEM_SIZE
         image = self.art.item(station.kind, size)
         if image is not None:
-            target.blit(image, image.get_rect(center=(int(x), int(y))))
+            target.blit(self._fast(image), image.get_rect(center=(int(x), int(y))))
 
     def _draw_badges(self, target: pygame.Surface, motion: SceneMotion, now: float) -> None:
         for slot, (start, number) in motion.badges.items():
@@ -381,7 +385,7 @@ class TrainRenderer:
             y -= WAGON_ITEM_SIZE + 16
             rise = int(10 * _ease_out(age / 0.3))
             badge = self.art.badge(number)
-            target.blit(badge, badge.get_rect(center=(x, y - rise)))
+            target.blit(self._fast(badge), badge.get_rect(center=(x, y - rise)))
 
     # -- smoke and FX -------------------------------------------------------------
 
@@ -394,7 +398,7 @@ class TrainRenderer:
             if age >= PUFF_SECONDS:
                 continue
             frame = frames[min(len(frames) - 1, int(age / PUFF_SECONDS * len(frames)))]
-            target.blit(frame, frame.get_rect(center=(int(x - 30 * age), int(y - 70 * age))))
+            target.blit(self._fast(frame), frame.get_rect(center=(int(x - 30 * age), int(y - 70 * age))))
 
     def _draw_fx(self, target: pygame.Surface, motion: SceneMotion, now: float) -> None:
         for name, position, start in motion.fx:
@@ -405,7 +409,7 @@ class TrainRenderer:
                 continue
             frame = frames[min(len(frames) - 1, int(age / duration * len(frames)))]
             drift = int(FX_DRIFT.get(name, 0.0) * age / duration)
-            target.blit(frame, frame.get_rect(center=(position[0], position[1] + drift)))
+            target.blit(self._fast(frame), frame.get_rect(center=(position[0], position[1] + drift)))
 
 
 def chimney_position(offset: float) -> tuple[float, float]:

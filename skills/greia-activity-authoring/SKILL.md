@@ -603,6 +603,18 @@ while running and not activity_stop_requested():
 - **Never re-render a still screen on a timer.** A full 1024×600 render costs 150–220 ms on the Atom and input that arrives meanwhile waits for it (the SDL idle wait itself wakes within ~1 ms of input). `keepalive_seconds` is a migration aid only, and on the reference floor it pauses once the child is idle (resuming from the next input). Do not mark the whole frame dirty on plain pointer motion (Greia's pointer is a `POINTER` frame / `PygamePointerSprite`; hover changes come from the kit's invalidation): `workshop_settings` still does and repaints ~220 ms per move on the Atom.
 - Check with `PYTHONDONTWRITEBYTECODE=1 python3 tools/measure_activity_idle_cpu.py --settle 15 <activity>`: a static screen should show ~0 presents/s.
 
+### Blit cost: RLE every per-frame alpha surface (`greia_platform.pygame_blit`)
+
+Measured on the Acer (Debian pygame 2.1.2 / SDL 2.26.5, 32-bit X11), onto the 1024×600 canvas: opaque display-format blit ~2 ms; **per-pixel-alpha blit ~134 ms (~0.22 µs/pixel, even for fully opaque or transparent pixels)**; the same surface RLE-encoded ~1.5 ms (≈16 ns/pixel where pixels are translucent), identical within 1/255. That one SDL path was why colline_allegre (4 fps) and viaggio_delfino (4.3 fps) were unplayable: their parallax bands and ground strips were `convert_alpha()` surfaces blitted every frame. Recipe:
+
+- **Every alpha surface blitted per frame** goes through `prepare_static(surface)` once, after it is final (display format + `RLEACCEL`; the source is not modified). Renderers that blit surfaces owned by a loader/kit cache keep one `PreparedSurfaces()` and blit `fast(image)` (bounded, identity-keyed RLE copies; only for surfaces nobody draws on afterwards).
+- **No per-frame `set_alpha`** on sprites: it forces the slow path and drops RLE. Use `FadeSteps(surface).at(fraction)` or `fast.faded(image, fraction)` (a few baked levels).
+- **HUD over a moving scene:** `HudOverlay().draw(canvas, key, layer_draw, stale=layer.invalidation.should_draw)` composes the kit layer once into a transparent RLE overlay and re-composes only on key change/invalidation/resize (colline_allegre, baia_delle_orche).
+- The logical canvas stays in the display format (`PygameReferenceCanvas` default). Never replace it with a 24-bit or alpha surface: sottomarino's 24-bit canvas alone cost ~25 ms a frame.
+- Static backgrounds: compose once, `convert()` (opaque). Scrolling worlds: pre-render terrain/parallax into strips once and blit them (colline `CollineArt.chunk`, delfino `ParallaxStrip`); pre-rotate sprite frames in angle steps; render text once.
+- Do not draw on, `subsurface` or `smoothscale` from an RLE surface on a frame path (each lock decodes and re-encodes it); keep the plain source for composition and blit the prepared copy.
+- After the fix (Acer, scripted play, 2026-10-16): colline 4.0→21.7 fps (frame work 252→22 ms), delfino 4.3→23.3, treno 8.7→20.3, sottomarino 16.3→21.4, labirinto 14.9→23.3, foresta 17.0→23.1; every motion game now needs ≤40 ms of work per frame, so it runs at the reference-floor cap (24 fps; 20–23 measured because of sleep overshoot and mixer-reopen stalls).
+
 Load `ENGINEERING.md` before implementation.
 
 ## 12. Project-specific tools stay with the project

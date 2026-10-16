@@ -18,6 +18,7 @@ from typing import Dict, List, Optional, Tuple
 import pygame
 
 from greia_platform.localization import LocalizationError, LocalizedResources
+from greia_platform.pygame_blit import PreparedSurfaces
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
@@ -133,6 +134,7 @@ class CockpitPresenter:
     """Renders the cockpit dashboard and the porthole ocean scene."""
 
     def __init__(self, art: SubmarineArt, typography: GreiaTypography) -> None:
+        self._fast = PreparedSurfaces(max_entries=96)  # RLE copies of per-frame sprites (pygame_blit)
         self.art = art
         self.typography = typography
         self._cockpit = self._bake_cockpit()
@@ -204,7 +206,7 @@ class CockpitPresenter:
     ) -> None:
         self._ticks = pygame.time.get_ticks()
         self._render_ocean_viewport(surface, model)
-        surface.blit(self._cockpit, (0, 0))
+        surface.blit(self._fast(self._cockpit), (0, 0))
         self._render_biome_plaque(surface, model, resources)
         self._render_radar(surface, model)
         self._render_depth_gauge(surface, model)
@@ -217,7 +219,7 @@ class CockpitPresenter:
 
     def _render_ocean_viewport(self, surface: pygame.Surface, model: SubmarineModel) -> None:
         biome = get_biome(model.depth)
-        surface.blit(self.art.backdrop(biome.value, model.lights_on), PORTHOLE_VIEW.topleft)
+        surface.blit(self._fast(self.art.backdrop(biome.value, model.lights_on)), PORTHOLE_VIEW.topleft)
         previous_clip = surface.get_clip()
         surface.set_clip(PORTHOLE_VIEW)
         rects: List[Tuple[pygame.Rect, str]] = []
@@ -231,12 +233,12 @@ class CockpitPresenter:
             if sprite is None:
                 continue
             rect = sprite.get_rect(center=(sx, sy))
-            surface.blit(sprite, rect)
+            surface.blit(self._fast(sprite), rect)
             if ent.kind != "bubble":
                 rects.append((rect, ent.kind))
         if model.encounter.active_type != EncounterType.NONE:
             self._render_encounter_creature(surface, model)
-        surface.blit(self.art.glass_sheen, PORTHOLE_VIEW.topleft)
+        surface.blit(self._fast(self.art.glass_sheen), PORTHOLE_VIEW.topleft)
         surface.set_clip(previous_clip)
         self.creature_rects = rects
 
@@ -249,10 +251,12 @@ class CockpitPresenter:
         sprite = self.art.encounter_sprite(kind, size)
         if sprite is None or alpha <= 0:
             return
-        sprite.set_alpha(alpha)
+        faded = self._fast.faded(sprite, alpha / 255.0, steps=16)
+        if faded is None:
+            return
         bob = int(math.sin(self._ticks * 0.005) * 8)
         sway = int(math.sin(self._ticks * 0.003) * 10) if kind == "shark" else 0
-        surface.blit(sprite, sprite.get_rect(center=(PORTHOLE_CENTER_X + sway, PORTHOLE_CENTER_Y + bob + 10)))
+        surface.blit(faded, sprite.get_rect(center=(PORTHOLE_CENTER_X + sway, PORTHOLE_CENTER_Y + bob + 10)))
 
     def _render_biome_plaque(self, surface: pygame.Surface, model: SubmarineModel, resources: LocalizedResources) -> None:
         key = {
@@ -273,7 +277,7 @@ class CockpitPresenter:
                 pygame.draw.circle(plaque, (150, 105, 30), (bx, 15), 3)
             plaque.blit(label, label.get_rect(center=(w // 2, 15)))
             self._plaques[text] = plaque
-        surface.blit(plaque, plaque.get_rect(center=(PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y + PORTHOLE_RADIUS + 22)))
+        surface.blit(self._fast(plaque), plaque.get_rect(center=(PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y + PORTHOLE_RADIUS + 22)))
 
     def _render_radar(self, surface: pygame.Surface, model: SubmarineModel) -> None:
         cx, cy, r = RADAR_CENTER_X, RADAR_CENTER_Y, RADAR_RADIUS
@@ -396,13 +400,13 @@ class CockpitPresenter:
                 if active:
                     aura = self._aura_surface(rect.inflate(24, 24).size)
                     if flash_on:
-                        surface.blit(aura, rect.inflate(24, 24))
+                        surface.blit(self._fast(aura), rect.inflate(24, 24))
             else:
                 flash = hinted and flash_on
                 image = self._button_surface(name, resources, active, hot_button == name, pressed_button == name, int(flash))
                 if flash:
-                    surface.blit(self._aura_surface(rect.inflate(20, 20).size), rect.inflate(20, 20))
-            surface.blit(image, (rect.x, rect.y))
+                    surface.blit(self._fast(self._aura_surface(rect.inflate(20, 20).size)), rect.inflate(20, 20))
+            surface.blit(self._fast(image), (rect.x, rect.y))
 
     def _aura_surface(self, size: Tuple[int, int]) -> pygame.Surface:
         key = ("aura", size)

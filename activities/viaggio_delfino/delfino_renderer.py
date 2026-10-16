@@ -16,6 +16,7 @@ from typing import Final
 import pygame
 
 from greia_platform.activity_controls import BodyShape, ControlKit, mix
+from greia_platform.pygame_blit import prepare_static
 
 try:
     from delfino_art import ARCH_SIZE, DelfinoArt, SceneLayers
@@ -122,6 +123,8 @@ class DelfinoRenderer:
         if image is not None and faded:
             image = image.copy()
             image.fill((255, 255, 255, 105), special_flags=pygame.BLEND_RGBA_MULT)
+        if image is not None:
+            image = prepare_static(image)
         self._faded[key] = image
         return image
 
@@ -129,7 +132,9 @@ class DelfinoRenderer:
         panel = self._panels.get(size)
         if panel is None:
             painter = self.kit.painter
-            panel = painter.body(BodyShape.PANEL, size, painter.theme.surface, lip=6, contour_width=4, highlight=False)
+            panel = prepare_static(
+                painter.body(BodyShape.PANEL, size, painter.theme.surface, lip=6, contour_width=4, highlight=False)
+            )
             if len(self._panels) > 8:
                 self._panels.clear()
             self._panels[size] = panel

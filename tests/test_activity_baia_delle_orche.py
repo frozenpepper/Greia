@@ -459,6 +459,32 @@ class BaiaDelleOrcheAppTests(unittest.TestCase):
             self.assertLessEqual(orca.y + half_h, toolbar + 2, orca.id)
             self.assertGreaterEqual(orca.x - half_w, -2, orca.id)
 
+    def test_cached_hud_overlay_frame_matches_direct_kit_drawing(self) -> None:
+        from unittest.mock import patch
+
+        import activities.baia_delle_orche.orca_app as orca_app_module
+
+        app, pod, _, clock = self._app()
+        self._step(app, clock, 3)
+        with patch.object(orca_app_module, "now_seconds", return_value=12.0):
+            app.draw()
+            composed = app._hud.compositions
+            app.draw()
+            self.assertEqual(app._hud.compositions, composed, "a still HUD is not re-composed")
+            cached = app.canvas.surface.copy()
+            with patch.object(app._hud, "draw", lambda surface, key, render, stale=False: render(surface)):
+                app.draw()
+            direct = app.canvas.surface.copy()
+            app._controls.set_counters(pod.total_fed + 1, pod.total_cuddled, pod.stars)
+            app.draw()
+            self.assertGreater(app._hud.compositions, composed, "an invalidated layer re-composes")
+        worst = 0
+        for x in range(0, 1024, 3):
+            for y in range(0, 600, 3):
+                a, b = cached.get_at((x, y)), direct.get_at((x, y))
+                worst = max(worst, abs(a.r - b.r), abs(a.g - b.g), abs(a.b - b.b))
+        self.assertLessEqual(worst, 3)
+
     def test_day_sea_keeps_the_deep_ocean_blue_and_moon_clears_counters(self) -> None:
         assets = OrcaAssetCache()
         day = assets.background(False)

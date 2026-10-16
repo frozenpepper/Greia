@@ -28,6 +28,8 @@ from typing import Final, Optional
 
 import pygame
 
+from greia_platform.pygame_blit import prepare_static
+
 try:
     from delfino_content import JOURNEYS, REFERENCE_HEIGHT, REFERENCE_WIDTH, SURFACE_Y, JourneySpec
 except ImportError:  # repository/package import context
@@ -109,6 +111,12 @@ class ParallaxStrip:
     surface: pygame.Surface
     y: int
     factor: float
+
+    def __post_init__(self) -> None:
+        # Alpha bands are blitted every frame: SDL RLE makes a full-width
+        # band ~2 ms instead of ~130 ms on the Atom (greia_platform.pygame_blit).
+        if self.surface.get_flags() & pygame.SRCALPHA:
+            self.surface = prepare_static(self.surface)
 
     def draw(self, target: pygame.Surface, camera_x: float, *, offset: float = 0.0) -> None:
         width = self.surface.get_width()
@@ -271,6 +279,8 @@ class DelfinoArt:
             self._sprites.move_to_end(key)
             return self._sprites[key]
         surface = build()
+        if surface is not None:
+            surface = prepare_static(surface)  # blitted per frame: RLE (pygame_blit)
         self._sprites[key] = surface
         while len(self._sprites) > _MAX_SPRITES:
             self._sprites.popitem(last=False)
@@ -382,7 +392,7 @@ class DelfinoArt:
         for variant in ("default", "frame_2", "frame_3"):
             image = self.shared(f"fx.{fx_id}", variant)
             if image is not None:
-                frames.append(pygame.transform.smoothscale(image, (size, size)))
+                frames.append(prepare_static(pygame.transform.smoothscale(image, (size, size))))
         self._fx[key] = frames
         while len(self._fx) > _MAX_FX:
             self._fx.popitem(last=False)
