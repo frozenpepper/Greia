@@ -18,7 +18,7 @@ from .customization import (
     WallpaperImporter,
 )
 from .creation_client import ActivityCreationsClient
-from .event_client import ActivityEventClient, ActivityEventReceipt
+from .event_client import ActivityEventClient, ActivityEventReceipt, EventFailureReporter
 from .first_frame_work import release_first_frame_work
 from .input_core import InteractionProfile, parse_interaction_profile
 from .profile_presentation import (
@@ -159,6 +159,10 @@ def get_creations() -> ActivityCreationsClient:
     return ActivityCreationsClient(storage)
 
 
+_EVENT_FAILURES = EventFailureReporter()
+_DEFAULT_KEY_PREFIX_CHARS = 31
+
+
 @lru_cache(maxsize=1)
 def get_events() -> ActivityEventClient:
     """Return this launch's runtime-neutral validated Activity event client."""
@@ -247,7 +251,9 @@ def emit_activity_event(
         # distinct child achievements into one deduplicated history event.
         # Omitted keys mean a fresh fact; callers with retry semantics supply
         # a stable explicit idempotency_key themselves.
-        idempotency_key = f"{event_id}-{uuid4().hex}"
+        # The event ID is truncated so ``<prefix>-<32 hex>`` always fits the
+        # 64-byte history limit (the ID itself is recorded separately).
+        idempotency_key = f"{str(event_id)[:_DEFAULT_KEY_PREFIX_CHARS]}-{uuid4().hex}"
 
     try:
         return get_events().emit(
@@ -256,7 +262,10 @@ def emit_activity_event(
             score=score,
             payload=payload,
         )
-    except Exception:
+    except Exception as exc:
+        # Emission stays fail-soft for the child, but a rejection is never
+        # silent: one bounded stderr line per distinct reason.
+        _EVENT_FAILURES.report(event_id, idempotency_key, exc)
         return None
 
 

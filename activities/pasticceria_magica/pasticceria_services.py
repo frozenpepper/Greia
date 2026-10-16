@@ -144,7 +144,7 @@ class GreiaBakeryEvents:
         self._emit("round.completed", payload, f"pasticceria:{session_id}")
 
     def picture_shared(self, digest: str, payload: dict[str, Any]) -> None:
-        self._emit("creation.completed", payload, f"pasticceria-cake:{digest}")
+        self._emit("creation.completed", payload, cake_event_key(digest))
 
     @staticmethod
     def _emit(event_id: str, payload: dict[str, Any], key: str) -> None:
@@ -180,6 +180,16 @@ def picture_digest(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def cake_event_key(digest: str) -> str:
+    """Stable per-picture idempotency key within the platform's 64-byte limit.
+
+    The full SHA-256 hex digest (64 chars) would overflow the limit; a 128-bit
+    prefix stays unique per picture and identical on retry
+    (``pasticceria-cake:`` + 32 hex = 49 bytes).
+    """
+    return f"pasticceria-cake:{digest[:32]}"
+
+
 __all__ = [
     "BakeryProgress",
     "EventPort",
@@ -190,6 +200,7 @@ __all__ = [
     "ProgressPort",
     "SCHEMA_VERSION",
     "parse_progress",
+    "cake_event_key",
     "picture_digest",
     "progress_payload",
 ]
