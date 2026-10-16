@@ -442,3 +442,155 @@ So painting and writing add about 200–300 ms over the reference: pointer motio
 - Every `/tmp` file this sweep created is deleted. No system files, profile directories or settings were changed, and no restore was needed.
 - About 6 minutes of today's play time remain.
 - New history: 38 `graceful_stop` sessions, plus the first sweep's leftovers listed in §7.
+
+---
+
+## Third sweep at 15212f44
+
+**Evidence class:** PHYSICAL DEVICE + remote input injection (`xdotool`, not physical input). The 9 rows hidden by `recommended_only`, and the fast-typing root-cause check, are **STANDALONE DIAGNOSTIC** (shipped entry `python3 -P -m greia_platform.python_activity_entry`, `PYTHONPYCACHEPREFIX` and `SDL_FRAMEBUFFER_ACCELERATION=0`, outside bwrap and the Shell).
+**Deployed:** `/opt/greia-os/.deployed-sha` = `15212f44`. The test profile now has no play limit. The parental filter is still `recommended_only`.
+
+**Method.** Same as before, with longer idle windows. Per Activity:
+- tap → READY;
+- **EARLY** idle: the 15 s right after READY;
+- 30 s with no input, then **LATE** idle: 30 s starting about 45 s after READY, which is after the 6 s decorative window and the 6/12/24 s hint back-off;
+- 8 s scripted interaction;
+- Home.
+
+No device workaround and no system-file edits were made, and the launcher was never restarted (`NRestarts` 0, one Shell PID for the whole sweep).
+
+**Operator error, recorded for completeness.** During a side test one tap landed on the Crea page and launched teatrino_fiabe. Scripted taps then went into it for about 5 minutes before I sent it Home. That is one extra history session; it does not affect the per-Activity numbers.
+
+### T.1 Before / after (3 builds)
+
+| Metric | 0148f113 | 0f560c2e | 15212f44 |
+|---|---|---|---|
+| Visible Activities launching from the Shell | 0 (Shell crash, P0) | 36 of 36 | **36 of 36**, 0 crashes, `NRestarts` 0 |
+| Tap → READY via Shell, median (range) | 16.3 s (13.5–20.6), 17 `ready_timeout` | 10.3 s (6.9–14.9) | **7.4 s (5.2–14.8)** |
+| Hidden 9, standalone READY | 11.1–14.9 s | 6.0–9.8 s | **3.9–5.2 s** |
+| Idle CPU, first window after READY: median / count above 60% | 88% / 19 of 29 | 77% / 22 of 36 | **34% / 3 of 36** |
+| Idle CPU about 45 s after READY: median / count above 20% | not measured | not measured | **12.9% / 6 of 36** (foresta 88, sillabe 48, orchestra 38, morbidi 23, painting 22, writing 21) |
+| Activity peak RSS | 145–197 MB | 137–203 MB | **61–124 MB** |
+| Shell RSS: start → peak → plateau | 147 → 202 → 174 MB | 141 → 222 MB, still growing | **64 → 145 MB, flat** (repeat launches and a full catalogue walk: 140–144 MB) |
+| Shell CPU while an Activity is foreground | 9–14% | 5.7–9.1% | 7.1–10.0% (median about 9.2%) |
+| Shell Home idle | 2.2–8.2% | 2.2–7.9% | 7.6% during cloud drift (first 15 s); **2.8% over 60 s** before any Shell sound; **8.6–9.4% once Shell audio has played** (see T.4) |
+| Lowest MemAvailable | 384 MB | 443 MB | **500 MB** (foresta) |
+| Home → session ended | 0.71–4.37 s, 1 forced | 0.55–2.88 s | 0.48–2.05 s, all `graceful_stop` |
+| Pointer move → repaint, painting / writing (harness floor about 120 ms) | not measured | 380 / 435 ms | **103 / 138 ms** |
+| Writing, fast `xdotool` typing | "space lost" | "space lost" | **works.** The earlier finding was a harness artifact (T.3) |
+
+Per Activity (Shell; launch s / EARLY % / LATE % / interaction % / peak RSS MB):
+
+| Activity | Values |
+|---|---|
+| acquario_magico | 8.6 / 19 / 15 / 69 / 83 |
+| baia_delle_orche | 5.8 / 19 / 15 / 24 / 84 |
+| bosco_numeri | 10.7 / 21 / 14 / 72 / 93 |
+| bottega_delle_misure | 6.9 / 37 / 13 / 31 / 74 |
+| casa_del_dieci | 7.8 / 31 / 13 / 21 / 83 |
+| clinica_cuccioli | 5.8 / 33 / 13 / 36 / 79 |
+| colline_allegre | 6.1 / 50 / 16 / 92 / 68 |
+| corsa_bacche | 7.8 / 50 / 13 / 69 / 70 |
+| costruiamo_ponti | 7.8 / 42 / 17 / 22 / 75 |
+| enciclopedia_greia | **14.8** / 22 / 12 / 84 / 75 |
+| foresta_parole | 6.1 / **77 / 88** / 70 / **112** (RSS grew 80 → 110 MB while idle) |
+| la_discesa_della_biglia | 6.7 / 42 / 18 / 41 / 70 |
+| labirinto_magico | 6.3 / 49 / 13 / 52 / 72 |
+| luci_di_momo | 7.4 / 60 / 17 / 37 / 94 |
+| memory_meraviglie | 8.4 / 14 / 13 / 41 / 88 |
+| morbidi_mostriciattoli | 8.0 / 41 / 23 / 59 / 102 |
+| nanna_delle_nuvolette | 7.5 / 41 / 13 / 55 / 66 |
+| officina_dei_suoni | 8.5 / 25 / 18 / 45 / 86 |
+| orchestra_animali | 9.0 / 61 / **38** / 70 / 87 |
+| painting | 8.4 / 22 / 22 / 28 / 70 |
+| pasticceria_magica | 6.4 / 56 / 13 / 39 / 77 |
+| piccola_serra | 5.2 / 62 / 13 / 78 / 75 |
+| posta_di_leo | 6.3 / 20 / 6 / 29 / 67 |
+| quattro_amici | 7.1 / 34 / 12 / 74 / 73 |
+| shape_garden | 7.4 / 18 / 5 / 83 / 73 |
+| sillabe_magiche | 6.8 / 49 / **48** / 55 / 66 |
+| sottomarino_giramondo | 6.1 / 33 / 13 / 60 / 88 |
+| specchi_magici | 7.9 / 22 / 12 / 20 / 67 |
+| stelle_incantate | 5.3 / 36 / 13 / 57 / 70 |
+| storie_della_mia_voce | 10.8 / 15 / 13 / 63 / 91 |
+| teatrino_fiabe | 8.2 / 43 / 14 / 38 / 98 |
+| torre_forme | 8.8 / 37 / 12 / 24 / 65 |
+| viaggio_delfino | 11.9 / 32 / 13 / 82 / 124 |
+| volo_draghetto | 6.6 / 19 / 13 / 69 / 90 |
+| workshop_settings | 7.3 / 13 / 13 / 37 / 67 |
+| writing | 6.4 / 27 / 21 / 39 / 61 |
+
+Hidden 9 (STANDALONE; READY s / EARLY % / LATE % at about 37 s after READY / RSS MB):
+
+| Activity | Values |
+|---|---|
+| alfabeto_leo | 4.7 / 22 / 14 / 101 |
+| cucciolo_mio | 4.1 / 45 / 18 / 72 |
+| faccine_momo | 4.7 / 28 / 20 / 82 |
+| festa_delle_rime | 4.0 / 24 / 17 / 84 |
+| il_giardino_dei_numeri | 3.9 / 39 / 17 / 66 |
+| mondo_contrari | 5.2 / 35 / 17 / 78 |
+| nascondino_bosco | 4.3 / 28 / 20 / 71 |
+| quattro_stagioni | 3.9 / 14 / 13 / 66 |
+| treno_numeri | 4.2 / 50 / 18 / 66 |
+
+None of the 45 first frames shows missing art, black boxes or wrong-language text (contact sheet refreshed at `~/.cache/greia-acer-test/sweep_firstframes.png`).
+
+### T.2 Shell Home features
+
+| Check | Result |
+|---|---|
+| Greeter tap | Mascot goes from eyes-closed to eyes-open with a hop. The ALSA playback PCM went `OPEN` → `RUNNING` within 0.3 s of the tap, so a sound played; its content was not verified. **PASS (visual + PCM state).** |
+| Apple drop | Tapping the top apple (944, 343): it falls and rests on the ground, then disappears. The tree shows one fewer apple, and the apple has grown back the next time the Home background is shown. **PASS.** |
+| Cloud drift | Clouds move for a short window after Home appears, with Shell at 7.6% CPU over the first 15 s. They are then frozen: 0 screen changes in 20 s, consistent with the low-end decoration freeze. |
+| Time-left pill beside the star | **NOT VERIFIABLE.** The profile has no limit now, so no pill is drawn. Setting a limit needs the Parent password (see the second sweep's notes). |
+| Collection title tooltip | **Fixed.** The tooltip now replaces the card's own caption in place (e.g. "TEATRINO FIABE") and no longer overlaps neighbouring labels. |
+| Badge celebration | **Could not be earned.** See T.4 #1 (a real bug). |
+
+### T.3 Correction: the Writing "space lost" finding was a harness artifact
+
+The first and second sweeps reported that Writing turned "ciao mamma" into "ciaomamma". That was my test harness, not Writing: the interaction runner split each action on whitespace, so `type ciao mamma` became `xdotool type ciao mamma`, which types the two arguments back to back with no space.
+
+Evidence:
+- Properly quoted `xdotool type "uno due tre quattro"` (12 ms per character) and `type --delay 120 "cinque sei"` both typed every space in Shell-launched Writing (screenshot).
+- A standalone trace of `WritingApp.handle_event` / `_text_input` shows KeyDown space → TextInput `' '` → buffer `'ab '`.
+- A minimal SDL app receives `TI:' '` for fast typing.
+
+The P3 "Writing space loss" item in the first and second sweeps is withdrawn.
+
+### T.4 Remaining problems, ranked
+
+1. **P1: Shape Garden can never award "Il mio primo giardino" or its star.**
+   - On device: publishing a garden to My Creations succeeded (a new row in `creations/index.sqlite3` for `org.greia.shape-garden`), but **no `creation.completed` event was recorded** (absent from `events` / `event_counts`). No badge or star followed.
+   - Cause (source): `activities/shape_garden/garden_app.py:1093` uses `idempotency_key=f"composition-{digest}"`, which is 12 + 64 = **76 bytes**. `runtime/history-policy.toml` sets `max_idempotency_key_bytes = 64`, so `history.py:968` raises `EventValidationError`, and `garden_app.py:1097-1099` swallows it.
+   - No other Activity's key pattern exceeds 64 bytes.
+   - Fix: hash or shorten the key (e.g. `f"composition-{digest[:32]}"`), and log swallowed telemetry failures in the dev profile.
+2. **P2: Shell idles at about 9% CPU forever once it has played any sound.**
+   - Per-thread over 10 s idle on a static Home: main thread 2.7%, `SDLAudioP2` 4.1%, `SDLHotplugALSA` 1.9%.
+   - The ALSA PCM stays `RUNNING` indefinitely after the greeter voice.
+   - Before any Shell sound, Home idled at 2.8%.
+   - Fix: close or pause the mixer after a few seconds of silence (`pygame.mixer.quit()` / `SDL_PauseAudioDevice`) and reopen on demand.
+3. **P2: idle floor of about 12.5% in every static Activity.** 25 of 36 have a LATE idle of 12–13% with nothing animating; workshop_settings measures 12.6–12.8% on a static settings screen. The likely cause is the governor's 50 ms static poll (`frame_governor.py` `idle_poll_seconds`): 20 wake-ups per second, each running events, `step()` and `frame()`, at about 6 ms each on the N270. That is an inference, not profiled. A blocking `pygame.event.wait(timeout)` with timers would drop it toward 1–2%.
+4. **P2: Activities that never settle.**
+   - foresta_parole: 88% LATE idle, and RSS grew 80 → 110 MB while idle. Its partial-redraw path is still animating and allocating.
+   - sillabe_magiche: 48%.
+   - orchestra_animali: 38%.
+   - morbidi_mostriciattoli, painting and writing: 21–23% (writing's caret blink is the likely cause).
+5. **P2: Shell CPU while an Activity is foreground is still about 9%** (10 Hz loop). It was not lower than at 0f560c2e.
+6. **P3: Home shows a stale strip of collection pills** ("CREA GIOCA IMPARA ESPLORA MIO GREIA") across the top after returning from Collection pages.
+   - Text overflows the pills ("MIO GREIA", "ESPLORA") and clips the top of the selected card. Seen in two separate Home screenshots after Back navigation; the initial Home after profile selection did not have it.
+   - **Suspected** source: the hover-repair path in `presentation.py:1259-1270` redraws `_draw_category_bar` into the cached Home scene. Not verified.
+7. **P3: slowest launches.** enciclopedia_greia 14.8 s, viaggio_delfino 11.9 s, storie_della_mia_voce 10.8 s and bosco_numeri 10.7 s are still above 10 s through the Shell. All others are 5.2–9.0 s.
+8. **Still unverified:** the P0 fix creating a brand-new per-Activity folder under the Parent-owned `activities/` (all 45 folders still exist from the first sweep), and the time-left pill placement (no limit configured).
+
+### T.5 Device state left
+
+- Shell left on Home: same PID throughout the sweep, `NRestarts` 0, no OOM, MemAvailable 548 MB at the end.
+- All `/tmp` files this sweep created are deleted.
+- No settings, limits or system files were changed.
+- New data, all left in place (no supported per-profile clear operation exists):
+  - about 50 history sessions;
+  - Activity events from the scripted taps;
+  - one published Shape Garden creation in My Creations;
+  - the profile's first `creations/` directory, created by the Shell for that creation;
+  - extra text lines appended to the Writing draft.
