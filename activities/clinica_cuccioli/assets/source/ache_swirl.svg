@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Clinica FX: tummy-ache swirl (a coral spiral on a soft glow), drawn on a sore tummy. -->
+  <g id="glow">
+    <circle cx="64" cy="64" r="44" fill="#F46F61" opacity="0.16"/>
+  </g>
+  <g id="swirl">
+    <path d="M64 64 Q72 60 70 52 Q66 42 54 46 Q40 52 44 68 Q50 86 70 84 Q92 80 90 56 Q86 30 60 30" fill="none" stroke="#4B372F" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M64 64 Q72 60 70 52 Q66 42 54 46 Q40 52 44 68 Q50 86 70 84 Q92 80 90 56 Q86 30 60 30" fill="none" stroke="#F46F61" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

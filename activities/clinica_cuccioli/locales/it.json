@@ -4,25 +4,9 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "La Clinica dei Cuccioli",
-    "patient.puppy": "Cagnolino 🐶",
-    "patient.kitten": "Gattino 🐱",
-    "patient.bunny": "Coniglietto 🐰",
-    "patient.dragon": "Draghetto 🐲",
-    "tool.stetho": "🩺 Visita",
-    "tool.bandage": "🩹 Cerotto",
-    "tool.sponge": "🧼 Bagnetto",
-    "tool.snack": "🥣 Pappa",
-    "tool.cuddle": "💖 Coccole",
-    "tool.stethoscope.short": "Visita",
-    "tool.bath.short": "Bagnetto",
-    "tool.bandaid.short": "Cerotto",
-    "tool.food.short": "Pappa",
-    "tool.cuddle.short": "Coccole",
-    "victory.title": "Il cucciolo è guarito ed è felice! 🐶💖",
-    "victory.subtitle": "Hai fatto un lavoro fantastico!",
-    "victory.all_patients": "Cuccioli curati!",
-    "btn.next_patient": "🐾 Prossimo Paziente!",
-    "btn.play_again": "Gioca ancora"
+    "victory.title": "Tutti i cuccioli stanno bene!",
+    "victory.subtitle": "Grazie per le tue cure!",
+    "button.play_again": "Gioca ancora"
   },
   "audio": {
     "activity.title": {

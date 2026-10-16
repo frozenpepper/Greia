@@ -19,15 +19,20 @@ emblems = [
 categories = ["empathy", "caregiving", "hygiene_and_health"]
 difficulty = 2
 recommended_age_min = 3
-recommended_age_max = 7
+recommended_age_max = 6
+difficulty_min = 1
+difficulty_max = 3
+adaptive_difficulty = true
 skills = [
   { id = "socioemotional.empathy.caring", weight = 3 },
-  { id = "cognition.sequencing.care", weight = 2 },
-  { id = "motor.pointer.target_selection", weight = 2 },
+  { id = "cognition.sequencing.care", weight = 3 },
+  { id = "cognition.observation.visual_cues", weight = 2 },
+  { id = "motor.pointer.target_selection", weight = 1 },
 ]
 events = [
   { id = "vet.treatment_applied", kind = "milestone" },
   { id = "vet.patient_healed", kind = "completion" },
+  { id = "vet.clinic_day_completed", kind = "completion" },
 ]
 
 [runtime]

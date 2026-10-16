@@ -1,305 +1,322 @@
+"""Storybook presentation for Little Vet Clinic.
+
+The renderer owns the vet-corner frame: the patient (walking in, hopping,
+gently shaking its head), its problem marks, tools flying from the tray to
+the patient, hint glows, library FX and Momo. Kit controls (tray tiles,
+"where does it hurt?" hotspots, progress dots) and their focus ring are drawn
+afterwards by the shared ``ControlLayer`` (ADR 0037). Per-frame work is
+blits only: every surface comes prepared from ``ClinicArt``; motion is
+expressed as offsets.
+"""
+
 from __future__ import annotations
 
-from dataclasses import dataclass
-import random
-from typing import Final
+from collections.abc import Callable
+from dataclasses import dataclass, field
+import math
+import time
 
 import pygame
 
-from greia_platform.localization import LocalizedResources
-from greia_platform.pygame_completion import CompletionContent, PygameCompletionScreen
-from greia_platform.system_chrome import ActivitySystemChromeLayout
-from greia_platform.typography import FontRole, GreiaTypography
+from greia_platform.activity_feedback import CastFeedback, CastPose
 
-try:
-    from clinic_art import draw_patient, draw_thought_bubble, draw_tool_icon
-    from clinic_model import ClinicSession, TOOL_IDS
-except ImportError:
-    from .clinic_art import draw_patient, draw_thought_bubble, draw_tool_icon
-    from .clinic_model import ClinicSession, TOOL_IDS
+if __package__:
+    from .clinic_art import ClinicArt
+    from .clinic_content import Overlay, PatientLook, Tool
+    from .clinic_layout import MOMO_MIDBOTTOM, PATIENT_HOME, PATIENT_OFFSTAGE_X, to_screen
+    from .clinic_model import ClinicDay, Phase
+else:
+    from clinic_art import ClinicArt
+    from clinic_content import Overlay, PatientLook, Tool
+    from clinic_layout import MOMO_MIDBOTTOM, PATIENT_HOME, PATIENT_OFFSTAGE_X, to_screen
+    from clinic_model import ClinicDay, Phase
 
-
-REFERENCE_WIDTH: Final = 1024
-REFERENCE_HEIGHT: Final = 600
-TABLE_RECT = pygame.Rect(REFERENCE_WIDTH // 2 - 250, 150, 500, 270)
-PLAY_AGAIN_RECT = pygame.Rect(REFERENCE_WIDTH // 2 - 120, REFERENCE_HEIGHT // 2 + 70, 240, 60)
-PALETTE_Y = 480
-# The star pill starts clear of the trusted Home/Back region, which the
-# platform reserves in full (both slots) so layout never jumps with context.
-STAR_PILL_LEFT: Final = (
-    ActivitySystemChromeLayout.for_surface(REFERENCE_WIDTH, REFERENCE_HEIGHT)
-    .protected_region.right
-    + 8
-)
-MAX_PARTICLES = 96
-
-_TOOL_TEXT_KEYS = {
-    "stethoscope": "tool.stethoscope.short",
-    "bath": "tool.bath.short",
-    "bandaid": "tool.bandaid.short",
-    "food": "tool.food.short",
-    "cuddle": "tool.cuddle.short",
+FLIGHT_SECONDS = 0.5
+WORK_SECONDS = 0.6
+HOP_SECONDS = 0.45
+SHAKE_SECONDS = 0.7
+HALO_SECONDS = 2.0
+TOOL_HOP_SECONDS = 1.6
+MAX_FLIGHTS = 4
+MAX_FX = 12
+MAX_HALOS = 4
+FX_SECONDS = {
+    "sparkle": 0.5,
+    "bubble_pop": 0.6,
+    "heart_pop": 0.9,
+    "beat_ring": 0.5,
+    "star_burst": 0.8,
+    "check_pop": 0.6,
+    "ripple": 0.6,
 }
+FX_RISE = {"heart_pop": -40.0}
+_OVERLAY_NUDGE = {Overlay.THROB: (26, -6)}
+
+
+class ClinicCast:
+    """Momo with the shared feedback grammar plus a pointing hint pose.
+
+    ``CastFeedback`` owns cheer (correct) and think (try again); this wrapper
+    adds ``point`` for graduated hints and phase starts, drawn only while the
+    feedback friend is idle so the grammar stays unambiguous.
+    """
+
+    def __init__(self, feedback: CastFeedback, point: pygame.Surface | None, clock: Callable[[], float]) -> None:
+        self.feedback = feedback
+        self._point = point
+        self._clock = clock
+        self._point_until = 0.0
+
+    @property
+    def pose(self) -> CastPose:
+        return self.feedback.pose
+
+    @property
+    def pointing(self) -> bool:
+        return self._point is not None and self._clock() < self._point_until
+
+    @property
+    def animating(self) -> bool:
+        return self.feedback.animating or self.pointing
+
+    def point(self, seconds: float = 1.8) -> None:
+        self._point_until = self._clock() + seconds
+
+    def correct(self) -> None:
+        self._point_until = 0.0
+        self.feedback.correct()
+
+    def try_again(self) -> None:
+        self._point_until = 0.0
+        self.feedback.try_again()
+
+    def reset(self) -> None:
+        self._point_until = 0.0
+        self.feedback.reset()
+
+    def update(self) -> bool:
+        was_pointing = self._point_until > 0.0
+        changed = self.feedback.update()
+        if was_pointing and not self.pointing:
+            self._point_until = 0.0
+            changed = True
+        return changed
+
+    def draw(self, target: pygame.Surface, midbottom: tuple[int, int]) -> None:
+        if self.pointing and self.feedback.pose is CastPose.IDLE and self._point is not None:
+            target.blit(self._point, self._point.get_rect(midbottom=midbottom))
+            return
+        self.feedback.draw(target, midbottom)
 
 
 @dataclass(slots=True)
-class Particle:
-    x: float
-    y: float
-    vx: float
-    vy: float
-    color: tuple[int, int, int]
-    size: float
-    life: float = 1.0
+class ToolFlight:
+    """A tool travelling from its tray tile to the patient, then working there."""
+
+    tool: Tool
+    start: float
+    origin: tuple[int, int]
+    dest: tuple[int, int]
+    duration: float = FLIGHT_SECONDS
+    work: float = WORK_SECONDS
+
+    @property
+    def end(self) -> float:
+        return self.start + self.duration + self.work
+
+    def position(self, now: float) -> tuple[int, int] | None:
+        t = (now - self.start) / self.duration
+        if t < 0.0 or now >= self.end:
+            return None
+        if t < 1.0:
+            eased = 1.0 - (1.0 - t) ** 2
+            x = self.origin[0] + (self.dest[0] - self.origin[0]) * eased
+            y = self.origin[1] + (self.dest[1] - self.origin[1]) * eased - 90 * math.sin(math.pi * t)
+            return (int(x), int(y))
+        # Working on the spot: a small scrub / pat wiggle.
+        local = now - self.start - self.duration
+        return (int(self.dest[0] + 9 * math.sin(local * 26)), int(self.dest[1] + 3 * math.sin(local * 13)))
+
+
+@dataclass(slots=True)
+class ClinicMotion:
+    """Bounded, time-stamped presentation state owned by the app."""
+
+    patient_from_x: int = PATIENT_OFFSTAGE_X
+    patient_to_x: int = PATIENT_HOME[0]
+    move_start: float = 0.0
+    move_seconds: float = 0.0
+    hop_start: float | None = None
+    shake_start: float | None = None
+    frozen_look: PatientLook | None = None
+    frozen_until: float = 0.0
+    flights: list[ToolFlight] = field(default_factory=list)
+    fx: list[tuple[str, tuple[int, int], float]] = field(default_factory=list)
+    halos: list[tuple[tuple[int, int], float]] = field(default_factory=list)
+    tool_hop: tuple[str, float] | None = None
+    wobble: tuple[str, float] | None = None
+
+    def clear(self) -> None:
+        self.hop_start = None
+        self.shake_start = None
+        self.frozen_look = None
+        self.frozen_until = 0.0
+        self.flights.clear()
+        self.fx.clear()
+        self.halos.clear()
+        self.tool_hop = None
+        self.wobble = None
+
+    def walk(self, from_x: int, to_x: int, now: float, seconds: float) -> None:
+        self.patient_from_x = from_x
+        self.patient_to_x = to_x
+        self.move_start = now
+        self.move_seconds = seconds
+
+    def patient_x(self, now: float) -> int:
+        if self.move_seconds <= 0.0:
+            return self.patient_to_x
+        t = max(0.0, min(1.0, (now - self.move_start) / self.move_seconds))
+        eased = 1.0 - (1.0 - t) ** 2
+        return int(self.patient_from_x + (self.patient_to_x - self.patient_from_x) * eased)
+
+    def walking(self, now: float) -> bool:
+        return self.move_seconds > 0.0 and now - self.move_start < self.move_seconds
+
+    def fly(self, flight: ToolFlight) -> None:
+        self.flights.append(flight)
+        del self.flights[:-MAX_FLIGHTS]
+
+    def add_fx(self, name: str, position: tuple[int, int], at: float) -> None:
+        self.fx.append((name, position, at))
+        del self.fx[:-MAX_FX]
+
+    def add_halo(self, position: tuple[int, int], at: float) -> None:
+        self.halos.append((position, at))
+        del self.halos[:-MAX_HALOS]
+
+    def freeze_look(self, look: PatientLook, until: float) -> None:
+        """Keep showing ``look`` until a flying tool has done its work."""
+
+        self.frozen_look = look
+        self.frozen_until = until
+
+    def active(self, now: float) -> bool:
+        if self.walking(now):
+            return True
+        if self.hop_start is not None and now - self.hop_start < HOP_SECONDS:
+            return True
+        if self.shake_start is not None and now - self.shake_start < SHAKE_SECONDS:
+            return True
+        if any(now < flight.end for flight in self.flights):
+            return True
+        if any(now - start < HALO_SECONDS for _, start in self.halos):
+            return True
+        if self.tool_hop is not None and now - self.tool_hop[1] < TOOL_HOP_SECONDS:
+            return True
+        if self.wobble is not None and now - self.wobble[1] < 0.4:
+            return True
+        if self.frozen_look is not None and now < self.frozen_until:
+            return True
+        return any(now - start < _fx_seconds(name) for name, _, start in self.fx)
+
+    def prune(self, now: float) -> None:
+        self.flights = [flight for flight in self.flights if now < flight.end]
+        self.fx = [entry for entry in self.fx if now - entry[2] < _fx_seconds(entry[0])]
+        self.halos = [entry for entry in self.halos if now - entry[1] < HALO_SECONDS]
+        if self.frozen_look is not None and now >= self.frozen_until:
+            self.frozen_look = None
+
+
+def _fx_seconds(name: str) -> float:
+    return FX_SECONDS.get(name, 0.5)
 
 
 class ClinicRenderer:
-    """Own Clinic Pygame presentation, geometry and bounded transient effects.
+    """Compose one frame of the vet corner from prepared surfaces."""
 
-    Active treatment and terminal completion are intentionally different render
-    modes. The terminal mode uses Greia's shared opaque prepared completion screen:
-    no live clinic scene is rendered underneath it, no full-screen alpha blend is
-    performed, and repeated terminal draws are one opaque blit.
-    """
-
-    def __init__(self, typography: GreiaTypography, resources: LocalizedResources) -> None:
-        self._typography = typography
-        self._resources = resources
-        self._backdrop = self._build_backdrop()
-        self._tool_labels: dict[tuple[str, str], pygame.Surface] = {}
-        self._star_value: int | None = None
-        self._star_surface: pygame.Surface | None = None
-        self._particles: list[Particle] = []
-        self._completion = PygameCompletionScreen(
-            typography,
-            width=REFERENCE_WIDTH,
-            height=REFERENCE_HEIGHT,
-            primary_rect=PLAY_AGAIN_RECT,
-        )
-        self._completion_content = CompletionContent(
-            title=self._resources.text("victory.all_patients"),
-            primary_label=self._resources.text("btn.play_again"),
-            achievement_count=5,
-        )
-
-    @property
-    def has_active_animation(self) -> bool:
-        return bool(self._particles)
-
-    def reset_transients(self) -> None:
-        self._particles.clear()
-        self._completion.clear()
-
-    def update(self, dt: float) -> None:
-        if not self._particles:
-            return
-        surviving: list[Particle] = []
-        for particle in self._particles:
-            particle.x += particle.vx * dt
-            particle.y += particle.vy * dt
-            particle.life -= dt
-            if particle.life > 0.0:
-                surviving.append(particle)
-        self._particles = surviving
-
-    def celebrate(self, tool_id: str, origin: tuple[float, float]) -> None:
-        """Spawn one bounded success burst around the treated patient."""
-
-        ox, oy = origin
-        color = (
-            (239, 68, 68)
-            if tool_id == "cuddle"
-            else ((56, 189, 248) if tool_id == "bath" else (254, 240, 138))
-        )
-        burst = [
-            Particle(
-                x=ox + random.uniform(-30, 30),
-                y=oy + random.uniform(-30, 30),
-                vx=random.uniform(-75, 75),
-                vy=random.uniform(-135, -30),
-                color=color,
-                size=random.uniform(6, 12),
-            )
-            for _ in range(16)
-        ]
-        self._particles.extend(burst)
-        if len(self._particles) > MAX_PARTICLES:
-            self._particles = self._particles[-MAX_PARTICLES:]
-
-    def tool_at(self, point: tuple[int, int]) -> str | None:
-        for index, tool_id in enumerate(TOOL_IDS):
-            if self.tool_rect(index).collidepoint(point):
-                return tool_id
-        return None
-
-    @staticmethod
-    def tool_rect(index: int) -> pygame.Rect:
-        return pygame.Rect(60 + index * 185, PALETTE_Y, 165, 96)
-
-    @staticmethod
-    def patient_contains(point: tuple[int, int]) -> bool:
-        return TABLE_RECT.collidepoint(point)
-
-    def play_again_contains(self, point: tuple[int, int]) -> bool:
-        return self._completion.primary_contains(point)
-
-    def render(self, surface: pygame.Surface, session: ClinicSession, now: float) -> None:
-        if session.is_victory:
-            self._completion.prepare(self._completion_content)
-            self._completion.draw(surface)
-            return
-
-        surface.blit(self._backdrop, (0, 0))
-        self._draw_patient(surface, session, now)
-        self._draw_prescription(surface, session)
-        self._draw_particles(surface)
-        self._draw_palette(surface, session)
-        self._draw_star_pill(surface, session.total_stars)
-
-    def _build_backdrop(self) -> pygame.Surface:
-        surface = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
-        surface.fill((255, 247, 237))
-        for x in range(0, REFERENCE_WIDTH, 48):
-            pygame.draw.rect(surface, (254, 237, 222), (x, 0, 24, REFERENCE_HEIGHT))
-        pygame.draw.rect(surface, (254, 215, 170), (0, 420, REFERENCE_WIDTH, 180))
-        pygame.draw.line(surface, (217, 119, 6), (0, 420), (REFERENCE_WIDTH, 420), 4)
-        pygame.draw.rect(surface, (255, 255, 255), TABLE_RECT, border_radius=28)
-        pygame.draw.rect(surface, (203, 213, 225), TABLE_RECT, width=6, border_radius=28)
-        pygame.draw.ellipse(
-            surface,
-            (241, 245, 249),
-            pygame.Rect(
-                TABLE_RECT.left + 20,
-                TABLE_RECT.top + 20,
-                TABLE_RECT.width - 40,
-                TABLE_RECT.height - 40,
-            ),
-        )
-        return surface
-
-    def _draw_patient(
+    def __init__(
         self,
-        surface: pygame.Surface,
-        session: ClinicSession,
-        now: float,
+        art: ClinicArt,
+        cast: ClinicCast | None = None,
+        *,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
-        draw_patient(
-            surface,
-            session.patient_id,
-            TABLE_RECT.centerx,
-            TABLE_RECT.centery + 15,
-            180,
-            has_mud=session.has_mud,
-            has_scratch=session.has_scratch,
-            completed_steps=session.completed_steps,
-            is_happy=False,
-        )
-        draw_thought_bubble(
-            surface,
-            TABLE_RECT.centerx + 130,
-            TABLE_RECT.centery - 85,
-            session.next_needed,
-            now,
-        )
+        self.art = art
+        self.cast = cast
+        self._clock = clock
 
-    def _draw_prescription(self, surface: pygame.Surface, session: ClinicSession) -> None:
-        clip_width = max(260, len(session.required_steps) * 80 + 40)
-        clip_rect = pygame.Rect(REFERENCE_WIDTH // 2 - clip_width // 2, 14, clip_width, 64)
-        pygame.draw.rect(surface, (255, 255, 255), clip_rect, border_radius=20)
-        pygame.draw.rect(surface, (234, 179, 8), clip_rect, width=3, border_radius=20)
+    def patient_midbottom(self, motion: ClinicMotion, now: float | None = None) -> tuple[int, int]:
+        now = self._clock() if now is None else now
+        x = motion.patient_x(now)
+        y = PATIENT_HOME[1]
+        if motion.walking(now):
+            y -= int(14 * abs(math.sin((now - motion.move_start) * 9.0)))
+        elif motion.hop_start is not None and 0.0 <= now - motion.hop_start < HOP_SECONDS:
+            y -= int(26 * math.sin(math.pi * (now - motion.hop_start) / HOP_SECONDS))
+        if motion.shake_start is not None and 0.0 <= now - motion.shake_start < SHAKE_SECONDS:
+            age = now - motion.shake_start
+            x += int(12 * (1.0 - age / SHAKE_SECONDS) * math.sin(age * 28.0))
+        return (x, y)
 
-        badge_start_x = clip_rect.left + 45
-        for index, step_id in enumerate(session.required_steps):
-            x = badge_start_x + index * 75
-            y = clip_rect.centery
-            is_done = step_id in session.completed_steps
-            is_current = step_id == session.next_needed
-            badge_color = (
-                (34, 197, 94)
-                if is_done
-                else ((254, 240, 138) if is_current else (241, 245, 249))
-            )
-            border_color = (
-                (22, 101, 52)
-                if is_done
-                else ((234, 179, 8) if is_current else (203, 213, 225))
-            )
-            pygame.draw.circle(surface, badge_color, (x, y), 24)
-            pygame.draw.circle(surface, border_color, (x, y), 24, 3 if is_current else 2)
-            if is_done:
-                pygame.draw.circle(surface, (34, 197, 94), (x, y), 22)
-                pygame.draw.lines(
-                    surface,
-                    (255, 255, 255),
-                    False,
-                    [(x - 8, y), (x - 2, y + 6), (x + 8, y - 6)],
-                    3,
-                )
-            else:
-                draw_tool_icon(surface, step_id, x, y, 30)
+    def draw(self, target: pygame.Surface, day: ClinicDay, motion: ClinicMotion) -> None:
+        now = self._clock()
+        target.blit(self.art.background, (0, 0))
+        if day.phase is not Phase.DONE:
+            self._draw_patient(target, day, motion, now)
+        self._draw_flights(target, motion, now)
+        self._draw_halos(target, motion, now)
+        self._draw_fx(target, motion, now)
+        if self.cast is not None:
+            self.cast.draw(target, MOMO_MIDBOTTOM)
 
-    def _draw_particles(self, surface: pygame.Surface) -> None:
-        for particle in self._particles:
-            pygame.draw.circle(
-                surface,
-                particle.color,
-                (int(particle.x), int(particle.y)),
-                max(1, int(particle.size)),
-            )
+    def _draw_patient(self, target: pygame.Surface, day: ClinicDay, motion: ClinicMotion, now: float) -> None:
+        look = motion.frozen_look if motion.frozen_look is not None and now < motion.frozen_until else day.look
+        midbottom = self.patient_midbottom(motion, now)
+        sprite = self.art.patient(day.case.species_id, look.variant)
+        if sprite is not None:
+            target.blit(sprite, sprite.get_rect(midbottom=midbottom))
+        for overlay, anchor in look.overlays:
+            image = self.art.overlays.get(overlay)
+            if image is None:
+                continue
+            x, y = to_screen(anchor, midbottom)
+            nudge = _OVERLAY_NUDGE.get(overlay, (0, 0))
+            bob = int(3 * math.sin(now * 6.0)) if overlay in {Overlay.THROB, Overlay.SWIRL} else 0
+            target.blit(image, image.get_rect(center=(x + nudge[0] + bob, y + nudge[1])))
 
-    def _draw_palette(self, surface: pygame.Surface, session: ClinicSession) -> None:
-        for index, tool_id in enumerate(TOOL_IDS):
-            rect = self.tool_rect(index)
-            is_selected = tool_id == session.selected_tool_id
-            is_needed = tool_id == session.next_needed
-            state = "selected" if is_selected else ("needed" if is_needed else "default")
-            pygame.draw.rect(surface, (255, 255, 255), rect, border_radius=22)
-            outline = (
-                (234, 179, 8)
-                if is_selected
-                else ((34, 197, 94) if is_needed else (203, 213, 225))
-            )
-            pygame.draw.rect(
-                surface,
-                outline,
-                rect,
-                width=5 if (is_selected or is_needed) else 2,
-                border_radius=22,
-            )
-            draw_tool_icon(surface, tool_id, rect.centerx, rect.top + 36, 52)
-            label = self._tool_label(tool_id, state)
-            surface.blit(label, (rect.centerx - label.get_width() // 2, rect.bottom - 26))
+    def _draw_flights(self, target: pygame.Surface, motion: ClinicMotion, now: float) -> None:
+        for flight in motion.flights:
+            position = flight.position(now)
+            image = self.art.flight_icons.get(flight.tool)
+            if position is not None and image is not None:
+                target.blit(image, image.get_rect(center=position))
 
-    def _tool_label(self, tool_id: str, state: str) -> pygame.Surface:
-        key = (tool_id, state)
-        cached = self._tool_labels.get(key)
-        if cached is not None:
-            return cached
-        color = (
-            (180, 83, 9)
-            if state == "selected"
-            else ((22, 101, 52) if state == "needed" else (71, 85, 105))
-        )
-        rendered = self._typography.render(
-            self._resources.text(_TOOL_TEXT_KEYS[tool_id]),
-            FontRole.DISPLAY,
-            18,
-            color,
-        )
-        self._tool_labels[key] = rendered
-        return rendered
+    def _draw_halos(self, target: pygame.Surface, motion: ClinicMotion, now: float) -> None:
+        for position, start in motion.halos:
+            age = now - start
+            if 0.0 <= age < HALO_SECONDS and int(age * 5) % 2 == 0:
+                target.blit(self.art.halo, self.art.halo.get_rect(center=position))
 
-    def _draw_star_pill(self, surface: pygame.Surface, total_stars: int) -> None:
-        rect = pygame.Rect(STAR_PILL_LEFT, 16, 130, 56)
-        pygame.draw.rect(surface, (255, 255, 255), rect, border_radius=18)
-        pygame.draw.rect(surface, (234, 179, 8), rect, width=3, border_radius=18)
-        pygame.draw.circle(surface, (234, 179, 8), (rect.left + 30, rect.centery), 16)
-        if self._star_value != total_stars or self._star_surface is None:
-            self._star_value = total_stars
-            self._star_surface = self._typography.render(
-                str(total_stars), FontRole.DISPLAY, 28, (180, 83, 9)
-            )
-        surface.blit(
-            self._star_surface,
-            (rect.left + 58, rect.centery - self._star_surface.get_height() // 2),
-        )
+    def _draw_fx(self, target: pygame.Surface, motion: ClinicMotion, now: float) -> None:
+        for name, position, start in motion.fx:
+            frames = self.art.fx_frames(name)
+            duration = _fx_seconds(name)
+            age = now - start
+            if not frames or age < 0.0 or age >= duration:
+                continue
+            frame = frames[min(len(frames) - 1, int(age / duration * len(frames)))]
+            drift = int(FX_RISE.get(name, 0.0) * age / duration)
+            target.blit(frame, frame.get_rect(center=(position[0], position[1] + drift)))
+
+
+__all__ = [
+    "ClinicCast",
+    "ClinicMotion",
+    "ClinicRenderer",
+    "FLIGHT_SECONDS",
+    "HALO_SECONDS",
+    "TOOL_HOP_SECONDS",
+    "ToolFlight",
+    "WORK_SECONDS",
+]

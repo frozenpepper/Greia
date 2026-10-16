@@ -1,165 +1,291 @@
+"""Gameplay rules for one Little Vet Clinic day (no Pygame, no IO).
+
+A clinic day is a fixed queue of patients. Each patient goes through:
+
+``ARRIVING`` -> ``FIND`` (the child looks and taps where it hurts) ->
+``CARE`` (the child uses the tray tools in the ailment's fixed order) ->
+``HEALED`` (the happy patient goes home) -> next patient ... -> ``DONE``.
+
+The model owns truth (what is wrong, which step is next, mistakes) but
+never chooses for the child: every find and every care step is an explicit
+child action, and a wrong choice changes nothing but the mistake count.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import StrEnum
 import random
-from typing import Protocol, Sequence
+
+if __package__:
+    from .clinic_content import (
+        AILMENTS,
+        MAX_LEVEL,
+        MIN_LEVEL,
+        PATIENTS_PER_DAY,
+        SPECIES,
+        Ailment,
+        AilmentId,
+        BodyPart,
+        PatientLook,
+        Species,
+        Tool,
+        level_spec,
+        patient_look,
+    )
+else:
+    from clinic_content import (
+        AILMENTS,
+        MAX_LEVEL,
+        MIN_LEVEL,
+        PATIENTS_PER_DAY,
+        SPECIES,
+        Ailment,
+        AilmentId,
+        BodyPart,
+        PatientLook,
+        Species,
+        Tool,
+        level_spec,
+        patient_look,
+    )
+
+LEVEL_UP_MAX_MISTAKES = 2
+LEVEL_DOWN_MIN_MISTAKES = 7
 
 
-TOOL_IDS: tuple[str, ...] = (
-    "stethoscope",
-    "bath",
-    "bandaid",
-    "food",
-    "cuddle",
-)
-PATIENT_IDS: tuple[str, ...] = ("dog", "cat", "bunny", "bear")
-PATIENTS_PER_SESSION = 5
-
-
-class RandomSource(Protocol):
-    """Small injectable randomness contract used by the treatment planner."""
-
-    def choice(self, seq: Sequence[int]) -> int: ...
-
-    def sample(self, population: Sequence[str], k: int) -> list[str]: ...
+class Phase(StrEnum):
+    ARRIVING = "arriving"
+    FIND = "find"
+    CARE = "care"
+    HEALED = "healed"
+    DONE = "done"
 
 
 @dataclass(frozen=True, slots=True)
-class TreatmentResult:
-    """Result of one tool attempt, independent from rendering or platform IO."""
+class PatientCase:
+    """One visitor: which creature and what is wrong with it."""
 
-    tool_id: str
-    patient_id: str
-    applied: bool
-    patient_healed: bool
-    session_complete: bool
-    total_stars: int
+    species_id: str
+    ailment_id: AilmentId
+
+    @property
+    def species(self) -> Species:
+        return SPECIES[self.species_id]
+
+    @property
+    def ailment(self) -> Ailment:
+        return AILMENTS[self.ailment_id]
+
+
+@dataclass(frozen=True, slots=True)
+class FindResult:
+    part: BodyPart
+    correct: bool
+
+
+@dataclass(frozen=True, slots=True)
+class CareResult:
+    """Outcome of one tool use; ``step_index`` is the step it was tried for."""
+
+    tool: Tool
+    correct: bool
+    step_index: int
+    healed: bool
+    case: PatientCase
+
+
+class ClinicDayFactory:
+    """Build a varied, fair patient queue for one level (seedable)."""
+
+    def __init__(self, rng: random.Random) -> None:
+        self._rng = rng
+
+    def build(self, level: int) -> tuple[PatientCase, ...]:
+        spec = level_spec(level)
+        pool = list(spec.ailments)
+        # Every ailment of the level appears at least once, then random fill.
+        ailments = pool[:]
+        self._rng.shuffle(ailments)
+        while len(ailments) < PATIENTS_PER_DAY:
+            ailments.append(self._rng.choice(pool))
+        ailments = self._spread(ailments[:PATIENTS_PER_DAY])
+        cases: list[PatientCase] = []
+        used: dict[str, int] = {}
+        previous_species: str | None = None
+        for ailment_id in ailments:
+            ailment = AILMENTS[ailment_id]
+            eligible = [
+                species.species_id
+                for species in SPECIES.values()
+                if species.min_level <= spec.level and (species.mood_variants or not ailment.pets_only)
+            ]
+            fresh = [
+                species_id
+                for species_id in eligible
+                if species_id != previous_species and PatientCase(species_id, ailment_id) not in cases
+            ]
+            # Relax "never the same visitor twice" before "never twice in a row".
+            candidates = fresh or [s for s in eligible if s != previous_species] or eligible
+            # Prefer creatures seen least today so a day feels like a queue of
+            # different visitors; ties are broken by the seeded RNG.
+            fewest = min(used.get(species_id, 0) for species_id in candidates)
+            species_id = self._rng.choice(sorted(c for c in candidates if used.get(c, 0) == fewest))
+            cases.append(PatientCase(species_id, ailment_id))
+            used[species_id] = used.get(species_id, 0) + 1
+            previous_species = species_id
+        return tuple(cases)
+
+    def _spread(self, ailments: list[AilmentId]) -> list[AilmentId]:
+        """Avoid the same ailment twice in a row when the pool allows it."""
+
+        result: list[AilmentId] = []
+        remaining = ailments[:]
+        while remaining:
+            # Greedy: the most frequent remaining ailment that differs from the
+            # last one, so duplicates are spaced out instead of left to the end.
+            options = [a for a in remaining if not result or a != result[-1]] or remaining
+            pick = max(options, key=remaining.count)
+            remaining.remove(pick)
+            result.append(pick)
+        return result
+
+    def tray(self, level: int) -> tuple[Tool, ...]:
+        """Tool order for the next patient (shuffled only at the top level)."""
+
+        spec = level_spec(level)
+        tools = list(spec.tools)
+        if spec.shuffle_tray:
+            self._rng.shuffle(tools)
+        return tuple(tools)
 
 
 @dataclass(slots=True)
-class ClinicSession:
-    """Own the deterministic gameplay state for one Little Vet Clinic session.
+class ClinicDay:
+    """Mutable state of one clinic day."""
 
-    Rendering, audio, storage and Greia event publication deliberately live outside
-    this class. The child-facing interaction is intentionally two-step: choose a
-    tool, then apply it to the patient. Successful treatment clears the selection
-    so every prescription step requires an explicit child choice.
-    """
-
-    total_stars: int = 0
-    rng: RandomSource = field(default_factory=random.Random, repr=False)
-    patient_index: int = 0
-    selected_tool_id: str | None = None
-    required_steps: list[str] = field(default_factory=list)
-    completed_steps: list[str] = field(default_factory=list)
-    is_victory: bool = False
+    cases: tuple[PatientCase, ...]
+    level: int = MIN_LEVEL
+    index: int = 0
+    phase: Phase = Phase.ARRIVING
+    steps_done: int = 0
+    patient_mistakes: int = 0
+    mistakes: int = 0
+    healed_count: int = 0
+    _completion_reported: bool = field(default=False, repr=False)
 
     def __post_init__(self) -> None:
-        if self.total_stars < 0:
-            self.total_stars = 0
-        if self.selected_tool_id is not None:
-            self._require_tool(self.selected_tool_id)
-        if not self.required_steps:
-            self._prepare_patient()
+        if not self.cases:
+            raise ValueError("a clinic day needs at least one patient")
+        self.level = max(MIN_LEVEL, min(MAX_LEVEL, int(self.level)))
+
+    # -- queries -----------------------------------------------------------
 
     @property
-    def patient_id(self) -> str:
-        # On victory ``patient_index`` points one past the final patient. Keep the
-        # patient just healed available to the terminal renderer instead of wrapping.
-        index = self.patient_index - 1 if self.is_victory else self.patient_index
-        return PATIENT_IDS[index % len(PATIENT_IDS)]
+    def case(self) -> PatientCase:
+        return self.cases[min(self.index, len(self.cases) - 1)]
 
     @property
-    def next_needed(self) -> str | None:
-        return next(
-            (tool_id for tool_id in self.required_steps if tool_id not in self.completed_steps),
-            None,
-        )
-
-    @property
-    def has_mud(self) -> bool:
-        return "bath" in self.required_steps and "bath" not in self.completed_steps
-
-    @property
-    def has_scratch(self) -> bool:
-        return "bandaid" in self.required_steps and "bandaid" not in self.completed_steps
-
-    def select_tool(self, tool_id: str) -> None:
-        """Select a tool without applying treatment to the patient."""
-
-        self._require_tool(tool_id)
-        if not self.is_victory:
-            self.selected_tool_id = tool_id
-
-    def use_tool(self, tool_id: str) -> TreatmentResult:
-        """Apply one explicit tool attempt to the current patient.
-
-        This method owns treatment truth but does not choose a tool for the child.
-        The application normally calls :meth:`select_tool` from the palette and
-        :meth:`use_selected_tool` from the patient hit target. Direct calls remain
-        useful for provider-free domain tests and alternate semantic input routes.
-        """
-
-        self._require_tool(tool_id)
-        patient_id = self.patient_id
-
-        if self.is_victory or tool_id != self.next_needed:
-            return TreatmentResult(
-                tool_id=tool_id,
-                patient_id=patient_id,
-                applied=False,
-                patient_healed=False,
-                session_complete=self.is_victory,
-                total_stars=self.total_stars,
-            )
-
-        self.completed_steps.append(tool_id)
-        # Never auto-arm the next answer. The child must explicitly choose a tool
-        # for each treatment step before another patient tap can make progress.
-        self.selected_tool_id = None
-        healed = self.next_needed is None
-        session_complete = False
-
-        if healed:
-            self.total_stars += 1
-            self.patient_index += 1
-            session_complete = self.patient_index >= PATIENTS_PER_SESSION
-            if session_complete:
-                self.is_victory = True
-            else:
-                self._prepare_patient()
-
-        return TreatmentResult(
-            tool_id=tool_id,
-            patient_id=patient_id,
-            applied=True,
-            patient_healed=healed,
-            session_complete=session_complete,
-            total_stars=self.total_stars,
-        )
-
-    def use_selected_tool(self) -> TreatmentResult | None:
-        """Apply the child's current selection, or do nothing when none is armed."""
-
-        if self.selected_tool_id is None:
+    def expected_tool(self) -> Tool | None:
+        if self.phase is not Phase.CARE:
             return None
-        return self.use_tool(self.selected_tool_id)
+        steps = self.case.ailment.steps
+        return steps[self.steps_done] if self.steps_done < len(steps) else None
 
-    def restart(self) -> None:
-        """Start a new five-patient run without discarding durable stars."""
+    @property
+    def look(self) -> PatientLook:
+        case = self.case
+        return patient_look(case.species, case.ailment, self.steps_done, healed=self.phase in {Phase.HEALED, Phase.DONE})
 
-        self.patient_index = 0
-        self.is_victory = False
-        self._prepare_patient()
+    @property
+    def is_last_patient(self) -> bool:
+        return self.index >= len(self.cases) - 1
 
-    def _prepare_patient(self) -> None:
-        # The weighted choice preserves the original 2/3/4-step difficulty mix.
-        step_count = self.rng.choice((2, 2, 3, 3, 4))
-        self.required_steps = self.rng.sample(TOOL_IDS, step_count)
-        self.completed_steps = []
-        self.selected_tool_id = None
+    # -- child actions -------------------------------------------------------
 
-    @staticmethod
-    def _require_tool(tool_id: str) -> None:
-        if tool_id not in TOOL_IDS:
-            raise ValueError(f"unknown clinic tool: {tool_id}")
+    def arrived(self) -> None:
+        if self.phase is Phase.ARRIVING:
+            self.phase = Phase.FIND
+
+    def find(self, part: BodyPart) -> FindResult | None:
+        """The child points at a body part. ``None`` outside the find step."""
+
+        if self.phase is not Phase.FIND:
+            return None
+        target = self.case.ailment.part
+        correct = target is BodyPart.FUR or part is target
+        if correct:
+            self.phase = Phase.CARE
+        else:
+            self._mistake()
+        return FindResult(part, correct)
+
+    def use_tool(self, tool: Tool) -> CareResult | None:
+        """The child uses one tray tool on the patient. ``None`` when not caring."""
+
+        if self.phase is not Phase.CARE:
+            return None
+        step = self.steps_done
+        expected = self.expected_tool
+        if tool is not expected:
+            self._mistake()
+            return CareResult(tool, False, step, False, self.case)
+        self.steps_done += 1
+        healed = self.steps_done >= len(self.case.ailment.steps)
+        if healed:
+            self.phase = Phase.HEALED
+            self.healed_count += 1
+        return CareResult(tool, True, step, healed, self.case)
+
+    def next_patient(self) -> bool:
+        """Move on after a patient went home; False when the day is over."""
+
+        if self.phase is not Phase.HEALED:
+            return False
+        if self.is_last_patient:
+            self.phase = Phase.DONE
+            return False
+        self.index += 1
+        self.phase = Phase.ARRIVING
+        self.steps_done = 0
+        self.patient_mistakes = 0
+        return True
+
+    def consume_completion(self) -> dict[str, object] | None:
+        """One-shot day summary for events/adaptation (None until DONE)."""
+
+        if self.phase is not Phase.DONE or self._completion_reported:
+            return None
+        self._completion_reported = True
+        return {
+            "level": self.level,
+            "patients": self.healed_count,
+            "mistakes": self.mistakes,
+        }
+
+    def _mistake(self) -> None:
+        self.patient_mistakes += 1
+        self.mistakes += 1
+
+
+def adapt_level(level: int, mistakes: int) -> int:
+    """Next day's level: up after a calm day, down after a hard one."""
+
+    if mistakes <= LEVEL_UP_MAX_MISTAKES:
+        level += 1
+    elif mistakes >= LEVEL_DOWN_MIN_MISTAKES:
+        level -= 1
+    return max(MIN_LEVEL, min(MAX_LEVEL, level))
+
+
+__all__ = [
+    "CareResult",
+    "ClinicDay",
+    "ClinicDayFactory",
+    "FindResult",
+    "LEVEL_DOWN_MIN_MISTAKES",
+    "LEVEL_UP_MAX_MISTAKES",
+    "PatientCase",
+    "Phase",
+    "adapt_level",
+]

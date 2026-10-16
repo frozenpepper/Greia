@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Clinica prop: two soft folded towels (dry) - aqua and coral with stripes. GREIA_SVG_AUTHORING_RULES. -->
+  <defs>
+    <!-- aqua light -> turquoise light -->
+    <linearGradient id="towel_top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E6F7F3"/>
+      <stop offset="1" stop-color="#9ED8D2"/>
+    </linearGradient>
+    <!-- coral light -> coral -->
+    <linearGradient id="towel_bottom" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F9A89F"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="230" rx="98" ry="15" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="towel_low">
+    <path d="M58 148 L214 148 Q232 148 232 166 L232 196 Q232 216 212 216 L58 216 Q26 216 26 182 Q26 148 58 148 Z" fill="url(#towel_bottom)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M58 158 Q40 160 40 182 Q40 204 58 206" fill="none" stroke="#C8584E" stroke-width="4" stroke-linecap="round"/>
+    <path d="M176 148 L176 216 M192 148 L192 216" fill="none" stroke="#FFFBEB" stroke-width="7"/>
+  </g>
+  <g id="towel_high">
+    <path d="M66 74 L206 74 Q222 74 222 90 L222 132 Q222 152 202 152 L66 152 Q34 152 34 113 Q34 74 66 74 Z" fill="url(#towel_top)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M66 86 Q48 88 48 113 Q48 138 66 140" fill="none" stroke="#7FC3BC" stroke-width="4" stroke-linecap="round"/>
+    <path d="M170 74 L170 152 M186 74 L186 152" fill="none" stroke="#F46F61" stroke-width="7"/>
+    <path d="M222 132 Q222 152 202 152 L66 152" fill="none" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M80 90 Q118 84 150 88" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.75"/>
+  </g>
+</svg>

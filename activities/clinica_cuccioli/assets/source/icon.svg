@@ -1,38 +1,54 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Little Vet Clinic Activity icon: puppy patient with a plaster + a get-well heart, ocean (play) tile. GREIA_SVG_AUTHORING_RULES §7. -->
   <defs>
-    <linearGradient id="fur" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FFD54F"/>
-      <stop offset="100%" stop-color="#FFB300"/>
+    <!-- ocean light (mix 35% white) -> ocean -->
+    <linearGradient id="clinic_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
     </linearGradient>
-    <radialGradient id="badge" cx="30%" cy="30%" r="70%">
-      <stop offset="0%" stop-color="#FF5252"/>
-      <stop offset="100%" stop-color="#D32F2F"/>
-    </radialGradient>
+    <!-- sand light -> sand shade (shared puppy fur) -->
+    <linearGradient id="clinic_fur" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FFF7E6"/>
+      <stop offset="1" stop-color="#EBD3AE"/>
+    </linearGradient>
+    <!-- accent light -> accent (shared puppy ears) -->
+    <linearGradient id="clinic_acc" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#C48E66"/>
+      <stop offset="1" stop-color="#9A6445"/>
+    </linearGradient>
   </defs>
-  <!-- Shadow -->
-  <ellipse cx="128" cy="220" rx="68" ry="12" fill="#CFD8DC" opacity="0.6"/>
-  <!-- Puppy Ears -->
-  <ellipse cx="64" cy="100" rx="24" ry="46" fill="#D7CCC8" transform="rotate(-20 64 100)"/>
-  <ellipse cx="192" cy="100" rx="24" ry="46" fill="#D7CCC8" transform="rotate(20 192 100)"/>
-  <!-- Head -->
-  <circle cx="128" cy="122" r="68" fill="url(#fur)"/>
-  <!-- Snout -->
-  <ellipse cx="128" cy="142" rx="34" ry="24" fill="#FFF9C4"/>
-  <ellipse cx="128" cy="130" rx="14" ry="10" fill="#37474F"/>
-  <path d="M128 140 L128 152 M120 152 Q128 158 136 152" fill="none" stroke="#37474F" stroke-width="4" stroke-linecap="round"/>
-  <!-- Eyes -->
-  <circle cx="102" cy="108" r="8" fill="#37474F"/>
-  <circle cx="100" cy="106" r="3" fill="#FFFFFF"/>
-  <circle cx="154" cy="108" r="8" fill="#37474F"/>
-  <circle cx="152" cy="106" r="3" fill="#FFFFFF"/>
-  <!-- Cheeks -->
-  <circle cx="86" cy="132" r="10" fill="#FF8A80" opacity="0.6"/>
-  <circle cx="170" cy="132" r="10" fill="#FF8A80" opacity="0.6"/>
-  <!-- Vet Cross / Heart Badge -->
-  <g transform="translate(160, 160)">
-    <circle cx="28" cy="28" r="32" fill="url(#badge)" stroke="#FFFFFF" stroke-width="4"/>
-    <!-- Medical Cross -->
-    <rect x="23" y="10" width="10" height="36" rx="3" fill="#FFFFFF"/>
-    <rect x="10" y="23" width="36" height="10" rx="3" fill="#FFFFFF"/>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#clinic_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="subject" transform="translate(12 6) scale(0.9)">
+    <ellipse cx="128" cy="229" rx="62" ry="10.3" fill="#2A537C" opacity="0.18"/>
+    <path d="M174 196 C194 192 207 176 211 157 C213 149 222 151 220 160 C216 185 198 203 177 207 Z" fill="url(#clinic_fur)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="86" cy="198" rx="20" ry="17" fill="url(#clinic_fur)" stroke="#4B372F" stroke-width="4.5"/>
+    <ellipse cx="170" cy="198" rx="20" ry="17" fill="url(#clinic_fur)" stroke="#4B372F" stroke-width="4.5"/>
+    <path d="M128 128 C160 128 180 158 182 188 C184 208 172 216 150 216 L106 216 C84 216 72 208 74 188 C76 158 96 128 128 128 Z" fill="url(#clinic_fur)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="174" rx="26" ry="30" fill="#FFFBEB"/>
+    <ellipse cx="110" cy="212" rx="14" ry="8.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="3"/>
+    <ellipse cx="146" cy="212" rx="14" ry="8.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="3"/>
+    <path d="M128 42 C171 42 194 68 194 100 C194 134 166 154 128 154 C90 154 62 134 62 100 C62 68 85 42 128 42 Z" fill="url(#clinic_fur)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="125" rx="25" ry="18" fill="#FFFBEB"/>
+    <ellipse cx="86" cy="120" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="170" cy="120" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="104" cy="96" rx="8.5" ry="12" fill="#342C35"/>
+    <ellipse cx="152" cy="96" rx="8.5" ry="12" fill="#342C35"/>
+    <ellipse cx="107" cy="92" rx="3" ry="3.6" fill="#FFFFFF"/>
+    <ellipse cx="155" cy="92" rx="3" ry="3.6" fill="#FFFFFF"/>
+    <path d="M116 110 Q128 102 140 110 Q136 120 128 123 Q120 120 116 110 Z" fill="#594047" stroke="#4B372F" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M128 123 L128 128 M117 127 Q122 134 128 128 Q134 134 139 127" fill="none" stroke="#72513F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M86 56 C62 50 44 70 45 100 C46 126 58 142 71 138 C84 133 92 108 96 66 Z" fill="url(#clinic_acc)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M170 56 C194 50 212 70 211 100 C210 126 198 142 185 138 C172 133 164 108 160 66 Z" fill="url(#clinic_acc)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <g transform="rotate(-24 132 64)">
+      <rect x="92" y="50" width="80" height="28" rx="14" fill="#F6C08A" stroke="#4B372F" stroke-width="4"/>
+      <rect x="118" y="53" width="28" height="22" rx="6" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+  </g>
+  <g id="accent">
+    <path d="M206 92 C196 84 182 74 182 61 C182 52 189 47 195 47 C200 47 204 50 206 55 C208 50 212 47 217 47 C223 47 230 52 230 61 C230 74 216 84 206 92 Z" fill="#F46F61" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="193" cy="58" rx="4" ry="5" fill="#FFFFFF" opacity="0.7"/>
   </g>
 </svg>

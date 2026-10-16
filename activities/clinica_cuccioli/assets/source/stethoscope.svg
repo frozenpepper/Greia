@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Clinica prop: stethoscope (listen) - turquoise tubing, silver chest piece. GREIA_SVG_AUTHORING_RULES. -->
+  <defs>
+    <!-- sky light -> ocean light (chest piece) -->
+    <linearGradient id="stetho_disc" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F2F8FC"/>
+      <stop offset="1" stop-color="#B9D3EA"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="132" cy="232" rx="82" ry="13" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="tube">
+    <path d="M84 44 C78 98 98 128 128 132 C158 128 178 98 172 44" fill="none" stroke="#4B372F" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128 132 C128 196 80 214 66 186 C54 160 92 150 118 174" fill="none" stroke="#4B372F" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M84 44 C78 98 98 128 128 132 C158 128 178 98 172 44" fill="none" stroke="#44B8AE" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128 132 C128 196 80 214 66 186 C54 160 92 150 118 174" fill="none" stroke="#44B8AE" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M90 60 C88 90 100 112 116 120" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g id="ear_tips">
+    <circle cx="84" cy="40" r="13" fill="#EEDDBA" stroke="#4B372F" stroke-width="4"/>
+    <circle cx="172" cy="40" r="13" fill="#EEDDBA" stroke="#4B372F" stroke-width="4"/>
+  </g>
+  <g id="chest_piece">
+    <circle cx="160" cy="176" r="42" fill="url(#stetho_disc)" stroke="#4B372F" stroke-width="5"/>
+    <circle cx="160" cy="176" r="26" fill="#4A91D8" stroke="#4B372F" stroke-width="3.5"/>
+    <ellipse cx="150" cy="166" rx="9" ry="6" fill="#FFFFFF" opacity="0.75"/>
+  </g>
+</svg>

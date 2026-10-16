@@ -4,25 +4,9 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Little Vet Clinic",
-    "patient.puppy": "Puppy 🐶",
-    "patient.kitten": "Kitten 🐱",
-    "patient.bunny": "Bunny 🐰",
-    "patient.dragon": "Little Dragon 🐲",
-    "tool.stetho": "🩺 Checkup",
-    "tool.bandage": "🩹 Bandage",
-    "tool.sponge": "🧼 Bath",
-    "tool.snack": "🥣 Treat",
-    "tool.cuddle": "💖 Cuddles",
-    "tool.stethoscope.short": "Checkup",
-    "tool.bath.short": "Bath",
-    "tool.bandaid.short": "Bandage",
-    "tool.food.short": "Treat",
-    "tool.cuddle.short": "Cuddles",
-    "victory.title": "The puppy is healthy and happy! 🐶💖",
-    "victory.subtitle": "You are a wonderful vet doctor!",
-    "victory.all_patients": "Pets all better!",
-    "btn.next_patient": "🐾 Next Patient!",
-    "btn.play_again": "Play again"
+    "victory.title": "All the patients feel better!",
+    "victory.subtitle": "Thank you for taking such good care!",
+    "button.play_again": "Play again"
   },
   "audio": {
     "activity.title": {

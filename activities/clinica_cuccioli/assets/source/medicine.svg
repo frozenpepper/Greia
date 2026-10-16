@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Clinica prop: medicine dropper bottle (drops) - rose bottle, grape bulb, heart label. GREIA_SVG_AUTHORING_RULES. -->
+  <defs>
+    <!-- raspberry light -> raspberry -->
+    <linearGradient id="medicine_bottle" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EC9DB8"/>
+      <stop offset="1" stop-color="#D85683"/>
+    </linearGradient>
+    <!-- grape light -> grape -->
+    <linearGradient id="medicine_bulb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BFA0E0"/>
+      <stop offset="1" stop-color="#9464C9"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="78" ry="11" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="bottle">
+    <path d="M70 116 Q70 98 88 98 L148 98 Q166 98 166 116 L166 210 Q166 226 150 226 L86 226 Q70 226 70 210 Z" fill="url(#medicine_bottle)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="86" y="136" width="64" height="60" rx="10" fill="#FFFBEB" stroke="#4B372F" stroke-width="3"/>
+    <path d="M118 182 C111 177 102 171 102 162 C102 156 107 153 111 153 C114 153 117 155 118 158 C119 155 122 153 125 153 C129 153 134 156 134 162 C134 171 125 177 118 182 Z" fill="#F46F61" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M82 118 L82 208" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+    <rect x="94" y="80" width="48" height="24" rx="6" fill="#EEDDBA" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M100 82 Q100 30 118 30 Q136 30 136 82 Z" fill="url(#medicine_bulb)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="111" cy="50" rx="5" ry="9" fill="#FFFFFF" opacity="0.6"/>
+  </g>
+  <g id="drop">
+    <path d="M200 112 C200 112 180 140 180 153 C180 164 189 172 200 172 C211 172 220 164 220 153 C220 140 200 112 200 112 Z" fill="#89B8E6" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="193" cy="150" rx="4" ry="7" fill="#FFFFFF" opacity="0.7"/>
+  </g>
+</svg>

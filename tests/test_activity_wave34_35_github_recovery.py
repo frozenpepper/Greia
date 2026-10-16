@@ -12,65 +12,83 @@ from unittest.mock import Mock
 import pygame
 
 from activities.clinica_cuccioli.clinic_app import ClinicActivity
-from activities.clinica_cuccioli.clinic_model import ClinicSession, TOOL_IDS
+from activities.clinica_cuccioli.clinic_content import BodyPart
+from activities.clinica_cuccioli.clinic_model import ClinicDay, ClinicDayFactory, Phase
+from activities.clinica_cuccioli.clinic_services import ClinicProgressState
 from activities.baia_delle_orche.orca_app import OrcaBayActivity
 
 
 class ClinicKeyboardRecoveryTests(TestCase):
-    def make_app(self) -> ClinicActivity:
-        app = ClinicActivity.__new__(ClinicActivity)
-        app._session = ClinicSession(rng=random.Random(42))
-        app._focused_tool_index = 0
-        app._renderer = Mock()
-        app._events = Mock()
-        app._progress = Mock()
-        app._audio = Mock()
-        app._running = True
-        return app
+    """Keyboard-only play of a whole clinic day (reworked 2026-10-16).
 
-    def test_five_patients_keyboard_only_choose_then_apply(self) -> None:
-        app = self.make_app()
-        while not app._session.is_victory:
-            needed = app._session.next_needed
-            self.assertIsNotNone(needed)
-            assert needed is not None
-            destination = TOOL_IDS.index(needed)
-            while app._focused_tool_index != destination:
-                app._handle_keyboard(pygame.K_RIGHT)
-            # First press selects the explicit tool and must not apply it.
-            previous = app._session.completed_steps.copy()
-            app._handle_keyboard(pygame.K_RETURN)
-            self.assertEqual(app._session.completed_steps, previous)
-            app._handle_keyboard(pygame.K_RETURN)
-            self.assertNotEqual(app._session.completed_steps, previous)
-        self.assertEqual(app._session.total_stars, 5)
-        self.assertEqual(app._events.patient_healed.call_count, 5)
-        self.assertEqual(app._progress.save_stars.call_count, 5)
-        app._handle_keyboard(pygame.K_SPACE)
-        self.assertFalse(app._session.is_victory)
-        self.assertEqual(app._session.total_stars, 5)
-        self.assertEqual(app._focused_tool_index, 0)
+    The old choose-then-apply palette and its hand-rolled touch/keyboard
+    handlers were replaced by the shared control kit (ADR 0037); touch
+    normalization and synthetic-mouse suppression now live in
+    ``PygameControlInput`` and are covered by the platform kit tests.
+    """
 
-    def test_keyboard_without_selection_does_not_treat_patient(self) -> None:
-        app = self.make_app()
-        self.assertIsNone(app._session.selected_tool_id)
-        self.assertEqual(app._session.patient_index, 0)
-        app._handle_keyboard(pygame.K_RETURN)
-        self.assertIsNotNone(app._session.selected_tool_id)
-        self.assertEqual(app._session.patient_index, 0)
+    def test_five_patients_keyboard_only(self) -> None:
+        import os
+        from pathlib import Path
 
-    def test_touch_normalizes_and_synthetic_mouse_is_suppressed(self) -> None:
-        app = self.make_app()
-        app._screen = pygame.Surface((800, 480))
-        app._handle_pointer = Mock()
-        app._handle_event(pygame.event.Event(
-            pygame.FINGERDOWN, x=0.25, y=0.5,
-        ))
-        app._handle_pointer.assert_called_once_with((200, 240))
-        app._handle_event(pygame.event.Event(
-            pygame.MOUSEBUTTONDOWN, button=1, pos=(200, 240), touch=True,
-        ))
-        self.assertEqual(app._handle_pointer.call_count, 1)
+        from greia_platform.localization import ActivityLocaleSupport, LocalizedResources, resolve_activity_locale
+        from greia_platform.pygame_canvas import PygameReferenceCanvas
+        from greia_platform.typography import GreiaTypography
+
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        pygame.init()
+        screen = pygame.display.get_surface() or pygame.display.set_mode((1024, 600))
+        root = Path(__file__).resolve().parents[1] / "activities" / "clinica_cuccioli"
+        context = resolve_activity_locale("en", ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it"))
+        factory = ClinicDayFactory(random.Random(42))
+        progress = Mock()
+        clock = [0.0]
+        app = ClinicActivity(
+            screen=screen,
+            canvas=PygameReferenceCanvas(screen),
+            day=ClinicDay(factory.build(1), level=1),
+            factory=factory,
+            typography=GreiaTypography(),
+            resources=LocalizedResources(root, context),
+            progress=progress,
+            saved=ClinicProgressState(),
+            events=Mock(),
+            audio=Mock(),
+            clock=lambda: clock[0],
+        )
+
+        def advance(seconds: float) -> None:
+            end = clock[0] + seconds
+            while clock[0] < end:
+                clock[0] += 0.05
+                app.step()
+
+        def press_until(control_id: str) -> None:
+            layer = app.controls.layer
+            for key in (pygame.K_RIGHT, pygame.K_LEFT, pygame.K_UP, pygame.K_DOWN) * 4:
+                if layer.focused_id == control_id:
+                    break
+                for _ in range(6):
+                    if layer.focused_id == control_id:
+                        break
+                    app.press(key)
+            self.assertEqual(layer.focused_id, control_id)
+            app.press(pygame.K_RETURN)
+
+        parts = {BodyPart.EAR: "part.ear_right", BodyPart.PAW: "part.paw", BodyPart.TUMMY: "part.tummy", BodyPart.FUR: "part.tummy"}
+        for _ in range(5):
+            advance(1.3)
+            press_until(parts[app.day.case.ailment.part])
+            advance(1.2)
+            while app.day.phase is Phase.CARE:
+                press_until(f"tool.{app.day.expected_tool.value}")
+                advance(1.3)
+            advance(3.6)
+        advance(0.5)
+        self.assertEqual(app.day.healed_count, 5)
+        self.assertEqual(app.state.value, "terminal")
+        app.press(pygame.K_RETURN)
+        self.assertEqual(app.state.value, "playing")
 
 
 class OrcaGestureAndLocaleRecoveryTests(TestCase):

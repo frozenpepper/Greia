@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 176" width="480" height="176">
+  <!-- Clinica prop: vet exam table - mint cushion, cream cabinet, paw badge. GREIA_SVG_AUTHORING_RULES (wide prop). -->
+  <defs>
+    <!-- mint light -> leaf light -->
+    <linearGradient id="exam_table_cushion" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EAF8E4"/>
+      <stop offset="1" stop-color="#A9DCA9"/>
+    </linearGradient>
+    <!-- cream -> sand -->
+    <linearGradient id="exam_table_cabinet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFBEB"/>
+      <stop offset="1" stop-color="#EEDDBA"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="240" cy="160" rx="210" ry="12" fill="#6A5147" opacity="0.16"/>
+  </g>
+  <g id="cabinet">
+    <rect x="44" y="40" width="392" height="118" rx="16" fill="url(#exam_table_cabinet)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="64" y="66" width="120" height="74" rx="12" fill="#F7EBCB" stroke="#4B372F" stroke-width="3"/>
+    <rect x="296" y="66" width="120" height="74" rx="12" fill="#F7EBCB" stroke="#4B372F" stroke-width="3"/>
+    <rect x="104" y="96" width="40" height="10" rx="5" fill="#C48E66" stroke="#4B372F" stroke-width="2.5"/>
+    <rect x="336" y="96" width="40" height="10" rx="5" fill="#C48E66" stroke="#4B372F" stroke-width="2.5"/>
+    <circle cx="240" cy="104" r="34" fill="#44B8AE" stroke="#4B372F" stroke-width="3.5"/>
+    <ellipse cx="240" cy="114" rx="14" ry="11" fill="#FFFBEB"/>
+    <circle cx="222" cy="96" r="6" fill="#FFFBEB"/>
+    <circle cx="234" cy="88" r="6" fill="#FFFBEB"/>
+    <circle cx="246" cy="88" r="6" fill="#FFFBEB"/>
+    <circle cx="258" cy="96" r="6" fill="#FFFBEB"/>
+  </g>
+  <g id="cushion">
+    <rect x="12" y="12" width="456" height="44" rx="22" fill="url(#exam_table_cushion)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M40 24 Q160 18 300 22" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+  </g>
+</svg>

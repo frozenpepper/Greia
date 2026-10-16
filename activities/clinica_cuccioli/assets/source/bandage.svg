@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Clinica prop: adhesive bandage / plaster - peach strip, cream pad. GREIA_SVG_AUTHORING_RULES. -->
+  <defs>
+    <!-- peach light -> orange light -->
+    <linearGradient id="bandage_strip" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FCE6D2"/>
+      <stop offset="1" stop-color="#F6C08A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="226" rx="92" ry="14" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="bandage" transform="rotate(-28 128 132)">
+    <rect x="20" y="96" width="216" height="72" rx="36" fill="url(#bandage_strip)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="96" y="104" width="64" height="56" rx="12" fill="#FFFBEB" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="48" cy="120" r="3.5" fill="#D9A36E"/>
+    <circle cx="66" cy="132" r="3.5" fill="#D9A36E"/>
+    <circle cx="48" cy="144" r="3.5" fill="#D9A36E"/>
+    <circle cx="190" cy="120" r="3.5" fill="#D9A36E"/>
+    <circle cx="208" cy="132" r="3.5" fill="#D9A36E"/>
+    <circle cx="190" cy="144" r="3.5" fill="#D9A36E"/>
+    <path d="M46 108 Q90 102 120 104" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.75"/>
+  </g>
+</svg>

@@ -4,25 +4,9 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Clinique des petits animaux",
-    "patient.puppy": "Chiot 🐶",
-    "patient.kitten": "Chaton 🐱",
-    "patient.bunny": "Lapereau 🐰",
-    "patient.dragon": "Petit dragon 🐲",
-    "tool.stetho": "🩺 Examen",
-    "tool.bandage": "🩹 Pansement",
-    "tool.sponge": "🧼 Bain",
-    "tool.snack": "🥣 Repas",
-    "tool.cuddle": "💖 Câlins",
-    "tool.stethoscope.short": "Examen",
-    "tool.bath.short": "Bain",
-    "tool.bandaid.short": "Pansement",
-    "tool.food.short": "Repas",
-    "tool.cuddle.short": "Câlins",
-    "victory.title": "Le chiot est guéri et heureux ! 🐶💖",
-    "victory.subtitle": "Tu es un super vétérinaire !",
-    "victory.all_patients": "Tous guéris !",
-    "btn.next_patient": "🐾 Patient suivant !",
-    "btn.play_again": "Rejouer"
+    "victory.title": "Tous les petits animaux vont bien !",
+    "victory.subtitle": "Merci pour tes bons soins !",
+    "button.play_again": "Rejouer"
   },
   "audio": {}
 }

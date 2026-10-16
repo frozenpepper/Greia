@@ -4,25 +4,9 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Clínica de animalitos",
-    "patient.puppy": "Perrito 🐶",
-    "patient.kitten": "Gatito 🐱",
-    "patient.bunny": "Conejito 🐰",
-    "patient.dragon": "Dragoncito 🐲",
-    "tool.stetho": "🩺 Revisión",
-    "tool.bandage": "🩹 Tirita",
-    "tool.sponge": "🧼 Baño",
-    "tool.snack": "🥣 Comida",
-    "tool.cuddle": "💖 Mimos",
-    "tool.stethoscope.short": "Revisión",
-    "tool.bath.short": "Baño",
-    "tool.bandaid.short": "Tirita",
-    "tool.food.short": "Comida",
-    "tool.cuddle.short": "Mimos",
-    "victory.title": "¡El perrito está sano y feliz! 🐶💖",
-    "victory.subtitle": "¡Eres una veterinaria o un veterinario genial!",
-    "victory.all_patients": "¡Todos curados!",
-    "btn.next_patient": "🐾 ¡Siguiente paciente!",
-    "btn.play_again": "Jugar otra vez"
+    "victory.title": "¡Todos los animalitos están bien!",
+    "victory.subtitle": "¡Gracias por tus cuidados!",
+    "button.play_again": "Jugar otra vez"
   },
   "audio": {}
 }

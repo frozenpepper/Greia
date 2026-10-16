@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Clinica FX: "it hurts here" throb marks (three coral arcs + a tiny glow), drawn beside a sore ear. -->
+  <g id="glow">
+    <circle cx="40" cy="64" r="30" fill="#F46F61" opacity="0.18"/>
+  </g>
+  <g id="arcs">
+    <path d="M62 36 Q78 64 62 92" fill="none" stroke="#4B372F" stroke-width="12" stroke-linecap="round"/>
+    <path d="M86 24 Q108 64 86 104" fill="none" stroke="#4B372F" stroke-width="12" stroke-linecap="round"/>
+    <path d="M62 36 Q78 64 62 92" fill="none" stroke="#F46F61" stroke-width="6" stroke-linecap="round"/>
+    <path d="M86 24 Q108 64 86 104" fill="none" stroke="#F46F61" stroke-width="6" stroke-linecap="round"/>
+  </g>
+</svg>
