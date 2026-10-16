@@ -5,14 +5,9 @@
   "strings": {
     "activity.colline_allegre.title": "COLLINE ALLEGRE",
     "activity.title": "Colline Allegre",
-    "ui.go": "VAI!",
-    "ui.brake": "FRENA!",
-    "ui.distance": "DISTANZA",
-    "ui.stars": "STELLE",
-    "ui.perfect_landing": "ATTERRAGGIO PERFETTO!",
-    "ui.boing": "BOING!",
-    "ui.level": "LIVELLO",
-    "ui.replay": "GIOCA ANCORA"
+    "button.play_again": "Guida ancora",
+    "victory.title": "Che bel picnic!",
+    "victory.subtitle": "Cinque colline, cinque amici, tutti con Tito!"
   },
   "audio": {
     "activity.title": {

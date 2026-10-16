@@ -5,14 +5,9 @@
   "strings": {
     "activity.colline_allegre.title": "BUMPY HILLS",
     "activity.title": "Bumpy Hills",
-    "ui.go": "GO!",
-    "ui.brake": "BRAKE!",
-    "ui.distance": "DISTANCE",
-    "ui.stars": "STARS",
-    "ui.perfect_landing": "PERFECT LANDING!",
-    "ui.boing": "BOING!",
-    "ui.level": "LEVEL",
-    "ui.replay": "PLAY AGAIN"
+    "button.play_again": "Drive again",
+    "victory.title": "Picnic party!",
+    "victory.subtitle": "Five hills, five friends, all with Tito!"
   },
   "audio": {
     "activity.title": {

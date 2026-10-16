@@ -1,481 +1,736 @@
-"""2D Physics simulation and game state for Colline Allegre.
+"""Terrain, fixed-step buggy physics and the course ladder of Colline Allegre.
 
-Pure logic module with zero pygame drawing dependencies.
-Fully deterministic and unit-testable.
+Pure logic: no drawing, sound or storage. Deterministic for a given course,
+rung and input sequence.
+
+* ``CourseLayout`` turns a ``CourseSpec`` (+ rung) into a finite course:
+  precomputed height samples, surface spans, checkpoints, stars, drop edges,
+  mushroom pads and the finish line.
+* ``CourseRun`` is one drive along one course. ``step(controls)`` advances the
+  physics by exactly ``FIXED_DT`` and returns what happened (a star, a flag,
+  a perfect landing, a tumble, the finish ...). A tumble never ends the game:
+  the app shows it, then calls ``respawn()`` to put the buggy back upright at
+  the last checkpoint flag.
+* ``CourseSet`` plays the five courses in order and records stars and
+  tumbles; ``adapt_rung`` picks the next set's rung.
 """
 
 from __future__ import annotations
 
-import math
+from bisect import bisect_right
 from dataclasses import dataclass, field
-from typing import Final
+from enum import StrEnum
+import math
+from typing import Sequence
 
 if __package__:
     from .colline_content import (
         AIR_DRAG,
         AIR_TILT_TORQUE,
         ANGULAR_DAMPING,
-        BOUNCE_ANIMATION_DURATION,
-        BOUNCE_IMPULSE_X,
-        BOUNCE_IMPULSE_Y,
+        ASSIST_AFTER_TUMBLES,
+        ASSIST_DROP_SPEED,
+        AUTO_UPRIGHT_GAIN,
+        BASE_Y,
         BRAKE_DECEL,
         CHASSIS_HEIGHT,
-        CHASSIS_MASS,
-        CHASSIS_WIDTH,
-        DISTANCE_MILESTONES,
+        COURSES,
+        COURSES_PER_SET,
+        DEMOTE_MIN_TUMBLES,
         DRIVE_ACCEL,
-        DifficultyProfile,
+        DROP_LAUNCH_SPIN,
+        DROP_SAFE_SPEED,
+        DROP_TUMBLE_SECONDS,
+        FINISH_RUNOUT,
+        FIXED_DT,
         FLIP_DURATION_THRESHOLD,
         FLIP_TOLERANCE_ANGLE,
         GRAVITY,
+        HISTORY_LIMIT,
         MAX_FORWARD_SPEED,
         MAX_REVERSE_SPEED,
+        MAX_RUNG,
+        MIN_RUNG,
+        MUD_DRAG,
+        MUD_TRACTION,
+        MUSHROOM_BOUNCE_VX,
+        MUSHROOM_BOUNCE_VY,
         PERFECT_LANDING_ANGLE_TOLERANCE,
         PERFECT_LANDING_BOOST,
-        PIXELS_PER_METER,
-        PROFILES,
+        PERFECT_LANDING_MIN_AIR,
+        PROMOTE_MAX_TUMBLES,
         ROLLING_FRICTION,
+        RUNG_SCALE,
+        STAR_PICKUP_RADIUS,
+        START_FLAT,
+        START_X,
         SUSPENSION_DAMPING,
         SUSPENSION_MAX_LENGTH,
         SUSPENSION_MIN_LENGTH,
         SUSPENSION_REST_LENGTH,
         SUSPENSION_STIFFNESS,
+        TERRAIN_SAMPLE,
         WHEEL_RADIUS,
         WHEELBASE,
+        CourseSpec,
+        Feature,
+        FeatureKind,
+        Surface,
     )
 else:
     from colline_content import (
         AIR_DRAG,
         AIR_TILT_TORQUE,
         ANGULAR_DAMPING,
-        BOUNCE_ANIMATION_DURATION,
-        BOUNCE_IMPULSE_X,
-        BOUNCE_IMPULSE_Y,
+        ASSIST_AFTER_TUMBLES,
+        ASSIST_DROP_SPEED,
+        AUTO_UPRIGHT_GAIN,
+        BASE_Y,
         BRAKE_DECEL,
         CHASSIS_HEIGHT,
-        CHASSIS_MASS,
-        CHASSIS_WIDTH,
-        DISTANCE_MILESTONES,
+        COURSES,
+        COURSES_PER_SET,
+        DEMOTE_MIN_TUMBLES,
         DRIVE_ACCEL,
-        DifficultyProfile,
+        DROP_LAUNCH_SPIN,
+        DROP_SAFE_SPEED,
+        DROP_TUMBLE_SECONDS,
+        FINISH_RUNOUT,
+        FIXED_DT,
         FLIP_DURATION_THRESHOLD,
         FLIP_TOLERANCE_ANGLE,
         GRAVITY,
+        HISTORY_LIMIT,
         MAX_FORWARD_SPEED,
         MAX_REVERSE_SPEED,
+        MAX_RUNG,
+        MIN_RUNG,
+        MUD_DRAG,
+        MUD_TRACTION,
+        MUSHROOM_BOUNCE_VX,
+        MUSHROOM_BOUNCE_VY,
         PERFECT_LANDING_ANGLE_TOLERANCE,
         PERFECT_LANDING_BOOST,
-        PIXELS_PER_METER,
-        PROFILES,
+        PERFECT_LANDING_MIN_AIR,
+        PROMOTE_MAX_TUMBLES,
         ROLLING_FRICTION,
+        RUNG_SCALE,
+        STAR_PICKUP_RADIUS,
+        START_FLAT,
+        START_X,
         SUSPENSION_DAMPING,
         SUSPENSION_MAX_LENGTH,
         SUSPENSION_MIN_LENGTH,
         SUSPENSION_REST_LENGTH,
         SUSPENSION_STIFFNESS,
+        TERRAIN_SAMPLE,
         WHEEL_RADIUS,
         WHEELBASE,
+        CourseSpec,
+        Feature,
+        FeatureKind,
+        Surface,
     )
 
-TERRAIN_BASE_Y: Final[float] = 430.0
+PADDING_AFTER_FEATURES = 160.0
+MUSHROOM_PAD_HALF = 30.0
+MUSHROOM_COOLDOWN = 0.4
+STALL_SECONDS = 3.5
+STALL_SPEED = 10.0
+ASSIST_CLIMB = 1.35
+FINISH_ROLL_BRAKE = 0.3
+
+
+class RunEvent(StrEnum):
+    """Facts one physics step can report to the app."""
+
+    STAR = "star"
+    CHECKPOINT = "checkpoint"
+    PERFECT_LANDING = "perfect_landing"
+    LANDING = "landing"
+    BOUNCE = "bounce"
+    DROP_SAFE = "drop_safe"
+    DROP_TOO_FAST = "drop_too_fast"
+    TUMBLE = "tumble"
+    FINISH = "finish"
+
+
+@dataclass(frozen=True, slots=True)
+class Controls:
+    """One step of driver input: GO / BRAKE pedals and the air tilt."""
+
+    go: bool = False
+    brake: bool = False
+    tilt: float = 0.0
+
+
+@dataclass(frozen=True, slots=True)
+class Span:
+    x0: float
+    x1: float
+    feature: Feature
+    index: int
+
+    def at(self, t: float) -> float:
+        return self.x0 + (self.x1 - self.x0) * t
+
+
+@dataclass(frozen=True, slots=True)
+class DropEdge:
+    sign_x: float
+    edge_x: float
+    bottom_x: float
+
+
+@dataclass(slots=True)
+class Star:
+    x: float
+    y: float
+    collected: bool = False
+
+
+def feature_offset(feature: Feature, t: float, scale: float) -> float:
+    """Height offset (px, negative = up) of ``feature`` at ``t`` in [0, 1].
+
+    Every shape starts and ends at 0, so features join without seams.
+    """
+
+    t = max(0.0, min(1.0, t))
+    h = feature.height * scale
+    kind = feature.kind
+    if kind is FeatureKind.HILL:
+        return -h * (1.0 - math.cos(2.0 * math.pi * t)) / 2.0
+    if kind in (FeatureKind.VALLEY, FeatureKind.MUD, FeatureKind.MUSHROOM):
+        return h * (1.0 - math.cos(2.0 * math.pi * t)) / 2.0
+    if kind is FeatureKind.BUMPS:
+        return -h * (1.0 - math.cos(2.0 * math.pi * max(1, feature.count) * t)) / 2.0
+    if kind is FeatureKind.JUMP:
+        if t < 0.78:
+            return -h * math.sin(0.5 * math.pi * t / 0.78) ** 2
+        return -h * math.cos(0.5 * math.pi * (t - 0.78) / 0.22) ** 2
+    if kind is FeatureKind.DROP:
+        if t < 0.3:
+            return -h * math.sin(0.5 * math.pi * t / 0.3) ** 2
+        if t < DROP_EDGE_T:
+            return -h
+        if t < DROP_BOTTOM_T:
+            return -h * math.cos(0.5 * math.pi * (t - DROP_EDGE_T) / (DROP_BOTTOM_T - DROP_EDGE_T)) ** 2
+        return 0.0
+    return 0.0  # FLAT, BRIDGE (deck at ground level over a pond)
+
+
+DROP_SIGN_T = 0.36
+DROP_EDGE_T = 0.58
+DROP_BOTTOM_T = 0.72
+
+
+class CourseLayout:
+    """A finite course: height samples, surfaces, flags, stars and the finish."""
+
+    def __init__(self, spec: CourseSpec, rung: int = 2) -> None:
+        self.spec = spec
+        self.rung = max(MIN_RUNG, min(MAX_RUNG, int(rung)))
+        self.scale = RUNG_SCALE[self.rung]
+        spans: list[Span] = []
+        x = START_FLAT
+        for index, feature in enumerate(spec.features):
+            spans.append(Span(x, x + feature.width, feature, index))
+            x += feature.width
+        self.spans: tuple[Span, ...] = tuple(spans)
+        self.finish_x = x + PADDING_AFTER_FEATURES
+        self.length = self.finish_x + FINISH_RUNOUT
+        self.start_x = START_X
+
+        count = int(self.length // TERRAIN_SAMPLE) + 2
+        heights = [BASE_Y] * count
+        for span in spans:
+            first = int(span.x0 // TERRAIN_SAMPLE)
+            last = min(count - 1, int(span.x1 // TERRAIN_SAMPLE) + 1)
+            for i in range(first, last + 1):
+                t = (i * TERRAIN_SAMPLE - span.x0) / (span.x1 - span.x0)
+                if 0.0 <= t <= 1.0:
+                    heights[i] = BASE_Y + feature_offset(span.feature, t, self.scale)
+        self.heights: tuple[float, ...] = tuple(heights)
+        self.min_y = min(heights)
+        self.max_y = max(heights)
+
+        surfaces: list[tuple[float, float, Surface]] = []
+        drops: list[DropEdge] = []
+        pads: list[float] = []
+        checkpoints: list[float] = [self.start_x]
+        for span in spans:
+            kind = span.feature.kind
+            if span.feature.checkpoint:
+                # Just before the feature, where every feature meets level ground.
+                checkpoints.append(span.x0 - 50.0)
+            if kind is FeatureKind.BRIDGE:
+                surfaces.append((span.x0, span.x1, Surface.BRIDGE))
+            elif kind is FeatureKind.MUD:
+                surfaces.append((span.at(0.1), span.at(0.9), Surface.MUD))
+            elif kind is FeatureKind.MUSHROOM:
+                center = span.at(0.5)
+                pads.append(center)
+                surfaces.append((center - MUSHROOM_PAD_HALF, center + MUSHROOM_PAD_HALF, Surface.MUSHROOM))
+            elif kind is FeatureKind.DROP:
+                drops.append(DropEdge(span.at(DROP_SIGN_T), span.at(DROP_EDGE_T), span.at(DROP_BOTTOM_T)))
+        surfaces.sort(key=lambda item: item[0])
+        self._surface_starts = [item[0] for item in surfaces]
+        self._surfaces = surfaces
+        self.drops: tuple[DropEdge, ...] = tuple(drops)
+        self.pads: tuple[float, ...] = tuple(pads)
+        self.checkpoints: tuple[float, ...] = tuple(sorted(checkpoints))
+        self.star_spots: tuple[tuple[float, float], ...] = tuple(
+            (spans[spot.feature].at(spot.t), self.height(spans[spot.feature].at(spot.t)) - spot.lift)
+            for spot in spec.stars
+            if 0 <= spot.feature < len(spans)
+        )
+
+    # -- queries ------------------------------------------------------------------
+
+    def height(self, x: float) -> float:
+        """Ground height (world y) at ``x``; flat outside the course."""
+
+        if x <= 0.0:
+            return self.heights[0]
+        position = x / TERRAIN_SAMPLE
+        index = int(position)
+        if index >= len(self.heights) - 1:
+            return self.heights[-1]
+        frac = position - index
+        a = self.heights[index]
+        return a + (self.heights[index + 1] - a) * frac
+
+    def slope(self, x: float) -> float:
+        return (self.height(x + 3.0) - self.height(x - 3.0)) / 6.0
+
+    def normal(self, x: float) -> tuple[float, float]:
+        """Upward unit normal of the ground at ``x`` (screen coords, +y down)."""
+
+        slope = self.slope(x)
+        length = math.hypot(1.0, slope)
+        return slope / length, -1.0 / length
+
+    def surface(self, x: float) -> Surface:
+        index = bisect_right(self._surface_starts, x) - 1
+        if index >= 0:
+            x0, x1, kind = self._surfaces[index]
+            if x0 <= x <= x1:
+                return kind
+        return Surface.GRASS
+
+    def surface_spans(self) -> tuple[tuple[float, float, Surface], ...]:
+        return tuple(self._surfaces)
+
+    def progress(self, x: float) -> float:
+        span = max(1.0, self.finish_x - self.start_x)
+        return max(0.0, min(1.0, (x - self.start_x) / span))
+
+    def checkpoint_before(self, x: float) -> float:
+        best = self.checkpoints[0]
+        for flag in self.checkpoints:
+            if flag <= x:
+                best = flag
+        return best
 
 
 @dataclass
 class Wheel:
-    rel_x: float  # offset from chassis center along heading
-    x: float = 0.0
-    y: float = 0.0
+    rel_x: float  # offset from the chassis centre along the heading
     hub_x: float = 0.0
     hub_y: float = 0.0
-    suspension_len: float = SUSPENSION_REST_LENGTH
     in_contact: bool = False
     compression: float = 0.0
-    surface_kind: str = "grass"
+    surface: Surface = Surface.GRASS
 
 
 @dataclass
 class Vehicle:
-    x: float = 120.0
-    y: float = TERRAIN_BASE_Y - 80.0
+    x: float = START_X
+    y: float = BASE_Y - 70.0
     vx: float = 0.0
     vy: float = 0.0
-    angle: float = 0.0  # radians (0 = horizontal facing right, positive = nose down)
+    angle: float = 0.0  # radians, 0 = level facing right, + = nose down
     angular_velocity: float = 0.0
     rear_wheel: Wheel = field(default_factory=lambda: Wheel(rel_x=-WHEELBASE / 2.0))
     front_wheel: Wheel = field(default_factory=lambda: Wheel(rel_x=WHEELBASE / 2.0))
-    is_airborne: bool = False
+    airborne: bool = False
     air_time: float = 0.0
     flip_timer: float = 0.0
-    is_flipped: bool = False
-    bounce_active: bool = False
-    bounce_timer: float = 0.0
-    perfect_landing_active: bool = False
-    perfect_landing_timer: float = 0.0
+    wheel_spin: float = 0.0  # radians, for drawing
+
+    @property
+    def wheels(self) -> tuple[Wheel, Wheel]:
+        return (self.rear_wheel, self.front_wheel)
+
+    @property
+    def speed(self) -> float:
+        return math.hypot(self.vx, self.vy)
 
 
-@dataclass
-class Collectible:
-    x: float
-    y: float
-    kind: str  # "star", "gear", "balloon"
-    value: int = 1
-    radius: float = 24.0
-    collected: bool = False
+class CourseRun:
+    """One drive along one course with fixed-step physics.
 
+    Two kind helpers keep every child moving: ``air_assist`` rights the buggy
+    in the air (gentle courses, the gentle rung, or after a tumble pile-up)
+    and ``drop_assist`` slows the buggy by itself at a turtle sign once it has
+    tumbled ``ASSIST_AFTER_TUMBLES`` times on this course. Either one also
+    adds a little climbing help.
+    """
 
-class Terrain:
-    """Procedural rolling hills terrain with bridges, mud and bouncy mushrooms."""
-
-    def __init__(self, profile: DifficultyProfile) -> None:
-        self.profile = profile
-
-    def get_height(self, x: float) -> float:
-        # Safe spawn zone
-        if x < 180.0:
-            return TERRAIN_BASE_Y
-        blend = min(1.0, (x - 180.0) / 100.0)
-
-        wl = self.profile.hill_wavelength
-        amp = self.profile.hill_amplitude
-
-        # Primary rolling wave
-        h = -math.sin((x - 180.0) / wl * 2.0 * math.pi) * amp
-        # Secondary harmonics
-        h += -math.sin((x - 180.0) / (wl * 0.43) * 2.0 * math.pi) * (amp * 0.35)
-
-        if self.profile.roughness > 0.0:
-            h += -math.cos((x - 180.0) / (wl * 0.21) * 2.0 * math.pi) * (amp * self.profile.roughness)
-
-        # Wooden bridge segment flattening
-        if self.profile.has_bridges:
-            if 800.0 <= x <= 1050.0:
-                bridge_y = -amp * 0.3
-                bridge_blend = math.sin((x - 800.0) / 250.0 * math.pi)
-                h = h * (1.0 - bridge_blend) + bridge_y * bridge_blend
-            elif 2100.0 <= x <= 2400.0:
-                bridge_y = -amp * 0.4
-                bridge_blend = math.sin((x - 2100.0) / 300.0 * math.pi)
-                h = h * (1.0 - bridge_blend) + bridge_y * bridge_blend
-
-        return TERRAIN_BASE_Y + h * blend
-
-    def get_slope(self, x: float) -> float:
-        dx = 2.0
-        return (self.get_height(x + dx) - self.get_height(x - dx)) / (2.0 * dx)
-
-    def get_normal(self, x: float) -> tuple[float, float]:
-        slope = self.get_slope(x)
-        # In screen coordinates where +y is down:
-        # Tangent vector is (1, slope)
-        # Normal pointing upwards is (-slope, 1) or (slope, -1) normalized.
-        # Upward normal in +y-down coords has negative y:
-        length = math.hypot(1.0, slope)
-        nx = -slope / length
-        ny = -1.0 / length
-        return nx, ny
-
-    def get_surface_kind(self, x: float) -> str:
-        if self.profile.has_bridges:
-            if (800.0 <= x <= 1050.0) or (2100.0 <= x <= 2400.0):
-                return "bridge"
-        if self.profile.has_mud:
-            if (1400.0 <= x <= 1650.0) or (2700.0 <= x <= 2950.0):
-                return "mud"
-        if self.profile.has_mushrooms:
-            # Mushroom pads at valley bottoms
-            if abs(x - 620.0) < 30.0 or abs(x - 1850.0) < 30.0:
-                return "mushroom"
-        return "grass"
-
-
-class CollineWorld:
-    """Deterministic 2D vehicle physics world."""
-
-    def __init__(self, difficulty: int = 2) -> None:
-        self.difficulty = max(1, min(5, difficulty))
-        self.profile = PROFILES.get(self.difficulty, PROFILES[2])
-        self.terrain = Terrain(self.profile)
+    def __init__(self, layout: CourseLayout, *, assist: bool = False) -> None:
+        self.layout = layout
+        self.base_assist = assist or layout.spec.auto_upright
         self.vehicle = Vehicle()
-        self.collectibles: list[Collectible] = []
-        self.events: list[str] = []
-        self.stars_collected: int = 0
-        self.score: int = 0
-        self.distance_traveled: float = 0.0
-        self.highest_milestone: int = 0
-        self.is_completed: bool = False
-        self._init_collectibles()
+        self.stars: list[Star] = [Star(x, y) for x, y in layout.star_spots]
+        self.checkpoint_x = layout.start_x
+        self.passed_flags: set[float] = {layout.start_x}
+        self.tumbles = 0
+        self.finished = False
+        self.tumbling = False
+        self.elapsed = 0.0
+        self._drop_launch_timer = 0.0
+        self._mushroom_cooldown = 0.0
+        self._stall_timer = 0.0
+        self.drop_hints: set[int] = set()  # drops where the buggy went over too fast
+        self._settle()
 
-    def _init_collectibles(self) -> None:
-        # Spawn collectibles along the hill path (stars on crests, gears in bridges, balloons over jumps)
-        for d in range(250, int(self.profile.target_distance * PIXELS_PER_METER), 160):
-            x = float(d)
-            ground_y = self.terrain.get_height(x)
-            slope = self.terrain.get_slope(x)
-            # On hill crests or jumps
-            if slope > 0.2:
-                # Up in the air
-                self.collectibles.append(Collectible(x=x, y=ground_y - 85.0, kind="balloon", value=3))
-            elif (800 <= x <= 1050) or (2100 <= x <= 2400):
-                self.collectibles.append(Collectible(x=x, y=ground_y - 45.0, kind="gear", value=2))
-            else:
-                self.collectibles.append(Collectible(x=x, y=ground_y - 50.0, kind="star", value=1))
+    # -- state ----------------------------------------------------------------------
 
-    def reset(self, difficulty: int | None = None) -> None:
-        if difficulty is not None:
-            self.difficulty = max(1, min(5, difficulty))
-            self.profile = PROFILES.get(self.difficulty, PROFILES[2])
-            self.terrain = Terrain(self.profile)
-        self.vehicle = Vehicle()
-        self.collectibles.clear()
-        self.events.clear()
-        self.stars_collected = 0
-        self.score = 0
-        self.distance_traveled = 0.0
-        self.highest_milestone = 0
-        self.is_completed = False
-        self._init_collectibles()
+    @property
+    def drop_assist(self) -> bool:
+        return self.tumbles >= ASSIST_AFTER_TUMBLES
 
-    def step(self, dt: float, throttle: float = 0.0, brake: float = 0.0, tilt: float = 0.0) -> list[str]:
-        """Advance physics by dt using multi-step integration for suspension stability."""
-        new_events: list[str] = []
-        if dt <= 0.0:
-            return new_events
+    @property
+    def air_assist(self) -> bool:
+        return self.base_assist or self.drop_assist
 
-        # Clamp inputs
-        throttle = max(0.0, min(1.0, throttle))
-        brake = max(0.0, min(1.0, brake))
-        tilt = max(-1.0, min(1.0, tilt))
+    @property
+    def assist(self) -> bool:
+        return self.air_assist or self.drop_assist
 
-        # Sub-step integration (4 sub-steps per frame)
-        sub_steps = 4
-        sub_dt = min(0.05, dt) / sub_steps
+    @property
+    def stars_collected(self) -> int:
+        return sum(1 for star in self.stars if star.collected)
 
-        for _ in range(sub_steps):
-            self._physics_substep(sub_dt, throttle, brake, tilt, new_events)
+    @property
+    def progress(self) -> float:
+        return self.layout.progress(self.vehicle.x)
 
-        # Update timers
+    def upcoming_drop(self, lookahead: float = 520.0) -> int | None:
+        """Index of the drop whose sign is just ahead of (or under) the buggy."""
+
+        x = self.vehicle.x
+        for index, drop in enumerate(self.layout.drops):
+            if drop.sign_x - lookahead <= x <= drop.edge_x:
+                return index
+        return None
+
+    # -- lifecycle ------------------------------------------------------------------
+
+    def respawn(self) -> None:
+        """Put the buggy back upright, at rest, on the last flag it passed."""
+
+        self.vehicle = Vehicle(x=self.checkpoint_x)
+        self.tumbling = False
+        self._drop_launch_timer = 0.0
+        self._stall_timer = 0.0
+        self._settle()
+
+    def _settle(self) -> None:
         veh = self.vehicle
-        if veh.bounce_active:
-            veh.bounce_timer += dt
-            if veh.bounce_timer >= BOUNCE_ANIMATION_DURATION:
-                veh.bounce_active = False
-                veh.bounce_timer = 0.0
+        ground = self.layout.height(veh.x)
+        veh.angle = math.atan(self.layout.slope(veh.x))
+        veh.y = ground - WHEEL_RADIUS - SUSPENSION_REST_LENGTH + 6.0
+        for wheel in veh.wheels:
+            wheel.hub_x = veh.x + wheel.rel_x * math.cos(veh.angle)
+            wheel.hub_y = self.layout.height(wheel.hub_x) - WHEEL_RADIUS
+            wheel.in_contact = True
 
-        if veh.perfect_landing_active:
-            veh.perfect_landing_timer += dt
-            if veh.perfect_landing_timer >= 1.2:
-                veh.perfect_landing_active = False
-                veh.perfect_landing_timer = 0.0
+    # -- physics ----------------------------------------------------------------------
 
-        # Check collectibles
-        for c in self.collectibles:
-            if not c.collected:
-                dx = veh.x - c.x
-                dy = veh.y - c.y
-                if (dx * dx + dy * dy) < (c.radius + 36.0) ** 2:
-                    c.collected = True
-                    self.stars_collected += 1
-                    self.score += c.value
-                    new_events.append("colline.star_collected")
+    def step(self, controls: Controls = Controls()) -> list[RunEvent]:
+        """Advance exactly one fixed step (``FIXED_DT``)."""
 
-        # Distance & Milestones
-        meters = max(0.0, veh.x / PIXELS_PER_METER)
-        if meters > self.distance_traveled:
-            self.distance_traveled = meters
+        events: list[RunEvent] = []
+        dt = FIXED_DT
+        self.elapsed += dt
+        veh = self.vehicle
+        go = controls.go and not self.tumbling and not self.finished
+        brake = (controls.brake and not self.tumbling) or self.finished
+        tilt = 0.0 if self.tumbling else max(-1.0, min(1.0, controls.tilt))
+        before_x = veh.x
+        if self._mushroom_cooldown > 0.0:
+            self._mushroom_cooldown -= dt
 
-        for m in DISTANCE_MILESTONES:
-            if self.distance_traveled >= m > self.highest_milestone:
-                self.highest_milestone = m
-                new_events.append("colline.milestone_distance")
+        # Drop signs: with assist the buggy slows itself before the edge.
+        if self.drop_assist and not veh.airborne:
+            for drop in self.layout.drops:
+                if drop.sign_x <= veh.x <= drop.edge_x and veh.vx > ASSIST_DROP_SPEED:
+                    go = False
+                    veh.vx = max(ASSIST_DROP_SPEED, veh.vx - BRAKE_DECEL * dt)
 
-        # Course completion check
-        if self.distance_traveled >= self.profile.target_distance and not self.is_completed:
-            self.is_completed = True
-            new_events.append("colline.course_completed")
+        self._integrate(dt, go, brake, tilt, events)
+        if self.tumbling:
+            # A tumbled buggy settles where it lies (on its roof), it does not roll on.
+            veh.angular_velocity *= 0.86
+            if not veh.airborne or veh.y >= self.layout.height(veh.x) - CHASSIS_HEIGHT:
+                veh.vx *= 0.96
 
-        self.events.extend(new_events)
-        return new_events
+        # Drop edges: too fast over the edge -> head over heels.
+        for index, drop in enumerate(self.layout.drops):
+            if before_x < drop.edge_x <= veh.x and not self.tumbling:
+                if veh.vx > DROP_SAFE_SPEED:
+                    # Head over heels: a clear, comical half-somersault.
+                    veh.angular_velocity = DROP_LAUNCH_SPIN
+                    veh.vy = min(veh.vy, -160.0)
+                    self._drop_launch_timer = DROP_TUMBLE_SECONDS
+                    self.drop_hints.add(index)
+                    events.append(RunEvent.DROP_TOO_FAST)
+                else:
+                    events.append(RunEvent.DROP_SAFE)
+        if self._drop_launch_timer > 0.0 and not self.tumbling:
+            self._drop_launch_timer -= dt
+            if self._drop_launch_timer <= 0.0:
+                self._tumble(events)
 
-    def _physics_substep(
-        self, sub_dt: float, throttle: float, brake: float, tilt: float, new_events: list[str]
-    ) -> None:
+        # Flips: upside down for a moment, in the air or on the roof.
+        norm = (veh.angle + math.pi) % (2.0 * math.pi) - math.pi
+        upside_down = abs(norm) > FLIP_TOLERANCE_ANGLE
+        if upside_down and not self.tumbling:
+            veh.flip_timer += dt
+            if veh.flip_timer >= FLIP_DURATION_THRESHOLD:
+                self._tumble(events)
+        else:
+            veh.flip_timer = max(0.0, veh.flip_timer - dt * 1.5)
+
+        # Stuck (on a side, or no progress while pressing GO): kindly reset.
+        if go and not veh.airborne and abs(veh.vx) < STALL_SPEED and not self.tumbling:
+            self._stall_timer += dt
+            if self._stall_timer >= STALL_SECONDS:
+                self._tumble(events)
+        else:
+            self._stall_timer = 0.0
+
+        if not self.tumbling:
+            for flag in self.layout.checkpoints:
+                if flag not in self.passed_flags and veh.x >= flag:
+                    self.passed_flags.add(flag)
+                    self.checkpoint_x = max(self.checkpoint_x, flag)
+                    events.append(RunEvent.CHECKPOINT)
+            for star in self.stars:
+                if not star.collected:
+                    dx = veh.x - star.x
+                    dy = (veh.y - 20.0) - star.y
+                    if dx * dx + dy * dy < STAR_PICKUP_RADIUS * STAR_PICKUP_RADIUS:
+                        star.collected = True
+                        events.append(RunEvent.STAR)
+            if not self.finished and veh.x >= self.layout.finish_x:
+                self.finished = True
+                events.append(RunEvent.FINISH)
+        return events
+
+    def _tumble(self, events: list[RunEvent]) -> None:
+        self.tumbling = True
+        self.tumbles += 1
+        self.vehicle.flip_timer = 0.0
+        self._drop_launch_timer = 0.0
+        self._stall_timer = 0.0
+        events.append(RunEvent.TUMBLE)
+
+    def _integrate(self, dt: float, go: bool, brake: bool, tilt: float, events: list[RunEvent]) -> None:
+        layout = self.layout
         veh = self.vehicle
         cos_a = math.cos(veh.angle)
         sin_a = math.sin(veh.angle)
+        nx, ny = -sin_a, cos_a  # chassis "down"
 
-        # Heading vector (forward along chassis)
-        hx, hy = cos_a, sin_a
-        # Perpendicular normal vector downwards relative to chassis
-        nx, ny = -sin_a, cos_a
-
-        # Gravity
-        veh.vy += GRAVITY * sub_dt
-
-        # Calculate wheel positions & suspension forces
-        wheels = [veh.rear_wheel, veh.front_wheel]
-        total_spring_force_x = 0.0
-        total_spring_force_y = 0.0
-        chassis_torque = 0.0
+        veh.vy += GRAVITY * dt
+        force_x = force_y = torque = 0.0
         contacts = 0
+        in_mud = False
+        for wheel in veh.wheels:
+            mount_x = veh.x + wheel.rel_x * cos_a
+            mount_y = veh.y + wheel.rel_x * sin_a
+            hub_x = mount_x + nx * SUSPENSION_REST_LENGTH
+            hub_y = mount_y + ny * SUSPENSION_REST_LENGTH
+            ground = layout.height(hub_x)
+            surface = layout.surface(hub_x)
+            wheel.surface = surface
+            penetration = hub_y + WHEEL_RADIUS - ground
+            if penetration <= 0.0:
+                wheel.in_contact = False
+                wheel.compression = 0.0
+                wheel.hub_x, wheel.hub_y = hub_x, hub_y
+                continue
+            wheel.in_contact = True
+            contacts += 1
+            compression = min(SUSPENSION_MAX_LENGTH, penetration)
+            wheel.compression = compression
+            wheel.hub_x = hub_x
+            wheel.hub_y = max(ground - WHEEL_RADIUS, mount_y + ny * SUSPENSION_MIN_LENGTH)
+            tnx, tny = layout.normal(hub_x)
+            along_normal = veh.vx * tnx + veh.vy * tny
+            spring = compression * SUSPENSION_STIFFNESS - along_normal * SUSPENSION_DAMPING
+            if spring > 0.0:
+                force_x += tnx * spring
+                force_y += tny * spring
+                torque += (wheel.rel_x / (WHEELBASE / 2.0)) * (-spring * 0.015)
+            if surface is Surface.MUSHROOM and self._mushroom_cooldown <= 0.0:
+                veh.vy = min(veh.vy, MUSHROOM_BOUNCE_VY)
+                veh.vx = max(veh.vx, 0.0) + MUSHROOM_BOUNCE_VX
+                self._mushroom_cooldown = MUSHROOM_COOLDOWN
+                events.append(RunEvent.BOUNCE)
+            if surface is Surface.MUD:
+                in_mud = True
+            slope = layout.slope(hub_x)
+            norm = math.hypot(1.0, slope)
+            tx, ty = 1.0 / norm, slope / norm
+            if go:
+                # Half per wheel; assist adds a little climbing help so a buggy
+                # put back at the foot of a steep hill can always get up it.
+                accel = DRIVE_ACCEL * (MUD_TRACTION if surface is Surface.MUD else 1.0) * 0.5
+                if self.assist:
+                    accel *= ASSIST_CLIMB
+                veh.vx += tx * accel * dt
+                veh.vy += ty * accel * dt
+            elif brake:
+                speed = math.hypot(veh.vx, veh.vy)
+                if speed > 6.0:
+                    # After the finish the buggy rolls gently up to the picnic.
+                    strength = FINISH_ROLL_BRAKE if self.finished else 1.0
+                    cut = min(speed, BRAKE_DECEL * 0.5 * strength * dt)
+                    veh.vx -= veh.vx / speed * cut
+                    veh.vy -= veh.vy / speed * cut
+                elif not self.finished:
+                    veh.vx += tx * MAX_REVERSE_SPEED * 0.4 * dt
 
-        for w in wheels:
-            # Mount point on chassis
-            mx = veh.x + w.rel_x * hx
-            my = veh.y + w.rel_x * hy
-
-            # Uncompressed hub position
-            hub_x = mx + nx * SUSPENSION_REST_LENGTH
-            hub_y = my + ny * SUSPENSION_REST_LENGTH
-
-            # Wheel bottom ground query
-            ground_y = self.terrain.get_height(hub_x)
-            surface_kind = self.terrain.get_surface_kind(hub_x)
-            w.surface_kind = surface_kind
-
-            wheel_bottom_y = hub_y + WHEEL_RADIUS
-            penetration = wheel_bottom_y - ground_y
-
-            if penetration > 0.0:
-                # Wheel is touching ground
-                w.in_contact = True
-                contacts += 1
-                comp = min(SUSPENSION_MAX_LENGTH, max(0.0, penetration))
-                w.compression = comp
-                w.suspension_len = max(SUSPENSION_MIN_LENGTH, SUSPENSION_REST_LENGTH - comp)
-
-                # Wheel hub sits above ground by WHEEL_RADIUS
-                w.hub_x = hub_x
-                w.hub_y = ground_y - WHEEL_RADIUS
-                w.x = w.hub_x
-                w.y = ground_y
-
-                # Terrain normal at contact point
-                tnx, tny = self.terrain.get_normal(w.hub_x)
-
-                # Normal spring force
-                # Project vehicle velocity onto terrain normal
-                rel_v = veh.vx * tnx + veh.vy * tny
-                spring_f = comp * SUSPENSION_STIFFNESS - rel_v * SUSPENSION_DAMPING
-                if spring_f > 0.0:
-                    total_spring_force_x += tnx * spring_f
-                    total_spring_force_y += tny * spring_f
-
-                    # Torque on chassis: arm is w.rel_x
-                    # If rear wheel pushes up, it tilts nose down (+torque in clockwise sys)
-                    # If front wheel pushes up, it tilts nose up (-torque)
-                    chassis_torque += (w.rel_x / (WHEELBASE / 2.0)) * (-spring_f * 0.015)
-
-                # Bouncy mushroom bounce
-                if surface_kind == "mushroom":
-                    veh.vy = min(veh.vy, -480.0)
-                    veh.vx += 120.0
-                    new_events.append("colline.mushroom_bounce")
-
-                # Traction & Braking
-                surface_friction = 0.55 if surface_kind == "mud" else 1.0
-                slope = self.terrain.get_slope(w.hub_x)
-                tx, ty = 1.0 / math.hypot(1.0, slope), slope / math.hypot(1.0, slope)
-
-                if throttle > 0.0:
-                    accel = DRIVE_ACCEL * throttle * surface_friction
-                    veh.vx += tx * accel * sub_dt
-                    veh.vy += ty * accel * sub_dt
-                elif brake > 0.0:
-                    decel = BRAKE_DECEL * brake
-                    speed = math.hypot(veh.vx, veh.vy)
-                    if speed > 5.0:
-                        veh.vx -= (veh.vx / speed) * decel * sub_dt
-                        veh.vy -= (veh.vy / speed) * decel * sub_dt
-                    else:
-                        veh.vx += tx * MAX_REVERSE_SPEED * 0.4 * sub_dt
-            else:
-                # Airborne wheel
-                w.in_contact = False
-                w.compression = 0.0
-                w.suspension_len = SUSPENSION_REST_LENGTH
-                w.hub_x = hub_x
-                w.hub_y = hub_y
-                w.x = hub_x
-                w.y = hub_y + WHEEL_RADIUS
-
-        # Apply spring forces to vehicle
-        veh.vx += total_spring_force_x * sub_dt
-        veh.vy += total_spring_force_y * sub_dt
-
-        # Check airborne status
-        was_airborne = veh.is_airborne
-        veh.is_airborne = contacts == 0
-
-        if veh.is_airborne:
-            veh.air_time += sub_dt
-            # Mid-air tilt control
-            if tilt != 0.0:
-                veh.angular_velocity += tilt * AIR_TILT_TORQUE * sub_dt
-            # Auto-uprighting for D1
-            if self.profile.auto_upright:
-                target_ang = 0.0
-                veh.angular_velocity += (target_ang - veh.angle) * 3.0 * sub_dt
-            # Air drag
+        veh.vx += force_x * dt
+        veh.vy += force_y * dt
+        was_airborne = veh.airborne
+        veh.airborne = contacts == 0
+        if veh.airborne:
+            veh.air_time += dt
+            if tilt:
+                veh.angular_velocity += tilt * AIR_TILT_TORQUE * dt
+            if self.air_assist and self._drop_launch_timer <= 0.0 and not self.tumbling:
+                target = math.atan(layout.slope(veh.x + veh.vx * 0.25))
+                veh.angular_velocity += (target - veh.angle) * AUTO_UPRIGHT_GAIN * dt
             veh.vx *= AIR_DRAG
         else:
-            # Wheels on ground
-            # Landing detection
-            if was_airborne and veh.air_time > 0.35 and contacts == 2:
-                # Check landing angle alignment with terrain slope
-                terrain_angle = math.atan(self.terrain.get_slope(veh.x))
-                angle_diff = abs(veh.angle - terrain_angle)
-                if angle_diff <= PERFECT_LANDING_ANGLE_TOLERANCE:
-                    # Perfect landing boost!
-                    veh.vx += PERFECT_LANDING_BOOST
-                    veh.perfect_landing_active = True
-                    veh.perfect_landing_timer = 0.0
-                    new_events.append("colline.perfect_landing")
+            if was_airborne and veh.air_time > PERFECT_LANDING_MIN_AIR:
+                events.append(RunEvent.LANDING)
+                if contacts == 2 and not self.tumbling and self._drop_launch_timer <= 0.0:
+                    ground_angle = math.atan(layout.slope(veh.x))
+                    if abs(veh.angle - ground_angle) <= PERFECT_LANDING_ANGLE_TOLERANCE:
+                        veh.vx += PERFECT_LANDING_BOOST
+                        events.append(RunEvent.PERFECT_LANDING)
             veh.air_time = 0.0
             veh.vx *= ROLLING_FRICTION
+            if in_mud:
+                veh.vx *= MUD_DRAG
 
-        # Apply torque & angular damping
-        veh.angular_velocity += chassis_torque * sub_dt
-        veh.angular_velocity *= max(0.0, 1.0 - ANGULAR_DAMPING * sub_dt)
-        veh.angle += veh.angular_velocity * sub_dt
-
-        # Clamp speed
+        if self._drop_launch_timer <= 0.0:
+            veh.angular_velocity += torque * dt
+            veh.angular_velocity *= max(0.0, 1.0 - ANGULAR_DAMPING * dt)
+        veh.angle += veh.angular_velocity * dt
         veh.vx = max(MAX_REVERSE_SPEED, min(MAX_FORWARD_SPEED, veh.vx))
+        veh.x += veh.vx * dt
+        veh.y += veh.vy * dt
+        veh.x = max(40.0, min(layout.length - 200.0, veh.x))
 
-        # Integrate linear position
-        veh.x += veh.vx * sub_dt
-        veh.y += veh.vy * sub_dt
-
-        # Enforce ground floor for chassis (so it doesn't sink deep into terrain)
-        ground_center_y = self.terrain.get_height(veh.x)
-        min_y = ground_center_y - CHASSIS_HEIGHT / 2.0
-        if veh.y > min_y + 12.0:
-            veh.y = min_y + 12.0
-            if veh.vy > 0:
+        # Keep the chassis out of the ground (the roof of a tumbled buggy rests on it).
+        floor = layout.height(veh.x) - CHASSIS_HEIGHT / 2.0 + 12.0
+        if veh.y > floor:
+            veh.y = floor
+            if veh.vy > 0.0:
                 veh.vy = 0.0
+            if veh.airborne:
+                veh.vx *= 0.9
+        if contacts:
+            veh.wheel_spin = (veh.wheel_spin + veh.vx * dt / WHEEL_RADIUS) % (2.0 * math.pi)
 
-        # Flip detection & Comical Boxing-Glove Spring Recovery
-        # Angle normalized between -pi and pi
-        norm_angle = (veh.angle + math.pi) % (2.0 * math.pi) - math.pi
-        is_upside_down = abs(norm_angle) > FLIP_TOLERANCE_ANGLE
 
-        # Also check if chassis roof hits ground
-        roof_contact = veh.y >= ground_center_y - 20.0 and is_upside_down
+# -- the set of five courses ------------------------------------------------------
 
-        if is_upside_down and (contacts == 0 or roof_contact):
-            veh.flip_timer += sub_dt
-            if veh.flip_timer >= FLIP_DURATION_THRESHOLD:
-                # TRIGGER BOING! COMICAL RECOVERY!
-                veh.is_flipped = False
-                veh.flip_timer = 0.0
-                veh.bounce_active = True
-                veh.bounce_timer = 0.0
 
-                # Upright vehicle and give bouncy jump!
-                veh.angle = math.atan(self.terrain.get_slope(veh.x))
-                veh.angular_velocity = 0.0
-                veh.vy = BOUNCE_IMPULSE_Y
-                veh.vx = max(veh.vx + BOUNCE_IMPULSE_X, 160.0)
-                veh.y = ground_center_y - 70.0
-                new_events.append("colline.comical_flip")
-        else:
-            veh.flip_timer = max(0.0, veh.flip_timer - sub_dt * 1.5)
+@dataclass(frozen=True, slots=True)
+class CourseResult:
+    course_id: str
+    stars: int
+    tumbles: int
+    seconds: float
+
+
+class CourseSet:
+    """Five courses in order (gentle -> wild) at one rung."""
+
+    def __init__(self, rung: int = 1, courses: Sequence[CourseSpec] = COURSES) -> None:
+        self.rung = max(MIN_RUNG, min(MAX_RUNG, int(rung)))
+        self.courses = tuple(courses)[:COURSES_PER_SET]
+        self.index = 0
+        self.results: list[CourseResult] = []
+
+    @property
+    def total(self) -> int:
+        return len(self.courses)
+
+    @property
+    def complete(self) -> bool:
+        return len(self.results) >= self.total
+
+    @property
+    def current(self) -> CourseSpec:
+        return self.courses[min(self.index, self.total - 1)]
+
+    @property
+    def total_stars(self) -> int:
+        return sum(result.stars for result in self.results)
+
+    @property
+    def total_tumbles(self) -> int:
+        return sum(result.tumbles for result in self.results)
+
+    def build_run(self) -> CourseRun:
+        """A fresh run of the current course (rung 1 always helps in the air)."""
+
+        layout = CourseLayout(self.current, self.rung)
+        return CourseRun(layout, assist=self.rung == MIN_RUNG)
+
+    def record(self, run: CourseRun) -> CourseResult:
+        result = CourseResult(run.layout.spec.course_id, run.stars_collected, run.tumbles, run.elapsed)
+        if not self.complete:
+            self.results.append(result)
+            self.index = min(self.total, self.index + 1)
+        return result
+
+
+def adapt_rung(rung: int, tumbles: int) -> int:
+    """Next set's rung: smooth sets climb, sets with many tumbles ease off."""
+
+    if tumbles <= PROMOTE_MAX_TUMBLES:
+        rung += 1
+    elif tumbles >= DEMOTE_MIN_TUMBLES:
+        rung -= 1
+    return max(MIN_RUNG, min(MAX_RUNG, rung))
+
+
+def bounded_history(history: Sequence[int], tumbles: int) -> tuple[int, ...]:
+    return (*tuple(history), int(tumbles))[-HISTORY_LIMIT:]
+
+
+__all__ = [
+    "Controls",
+    "CourseLayout",
+    "CourseResult",
+    "CourseRun",
+    "CourseSet",
+    "DropEdge",
+    "RunEvent",
+    "Span",
+    "Star",
+    "Vehicle",
+    "Wheel",
+    "adapt_rung",
+    "bounded_history",
+    "feature_offset",
+]

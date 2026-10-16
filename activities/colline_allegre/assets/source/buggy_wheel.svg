@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <g id="tire">
+    <circle cx="64" cy="64" r="58" fill="#4F5258" stroke="#4B372F" stroke-width="5"/>
+    <path d="M64 8 L64 18 M64 110 L64 120 M8 64 L18 64 M110 64 L120 64 M24 24 L31 31 M104 104 L97 97 M104 24 L97 31 M24 104 L31 97" stroke="#30343A" stroke-width="7" stroke-linecap="round"/>
+    <path d="M30 44 C36 30 48 20 62 17" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.35"/>
+  </g>
+  <g id="rim">
+    <circle cx="64" cy="64" r="32" fill="#FFFBEB" stroke="#4B372F" stroke-width="5"/>
+    <circle cx="64" cy="64" r="13" fill="#FBBF24" stroke="#4B372F" stroke-width="4"/>
+    <circle cx="64" cy="43" r="4.5" fill="#4B372F"/>
+    <circle cx="64" cy="85" r="4.5" fill="#4B372F"/>
+    <circle cx="43" cy="64" r="4.5" fill="#4B372F"/>
+    <circle cx="85" cy="64" r="4.5" fill="#4B372F"/>
+  </g>
+</svg>

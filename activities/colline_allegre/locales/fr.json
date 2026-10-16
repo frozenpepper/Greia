@@ -5,14 +5,9 @@
   "strings": {
     "activity.colline_allegre.title": "COLLINES RIGOLOTES",
     "activity.title": "Collines rigolotes",
-    "ui.go": "C'EST PARTI !",
-    "ui.brake": "FREINE !",
-    "ui.distance": "DISTANCE",
-    "ui.stars": "ÉTOILES",
-    "ui.perfect_landing": "ATTERRISSAGE PARFAIT !",
-    "ui.boing": "BOING !",
-    "ui.level": "NIVEAU",
-    "ui.replay": "REJOUER"
+    "button.play_again": "Rouler encore",
+    "victory.title": "Quel beau pique-nique !",
+    "victory.subtitle": "Cinq collines, cinq amis, tous avec Tito !"
   },
   "audio": {}
 }

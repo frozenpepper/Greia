@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" width="512" height="256">
+  <defs>
+    <!-- wood light -> wood (wicker) -->
+    <linearGradient id="picnic_wicker" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F2C185"/>
+      <stop offset="1" stop-color="#D28F52"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="256" cy="230" rx="220" ry="10" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="blanket">
+    <path d="M80 194 L432 194 L468 226 L44 226 Z" fill="#FFFBEB"/>
+        <path d="M80.0 194 L130.3 194 L104.6 226 L44.0 226 Z" fill="#F46F61"/>
+    <path d="M180.6 194 L230.9 194 L225.7 226 L165.1 226 Z" fill="#F46F61"/>
+    <path d="M281.1 194 L331.4 194 L346.9 226 L286.3 226 Z" fill="#F46F61"/>
+    <path d="M381.7 194 L432.0 194 L468.0 226 L407.4 226 Z" fill="#F46F61"/>
+    <path d="M62 210 L450 210" stroke="#F46F61" stroke-width="5" opacity="0.55"/>
+    <path d="M80 194 L432 194 L468 226 L44 226 Z" fill="none" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+  <g id="basket">
+    <path d="M318 150 C338 82 384 82 404 150" fill="none" stroke="#4B372F" stroke-width="13" stroke-linecap="round"/>
+    <path d="M318 150 C338 82 384 82 404 150" fill="none" stroke="#E2AC74" stroke-width="6" stroke-linecap="round"/>
+    <path d="M302 146 L420 146 C426 146 429 151 428 156 L418 200 C417 205 413 208 408 208 L314 208 C309 208 305 205 304 200 L294 156 C293 151 296 146 302 146 Z" fill="url(#picnic_wicker)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M300 168 L422 168 M304 188 L418 188" stroke="#B9783F" stroke-width="4" stroke-linecap="round"/>
+    <path d="M330 146 L352 128 L376 146 Z" fill="#F46F61" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M312 156 L344 156" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g id="apple">
+    <path d="M228 170 C214 160 196 168 196 186 C196 204 212 214 228 208 C244 214 260 204 260 186 C260 168 242 160 228 170 Z" fill="#F46F61" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M228 170 C228 162 232 156 238 152" fill="none" stroke="#4B372F" stroke-width="4" stroke-linecap="round"/>
+    <path d="M234 160 C242 150 254 152 256 158 C248 164 240 164 234 160 Z" fill="#59B86A" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <ellipse cx="209" cy="180" rx="5" ry="8" fill="#FFFFFF" opacity="0.7"/>
+  </g>
+  <g id="cup">
+    <path d="M146 162 L180 162 L176 204 C176 207 173 209 170 209 L156 209 C153 209 150 207 150 204 Z" fill="#4A91D8" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M154 172 L156 196" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+  </g>
+</svg>

@@ -1,325 +1,635 @@
-"""Application coordinator, event loop, and lifecycle for Colline Allegre."""
+"""Lifecycle, timing and input for Colline Allegre (Bumpy Hills).
+
+Tito drives his little buggy over five finite courses, each ending at a
+picnic where a friend waits (Leo, Lilli, Momo, Dani, Flash):
+
+* hold GO (right arrow / Space / D-pad right / south button / the green
+  pedal) to drive and BRAKE (left arrow / D-pad left / east button / the
+  coral pedal) to slow down; in the air, right and left lean the buggy;
+* stars float over the course (three per course) and fill the star slots;
+  flags along the way are checkpoints;
+* a tumble is never "game over": the buggy lands on its roof, Tito thinks,
+  and after a moment it is back upright on the last flag. On the snowy and
+  sky courses a snail sign marks a steep drop: too fast over the edge and
+  the buggy goes head over heels. After such a tumble the sign glows and the
+  BRAKE pedal pulses when the buggy comes back (demonstration); after two
+  tumbles on one course the buggy slows itself at the signs (assist);
+* idle ~6 s: Tito points ahead and the GO pedal pulses;
+* at the finish arch the friend cheers, the course's stars pop in over the
+  picnic, and the next course starts. After five courses the shared cast
+  completion scene appears ("drive again"); the rung (hill size) adapts.
+
+Physics runs in fixed 1/120 s steps (``FIXED_DT``) whatever the frame rate.
+"""
 
 from __future__ import annotations
 
-from pathlib import Path
+from collections import deque
+from collections.abc import Callable
+from enum import StrEnum
+import math
+import random
 import time
-from typing import Any, Final
 
 import pygame
 
-from greia_platform.activity_api import (
-    activity_stop_requested,
-    emit_activity_event,
-    get_profile_locale,
-    get_storage,
-    mark_activity_ready,
+from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.activity_controls import (
+    ControlArt,
+    ControlKit,
+    ControlLayout,
+    ControlTheme,
+    KitPointer,
+    PointerPhase,
+    PygameControlInput,
 )
-from greia_platform.localization import (
-    ActivityLocaleSupport,
-    LocalizedResources,
-    resolve_activity_locale,
-)
-from greia_platform.pygame_canvas import (
-    PygameReferenceCanvas,
-    activity_viewport_for_surface,
+from greia_platform.activity_feedback import CastFeedback
+from greia_platform.input_core import SemanticAction
+from greia_platform.localization import LocalizedResources
+from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
+from greia_platform.pygame_completion import (
+    CompletionContent,
+    CompletionOverlay,
+    CompletionPalette,
+    CompletionScene,
+    PygameCompletionScreen,
 )
 from greia_platform.typography import GreiaTypography
+from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 
 if __package__:
+    from .colline_art import CollineArt
     from .colline_audio import CollineAudio
     from .colline_content import (
+        COURSES_PER_SET,
+        FIXED_DT,
+        MAX_STEPS_PER_FRAME,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
-        SYSTEM_CHROME_SAFE_X,
-        SYSTEM_CHROME_SAFE_Y,
     )
-    from .colline_model import CollineWorld
-    from .colline_renderer import CollineRenderer
+    from .colline_controls import CollineControls
+    from .colline_input import DriveInput
+    from .colline_layout import BRAKE_RECT, FRIEND_OFFSET, GO_RECT, pedal_hit
+    from .colline_model import Controls, CourseRun, CourseSet, RunEvent, adapt_rung, bounded_history
+    from .colline_renderer import CELEBRATE_SECONDS, FLAG_BEHIND, Camera, CollineRenderer, DriverCast, SceneMotion, SceneView
+    from .colline_services import CollineProgress, EventPort, ProgressPort
 else:
+    from colline_art import CollineArt
     from colline_audio import CollineAudio
     from colline_content import (
+        COURSES_PER_SET,
+        FIXED_DT,
+        MAX_STEPS_PER_FRAME,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
-        SYSTEM_CHROME_SAFE_X,
-        SYSTEM_CHROME_SAFE_Y,
     )
-    from colline_model import CollineWorld
-    from colline_renderer import CollineRenderer
+    from colline_controls import CollineControls
+    from colline_input import DriveInput
+    from colline_layout import BRAKE_RECT, FRIEND_OFFSET, GO_RECT, pedal_hit
+    from colline_model import Controls, CourseRun, CourseSet, RunEvent, adapt_rung, bounded_history
+    from colline_renderer import CELEBRATE_SECONDS, FLAG_BEHIND, Camera, CollineRenderer, DriverCast, SceneMotion, SceneView
+    from colline_services import CollineProgress, EventPort, ProgressPort
 
-STORAGE_KEY: Final[str] = "colline_allegre.progress"
+IDLE_HINT_SECONDS = 6.0
+TUMBLE_SECONDS = 1.4
+NEXT_COURSE_SECONDS = CELEBRATE_SECONDS + 0.6
+SIGN_HINT_SECONDS = 7.0
+SPEECH_GAP_SECONDS = 4.0
+MAX_FRAME_SECONDS = 0.1
+MAX_SCHEDULED = 32
+MEADOW_DUSK = (58, 92, 128)  # deep ocean ("play" Collection hue, darkened)
 
 
-def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
-    """Return True if point is not within the protected system chrome region."""
-    vp = activity_viewport_for_surface(surface)
+class AppState(StrEnum):
+    READY = "ready"  # buggy at the start flag, waiting for GO
+    DRIVING = "driving"
+    TUMBLE = "tumble"
+    FINISH = "finish"  # celebrating at the picnic
+    TERMINAL = "terminal"  # shared completion scene
+
+
+class Timeline:
+    """Tiny bounded scheduler for the scripted moments."""
+
+    def __init__(self, clock: Callable[[], float]) -> None:
+        self._clock = clock
+        self._entries: deque[tuple[float, Callable[[], object]]] = deque(maxlen=MAX_SCHEDULED)
+
+    def after(self, delay: float, action: Callable[[], object]) -> None:
+        self._entries.append((self._clock() + delay, action))
+
+    def run_due(self) -> bool:
+        now = self._clock()
+        due = [entry for entry in self._entries if entry[0] <= now]
+        if not due:
+            return False
+        for entry in due:
+            self._entries.remove(entry)
+        for _, action in sorted(due, key=lambda entry: entry[0]):
+            action()
+        return True
+
+    def clear(self) -> None:
+        self._entries.clear()
+
+
+class CollineActivity:
+    """Coordinate the course set, physics clock, input, art, audio and lifecycle."""
+
+    def __init__(
+        self,
+        *,
+        screen: pygame.Surface,
+        canvas: PygameReferenceCanvas,
+        typography: GreiaTypography,
+        resources: LocalizedResources | None,
+        audio: CollineAudio,
+        progress: ProgressPort,
+        events: EventPort,
+        rng: random.Random | None = None,
+        clock: Callable[[], float] = time.monotonic,
+        kit: ControlKit | None = None,
+        art: CollineArt | None = None,
+        session_prefix: str | None = None,
+    ) -> None:
+        self.screen = screen
+        self.canvas = canvas
+        self.typography = typography
+        self.resources = resources
+        self.audio = audio
+        self.progress = progress
+        self.events = events
+        self.rng = rng if rng is not None else random.Random()
+        self.clock = clock
+        self._session_prefix = session_prefix or f"{int(time.time())}"
+        self._sets_played = 0
+
+        saved = progress.load()
+        self.saved = saved
+        self.rung = saved.rung
+        self._history = saved.history
+
+        # Shared control kit (ADR 0037): play Collection -> ocean accent.
+        self.kit = kit if kit is not None else ControlKit(typography, ControlTheme.for_accent("ocean"))
+        self.art = art if art is not None else CollineArt(loader=ControlArt(max_entries=64))
+        feedback = CastFeedback("tito", height=96, art=self.art.loader, idle_variant="happy", hold_seconds=1.5, clock=clock)
+        self.driver = DriverCast(feedback, clock)
+        self.renderer = CollineRenderer(self.art, self.driver)
+        self.camera = Camera()
+        self.motion = SceneMotion()
+        self.timeline = Timeline(clock)
+        self.drive = DriveInput()
+        self.controls = CollineControls(self.kit, self.art, typography, on_listen=self._listen)
+        self._surfaces = SurfaceNavigator(self.controls.layer)
+        self._input = PygameControlInput(to_logical=canvas.pointer, is_safe=lambda pos: _safe_point(self.screen, pos))
+        self.controls.place(ControlLayout.for_canvas(canvas, screen.get_size()))
+
+        self.course_set: CourseSet | None = None
+        self.ride: CourseRun | None = None
+        self.completion: PygameCompletionScreen | None = None
+        self.state = AppState.READY
+        self.session_id = ""
+        self._running = True
+        self.ready_published = False
+        self._welcomed = False
+        self._last_tick = clock()
+        self._accumulator = 0.0
+        self._last_input = clock()
+        self._idle_hints = 0
+        self._last_speech = -SPEECH_GAP_SECONDS
+        self._hinted_drop: int | None = None
+        self.start_set()
+
+    # -- main loop --------------------------------------------------------------------
+
+    def run(self) -> int:
+        ticker = pygame.time.Clock()
+        try:
+            while self._running and not activity_stop_requested():
+                for event in pygame.event.get():
+                    self.handle_event(event)
+                repeat = self._input.poll()
+                if repeat is not None and self.state is AppState.TERMINAL:
+                    self._surfaces.dispatch(repeat)
+                self.step()
+                self.render()
+                self.canvas.present()
+                pygame.display.flip()
+                if not self.ready_published:
+                    mark_activity_ready()
+                    self.ready_published = True
+                    self._welcome()
+                ticker.tick(30)
+        finally:
+            self.persist()
+            self.audio.stop_all()
+            self.typography.clear()
+        return 0
+
+    def step(self) -> None:
+        """Advance timers, hints and the fixed-step physics to the clock."""
+
+        now = self.clock()
+        dt = max(0.0, min(MAX_FRAME_SECONDS, now - self._last_tick))
+        self._last_tick = now
+        self.timeline.run_due()
+        self.driver.update()
+        self.motion.prune(now)
+        ride = self.ride
+        if ride is None or self.state is AppState.TERMINAL:
+            return
+        self._accumulator += dt
+        steps = 0
+        while self._accumulator >= FIXED_DT and steps < MAX_STEPS_PER_FRAME:
+            controls = self.drive.controls() if self.state is AppState.DRIVING else _NO_INPUT
+            for event in ride.step(controls):
+                self._on_run_event(event, now)
+            self._accumulator -= FIXED_DT
+            steps += 1
+            if self.ride is not ride:
+                break
+        if steps >= MAX_STEPS_PER_FRAME:
+            self._accumulator = 0.0
+        if self.ride is ride:
+            self.camera.follow(ride, dt)
+            self.controls.road.progress = ride.progress
+        self._hints(now)
+
+    def render(self) -> None:
+        surface = self.canvas.surface
+        run = self.ride
+        if self.state is not AppState.TERMINAL and run is not None and self.course_set is not None:
+            now = self.clock()
+            view = SceneView(run, run.layout.spec.friend, self.camera.x, self.camera.y)
+            self.renderer.draw(surface, view, self.motion, now)
+            self.controls.draw_pedals(
+                surface,
+                go=self.drive.go and self.state is AppState.DRIVING,
+                brake=self.drive.brake and self.state is AppState.DRIVING,
+                go_hint=self._go_hint(now),
+                brake_hint=self._brake_hint(now),
+            )
+        self._surfaces.draw(surface)
+
+    def persist(self) -> None:
+        self.progress.save(
+            CollineProgress(
+                self.rung,
+                self._history,
+                self.saved.sets,
+                self.saved.courses,
+                self.saved.total_stars,
+                self.saved.best_distance,
+            )
+        )
+
+    # -- input --------------------------------------------------------------------------
+
+    def handle_event(self, event: pygame.event.Event) -> None:
+        if event.type == pygame.QUIT:
+            self._running = False
+            return
+        if event.type == pygame.VIDEORESIZE:
+            self._resize()
+            return
+        if event.type == pygame.WINDOWFOCUSLOST:
+            self.drive.release_all()
+            return
+        if self.state is AppState.TERMINAL:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                self._running = False
+                return
+            translated = self._input.translate(event)
+            if translated is not None:
+                self._surfaces.dispatch(translated)
+            return
+        if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+            translated = self._input.translate(event)
+            if translated is not None:
+                self._pointer(translated)
+            return
+        action = self.drive.handle(event)
+        if action is None:
+            return
+        self._note_input()
+        if action == "listen":
+            self._listen()
+        elif action is SemanticAction.CANCEL:
+            self._running = False
+        elif self.drive.go and self.state is AppState.READY:
+            self._start_driving()
+
+    def _pointer(self, sample: KitPointer) -> None:
+        if sample.phase is PointerPhase.CANCEL:
+            self.drive.touch_go = self.drive.touch_brake = False
+            self.controls.layer.handle_event(sample)
+            return
+        if sample.phase is PointerPhase.UP:
+            self.drive.touch_go = self.drive.touch_brake = False
+            self._surfaces.dispatch(sample)
+            return
+        result = self._surfaces.dispatch(sample)
+        if sample.phase is not PointerPhase.DOWN or result is not UiEventResult.IGNORED:
+            return
+        self._note_input()
+        point = sample.position
+        if pedal_hit(GO_RECT).collidepoint(point):
+            self.drive.touch_go = True
+            if self.state is AppState.READY:
+                self._start_driving()
+        elif pedal_hit(BRAKE_RECT).collidepoint(point):
+            self.drive.touch_brake = True
+
+    def _resize(self) -> None:
+        self.screen = pygame.display.get_surface() or self.screen
+        self.canvas = PygameReferenceCanvas(self.screen)
+        self._input = PygameControlInput(to_logical=self.canvas.pointer, is_safe=lambda pos: _safe_point(self.screen, pos))
+        self.controls.place(ControlLayout.for_canvas(self.canvas, self.screen.get_size()))
+
+    def _note_input(self) -> None:
+        self._last_input = self.clock()
+        self._idle_hints = 0
+
+    # -- set / course flow ----------------------------------------------------------------
+
+    def start_set(self) -> None:
+        self.timeline.clear()
+        self.course_set = CourseSet(self.rung)
+        self._sets_played += 1
+        self.session_id = f"{self._session_prefix}-{self._sets_played}-{self.rng.randrange(1_000_000):06d}"
+        self.controls.set_playing(True)
+        self._begin_course()
+
+    def _begin_course(self) -> None:
+        course_set = self.course_set
+        assert course_set is not None
+        self.ride = course_set.build_run()
+        self.art.begin_course(self.ride.layout)
+        self.camera.snap(self.ride)
+        self.motion.reset()
+        self.driver.reset()
+        self.drive.release_all()
+        self._accumulator = 0.0
+        self._hinted_drop = None
+        self.controls.set_course(course_set.index, course_set.current.friend)
+        self.state = AppState.READY
+        self._note_input()
+        if self._welcomed:
+            self._say("ready.go")
+
+    def _start_driving(self) -> None:
+        if self.state is AppState.READY:
+            self.state = AppState.DRIVING
+            self._note_input()
+
+    def _welcome(self) -> None:
+        if not self._welcomed:
+            self._welcomed = True
+            self._say("ready.go", force=True)
+
+    def _on_run_event(self, event: RunEvent, now: float) -> None:
+        run = self.ride
+        assert run is not None
+        veh = run.vehicle
+        if event is RunEvent.STAR:
+            self.audio.play("star")
+            star = min((s for s in run.stars if s.collected), key=lambda s: abs(s.x - veh.x))
+            self.motion.add_fx("star_burst", (star.x, star.y), now)
+            self.controls.set_stars(run.stars_collected)
+            self.driver.correct()
+        elif event is RunEvent.CHECKPOINT:
+            flag = run.checkpoint_x
+            self.audio.play("flag")
+            self.motion.flag_pops[flag] = now
+            pole = flag - FLAG_BEHIND
+            self.motion.add_fx("sparkle", (pole + 24, run.layout.height(pole) - 92), now)
+        elif event is RunEvent.PERFECT_LANDING:
+            self.audio.play("sparkle")
+            self.motion.add_fx("sparkle", (veh.x, veh.y - 40), now)
+            self.driver.correct()
+        elif event is RunEvent.LANDING:
+            self.audio.play("thump")
+            self.motion.add_fx("dust_puff", (veh.x, run.layout.height(veh.x) - 18), now)
+        elif event is RunEvent.BOUNCE:
+            self.audio.play("whoosh")
+            pads = run.layout.pads
+            if pads:
+                pad = min(pads, key=lambda x: abs(x - veh.x))
+                self.motion.squashes[pad] = now
+        elif event is RunEvent.DROP_SAFE:
+            self.driver.correct()
+            self.audio.play("sparkle")
+            if self._hinted_drop is not None:
+                self._say("praise.general", force=True)
+                self._hinted_drop = None
+                self.motion.sign_hint = None
+        elif event is RunEvent.DROP_TOO_FAST:
+            self.audio.play("whoosh")
+        elif event is RunEvent.TUMBLE:
+            self._tumble(now)
+        elif event is RunEvent.FINISH:
+            self._finish_course(now)
+
+    def _tumble(self, now: float) -> None:
+        run = self.ride
+        assert run is not None
+        self.state = AppState.TUMBLE
+        self.audio.play("boing")
+        self.motion.add_fx("dust_puff", (run.vehicle.x, run.vehicle.y), now)
+        self.driver.try_again()
+        self._say("encourage.retry")
+        self.timeline.after(TUMBLE_SECONDS, self._respawn)
+
+    def _respawn(self) -> None:
+        run = self.ride
+        if run is None or self.state is not AppState.TUMBLE:
+            return
+        now = self.clock()
+        run.respawn()
+        self.camera.snap(run)
+        self.motion.add_fx("dust_puff", (run.vehicle.x, run.vehicle.y + 10), now)
+        self.drive.release_all()
+        self.state = AppState.DRIVING
+        self._note_input()
+        # Demonstrate after an error at a drop: the sign glows and BRAKE pulses.
+        upcoming = run.upcoming_drop(lookahead=1600.0)
+        if upcoming is not None and upcoming in run.drop_hints and not run.drop_assist:
+            self._hinted_drop = upcoming
+            self.motion.sign_hint = (upcoming, now + SIGN_HINT_SECONDS)
+            self.driver.point(1.6)
+
+    def _finish_course(self, now: float) -> None:
+        run = self.ride
+        course_set = self.course_set
+        assert run is not None and course_set is not None
+        self.state = AppState.FINISH
+        self.drive.release_all()
+        self.motion.celebrate = now
+        self.motion.result_stars = run.stars_collected
+        layout = run.layout
+        friend_x = layout.finish_x + FRIEND_OFFSET
+        self.motion.add_fx("confetti", (friend_x - 120, layout.height(friend_x) - 160), now + 0.1)
+        self.motion.add_fx("star_burst", (layout.finish_x, layout.height(layout.finish_x) - 200), now)
+        self.audio.play("fanfare")
+        self.driver.correct()
+        index = course_set.index
+        result = course_set.record(run)
+        self.controls.progress.set_progress(course_set.index)
+        self.saved = CollineProgress(
+            self.rung,
+            self._history,
+            self.saved.sets,
+            self.saved.courses + 1,
+            self.saved.total_stars + result.stars,
+            self.saved.best_distance,
+        )
+        self.persist()
+        self.events.course_finished(
+            self.session_id,
+            {"course": index + 1, "stars": result.stars, "tumbles": result.tumbles, "rung": self.rung},
+        )
+        if course_set.complete:
+            self._say("celebrate.success", force=True)
+            self.timeline.after(NEXT_COURSE_SECONDS, self._finish_set)
+        else:
+            self._say("praise.general", force=True)
+            self.timeline.after(NEXT_COURSE_SECONDS, self._next_course)
+
+    def _next_course(self) -> None:
+        if self.state is AppState.FINISH and self.course_set is not None and not self.course_set.complete:
+            self._begin_course()
+
+    def _finish_set(self) -> None:
+        course_set = self.course_set
+        if course_set is None or self.state is not AppState.FINISH:
+            return
+        tumbles = course_set.total_tumbles
+        self._history = bounded_history(self._history, tumbles)
+        played_rung = self.rung
+        self.rung = adapt_rung(self.rung, tumbles)
+        self.saved = CollineProgress(
+            self.rung, self._history, self.saved.sets + 1, self.saved.courses, self.saved.total_stars, self.saved.best_distance
+        )
+        self.persist()
+        self.events.set_completed(
+            self.session_id,
+            {"courses": course_set.total, "stars": course_set.total_stars, "tumbles": tumbles, "rung": played_rung},
+        )
+        self.completion = PygameCompletionScreen(
+            self.typography,
+            width=REFERENCE_WIDTH,
+            height=REFERENCE_HEIGHT,
+            palette=CompletionPalette(background=MEADOW_DUSK),
+            scene=CompletionScene(self.kit, character="tito", star_total=COURSES_PER_SET),
+        )
+        self.completion.prepare(
+            CompletionContent(
+                title=self._text("victory.title", "★"),
+                primary_label=self._text("button.play_again", "↻"),
+                body_lines=(self._text("victory.subtitle", ""),),
+                achievement_count=course_set.total,
+            )
+        )
+        self.controls.set_playing(False)
+        self._surfaces.push_overlay(CompletionOverlay(self.completion, on_primary=self._restart))
+        self.timeline.clear()
+        self.drive.release_all()
+        self.state = AppState.TERMINAL
+
+    def _restart(self) -> None:
+        if self.completion is not None:
+            self._surfaces.pop_overlay()
+            self.completion.clear()
+            self.completion = None
+        self.start_set()
+
+    def _listen(self) -> None:
+        """Say the goal again (listen button / Enter / north button): Tito points ahead."""
+
+        if self.state is AppState.TERMINAL:
+            return
+        self._say("ready.go", force=True)
+        self.driver.point(1.6)
+
+    # -- hints ----------------------------------------------------------------------------
+
+    def _hints(self, now: float) -> None:
+        run = self.ride
+        if run is None or self.state not in (AppState.READY, AppState.DRIVING):
+            return
+        if self.drive.go or self.drive.brake:
+            self._last_input = now
+            return
+        quiet = now - self._last_input
+        if quiet >= IDLE_HINT_SECONDS * (self._idle_hints + 1) and self._idle_hints < 3:
+            self._idle_hints += 1
+            self.driver.point(1.8)
+            if self._idle_hints == 1 or self.state is AppState.READY:
+                self._say("ready.go")
+
+    def _go_hint(self, now: float) -> float:
+        if self.state is AppState.READY:
+            strength = 0.6 if self._idle_hints else 0.35
+            return strength + strength * 0.8 * abs(_wave(now, 2.0))
+        if self.state is AppState.DRIVING and self._idle_hints and not self.drive.go:
+            return 0.5 + 0.5 * abs(_wave(now, 2.5))
+        return 0.0
+
+    def _brake_hint(self, now: float) -> float:
+        run = self.ride
+        if run is None or self._hinted_drop is None or self.state is not AppState.DRIVING:
+            return 0.0
+        if run.upcoming_drop() != self._hinted_drop or self.drive.brake:
+            return 0.0
+        return 0.5 + 0.5 * abs(_wave(now, 3.0))
+
+    # -- helpers ----------------------------------------------------------------------------
+
+    def _say(self, cue: str, *, force: bool = False) -> None:
+        now = self.clock()
+        if not force and now - self._last_speech < SPEECH_GAP_SECONDS:
+            return
+        self._last_speech = now
+        self.audio.say(cue)
+
+    def _text(self, key: str, default: str) -> str:
+        if self.resources is None:
+            return default
+        try:
+            return self.resources.text(key) or default
+        except Exception:
+            return default
+
+    # -- test / tooling helpers -------------------------------------------------------------
+
+    def hold(self, *, go: bool = False, brake: bool = False) -> None:
+        """Hold the pedals as a touch would (used by tests and scripted reviews)."""
+
+        self.drive.touch_go = go
+        self.drive.touch_brake = brake
+        if go:
+            self._note_input()
+            self._start_driving()
+
+
+_NO_INPUT = Controls()
+
+
+def _wave(now: float, hz: float) -> float:
+    return math.sin(now * hz * math.pi)
+
+
+def _safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
+    """True inside the play surface and outside the Greia protected region(s)."""
+
+    viewport = activity_viewport_for_surface(surface)
     x, y = position
-    if not (0 <= x < vp.surface.width and 0 <= y < vp.surface.height):
+    if not (0 <= x < viewport.surface.width and 0 <= y < viewport.surface.height):
         return False
-    for protected in vp.protected_regions:
+    for protected in viewport.protected_regions:
         if protected.x <= x < protected.right and protected.y <= y < protected.bottom:
             return False
     return True
 
 
-class CollineApp:
-    """Main application lifecycle and event router for Colline Allegre."""
-
-    def __init__(self, screen: pygame.Surface | None = None, locale: str = "it") -> None:
-        if screen is None:
-            screen = pygame.display.get_surface()
-            if screen is None:
-                screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
-        self.screen = screen
-        self.canvas = PygameReferenceCanvas(screen)
-        pygame.mouse.set_visible(True)
-
-        self.world = CollineWorld(difficulty=2)
-        self.audio = CollineAudio()
-        self.typography = GreiaTypography()
-        self._resources: LocalizedResources | None = None
-        self._active_locale = locale
-        self._init_localization()
-        self.renderer = CollineRenderer(self.typography, resources=self._resources)
-
-        self._storage: Any = None
-        self._best_distance: float = 0.0
-        self._total_stars: int = 0
-        self._load_storage()
-
-        self.running = True
-        self.ready_published = False
-
-        # Input state
-        self.gas_active = False
-        self.brake_active = False
-        self.tilt_axis = 0.0
-        self._touch_gas = False
-        self._touch_brake = False
-        self._joy_gas = False
-        self._joy_brake = False
-        self._joy_tilt = 0.0
-
-    def _init_localization(self) -> None:
-        pkg_root = Path(__file__).parent
-        support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale=self._active_locale)
-        try:
-            profile_lang = get_profile_locale()
-            context = resolve_activity_locale(profile_lang, support)
-            self._resources = LocalizedResources(pkg_root, context) if context else None
-            self._active_locale = context.selected.language if context else self._active_locale
-        except Exception:
-            pass
-
-    def _load_storage(self) -> None:
-        try:
-            self._storage = get_storage()
-            if self._storage is not None:
-                saved = self._storage.kv_get(STORAGE_KEY, {})
-                if isinstance(saved, dict):
-                    self._best_distance = float(saved.get("best_distance", 0.0))
-                    self._total_stars = int(saved.get("total_stars", 0))
-        except Exception:
-            self._storage = None
-
-    def _save_storage(self) -> None:
-        if self._storage is None:
-            return
-        previous_best = self._best_distance
-        current_best = max(previous_best, self.world.distance_traveled)
-        try:
-            self._storage.kv_set(
-                STORAGE_KEY,
-                {
-                    "best_distance": current_best,
-                    "total_stars": self._total_stars + self.world.stars_collected,
-                    "timestamp": time.time(),
-                },
-            )
-        except Exception:
-            return
-        self._best_distance = current_best
-        if current_best > previous_best:
-            try:
-                emit_activity_event(
-                    "colline.best_distance",
-                    idempotency_key=f"best-distance-{int(round(current_best * 1000.0))}",
-                    payload={"distance": current_best},
-                    score=current_best,
-                )
-            except Exception:
-                pass
-
-    def _handle_pointer_down(self, pos: tuple[int, int]) -> None:
-        if not _is_safe_point(self.screen, pos):
-            return
-        log_pt = self.canvas.pointer(pos)
-        if log_pt is None:
-            return
-        lx, ly = int(log_pt[0]), int(log_pt[1])
-
-        # Never process input under top-left system chrome boundary
-        if lx < SYSTEM_CHROME_SAFE_X and ly < SYSTEM_CHROME_SAFE_Y:
-            return
-
-        if self.renderer.gas_pedal_rect.collidepoint(lx, ly):
-            self._touch_gas = True
-        elif self.renderer.brake_pedal_rect.collidepoint(lx, ly):
-            self._touch_brake = True
-
-    def _handle_pointer_up(self, pos: tuple[int, int]) -> None:
-        self._touch_gas = False
-        self._touch_brake = False
-
-    def _route_events(self, model_events: list[str]) -> None:
-        veh = self.world.vehicle
-        for ev in model_events:
-            if ev == "colline.star_collected":
-                self.audio.play("star")
-                try:
-                    emit_activity_event("colline.star_collected", payload={"stars": self.world.stars_collected})
-                except Exception:
-                    pass
-            elif ev == "colline.comical_flip":
-                self.audio.play("boing")
-                self.renderer.emit_confetti(veh.x, veh.y, 40)
-                try:
-                    emit_activity_event("colline.comical_flip")
-                except Exception:
-                    pass
-            elif ev == "colline.perfect_landing":
-                self.audio.play("perfect_landing")
-                self.renderer.emit_confetti(veh.x, veh.y, 25)
-                try:
-                    emit_activity_event("colline.perfect_landing")
-                except Exception:
-                    pass
-            elif ev == "colline.milestone_distance":
-                self.audio.play("fanfare")
-                self._save_storage()
-                try:
-                    emit_activity_event(
-                        "colline.milestone_distance",
-                        payload={"milestone_m": self.world.highest_milestone},
-                        idempotency_key=f"milestone-{self.world.highest_milestone}",
-                    )
-                except Exception:
-                    pass
-            elif ev == "colline.course_completed":
-                self.audio.play("fanfare")
-                self._save_storage()
-                try:
-                    emit_activity_event(
-                        "colline.course_completed",
-                        payload={"distance": self.world.distance_traveled, "stars": self.world.stars_collected},
-                    )
-                except Exception:
-                    pass
-            elif ev == "colline.mushroom_bounce":
-                self.audio.play("boing")
-                self.audio.play("whoosh")
-
-    def run(self) -> int:
-        """Main 60 FPS gameplay loop."""
-        clock = pygame.time.Clock()
-        last_time = time.monotonic()
-
-        # Emit initial run_started event
-        try:
-            emit_activity_event("colline.run_started", idempotency_key=f"run-{time.time()}")
-        except Exception:
-            pass
-
-        while self.running and not activity_stop_requested():
-            now = time.monotonic()
-            dt = min(0.05, max(0.001, now - last_time))
-            last_time = now
-
-            # Process input events
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.running = False
-                    elif event.key in (pygame.K_r, pygame.K_F5):
-                        self.world.reset()
-                elif event.type == pygame.VIDEORESIZE:
-                    self.screen = pygame.display.get_surface() or self.screen
-                    self.canvas = PygameReferenceCanvas(self.screen)
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    self._handle_pointer_down(event.pos)
-                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    self._handle_pointer_up(event.pos)
-                elif event.type == pygame.JOYBUTTONDOWN:
-                    if event.button == 0:
-                        self._joy_gas = True
-                    elif event.button in (1, 2):
-                        self._joy_brake = True
-                elif event.type == pygame.JOYBUTTONUP:
-                    if event.button == 0:
-                        self._joy_gas = False
-                    elif event.button in (1, 2):
-                        self._joy_brake = False
-                elif event.type == pygame.JOYAXISMOTION:
-                    if event.axis == 0:
-                        self._joy_tilt = event.value if abs(event.value) > 0.2 else 0.0
-                    elif event.axis == 5:
-                        self._joy_gas = event.value > 0.2
-                    elif event.axis == 4:
-                        self._joy_brake = event.value > 0.2
-
-            # Continuous Keyboard & Gamepad evaluation
-            keys = pygame.key.get_pressed()
-            key_gas = (
-                keys[pygame.K_RIGHT]
-                or keys[pygame.K_UP]
-                or keys[pygame.K_SPACE]
-                or keys[pygame.K_d]
-                or keys[pygame.K_w]
-                or keys[pygame.K_RETURN]
-            )
-            key_brake = keys[pygame.K_LEFT] or keys[pygame.K_DOWN] or keys[pygame.K_s] or keys[pygame.K_a]
-
-            # Mid-air tilt keys
-            tilt_val = 0.0
-            if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-                tilt_val -= 1.0
-            if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-                tilt_val += 1.0
-            if abs(self._joy_tilt) > 0.1:
-                tilt_val += self._joy_tilt
-
-            throttle = 1.0 if (key_gas or self._touch_gas or self._joy_gas) else 0.0
-            brake = 1.0 if (key_brake or self._touch_brake or self._joy_brake) else 0.0
-
-            self.renderer.gas_pressed = throttle > 0.0
-            self.renderer.brake_pressed = brake > 0.0
-
-            # Advance 2D physics simulation
-            events = self.world.step(dt, throttle=throttle, brake=brake, tilt=tilt_val)
-            self._route_events(events)
-
-            # Render scene onto 1024x600 reference canvas
-            self.renderer.render(self.canvas.surface, self.world, dt)
-
-            # Present canvas to physical display
-            self.canvas.present()
-            pygame.display.flip()
-
-            # Mark activity ready after first frame is safely on screen
-            if not self.ready_published:
-                mark_activity_ready()
-                self.ready_published = True
-
-            clock.tick(60)
-
-        # Cleanup on exit
-        self._save_storage()
-        self.audio.stop_all()
-        self.typography.clear()
-        return 0
-
-
-def build_app(screen: pygame.Surface | None = None, locale: str = "it") -> CollineApp:
-    return CollineApp(screen=screen, locale=locale)
+__all__ = ["AppState", "CollineActivity", "Timeline"]

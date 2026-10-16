@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" width="512" height="256">
+  <defs>
+    <!-- grape light (mix 40% white) -> grape -->
+    <linearGradient id="buggy_body_shell" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BEA2DF"/>
+      <stop offset="1" stop-color="#9464C9"/>
+    </linearGradient>
+    <!-- aqua -> sky (glass) -->
+    <linearGradient id="buggy_body_glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F2FAFD"/>
+      <stop offset="1" stop-color="#CFEAF7"/>
+    </linearGradient>
+  </defs>
+  <g id="windshield">
+    <path d="M300 128 L330 60 C333 53 341 51 346 56 L352 62 L336 118 Z" fill="url(#buggy_body_glass)" stroke="#4B372F" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M330 80 L338 64" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+  </g>
+  <g id="exhaust">
+    <rect x="12" y="160" width="30" height="16" rx="7" fill="#D5D2CC" stroke="#4B372F" stroke-width="5"/>
+  </g>
+  <g id="shell">
+    <path d="M58 116 L146 116 C153 116 158 121 160 128 L300 128 L312 106 C360 94 422 98 454 112 C477 122 488 140 488 160 L488 172 C488 184 479 193 467 193 L459 193 A76 76 0 0 0 341 193 L171 193 A76 76 0 0 0 53 193 L48 193 C37 193 30 185 30 174 L30 142 C30 127 42 116 58 116 Z" fill="url(#buggy_body_shell)" stroke="#4B372F" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M64 146 L442 146 C447 146 450 150 450 154 C450 158 447 162 442 162 L64 162 C59 162 56 158 56 154 C56 150 59 146 64 146 Z" fill="#FFC234" stroke="#C99635" stroke-width="3"/>
+    <path d="M238 134 C244 150 244 172 236 186" fill="none" stroke="#7A55A7" stroke-width="5" stroke-linecap="round"/>
+    <path d="M330 113 C370 104 418 106 446 116" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.7"/>
+    <path d="M60 128 L132 128" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g id="lights">
+    <circle cx="472" cy="140" r="11" fill="#FFF3C4" stroke="#4B372F" stroke-width="5"/>
+    <rect x="30" y="132" width="12" height="18" rx="5" fill="#F46F61" stroke="#4B372F" stroke-width="4"/>
+  </g>
+</svg>

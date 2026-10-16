@@ -2,7 +2,7 @@
 id = "org.greia.colline-allegre"
 legacy_ids = []
 title_key = "activity.colline_allegre.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
@@ -11,26 +11,32 @@ categories = ["play", "explore"]
 discovery_tags = ["action", "nature"]
 
 [education]
-categories = ["physics_intuition", "motor_skills", "timing_coordination"]
-difficulty = 2
-recommended_age_min = 3
-recommended_age_max = 6
+# A motor-timing driving game. Tito drives his buggy over five finite
+# courses (meadow, pond, autumn wood, snowy wood, hills above the clouds),
+# each ending at a picnic where a friend waits. The courses are the ladder:
+# 1 gentle rolling hills (the buggy rights itself in the air) -> 2 bigger
+# hills, a jump and a bridge -> 3 mud that slows the buggy -> 4 steep drops
+# behind a snail sign where the child must brake before the edge -> 5 high
+# hills with bouncy mushrooms and drops. Three stars per course; a tumble
+# goes back to the last flag (never game over). After a tumble at a drop the
+# sign glows and BRAKE pulses; after two tumbles on a course the buggy slows
+# itself at the signs. Between sets the hill size (rung 1-3) adapts to how
+# many tumbles the last set had.
+categories = ["motor_skills", "timing_coordination", "physics_intuition"]
+difficulty = 1
+recommended_age_min = 4
+recommended_age_max = 7
 difficulty_min = 1
 difficulty_max = 5
 adaptive_difficulty = true
 skills = [
-  { id = "physics.momentum", weight = 3 },
   { id = "motor.timing", weight = 3 },
   { id = "motor.coordination", weight = 2 },
+  { id = "physics.momentum", weight = 2 },
 ]
 events = [
-  { id = "colline.run_started", kind = "milestone" },
-  { id = "colline.star_collected", kind = "milestone" },
-  { id = "colline.perfect_landing", kind = "milestone" },
-  { id = "colline.comical_flip", kind = "milestone" },
-  { id = "colline.milestone_distance", kind = "milestone" },
-  { id = "colline.course_completed", kind = "completion" },
-  { id = "colline.best_distance", kind = "score", score_order = "higher_better" },
+  { id = "colline.course_finished", kind = "milestone" },
+  { id = "colline.set_completed", kind = "completion" },
 ]
 
 [runtime]
@@ -39,14 +45,16 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "hybrid"
+profile = "game"
 
 [requirements]
-required_capabilities = ["display", "audio.basic"]
-optional_capabilities = ["keyboard", "touch", "pointer", "controller"]
+required_capabilities = ["display"]
+optional_capabilities = ["keyboard", "touch", "pointer", "controller", "audio.basic"]
 
 [permissions]
 requested = []
 
 [storage]
+# Platform save schema stays 1: the progress payload carries its own version
+# (colline_services.SCHEMA_VERSION) and migrates the older distance save in place.
 schema_version = 1

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- wood light -> wood (sand/orange shade steps) -->
+    <linearGradient id="finish_arch_wood" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#E2AC74"/>
+      <stop offset="1" stop-color="#C48652"/>
+    </linearGradient>
+    <!-- gold -> gold_deep -->
+    <linearGradient id="finish_arch_star" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDE68A"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="40" cy="232" rx="22" ry="4" fill="#6A5147" opacity="0.16"/>
+    <ellipse cx="216" cy="232" rx="22" ry="4" fill="#6A5147" opacity="0.16"/>
+  </g>
+  <g id="posts">
+    <rect x="31" y="62" width="18" height="170" rx="6" fill="url(#finish_arch_wood)" stroke="#4B372F" stroke-width="4"/>
+    <rect x="207" y="62" width="18" height="170" rx="6" fill="url(#finish_arch_wood)" stroke="#4B372F" stroke-width="4"/>
+    <circle cx="40" cy="60" r="11" fill="#FFC234" stroke="#4B372F" stroke-width="4"/>
+    <circle cx="216" cy="60" r="11" fill="#FFC234" stroke="#4B372F" stroke-width="4"/>
+    <path d="M36 80 L36 150" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+  </g>
+  <g id="bunting">
+    <path d="M40 70 Q128 118 216 70" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M57.1 78.4 L76.4 85.8 L66.7 112.4 Z" fill="#F46F61" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M84.1 88.0 L103.5 92.1 L93.8 120.4 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M111.2 93.1 L130.6 94.0 L120.9 123.8 Z" fill="#59B86A" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M138.3 93.7 L157.6 91.3 L148.0 122.8 Z" fill="#4A91D8" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M165.4 89.7 L184.7 84.0 L175.0 117.1 Z" fill="#9464C9" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M192.4 81.1 L211.8 72.2 L202.1 107.0 Z" fill="#F39A38" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+  <g id="star">
+    <path d="M128 70 L128 60" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/>
+    <path d="M128.0 18.0 L134.5 35.1 L152.7 36.0 L138.5 47.4 L143.3 65.0 L128.0 55.0 L112.7 65.0 L117.5 47.4 L103.3 36.0 L121.5 35.1 Z" fill="url(#finish_arch_star)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="121" cy="36" rx="5" ry="3" fill="#FFFFFF" opacity="0.8"/>
+  </g>
+</svg>
