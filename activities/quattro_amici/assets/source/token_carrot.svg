@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Quattro Amici private prop: Flash's carrot disc token (shared-library candidate prop.token.carrot_disc). Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- coral -> coral shade (mix 22% ink) -->
+    <linearGradient id="token_carrot_rim" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#F46F61"/>
+      <stop offset="1" stop-color="#CF6356"/>
+    </linearGradient>
+    <!-- orange light -> orange (as prop.food.carrot) -->
+    <linearGradient id="token_carrot_body" x1="0" y1="0" x2="1" y2="0.6">
+      <stop offset="0" stop-color="#F8C288"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="disc">
+    <circle cx="128" cy="128" r="116" fill="url(#token_carrot_rim)" stroke="#4B372F" stroke-width="8"/>
+    <circle cx="128" cy="128" r="84" fill="#F8A9A0" stroke="#B85A4E" stroke-width="6"/>
+    <path d="M38 106 C46 72 70 46 104 37" fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" opacity="0.7"/>
+  </g>
+  <g id="carrot" transform="translate(46 52) scale(0.6)">
+    <path d="M164 78 C150 52 148 34 156 18 C170 34 176 54 174 74 Z" fill="#59B86A" stroke="#4B372F" stroke-width="9" stroke-linejoin="round"/>
+    <path d="M172 82 C182 56 198 42 222 38 C218 60 202 76 180 88 Z" fill="#59B86A" stroke="#4B372F" stroke-width="9" stroke-linejoin="round"/>
+    <path d="M160 84 C142 66 124 58 104 58 C112 76 130 88 154 92 Z" fill="#59B86A" stroke="#4B372F" stroke-width="9" stroke-linejoin="round"/>
+    <path d="M150 74 C178 74 198 96 194 122 C186 160 118 210 72 228 C60 232 52 224 58 214 C80 176 110 112 128 86 C134 78 142 74 150 74 Z" fill="url(#token_carrot_body)" stroke="#4B372F" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M128 112 L148 120 M162 134 L182 140 M108 152 L128 162" fill="none" stroke="#CE8436" stroke-width="8" stroke-linecap="round"/>
+    <path d="M140 96 C126 114 110 144 96 172" fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" opacity="0.75"/>
+  </g>
+</svg>

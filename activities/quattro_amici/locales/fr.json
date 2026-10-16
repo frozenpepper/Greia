@@ -5,23 +5,19 @@
   "strings": {
     "activity.quattro_amici.title": "Quatre amis alignés",
     "activity.title": "Quatre amis alignés",
-    "ui.mode_vs_leo": "Contre Leo",
+    "ui.mode_vs_leo": "Avec Leo",
     "ui.mode_two_players": "Deux amis",
     "ui.turn_flash": "À Flash de jouer !",
     "ui.turn_leo": "À Leo de jouer !",
-    "ui.flash_thinking": "Flash réfléchit...",
     "ui.leo_thinking": "Leo réfléchit...",
-    "ui.win_flash": "Flash a gagné !",
-    "ui.win_leo": "Leo a gagné !",
+    "ui.win_flash": "Flash a fait une ligne !",
+    "ui.win_leo": "Leo a fait une ligne !",
     "ui.draw": "Égalité ! Belle partie !",
     "ui.play_again": "Rejouer",
-    "ui.diff_1": "Facile (3 alignés)",
-    "ui.diff_2": "Moyen (3 alignés)",
-    "ui.diff_3": "Classique (4 alignés)",
-    "ui.diff_4": "Défi (4 alignés)",
-    "ui.drop_column": "Lâche le jeton",
-    "ui.level_label": "Niveau",
-    "ui.mode_label": "Mode"
+    "ui.match_won": "Tu as gagné le défi !",
+    "ui.match_leo": "Cette fois, Leo a gagné !",
+    "ui.match_tie": "Quel défi !",
+    "ui.match_score": "Flash $flash – Leo $leo"
   },
   "audio": {}
 }

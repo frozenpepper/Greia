@@ -1,7 +1,7 @@
 """Thin Greia composition root for Quattro Amici in Fila.
 
-Acts strictly as the bootstrap boundary (<120 lines). Delegates all domain,
-rendering, and lifecycle mechanics to sibling modules.
+Acts strictly as the bootstrap boundary: it opens the display and hands
+control to ``quattro_app``, which owns domain, rendering and lifecycle.
 """
 
 from __future__ import annotations
@@ -29,7 +29,6 @@ def main() -> int:
     try:
         return app.run()
     finally:
-        app.typography.clear()
         pygame.quit()
 
 

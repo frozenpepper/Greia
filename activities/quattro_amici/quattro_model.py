@@ -1,81 +1,96 @@
-"""Pure logic domain model for Quattro Amici in Fila.
+"""Pure game model for Quattro Amici in Fila (no Pygame).
 
-Zero Pygame dependencies. Fully decoupled and unit-testable.
-Handles board matrix, gravity drop simulation, win and draw detection,
-turn management, and multi-tier AI opponent move generation.
+* ``QuattroBoard`` — the standing drop grid: gravity, lines, threats.
+* ``LeoBrain`` — how Leo picks a column. Three substitutable strategies
+  (easy / medium / smart) share one narrow protocol; ``kindness`` makes any of
+  them slip a little more after the child has lost games in a row.
+* ``QuattroGame`` — one game: turns, wins, draws, block detection.
+* ``QuattroMatch`` — best of three games with alternating first player.
+* ``adapt_stage`` — the automatic, kind difficulty ladder between matches.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from enum import StrEnum
 import random
-from dataclasses import dataclass, field
-from typing import Sequence
+from typing import Protocol, Sequence
 
 if __package__:
     from .quattro_content import (
-        LEVEL_CONFIGS,
+        FIRST_STAGE,
+        GAMES_PER_MATCH,
+        LAST_STAGE,
+        WINS_FOR_MATCH,
         GameMode,
         GameStatus,
-        LevelConfig,
+        LeoStyle,
         Player,
+        Stage,
+        stage_for,
     )
 else:
     from quattro_content import (
-        LEVEL_CONFIGS,
+        FIRST_STAGE,
+        GAMES_PER_MATCH,
+        LAST_STAGE,
+        WINS_FOR_MATCH,
         GameMode,
         GameStatus,
-        LevelConfig,
+        LeoStyle,
         Player,
+        Stage,
+        stage_for,
     )
 
+_DIRECTIONS = ((0, 1), (1, 0), (1, 1), (1, -1))  # (d_row, d_col): -, |, \, /
+MAX_KINDNESS = 2
 
-@dataclass
-class MoveRecord:
-    """Historical record of an individual token drop."""
-    col: int
-    row: int
-    player: Player
+
+# ---------------------------------------------------------------------------
+# Board
+# ---------------------------------------------------------------------------
 
 
 class QuattroBoard:
-    """Matrix representation of the vertical connect drop-grid."""
+    """Matrix of the vertical drop grid. ``grid[row][col]``, row 0 is the TOP."""
 
     def __init__(self, cols: int, rows: int, target_in_a_row: int) -> None:
+        if cols < target_in_a_row and rows < target_in_a_row:
+            raise ValueError("a row of the target length must fit on the board")
         self.cols = cols
         self.rows = rows
         self.target = target_in_a_row
-        # grid[row][col]: row 0 is TOP, row (rows - 1) is BOTTOM
-        self.grid: list[list[Player]] = [
-            [Player.EMPTY for _ in range(cols)] for _ in range(rows)
-        ]
+        self.grid: list[list[Player]] = [[Player.EMPTY for _ in range(cols)] for _ in range(rows)]
 
     def can_drop(self, col: int) -> bool:
-        """Return True if column index is within bounds and has space."""
-        if not (0 <= col < self.cols):
-            return False
-        return self.grid[0][col] == Player.EMPTY
+        return 0 <= col < self.cols and self.grid[0][col] == Player.EMPTY
 
     def valid_columns(self) -> list[int]:
-        """Return sorted list of non-full column indices."""
         return [c for c in range(self.cols) if self.can_drop(c)]
 
-    def drop_token(self, col: int, player: Player) -> int:
-        """Simulate gravity drop down the slot.
+    def landing_row(self, col: int) -> int:
+        """Row a disc dropped in ``col`` would land on, or -1 when full/outside."""
 
-        Returns landing row index (0 to rows-1), or -1 if column is full.
-        """
         if not self.can_drop(col):
             return -1
-        # Start from bottom (rows - 1) up to top (0)
         for r in range(self.rows - 1, -1, -1):
             if self.grid[r][col] == Player.EMPTY:
-                self.grid[r][col] = player
                 return r
         return -1
 
+    def drop_token(self, col: int, player: Player) -> int:
+        """Drop with gravity; return the landing row or -1 if the column is full."""
+
+        row = self.landing_row(col)
+        if row >= 0:
+            self.grid[row][col] = player
+        return row
+
     def undo_drop(self, col: int) -> int:
-        """Remove topmost token in column. Returns cleared row, or -1 if empty."""
-        if not (0 <= col < self.cols):
+        """Remove the top disc of ``col``; return the cleared row or -1."""
+
+        if not 0 <= col < self.cols:
             return -1
         for r in range(self.rows):
             if self.grid[r][col] != Player.EMPTY:
@@ -84,312 +99,391 @@ class QuattroBoard:
         return -1
 
     def is_full(self) -> bool:
-        """Return True if every column is full."""
         return all(self.grid[0][c] != Player.EMPTY for c in range(self.cols))
 
+    def is_empty(self) -> bool:
+        return all(self.grid[self.rows - 1][c] == Player.EMPTY for c in range(self.cols))
+
+    def run_through(self, row: int, col: int, d_row: int, d_col: int, player: Player) -> list[tuple[int, int]]:
+        """Cells of ``player`` in one straight line through (row, col), in line order."""
+
+        cells: list[tuple[int, int]] = []
+        r, c = row - d_row, col - d_col
+        while 0 <= r < self.rows and 0 <= c < self.cols and self.grid[r][c] == player:
+            cells.insert(0, (r, c))
+            r, c = r - d_row, c - d_col
+        cells.append((row, col))
+        r, c = row + d_row, col + d_col
+        while 0 <= r < self.rows and 0 <= c < self.cols and self.grid[r][c] == player:
+            cells.append((r, c))
+            r, c = r + d_row, c + d_col
+        return cells
+
+    def line_at(self, row: int, col: int, target: int | None = None) -> list[tuple[int, int]]:
+        """Winning cells through the disc at (row, col) (empty when no row)."""
+
+        player = self.grid[row][col]
+        if player == Player.EMPTY:
+            return []
+        need = self.target if target is None else target
+        best: list[tuple[int, int]] = []
+        for d_row, d_col in _DIRECTIONS:
+            run = self.run_through(row, col, d_row, d_col, player)
+            if len(run) >= need and len(run) > len(best):
+                best = run
+        return best
+
+    def would_win(self, col: int, player: Player) -> bool:
+        row = self.drop_token(col, player)
+        if row < 0:
+            return False
+        try:
+            return bool(self.line_at(row, col))
+        finally:
+            self.grid[row][col] = Player.EMPTY
+
+    def winning_columns(self, player: Player) -> list[int]:
+        """Columns where ``player`` would complete a row right now."""
+
+        return [c for c in self.valid_columns() if self.would_win(c, player)]
+
+    def gives_win_above(self, col: int, player: Player) -> bool:
+        """True if dropping in ``col`` lets the opponent win on top of it."""
+
+        row = self.drop_token(col, player)
+        if row < 0:
+            return False
+        try:
+            return self.can_drop(col) and self.would_win(col, player.opponent)
+        finally:
+            self.grid[row][col] = Player.EMPTY
+
     def check_win(self, target: int | None = None) -> tuple[Player, list[tuple[int, int]]]:
-        """Check for horizontal, vertical, or diagonal consecutive lines.
+        """Full scan: (winner, sorted winning cells) or (EMPTY, [])."""
 
-        Returns (winning_player, winning_coordinates) or (Player.EMPTY, []).
-        """
-        req = target if target is not None else self.target
-        winning_cells: set[tuple[int, int]] = set()
-        winner = Player.EMPTY
-
-        # 1. Horizontal lines
+        need = self.target if target is None else target
         for r in range(self.rows):
-            for c in range(self.cols - req + 1):
-                p = self.grid[r][c]
-                if p != Player.EMPTY and all(self.grid[r][c + i] == p for i in range(req)):
-                    winner = p
-                    winning_cells.update((r, c + i) for i in range(req))
+            for c in range(self.cols):
+                if self.grid[r][c] != Player.EMPTY:
+                    line = self.line_at(r, c, need)
+                    if line:
+                        return self.grid[r][c], sorted(line)
+        return Player.EMPTY, []
 
-        # 2. Vertical lines
-        for c in range(self.cols):
-            for r in range(self.rows - req + 1):
-                p = self.grid[r][c]
-                if p != Player.EMPTY and all(self.grid[r + i][c] == p for i in range(req)):
-                    winner = p
-                    winning_cells.update((r + i, c) for i in range(req))
-
-        # 3. Diagonal down-right (\)
-        for r in range(self.rows - req + 1):
-            for c in range(self.cols - req + 1):
-                p = self.grid[r][c]
-                if p != Player.EMPTY and all(self.grid[r + i][c + i] == p for i in range(req)):
-                    winner = p
-                    winning_cells.update((r + i, c + i) for i in range(req))
-
-        # 4. Diagonal up-right (/)
-        for r in range(req - 1, self.rows):
-            for c in range(self.cols - req + 1):
-                p = self.grid[r][c]
-                if p != Player.EMPTY and all(self.grid[r - i][c + i] == p for i in range(req)):
-                    winner = p
-                    winning_cells.update((r - i, c + i) for i in range(req))
-
-        return winner, sorted(winning_cells)
-
-    def clone(self) -> QuattroBoard:
-        """Create an independent copy of this board."""
-        copy_board = QuattroBoard(self.cols, self.rows, self.target)
-        copy_board.grid = [row[:] for row in self.grid]
-        return copy_board
+    def clone(self) -> "QuattroBoard":
+        copy = QuattroBoard(self.cols, self.rows, self.target)
+        copy.grid = [row[:] for row in self.grid]
+        return copy
 
 
-@dataclass
-class QuattroModel:
-    """Complete game match and state manager."""
-    difficulty: int = 2
-    mode: GameMode = GameMode.VS_CPU
-    rng: random.Random = field(default_factory=random.Random)
-    board: QuattroBoard = field(init=False)
-    current_player: Player = Player.FLASH
+def suggest_column(board: QuattroBoard, player: Player) -> tuple[int, str] | None:
+    """Hint: a column that wins now, else one that blocks the opponent's row."""
+
+    wins = board.winning_columns(player)
+    if wins:
+        return wins[0], "win"
+    blocks = board.winning_columns(player.opponent)
+    if blocks:
+        return blocks[0], "block"
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Leo's brains
+# ---------------------------------------------------------------------------
+
+
+class LeoBrain(Protocol):
+    """Choose Leo's column. ``kindness`` (0..2) makes Leo slip more often."""
+
+    style: LeoStyle
+
+    def choose(self, board: QuattroBoard, me: Player, rng: random.Random, kindness: int = 0) -> int: ...
+
+
+def _center_weighted(columns: Sequence[int], cols: int, rng: random.Random) -> int:
+    center = (cols - 1) / 2.0
+    weights = [1.0 / (1.0 + abs(c - center)) for c in columns]
+    return rng.choices(list(columns), weights=weights, k=1)[0]
+
+
+def _chance(rng: random.Random, probability: float) -> bool:
+    return rng.random() < max(0.0, min(1.0, probability))
+
+
+@dataclass(frozen=True, slots=True)
+class EasyLeo:
+    """A playful first opponent: often misses wins and blocks."""
+
+    style: LeoStyle = LeoStyle.EASY
+    take_win: float = 0.6
+    block: float = 0.35
+
+    def choose(self, board: QuattroBoard, me: Player, rng: random.Random, kindness: int = 0) -> int:
+        valid = board.valid_columns()
+        if not valid:
+            return -1
+        wins = board.winning_columns(me)
+        if wins and _chance(rng, self.take_win - 0.15 * kindness):
+            return wins[0]
+        blocks = board.winning_columns(me.opponent)
+        if blocks and _chance(rng, self.block - 0.12 * kindness):
+            return blocks[0]
+        return _center_weighted(valid, board.cols, rng)
+
+
+@dataclass(frozen=True, slots=True)
+class MediumLeo:
+    """Takes his wins, blocks obvious rows and does not gift a win above."""
+
+    style: LeoStyle = LeoStyle.MEDIUM
+    take_win: float = 0.95
+    block: float = 0.9
+
+    def choose(self, board: QuattroBoard, me: Player, rng: random.Random, kindness: int = 0) -> int:
+        valid = board.valid_columns()
+        if not valid:
+            return -1
+        wins = board.winning_columns(me)
+        if wins and _chance(rng, self.take_win - 0.15 * kindness):
+            return wins[0]
+        blocks = board.winning_columns(me.opponent)
+        if blocks and _chance(rng, self.block - 0.25 * kindness):
+            return blocks[0]
+        safe = [c for c in valid if not board.gives_win_above(c, me)]
+        return _center_weighted(safe or valid, board.cols, rng)
+
+
+@dataclass(frozen=True, slots=True)
+class SmartLeo:
+    """Also builds his own lines; still slips now and then (kid-friendly cap)."""
+
+    style: LeoStyle = LeoStyle.SMART
+    slip: float = 0.08
+
+    def choose(self, board: QuattroBoard, me: Player, rng: random.Random, kindness: int = 0) -> int:
+        valid = board.valid_columns()
+        if not valid:
+            return -1
+        if _chance(rng, self.slip + 0.1 * kindness):
+            return MediumLeo().choose(board, me, rng, kindness)
+        wins = board.winning_columns(me)
+        if wins:
+            return wins[0]
+        blocks = board.winning_columns(me.opponent)
+        if blocks:
+            return blocks[0]
+        safe = [c for c in valid if not board.gives_win_above(c, me)] or valid
+        scored = sorted(((self._score(board, c, me), c) for c in safe), reverse=True)
+        best_score = scored[0][0]
+        near = [c for score, c in scored if score >= best_score - 1.0]
+        return rng.choice(near)
+
+    @staticmethod
+    def _score(board: QuattroBoard, col: int, me: Player) -> float:
+        """Centre + the lines Leo would build here + the lines he would spoil."""
+
+        center = (board.cols - 1) / 2.0
+        score = 4.0 - abs(col - center)
+        row = board.landing_row(col)
+        for player, weight in ((me, 1.0), (me.opponent, 0.6)):
+            board.grid[row][col] = player
+            try:
+                for d_row, d_col in _DIRECTIONS:
+                    score += weight * len(board.run_through(row, col, d_row, d_col, player)) ** 2
+            finally:
+                board.grid[row][col] = Player.EMPTY
+        return score
+
+
+_BRAINS: dict[LeoStyle, LeoBrain] = {
+    LeoStyle.EASY: EasyLeo(),
+    LeoStyle.MEDIUM: MediumLeo(),
+    LeoStyle.SMART: SmartLeo(),
+}
+
+
+def leo_brain_for(style: LeoStyle) -> LeoBrain:
+    return _BRAINS[style]
+
+
+# ---------------------------------------------------------------------------
+# One game
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class MoveRecord:
+    col: int
+    row: int
+    player: Player
+
+
+@dataclass(frozen=True, slots=True)
+class DropResult:
+    """What one drop did (for presentation and teaching moments)."""
+
+    ok: bool
+    col: int = -1
+    row: int = -1
+    player: Player = Player.EMPTY
     status: GameStatus = GameStatus.IN_PROGRESS
-    winner: Player = Player.EMPTY
-    winning_cells: list[tuple[int, int]] = field(default_factory=list)
-    history: list[MoveRecord] = field(default_factory=list)
+    blocked: bool = False  # the mover filled the opponent's winning hole
 
-    def __post_init__(self) -> None:
-        self.reset()
 
-    @property
-    def level_config(self) -> LevelConfig:
-        return LEVEL_CONFIGS.get(self.difficulty, LEVEL_CONFIGS[2])
+class QuattroGame:
+    """One game on a stage board; ``starter`` drops first."""
 
-    def reset(self) -> None:
-        """Reset board for a new game with current difficulty and mode."""
-        cfg = self.level_config
-        self.board = QuattroBoard(cfg.cols, cfg.rows, cfg.target_in_a_row)
-        self.current_player = Player.FLASH
+    def __init__(self, stage: Stage, starter: Player = Player.FLASH) -> None:
+        self.stage = stage
+        self.board = QuattroBoard(stage.cols, stage.rows, stage.target)
+        self.starter = starter
+        self.current_player = starter
         self.status = GameStatus.IN_PROGRESS
         self.winner = Player.EMPTY
-        self.winning_cells.clear()
-        self.history.clear()
+        self.winning_cells: list[tuple[int, int]] = []
+        self.history: list[MoveRecord] = []
 
-    def set_difficulty(self, diff: int) -> None:
-        """Change difficulty level and start a fresh game."""
-        if diff in LEVEL_CONFIGS and diff != self.difficulty:
-            self.difficulty = diff
-            self.reset()
-
-    def set_mode(self, mode: GameMode) -> None:
-        """Change gameplay mode (Solo vs Leo or Two Players)."""
-        if mode != self.mode:
-            self.mode = mode
-            self.reset()
+    @property
+    def finished(self) -> bool:
+        return self.status is not GameStatus.IN_PROGRESS
 
     def can_drop(self, col: int) -> bool:
-        """Return True if token can be dropped in column."""
-        if self.status != GameStatus.IN_PROGRESS:
-            return False
-        return self.board.can_drop(col)
+        return not self.finished and self.board.can_drop(col)
 
-    def drop_token(self, col: int) -> tuple[bool, int]:
-        """Perform a drop for the current player.
-
-        Returns (success, landed_row).
-        """
-        if self.status != GameStatus.IN_PROGRESS:
-            return False, -1
-
+    def drop(self, col: int) -> DropResult:
+        if not self.can_drop(col):
+            return DropResult(False, col)
         player = self.current_player
+        threats = self.board.winning_columns(player.opponent)
         row = self.board.drop_token(col, player)
-        if row < 0:
-            return False, -1
-
-        self.history.append(MoveRecord(col=col, row=row, player=player))
-
-        # Check win condition
-        winner, win_cells = self.board.check_win()
-        if winner != Player.EMPTY:
+        self.history.append(MoveRecord(col, row, player))
+        line = self.board.line_at(row, col)
+        if line:
             self.status = GameStatus.WON
-            self.winner = winner
-            self.winning_cells = win_cells
-            return True, row
-
-        # Check draw condition
-        if self.board.is_full():
+            self.winner = player
+            self.winning_cells = line
+        elif self.board.is_full():
             self.status = GameStatus.DRAW
-            self.winner = Player.EMPTY
-            return True, row
-
-        # Alternate turn
-        self.current_player = self.current_player.opponent
-        return True, row
-
-    def cpu_choose_move(self) -> int:
-        """Select a column move for Leo (CPU) based on level intelligence."""
-        val_cols = self.board.valid_columns()
-        if not val_cols:
-            return -1
-
-        intel = self.level_config.cpu_intelligence
-        cpu_player = Player.LEO
-        child_player = Player.FLASH
-
-        # Center preference helper for natural play
-        center = (self.board.cols - 1) / 2.0
-        val_cols_center_sorted = sorted(val_cols, key=lambda c: abs(c - center))
-
-        # Tier 1: Silly (Age 3-4) - Playful random moves
-        if intel == "silly":
-            return self.rng.choice(val_cols)
-
-        # Tier 2: Defensive (Age 4) - Take immediate wins, block obvious wins
-        if intel == "defensive":
-            # 1. Check if CPU can win in 1 move
-            for c in val_cols:
-                r = self.board.drop_token(c, cpu_player)
-                w, _ = self.board.check_win()
-                self.board.undo_drop(c)
-                if w == cpu_player:
-                    return c
-
-            # 2. Check if Child can win in 1 move; block it!
-            for c in val_cols:
-                r = self.board.drop_token(c, child_player)
-                w, _ = self.board.check_win()
-                self.board.undo_drop(c)
-                if w == child_player:
-                    return c
-
-            # 3. Otherwise pick with center bias
-            weights = [1.0 / (1.0 + abs(c - center)) for c in val_cols]
-            return self.rng.choices(val_cols, weights=weights, k=1)[0]
-
-        # Tier 3: Smart (Age 4-5) - Avoid giving away wins, seek lines of 2/3
-        if intel == "smart":
-            # 1. Take winning move
-            for c in val_cols:
-                self.board.drop_token(c, cpu_player)
-                w, _ = self.board.check_win()
-                self.board.undo_drop(c)
-                if w == cpu_player:
-                    return c
-
-            # 2. Block child's winning move
-            for c in val_cols:
-                self.board.drop_token(c, child_player)
-                w, _ = self.board.check_win()
-                self.board.undo_drop(c)
-                if w == child_player:
-                    return c
-
-            # 3. Filter out moves that give the child an immediate win directly above!
-            safe_cols: list[int] = []
-            for c in val_cols:
-                r = self.board.drop_token(c, cpu_player)
-                is_safe = True
-                if self.board.can_drop(c):
-                    self.board.drop_token(c, child_player)
-                    w, _ = self.board.check_win()
-                    self.board.undo_drop(c)
-                    if w == child_player:
-                        is_safe = False
-                self.board.undo_drop(c)
-                if is_safe:
-                    safe_cols.append(c)
-
-            candidates = safe_cols if safe_cols else val_cols
-            # Score candidate positions based on line alignment
-            best_col = candidates[0]
-            best_score = -9999.0
-            for c in candidates:
-                score = self._score_heuristic_move(c, cpu_player, child_player)
-                if score > best_score:
-                    best_score = score
-                    best_col = c
-            return best_col
-
-        # Tier 4: Strategic (Age 5+) - 3-ply Minimax evaluation
-        return self._minimax_best_move(depth=3, cpu=cpu_player, opp=child_player)
-
-    def _score_heuristic_move(self, col: int, me: Player, opp: Player) -> float:
-        """Evaluate a move by analyzing lines formed."""
-        center = (self.board.cols - 1) / 2.0
-        score = 10.0 - abs(col - center) * 2.0
-
-        r = self.board.drop_token(col, me)
-        # Check sub-lines formed
-        for length in range(2, self.board.target):
-            _, cells = self.board.check_win(target=length)
-            score += len(cells) * (5.0 ** (length - 1))
-        self.board.undo_drop(col)
-        return score
-
-    def _minimax_best_move(self, depth: int, cpu: Player, opp: Player) -> int:
-        """Minimax with alpha-beta pruning."""
-        val_cols = self.board.valid_columns()
-        if not val_cols:
-            return -1
-
-        # Center sort
-        center = (self.board.cols - 1) / 2.0
-        val_cols.sort(key=lambda c: abs(c - center))
-
-        best_score = -100000.0
-        best_col = val_cols[0]
-        alpha = -100000.0
-        beta = 100000.0
-
-        for col in val_cols:
-            self.board.drop_token(col, cpu)
-            score = self._minimax(depth - 1, False, alpha, beta, cpu, opp)
-            self.board.undo_drop(col)
-            if score > best_score:
-                best_score = score
-                best_col = col
-            alpha = max(alpha, best_score)
-            if beta <= alpha:
-                break
-        return best_col
-
-    def _minimax(
-        self, depth: int, is_max: bool, alpha: float, beta: float, cpu: Player, opp: Player
-    ) -> float:
-        winner, _ = self.board.check_win()
-        if winner == cpu:
-            return 1000.0 + depth * 10.0
-        if winner == opp:
-            return -1000.0 - depth * 10.0
-        if self.board.is_full() or depth <= 0:
-            return self._evaluate_board(cpu, opp)
-
-        val_cols = self.board.valid_columns()
-        center = (self.board.cols - 1) / 2.0
-        val_cols.sort(key=lambda c: abs(c - center))
-
-        if is_max:
-            val = -100000.0
-            for col in val_cols:
-                self.board.drop_token(col, cpu)
-                val = max(val, self._minimax(depth - 1, False, alpha, beta, cpu, opp))
-                self.board.undo_drop(col)
-                alpha = max(alpha, val)
-                if beta <= alpha:
-                    break
-            return val
         else:
-            val = 100000.0
-            for col in val_cols:
-                self.board.drop_token(col, opp)
-                val = min(val, self._minimax(depth - 1, True, alpha, beta, cpu, opp))
-                self.board.undo_drop(col)
-                beta = min(beta, val)
-                if beta <= alpha:
-                    break
-            return val
+            self.current_player = player.opponent
+        return DropResult(True, col, row, player, self.status, blocked=col in threats and not line)
 
-    def _evaluate_board(self, cpu: Player, opp: Player) -> float:
-        """Heuristic evaluation for leaf nodes."""
-        center = (self.board.cols - 1) / 2.0
-        score = 0.0
-        for r in range(self.board.rows):
-            for c in range(self.board.cols):
-                p = self.board.grid[r][c]
-                if p == cpu:
-                    score += 4.0 - abs(c - center)
-                elif p == opp:
-                    score -= 4.0 - abs(c - center)
-        return score
+
+# ---------------------------------------------------------------------------
+# Best-of-three match
+# ---------------------------------------------------------------------------
+
+
+class MatchOutcome(StrEnum):
+    FLASH = "flash"
+    LEO = "leo"
+    TIE = "tie"
+
+
+class QuattroMatch:
+    """Up to three games; first to two wins. Draws count as played games."""
+
+    def __init__(self, stage: Stage, mode: GameMode) -> None:
+        self.stage = stage
+        self.mode = mode
+        self.results: list[Player] = []  # EMPTY = draw
+        self.game = QuattroGame(stage, self._starter(0))
+        self._recorded = False
+
+    @staticmethod
+    def _starter(index: int) -> Player:
+        # Flash (the child) opens games 1 and 3; Leo opens game 2.
+        return Player.FLASH if index % 2 == 0 else Player.LEO
+
+    @property
+    def game_index(self) -> int:
+        return len(self.results)
+
+    def wins(self, player: Player) -> int:
+        return sum(1 for winner in self.results if winner == player)
+
+    @property
+    def over(self) -> bool:
+        return (
+            self.wins(Player.FLASH) >= WINS_FOR_MATCH
+            or self.wins(Player.LEO) >= WINS_FOR_MATCH
+            or len(self.results) >= GAMES_PER_MATCH
+        )
+
+    @property
+    def outcome(self) -> MatchOutcome:
+        flash, leo = self.wins(Player.FLASH), self.wins(Player.LEO)
+        if flash > leo:
+            return MatchOutcome.FLASH
+        if leo > flash:
+            return MatchOutcome.LEO
+        return MatchOutcome.TIE
+
+    def record_game(self) -> bool:
+        """Store the finished current game's result once; True when stored."""
+
+        if not self.game.finished or self._recorded:
+            return False
+        self.results.append(self.game.winner)
+        self._recorded = True
+        return True
+
+    def next_game(self) -> QuattroGame:
+        if self.over:
+            raise RuntimeError("the match is over")
+        self.game = QuattroGame(self.stage, self._starter(len(self.results)))
+        self._recorded = False
+        return self.game
+
+
+# ---------------------------------------------------------------------------
+# Difficulty ladder
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class Ladder:
+    """Persisted adaptive state: current stage and Leo-won-match streak."""
+
+    stage: int = FIRST_STAGE
+    loss_streak: int = 0
+
+
+def adapt_stage(ladder: Ladder, outcome: MatchOutcome) -> Ladder:
+    """Win a match -> next stage; lose two in a row -> one stage back."""
+
+    if outcome is MatchOutcome.FLASH:
+        return Ladder(min(LAST_STAGE, ladder.stage + 1), 0)
+    if outcome is MatchOutcome.LEO:
+        streak = ladder.loss_streak + 1
+        if streak >= 2:
+            return Ladder(max(FIRST_STAGE, ladder.stage - 1), 0)
+        return Ladder(ladder.stage, streak)
+    return ladder
+
+
+def kindness_for(losses_in_a_row: int) -> int:
+    """Games the child lost in a row -> how much Leo eases off (0..2)."""
+
+    return max(0, min(MAX_KINDNESS, losses_in_a_row))
+
+
+__all__ = [
+    "DropResult",
+    "EasyLeo",
+    "Ladder",
+    "LeoBrain",
+    "MatchOutcome",
+    "MediumLeo",
+    "MoveRecord",
+    "QuattroBoard",
+    "QuattroGame",
+    "QuattroMatch",
+    "SmartLeo",
+    "adapt_stage",
+    "kindness_for",
+    "leo_brain_for",
+    "stage_for",
+    "suggest_column",
+]

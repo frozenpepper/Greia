@@ -5,23 +5,19 @@
   "strings": {
     "activity.quattro_amici.title": "Four Friends in a Row",
     "activity.title": "Four Friends in a Row",
-    "ui.mode_vs_leo": "Vs Leo",
+    "ui.mode_vs_leo": "With Leo",
     "ui.mode_two_players": "Two friends",
     "ui.turn_flash": "Flash's turn!",
     "ui.turn_leo": "Leo's turn!",
-    "ui.flash_thinking": "Flash is thinking...",
     "ui.leo_thinking": "Leo is thinking...",
-    "ui.win_flash": "Flash won!",
-    "ui.win_leo": "Leo won!",
-    "ui.draw": "It's a draw! Great game!",
+    "ui.win_flash": "Flash made a row!",
+    "ui.win_leo": "Leo made a row!",
+    "ui.draw": "A draw! Good game!",
     "ui.play_again": "Play again",
-    "ui.diff_1": "Easy (3 in a row)",
-    "ui.diff_2": "Medium (3 in a row)",
-    "ui.diff_3": "Classic (4 in a row)",
-    "ui.diff_4": "Challenge (4 in a row)",
-    "ui.drop_column": "Drop the disc",
-    "ui.level_label": "Level",
-    "ui.mode_label": "Mode"
+    "ui.match_won": "You won the match!",
+    "ui.match_leo": "Leo won this time!",
+    "ui.match_tie": "What a match!",
+    "ui.match_score": "Flash $flash – Leo $leo"
   },
   "audio": {
     "activity.title": {

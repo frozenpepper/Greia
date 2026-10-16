@@ -12,8 +12,8 @@ discovery_tags = ["puzzles"]
 
 [education]
 categories = ["spatial_reasoning", "turn_taking", "planning"]
-difficulty = 2
-recommended_age_min = 3
+difficulty = 1
+recommended_age_min = 4
 recommended_age_max = 7
 difficulty_min = 1
 difficulty_max = 4
@@ -26,8 +26,9 @@ skills = [
 events = [
   { id = "quattro.game_started", kind = "milestone" },
   { id = "quattro.token_dropped", kind = "milestone" },
-  { id = "quattro.game_won", kind = "completion" },
+  { id = "quattro.game_won", kind = "milestone" },
   { id = "quattro.game_draw", kind = "milestone" },
+  { id = "quattro.match_completed", kind = "completion" },
 ]
 
 [runtime]

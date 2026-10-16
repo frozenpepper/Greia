@@ -1,409 +1,877 @@
-"""Main application loop, lifecycle, and event routing for Quattro Amici in Fila.
+"""Lifecycle, turn flow and shared-kit input for Quattro Amici in Fila.
 
-Coordinates Pygame ReferenceCanvas, platform lifecycle markers, input routing
-(mouse, keyboard, controller), gravity animation, and CPU opponent timing.
+A *match* is best of three games between Flash (the child) and Leo — or
+between two children sharing the device. Each game the friend whose turn it
+is stands in a sunny spotlight with a happy pose while their disc hovers over
+the board; Leo thinks out loud with his ``pose_think`` and then glides his
+acorn to a column before dropping it, so the child can follow his move.
+
+Feedback follows ADR 0037: a won game counts the winning row disc by disc
+(chimes + sparkles), then the winner cheers (``pose_cheer``) and Leo speaks
+an approved line; a lost game makes Flash think (``pose_think``) and Leo say
+"let's try again"; a draw is friendly (both wave, hearts). Blocking Leo's
+almost-row earns a cheer; when Leo blocks the child he points at the board.
+Hints are graduated (~6 s idle -> the friend points and the disc pulses;
+again -> the winning/blocking column glows) and after two lost games in a row
+the useful column glows on its own. Difficulty adapts between matches
+(``adapt_stage``) and Leo eases off within a session after lost games.
+The match ends on the shared cast completion scene.
 """
 
 from __future__ import annotations
 
-import time
-from dataclasses import dataclass, field
+from collections import deque
+from collections.abc import Callable
+from enum import StrEnum
 from pathlib import Path
+import random
+import time
 
 import pygame
 
-from greia_platform.activity_api import activity_stop_requested, emit_activity_event, mark_activity_ready
+from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.activity_controls import (
+    ControlKit,
+    ControlLayout,
+    ControlTheme,
+    KitPointer,
+    PointerPhase,
+    PygameControlInput,
+)
+from greia_platform.activity_feedback import CastFeedback
+from greia_platform.input_core import InputEdge, SemanticAction, SemanticInputEvent
 from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
+from greia_platform.pygame_completion import (
+    CompletionContent,
+    CompletionOverlay,
+    CompletionPalette,
+    CompletionScene,
+    PygameCompletionScreen,
+)
 from greia_platform.typography import GreiaTypography
+from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 
 if __package__:
+    from .quattro_art import QuattroArt
     from .quattro_audio import QuattroAudio
     from .quattro_content import (
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
+        WINS_FOR_MATCH,
         GameMode,
         GameStatus,
         Player,
+        stage_for,
     )
-    from .quattro_model import QuattroModel
-    from .quattro_renderer import DropAnimation, QuattroRenderer
+    from .quattro_controls import QuattroControls
+    from .quattro_layout import CAST_HEIGHT, BoardGeometry, plate_rect
+    from .quattro_model import (
+        DropResult,
+        MatchOutcome,
+        QuattroGame,
+        QuattroMatch,
+        adapt_stage,
+        kindness_for,
+        leo_brain_for,
+        suggest_column,
+    )
+    from .quattro_renderer import WIN_STEP_SECONDS, BoardMotion, DropAnimation, FriendCast, QuattroRenderer
+    from .quattro_services import (
+        EventPort,
+        GreiaQuattroEvents,
+        GreiaQuattroProgress,
+        ProgressPort,
+        QuattroProgress,
+    )
 else:
+    from quattro_art import QuattroArt
     from quattro_audio import QuattroAudio
     from quattro_content import (
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
+        WINS_FOR_MATCH,
         GameMode,
         GameStatus,
         Player,
+        stage_for,
     )
-    from quattro_model import QuattroModel
-    from quattro_renderer import DropAnimation, QuattroRenderer
+    from quattro_controls import QuattroControls
+    from quattro_layout import CAST_HEIGHT, BoardGeometry, plate_rect
+    from quattro_model import (
+        DropResult,
+        MatchOutcome,
+        QuattroGame,
+        QuattroMatch,
+        adapt_stage,
+        kindness_for,
+        leo_brain_for,
+        suggest_column,
+    )
+    from quattro_renderer import WIN_STEP_SECONDS, BoardMotion, DropAnimation, FriendCast, QuattroRenderer
+    from quattro_services import (
+        EventPort,
+        GreiaQuattroEvents,
+        GreiaQuattroProgress,
+        ProgressPort,
+        QuattroProgress,
+    )
+
+IDLE_HINT_SECONDS = 6.0
+MAX_IDLE_HINTS = 3
+AUTO_HINT_SECONDS = 2.5
+HINT_GLOW_SECONDS = 3.0
+LEO_THINK_SECONDS = (0.7, 1.2)
+GLIDE_SECONDS_PER_COLUMN = 0.12
+WIN_LEAD = 0.15
+CELEBRATE_HOLD = 2.4
+DRAW_HOLD = 2.6
+MAX_SCHEDULED = 48
+SKY_NIGHT = (37, 59, 89)  # theme token "navy" behind the completion card
+
+
+class Phase(StrEnum):
+    TURN = "turn"  # a child may drop a disc
+    LEO = "leo"  # Leo is choosing
+    DROPPING = "dropping"
+    CELEBRATING = "celebrating"
+    BETWEEN = "between"  # the "next game" button is up
+    MATCH_OVER = "match_over"
+
+
+class Timeline:
+    """Tiny bounded scheduler for scripted moments."""
+
+    def __init__(self, clock: Callable[[], float]) -> None:
+        self._clock = clock
+        self._entries: deque[tuple[float, Callable[[], object]]] = deque(maxlen=MAX_SCHEDULED)
+
+    def after(self, delay: float, action: Callable[[], object]) -> None:
+        self._entries.append((self._clock() + delay, action))
+
+    def run_due(self) -> bool:
+        now = self._clock()
+        due = [entry for entry in self._entries if entry[0] <= now]
+        if not due:
+            return False
+        for entry in due:
+            self._entries.remove(entry)
+        for _, action in sorted(due, key=lambda entry: entry[0]):
+            action()
+        return True
+
+    @property
+    def busy(self) -> bool:
+        return bool(self._entries)
+
+    def clear(self) -> None:
+        self._entries.clear()
 
 
 def _is_safe_pointer(surface: pygame.Surface, position: tuple[int, int]) -> bool:
     """Prevent Activity clicks/hover from operating under trusted Greia chrome."""
+
     viewport = activity_viewport_for_surface(surface)
     x, y = position
     if not (0 <= x < viewport.surface.width and 0 <= y < viewport.surface.height):
         return False
-    if any(
-        region.x <= x < region.right and region.y <= y < region.bottom
-        for region in viewport.protected_regions
-    ):
-        return False
-    return True
+    return not any(
+        region.x <= x < region.right and region.y <= y < region.bottom for region in viewport.protected_regions
+    )
 
 
-@dataclass
 class QuattroApp:
-    """Greia Activity app orchestrating model, presentation, audio, and input."""
-    screen: pygame.Surface
-    canvas: PygameReferenceCanvas
-    renderer: QuattroRenderer
-    typography: GreiaTypography
-    resources: LocalizedResources
-    audio: QuattroAudio
-    model: QuattroModel
-    selected_col: int = 2
-    active_drop: DropAnimation | None = None
-    cpu_thinking: bool = False
-    cpu_think_timer: float = 0.0
-    ready_published: bool = False
+    """Coordinate match model, shared-kit controls, art, sound and lifecycle."""
+
+    # Class-level defaults: event routing degrades safely before wiring.
+    phase: Phase = Phase.TURN
     running: bool = True
-    last_clack_row: int = -1
-    game_sequence: int = 0
+    _surfaces: SurfaceNavigator | None = None
+    _dirty: bool = True
+
+    def __init__(
+        self,
+        *,
+        screen: pygame.Surface,
+        canvas: PygameReferenceCanvas,
+        typography: GreiaTypography,
+        resources: LocalizedResources,
+        audio: QuattroAudio,
+        progress: ProgressPort,
+        events: EventPort,
+        rng: random.Random | None = None,
+        clock: Callable[[], float] = time.monotonic,
+        session_id: str | None = None,
+        kit: ControlKit | None = None,
+        art: QuattroArt | None = None,
+    ) -> None:
+        self.screen = screen
+        self.canvas = canvas
+        self.typography = typography
+        self.resources = resources
+        self.audio = audio
+        self.progress = progress
+        self.events = events
+        self.rng = rng or random.Random()
+        self.clock = clock
+        self.session_id = session_id or f"{int(time.time())}-{self.rng.randrange(1_000_000):06d}"
+
+        saved = progress.load()
+        self.ladder = saved.ladder
+        # Shared control kit (ADR 0037): play Collection -> ocean accent.
+        self.kit = kit if kit is not None else ControlKit(typography, ControlTheme.for_accent("ocean"))
+        self.art = art if art is not None else QuattroArt(self.kit.painter)
+        self.match = QuattroMatch(stage_for(self.ladder.stage), saved.mode)
+        self.model: QuattroGame = self.match.game
+        self.geometry = BoardGeometry.for_stage(self.match.stage)
+        self.art.prepare_stage(self.geometry)
+        self.friends = {
+            player: FriendCast(
+                player,
+                CastFeedback(player.cast_id, height=CAST_HEIGHT, art=self.art.art, clock=clock),
+                self.art,
+                clock,
+            )
+            for player in (Player.FLASH, Player.LEO)
+        }
+        self.renderer = QuattroRenderer(self.art, self.friends, clock=clock)
+        self.renderer.geometry = self.geometry
+        self.motion = BoardMotion()
+        self.timeline = Timeline(clock)
+        self.controls = QuattroControls(
+            self.kit,
+            self.art,
+            resources,
+            ControlLayout.for_canvas(canvas, screen.get_size()),
+            self.geometry,
+            self.match.mode,
+            on_column=self._on_column,
+            on_mode=self._on_mode,
+            on_next=self._on_next,
+        )
+        self._surfaces = SurfaceNavigator(self.controls.layer)
+        self._input = PygameControlInput(to_logical=canvas.pointer, is_safe=lambda pos: _is_safe_pointer(self.screen, pos))
+        self._completions: dict[str, PygameCompletionScreen] = {}
+        self.completion: PygameCompletionScreen | None = None
+        self.selected_col = self.geometry.cols // 2
+        self.running = True
+        self.ready_published = False
+        self._activated = False
+        self._turn_serial = 0
+        self._last_activity = clock()
+        self._last_step = clock()
+        self._idle_hints = 0
+        self._losses_in_a_row = 0
+        self._game_serial = 0
+        self._pending: DropResult | None = None
+        self._begin_game()
+
+    # -- main loop ----------------------------------------------------------------
 
     def run(self) -> int:
-        """Execute the 60 FPS Activity loop."""
-        clock = pygame.time.Clock()
-        last_time = time.monotonic()
-        self._emit_game_started()
-
-        while self.running and not activity_stop_requested():
-            now = time.monotonic()
-            dt = min(0.05, now - last_time)
-            last_time = now
-
-            self._process_events()
-            self._update(dt)
-            self._draw()
-
-            # Present through reference canvas to physical display
-            self.canvas.present()
-            pygame.display.flip()
-
-            # Signal readiness on the very first presented frame
-            if not self.ready_published:
-                mark_activity_ready()
-                self.ready_published = True
-
-            clock.tick(60)
-
+        ticker = pygame.time.Clock()
+        try:
+            while self.running and not activity_stop_requested():
+                self._process_events()
+                repeat = self._input.poll()
+                if repeat is not None:
+                    self._dispatch(repeat)
+                animating = self.step()
+                if self._dirty or animating:
+                    self.render()
+                    self.canvas.present()
+                    pygame.display.flip()
+                    self._dirty = False
+                    if not self.ready_published:
+                        mark_activity_ready()
+                        self.ready_published = True
+                ticker.tick(30 if animating else 15)
+        finally:
+            self.typography.clear()
         return 0
 
+    def step(self, dt: float | None = None) -> bool:
+        """Advance timers and animation; return True while something moves."""
+
+        now = self.clock()
+        elapsed = now - self._last_step if dt is None else dt
+        self._last_step = now
+        elapsed = max(0.0, min(0.05, elapsed))
+        if self.timeline.run_due():
+            self._dirty = True
+        drop = self.motion.drop
+        if drop is not None:
+            settled = drop.update(elapsed)
+            if drop.consume_landing():
+                self.audio.play_drop_clack()
+            if settled:
+                self.motion.drop = None
+                self._after_drop()
+            self._dirty = True
+        for friend in self.friends.values():
+            if friend.update():
+                self._dirty = True
+        self.motion.prune(now)
+        self._maybe_hint(now)
+        if self.controls.layer.invalidation.should_draw:
+            self._dirty = True
+        animating = self.motion.active(now, self.geometry) or any(f.animating for f in self.friends.values())
+        return animating or self.phase is Phase.LEO
+
+    def render(self) -> None:
+        surface = self.canvas.surface
+        if self.phase is Phase.MATCH_OVER and self.completion is not None:
+            self._surfaces.draw(surface)
+            return
+        self.renderer.draw(
+            surface,
+            self.model,
+            self.geometry,
+            self.motion,
+            self._wins(),
+            self.selected_col,
+            human_turn=self.phase is Phase.TURN,
+        )
+        self._surfaces.draw(surface)
+
+    def _wins(self) -> dict[Player, int]:
+        return {player: self.match.wins(player) for player in (Player.FLASH, Player.LEO)}
+
+    # -- input ----------------------------------------------------------------------
+
     def _process_events(self) -> None:
-        """Route input events from keyboard, mouse, and gamepads."""
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
+            self._handle_event(event)
+            if not self.running:
                 return
 
-            elif event.type == pygame.KEYDOWN:
-                self._handle_keydown(event.key)
-
-            elif event.type == pygame.MOUSEMOTION:
-                if not _is_safe_pointer(self.screen, event.pos):
-                    continue
-                logical_pos = self.canvas.pointer(event.pos)
-                if logical_pos is not None:
-                    col = self.renderer.get_column_at_x(self.model, logical_pos[0])
-                    if col is not None and col != self.selected_col:
-                        self.selected_col = col
-                        self.audio.play_hover()
-
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if not _is_safe_pointer(self.screen, event.pos):
-                    continue
-                logical_pos = self.canvas.pointer(event.pos)
-                if logical_pos is not None:
-                    self._handle_click(logical_pos[0], logical_pos[1])
-
-            elif event.type == pygame.JOYHATMOTION:
-                hat_x, _ = event.value
-                if hat_x < 0:
-                    self._move_selection(-1)
-                elif hat_x > 0:
-                    self._move_selection(1)
-
-            elif event.type == pygame.JOYBUTTONDOWN:
-                # Button 0 = South button (A/Cross)
-                if event.button == 0:
-                    self._try_drop(self.selected_col)
-
-    def _handle_keydown(self, key: int) -> None:
-        """Keyboard input mapping."""
-        if key == pygame.K_ESCAPE:
+    def _handle_event(self, event: pygame.event.Event) -> None:
+        if event.type == pygame.QUIT:
             self.running = False
-        elif key in (pygame.K_LEFT, pygame.K_a):
-            self._move_selection(-1)
-        elif key in (pygame.K_RIGHT, pygame.K_d):
-            self._move_selection(1)
-        elif key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_DOWN, pygame.K_s):
-            self._try_drop(self.selected_col)
-        elif key in (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4):
-            diff = key - pygame.K_0
-            self._switch_difficulty(diff)
-        elif key == pygame.K_m:
-            self._toggle_mode()
-        elif key == pygame.K_r:
-            self._restart_game()
+            return
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            self.running = False
+            return
+        if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+            self._handle_pointer_event(event)
+            return
+        if event.type == pygame.VIDEORESIZE:
+            self._resize()
+            return
+        translated = self._input.translate(event)
+        if translated is not None:
+            self._dispatch(translated)
 
-    def _move_selection(self, delta: int) -> None:
-        """Move column selector left or right with wrap/clamping."""
-        new_col = max(0, min(self.model.board.cols - 1, self.selected_col + delta))
-        if new_col != self.selected_col:
-            self.selected_col = new_col
-            self.audio.play_hover()
+    def _handle_pointer_event(self, event: pygame.event.Event) -> None:
+        if event.type != pygame.MOUSEMOTION and getattr(event, "button", 1) != 1:
+            return
+        logical = self.canvas.pointer(event.pos) if _is_safe_pointer(self.screen, event.pos) else None
+        if logical is None:
+            if event.type == pygame.MOUSEBUTTONUP:
+                self._kit_pointer(PointerPhase.CANCEL, (-1, -1))
+            return
+        x, y = logical
+        if event.type == pygame.MOUSEMOTION:
+            self._hover(x, y)
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            self._handle_click(x, y)
+        else:
+            self._handle_release(x, y)
+
+    def _hover(self, x: float, y: float) -> None:
+        if self.phase is Phase.TURN:
+            col = self.renderer.get_column_at_x(self.model, x)
+            if col is not None and col != self.selected_col:
+                self.selected_col = col
+                self.audio.play_hover()
+                self._dirty = True
+        self._kit_pointer(PointerPhase.MOVE, (x, y))
 
     def _handle_click(self, x: float, y: float) -> None:
-        """Process clicks on buttons and board columns."""
-        # 1. Level buttons (1 to 4) near top right
-        btn_y = 26
-        btn_h = 42
-        if btn_y <= y <= btn_y + btn_h:
-            for diff in (1, 2, 3, 4):
-                btn_x = 730 + (diff - 1) * 50
-                if btn_x <= x <= btn_x + 42:
-                    self._switch_difficulty(diff)
-                    return
+        self._note_activity()
+        if self.phase is Phase.TURN:
+            col = self.renderer.get_column_at_x(self.model, x)
+            if col is not None and self.controls.columns[col].contains((int(x), int(y))):
+                self.selected_col = col
+        self._kit_pointer(PointerPhase.DOWN, (x, y))
 
-            # Mode toggle button
-            mode_x = 936
-            if mode_x <= x <= mode_x + 74:
-                self._toggle_mode()
-                return
+    def _handle_release(self, x: float, y: float) -> None:
+        self._kit_pointer(PointerPhase.UP, (x, y))
 
-        # 2. Play Again button (bottom center on game over)
-        if self.model.status != GameStatus.IN_PROGRESS:
-            pa_rect = pygame.Rect((REFERENCE_WIDTH - 220) // 2, 535, 220, 50)
-            if pa_rect.collidepoint((x, y)):
-                self._restart_game()
-                return
+    def _kit_pointer(self, phase: PointerPhase, position: tuple[float, float]) -> None:
+        if self._surfaces is None:
+            return
+        self._dispatch(KitPointer(phase, (int(position[0]), int(position[1]))))
 
-        # 3. Column drop click on board
-        col = self.renderer.get_column_at_x(self.model, x)
-        if col is not None:
-            self.selected_col = col
-            self._try_drop(col)
+    def _dispatch(self, kit_input) -> bool:
+        if not isinstance(kit_input, KitPointer) or kit_input.phase is not PointerPhase.MOVE:
+            self._note_activity()
+        if (
+            isinstance(kit_input, SemanticInputEvent)
+            and kit_input.edge is InputEdge.PRESSED
+            and kit_input.action in {SemanticAction.NAV_DOWN, SemanticAction.MOVE_DOWN}
+            and self.phase is Phase.TURN
+            and self.controls.focused_column() is not None
+        ):
+            # Arrow-down / D-pad down drops the disc, like Space or the south button.
+            self.controls.layer.focus_visible = True
+            self._on_column(self.controls.focused_column())  # type: ignore[arg-type]
+            return True
+        result = self._surfaces.dispatch(kit_input)
+        focused = self.controls.focused_column()
+        if (
+            isinstance(kit_input, SemanticInputEvent)
+            and focused is not None
+            and focused != self.selected_col
+            and self.phase is Phase.TURN
+        ):
+            self.selected_col = focused
+            self.audio.play_hover()
+        if self.controls.layer.invalidation.should_draw:
+            self._dirty = True
+        return result is not UiEventResult.IGNORED
 
-    def _switch_difficulty(self, diff: int) -> None:
-        """Switch difficulty and reset board."""
-        if diff != self.model.difficulty:
-            self.model.set_difficulty(diff)
-            self.active_drop = None
-            self.cpu_thinking = False
-            self.selected_col = min(self.selected_col, self.model.board.cols - 1)
-            self.renderer.invalidate_cache()
-            self.audio.play_click()
-            self._emit_game_started()
+    def _note_activity(self) -> None:
+        self._last_activity = self.clock()
+        self._idle_hints = 0
 
-    def _toggle_mode(self) -> None:
-        """Toggle between Solo vs Leo and Two Players."""
-        new_mode = (
-            GameMode.TWO_PLAYERS
-            if self.model.mode == GameMode.VS_CPU
-            else GameMode.VS_CPU
+    def tap(self, raw_pos: tuple[int, int]) -> bool:
+        """Deliver one complete tap at a physical position (tests/tools)."""
+
+        self._activated = False
+        for kind in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+            self._handle_event(pygame.event.Event(kind, button=1, pos=raw_pos))
+        return self._activated
+
+    def press(self, key: int) -> bool:
+        """Deliver one key press through the shared navigation mapping."""
+
+        self._activated = False
+        self._handle_event(pygame.event.Event(pygame.KEYDOWN, key=key, mod=0, unicode="", scancode=0))
+        return self._activated
+
+    def _resize(self) -> None:
+        self.screen = pygame.display.get_surface() or self.screen
+        self.canvas = PygameReferenceCanvas(self.screen)
+        self._input = PygameControlInput(
+            to_logical=self.canvas.pointer, is_safe=lambda pos: _is_safe_pointer(self.screen, pos)
         )
-        self.model.set_mode(new_mode)
-        self.active_drop = None
-        self.cpu_thinking = False
-        self.audio.play_click()
-        self._emit_game_started()
+        self.controls.relayout(ControlLayout.for_canvas(self.canvas, self.screen.get_size()))
+        self._dirty = True
 
-    def _restart_game(self) -> None:
-        """Restart a new game with current configuration."""
-        self.model.reset()
-        self.active_drop = None
-        self.cpu_thinking = False
-        self.audio.play_click()
-        self._emit_game_started()
+    # -- game flow --------------------------------------------------------------------
 
-    def _try_drop(self, col: int) -> bool:
-        """Initiate token drop if turn and column are legal."""
-        # Disallow dropping while animation is playing or game is finished
-        if self.active_drop is not None or self.model.status != GameStatus.IN_PROGRESS:
-            return False
+    @property
+    def vs_leo(self) -> bool:
+        return self.match.mode is GameMode.VS_CPU
 
-        # In vs CPU mode, child can only drop on Flash's turn
-        if self.model.mode == GameMode.VS_CPU and self.model.current_player != Player.FLASH:
-            return False
+    def _is_human(self, player: Player) -> bool:
+        return player is Player.FLASH or not self.vs_leo
 
-        return self._execute_drop(col)
+    def _begin_game(self) -> None:
+        self.model = self.match.game
+        self.timeline.clear()
+        self.motion.clear()
+        for friend in self.friends.values():
+            friend.reset()
+        self.selected_col = self.geometry.cols // 2
+        self._game_serial += 1
+        starter = self.model.starter
+        self.audio.say(starter.cast_id, "ready.go")
+        self._emit(
+            "quattro.game_started",
+            f"game-{self._game_serial}-started",
+            {"stage": self.match.stage.number, "mode": self.match.mode.value, "game": self.match.game_index + 1},
+        )
+        self._begin_turn()
+
+    def _begin_turn(self) -> None:
+        game = self.model
+        self._turn_serial += 1
+        player = game.current_player
+        for who, friend in self.friends.items():
+            friend.set_active(who is player)
+        self.motion.show_selector = True
+        self.motion.selector_since = self.clock()
+        self.motion.pulse_start = None
+        self.selected_col = max(0, min(self.geometry.cols - 1, self.selected_col))
+        if not self._is_human(player):
+            self.phase = Phase.LEO
+            self._leo_move()
+        else:
+            self.phase = Phase.TURN
+            self._note_activity()
+            if self.vs_leo and self._losses_in_a_row >= 2:
+                serial = self._turn_serial
+                self.timeline.after(AUTO_HINT_SECONDS, lambda: self._auto_hint(serial))
+        self._sync()
+        if self.phase is Phase.TURN:
+            self.controls.focus_column(self.selected_col)
+        self._dirty = True
+
+    def _leo_move(self) -> None:
+        game = self.model
+        brain = leo_brain_for(game.stage.leo)
+        choice = brain.choose(game.board, Player.LEO, self.rng, kindness_for(self._losses_in_a_row))
+        if choice < 0:
+            return
+        think = self.rng.uniform(*LEO_THINK_SECONDS)
+        glide = abs(choice - self.selected_col) * GLIDE_SECONDS_PER_COLUMN
+        self.friends[Player.LEO].show("pose_think", think)
+        serial = self._turn_serial
+        self.timeline.after(think, lambda: self._leo_glide(serial, choice))
+        self.timeline.after(think + glide + 0.25, lambda: self._leo_drop(serial, choice))
+
+    def _leo_glide(self, serial: int, col: int) -> None:
+        if serial == self._turn_serial and self.phase is Phase.LEO:
+            self.selected_col = col
+            self._dirty = True
+
+    def _leo_drop(self, serial: int, col: int) -> None:
+        if serial == self._turn_serial and self.phase is Phase.LEO:
+            self._execute_drop(col)
+
+    def _on_column(self, col: int) -> None:
+        if self.phase is not Phase.TURN:
+            return
+        self._activated = True
+        self.selected_col = col
+        if not self.model.can_drop(col):
+            friend = self.friends[self.model.current_player]
+            friend.try_again()
+            self.motion.wobble_col = col
+            self.motion.wobble_start = self.clock()
+            self.audio.play("boop")
+            self._dirty = True
+            return
+        self._execute_drop(col)
 
     def _execute_drop(self, col: int) -> bool:
-        """Execute drop logic and spawn falling animation."""
-        if not self.model.can_drop(col):
+        game = self.model
+        result = game.drop(col)
+        if not result.ok:
             return False
-
-        player = self.model.current_player
-        success, row = self.model.drop_token(col)
-        if not success:
-            return False
-
-        move_number = len(self.model.history)
-        self._safe_emit(
-            "quattro.token_dropped",
-            f"game-{self.game_sequence}-move-{move_number}",
-            {
-                "difficulty": self.model.difficulty,
-                "mode": self.model.mode.value,
-                "column": col,
-                "player": player.value,
-            },
-        )
-        if self.model.status == GameStatus.WON:
-            self._safe_emit(
-                "quattro.game_won",
-                f"game-{self.game_sequence}-won",
-                {
-                    "difficulty": self.model.difficulty,
-                    "mode": self.model.mode.value,
-                    "winner": self.model.winner.value,
-                    "moves": move_number,
-                },
-            )
-        elif self.model.status == GameStatus.DRAW:
-            self._safe_emit(
-                "quattro.game_draw",
-                f"game-{self.game_sequence}-draw",
-                {
-                    "difficulty": self.model.difficulty,
-                    "mode": self.model.mode.value,
-                    "moves": move_number,
-                },
-            )
-
-        board_rect, cell_size, _ = self.renderer._compute_board_layout(self.model)
-        target_y = board_rect.top + row * cell_size + cell_size / 2.0
-        start_y = board_rect.top - cell_size * 0.75
-
-        self.active_drop = DropAnimation(
-            col=col,
-            target_row=row,
-            player=player,
-            current_y=start_y,
-            target_y=target_y,
-        )
+        self._pending = result
+        target_y = self.geometry.cell_center(result.row, col)[1]
+        self.motion.drop = DropAnimation(col, result.row, result.player, float(self.geometry.selector_y), float(target_y))
+        self.motion.show_selector = False
+        self.motion.glow_col = None
+        self.phase = Phase.DROPPING
         self.audio.play_drop_slide()
+        if self._is_human(result.player):
+            self._emit(
+                "quattro.token_dropped",
+                f"game-{self._game_serial}-move-{len(game.history)}",
+                {"stage": game.stage.number, "mode": self.match.mode.value, "column": col, "player": result.player.value},
+            )
+        self._sync()
+        self._dirty = True
         return True
 
-    def _emit_game_started(self) -> None:
-        self.game_sequence += 1
-        self._safe_emit(
-            "quattro.game_started",
-            f"game-{self.game_sequence}-started",
+    def _after_drop(self) -> None:
+        result = self._pending
+        if result is None:
+            return
+        if result.status is GameStatus.WON:
+            self._game_won(result)
+            return
+        if result.status is GameStatus.DRAW:
+            self._game_draw()
+            return
+        if result.blocked:
+            self._block_moment(result)
+        self._begin_turn()
+
+    def _block_moment(self, result: DropResult) -> None:
+        now = self.clock()
+        center = self.geometry.cell_center(result.row, result.col)
+        if self._is_human(result.player):
+            # The child filled the other friend's winning hole: celebrate the idea.
+            self.friends[result.player].correct()
+            self.motion.add_fx("star_burst", center, now)
+            self.audio.play("pop")
+        else:
+            # Leo stopped the child's row: he points at it, Flash is surprised.
+            self.friends[Player.LEO].show("pose_point", 1.6)
+            self.friends[Player.FLASH].show("surprised", 1.2)
+            self.motion.add_fx("sparkle", center, now)
+
+    def _game_won(self, result: DropResult) -> None:
+        self.phase = Phase.CELEBRATING
+        self.timeline.clear()
+        game = self.model
+        winner = game.winner
+        self.match.record_game()
+        now = self.clock()
+        cells = list(game.winning_cells)
+        self.motion.win_cells = cells
+        self.motion.win_start = now + WIN_LEAD
+        self.motion.win_band = self.art.win_band(self.geometry, cells)
+        for index, (row, col) in enumerate(cells):
+            delay = WIN_LEAD + index * WIN_STEP_SECONDS
+            self.motion.add_fx("sparkle", self.geometry.cell_center(row, col), now + delay)
+            self.timeline.after(delay, lambda n=index + 1: self.audio.chime(n))
+        line_done = WIN_LEAD + len(cells) * WIN_STEP_SECONDS
+        self.timeline.after(line_done, lambda: self._cheer(winner))
+        child_lost = self.vs_leo and winner is Player.LEO
+        self._losses_in_a_row = self._losses_in_a_row + 1 if child_lost else (0 if self.vs_leo else self._losses_in_a_row)
+        self._emit(
+            "quattro.game_won",
+            f"game-{self._game_serial}-won",
             {
-                "difficulty": self.model.difficulty,
-                "mode": self.model.mode.value,
+                "stage": game.stage.number,
+                "mode": self.match.mode.value,
+                "winner": winner.value,
+                "moves": len(game.history),
             },
         )
+        self.timeline.after(line_done + CELEBRATE_HOLD, self._finish_game)
+        self._sync()
+        self._dirty = True
 
-    @staticmethod
-    def _safe_emit(
-        event_id: str,
-        idempotency_key: str,
-        payload: dict[str, object],
-    ) -> None:
-        try:
-            emit_activity_event(
-                event_id,
-                idempotency_key=idempotency_key,
-                payload=payload,
-            )
-        except Exception:
-            pass
+    def _cheer(self, winner: Player) -> None:
+        now = self.clock()
+        self.friends[winner].correct()
+        loser = winner.opponent
+        if self.vs_leo and winner is Player.LEO:
+            self.friends[loser].try_again()
+            self.audio.say("leo", "encourage.retry")
+        elif self.vs_leo:
+            self.friends[loser].show("happy", 1.6)
+            self.audio.say("leo", "praise.general")
+        else:
+            self.audio.say(winner.cast_id, "celebrate.success")
+        self.audio.play("fanfare")
+        self.motion.add_fx("confetti", (self.geometry.grid.centerx, self.geometry.frame.top + 40), now)
+        plate = plate_rect(winner)
+        self.motion.add_fx("star_burst", plate.center, now + 0.1)
+        self.motion.score_pop = (winner, now + 0.1)
+        self._dirty = True
 
-    def _update(self, dt: float) -> None:
-        """Update active animations and CPU opponent decision."""
-        # 1. Update falling token animation
-        if self.active_drop is not None:
-            settled = self.active_drop.update(dt)
-
-            # The clack plays once, on the frame the token reaches its row.
-            if self.active_drop.consume_landing():
-                self.audio.play_drop_clack()
-
-            if settled:
-                # Dropped token has come to rest
-                self.active_drop = None
-                # Check win reaction
-                if self.model.status == GameStatus.WON:
-                    board_rect, _, _ = self.renderer._compute_board_layout(self.model)
-                    self.renderer.spawn_win_particles(board_rect)
-                    self.audio.play_win(self.model.winner == Player.FLASH)
-
-        # 2. CPU opponent thinking and move triggering
-        if (
-            self.model.mode == GameMode.VS_CPU
-            and self.model.current_player == Player.LEO
-            and self.model.status == GameStatus.IN_PROGRESS
-            and self.active_drop is None
-        ):
-            if not self.cpu_thinking:
-                self.cpu_thinking = True
-                # Friendly natural thinking delay (0.5s) so the child sees Leo thinking
-                self.cpu_think_timer = 0.5
-            else:
-                self.cpu_think_timer -= dt
-                if self.cpu_think_timer <= 0.0:
-                    self.cpu_thinking = False
-                    cpu_col = self.model.cpu_choose_move()
-                    if cpu_col >= 0:
-                        self.selected_col = cpu_col
-                        self._execute_drop(cpu_col)
-
-    def _draw(self) -> None:
-        """Render frame to the reference canvas."""
-        self.renderer.render(
-            model=self.model,
-            selected_col=self.selected_col,
-            active_drop=self.active_drop,
-            cpu_thinking=self.cpu_thinking,
+    def _game_draw(self) -> None:
+        self.phase = Phase.CELEBRATING
+        self.timeline.clear()
+        self.match.record_game()
+        now = self.clock()
+        for friend in self.friends.values():
+            friend.show("pose_wave", DRAW_HOLD)
+        self.motion.add_fx("heart_pop", (self.geometry.grid.centerx, self.geometry.frame.top + 30), now)
+        self.audio.play("pop")
+        self.audio.say("leo", "encourage.progress")
+        self._emit(
+            "quattro.game_draw",
+            f"game-{self._game_serial}-draw",
+            {"stage": self.model.stage.number, "mode": self.match.mode.value, "moves": len(self.model.history)},
         )
+        self.timeline.after(DRAW_HOLD, self._finish_game)
+        self._sync()
+        self._dirty = True
+
+    def _finish_game(self) -> None:
+        if self.match.over:
+            self._complete_match()
+            return
+        self.phase = Phase.BETWEEN
+        for friend in self.friends.values():
+            friend.set_active(False)
+        self._note_activity()
+        self._sync()
+        self.controls.focus_default(None)
+        self._dirty = True
+
+    def _on_next(self) -> None:
+        if self.phase is not Phase.BETWEEN:
+            return
+        self._activated = True
+        self.audio.play_click()
+        self.match.next_game()
+        self._begin_game()
+
+    def _on_mode(self, tool_id: str) -> None:
+        mode = GameMode(tool_id)
+        self._activated = True
+        if mode is self.match.mode:
+            return
+        self.audio.play_click()
+        self.progress.save(QuattroProgress(self.ladder, mode))
+        self._new_match(mode)
+
+    # -- match end ---------------------------------------------------------------------
+
+    def _complete_match(self) -> None:
+        outcome = self.match.outcome
+        mode = self.match.mode
+        if mode is GameMode.VS_CPU:
+            self.ladder = adapt_stage(self.ladder, outcome)
+        self.progress.save(QuattroProgress(self.ladder, mode))
+        flash, leo = self.match.wins(Player.FLASH), self.match.wins(Player.LEO)
+        self._emit(
+            "quattro.match_completed",
+            f"match-{self.session_id}-{self._game_serial}",
+            {
+                "stage": self.match.stage.number,
+                "mode": mode.value,
+                "outcome": outcome.value,
+                "flash_wins": flash,
+                "leo_wins": leo,
+                "next_stage": self.ladder.stage,
+            },
+        )
+        self.timeline.clear()
+        if outcome is MatchOutcome.LEO:
+            character, title_key = "leo", ("ui.match_leo" if mode is GameMode.VS_CPU else "ui.win_leo")
+            stars = flash if mode is GameMode.VS_CPU else leo
+        elif outcome is MatchOutcome.FLASH:
+            character, title_key, stars = "flash", ("ui.match_won" if mode is GameMode.VS_CPU else "ui.win_flash"), flash
+        else:
+            character, title_key, stars = "flash", "ui.match_tie", max(flash, leo)
+        self.audio.say(character, "celebrate.success" if outcome is not MatchOutcome.TIE else "praise.general")
+        self.completion = self._completion_for(character)
+        self.completion.prepare(
+            CompletionContent(
+                title=self.resources.text(title_key),
+                primary_label=self.resources.text("ui.play_again"),
+                body_lines=(self.resources.text("ui.match_score", {"flash": flash, "leo": leo}),),
+                achievement_count=stars,
+            )
+        )
+        self._surfaces.push_overlay(CompletionOverlay(self.completion, on_primary=self._play_again))
+        self.controls.progress.set_progress(len(self.match.results))
+        self.phase = Phase.MATCH_OVER
+        self._dirty = True
+
+    def _completion_for(self, character: str) -> PygameCompletionScreen:
+        screen = self._completions.get(character)
+        if screen is None:
+            screen = PygameCompletionScreen(
+                self.typography,
+                width=REFERENCE_WIDTH,
+                height=REFERENCE_HEIGHT,
+                palette=CompletionPalette(background=SKY_NIGHT),
+                scene=CompletionScene(self.kit, character=character, star_total=WINS_FOR_MATCH),
+            )
+            self._completions[character] = screen
+        return screen
+
+    def _play_again(self) -> None:
+        self._activated = True
+        self._new_match(self.match.mode)
+
+    def _new_match(self, mode: GameMode) -> None:
+        if self.phase is Phase.MATCH_OVER:
+            self._surfaces.pop_overlay()
+            if self.completion is not None:
+                self.completion.clear()
+            self.completion = None
+        self.match = QuattroMatch(stage_for(self.ladder.stage), mode)
+        geometry = BoardGeometry.for_stage(self.match.stage)
+        if geometry != self.geometry:
+            self.geometry = geometry
+            self.renderer.geometry = geometry
+            self.art.prepare_stage(geometry)
+            self.controls.set_geometry(geometry)
+        self.controls.select_mode(mode)
+        self._begin_game()
+
+    # -- hints ---------------------------------------------------------------------------
+
+    def _maybe_hint(self, now: float) -> None:
+        if self.phase not in (Phase.TURN, Phase.BETWEEN):
+            return
+        if self._idle_hints >= MAX_IDLE_HINTS:
+            return
+        if now - self._last_activity < IDLE_HINT_SECONDS * (self._idle_hints + 1):
+            return
+        self._idle_hints += 1
+        if self.phase is Phase.BETWEEN:
+            self.friends[Player.FLASH].show("pose_point", 1.8)
+            self._dirty = True
+            return
+        player = self.model.current_player
+        self.friends[player].show("pose_point", 1.8)
+        self.motion.pulse_start = now
+        if self._idle_hints >= 2:
+            self._glow_suggestion(player)
+        self._dirty = True
+
+    def _auto_hint(self, serial: int) -> None:
+        if serial != self._turn_serial or self.phase is not Phase.TURN:
+            return
+        if self._glow_suggestion(self.model.current_player):
+            self.friends[self.model.current_player].show("pose_point", 1.6)
+
+    def _glow_suggestion(self, player: Player) -> bool:
+        hint = suggest_column(self.model.board, player)
+        if hint is None:
+            return False
+        self.motion.glow_col = hint[0]
+        self.motion.glow_until = self.clock() + HINT_GLOW_SECONDS
+        self._dirty = True
+        return True
+
+    # -- presentation sync -----------------------------------------------------------------
+
+    def _sync(self) -> None:
+        phase = self.phase
+        game = self.model
+        player = game.current_player
+        if phase is Phase.DROPPING and self._pending is not None:
+            player = self._pending.player  # the banner follows the falling disc
+        if phase is Phase.CELEBRATING or phase is Phase.BETWEEN:
+            if game.status is GameStatus.WON:
+                key = "ui.win_flash" if game.winner is Player.FLASH else "ui.win_leo"
+                icon_player = game.winner
+            else:
+                key, icon_player = "ui.draw", player
+        elif self.vs_leo and player is Player.LEO:
+            key, icon_player = "ui.leo_thinking", Player.LEO
+        else:
+            key = "ui.turn_flash" if player is Player.FLASH else "ui.turn_leo"
+            icon_player = player
+        self.controls.sync(
+            columns_live=phase is Phase.TURN,
+            mode_live=(phase is Phase.TURN and game.board.is_empty() and self.match.game_index == 0)
+            or phase is Phase.BETWEEN,
+            between_games=phase is Phase.BETWEEN,
+            games_played=len(self.match.results),
+            banner_text=self.resources.text(key),
+            banner_icon=self.art.goal_icon(icon_player, game.stage.target, 40),
+        )
+
+    def _emit(self, event_id: str, key: str, payload: dict[str, object]) -> None:
+        self.events.emit(event_id, f"quattro:{self.session_id}:{key}", payload)
 
 
 def build_app(
     screen: pygame.Surface,
     locale: str = "it",
     package_root: Path | None = None,
+    *,
+    progress: ProgressPort | None = None,
+    events: EventPort | None = None,
+    rng: random.Random | None = None,
+    clock: Callable[[], float] = time.monotonic,
 ) -> QuattroApp:
-    """Construct application with injected canvas, renderer, audio, and model."""
+    """Construct the Activity with injected canvas, kit, art, audio and services."""
+
     root = package_root or Path(__file__).resolve().parent
     canvas = PygameReferenceCanvas(screen)
     typography = GreiaTypography()
-
-    # UI and spoken character voices must use the SAME effective Activity
-    # language. A staged-but-unsupported profile locale falls back once here.
+    # UI and spoken character voices use the SAME effective Activity language.
     resources = activity_resources(root, requested_locale=locale)
-    audio = QuattroAudio(locale=resources.context.selected.language)
-
-    # Storybook renderer
-    renderer = QuattroRenderer(
-        surface=canvas.surface,
-        typography=typography,
-        resources=resources,
-    )
-
-    # Domain model (starts at Level 2, Solo vs Leo)
-    model = QuattroModel(difficulty=2, mode=GameMode.VS_CPU)
-
+    rng = rng or random.Random()
+    audio = QuattroAudio(locale=resources.context.selected.language, rng=rng)
     return QuattroApp(
         screen=screen,
         canvas=canvas,
-        renderer=renderer,
         typography=typography,
         resources=resources,
         audio=audio,
-        model=model,
+        progress=progress if progress is not None else GreiaQuattroProgress(),
+        events=events if events is not None else GreiaQuattroEvents(),
+        rng=rng,
+        clock=clock,
     )
+
+
+__all__ = ["Phase", "QuattroApp", "Timeline", "build_app"]

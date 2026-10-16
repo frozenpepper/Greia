@@ -1,6 +1,11 @@
-"""Design constants, color palettes, and level definitions for Quattro Amici in Fila.
+"""Domain vocabulary, stages and design tokens for Quattro Amici in Fila.
 
-Reference display target: 1024x600 (Greia standard child-viewport).
+One experience: Flash (the child) and Leo take turns dropping discs into a
+standing board until one of them makes a row. A *match* is best of three
+games; the board grows and Leo plays a little smarter as the child wins
+matches (stages of the same loop, never separate modes).
+
+Reference display target: 1024x600 logical pixels (Greia reference canvas).
 """
 
 from __future__ import annotations
@@ -12,120 +17,98 @@ from typing import Final
 REFERENCE_WIDTH: Final[int] = 1024
 REFERENCE_HEIGHT: Final[int] = 600
 
-# Top-left system chrome clearance boundary (ADR 0019)
-CHROME_SAFE_MARGIN_X: Final[int] = 120
-CHROME_SAFE_MARGIN_Y: Final[int] = 68
+GAMES_PER_MATCH: Final[int] = 3
+WINS_FOR_MATCH: Final[int] = 2
 
 
 class Player(IntEnum):
     """Grid cell contents and player identification."""
+
     EMPTY = 0
-    FLASH = 1  # Player 1 (Rabbit - Orange Carrot Disc)
-    LEO = 2    # Player 2 / CPU (Owl - Purple Acorn Disc)
+    FLASH = 1  # first friend: carrot discs (the child in "vs Leo")
+    LEO = 2  # second friend: acorn discs (Leo, or a second child)
 
     @property
-    def opponent(self) -> Player:
+    def opponent(self) -> "Player":
         if self == Player.FLASH:
             return Player.LEO
         if self == Player.LEO:
             return Player.FLASH
         return Player.EMPTY
 
+    @property
+    def cast_id(self) -> str:
+        """Canonical cast id (``character.<id>``) of this player's friend."""
+
+        return "leo" if self == Player.LEO else "flash"
+
 
 class GameMode(StrEnum):
-    """Supported child gameplay modes."""
-    VS_CPU = "vs_cpu"           # Solo play against friendly Leo
-    TWO_PLAYERS = "two_players" # Same-computer turn-taking between two children
+    """Who plays Leo's discs: Leo himself, or a second child on the same device."""
+
+    VS_CPU = "vs_cpu"
+    TWO_PLAYERS = "two_players"
 
 
 class GameStatus(StrEnum):
-    """Match state."""
     IN_PROGRESS = "in_progress"
     WON = "won"
     DRAW = "draw"
 
 
+class LeoStyle(StrEnum):
+    """How Leo chooses a column (see ``quattro_model.leo_brain_for``)."""
+
+    EASY = "easy"  # often misses a win or a block: a playful first opponent
+    MEDIUM = "medium"  # takes wins and blocks obvious ones (nearly always)
+    SMART = "smart"  # also avoids gifts and builds his own lines
+
+
 @dataclass(frozen=True, slots=True)
-class LevelConfig:
-    """Developmental level configuration (Section 8.4)."""
-    difficulty: int
+class Stage:
+    """One step of the automatic difficulty ladder."""
+
+    number: int
     cols: int
     rows: int
-    target_in_a_row: int
-    cpu_intelligence: str  # "silly", "defensive", "smart", "strategic"
-    name_key: str
+    target: int
+    leo: LeoStyle
 
 
-LEVEL_CONFIGS: Final[dict[int, LevelConfig]] = {
-    1: LevelConfig(
-        difficulty=1,
-        cols=5,
-        rows=4,
-        target_in_a_row=3,
-        cpu_intelligence="silly",
-        name_key="ui.diff_1",
-    ),
-    2: LevelConfig(
-        difficulty=2,
-        cols=6,
-        rows=5,
-        target_in_a_row=3,
-        cpu_intelligence="defensive",
-        name_key="ui.diff_2",
-    ),
-    3: LevelConfig(
-        difficulty=3,
-        cols=7,
-        rows=6,
-        target_in_a_row=4,
-        cpu_intelligence="smart",
-        name_key="ui.diff_3",
-    ),
-    4: LevelConfig(
-        difficulty=4,
-        cols=7,
-        rows=6,
-        target_in_a_row=4,
-        cpu_intelligence="strategic",
-        name_key="ui.diff_4",
-    ),
+STAGES: Final[dict[int, Stage]] = {
+    1: Stage(1, cols=5, rows=4, target=3, leo=LeoStyle.EASY),
+    2: Stage(2, cols=6, rows=5, target=3, leo=LeoStyle.MEDIUM),
+    3: Stage(3, cols=7, rows=6, target=4, leo=LeoStyle.MEDIUM),
+    4: Stage(4, cols=7, rows=6, target=4, leo=LeoStyle.SMART),
 }
+FIRST_STAGE: Final[int] = min(STAGES)
+LAST_STAGE: Final[int] = max(STAGES)
 
-# Color definitions (Storybook natural meadow palette)
-COLOR_SKY_TOP: Final[tuple[int, int, int]] = (205, 235, 252)
-COLOR_SKY_BOTTOM: Final[tuple[int, int, int]] = (240, 248, 255)
-COLOR_HILL_DISTANT: Final[tuple[int, int, int]] = (150, 205, 120)
-COLOR_HILL_NEAR: Final[tuple[int, int, int]] = (110, 180, 80)
-COLOR_GRASS_TABLE: Final[tuple[int, int, int]] = (95, 165, 68)
-COLOR_TABLE_WOOD: Final[tuple[int, int, int]] = (196, 148, 92)
-COLOR_TABLE_WOOD_DARK: Final[tuple[int, int, int]] = (148, 102, 54)
 
-# Wooden board
-COLOR_BOARD_WOOD: Final[tuple[int, int, int]] = (218, 162, 98)
-COLOR_BOARD_DARK: Final[tuple[int, int, int]] = (128, 80, 36)
-COLOR_BOARD_LIGHT: Final[tuple[int, int, int]] = (242, 194, 136)
-COLOR_BOARD_HOLE: Final[tuple[int, int, int]] = (72, 42, 18)
-COLOR_BOARD_HOLE_RIM: Final[tuple[int, int, int]] = (148, 98, 52)
-COLOR_BOARD_LEG: Final[tuple[int, int, int]] = (142, 90, 44)
+def stage_for(number: int) -> Stage:
+    """Return the stage, clamped into the ladder."""
 
-# Flash Tokens (Carrot orange)
-COLOR_FLASH_MAIN: Final[tuple[int, int, int]] = (255, 122, 24)
-COLOR_FLASH_LIGHT: Final[tuple[int, int, int]] = (255, 174, 88)
-COLOR_FLASH_DARK: Final[tuple[int, int, int]] = (196, 76, 8)
-COLOR_CARROT_LEAF: Final[tuple[int, int, int]] = (58, 182, 52)
-COLOR_CARROT_LEAF_LIGHT: Final[tuple[int, int, int]] = (96, 214, 88)
+    return STAGES[max(FIRST_STAGE, min(LAST_STAGE, int(number)))]
 
-# Leo Tokens (Vibrant acorn purple)
-COLOR_LEO_MAIN: Final[tuple[int, int, int]] = (126, 87, 214)
-COLOR_LEO_LIGHT: Final[tuple[int, int, int]] = (182, 150, 245)
-COLOR_LEO_DARK: Final[tuple[int, int, int]] = (78, 44, 158)
-COLOR_ACORN_CAP: Final[tuple[int, int, int]] = (142, 106, 92)
-COLOR_ACORN_STEM: Final[tuple[int, int, int]] = (94, 62, 52)
 
-# UI Elements
-COLOR_BANNER_BG: Final[tuple[int, int, int]] = (255, 252, 244)
-COLOR_BANNER_BORDER: Final[tuple[int, int, int]] = (180, 135, 80)
-COLOR_TEXT_DARK: Final[tuple[int, int, int]] = (56, 42, 30)
-COLOR_TEXT_MUTED: Final[tuple[int, int, int]] = (118, 98, 78)
-COLOR_GOLD: Final[tuple[int, int, int]] = (255, 215, 0)
-COLOR_WIN_GLOW: Final[tuple[int, int, int]] = (255, 245, 120)
+# Design tokens (runtime/theme-defaults.toml + cast artwork constants).
+INK: Final = (75, 55, 47)  # cast contour #4B372F
+COCOA: Final = (61, 44, 31)
+CREAM: Final = (255, 251, 235)
+SAND: Final = (238, 221, 186)
+SAND_LIGHT: Final = (245, 235, 214)  # sand -> 40 % white
+SAND_SHADE: Final = (202, 184, 155)  # sand -> 22 % ink
+SAND_WELL: Final = (132, 113, 96)  # sand -> 65 % ink (inside a hole)
+WOOD: Final = (201, 129, 54)  # orange -> 25 % ink
+WOOD_SHADE: Final = (165, 104, 52)  # orange -> 45 % ink
+SUNSHINE: Final = (255, 194, 52)
+SUNSHINE_LIGHT: Final = (255, 218, 133)
+CORAL: Final = (244, 111, 97)
+TURQUOISE: Final = (68, 184, 174)
+SHADOW: Final = (106, 81, 71)  # contact shadow #6A5147 (used with alpha)
+NAVY: Final = (37, 59, 89)
+
+PLAYER_ACCENT: Final[dict[Player, tuple[int, int, int]]] = {
+    Player.FLASH: CORAL,
+    Player.LEO: TURQUOISE,
+}

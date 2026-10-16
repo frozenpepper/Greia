@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Quattro Amici private prop: Leo's acorn disc token (shared-library candidate prop.token.acorn_disc). Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- turquoise -> turquoise shade (mix 22% ink) -->
+    <linearGradient id="token_acorn_rim" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#44B8AE"/>
+      <stop offset="1" stop-color="#469C92"/>
+    </linearGradient>
+    <!-- orange light -> orange (as prop.nature.acorn) -->
+    <linearGradient id="token_acorn_nut" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BD7E"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="disc">
+    <circle cx="128" cy="128" r="116" fill="url(#token_acorn_rim)" stroke="#4B372F" stroke-width="8"/>
+    <circle cx="128" cy="128" r="84" fill="#8FD4CE" stroke="#3F8A81" stroke-width="6"/>
+    <path d="M38 106 C46 72 70 46 104 37" fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" opacity="0.7"/>
+  </g>
+  <g id="acorn" transform="translate(59 58) scale(0.54)">
+    <path d="M62 112 C62 176 96 222 128 232 C160 222 194 176 194 112 Z" fill="url(#token_acorn_nut)" stroke="#4B372F" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M86 136 C90 168 104 192 118 206" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" opacity="0.6"/>
+    <path d="M128 50 C128 36 134 26 144 20" fill="none" stroke="#4B372F" stroke-width="24" stroke-linecap="round"/>
+    <path d="M128 50 C128 36 134 26 144 20" fill="none" stroke="#78350F" stroke-width="10" stroke-linecap="round"/>
+    <path d="M44 112 C44 70 82 48 128 48 C174 48 212 70 212 112 C212 124 196 128 128 128 C60 128 44 124 44 112 Z" fill="#B45309" stroke="#4B372F" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M78 70 L108 120 M118 56 L148 120 M160 62 L186 108" fill="none" stroke="#92400E" stroke-width="8" stroke-linecap="round"/>
+  </g>
+</svg>

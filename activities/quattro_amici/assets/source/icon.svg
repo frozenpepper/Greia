@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Quattro Amici in Fila: Activity icon (play -> ocean tile). A standing board where Flash's carrot discs make a row past Leo's acorn discs. -->
+  <defs>
+    <!-- ocean light (mix 35% white) -> ocean -->
+    <linearGradient id="quattro_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+    <!-- sand light (mix 40% white) -> sand -->
+    <linearGradient id="quattro_board" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F5EBD6"/>
+      <stop offset="1" stop-color="#EEDDBA"/>
+    </linearGradient>
+  </defs>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#quattro_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="128" cy="216" rx="88" ry="9" fill="#4B5B73" opacity="0.18"/>
+  </g>
+  <g id="feet" fill="#C98136" stroke="#4B372F" stroke-width="4" stroke-linejoin="round">
+    <rect x="56" y="186" width="30" height="28" rx="7"/>
+    <rect x="170" y="186" width="30" height="28" rx="7"/>
+  </g>
+  <g id="board">
+    <rect x="36" y="56" width="184" height="144" rx="24" fill="url(#quattro_board)" stroke="#4B372F" stroke-width="5"/>
+    <path d="M60 66 L118 66" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.75"/>
+    <g fill="#847160" stroke="#9F8A72" stroke-width="3">
+      <circle cx="68" cy="88" r="15"/>
+      <circle cx="108" cy="88" r="15"/>
+      <circle cx="68" cy="128" r="15"/>
+      <circle cx="188" cy="88" r="15"/>
+      <circle cx="188" cy="128" r="15"/>
+    </g>
+  </g>
+  <g id="acorn_discs" stroke="#4B372F" stroke-width="4">
+    <circle cx="108" cy="168" r="17" fill="#44B8AE"/>
+    <circle cx="148" cy="168" r="17" fill="#44B8AE"/>
+    <circle cx="148" cy="128" r="17" fill="#44B8AE"/>
+    <g fill="#8FD4CE" stroke="none">
+      <circle cx="108" cy="168" r="8.5"/>
+      <circle cx="148" cy="168" r="8.5"/>
+      <circle cx="148" cy="128" r="8.5"/>
+    </g>
+  </g>
+  <g id="carrot_discs" stroke="#4B372F" stroke-width="4">
+    <circle cx="68" cy="168" r="17" fill="#F46F61"/>
+    <circle cx="108" cy="128" r="17" fill="#F46F61"/>
+    <circle cx="148" cy="88" r="17" fill="#F46F61"/>
+    <circle cx="188" cy="168" r="17" fill="#F46F61"/>
+    <g fill="#F8A9A0" stroke="none">
+      <circle cx="68" cy="168" r="8.5"/>
+      <circle cx="108" cy="128" r="8.5"/>
+      <circle cx="148" cy="88" r="8.5"/>
+      <circle cx="188" cy="168" r="8.5"/>
+    </g>
+  </g>
+  <g id="accent">
+    <path d="M58 178 L158 78" fill="none" stroke="#4B372F" stroke-width="13" stroke-linecap="round"/>
+    <path d="M58 178 L158 78" fill="none" stroke="#FFC234" stroke-width="7" stroke-linecap="round"/>
+    <path d="M200 30 C202 42 206 46 218 48 C206 50 202 54 200 66 C198 54 194 50 182 48 C194 46 198 42 200 30 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+  </g>
+</svg>
