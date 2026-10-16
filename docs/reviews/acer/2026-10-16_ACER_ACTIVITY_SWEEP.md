@@ -594,3 +594,56 @@ The P3 "Writing space loss" item in the first and second sweeps is withdrawn.
   - one published Shape Garden creation in My Creations;
   - the profile's first `creations/` directory, created by the Shell for that creation;
   - extra text lines appended to the Writing draft.
+
+---
+
+## Targeted re-measure at a8be76d7
+
+**Evidence class:** PHYSICAL DEVICE + remote input injection (`xdotool`, not physical input).
+**Deployed:** `/opt/greia-os/.deployed-sha` = `a8be76d77ab4…`, deployed with `tools/dev_source_deploy.py`. The Shell was started about 40 s before measuring.
+
+**Method.** A targeted check, not a full sweep. Each Activity was launched from its Collection card, left with no input for about 40 s, then sampled as **LATE** idle over 30 s, then sent Home. Other details:
+- The pointer was parked at (1010, 590) during idle windows.
+- The helper and sampler on the device were recreated under the same rules and deleted afterwards.
+- The launcher was not restarted during the check: `NRestarts` 0, no OOM. The launcher journal has no errors apart from the 18:16 deploy restart.
+
+### A.1 Before / after vs 15212f44
+
+| Metric | 15212f44 | a8be76d7 |
+|---|---|---|
+| LATE idle CPU, ~45 s after READY: foresta_parole | 88% | **8.9% → 7.2%** (the following 2 min) |
+| foresta_parole RSS while idle | 80 → 110 MB, growing | 101.8 → 108.0 MB in the first 30 s, then **flat** (108.0–108.1 MB for 2 min) |
+| sillabe_magiche | 48% | **10.1%** |
+| orchestra_animali | 38% | **16.0%** |
+| painting / writing | 22% / 21% | 18.8% / 19.0% |
+| workshop_settings / memory_meraviglie / specchi_magici / nanna_delle_nuvolette / baia_delle_orche (the ~12.5% group) | 12.8 / 12.6 / 12.4 / 12.8 / 14.6% | **7.1 / 6.8 / 10.4 / 11.9 / 13.4%** |
+| Shell CPU while an Activity is foreground | 7.1–10.0% | **2.0–2.4%** |
+| Shell Home idle after a greeter tap | 8.6–9.4% indefinitely; ALSA PCM `RUNNING` forever | PCM `RUNNING` for ~16 s after the tap, then **`closed`**. 60 s average including that window 8.4%; **following 60 s 2.4%**; Home at the end 3.5% |
+| Shell pointer repaint on Home (harness floor now ~50 ms) | ~200 ms | 230 ms median, bimodal ~115 / ~240 ms |
+| Pointer repaint, painting / writing, continuous motion | 103 / 138 ms | **53 / 53 ms** |
+| First pointer move after ≥1.5 s idle, painting / writing | not measured | **211 / 264 ms**; later moves 41–58 ms |
+| Tap → visible change on a static Activity screen | not measured | painting 291 ms; workshop_settings 312 ms (a second tap took 1,260 ms) |
+| Home from inside an Activity → session ended | 0.48–2.05 s | 0.65–1.41 s typical; **foresta_parole 3.10 s** |
+| Shape Garden publish → "Il mio primo giardino" | no event recorded, no badge, no star | **event recorded** (`creation.completed` 1); **star ledger +1** (`shape-garden-creation-star`); **celebration shown** ("NUOVO DISTINTIVO! IL MIO PRIMO GIARDINO") |
+| Home after Collection pages → Back | stale collection-pill strip | **no strip** after Crea p1–2, Gioca, Impara p1–3 and Esplora p1–2 → Back, each followed by hovering over the Home cards |
+
+### A.2 Observations
+
+1. **The remaining idle floor in Activities is their own audio, not the frame loop.** Per-thread over 10 s of idle in workshop_settings, a static screen:
+   - main thread: **1.4%** (the governor's blocking wait works);
+   - `SDLAudioP2`: 4.2%;
+   - `SDLHotplugALSA`: 1.8%.
+
+   About 6% of every "static" Activity's idle is therefore the open mixer. The Shell-side fix (close after 10 s of silence) should be applied to Activities too, through the shared `pygame_audio` / sound bank.
+2. **A blocked wait adds about 200–250 ms to the first input after idle.** Continuous pointer motion repaints in about 50 ms. The first move or tap after a static second takes 211–312 ms, which matches a ≤250 ms `SDL_WaitEventTimeout` that is not woken by X input. This suggests pygame 2.1.2 / SDL 2.26 times out instead of waking on the X11 event; not verified at C level. The Home button is not slower (0.65–1.41 s, comparable to before), but a child's first tap on a still screen now feels about a quarter-second late. Suggested next step: check that `pygame.event.wait(timeout)` actually returns on X events on the device, and if not, use a shorter timeout (e.g. 60–100 ms) on the reference floor.
+3. **The badge celebration waits for a tap.** The "NUOVO DISTINTIVO!" card stayed up for more than 12 s at 0 frames (Shell 2.7% CPU) until a tap. The tap then flew the badge into the Home star, which incremented from 0 to 1. If an auto-dismiss was intended, it did not happen on device. Minor: the description's first line ("…PRIMO GIARDINO NEL GIARDINO") touches the card's right edge at 1024×600.
+4. **First profile entry after Shell start is expensive.** In the window 20–40 s after the first profile tap following the deploy restart, the Shell used **49.5% CPU** with the PCM `RUNNING`, most likely the welcome voice plus first-use preparation. Leaving through the avatar and re-entering the same profile did not reproduce it (7.4 → 3.6 → 2.7 → 2.7% over successive 15 s windows). It looks like a one-off cost per Shell start, but it lands exactly when the child first sees Home.
+5. **foresta_parole stops slowly and holds more memory.** Home took 3.10 s to end the session (others 0.65–1.41 s). Its idle RSS settles at 108 MB, against 60–86 MB for the other Activities in this check.
+
+Not re-checked here: the time-left pill (still no play limit configured), and creating a brand-new per-Activity folder under the Parent-owned `activities/`.
+
+### A.3 Device state left
+
+- Shell left on Home, star count 1 from the earned badge. Same Shell PID throughout, `NRestarts` 0, no OOM.
+- `/tmp/gs` and `/tmp/gsweep.py` are deleted. No settings or system files were changed.
+- New data: about 12 history sessions, one more published Shape Garden creation, a `creation.completed` event, star balance 1 and the "first garden" badge.
