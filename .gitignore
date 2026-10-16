@@ -20,3 +20,10 @@ TBag/
 
 # Legacy developer preview of the retired core-icon extractor; never tracked or installed.
 assets/catalog/core_icons_v1_contact_sheet.png
+
+# Local tool state and caches; never part of the source tree.
+.pytest_cache/
+.ruff_cache/
+.claude/settings.local.json
+.claude/worktrees/
+opencode.json

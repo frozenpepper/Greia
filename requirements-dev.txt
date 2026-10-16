@@ -1,0 +1,9 @@
+# Desktop development, Activity Simulator and `make verify` dependencies.
+# Python 3.11 or newer is required (the reference device runs Debian's 3.11).
+# Greia OS images use Debian's packaged equivalents (python3-pygame,
+# python3-pil, ...); nothing here is installed on the child device.
+pygame>=2.1
+Pillow>=9.4
+zstandard>=0.19
+# Optional: better grapheme handling in typography; Greia falls back without it.
+regex
