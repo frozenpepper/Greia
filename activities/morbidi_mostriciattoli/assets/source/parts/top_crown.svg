@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- top: tiny gold crown -->
+  <g id="crown">
+    <path d="M104 88 L100 58 L116 72 L128 50 L140 72 L156 58 L152 88 Q128 94 104 88 Z" fill="#FBBF24" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="128" cy="78" r="5" fill="#D85683" stroke="#4B372F" stroke-width="2"/>
+    <path d="M108 84 Q128 88 148 84" fill="none" stroke="#F59E0B" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

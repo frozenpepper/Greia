@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- top: round bear ear (right; mirrored) (silhouette, tinted at runtime) -->
+  <g id="fill">
+    <path d="M150 94 Q148 64 172 62 Q194 64 188 92 Q178 102 150 94 Z" fill="#FFFFFF"/>
+  </g>
+</svg>

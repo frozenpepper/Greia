@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- feet: boing spring with a pad (right; mirrored; shade tint) (ink contour + details) -->
+  <g id="line">
+    <path d="M140 216 Q140 210 152 210 Q164 210 164 216 Q164 224 152 224 Q140 224 140 216 Z" fill="none" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+  <g id="spring">
+    <path d="M152 196 L144 199 L160 203 L144 207 L160 211" fill="none" stroke="#8C7E73" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

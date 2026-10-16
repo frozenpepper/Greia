@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- top: little monster horn (right; mirrored) -->
+  <g id="horn">
+    <path d="M142 90 Q146 64 168 54 Q160 70 164 90 Z" fill="#FBBF24" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M147 80 Q152 70 160 64" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+  </g>
+</svg>

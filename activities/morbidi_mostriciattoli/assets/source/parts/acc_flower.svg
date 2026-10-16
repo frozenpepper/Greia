@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- accessory: a flower tucked on the head (top) -->
+  <g id="flower">
+    <path d="M150 88 Q140 92 136 86 Q144 80 150 88 Z" fill="#59B86A" stroke="#4B372F" stroke-width="2"/>
+    <ellipse cx="158" cy="63" rx="8" ry="8" fill="#F8A69E" stroke="#4B372F" stroke-width="2.2"/>
+    <ellipse cx="168.5" cy="70.6" rx="8" ry="8" fill="#F8A69E" stroke="#4B372F" stroke-width="2.2"/>
+    <ellipse cx="164.5" cy="82.9" rx="8" ry="8" fill="#F8A69E" stroke="#4B372F" stroke-width="2.2"/>
+    <ellipse cx="151.5" cy="82.9" rx="8" ry="8" fill="#F8A69E" stroke="#4B372F" stroke-width="2.2"/>
+    <ellipse cx="147.5" cy="70.6" rx="8" ry="8" fill="#F8A69E" stroke="#4B372F" stroke-width="2.2"/>
+    <circle cx="158" cy="74" r="6.5" fill="#FFC234" stroke="#4B372F" stroke-width="2.2"/>
+  </g>
+</svg>

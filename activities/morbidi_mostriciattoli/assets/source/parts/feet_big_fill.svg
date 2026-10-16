@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- feet: big long clown foot (right; mirrored; shade tint) (silhouette, tinted at runtime) -->
+  <g id="fill">
+    <path d="M138 202 Q142 194 154 196 Q180 198 190 208 Q194 220 176 221 L146 221 Q134 220 138 202 Z" fill="#FFFFFF"/>
+  </g>
+</svg>

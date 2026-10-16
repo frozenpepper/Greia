@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- top: hair tuft (shade tint) (ink contour + details) -->
+  <g id="line">
+    <path d="M128 92 Q108 74 112 52 Q120 64 126 70 Q124 50 138 40 Q136 58 140 66 Q150 54 160 56 Q148 70 146 92 Z" fill="none" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+</svg>

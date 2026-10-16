@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- mouth: giggle (reaction) -->
+  <g id="cheeks">
+    <ellipse cx="84" cy="150" rx="11" ry="6.5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="172" cy="150" rx="11" ry="6.5" fill="#FDA4AF" opacity="0.55"/>
+  </g>
+  <g id="mouth">
+    <path d="M102 150 Q128 153 154 150 Q151 184 128 185 Q105 184 102 150 Z" fill="#6A3040" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M112 175 Q128 164 144 175 Q137 183 128 183 Q119 183 112 175 Z" fill="#F28B8B"/>
+  </g>
+</svg>

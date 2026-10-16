@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- arms: long noodle arm waving (right; mirrored) (ink contour + details) -->
+  <g id="line">
+    <path d="M182 146 Q206 142 212 118 Q216 98 226 92 Q240 90 238 104 Q230 108 226 122 Q218 154 186 162 Z" fill="none" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+</svg>

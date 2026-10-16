@@ -5,28 +5,7 @@
   "strings": {
     "activity.title": "Morbidi Mostriciattoli",
     "activity.morbidi_mostriciattoli.title": "Morbidi Mostriciattoli",
-    "activity.morbidi_mostriciattoli.description": "Crea il tuo tenero e buffo mostriciattolo morbido con forme, colori, occhi pazzi e accessori!",
-    "tab.body_shape": "Forma",
-    "tab.body_color": "Colore",
-    "tab.eyes": "Occhi",
-    "tab.mouth": "Bocca",
-    "tab.tuft": "Ciuffo",
-    "tab.accessory": "Accessorio",
-    "button.surprise": "Sorpresa 🎲",
-    "button.undo": "Annulla ↩️",
-    "button.name": "Nome 🏷️",
-    "button.save": "Salva 📸",
-    "button.gallery": "I Miei Mostriciattoli 🖼️",
-    "button.back": "Torna allo Studio 🎨",
-    "button.delete": "Elimina 🗑️",
-    "gallery.empty": "Nessun mostriciattolo ancora!",
-    "gallery.default_name": "Mostriciattolo",
-    "gallery.default_name_long": "Morbido mostriciattolo",
-    "name_dialog.title": "Come si chiama il tuo mostriciattolo?",
-    "name_dialog.confirm": "Fatto ✅",
-    "delete_dialog.title": "Vuoi davvero salutare questo mostriciattolo?",
-    "delete_dialog.confirm": "Elimina",
-    "delete_dialog.cancel": "Tieni"
+    "activity.morbidi_mostriciattoli.description": "Costruisci il tuo amico mostriciattolo morbido con grandi pezzi illustrati, dagli un nome buffo, tienilo nella tua galleria e condividi la sua foto!"
   },
   "audio": {
     "activity.title": {

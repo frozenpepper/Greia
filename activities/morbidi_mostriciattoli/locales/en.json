@@ -5,28 +5,7 @@
   "strings": {
     "activity.title": "Fluffy Monsters",
     "activity.morbidi_mostriciattoli.title": "Fluffy Monsters",
-    "activity.morbidi_mostriciattoli.description": "Create your sweet and silly fluffy monster portrait with soft shapes, vibrant colors, funny eyes, and accessories!",
-    "tab.body_shape": "Shape",
-    "tab.body_color": "Color",
-    "tab.eyes": "Eyes",
-    "tab.mouth": "Mouth",
-    "tab.tuft": "Tuft",
-    "tab.accessory": "Accessory",
-    "button.surprise": "Surprise 🎲",
-    "button.undo": "Undo ↩️",
-    "button.name": "Name 🏷️",
-    "button.save": "Save 📸",
-    "button.gallery": "My Monsters 🖼️",
-    "button.back": "Back to Studio 🎨",
-    "button.delete": "Delete 🗑️",
-    "gallery.empty": "No monsters saved yet!",
-    "gallery.default_name": "Monster",
-    "gallery.default_name_long": "Fluffy monster",
-    "name_dialog.title": "What is your monster's name?",
-    "name_dialog.confirm": "Done ✅",
-    "delete_dialog.title": "Do you really want to say goodbye to this monster?",
-    "delete_dialog.confirm": "Delete",
-    "delete_dialog.cancel": "Keep"
+    "activity.morbidi_mostriciattoli.description": "Build your own fluffy monster friend from big picture parts, give it a silly name, keep it in your gallery and share its picture!"
   },
   "audio": {
     "activity.title": {

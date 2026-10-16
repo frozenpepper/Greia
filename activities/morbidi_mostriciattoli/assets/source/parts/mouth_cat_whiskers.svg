@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- mouth: kitty w-mouth and whiskers -->
+  <g id="mouth">
+    <path d="M110 156 Q119 166 128 157 Q137 166 146 156" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="151" rx="6" ry="4.5" fill="#D85683" stroke="#4B372F" stroke-width="2"/>
+    <path d="M96 150 L74 145 M96 157 L73 160 M160 150 L182 145 M160 157 L183 160" stroke="#4B372F" stroke-width="2" stroke-linecap="round"/>
+  </g>
+</svg>

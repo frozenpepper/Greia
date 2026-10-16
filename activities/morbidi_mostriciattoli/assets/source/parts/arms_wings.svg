@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- arms: little cream wings (right; mirrored) -->
+  <g id="wing">
+    <path d="M184 140 Q214 112 238 120 Q232 132 240 140 Q228 146 234 158 Q214 160 186 158 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M196 148 Q214 140 228 140 M196 152 Q212 152 224 152" fill="none" stroke="#D9CBB0" stroke-width="2" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- feet: boing spring with a pad (right; mirrored; shade tint) (silhouette, tinted at runtime) -->
+  <g id="fill">
+    <path d="M140 216 Q140 210 152 210 Q164 210 164 216 Q164 224 152 224 Q140 224 140 216 Z" fill="#FFFFFF"/>
+  </g>
+</svg>

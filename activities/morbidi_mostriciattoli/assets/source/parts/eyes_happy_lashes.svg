@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- eyes: happy closed arcs with lashes -->
+  <g id="eyes">
+    <path d="M92 130 Q104 116 116 130" fill="none" stroke="#342C35" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M92 130 L86 125" stroke="#342C35" stroke-width="3" stroke-linecap="round"/>
+    <path d="M116 130 L122 125" stroke="#342C35" stroke-width="3" stroke-linecap="round"/>
+    <path d="M140 130 Q152 116 164 130" fill="none" stroke="#342C35" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M140 130 L134 125" stroke="#342C35" stroke-width="3" stroke-linecap="round"/>
+    <path d="M164 130 L170 125" stroke="#342C35" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

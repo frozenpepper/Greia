@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- arms: big mitten hands (right; mirrored) (ink contour + details) -->
+  <g id="line">
+    <path d="M184 142 Q200 146 206 158 Q222 154 230 166 Q236 184 220 190 Q204 194 198 178 Q190 168 184 164 Z" fill="none" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+  <g id="thumb">
+    <path d="M214 160 Q218 150 226 152" fill="none" stroke="#4B372F" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+</svg>

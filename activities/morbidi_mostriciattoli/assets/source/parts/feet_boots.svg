@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- feet: yellow rain boot (right; mirrored) -->
+  <g id="boot">
+    <path d="M140 196 L162 196 L162 206 Q176 206 178 214 Q178 222 166 222 L144 222 Q138 222 138 214 Z" fill="#FFC234" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M139 215 L177 215" stroke="#4B372F" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M145 200 L145 208" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+  </g>
+</svg>

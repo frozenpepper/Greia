@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- eyes: two big dots -->
+  <g id="eyes">
+    <ellipse cx="104" cy="126" rx="11" ry="14" fill="#342C35"/>
+    <ellipse cx="107.5" cy="121" rx="4" ry="5" fill="#FFFFFF"/>
+    <circle cx="101" cy="132" r="1.8" fill="#FFFFFF" opacity="0.85"/>
+    <ellipse cx="152" cy="126" rx="11" ry="14" fill="#342C35"/>
+    <ellipse cx="155.5" cy="121" rx="4" ry="5" fill="#FFFFFF"/>
+    <circle cx="149" cy="132" r="1.8" fill="#FFFFFF" opacity="0.85"/>
+  </g>
+</svg>

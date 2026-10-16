@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- arms: arm with little cream claws (right; mirrored) (ink contour + details) -->
+  <g id="line">
+    <path d="M184 140 Q204 138 214 152 Q222 164 214 172 Q202 176 186 164 Z" fill="none" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+  <g id="claws">
+    <path d="M214 156 L226 154 L216 162 Z M216 164 L228 166 L214 170 Z M208 172 L216 182 L204 174 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+</svg>

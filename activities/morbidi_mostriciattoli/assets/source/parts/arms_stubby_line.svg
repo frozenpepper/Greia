@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- arms: stubby nub (right; mirrored) (ink contour + details) -->
+  <g id="line">
+    <path d="M184 138 Q206 136 214 154 Q220 172 204 176 Q190 176 184 162 Z" fill="none" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+</svg>

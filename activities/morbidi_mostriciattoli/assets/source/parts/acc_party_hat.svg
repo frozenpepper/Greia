@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- accessory: party hat (top) -->
+  <g id="party_hat">
+    <path d="M112 84 L136 34 L152 82 Q132 92 112 84 Z" fill="#4A91D8" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M120 70 L140 46 M124 80 L146 62" stroke="#FFC234" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="136" cy="32" r="7" fill="#F46F61" stroke="#4B372F" stroke-width="2.5"/>
+  </g>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- mouth: broad open grin -->
+  <g id="cheeks">
+    <ellipse cx="84" cy="150" rx="11" ry="6.5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="172" cy="150" rx="11" ry="6.5" fill="#FDA4AF" opacity="0.55"/>
+  </g>
+  <g id="mouth">
+    <path d="M106 152 Q128 154 150 152 Q147 176 128 177 Q109 176 106 152 Z" fill="#6A3040" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M115 168 Q128 160 141 168 Q135 175 128 175 Q121 175 115 168 Z" fill="#F28B8B"/>
+  </g>
+</svg>

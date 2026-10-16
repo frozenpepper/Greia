@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- feet: three-toed monster foot (right; mirrored; shade tint) (ink contour + details) -->
+  <g id="line">
+    <path d="M138 200 Q152 192 164 200 L168 214 Q160 222 150 220 Q140 222 134 214 Z" fill="none" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+  <g id="claws">
+    <path d="M136 214 L132 222 L142 218 Z M148 218 L148 226 L155 219 Z M160 216 L166 223 L167 213 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+</svg>

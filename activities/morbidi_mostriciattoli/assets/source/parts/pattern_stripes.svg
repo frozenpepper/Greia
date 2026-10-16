@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- pattern: soft wavy stripes (tinted shade, clipped) -->
+  <g id="stripes">
+    <path d="M20 70 Q74 61 128 70 Q182 79 236 70 L236 81 Q182 90 128 81 Q74 72 20 81 Z" fill="#FFFFFF"/>
+    <path d="M20 96 Q74 87 128 96 Q182 105 236 96 L236 107 Q182 116 128 107 Q74 98 20 107 Z" fill="#FFFFFF"/>
+    <path d="M20 178 Q74 169 128 178 Q182 187 236 178 L236 189 Q182 198 128 189 Q74 180 20 189 Z" fill="#FFFFFF"/>
+    <path d="M20 204 Q74 195 128 204 Q182 213 236 204 L236 215 Q182 224 128 215 Q74 206 20 215 Z" fill="#FFFFFF"/>
+  </g>
+</svg>

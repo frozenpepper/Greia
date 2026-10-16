@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- feet: round paw (right; mirrored; shade tint) (silhouette, tinted at runtime) -->
+  <g id="fill">
+    <path d="M136 206 Q136 194 152 194 Q170 194 170 208 Q170 220 152 220 Q136 220 136 206 Z" fill="#FFFFFF"/>
+  </g>
+</svg>

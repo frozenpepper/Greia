@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- name tag (luggage tag) for the Name drawer -->
+  <g id="tag">
+    <path d="M14 34 L34 16 L82 16 Q86 16 86 20 L86 66 Q86 70 82 70 L34 70 L14 52 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="29" cy="43" r="6" fill="#FFFFFF" stroke="#4B372F" stroke-width="3"/>
+    <path d="M44 34 L74 34 M44 46 L68 46" stroke="#F46F61" stroke-width="5" stroke-linecap="round"/>
+    <path d="M22 43 Q10 60 18 80" fill="none" stroke="#F59E0B" stroke-width="3.5" stroke-linecap="round"/>
+  </g>
+</svg>

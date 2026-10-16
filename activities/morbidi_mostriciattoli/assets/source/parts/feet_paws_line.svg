@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- feet: round paw (right; mirrored; shade tint) (ink contour + details) -->
+  <g id="line">
+    <path d="M136 206 Q136 194 152 194 Q170 194 170 208 Q170 220 152 220 Q136 220 136 206 Z" fill="none" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+  <g id="toes">
+    <path d="M147 212 L147 218 M154 212 L154 218 M161 212 L161 217" stroke="#4B372F" stroke-width="2" stroke-linecap="round"/>
+  </g>
+</svg>

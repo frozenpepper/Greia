@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- accessory: round raspberry glasses (eyes) -->
+  <g id="glasses">
+    <circle cx="104" cy="127" r="18" fill="#FFFFFF" fill-opacity="0.25" stroke="#D85683" stroke-width="5"/>
+    <circle cx="152" cy="127" r="18" fill="#FFFFFF" fill-opacity="0.25" stroke="#D85683" stroke-width="5"/>
+    <path d="M122 125 Q128 120 134 125" fill="none" stroke="#D85683" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M93 117 Q99 112 106 112" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+  </g>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Fluffy Monsters body 'square' silhouette; tinted at runtime (palette token light->base). -->
+  <g id="body_fill">
+    <path d="M96 78 L160 78 Q196 78 197 114 Q199 146 197 176 Q196 210 160 210 L96 210 Q60 210 59 176 Q57 146 59 114 Q60 78 96 78 Z" fill="#FFFFFF"/>
+  </g>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- arms: arm with little cream claws (right; mirrored) (silhouette, tinted at runtime) -->
+  <g id="fill">
+    <path d="M184 140 Q204 138 214 152 Q222 164 214 172 Q202 176 186 164 Z" fill="#FFFFFF"/>
+  </g>
+</svg>

@@ -5,28 +5,7 @@
   "strings": {
     "activity.title": "Monstruitos peludos",
     "activity.morbidi_mostriciattoli.title": "Monstruitos peludos",
-    "activity.morbidi_mostriciattoli.description": "¡Crea el retrato de un monstruo peludito y divertido con formas suaves, colores vivos, ojos graciosos y accesorios!",
-    "tab.body_shape": "Forma",
-    "tab.body_color": "Color",
-    "tab.eyes": "Ojos",
-    "tab.mouth": "Boca",
-    "tab.tuft": "Mechón",
-    "tab.accessory": "Accesorio",
-    "button.surprise": "Sorpresa 🎲",
-    "button.undo": "Deshacer ↩️",
-    "button.name": "Nombre 🏷️",
-    "button.save": "Guardar 📸",
-    "button.gallery": "Mis monstruos 🖼️",
-    "button.back": "Volver al taller 🎨",
-    "button.delete": "Eliminar 🗑️",
-    "gallery.empty": "¡Todavía no hay monstruos guardados!",
-    "gallery.default_name": "Monstruito",
-    "gallery.default_name_long": "Monstruito suave",
-    "name_dialog.title": "¿Cómo se llama tu monstruo?",
-    "name_dialog.confirm": "Listo ✅",
-    "delete_dialog.title": "¿Seguro que quieres despedirte de este monstruo?",
-    "delete_dialog.confirm": "Eliminar",
-    "delete_dialog.cancel": "Conservar"
+    "activity.morbidi_mostriciattoli.description": "¡Construye tu propio amigo monstruo peludito con grandes piezas ilustradas, ponle un nombre gracioso, guárdalo en tu galería y comparte su foto!"
   },
   "audio": {}
 }

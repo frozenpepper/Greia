@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- pattern: spots (white; tinted with the body shade at runtime, clipped to the body) -->
+  <g id="spots">
+    <ellipse cx="72" cy="132" rx="12" ry="10" fill="#FFFFFF"/>
+    <ellipse cx="186" cy="120" rx="10" ry="9" fill="#FFFFFF"/>
+    <ellipse cx="66" cy="176" rx="9" ry="8" fill="#FFFFFF"/>
+    <ellipse cx="194" cy="170" rx="13" ry="11" fill="#FFFFFF"/>
+    <ellipse cx="100" cy="200" rx="10" ry="7" fill="#FFFFFF"/>
+    <ellipse cx="164" cy="202" rx="11" ry="7" fill="#FFFFFF"/>
+    <ellipse cx="150" cy="92" rx="8" ry="6" fill="#FFFFFF"/>
+    <ellipse cx="40" cy="160" rx="10" ry="9" fill="#FFFFFF"/>
+    <ellipse cx="218" cy="150" rx="10" ry="9" fill="#FFFFFF"/>
+  </g>
+</svg>

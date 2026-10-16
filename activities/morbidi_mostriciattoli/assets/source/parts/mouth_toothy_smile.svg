@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- mouth: smile with two big teeth -->
+  <g id="cheeks">
+    <ellipse cx="84" cy="150" rx="11" ry="6.5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="172" cy="150" rx="11" ry="6.5" fill="#FDA4AF" opacity="0.55"/>
+  </g>
+  <g id="mouth">
+    <path d="M104 152 Q128 156 152 152 Q148 178 128 178 Q108 178 104 152 Z" fill="#6A3040" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M116 154.5 L127 155.5 L126 165 Q121 166 117 164 Z" fill="#FFFFFF" stroke="#4B372F" stroke-width="2"/>
+    <path d="M129 155.5 L140 154.5 L139 164 Q135 166 130 165 Z" fill="#FFFFFF" stroke="#4B372F" stroke-width="2"/>
+  </g>
+</svg>

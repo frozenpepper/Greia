@@ -2,21 +2,26 @@
 id = "org.greia.morbidi-mostriciattoli"
 legacy_ids = []
 title_key = "activity.morbidi_mostriciattoli.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
 [presentation]
-categories = ["create", "play"]
+categories = ["create"]
 discovery_tags = ["making", "drawing"]
 
 [education]
+# One experience: a character creator. The child builds a monster friend
+# from nine big picture drawers (body, colour, pattern, eyes, mouth,
+# horns/ears, arms, feet, accessory), names it from syllable bubbles (no
+# typing), saves it to a gallery and can share its picture. Open-ended
+# choice-making and self-expression; no right answers, no reading needed.
 categories = ["creative_expression", "choice_making", "fine_motor"]
 difficulty = 1
 recommended_age_min = 3
 skills = [
   { id = "art.creative_assembly", weight = 3 },
-  { id = "motor.fine_selection", weight = 3 },
+  { id = "motor.fine_selection", weight = 2 },
   { id = "emotional.self_expression", weight = 2 },
 ]
 events = [
@@ -29,14 +34,22 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "pointer"
+profile = "hybrid"
 
 [requirements]
 required_capabilities = ["display", "pointer"]
-optional_capabilities = ["keyboard", "touch", "audio.basic"]
+optional_capabilities = ["keyboard", "touch", "controller", "audio.basic"]
 
 [permissions]
 requested = []
 
 [storage]
+# Platform namespace schema stays 1: the gallery KV value carries its own
+# schema_version and first-release saves are migrated forward in place.
 schema_version = 1
+
+[creations]
+# Publish: a saved friend's 800x600 picture (role "picture") only when the
+# child presses share; Painting, Shape Garden, Teatrino and Leo's Post can
+# then use it. The editable recipe stays private in this Activity's storage.
+produces = ["image/png"]

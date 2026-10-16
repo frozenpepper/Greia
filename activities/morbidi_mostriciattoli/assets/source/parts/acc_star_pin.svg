@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- accessory: gold star badge (chest) -->
+  <g id="star_pin">
+    <path d="M128 172 L133.5 183 L145.5 184.5 L136.5 192.5 L139 204.5 L128 198.5 L117 204.5 L119.5 192.5 L110.5 184.5 L122.5 183 Z" fill="#FBBF24" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M124 182 L127 177" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+  </g>
+</svg>

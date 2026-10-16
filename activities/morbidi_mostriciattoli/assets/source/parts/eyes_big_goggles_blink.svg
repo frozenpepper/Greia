@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- eyes: goggles, blink -->
+  <g id="eyes">
+    <path d="M92 126 Q108 135 124 126" fill="none" stroke="#342C35" stroke-width="4" stroke-linecap="round"/>
+    <path d="M134 124 Q150 133 166 124" fill="none" stroke="#342C35" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>

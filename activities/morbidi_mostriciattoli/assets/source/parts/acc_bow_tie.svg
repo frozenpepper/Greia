@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- accessory: coral bow tie (neck) -->
+  <g id="bow_tie">
+    <path d="M128 188 L106 176 Q100 188 106 200 Z" fill="#F46F61" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M128 188 L150 176 Q156 188 150 200 Z" fill="#F46F61" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="111" cy="186" r="2.5" fill="#FFFFFF"/><circle cx="145" cy="190" r="2.5" fill="#FFFFFF"/>
+    <rect x="121" y="181" width="14" height="14" rx="5" fill="#F8A69E" stroke="#4B372F" stroke-width="2.5"/>
+  </g>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- accessory: blue neckerchief (neck) -->
+  <g id="neckerchief">
+    <path d="M104 180 Q128 190 152 180 L132 208 Q128 212 124 208 Z" fill="#4A91D8" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M114 186 L120 190 M128 192 L128 198 M142 186 L136 190" stroke="#89B8E6" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="128" cy="184" r="6" fill="#89B8E6" stroke="#4B372F" stroke-width="2.2"/>
+  </g>
+</svg>

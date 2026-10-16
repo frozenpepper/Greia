@@ -1,505 +1,494 @@
-"""Presentation renderer for Morbidi Mostriciattoli."""
+"""Presentation for Fluffy Monsters: scenes, the living friend and FX.
+
+The renderer only blits prepared surfaces: the studio paper and the playroom
+stage (shared ``bg.indoor_room`` layers) are composed once per layout; the
+friend comes from ``MonsterArt``'s bounded caches; text (the friend's name)
+comes from the kit painter's bounded label cache. ``FriendMotion`` turns the
+friend's reactions (boing when a part pops on, giggle when tickled, hops when
+saved, an occasional blink) into a cached frame choice plus a blit offset —
+never a per-frame scale, decode or font construction.
+"""
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass, field
+import math
+import random
+import time
 from typing import Final
 
 import pygame
 
+from greia_platform.activity_controls import ControlArt, ControlPainter, mix
+from greia_platform.activity_feedback import CastFeedback
 from greia_platform.child_text import display_text
-from greia_platform.localization import LocalizedResources
-from greia_platform.system_chrome import ActivitySystemChromeLayout
-from greia_platform.typography import FontRole, GreiaTypography
+from greia_platform.ui_core import BoundedCache
 
 if __package__:
-    from .monster_art import MonsterArt
-    from .monster_content import (
-        ACCESSORY_OPTIONS,
-        BODY_COLORS,
-        BODY_SHAPES,
-        EYE_OPTIONS,
-        MOUTH_OPTIONS,
-        TUFT_OPTIONS,
-        Category,
-    )
-    from .monster_model import (
-        MAX_SAVED_PORTRAITS,
-        MonsterEditor,
-        MonsterGallery,
-        MonsterRecipe,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-    )
+    from .monster_art import BOX_H, BOX_W, MonsterArt
+    from .monster_content import REFERENCE_HEIGHT, REFERENCE_WIDTH, SYLLABLE_COLORS
+    from .monster_layout import FriendLayout, GalleryLayout, SheetLayout, StudioLayout
 else:
-    from monster_art import MonsterArt
-    from monster_content import (
-        ACCESSORY_OPTIONS,
-        BODY_COLORS,
-        BODY_SHAPES,
-        EYE_OPTIONS,
-        MOUTH_OPTIONS,
-        TUFT_OPTIONS,
-        Category,
-    )
-    from monster_model import (
-        MAX_SAVED_PORTRAITS,
-        MonsterEditor,
-        MonsterGallery,
-        MonsterRecipe,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-    )
+    from monster_art import BOX_H, BOX_W, MonsterArt
+    from monster_content import REFERENCE_HEIGHT, REFERENCE_WIDTH, SYLLABLE_COLORS
+    from monster_layout import FriendLayout, GalleryLayout, SheetLayout, StudioLayout
+
+INK: Final = (75, 55, 47)
+COCOA: Final = (61, 44, 31)
+CREAM: Final = (255, 249, 236)
+PAPER_TOP: Final = (252, 246, 232)
+PAPER_BOTTOM: Final = (244, 232, 208)
+HALO: Final = (255, 214, 102)
+FX_SIZES: Final[dict[str, int]] = {"sparkle": 120, "heart_pop": 120, "confetti": 300, "star_burst": 170}
+PICTURE_SIZE: Final = (800, 600)
+
+BOING_SECONDS: Final = 0.42
+GIGGLE_SECONDS: Final = 0.9
+HOP_SECONDS: Final = 1.6
+BLINK_SECONDS: Final = 0.14
 
 
-# Gallery grid: every one of the MAX_SAVED_PORTRAITS (24) saved monsters has a
-# visible, hit-testable card (6 columns x 4 rows).
-GALLERY_COLUMNS: Final = 6
-GALLERY_CARD_SIZE: Final = (150, 108)
-GALLERY_ORIGIN: Final = (34, 96)
-GALLERY_STRIDE: Final = (162, 118)
-GALLERY_THUMB_SIZE: Final = (72, 86)
+def monster_rect(midbottom: tuple[int, int], height: int) -> pygame.Rect:
+    """Where the friend's composition box is drawn."""
+
+    width = round(BOX_W * height / BOX_H)
+    rect = pygame.Rect(0, 0, width, height)
+    rect.midbottom = midbottom
+    return rect
 
 
-def gallery_card_rect(index: int) -> pygame.Rect:
-    """Screen rectangle of the gallery card for saved-monster ``index``."""
-    col, row = index % GALLERY_COLUMNS, index // GALLERY_COLUMNS
-    return pygame.Rect(
-        GALLERY_ORIGIN[0] + col * GALLERY_STRIDE[0],
-        GALLERY_ORIGIN[1] + row * GALLERY_STRIDE[1],
-        *GALLERY_CARD_SIZE,
-    )
+def body_rect(midbottom: tuple[int, int], height: int) -> pygame.Rect:
+    """The friend's tickle target (body area inside the box)."""
+
+    box = monster_rect(midbottom, height)
+    return pygame.Rect(box.left + round(box.width * 0.2), box.top + round(box.height * 0.18), round(box.width * 0.6), round(box.height * 0.72))
 
 
-PORTRAIT_CANVAS_RECT: Final[pygame.Rect] = pygame.Rect(70, 96, 460, 400)
+@dataclass(slots=True)
+class FriendFrame:
+    blink: bool = False
+    laugh: bool = False
+    squash: str | None = None  # "squash" | "stretch"
+    offset: tuple[int, int] = (0, 0)
 
-SURPRISE_BTN_RECT: Final[pygame.Rect] = pygame.Rect(70, 520, 150, 56)
-UNDO_BTN_RECT: Final[pygame.Rect] = pygame.Rect(235, 520, 120, 56)
-NAME_BTN_RECT: Final[pygame.Rect] = pygame.Rect(370, 520, 150, 56)
-SAVE_BTN_RECT: Final[pygame.Rect] = pygame.Rect(540, 520, 160, 56)
-GALLERY_BTN_RECT: Final[pygame.Rect] = pygame.Rect(720, 520, 234, 56)
 
-# Everything in the top row starts clear of the trusted Home/Back region, which
-# the platform reserves in full (both slots) so layout never jumps with context.
-_TOP_ROW_LEFT: Final[int] = (
-    ActivitySystemChromeLayout.for_surface(REFERENCE_WIDTH, REFERENCE_HEIGHT)
-    .protected_region.right
-    + 8
-)
-BACK_TO_STUDIO_RECT: Final[pygame.Rect] = pygame.Rect(_TOP_ROW_LEFT, 24, 230, 52)
-TAB_START_X: Final[int] = _TOP_ROW_LEFT
-TAB_SPACING: Final[int] = 136
-TAB_WIDTH: Final[int] = 128
-TAB_Y: Final[int] = 20
+class FriendMotion:
+    """The friend's little life: reactions + idle blinks (clock-driven)."""
+
+    def __init__(self, clock: Callable[[], float], rng: random.Random) -> None:
+        self._clock = clock
+        self._rng = rng
+        self.kind = ""
+        self.since = 0.0
+        self.next_blink = clock() + 2.5
+        self._last: tuple = ()
+
+    def react(self, kind: str) -> None:
+        self.kind = kind
+        self.since = self._clock()
+
+    def stop(self) -> None:
+        self.kind = ""
+
+    @property
+    def reacting(self) -> bool:
+        if not self.kind:
+            return False
+        limit = {"boing": BOING_SECONDS, "giggle": GIGGLE_SECONDS, "hop": HOP_SECONDS}.get(self.kind, 0.5)
+        return self._clock() - self.since < limit
+
+    def frame(self) -> FriendFrame:
+        now = self._clock()
+        if self.reacting:
+            t = now - self.since
+            if self.kind == "boing":
+                if t < 0.09:
+                    return FriendFrame(laugh=True, squash="squash")
+                if t < 0.22:
+                    return FriendFrame(laugh=True, squash="stretch", offset=(0, -14))
+                return FriendFrame(laugh=True, offset=(0, -round(10 * (BOING_SECONDS - t) / BOING_SECONDS)))
+            if self.kind == "giggle":
+                phase = int(t / 0.1) % 2
+                shake = round(5 * math.sin(t * 40))
+                return FriendFrame(blink=True, laugh=True, squash="squash" if phase else "stretch", offset=(shake, -4 * phase))
+            if self.kind == "hop":
+                cycle = (t % 0.53) / 0.53
+                height = round(26 * math.sin(math.pi * cycle))
+                squash = "squash" if cycle < 0.12 or cycle > 0.9 else ("stretch" if cycle < 0.4 else None)
+                return FriendFrame(laugh=True, squash=squash, offset=(0, -height))
+        if self.kind and not self.reacting:
+            self.kind = ""
+        if now >= self.next_blink:
+            if now - self.next_blink < BLINK_SECONDS:
+                return FriendFrame(blink=True)
+            self.next_blink = now + self._rng.uniform(2.4, 5.0)
+        return FriendFrame()
+
+    def changed(self) -> bool:
+        """True when the drawn frame differs from the last call (event-driven redraw)."""
+
+        frame = self.frame()
+        key = (frame.blink, frame.laugh, frame.squash, frame.offset)
+        if key != self._last:
+            self._last = key
+            return True
+        return False
+
+
+class CastActor:
+    """Momo the host: cheers and thinks through ``CastFeedback``; also points."""
+
+    def __init__(self, character: str, art: ControlArt, clock: Callable[[], float], *, height: int) -> None:
+        self.height = height
+        self.feedback = CastFeedback(character, height=height, art=art, clock=clock, hold_seconds=1.6)
+        self._clock = clock
+        self._point = art.image(f"character.{character}", height, variant="pose_point")
+        self._point_until = 0.0
+
+    def point(self, seconds: float) -> None:
+        self.feedback.reset()
+        self._point_until = self._clock() + seconds
+
+    def correct(self) -> None:
+        self._point_until = 0.0
+        self.feedback.correct()
+
+    def try_again(self) -> None:
+        self._point_until = 0.0
+        self.feedback.try_again()
+
+    @property
+    def pointing(self) -> bool:
+        return self._clock() < self._point_until
+
+    @property
+    def animating(self) -> bool:
+        return self.feedback.animating or self.pointing
+
+    def update(self) -> bool:
+        changed = self.feedback.update()
+        if self._point_until and self._clock() >= self._point_until:
+            self._point_until = 0.0
+            changed = True
+        return changed
+
+    def draw(self, target: pygame.Surface, midbottom: tuple[int, int]) -> None:
+        if self.pointing and self._point is not None:
+            target.blit(self._point, self._point.get_rect(midbottom=midbottom))
+            return
+        self.feedback.draw(target, midbottom)
+
+
+class FxBurst:
+    """One short shared-library FX animation (scaled once)."""
+
+    DURATION = 0.8
+
+    def __init__(self, image: pygame.Surface | None, center: tuple[int, int], *, clock=time.monotonic) -> None:
+        self._image = image
+        self._center = center
+        self._clock = clock
+        self._start = clock()
+
+    @property
+    def done(self) -> bool:
+        return self._clock() - self._start >= self.DURATION
+
+    def draw(self, target: pygame.Surface) -> None:
+        if self._image is None or self.done:
+            return
+        progress = (self._clock() - self._start) / self.DURATION
+        target.blit(self._image, self._image.get_rect(center=(self._center[0], self._center[1] - round(18 * progress))))
+
+
+@dataclass(slots=True)
+class Effects:
+    bursts: list[FxBurst] = field(default_factory=list)
+    halos: dict[str, float] = field(default_factory=dict)
+
+    def prune(self, now: float) -> None:
+        self.bursts = [burst for burst in self.bursts if not burst.done][-6:]
+        self.halos = {key: until for key, until in self.halos.items() if until > now}
+
+    def active(self, now: float) -> bool:
+        return bool(self.bursts) or any(until > now for until in self.halos.values())
 
 
 class MonsterRenderer:
-    """Render the studio creator, category tabs, option cards, and saved portrait gallery."""
+    """Draw every screen from prepared surfaces."""
 
-    def __init__(
-        self,
-        art: MonsterArt,
-        typography: GreiaTypography,
-        resources: LocalizedResources,
-    ) -> None:
-        self._art = art
-        self._typography = typography
-        self._resources = resources
-        self._thumb_cache: dict[str, pygame.Surface] = {}
-        # Localized default names resolve once; a missing resource shows nothing.
-        self._default_name = self._resolve("gallery.default_name")
-        self._default_name_long = self._resolve("gallery.default_name_long")
+    def __init__(self, art: MonsterArt, painter: ControlPainter, loader: ControlArt, clock: Callable[[], float] = time.monotonic) -> None:
+        self.art = art
+        self.painter = painter
+        self.loader = loader
+        self._clock = clock
+        self._screens: BoundedCache[tuple, pygame.Surface] = BoundedCache(6)
+        self._misc: BoundedCache[tuple, pygame.Surface] = BoundedCache(48)
 
-    def _fit_render(
-        self,
-        text: str,
-        role: FontRole,
-        size: int,
-        color: tuple[int, int, int],
-        max_width: int,
-    ) -> pygame.Surface:
-        """Render one line, shrinking (to a floor) so capitals never overflow."""
-        while size > 12 and self._typography.measure(text, role, size).width > max_width:
-            size -= 1
-        return self._typography.render(text, role, size, color)
+    # -- prepared backgrounds ------------------------------------------------------------
 
-    def _resolve(self, key: str) -> str:
-        try:
-            return self._resources.text(key)
-        except Exception:
-            return ""
+    def paper(self) -> pygame.Surface:
+        cached = self._screens.get(("paper",))
+        if cached is not None:
+            return cached
+        surface = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
+        span = REFERENCE_HEIGHT - 1
+        for row in range(REFERENCE_HEIGHT):
+            pygame.draw.line(surface, mix(PAPER_TOP, PAPER_BOTTOM, row / span), (0, row), (REFERENCE_WIDTH, row))
+        if pygame.display.get_surface() is not None:
+            surface = surface.convert()
+        self._screens[("paper",)] = surface
+        return surface
 
-    def draw_editor(
+    def playroom(self, size: tuple[int, int]) -> pygame.Surface:
+        """The shared playroom (wall + carpet) cover-cropped to ``size``."""
+
+        key = ("playroom", size)
+        cached = self._misc.get(key)
+        if cached is not None:
+            return cached
+        width, height = size
+        scale = max(width / REFERENCE_WIDTH, height / REFERENCE_HEIGHT)
+        full = (round(REFERENCE_WIDTH * scale), round(REFERENCE_HEIGHT * scale))
+        scene = pygame.Surface(full)
+        scene.fill((207, 234, 247))
+        for layer in ("bg.indoor_room.wall_playroom", "bg.indoor_room.floor_carpet"):
+            image = self.loader.image(layer, full)
+            if image is not None:
+                scene.blit(image, (0, 0))
+        surface = pygame.Surface(size)
+        # Left-anchored: keeps the wall picture and never cuts the shelf in half.
+        surface.blit(scene, (0, height - full[1]))
+        self._misc[key] = surface
+        return surface
+
+    def stage(self, rect: pygame.Rect) -> pygame.Surface:
+        """Rounded playroom stage with the ink frame (built once per rect)."""
+
+        key = ("stage", rect.size)
+        cached = self._screens.get(key)
+        if cached is not None:
+            return cached
+        radius = 28
+        surface = pygame.Surface(rect.size, pygame.SRCALPHA)
+        inner = self.playroom(rect.size)
+        mask = pygame.Surface(rect.size, pygame.SRCALPHA)
+        pygame.draw.rect(mask, (255, 255, 255, 255), mask.get_rect(), border_radius=radius)
+        clipped = pygame.Surface(rect.size, pygame.SRCALPHA)
+        clipped.blit(inner, (0, 0))
+        clipped.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
+        surface.blit(clipped, (0, 0))
+        pygame.draw.rect(surface, INK, surface.get_rect(), width=4, border_radius=radius)
+        self._screens[key] = surface
+        return surface
+
+    # -- the friend -----------------------------------------------------------------------------
+
+    def draw_friend(self, target: pygame.Surface, recipe, midbottom: tuple[int, int], height: int, frame: FriendFrame) -> None:
+        if frame.squash is not None:
+            image = self.art.squashed(recipe, height, laugh=frame.laugh, stretch=frame.squash == "stretch")
+        else:
+            image = self.art.portrait(recipe, height, blink=frame.blink, laugh=frame.laugh)
+        rect = image.get_rect(midbottom=(midbottom[0] + frame.offset[0], midbottom[1] + frame.offset[1]))
+        target.blit(image, rect)
+
+    def name_plate(self, target: pygame.Surface, rect: pygame.Rect, name: str, *, empty: bool = False) -> None:
+        if not name and not empty:
+            return
+        key = ("plate", rect.size, name)
+        plate = self._misc.get(key)
+        if plate is None:
+            plate = pygame.Surface(rect.size, pygame.SRCALPHA)
+            radius = rect.height // 2
+            pygame.draw.rect(plate, (*CREAM, 255), plate.get_rect(), border_radius=radius)
+            pygame.draw.rect(plate, INK, plate.get_rect(), width=3, border_radius=radius)
+            if name:
+                label = self.painter.label(display_text(name), round(rect.height * 0.62), COCOA, max_width=rect.width - 28)
+                plate.blit(label, label.get_rect(center=(rect.width // 2, rect.height // 2 + 1)))
+            else:
+                for index in range(3):
+                    x = rect.width // 2 + (index - 1) * 34
+                    pygame.draw.line(plate, (214, 196, 170), (x - 12, rect.height - 18), (x + 12, rect.height - 18), 4)
+            self._misc[key] = plate
+        target.blit(plate, rect)
+
+    def syllable_icon(self, syllable: str, index: int, size: int) -> pygame.Surface:
+        key = ("syllable", syllable, index, size)
+        cached = self._misc.get(key)
+        if cached is not None:
+            return cached
+        surface = pygame.Surface((size, size), pygame.SRCALPHA)
+        base = SYLLABLE_COLORS[index % len(SYLLABLE_COLORS)]
+        big = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)
+        pygame.draw.circle(big, mix(base, (255, 255, 255), 0.18), (size, size), size - 4)
+        pygame.draw.circle(big, INK, (size, size), size - 4, width=5)
+        pygame.draw.ellipse(big, (255, 255, 255, 150), pygame.Rect(round(size * 0.48), round(size * 0.36), round(size * 0.36), round(size * 0.2)))
+        surface.blit(pygame.transform.smoothscale(big, (size, size)), (0, 0))
+        label = self.painter.label(syllable, round(size * 0.44), (255, 255, 255) if sum(base) < 560 else COCOA)
+        surface.blit(label, label.get_rect(center=(size // 2, size // 2 + 2)))
+        self._misc[key] = surface
+        return surface
+
+    # -- screens ----------------------------------------------------------------------------------
+
+    def draw_studio(
         self,
         target: pygame.Surface,
-        editor: MonsterEditor,
+        layout: StudioLayout,
+        recipe,
+        frame: FriendFrame,
+        host: CastActor,
+        effects: Effects,
         *,
-        hovered_tab: Category | None = None,
-        hovered_option_idx: int | None = None,
-        hovered_btn: str | None = None,
-        squash_progress: float = 0.0,
+        name_drawer: bool,
     ) -> None:
-        target.blit(self._art.background, (0, 0))
+        target.blit(self.paper(), (0, 0))
+        target.blit(self.stage(layout.stage), layout.stage.topleft)
+        host.draw(target, layout.host_midbottom)
+        self.draw_friend(target, recipe, layout.monster_midbottom, layout.monster_height, frame)
+        self.name_plate(target, layout.name_plate, recipe.name, empty=name_drawer)
+        self._tray_panel(target, layout.tray)
 
-        # 1. Top Category Tabs
-        self._draw_category_tabs(target, editor.active_category, hovered_tab=hovered_tab)
+    def _tray_panel(self, target: pygame.Surface, rect: pygame.Rect) -> None:
+        key = ("tray", rect.size)
+        panel = self._screens.get(key)
+        if panel is None:
+            panel = pygame.Surface(rect.size, pygame.SRCALPHA)
+            pygame.draw.rect(panel, (255, 252, 244, 255), panel.get_rect(), border_radius=26)
+            pygame.draw.rect(panel, (222, 206, 182), panel.get_rect(), width=3, border_radius=26)
+            self._screens[key] = panel
+        target.blit(panel, rect)
 
-        # 2. Main Monster Portrait Canvas
-        self._draw_monster_canvas(target, editor.recipe, squash_progress=squash_progress)
-
-        # 3. Right Option Cards
-        self._draw_option_cards(
-            target,
-            editor,
-            hovered_option_idx=hovered_option_idx,
-        )
-
-        # 4. Bottom Toolbar
-        self._draw_toolbar(target, editor, hovered_btn=hovered_btn)
+    def draw_halos(self, target: pygame.Surface, effects: Effects, rects: dict[str, pygame.Rect]) -> None:
+        now = self._clock()
+        pulse = 0.5 + 0.5 * math.sin(now * 7)
+        for key, until in effects.halos.items():
+            rect = rects.get(key)
+            if rect is None or until <= now:
+                continue
+            ring = rect.inflate(14 + round(8 * pulse), 14 + round(8 * pulse))
+            pygame.draw.rect(target, HALO, ring, width=6, border_radius=26)
 
     def draw_gallery(
         self,
         target: pygame.Surface,
-        gallery: MonsterGallery,
+        layout: GalleryLayout,
+        recipes: Sequence,
         *,
-        hovered_idx: int | None = None,
-        selected_portrait_id: str | None = None,
-        confirm_delete: bool = False,
-        hovered_btn: str | None = None,
+        page: int,
+        page_count: int,
+        focus_slot: int | None,
     ) -> None:
-        target.blit(self._art.background, (0, 0))
+        target.blit(self.paper(), (0, 0))
+        if not recipes:
+            self._empty_gallery(target, layout.empty)
+        for slot, (rect, recipe) in enumerate(zip(layout.cards, recipes)):
+            target.blit(self._card_back(rect.size), rect)
+            portrait = self.art.portrait(recipe, round(rect.height * 1.04))
+            previous = target.get_clip()
+            target.set_clip(rect)
+            target.blit(portrait, portrait.get_rect(midbottom=(rect.centerx, rect.bottom + round(rect.height * 0.05))))
+            target.set_clip(previous)
+            pygame.draw.rect(target, INK, rect, width=4, border_radius=22)
+            if recipe.name:
+                plate = pygame.Rect(0, 0, min(rect.width - 30, 210), 40)
+                plate.center = (rect.centerx, rect.top)
+                self.name_plate(target, plate, recipe.name)
+        self._page_dots(target, layout.dots_centre, page, page_count)
 
-        # Top Return Button
-        b_draw = BACK_TO_STUDIO_RECT.move(0, -4) if (hovered_btn == "back") else BACK_TO_STUDIO_RECT
-        pygame.draw.rect(target, (10, 14, 28), BACK_TO_STUDIO_RECT.move(0, 6), border_radius=22)
-        pygame.draw.rect(target, (2, 132, 199), b_draw, border_radius=22)
-        b_border = (56, 189, 248) if (hovered_btn == "back") else (255, 255, 255)
-        pygame.draw.rect(target, b_border, b_draw, width=3, border_radius=22)
+    def _card_back(self, size: tuple[int, int]) -> pygame.Surface:
+        key = ("card", size)
+        cached = self._misc.get(key)
+        if cached is not None:
+            return cached
+        surface = pygame.Surface(size, pygame.SRCALPHA)
+        surface.blit(self.playroom(size), (0, 0))
+        mask = pygame.Surface(size, pygame.SRCALPHA)
+        pygame.draw.rect(mask, (255, 255, 255, 255), mask.get_rect(), border_radius=22)
+        surface.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
+        self._misc[key] = surface
+        return surface
 
-        b_txt = self._fit_render(
-            self._resources.text("button.back"),
-            FontRole.TITLE,
-            20,
-            (255, 255, 255),
-            BACK_TO_STUDIO_RECT.width - 28,
-        )
-        target.blit(
-            b_txt,
-            (
-                b_draw.centerx - b_txt.get_width() // 2,
-                b_draw.centery - b_txt.get_height() // 2,
-            ),
-        )
+    def _empty_gallery(self, target: pygame.Surface, rect: pygame.Rect) -> None:
+        pygame.draw.rect(target, (255, 252, 244), rect, border_radius=30)
+        for x in range(rect.left + 20, rect.right - 20, 28):
+            pygame.draw.line(target, (206, 190, 166), (x, rect.top + 14), (x + 14, rect.top + 14), 4)
+            pygame.draw.line(target, (206, 190, 166), (x, rect.bottom - 14), (x + 14, rect.bottom - 14), 4)
+        frame = self.art.ui("gallery", 150)
+        if frame is not None:
+            target.blit(frame, frame.get_rect(center=rect.center))
 
-        # Gallery Title Badge
-        header = f"{self._resources.text('button.gallery')} ({gallery.count}/{MAX_SAVED_PORTRAITS})"
-        h_surf = self._typography.render(header, FontRole.TITLE, 24, (254, 240, 138))
-        header_x = max(
-            REFERENCE_WIDTH // 2 - h_surf.get_width() // 2,
-            BACK_TO_STUDIO_RECT.right + 16,
-        )
-        target.blit(h_surf, (header_x, 34))
-
-        if gallery.count == 0:
-            empty_txt = self._typography.render(self._resources.text("gallery.empty"), FontRole.BODY, 24, (148, 163, 184))
-            target.blit(empty_txt, (REFERENCE_WIDTH // 2 - empty_txt.get_width() // 2, 280))
+    def _page_dots(self, target: pygame.Surface, centre: tuple[int, int], page: int, page_count: int) -> None:
+        if page_count <= 1:
             return
+        gap = 30
+        left = centre[0] - (page_count - 1) * gap // 2
+        for index in range(page_count):
+            point = (left + index * gap, centre[1])
+            if index == page:
+                pygame.draw.circle(target, (244, 111, 97), point, 11)
+                pygame.draw.circle(target, INK, point, 11, width=3)
+            else:
+                pygame.draw.circle(target, (226, 214, 196), point, 8)
+                pygame.draw.circle(target, INK, point, 8, width=2)
 
-        # Grid of saved monsters (6 columns x 4 rows = all 24 slots)
-        for i, recipe in enumerate(gallery.recipes[:MAX_SAVED_PORTRAITS]):
-            card_rect = gallery_card_rect(i)
-            is_hovered = (i == hovered_idx)
+    def draw_friend_view(self, target: pygame.Surface, layout: FriendLayout, recipe, frame: FriendFrame, host: CastActor | None) -> None:
+        target.blit(self.paper(), (0, 0))
+        target.blit(self.stage(layout.stage), layout.stage.topleft)
+        if host is not None:
+            host.draw(target, layout.host_midbottom)
+        self.draw_friend(target, recipe, layout.monster_midbottom, layout.monster_height, frame)
+        self.name_plate(target, layout.name_plate, recipe.name)
 
-            # Drop shadow
-            pygame.draw.rect(target, (10, 14, 28, 90), card_rect.move(0, 6), border_radius=18)
-            pygame.draw.rect(target, (15, 23, 42), card_rect, border_radius=18)
-            border_c = (56, 189, 248) if is_hovered else (51, 65, 85)
-            pygame.draw.rect(target, border_c, card_rect, width=3, border_radius=18)
+    def draw_effects(self, target: pygame.Surface, effects: Effects) -> None:
+        for burst in effects.bursts:
+            burst.draw(target)
 
-            # Thumbnail
-            thumb = self._get_thumbnail(recipe)
-            target.blit(thumb, (card_rect.left + 6, card_rect.top + (card_rect.height - thumb.get_height()) // 2))
+    def burst(self, name: str, center: tuple[int, int]) -> FxBurst:
+        size = FX_SIZES.get(name, 120)
+        return FxBurst(self.loader.image(f"fx.{name}", size), center, clock=self._clock)
 
-            # Name / Label
-            name_str = display_text(recipe.name if recipe.name else self._default_name)
-            name_surf = self._fit_render(
-                name_str[:12], FontRole.TITLE, 15, (254, 240, 138),
-                card_rect.right - (card_rect.left + 6 + GALLERY_THUMB_SIZE[0] + 6) - 8,
-            )
-            target.blit(
-                name_surf,
-                (card_rect.left + 6 + GALLERY_THUMB_SIZE[0] + 6, card_rect.centery - name_surf.get_height() // 2),
-            )
+    def draw_sheet(self, target: pygame.Surface, layout: SheetLayout, preview: pygame.Surface | None) -> None:
+        veil = self._misc.get(("veil",))
+        if veil is None:
+            veil = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA)
+            veil.fill((61, 44, 31, 120))
+            self._misc[("veil",)] = veil
+        target.blit(veil, (0, 0))
+        pygame.draw.rect(target, CREAM, layout.panel, border_radius=34)
+        pygame.draw.rect(target, INK, layout.panel, width=4, border_radius=34)
+        if preview is not None:
+            target.blit(preview, preview.get_rect(center=layout.preview.center))
 
-        # Modal preview if selected
-        if selected_portrait_id is not None:
-            sel = gallery.get(selected_portrait_id)
-            if sel is not None:
-                self._draw_modal_preview(target, sel, confirm_delete=confirm_delete, hovered_btn=hovered_btn)
+    # -- the shared picture ---------------------------------------------------------------------
 
-    def clear_thumbnail_cache(self) -> None:
-        self._thumb_cache.clear()
+    def picture(self, recipe) -> pygame.Surface:
+        """An 800x600 picture of the friend in the playroom (for My Creations)."""
 
-    def _get_thumbnail(self, recipe: MonsterRecipe) -> pygame.Surface:
-        if recipe.portrait_id not in self._thumb_cache:
-            if len(self._thumb_cache) >= MAX_SAVED_PORTRAITS:
-                # Evict oldest
-                self._thumb_cache.pop(next(iter(self._thumb_cache)))
-            full = pygame.Surface((100, 120), pygame.SRCALPHA)
-            self._art.draw_monster(full, pygame.Rect(0, 0, 100, 120), recipe)
-            # Rendered once and cached at the card's size (no per-frame scaling).
-            surf = pygame.transform.smoothscale(full, GALLERY_THUMB_SIZE)
-            self._thumb_cache[recipe.portrait_id] = surf
-        return self._thumb_cache[recipe.portrait_id]
-
-    def _draw_category_tabs(
-        self,
-        target: pygame.Surface,
-        active_cat: Category,
-        *,
-        hovered_tab: Category | None = None,
-    ) -> None:
-        categories = list(Category)
-        for i, cat in enumerate(categories):
-            tab_rect = pygame.Rect(TAB_START_X + i * TAB_SPACING, TAB_Y, TAB_WIDTH, 56)
-            is_active = (cat == active_cat)
-            is_hovered = (cat == hovered_tab)
-
-            t_draw = tab_rect.move(0, -4) if (is_hovered or is_active) else tab_rect
-            pygame.draw.rect(target, (10, 14, 28), tab_rect.move(0, 6), border_radius=18)
-
-            bg_col = (147, 51, 234) if is_active else (30, 41, 59)
-            border_col = (254, 240, 138) if is_active else ((56, 189, 248) if is_hovered else (71, 85, 105))
-            pygame.draw.rect(target, bg_col, t_draw, border_radius=18)
-            pygame.draw.rect(target, border_col, t_draw, width=3, border_radius=18)
-
-            cat_symbols = {
-                Category.BODY_SHAPE: "⚪",
-                Category.BODY_COLOR: "🎨",
-                Category.EYES: "👀",
-                Category.MOUTH: "👄",
-                Category.TUFT: "🦄",
-                Category.ACCESSORY: "🎀",
-            }
-            sym = cat_symbols.get(cat, "✨")
-            txt_surf = self._typography.render(sym, FontRole.DISPLAY, 32, (255, 255, 255))
-            target.blit(
-                txt_surf,
-                (
-                    t_draw.centerx - txt_surf.get_width() // 2,
-                    t_draw.centery - txt_surf.get_height() // 2,
-                ),
-            )
-
-    def _draw_monster_canvas(
-        self,
-        target: pygame.Surface,
-        recipe: MonsterRecipe,
-        *,
-        squash_progress: float = 0.0,
-    ) -> None:
-        # Easel photo frame
-        pygame.draw.rect(target, (10, 14, 28, 90), PORTRAIT_CANVAS_RECT.move(0, 8), border_radius=28)
-        pygame.draw.rect(target, (15, 23, 42, 220), PORTRAIT_CANVAS_RECT, border_radius=28)
-        pygame.draw.rect(target, (217, 119, 6), PORTRAIT_CANVAS_RECT, width=4, border_radius=28)
-        pygame.draw.rect(target, (254, 240, 138), PORTRAIT_CANVAS_RECT.inflate(-8, -8), width=1, border_radius=24)
-
-        # Name banner at top of canvas if named
+        surface = pygame.Surface(PICTURE_SIZE)
+        surface.blit(self.playroom(PICTURE_SIZE), (0, 0))
+        portrait = self.art.portrait(recipe, 480)
+        surface.blit(portrait, portrait.get_rect(midbottom=(PICTURE_SIZE[0] // 2, PICTURE_SIZE[1] - 18)))
         if recipe.name:
-            n_surf = self._typography.render(display_text(recipe.name), FontRole.TITLE, 22, (254, 240, 138))
-            n_rect = pygame.Rect(PORTRAIT_CANVAS_RECT.centerx - n_surf.get_width() // 2 - 16, PORTRAIT_CANVAS_RECT.top + 14, n_surf.get_width() + 32, 34)
-            pygame.draw.rect(target, (30, 41, 59), n_rect, border_radius=14)
-            pygame.draw.rect(target, (217, 119, 6), n_rect, width=2, border_radius=14)
-            target.blit(n_surf, (PORTRAIT_CANVAS_RECT.centerx - n_surf.get_width() // 2, PORTRAIT_CANVAS_RECT.top + 18))
+            plate = pygame.Rect(0, 0, 300, 64)
+            plate.midtop = (PICTURE_SIZE[0] // 2, 22)
+            self.name_plate(surface, plate, recipe.name)
+        return surface
 
-        # Monster
-        monster_area = pygame.Rect(PORTRAIT_CANVAS_RECT.left + 30, PORTRAIT_CANVAS_RECT.top + 40, PORTRAIT_CANVAS_RECT.width - 60, PORTRAIT_CANVAS_RECT.height - 60)
-        self._art.draw_monster(target, monster_area, recipe, squash_progress=squash_progress)
+    def clear(self) -> None:
+        self._screens.clear()
+        self._misc.clear()
 
-    def _draw_option_cards(
-        self,
-        target: pygame.Surface,
-        editor: MonsterEditor,
-        *,
-        hovered_option_idx: int | None = None,
-    ) -> None:
-        cat = editor.active_category
-        options = self._get_options_for_category(cat)
 
-        for i, opt in enumerate(options[:8]):
-            row = i // 3
-            col = i % 3
-            card_rect = pygame.Rect(560 + col * 132, 96 + row * 132, 116, 116)
-            is_hovered = (i == hovered_option_idx)
-            is_selected = self._is_option_selected(editor.recipe, cat, opt)
-
-            draw_rect = card_rect.move(0, -6) if (is_hovered or is_selected) else card_rect
-
-            # Drop shadow
-            pygame.draw.rect(target, (10, 14, 28, 80), card_rect.move(0, 6), border_radius=22)
-
-            bg_col = (255, 251, 235) if cat != Category.BODY_COLOR else opt.primary_color
-            border_col = (56, 189, 248) if is_selected else ((251, 191, 36) if is_hovered else (71, 85, 105))
-            border_w = 4 if (is_selected or is_hovered) else 2
-
-            pygame.draw.rect(target, bg_col, draw_rect, border_radius=22)
-            pygame.draw.rect(target, border_col, draw_rect, width=border_w, border_radius=22)
-
-            # Option symbol
-            sym_surf = self._typography.render(opt.symbol, FontRole.DISPLAY, 48, (255, 255, 255))
-            target.blit(
-                sym_surf,
-                (
-                    draw_rect.centerx - sym_surf.get_width() // 2,
-                    draw_rect.centery - sym_surf.get_height() // 2,
-                ),
-            )
-
-    def _draw_toolbar(
-        self,
-        target: pygame.Surface,
-        editor: MonsterEditor,
-        *,
-        hovered_btn: str | None = None,
-    ) -> None:
-        # 1. Surprise
-        self._draw_btn(target, SURPRISE_BTN_RECT, self._resources.text("button.surprise"), (234, 88, 12), is_hovered=(hovered_btn == "surprise"))
-        # 2. Undo
-        can_undo = editor.can_undo()
-        self._draw_btn(target, UNDO_BTN_RECT, self._resources.text("button.undo"), (100, 116, 139) if not can_undo else (71, 85, 105), is_hovered=(hovered_btn == "undo" and can_undo), enabled=can_undo)
-        # 3. Name
-        self._draw_btn(target, NAME_BTN_RECT, self._resources.text("button.name"), (147, 51, 234), is_hovered=(hovered_btn == "name"))
-        # 4. Save
-        self._draw_btn(target, SAVE_BTN_RECT, self._resources.text("button.save"), (22, 163, 74), is_hovered=(hovered_btn == "save"))
-        # 5. Gallery
-        self._draw_btn(target, GALLERY_BTN_RECT, self._resources.text("button.gallery"), (2, 132, 199), is_hovered=(hovered_btn == "gallery"))
-
-    def _draw_btn(
-        self,
-        target: pygame.Surface,
-        rect: pygame.Rect,
-        label: str,
-        bg_col: tuple[int, int, int],
-        *,
-        is_hovered: bool = False,
-        enabled: bool = True,
-    ) -> None:
-        draw_rect = rect.move(0, -4) if (is_hovered and enabled) else rect
-        pygame.draw.rect(target, (10, 14, 28), rect.move(0, 6), border_radius=20)
-        pygame.draw.rect(target, bg_col, draw_rect, border_radius=20)
-        border_c = (56, 189, 248) if (is_hovered and enabled) else (255, 255, 255)
-        pygame.draw.rect(target, border_c, draw_rect, width=3, border_radius=20)
-
-        # Highlight line
-        if enabled:
-            hl = draw_rect.inflate(-16, -draw_rect.height + 8).move(0, -draw_rect.height // 2 + 8)
-            pygame.draw.rect(target, (255, 255, 255, 90), hl, border_radius=4)
-
-        txt_surf = self._fit_render(
-            label, FontRole.TITLE, 18, (255, 255, 255), rect.width - 24
-        )
-        target.blit(
-            txt_surf,
-            (
-                draw_rect.centerx - txt_surf.get_width() // 2,
-                draw_rect.centery - txt_surf.get_height() // 2,
-            ),
-        )
-
-    def _draw_modal_preview(
-        self,
-        target: pygame.Surface,
-        recipe: MonsterRecipe,
-        *,
-        confirm_delete: bool = False,
-        hovered_btn: str | None = None,
-    ) -> None:
-        overlay = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA)
-        overlay.fill((10, 14, 28, 200))
-        target.blit(overlay, (0, 0))
-
-        modal_rect = pygame.Rect(260, 60, 504, 480)
-        pygame.draw.rect(target, (15, 23, 42), modal_rect, border_radius=28)
-        pygame.draw.rect(target, (217, 119, 6), modal_rect, width=4, border_radius=28)
-
-        # Monster drawing
-        m_area = pygame.Rect(modal_rect.left + 50, modal_rect.top + 30, modal_rect.width - 100, 300)
-        self._art.draw_monster(target, m_area, recipe)
-
-        # Name
-        name_str = display_text(recipe.name if recipe.name else self._default_name_long)
-        n_surf = self._typography.render(name_str, FontRole.TITLE, 24, (254, 240, 138))
-        target.blit(n_surf, (modal_rect.centerx - n_surf.get_width() // 2, modal_rect.top + 340))
-
-        # Action buttons
-        del_rect = pygame.Rect(modal_rect.centerx - 110, modal_rect.bottom - 70, 220, 50)
-        self._draw_btn(target, del_rect, self._resources.text("button.delete"), (225, 29, 72), is_hovered=(hovered_btn == "delete"))
-
-    def tab_at(self, point: tuple[int, int]) -> Category | None:
-        categories = list(Category)
-        for i, cat in enumerate(categories):
-            tab_rect = pygame.Rect(TAB_START_X + i * TAB_SPACING, TAB_Y, TAB_WIDTH, 56)
-            if tab_rect.collidepoint(point):
-                return cat
-        return None
-
-    def option_at(self, point: tuple[int, int], category: Category) -> int | None:
-        options = self._get_options_for_category(category)
-        for i in range(len(options)):
-            row = i // 3
-            col = i % 3
-            card_rect = pygame.Rect(560 + col * 132, 96 + row * 132, 116, 116)
-            if card_rect.collidepoint(point):
-                return i
-        return None
-
-    def button_at(self, point: tuple[int, int]) -> str | None:
-        if SURPRISE_BTN_RECT.collidepoint(point):
-            return "surprise"
-        if UNDO_BTN_RECT.collidepoint(point):
-            return "undo"
-        if NAME_BTN_RECT.collidepoint(point):
-            return "name"
-        if SAVE_BTN_RECT.collidepoint(point):
-            return "save"
-        if GALLERY_BTN_RECT.collidepoint(point):
-            return "gallery"
-        return None
-
-    def gallery_card_at(self, point: tuple[int, int], count: int) -> int | None:
-        for i in range(min(MAX_SAVED_PORTRAITS, count)):
-            if gallery_card_rect(i).collidepoint(point):
-                return i
-        return None
-
-    def back_to_studio_contains(self, point: tuple[int, int]) -> bool:
-        return BACK_TO_STUDIO_RECT.collidepoint(point)
-
-    def modal_delete_contains(self, point: tuple[int, int]) -> bool:
-        del_rect = pygame.Rect(512 - 110, 470, 220, 50)
-        return del_rect.collidepoint(point)
-
-    def _get_options_for_category(self, category: Category):
-        if category == Category.BODY_SHAPE:
-            return BODY_SHAPES
-        if category == Category.BODY_COLOR:
-            return BODY_COLORS
-        if category == Category.EYES:
-            return EYE_OPTIONS
-        if category == Category.MOUTH:
-            return MOUTH_OPTIONS
-        if category == Category.TUFT:
-            return TUFT_OPTIONS
-        return ACCESSORY_OPTIONS
-
-    def _is_option_selected(self, recipe: MonsterRecipe, category: Category, option) -> bool:
-        if category == Category.BODY_SHAPE:
-            return recipe.body_shape == option.option_id
-        if category == Category.BODY_COLOR:
-            return recipe.body_color == option.option_id
-        if category == Category.EYES:
-            return recipe.eyes == option.option_id
-        if category == Category.MOUTH:
-            return recipe.mouth == option.option_id
-        if category == Category.TUFT:
-            return recipe.tuft == option.option_id
-        return recipe.accessory == option.option_id
+__all__ = [
+    "CastActor",
+    "Effects",
+    "FriendFrame",
+    "FriendMotion",
+    "FxBurst",
+    "MonsterRenderer",
+    "PICTURE_SIZE",
+    "body_rect",
+    "monster_rect",
+]

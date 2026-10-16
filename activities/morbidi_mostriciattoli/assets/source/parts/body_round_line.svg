@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Fluffy Monsters body 'round': ink contour, one shade, one highlight. -->
+  <defs>
+    <clipPath id="body_round_clip"><path d="M128 80 C142.5 80 160.3 81 172 88 C183.7 95 193.3 109.3 198 122 C202.7 134.7 202.7 151 200 164 C197.3 177 194 192.3 182 200 C170 207.7 146 210 128 210 C110 210 85.8 207.7 74 200 C62.2 192.3 59.5 177 57 164 C54.5 151 54.3 134.7 59 122 C63.7 109.3 73.5 95 85 88 C96.5 81 113.5 80 128 80 Z"/></clipPath>
+  </defs>
+  <g id="body_shade">
+    <ellipse cx="196" cy="212" rx="96" ry="70" fill="#4B372F" opacity="0.13" clip-path="url(#body_round_clip)"/>
+  </g>
+  <g id="body_highlight">
+    <ellipse cx="90" cy="108" rx="17" ry="10" fill="#FFFFFF" opacity="0.6" transform="rotate(-32 90 108)"/>
+  </g>
+  <g id="body_line">
+    <path d="M128 80 C142.5 80 160.3 81 172 88 C183.7 95 193.3 109.3 198 122 C202.7 134.7 202.7 151 200 164 C197.3 177 194 192.3 182 200 C170 207.7 146 210 128 210 C110 210 85.8 207.7 74 200 C62.2 192.3 59.5 177 57 164 C54.5 151 54.3 134.7 59 122 C63.7 109.3 73.5 95 85 88 C96.5 81 113.5 80 128 80 Z" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+  </g>
+</svg>

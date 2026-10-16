@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- eyes: one big eye -->
+  <g id="eyes">
+    <circle cx="128" cy="124" r="25" fill="#FFFFFF" stroke="#4B372F" stroke-width="3"/>
+    <circle cx="130" cy="127" r="14" fill="#4A91D8"/>
+    <circle cx="131" cy="128" r="8" fill="#342C35"/>
+    <ellipse cx="135" cy="121" rx="4.5" ry="5.5" fill="#FFFFFF"/>
+    <path d="M106 99 Q128 88 150 99" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- pattern: cream belly patch (fixed colour, clipped) -->
+  <g id="belly">
+    <ellipse cx="128" cy="184" rx="44" ry="30" fill="#FFFBEB" opacity="0.92"/>
+  </g>
+</svg>

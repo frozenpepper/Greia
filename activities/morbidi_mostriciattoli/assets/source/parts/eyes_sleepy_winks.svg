@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- eyes: sleepy half-lids -->
+  <g id="eyes">
+    <path d="M91 126 L117 126 Q117 141 104 141 Q91 141 91 126 Z" fill="#342C35"/>
+    <circle cx="108" cy="131" r="3" fill="#FFFFFF"/>
+    <path d="M88 125 L120 125" stroke="#4B372F" stroke-width="4" stroke-linecap="round"/>
+    <path d="M139 126 L165 126 Q165 141 152 141 Q139 141 139 126 Z" fill="#342C35"/>
+    <circle cx="156" cy="131" r="3" fill="#FFFFFF"/>
+    <path d="M136 125 L168 125" stroke="#4B372F" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>

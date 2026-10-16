@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- top: soft dino spikes (shade tint) (silhouette, tinted at runtime) -->
+  <g id="fill">
+    <path d="M88 96 Q94 66 106 58 Q112 72 116 86 Q120 56 128 44 Q136 56 140 86 Q144 72 150 58 Q162 66 168 96 Z" fill="#FFFFFF"/>
+  </g>
+</svg>

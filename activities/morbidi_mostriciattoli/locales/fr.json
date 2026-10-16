@@ -5,28 +5,7 @@
   "strings": {
     "activity.title": "Petits monstres tout doux",
     "activity.morbidi_mostriciattoli.title": "Petits monstres tout doux",
-    "activity.morbidi_mostriciattoli.description": "Crée le portrait de ton monstre rigolo et tout doux avec de belles formes, des couleurs vives, des yeux amusants et des accessoires !",
-    "tab.body_shape": "Forme",
-    "tab.body_color": "Couleur",
-    "tab.eyes": "Yeux",
-    "tab.mouth": "Bouche",
-    "tab.tuft": "Touffe",
-    "tab.accessory": "Accessoire",
-    "button.surprise": "Surprise 🎲",
-    "button.undo": "Annuler ↩️",
-    "button.name": "Nom 🏷️",
-    "button.save": "Enregistrer 📸",
-    "button.gallery": "Mes monstres 🖼️",
-    "button.back": "Retour à l'atelier 🎨",
-    "button.delete": "Supprimer 🗑️",
-    "gallery.empty": "Aucun monstre enregistré pour le moment !",
-    "gallery.default_name": "Petit monstre",
-    "gallery.default_name_long": "Petit monstre doux",
-    "name_dialog.title": "Comment s'appelle ton monstre ?",
-    "name_dialog.confirm": "Terminé ✅",
-    "delete_dialog.title": "Veux-tu vraiment dire au revoir à ce monstre ?",
-    "delete_dialog.confirm": "Supprimer",
-    "delete_dialog.cancel": "Garder"
+    "activity.morbidi_mostriciattoli.description": "Fabrique ton ami petit monstre tout doux avec de grandes pièces en images, donne-lui un nom rigolo, garde-le dans ta galerie et partage sa photo !"
   },
   "audio": {}
 }
