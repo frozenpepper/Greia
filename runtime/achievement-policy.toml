@@ -9,17 +9,23 @@ default_locale = "en"
 # Optional `art` admits one Activity-owned emblem declared in that Activity's
 # [achievement_art] table. The Activity still does not choose the tier/frame,
 # unlock semantics, localization, library behavior or profile state.
+#
+# Catalogue rules (docs/design/GREIA_ACHIEVEMENTS_AND_BADGE_LIBRARY.md):
+# bronze = the first time a child does something, so the first badge can
+# arrive in the first session; silver = a little persistence; gold = a rare
+# Greia-wide milestone. No streaks, no time-in-app, no "come back" badges.
+# Every criterion below names an event the Activity already emits.
 
 [[achievements]]
 id = "greia.care.first-friend"
 category = "care"
 tier = "bronze"
-icon_id = "pink_heart"
+icon_id = "heart"
 secret = false
 art = { activity_id = "org.greia.clinica-cuccioli", emblem_id = "activity" }
-title = { it = "Primo amico curato", en = "First Friend Helped" }
-description = { it = "Hai aiutato il tuo primo cucciolo a stare meglio.", en = "You helped your first little patient feel better." }
-locked_hint = { it = "Aiuta un cucciolo nella Clinica dei Cuccioli.", en = "Help a patient in Puppy Clinic." }
+title = { it = "Primo amico curato", en = "First Friend Helped", es = "Primer amigo curado", fr = "Premier ami soigné" }
+description = { it = "Hai aiutato il tuo primo cucciolo a stare meglio.", en = "You helped your first little patient feel better.", es = "Ayudaste a tu primer animalito a sentirse mejor.", fr = "Tu as aidé ton premier petit patient à aller mieux." }
+locked_hint = { it = "Aiuta un cucciolo nella Clinica dei Cuccioli.", en = "Help a patient in Puppy Clinic.", es = "Ayuda a un animalito en la Clínica de animalitos.", fr = "Aide un patient à la Clinique des petits animaux." }
 
 [[achievements.criteria]]
 type = "event_count"
@@ -31,12 +37,12 @@ threshold = 1
 id = "greia.care.gentle-helper"
 category = "care"
 tier = "silver"
-icon_id = "pink_heart"
+icon_id = "heart"
 secret = false
 art = { activity_id = "org.greia.clinica-cuccioli", emblem_id = "activity" }
-title = { it = "Aiutante gentile", en = "Gentle Helper" }
-description = { it = "Hai curato dieci cuccioli con attenzione.", en = "You cared for ten little patients." }
-locked_hint = { it = "Continua a prenderti cura dei cuccioli.", en = "Keep caring for little patients." }
+title = { it = "Aiutante gentile", en = "Gentle Helper", es = "Ayudante amable", fr = "Gentil soigneur" }
+description = { it = "Hai curato dieci cuccioli con attenzione.", en = "You cared for ten little patients.", es = "Cuidaste a diez animalitos con cariño.", fr = "Tu as soigné dix petits patients." }
+locked_hint = { it = "Continua a prenderti cura dei cuccioli.", en = "Keep caring for little patients.", es = "Sigue cuidando a los animalitos.", fr = "Continue à soigner les petits patients." }
 
 [[achievements.criteria]]
 type = "event_count"
@@ -51,9 +57,9 @@ tier = "bronze"
 icon_id = "yellow_star"
 secret = false
 art = { activity_id = "org.greia.memory-meraviglie", emblem_id = "activity" }
-title = { it = "Memoria in azione", en = "Memory in Action" }
-description = { it = "Hai completato la tua prima partita di Memory delle Meraviglie.", en = "You completed your first Memory of Wonders game." }
-locked_hint = { it = "Completa una partita di Memory delle Meraviglie.", en = "Complete one Memory of Wonders game." }
+title = { it = "Memoria in azione", en = "Memory in Action", es = "Memoria en acción", fr = "Mémoire en action" }
+description = { it = "Hai completato la tua prima partita di Memory delle Meraviglie.", en = "You completed your first Memory of Wonders game.", es = "Terminaste tu primera partida de Memoria maravillosa.", fr = "Tu as terminé ta première partie de Mémoire merveilleuse." }
+locked_hint = { it = "Completa una partita di Memory delle Meraviglie.", en = "Complete one Memory of Wonders game.", es = "Termina una partida de Memoria maravillosa.", fr = "Termine une partie de Mémoire merveilleuse." }
 
 [[achievements.criteria]]
 type = "event_count"
@@ -65,12 +71,12 @@ threshold = 1
 id = "greia.memory.persistent-matcher"
 category = "puzzles"
 tier = "silver"
-icon_id = "purple_flower"
+icon_id = "puzzle_pieces"
 secret = false
 art = { activity_id = "org.greia.memory-meraviglie", emblem_id = "activity" }
-title = { it = "Cercatore di coppie", en = "Pair Finder" }
-description = { it = "Hai completato cinque partite di Memory delle Meraviglie.", en = "You completed five Memory of Wonders games." }
-locked_hint = { it = "Continua a cercare le coppie.", en = "Keep finding matching pairs." }
+title = { it = "Cercatore di coppie", en = "Pair Finder", es = "Buscador de parejas", fr = "Chercheur de paires" }
+description = { it = "Hai completato cinque partite di Memory delle Meraviglie.", en = "You completed five Memory of Wonders games.", es = "Terminaste cinco partidas de Memoria maravillosa.", fr = "Tu as terminé cinq parties de Mémoire merveilleuse." }
+locked_hint = { it = "Continua a cercare le coppie.", en = "Keep finding matching pairs.", es = "Sigue buscando parejas.", fr = "Continue à chercher les paires." }
 
 [[achievements.criteria]]
 type = "event_count"
@@ -85,9 +91,9 @@ tier = "silver"
 icon_id = "rainbow"
 secret = false
 art = { activity_id = "org.greia.costruiamo-ponti", emblem_id = "activity" }
-title = { it = "Costruttore di ponti", en = "Bridge Builder" }
-description = { it = "Hai completato tre attraversamenti costruendo i ponti giusti.", en = "You completed three crossings by building the right bridges." }
-locked_hint = { it = "Costruisci ponti sicuri e aiuta Flash ad attraversare.", en = "Build safe bridges and help Flash cross." }
+title = { it = "Costruttore di ponti", en = "Bridge Builder", es = "Constructor de puentes", fr = "Bâtisseur de ponts" }
+description = { it = "Hai completato tre attraversamenti costruendo i ponti giusti.", en = "You completed three crossings by building the right bridges.", es = "Completaste tres cruces construyendo los puentes correctos.", fr = "Tu as réussi trois traversées en construisant les bons ponts." }
+locked_hint = { it = "Costruisci ponti sicuri e aiuta Flash ad attraversare.", en = "Build safe bridges and help Flash cross.", es = "Construye puentes seguros y ayuda a Flash a cruzar.", fr = "Construis des ponts solides et aide Flash à traverser." }
 
 [[achievements.criteria]]
 type = "event_count"
@@ -96,14 +102,146 @@ event_id = "bridge.level_completed"
 threshold = 3
 
 [[achievements]]
+id = "greia.creation.first-garden"
+category = "creating"
+tier = "bronze"
+icon_id = "garden"
+secret = false
+title = { it = "Il mio primo giardino", en = "My First Garden", es = "Mi primer jardín", fr = "Mon premier jardin" }
+description = { it = "Hai creato il tuo primo giardino nel Giardino delle Forme.", en = "You made your first garden in Shape Garden.", es = "Creaste tu primer jardín en el Jardín de formas.", fr = "Tu as créé ton premier jardin dans le Jardin des formes." }
+locked_hint = { it = "Crea un giardino con le forme.", en = "Make a garden out of shapes.", es = "Crea un jardín con formas.", fr = "Crée un jardin avec des formes." }
+
+[[achievements.criteria]]
+type = "event_count"
+activity_id = "org.greia.shape-garden"
+event_id = "creation.completed"
+threshold = 1
+
+[[achievements]]
+id = "greia.creation.first-postcard"
+category = "creating"
+tier = "bronze"
+icon_id = "notebook"
+secret = false
+title = { it = "La mia prima cartolina", en = "My First Postcard", es = "Mi primera postal", fr = "Ma première carte postale" }
+description = { it = "Hai preparato la tua prima cartolina nella Posta di Leo.", en = "You made your first postcard at Leo's Post.", es = "Hiciste tu primera postal en El correo de Leo.", fr = "Tu as préparé ta première carte postale au Courrier de Leo." }
+locked_hint = { it = "Prepara una cartolina con Leo.", en = "Make a postcard with Leo.", es = "Haz una postal con Leo.", fr = "Prépare une carte postale avec Leo." }
+
+[[achievements.criteria]]
+type = "event_count"
+activity_id = "org.greia.posta-di-leo"
+event_id = "postcard.created"
+threshold = 1
+
+[[achievements]]
+id = "greia.creation.my-voice"
+category = "creating"
+tier = "bronze"
+icon_id = "book"
+secret = false
+art = { activity_id = "org.greia.storie-della-mia-voce", emblem_id = "voice" }
+title = { it = "La mia voce", en = "My Own Voice", es = "Mi propia voz", fr = "Ma propre voix" }
+description = { it = "Hai salvato la tua prima storia raccontata con la tua voce.", en = "You saved your first story told in your own voice.", es = "Guardaste tu primera historia contada con tu voz.", fr = "Tu as enregistré ta première histoire racontée avec ta voix." }
+locked_hint = { it = "Racconta e salva una storia con la tua voce.", en = "Tell and save a story with your voice.", es = "Cuenta y guarda una historia con tu voz.", fr = "Raconte et enregistre une histoire avec ta voix." }
+
+[[achievements.criteria]]
+type = "event_count"
+activity_id = "org.greia.storie-della-mia-voce"
+event_id = "voice.story_saved"
+threshold = 1
+
+[[achievements]]
+id = "greia.music.first-concert"
+category = "music"
+tier = "bronze"
+icon_id = "music_star"
+secret = false
+title = { it = "Il mio primo concerto", en = "My First Concert", es = "Mi primer concierto", fr = "Mon premier concert" }
+description = { it = "Hai suonato un concerto intero con l'Orchestra Magica.", en = "You played a whole concert with the Magic Orchestra.", es = "Tocaste un concierto entero con la Orquesta mágica.", fr = "Tu as joué tout un concert avec l'Orchestre magique." }
+locked_hint = { it = "Suona un concerto con l'Orchestra Magica.", en = "Play a concert with the Magic Orchestra.", es = "Toca un concierto con la Orquesta mágica.", fr = "Joue un concert avec l'Orchestre magique." }
+
+[[achievements.criteria]]
+type = "event_count"
+activity_id = "org.greia.orchestra-animali"
+event_id = "band.concert_completed"
+threshold = 1
+
+[[achievements]]
+id = "greia.maze.first-maze"
+category = "explore"
+tier = "bronze"
+icon_id = "magnifier"
+secret = false
+title = { it = "Esploratore del labirinto", en = "Maze Explorer", es = "Explorador del laberinto", fr = "Explorateur du labyrinthe" }
+description = { it = "Hai attraversato il Labirinto Magico fino alla fine.", en = "You made it all the way through the Magical Labyrinth.", es = "Recorriste el Laberinto mágico hasta el final.", fr = "Tu as traversé le Labyrinthe magique jusqu'au bout." }
+locked_hint = { it = "Arriva alla fine del Labirinto Magico.", en = "Reach the end of the Magical Labyrinth.", es = "Llega al final del Laberinto mágico.", fr = "Va jusqu'au bout du Labyrinthe magique." }
+
+[[achievements.criteria]]
+type = "event_count"
+activity_id = "org.greia.labirinto-magico"
+event_id = "maze.completed"
+threshold = 1
+
+[[achievements]]
+id = "greia.maze.star-hunter"
+category = "explore"
+tier = "silver"
+icon_id = "yellow_star"
+secret = false
+title = { it = "Cacciatore di stelle", en = "Star Hunter", es = "Cazador de estrellas", fr = "Chasseur d'étoiles" }
+description = { it = "Hai raccolto quindici stelle nel Labirinto Magico.", en = "You collected fifteen stars in the Magical Labyrinth.", es = "Recogiste quince estrellas en el Laberinto mágico.", fr = "Tu as ramassé quinze étoiles dans le Labyrinthe magique." }
+locked_hint = { it = "Raccogli le stelle nel Labirinto Magico.", en = "Collect stars in the Magical Labyrinth.", es = "Recoge estrellas en el Laberinto mágico.", fr = "Ramasse des étoiles dans le Labyrinthe magique." }
+
+[[achievements.criteria]]
+type = "event_count"
+activity_id = "org.greia.labirinto-magico"
+event_id = "maze.star_collected"
+threshold = 15
+
+[[achievements]]
+id = "greia.flight.first-course"
+category = "explore"
+tier = "bronze"
+icon_id = "lightning"
+secret = false
+title = { it = "Primo volo", en = "First Flight", es = "Primer vuelo", fr = "Premier vol" }
+description = { it = "Hai guidato il draghetto fino al traguardo.", en = "You guided the little dragon all the way to the finish.", es = "Guiaste al dragoncito hasta la meta.", fr = "Tu as guidé le petit dragon jusqu'à l'arrivée." }
+locked_hint = { it = "Vola con il draghetto fino al traguardo.", en = "Fly with the little dragon to the finish.", es = "Vuela con el dragoncito hasta la meta.", fr = "Vole avec le petit dragon jusqu'à l'arrivée." }
+
+[[achievements.criteria]]
+type = "event_count"
+activity_id = "org.greia.volo-draghetto"
+event_id = "flight.course_completed"
+threshold = 1
+
+# dolphin.journey_score is the number of pearls collected in one journey
+# (bay 15, reef 20, lagoon 25 pearls). 15 = every pearl of the first journey
+# or most of a longer one: a personal best worth a silver medal.
+[[achievements]]
+id = "greia.sea.dolphin-explorer"
+category = "explore"
+tier = "silver"
+icon_id = "sea"
+secret = false
+title = { it = "Amico del delfino", en = "Dolphin's Friend", es = "Amigo del delfín", fr = "Ami du dauphin" }
+description = { it = "Hai raccolto quindici perle in un solo viaggio con il delfino.", en = "You collected fifteen pearls in one journey with the dolphin.", es = "Recogiste quince perlas en un solo viaje con el delfín.", fr = "Tu as ramassé quinze perles en un seul voyage avec le dauphin." }
+locked_hint = { it = "Raccogli tante perle in un viaggio con il delfino.", en = "Collect lots of pearls in one dolphin journey.", es = "Recoge muchas perlas en un viaje con el delfín.", fr = "Ramasse beaucoup de perles en un voyage avec le dauphin." }
+
+[[achievements.criteria]]
+type = "best_score"
+activity_id = "org.greia.viaggio-delfino"
+event_id = "dolphin.journey_score"
+threshold = 15
+
+[[achievements]]
 id = "greia.stars.handful"
 category = "greia"
 tier = "bronze"
 icon_id = "yellow_star"
 secret = false
-title = { it = "Una manciata di stelle", en = "A Handful of Stars" }
-description = { it = "Hai raccolto cinque Stelle Greia.", en = "You collected five Greia Stars." }
-locked_hint = { it = "Esplora le attività e raccogli Stelle Greia.", en = "Explore activities and collect Greia Stars." }
+title = { it = "Una manciata di stelle", en = "A Handful of Stars", es = "Un puñado de estrellas", fr = "Une poignée d'étoiles" }
+description = { it = "Hai raccolto cinque Stelle Greia.", en = "You collected five Greia Stars.", es = "Reuniste cinco Estrellas Greia.", fr = "Tu as réuni cinq Étoiles Greia." }
+locked_hint = { it = "Esplora le attività e raccogli Stelle Greia.", en = "Explore activities and collect Greia Stars.", es = "Explora las actividades y reúne Estrellas Greia.", fr = "Explore les activités et réunis des Étoiles Greia." }
 
 [[achievements.criteria]]
 type = "reward_balance"
@@ -116,9 +254,9 @@ category = "greia"
 tier = "gold"
 icon_id = "yellow_star"
 secret = true
-title = { it = "Costellazione Greia", en = "Greia Constellation" }
-description = { it = "Hai raccolto venti Stelle Greia: una piccola costellazione tutta tua.", en = "You collected twenty Greia Stars: your own little constellation." }
-locked_hint = { it = "Continua a esplorare Greia.", en = "Keep exploring Greia." }
+title = { it = "Costellazione Greia", en = "Greia Constellation", es = "Constelación Greia", fr = "Constellation Greia" }
+description = { it = "Hai raccolto venti Stelle Greia: una piccola costellazione tutta tua.", en = "You collected twenty Greia Stars: your own little constellation.", es = "Reuniste veinte Estrellas Greia: una pequeña constelación solo tuya.", fr = "Tu as réuni vingt Étoiles Greia : ta petite constellation à toi." }
+locked_hint = { it = "Continua a esplorare Greia.", en = "Keep exploring Greia.", es = "Sigue explorando Greia.", fr = "Continue à explorer Greia." }
 
 [[achievements.criteria]]
 type = "reward_balance"

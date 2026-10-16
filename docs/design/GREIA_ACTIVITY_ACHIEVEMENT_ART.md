@@ -163,17 +163,18 @@ Unreferenced Activity art does not appear anywhere globally.
 
 Greia always owns the **award frame**.
 
-Current shared frame families:
+Current shared frame families (flat `ui.award.<family>` renditions from `assets/source/achievements/`; procedural fallback):
 
 ```text
-bronze / silver -> medal with ribbons
-gold            -> trophy cup
-special/secret  -> rosette / constellation treatment
+bronze          -> round copper medal, short blue ribbons
+silver          -> scalloped silver-blue medal, longer ribbons
+gold            -> cup trophy
+special/secret  -> purple rosette over a star burst
 ```
 
 The admitted Activity emblem replaces only the **center semantic artwork** when unlocked.
 
-Locked achievements remain Greia lock silhouettes, so Activity artwork does not spoil locked content.
+Locked achievements remain grey Greia tier silhouettes with a padlock, so Activity artwork does not spoil locked content.
 
 If the Activity emblem cannot decode at runtime:
 

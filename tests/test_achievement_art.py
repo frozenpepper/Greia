@@ -81,6 +81,53 @@ class AchievementArtContractTests(unittest.TestCase):
         )
         self.assertIsNone(global_star.activity_emblem)
 
+    def test_policy_catalogue_is_fifteen_existing_event_badges(self) -> None:
+        # Loading validates every event_count/best_score criterion against the
+        # Activity's own declared events, so no badge depends on a new event.
+        policy = AchievementPolicy.load(ACHIEVEMENT_POLICY, self.activities)
+        definitions = policy.achievements
+        self.assertEqual(len(definitions), 15)
+        self.assertEqual(len({item.achievement_id for item in definitions}), 15)
+        self.assertEqual([item.achievement_id for item in definitions if item.secret], [
+            "greia.stars.constellation"
+        ])
+        new_badges = {
+            "greia.creation.first-garden": ("org.greia.shape-garden", "creation.completed", "event_count", 1),
+            "greia.creation.first-postcard": ("org.greia.posta-di-leo", "postcard.created", "event_count", 1),
+            "greia.creation.my-voice": ("org.greia.storie-della-mia-voce", "voice.story_saved", "event_count", 1),
+            "greia.music.first-concert": ("org.greia.orchestra-animali", "band.concert_completed", "event_count", 1),
+            "greia.maze.first-maze": ("org.greia.labirinto-magico", "maze.completed", "event_count", 1),
+            "greia.maze.star-hunter": ("org.greia.labirinto-magico", "maze.star_collected", "event_count", 15),
+            "greia.flight.first-course": ("org.greia.volo-draghetto", "flight.course_completed", "event_count", 1),
+            "greia.sea.dolphin-explorer": ("org.greia.viaggio-delfino", "dolphin.journey_score", "best_score", 15),
+        }
+        for achievement_id, (activity_id, event_id, kind, threshold) in new_badges.items():
+            with self.subTest(achievement_id):
+                definition = policy.get(achievement_id)
+                (criterion,) = definition.criteria
+                self.assertEqual(
+                    (criterion.activity_id, criterion.event_id, criterion.kind, criterion.threshold),
+                    (activity_id, event_id, kind, threshold),
+                )
+                declared = {event.event_id for event in self.by_id[activity_id].events}
+                self.assertIn(event_id, declared)
+        for definition in definitions:
+            with self.subTest(definition.achievement_id):
+                # Bronze always means "the first time" so the first badge can
+                # arrive in a child's first session.
+                if definition.tier == "bronze" and definition.criteria[0].kind == "event_count":
+                    self.assertEqual(definition.criteria[0].threshold, 1)
+                for text in (definition.title, definition.description, definition.locked_hint):
+                    locales = dict(text.values)
+                    self.assertLessEqual({"en", "it", "es", "fr"}, set(locales))
+                    self.assertNotIn("/", locales["en"])
+
+    def test_voice_badge_admits_the_declared_voice_emblem(self) -> None:
+        policy = AchievementPolicy.load(ACHIEVEMENT_POLICY, self.activities)
+        voice = policy.get("greia.creation.my-voice")
+        assert voice.activity_emblem is not None
+        self.assertEqual(voice.activity_emblem.emblem_id, "voice")
+
     def test_activity_emblem_path_escape_is_rejected_at_art_boundary(self) -> None:
         with self._copy_clinic() as root:
             manifest_path = root / "activity.toml"

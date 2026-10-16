@@ -61,6 +61,16 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-16 — Badges: celebration moment, trophy shelf, flat award art, 15 badges
+
+**Evidence class: SOURCE + DESKTOP VISUAL REVIEW** (headless 1024x600 / 800x480 renders, macOS). No Acer deploy, no audible review, no Simulator/VM/physical evidence.
+
+**Done:** post-Activity celebration is now a character moment driven by the Shell loop's incremental frame hook (no blocking sleep): card scale-in, badge overshoot, sparkles (gold/secret: star bursts + confetti), greeter reaction via `HomeAnimator.react`, one accepted `celebrate.success` clip for the first badge of a return (non-interrupting), static while waiting (0 frames), then the badge flies into the Home star which bounces and increments (`achievement_celebration.py`, `achievement_presentation.py`). Badge Library is a trophy shelf (2×4 per page, locked tier silhouettes, secrets absent, star-pill count without denominator, tap → hop + `praise.general`/`encourage.progress` with 3 s cooldown; idle 0 frames). Home star joins the keyboard/controller focus cycle (Up from the top row or Tab after the last portal; Tab continues to the greeter). Award frames redrawn as flat SVG masters → `ui.award.<family>` renditions 160/112/64 + locked (procedural renderer kept as fallback). Policy has 15 badges (+8 from existing events; dolphin silver = 15 pearls in one journey); en/it/es/fr copy. A badge whose Activity is not loaded is now dropped with a warning instead of disabling all badges. ADR 0025 / product / badge-library / Activity-art docs describe the implemented subset.
+
+**Tests:** `test_achievement_celebration` (new), `test_pygame_achievements`, `test_achievements`, `test_achievement_art`, `test_achievement_localization`, `test_achievement_emblem_cache`, `test_failsoft_volume_headroom`, `test_launcher_home_layout`, `test_launcher_home_animator`, `test_launcher_pacing_dirty_redraw` and Home/collection/navigation suites: PASS locally. `make visual-assets-check` PASS. Full `make verify` not run.
+
+**Next exact step:** on the Acer, earn a badge (e.g. Shape Garden) and check the celebration frame cost/feel and the shelf hop with keyboard, pointer and controller; listen to the cheer clip level.
+
 ## 2026-10-16 — Interactive Home: greeter reactions, apple tree, sun sparkles, drifting clouds
 
 **Evidence class: SOURCE + DESKTOP VISUAL REVIEW** (headless 1024x600 renders, macOS). No Acer deploy (another session's timed sweep was running there); Acer CPU/idle acceptance is still open.

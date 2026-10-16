@@ -356,25 +356,23 @@ Optional art contribution is independent of events. An Activity can offer an emb
 
 The Badge Library belongs to the active **profile**, not to an Activity or launcher Collection.
 
-Current Shell behavior:
+Current Shell behavior (2026-10-16, "trophy shelf"):
 
-- a star/badge route is available from child Activity/Home navigation;
-- the route shows the child's unlocked count;
-- the library is an opaque full Shell mode, not a modal over a live Activity;
-- six badges are shown per page in a 3×2 grid at the 1024×600 reference floor;
-- normal locked badges show a lock medallion and positive hint;
-- secret locked badges are omitted entirely;
-- unlocked badges show their Greia award frame with an admitted Activity emblem or Greia fallback icon;
-- newly unlocked/unreviewed badges carry a localized NEW marker;
-- selecting a badge shows its localized title and description/hint;
-- keyboard/pointer navigation is supported;
+- a star route sits in the top-right Shell corner (`home_layout.achievement_button_rect`) on Home and Collection pages and shows the child's unlocked count;
+- on Home the star is also a keyboard/controller focus stop (Up from the top portal row or Tab after the last portal; Tab continues to the greeter, then the first portal); Enter/south opens the library;
+- the library is an opaque full Shell mode, not a modal over a live Activity: the child's meadow behind a wooden cabinet with **two shelves × four badges = 8 per page** (110 px badges at 1024×600 standing on the shelf with `ui.shadow.soft`);
+- normal locked badges show the grey silhouette of their tier with a padlock and a positive hint; secret locked badges are omitted entirely;
+- unlocked badges show their Greia award frame with an admitted Activity emblem or Greia fallback icon; newly unlocked/unreviewed badges carry a sparkle (`fx.sparkle`; text NEW only without shared art);
+- tapping/selecting a badge makes it hop (0.8 s) and the profile's greeter (bottom-left guide) says one accepted shared clip — `praise.general` for an earned badge, `encourage.progress` for a locked one — at most once every 3 s and never over other speech; the detail strip shows the localized title and one line of description/hint;
+- the unlocked count is a star pill **without a denominator** (no "3/7" deficit framing, §10.3 of the product requirements);
+- page arrows appear only when more than eight badges are visible; arrows move the selection, Enter hops, Esc/Back closes;
 - leaving the library marks the achievements that were available for review as seen.
 
-The total shown to the child is based on **visible** achievements, so locked secret content cannot be inferred from the count.
+Locked secret content cannot be inferred: secrets are absent and no total is shown.
 
 ### When the catalogue becomes larger
 
-The current flat paged grid is appropriate for the seed catalogue. When visible policy grows beyond roughly 12–18 achievements, add a bounded category navigation layer using the existing semantic categories rather than shrinking every badge or creating a huge scroll surface.
+The paged shelf is appropriate for the current 14 visible badges. When visible policy grows beyond roughly 18 achievements, add a bounded category navigation layer using the existing semantic categories rather than shrinking every badge or creating a huge scroll surface.
 
 ---
 
@@ -382,21 +380,29 @@ The current flat paged grid is appropriate for the seed catalogue. When visible 
 
 A newly earned badge should feel special but never block the machine with heavy animation.
 
-Current implementation:
+Current implementation (`achievement_presentation.py`, timing in `achievement_celebration.py`):
 
 ```text
 Activity ends / display returns to Shell
         ↓
 compare pre-session vs current trusted achievement snapshot
         ↓
-short ~0.34 s badge pop/rays intro
+INTRO  (~0.55 s)  card scales 0.6→1.0, badge overshoots 146→126 px,
+                  greeter "surprised" then "cheer"; at 0.25 s sparkles
+                  (gold/secret: star bursts + confetti) and ONE accepted
+                  `celebrate.success` clip for the greeter (first badge only)
         ↓
-small opaque card remains until child dismisses
+WAITING           completely static until tap / Enter / Space / Esc
         ↓
 mark announced
+        ↓
+FLIGHT (~0.57 s)  card disappears, badge shrinks 96→44 px along an arc into
+                  the Home star; star bounces 1.0→1.25→1.0 and its count
+                  goes up (the star shows the count minus not-yet-landed
+                  badges until then)
 ```
 
-If several achievements genuinely unlock in the same just-finished session, they are queued one at a time.
+If several achievements genuinely unlock in the same just-finished session, they are queued one at a time; later ones get a 0.25 s intro and no voice. Taps during the flight are ignored.
 
 Historical/reconstructed achievements are **not** replayed as a popup storm when a profile is activated. They remain marked NEW in the library until reviewed.
 
@@ -412,13 +418,17 @@ Shared Pygame award renderer:
 src/greia_platform/pygame_achievements.py
 ```
 
-Current frame families:
+Current frame families (shape and colour both carry the tier, legible in greyscale at 48 px):
 
 ```text
-bronze / silver -> medal + ribbons
-gold            -> trophy cup
-special/secret  -> rosette / constellation treatment
+bronze          -> round copper medal, two short blue ribbons
+silver          -> scalloped silver-blue medal, longer ribbons
+gold            -> cup trophy on a plinth
+special/secret  -> purple rosette with purple ribbons over a sunshine star burst
+locked          -> the same tier silhouette in grey with a padlock
 ```
+
+The frames are flat SVG masters under `assets/source/achievements/award_<family>[_locked].svg` (SVG authoring rules; no baked shadow because the Shell grounds, hops and flies the sprite), rendered at build time to `ui.award.<family>` catalogue renditions at 160/112/64 px (`default`/`size_112`/`size_64`, `locked`/`locked_112`/`locked_64`). The renderer takes the nearest larger rendition through the Shell's bounded visual cache, scales it once and composites the centre artwork into the cream slot (`AWARD_SLOTS` in `pygame_achievements.py`, pinned to the masters by tests). The original procedural geometry is the fail-soft fallback when shared art is unavailable.
 
 The center of an unlocked award is either:
 
@@ -428,7 +438,7 @@ OR
 its Greia-owned semantic icon_id fallback
 ```
 
-Locked badges use Greia lock geometry and therefore do not reveal Activity art before unlock.
+Locked badges use the grey tier silhouette with a padlock and therefore do not reveal Activity art before unlock.
 
 This is the intended visual split:
 
@@ -462,11 +472,11 @@ Small alpha artwork is acceptable. The measured problem is large changing alpha 
 
 ### Library
 
-The library is an ordinary opaque Shell mode. It redraws only when the Shell's invalidation/event loop asks it to; there is no perpetual 30 Hz idle animation.
+The library is an ordinary opaque Shell mode. Its static parts (meadow, cabinet, shelves, back button, title, count pill, page arrows) are one cached surface rebuilt only when size/locale/count/page/theme change; a full draw blits it plus eight cached badges and the detail strip. A badge hop presents only its slot rectangle through the loop's incremental frame hook; once the hop ends the library presents zero frames.
 
 ### Celebration
 
-The intro is short and bounded. It restores the already optimized Shell frame and draws only a small opaque card plus simple geometry. It never runs a hidden Activity scene behind itself and never dims the whole display with a changing RGBA overlay.
+Animated frames are presented by the Shell loop's incremental frame hook (`_present_ambient_frame` / `_ambient_wait_seconds`), never by a blocking sleep loop (a bounded blocking fallback exists only for a loop without that hook). At the start of each phase the Home frame without star/card/pointer is captured once into a reused restore surface; each frame restores and repaints only the card/badge/sparkle/star rectangles and calls `display.update(rects)`. Keyframes are at most 24 fps; each animated stretch is ≤0.9 s; badge sizes snap to a fixed set prepared when the celebration starts, so no frame scales or composes art. While the card waits the loop presents nothing. It never runs a hidden Activity scene behind itself and never dims the whole display with a changing RGBA overlay.
 
 Any future richer badge animation must preserve these properties.
 
@@ -537,7 +547,7 @@ Provider-free source tests should cover at least:
 - reconstruction from missing metadata;
 - corrupt-primary / valid-backup recovery;
 - concurrent metadata update serialization;
-- policy rejection of unknown Activity/event and non-score best-score criteria;
+- policy rejection of undeclared events in a loaded Activity and non-score best-score criteria; a badge whose Activity is not loaded is dropped (warning), never fatal to the other badges;
 - event receipt achievement-unlock parsing;
 - Activity-emblem path/type/size/dimension validation;
 - platform rejection of unknown Activity/emblem art references;
@@ -545,7 +555,9 @@ Provider-free source tests should cover at least:
 - fail-soft fallback to `icon_id` when Activity art cannot decode;
 - locked badge not revealing Activity art;
 - bounded badge surface/cache behavior;
-- library pointer/keyboard navigation;
+- library pointer/keyboard navigation and the Home star keyboard/controller route;
+- celebration pacing: ≤24 fps keyframes, each animated stretch ≤0.9 s, zero frames while waiting and while the library is idle, one voice clip per celebration queue, star count held back until the badge lands;
+- award renditions used when available with the procedural frame as fallback; masters pinned to the renderer slot geometry and SVG lint;
 - secret count non-disclosure;
 - no historical popup storm;
 - Activity event declarations matching implementation.
@@ -559,7 +571,7 @@ Physical/simulator acceptance must additionally verify:
 5. library shows the badge as NEW;
 6. opening/reviewing and leaving the library clears NEW;
 7. normal locked badge remains visible with a hint and does not reveal the Activity emblem;
-8. secret locked badge is absent and does not affect the visible denominator;
+8. secret locked badge is absent and no total/denominator is shown;
 9. themed Clinic / Memory / Bridges achievements visibly retain Greia frame consistency;
 10. changing language changes achievement text without requiring alternate emblem artwork;
 11. switching profiles shows independent badge state;
@@ -596,13 +608,20 @@ src/greia_platform/event_client.py
     trusted receipt including reward_deltas + achievement_unlocks
 
 src/greia_platform/pygame_achievements.py
-    shared bounded medal/trophy/rosette renderer + admitted Activity emblem
+    shared bounded award renderer: ui.award.* renditions (procedural fallback)
+    + admitted Activity emblem / Greia icon in the centre slot
+
+assets/source/achievements/award_*.svg  ->  ui.award.<family> renditions
+    flat award frame masters (catalogue: assets/catalog/shared_visuals_v1_source.toml)
 
 src/greia_launcher/achievement_localization.py
     active Greia locale + localized achievement Shell chrome
 
 src/greia_launcher/achievement_presentation.py
-    child library + post-Activity celebration
+    trophy-shelf library, Home star route/focus, post-Activity celebration
+
+src/greia_launcher/achievement_celebration.py
+    pure celebration timeline (keyframes, pacing) and library hop curve
 
 src/greia_launcher/child_shell.py
     production composition
@@ -627,6 +646,9 @@ Good candidates after current acceptance evidence:
 - purpose-made Activity achievement emblems rather than reusing launcher icons;
 - category browsing once the library is large enough;
 - a platform-owned notification sound/chime for badge unlocks;
+- recorded, localized badge-name speech;
+- a `NEW BEST!` card (needs more `score` events; only `dolphin.journey_score` exists today);
+- a child-chosen favourite badge shown beside the avatar;
 - immediate system-compositor celebration after R7 can safely own overlays above an Activity;
 - additional typed criteria such as distinct-Activity count or category breadth;
 - Parent read-only view of a child's achievements if useful;

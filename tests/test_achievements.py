@@ -3,11 +3,13 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 from greia_platform.achievements import (
     AchievementCriterion,
     AchievementDefinition,
     AchievementPolicy,
+    AchievementPolicyError,
     LocalizedAchievementText,
     ProfileAchievementService,
 )
@@ -220,6 +222,62 @@ class AchievementServiceTests(unittest.TestCase):
         self.assertEqual(text.resolve("en-US"), "Hello")
         self.assertEqual(text.resolve("it-IT"), "Ciao")
         self.assertEqual(text.resolve("fr-FR"), "Ciao")
+
+
+_POLICY_TEMPLATE = """
+schema_version = 1
+default_locale = "en"
+
+[[achievements]]
+id = "greia.test.present"
+category = "test"
+tier = "bronze"
+title = {{ en = "Present" }}
+description = {{ en = "Present" }}
+
+[[achievements.criteria]]
+type = "event_count"
+activity_id = "org.greia.present"
+event_id = "{event}"
+threshold = 1
+
+[[achievements]]
+id = "greia.test.absent"
+category = "test"
+tier = "bronze"
+title = {{ en = "Absent" }}
+description = {{ en = "Absent" }}
+
+[[achievements.criteria]]
+type = "event_count"
+activity_id = "org.greia.absent"
+event_id = "absent.done"
+threshold = 1
+"""
+
+
+class AchievementPolicyIslandTests(unittest.TestCase):
+    def _load(self, event: str) -> AchievementPolicy:
+        manifest = SimpleNamespace(
+            activity_id="org.greia.present",
+            events=(SimpleNamespace(event_id="present.done", kind="completion"),),
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "achievement-policy.toml"
+            path.write_text(_POLICY_TEMPLATE.format(event=event), encoding="utf-8")
+            return AchievementPolicy.load(path, (manifest,))
+
+    def test_badge_for_an_activity_that_is_not_loaded_is_dropped_not_fatal(self) -> None:
+        with self.assertLogs("greia_platform.achievements", "WARNING") as logs:
+            policy = self._load("present.done")
+        self.assertEqual(
+            [item.achievement_id for item in policy.achievements], ["greia.test.present"]
+        )
+        self.assertIn("org.greia.absent", "\n".join(logs.output))
+
+    def test_undeclared_event_in_a_loaded_activity_still_fails_closed(self) -> None:
+        with self.assertRaises(AchievementPolicyError):
+            self._load("present.never_declared")
 
 
 if __name__ == "__main__":

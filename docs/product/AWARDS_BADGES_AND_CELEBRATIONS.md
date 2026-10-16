@@ -1,6 +1,6 @@
 # Greia Awards, Badges, Celebrations, and Collection — Product Requirements
 
-**Status:** accepted product direction; implementation pending  
+**Status:** accepted product direction; Shell badge subset implemented (SOURCE + DESKTOP VISUAL REVIEW, 2026-10-16) — see §23; new-best, chime, spoken names, backup export and Parent view still pending  
 **Date:** 2026-08-17  
 **Architecture owner:** ADR 0025  
 **Progression foundation:** ADR 0017  
@@ -696,3 +696,13 @@ trusted evidence
 ```
 
 Everything else should grow from demonstrated child/product needs.
+
+## 23. Implemented subset (2026-10-16)
+
+Evidence class: SOURCE + DESKTOP VISUAL REVIEW only (headless renders). No Simulator, VM or physical review yet.
+
+- **Celebration (§9.2):** after an Activity returns, the badge card scales in, the badge overshoots and settles, sparkles appear (gold/secret: star bursts and confetti), the child's greeter reacts and says one accepted shared `celebrate.success` line (first badge of a return only; never interrupts other speech). The card then waits, completely still, for a tap or key. On dismiss the badge flies into the Home star, the star bounces and its count goes up — this teaches pre-readers what the star is for. Further badges from the same return get a shorter intro and no voice.
+- **Collection (§10):** a "trophy shelf" on the child's meadow: two wooden shelves of four badges, locked badges as grey tier silhouettes with a padlock, secret badges absent, a sparkle on newly earned badges, the unlocked count as a star pill with **no denominator**. Tapping a badge makes it hop; the greeter says `praise.general` (earned) or `encourage.progress` (locked), at most once every 3 s. A detail strip shows the title and one line.
+- **Navigation:** the Home star is part of the keyboard/controller focus cycle (Up from the top portal row, or Tab after the last portal); Enter/south opens the shelf; arrows move, Enter makes the badge hop, Esc/Back returns.
+- **Catalogue:** 15 badges; bronze is always "the first time" so the first badge can arrive in the first session (garden, postcard, voice story, concert, maze, dragon flight, patient, memory game), silver adds a little persistence (10 patients, 5 memory games, 3 bridges, 15 maze stars, 15 pearls in one dolphin journey), one secret gold (20 Greia Stars). Nothing is derived from usage time, streaks or Home taps.
+

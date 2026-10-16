@@ -359,3 +359,14 @@ This ADR selects product/architecture semantics; it does not claim the complete 
 Current ADR 0017 source already provides the required trusted ingredients for sessions, factual events, score ordering, best-score aggregates, reward policy, local history, and logical export. Future implementation must add the award definition/ledger/evaluation/presentation/collection pieces without weakening those boundaries.
 
 Until source, tests, and required runtime/hardware evidence land, documentation must describe awards/badges/celebrations as **SELECTED architecture / accepted product requirement**, not as a completed runtime feature.
+
+### Implementation status (2026-10-16)
+
+The Shell subset is now implemented at **SOURCE + DESKTOP VISUAL REVIEW** level (headless 1024×600 / 800×480 renders; no Simulator, VM or physical-hardware evidence yet):
+
+- **Authority:** `runtime/achievement-policy.toml` (15 badges, all from events the Activities already declare) → `ProfileAchievementService` derives unlocks from trusted history (`src/greia_platform/achievements.py`). A badge whose Activity is not loaded is dropped with a warning instead of disabling every badge.
+- **Celebration:** on return to the Shell, `src/greia_launcher/achievement_presentation.py` + `achievement_celebration.py` play one short character moment (card scale-in, badge overshoot, sparkles, greeter reaction, one accepted `celebrate.success` clip for the first badge of a return), wait statically for the child, then fly the badge into the Home star (star bounce + count increment). Frames are dirty rectangles through the Shell loop's incremental frame hook, ≤24 fps, each animated stretch ≤0.9 s, zero frames while waiting.
+- **Collection:** the Badge Library is a "trophy shelf" (8 per page, locked tier silhouettes, secret badges absent, unlocked count without a denominator), reachable by pointer and by keyboard/controller focus on the Home star.
+- **Art:** reviewed flat SVG award frames (`assets/source/achievements/`, catalogue `ui.award.<family>`) with the procedural renderer kept as fail-soft fallback.
+
+Not implemented yet: personal-best (`NEW BEST`) celebrations, a badge chime, spoken badge names, backup export of award metadata, Parent read-only view, and an immediate in-Activity overlay (R7). Exact behaviour is owned by the source above and summarised in `docs/design/GREIA_ACHIEVEMENTS_AND_BADGE_LIBRARY.md`.

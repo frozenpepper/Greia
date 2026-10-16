@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- ui.award.bronze locked: round copper medal; centre slot (128,100) r56 receives the emblem at runtime -->
+  <defs>
+    <!-- navy 82% white -> navy 66% white (locked grey) -->
+    <linearGradient id="award_bronze_locked_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D8DCE1"/>
+      <stop offset="1" stop-color="#B5BCC7"/>
+    </linearGradient>
+  </defs>
+  <g id="ribbons" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M120 150 L88 144 L74 210 L90 192 L106 218 Z" fill="#9BA5B3" stroke="#7B7373" stroke-width="4.5"/>
+    <path d="M104 156 L92 184" fill="none" stroke="#D8DCE1" stroke-width="5" opacity="0.8"/>
+    <path d="M136 150 L168 144 L182 210 L166 192 L150 218 Z" fill="#9BA5B3" stroke="#7B7373" stroke-width="4.5"/>
+    <path d="M152 156 L164 184" fill="none" stroke="#D8DCE1" stroke-width="5" opacity="0.8"/>
+  </g>
+  <g id="medal" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="128" cy="100" r="80" fill="url(#award_bronze_locked_body)" stroke="#7B7373" stroke-width="5"/>
+    <circle cx="128" cy="100" r="64" fill="none" stroke="#9BA5B3" stroke-width="5"/>
+    <circle cx="128" cy="100" r="56" fill="#EEEFF2" stroke="#7B7373" stroke-width="3.5"/>
+    <path d="M66 74 A70 70 0 0 1 100 38" fill="none" stroke="#FFFFFF" stroke-width="7" opacity="0.7"/>
+  </g>
+  <g id="padlock" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M113 88 V79 A15 15 0 0 1 143 79 V88" fill="none" stroke="#4B372F" stroke-width="13"/>
+    <path d="M113 88 V79 A15 15 0 0 1 143 79 V88" fill="none" stroke="#ACB5C0" stroke-width="6"/>
+    <rect x="103" y="86" width="50" height="40" rx="9" fill="#818D9F" stroke="#4B372F" stroke-width="4"/>
+    <path d="M111 95 H125.5" fill="none" stroke="#FFFFFF" stroke-width="4" opacity="0.7"/>
+    <circle cx="128" cy="102.8" r="5.5" fill="#4B372F"/>
+    <path d="M128 102.8 V114.8" fill="none" stroke="#4B372F" stroke-width="5"/>
+  </g>
+</svg>

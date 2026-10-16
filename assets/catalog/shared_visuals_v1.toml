@@ -1,6 +1,6 @@
 catalog_id = "greia.shared-visuals.v1"
 catalog_version = "0.7.0"
-source_sha256 = "d75dd89dc779333dc9ab0157303f18673157f8149bfd51866c836fca01074fe9"
+source_sha256 = "e381c611875ad6ac55e1bccc25e42b06eec33d7de1a5d8490acd228b95a3d3cf"
 generated_note = "Build-time PNG renditions from explicit reviewed SVG masters; runtime must not discover or rasterize SVG source."
 
 [[visuals]]
@@ -2929,6 +2929,58 @@ role = "avatar_frame"
 
 [visuals.variants]
 default = "visual/runtime/v1/ui/avatar_frame.png"
+
+[[visuals]]
+id = "ui.award.bronze"
+kind = "ui"
+role = "award_frame"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/awards/award_bronze_160.png"
+locked = "visual/runtime/v1/ui/awards/award_bronze_locked_160.png"
+locked_112 = "visual/runtime/v1/ui/awards/award_bronze_locked_112.png"
+locked_64 = "visual/runtime/v1/ui/awards/award_bronze_locked_64.png"
+size_112 = "visual/runtime/v1/ui/awards/award_bronze_112.png"
+size_64 = "visual/runtime/v1/ui/awards/award_bronze_64.png"
+
+[[visuals]]
+id = "ui.award.gold"
+kind = "ui"
+role = "award_frame"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/awards/award_gold_160.png"
+locked = "visual/runtime/v1/ui/awards/award_gold_locked_160.png"
+locked_112 = "visual/runtime/v1/ui/awards/award_gold_locked_112.png"
+locked_64 = "visual/runtime/v1/ui/awards/award_gold_locked_64.png"
+size_112 = "visual/runtime/v1/ui/awards/award_gold_112.png"
+size_64 = "visual/runtime/v1/ui/awards/award_gold_64.png"
+
+[[visuals]]
+id = "ui.award.silver"
+kind = "ui"
+role = "award_frame"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/awards/award_silver_160.png"
+locked = "visual/runtime/v1/ui/awards/award_silver_locked_160.png"
+locked_112 = "visual/runtime/v1/ui/awards/award_silver_locked_112.png"
+locked_64 = "visual/runtime/v1/ui/awards/award_silver_locked_64.png"
+size_112 = "visual/runtime/v1/ui/awards/award_silver_112.png"
+size_64 = "visual/runtime/v1/ui/awards/award_silver_64.png"
+
+[[visuals]]
+id = "ui.award.special"
+kind = "ui"
+role = "award_frame"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/awards/award_special_160.png"
+locked = "visual/runtime/v1/ui/awards/award_special_locked_160.png"
+locked_112 = "visual/runtime/v1/ui/awards/award_special_locked_112.png"
+locked_64 = "visual/runtime/v1/ui/awards/award_special_locked_64.png"
+size_112 = "visual/runtime/v1/ui/awards/award_special_112.png"
+size_64 = "visual/runtime/v1/ui/awards/award_special_64.png"
 
 [[visuals]]
 id = "ui.button.icon"

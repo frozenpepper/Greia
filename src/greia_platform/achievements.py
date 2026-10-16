@@ -174,17 +174,42 @@ class AchievementPolicy:
                 default_locale,
                 "locked_hint",
             )
-            activity_emblem = _activity_emblem(
-                raw_def.get("art"),
-                manifests,
-                emblem_cache,
-                achievement_id,
-            )
             raw_criteria = raw_def.get("criteria", [])
             if not isinstance(raw_criteria, list) or not raw_criteria:
                 raise AchievementPolicyError(
                     f"achievement {achievement_id!r} requires at least one criterion"
                 )
+            missing = _missing_criterion_activity(raw_criteria, manifests)
+            if missing is not None:
+                # Same island rule as progression policy: a badge whose
+                # Activity is not loaded on this system (broken, retired or
+                # excluded from the image) is dropped; it must not disable
+                # every other badge. Authoring errors in a loaded Activity
+                # (undeclared event, wrong score kind) still fail closed.
+                logger.warning(
+                    "Dropping achievement %r: Activity %r is not loaded",
+                    achievement_id,
+                    missing,
+                )
+                continue
+            raw_art = raw_def.get("art")
+            if (
+                isinstance(raw_art, dict)
+                and isinstance(raw_art.get("activity_id"), str)
+                and raw_art["activity_id"].strip().casefold() not in manifests
+            ):
+                logger.warning(
+                    "Achievement %r keeps its Greia icon: art Activity %r is not loaded",
+                    achievement_id,
+                    raw_art["activity_id"],
+                )
+                raw_art = None
+            activity_emblem = _activity_emblem(
+                raw_art,
+                manifests,
+                emblem_cache,
+                achievement_id,
+            )
             criteria = tuple(
                 _criterion(item, manifests, achievement_id)
                 for item in raw_criteria
@@ -547,6 +572,23 @@ def _activity_emblem(
             f"achievement {achievement_id!r} references undeclared Activity emblem {emblem_id!r}"
         )
     return emblem
+
+
+def _missing_criterion_activity(
+    raw_criteria: list[object], manifests: Mapping[str, ActivityManifest]
+) -> str | None:
+    """Return the first event-criterion Activity ID that is not loaded."""
+
+    for raw in raw_criteria:
+        if not isinstance(raw, dict):
+            continue
+        kind = str(raw.get("type", "")).strip().casefold()
+        activity_id = raw.get("activity_id")
+        if kind in {"event_count", "best_score"} and isinstance(activity_id, str):
+            normalized = activity_id.strip().casefold()
+            if normalized and normalized not in manifests:
+                return normalized
+    return None
 
 
 def _criterion(

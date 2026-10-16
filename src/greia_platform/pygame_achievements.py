@@ -16,6 +16,44 @@ class AchievementIconProvider(Protocol):
     def __call__(self, icon_id: str, size: int, pygame_module: Any) -> Any: ...
 
 
+class AchievementFrameProvider(Protocol):
+    """Return the pre-rendered award frame for ``family`` near ``size`` px.
+
+    ``family`` is ``bronze``/``silver``/``gold``/``special``. The provider
+    returns a square catalogue rendition (``ui.award.<family>``; the
+    ``locked`` variants carry the grey silhouette and padlock) at one of its
+    native sizes, or ``None`` when shared art is unavailable. It must not
+    rasterize SVG; the renderer scales the returned surface once into its own
+    bounded cache.
+    """
+
+    def __call__(
+        self, family: str, locked: bool, size: int, pygame_module: Any
+    ) -> Any | None: ...
+
+
+# Centre emblem slot of each award master, in 256-unit master coordinates:
+# (centre x, centre y, cream slot radius). Must match the SVG masters under
+# assets/source/achievements/ (tests/test_pygame_achievements.py pins it).
+AWARD_SLOTS: dict[str, tuple[float, float, float]] = {
+    "bronze": (128.0, 100.0, 56.0),
+    "silver": (128.0, 100.0, 56.0),
+    "gold": (128.0, 98.0, 42.0),
+    "special": (128.0, 100.0, 47.0),
+}
+AWARD_MASTER_SIZE = 256.0
+MIN_BADGE_SIZE = 32
+MAX_BADGE_SIZE = 220
+
+
+def award_family(tier: str, *, secret: bool) -> str:
+    """Return the award frame family for a tier (secret uses the rosette)."""
+
+    if secret or tier == "special":
+        return "special"
+    return tier if tier in AWARD_SLOTS else "bronze"
+
+
 @dataclass(frozen=True, slots=True)
 class AchievementBadgeStyle:
     """Greia award materials for small cached achievement artwork."""
@@ -60,11 +98,16 @@ class AchievementBadgeStyle:
 class PygameAchievementBadgeRenderer:
     """Render distinctive, tiny cached Greia award artwork.
 
-    Bronze/silver milestones use a medal-and-ribbon silhouette, ordinary gold
-    milestones use a trophy cup, and special/secret achievements use a richer
-    rosette/constellation treatment. When platform policy admits an optional
-    Activity-owned PNG emblem, that emblem becomes the centre artwork; otherwise
-    the platform semantic icon remains the fallback.
+    Bronze is a round copper medal, silver a scalloped medal with longer
+    ribbons, gold a cup trophy and special/secret a purple rosette over a star
+    burst. When a ``frame_provider`` is injected the frame is the reviewed
+    shared rendition (``ui.award.<family>``, flat SVG masters rendered at build
+    time); otherwise — or when that art fails to load — the original
+    procedural geometry remains a complete fail-soft fallback. When platform
+    policy admits an optional Activity-owned PNG emblem, that emblem becomes
+    the centre artwork; otherwise the platform semantic icon is used. Locked
+    badges show the grey tier silhouette with a padlock and never reveal
+    Activity art.
 
     Alpha is intentionally confined to the badge-sized surface. Activity emblem
     files are bounded/fingerprinted during policy loading. The renderer verifies
@@ -80,8 +123,10 @@ class PygameAchievementBadgeRenderer:
         *,
         max_entries: int = 64,
         style: AchievementBadgeStyle = AchievementBadgeStyle(),
+        frame_provider: AchievementFrameProvider | None = None,
     ) -> None:
         self._icon_provider = icon_provider
+        self._frame_provider = frame_provider
         self._cache: BoundedCache[tuple[object, ...], Any] = BoundedCache(max_entries)
         self._emblem_sources: BoundedCache[tuple[str, str], Any] = BoundedCache(
             max(4, min(24, max_entries))
@@ -92,13 +137,20 @@ class PygameAchievementBadgeRenderer:
         self._cache.clear()
         self._emblem_sources.clear()
 
+    def __len__(self) -> int:
+        return len(self._cache)
+
+    @property
+    def max_entries(self) -> int:
+        return self._cache.max_entries
+
     def render(
         self,
         entry: AchievementEntry,
         size: int,
         pygame_module: Any = pygame,
     ) -> Any:
-        size = max(48, min(220, int(size)))
+        size = max(MIN_BADGE_SIZE, min(MAX_BADGE_SIZE, int(size)))
         definition = entry.definition
         activity_emblem = definition.activity_emblem
         key = (
@@ -120,6 +172,9 @@ class PygameAchievementBadgeRenderer:
             return cached
 
         surface = pygame_module.Surface((size, size), pygame_module.SRCALPHA)
+        if self._compose_rendition(surface, entry, size, pygame_module):
+            self._cache[key] = surface
+            return surface
         if not entry.unlocked:
             self._draw_medal(surface, entry, size, pygame_module, locked=True)
         elif definition.secret or definition.tier == "special":
@@ -131,6 +186,44 @@ class PygameAchievementBadgeRenderer:
 
         self._cache[key] = surface
         return surface
+
+    def _compose_rendition(
+        self, surface: Any, entry: AchievementEntry, size: int, pygame_module: Any
+    ) -> bool:
+        """Blit the shared award frame and centre artwork; False = fall back."""
+
+        if self._frame_provider is None:
+            return False
+        definition = entry.definition
+        family = award_family(definition.tier, secret=definition.secret)
+        try:
+            frame = self._frame_provider(
+                family, not entry.unlocked, size, pygame_module
+            )
+            if frame is None:
+                return False
+            if frame.get_size() != (size, size):
+                frame = pygame_module.transform.smoothscale(frame, (size, size))
+            surface.blit(frame, (0, 0))
+        except Exception:
+            # Shared art is decorative: a missing/corrupt rendition must
+            # never hide the award. The procedural frame takes over.
+            surface.fill((0, 0, 0, 0))
+            return False
+        if entry.unlocked:
+            cx, cy, radius = AWARD_SLOTS[family]
+            scale = size / AWARD_MASTER_SIZE
+            # A square emblem tile with rounded corners fits the round cream
+            # slot at ~1.5x its radius; core icons are transparent anyway.
+            icon_size = max(12, int(radius * 1.5 * scale))
+            self._draw_semantic_icon(
+                surface,
+                entry,
+                (int(round(cx * scale)), int(round(cy * scale))),
+                icon_size,
+                pygame_module,
+            )
+        return True
 
     def _draw_medal(
         self,
@@ -501,7 +594,10 @@ class PygameAchievementBadgeRenderer:
 
 
 __all__ = [
+    "AWARD_SLOTS",
     "AchievementBadgeStyle",
+    "AchievementFrameProvider",
+    "award_family",
     "AchievementIconProvider",
     "PygameAchievementBadgeRenderer",
 ]

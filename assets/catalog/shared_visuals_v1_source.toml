@@ -252,6 +252,199 @@ output = "visual/runtime/v1/ui/soft_shadow.png"
 width = 520
 height = 150
 
+# Greia award frames (ADR 0025 Badge Library / celebration). Masters live in
+# assets/source/achievements/ (flat SVG recipe); the Activity emblem or Greia
+# icon is composited into the cream centre slot at runtime. Three sizes keep
+# the runtime scale small: 160 (celebration), 112 (shelf), 64 (star flight).
+
+[[visuals]]
+id = "ui.award.bronze"
+kind = "ui"
+role = "award_frame"
+
+[[visuals.variants]]
+name = "default"
+source = "source/achievements/award_bronze.svg"
+output = "visual/runtime/v1/ui/awards/award_bronze_160.png"
+width = 160
+height = 160
+
+[[visuals.variants]]
+name = "size_112"
+source = "source/achievements/award_bronze.svg"
+output = "visual/runtime/v1/ui/awards/award_bronze_112.png"
+width = 112
+height = 112
+
+[[visuals.variants]]
+name = "size_64"
+source = "source/achievements/award_bronze.svg"
+output = "visual/runtime/v1/ui/awards/award_bronze_64.png"
+width = 64
+height = 64
+
+[[visuals.variants]]
+name = "locked"
+source = "source/achievements/award_bronze_locked.svg"
+output = "visual/runtime/v1/ui/awards/award_bronze_locked_160.png"
+width = 160
+height = 160
+
+[[visuals.variants]]
+name = "locked_112"
+source = "source/achievements/award_bronze_locked.svg"
+output = "visual/runtime/v1/ui/awards/award_bronze_locked_112.png"
+width = 112
+height = 112
+
+[[visuals.variants]]
+name = "locked_64"
+source = "source/achievements/award_bronze_locked.svg"
+output = "visual/runtime/v1/ui/awards/award_bronze_locked_64.png"
+width = 64
+height = 64
+
+[[visuals]]
+id = "ui.award.silver"
+kind = "ui"
+role = "award_frame"
+
+[[visuals.variants]]
+name = "default"
+source = "source/achievements/award_silver.svg"
+output = "visual/runtime/v1/ui/awards/award_silver_160.png"
+width = 160
+height = 160
+
+[[visuals.variants]]
+name = "size_112"
+source = "source/achievements/award_silver.svg"
+output = "visual/runtime/v1/ui/awards/award_silver_112.png"
+width = 112
+height = 112
+
+[[visuals.variants]]
+name = "size_64"
+source = "source/achievements/award_silver.svg"
+output = "visual/runtime/v1/ui/awards/award_silver_64.png"
+width = 64
+height = 64
+
+[[visuals.variants]]
+name = "locked"
+source = "source/achievements/award_silver_locked.svg"
+output = "visual/runtime/v1/ui/awards/award_silver_locked_160.png"
+width = 160
+height = 160
+
+[[visuals.variants]]
+name = "locked_112"
+source = "source/achievements/award_silver_locked.svg"
+output = "visual/runtime/v1/ui/awards/award_silver_locked_112.png"
+width = 112
+height = 112
+
+[[visuals.variants]]
+name = "locked_64"
+source = "source/achievements/award_silver_locked.svg"
+output = "visual/runtime/v1/ui/awards/award_silver_locked_64.png"
+width = 64
+height = 64
+
+[[visuals]]
+id = "ui.award.gold"
+kind = "ui"
+role = "award_frame"
+
+[[visuals.variants]]
+name = "default"
+source = "source/achievements/award_gold.svg"
+output = "visual/runtime/v1/ui/awards/award_gold_160.png"
+width = 160
+height = 160
+
+[[visuals.variants]]
+name = "size_112"
+source = "source/achievements/award_gold.svg"
+output = "visual/runtime/v1/ui/awards/award_gold_112.png"
+width = 112
+height = 112
+
+[[visuals.variants]]
+name = "size_64"
+source = "source/achievements/award_gold.svg"
+output = "visual/runtime/v1/ui/awards/award_gold_64.png"
+width = 64
+height = 64
+
+[[visuals.variants]]
+name = "locked"
+source = "source/achievements/award_gold_locked.svg"
+output = "visual/runtime/v1/ui/awards/award_gold_locked_160.png"
+width = 160
+height = 160
+
+[[visuals.variants]]
+name = "locked_112"
+source = "source/achievements/award_gold_locked.svg"
+output = "visual/runtime/v1/ui/awards/award_gold_locked_112.png"
+width = 112
+height = 112
+
+[[visuals.variants]]
+name = "locked_64"
+source = "source/achievements/award_gold_locked.svg"
+output = "visual/runtime/v1/ui/awards/award_gold_locked_64.png"
+width = 64
+height = 64
+
+[[visuals]]
+id = "ui.award.special"
+kind = "ui"
+role = "award_frame"
+
+[[visuals.variants]]
+name = "default"
+source = "source/achievements/award_special.svg"
+output = "visual/runtime/v1/ui/awards/award_special_160.png"
+width = 160
+height = 160
+
+[[visuals.variants]]
+name = "size_112"
+source = "source/achievements/award_special.svg"
+output = "visual/runtime/v1/ui/awards/award_special_112.png"
+width = 112
+height = 112
+
+[[visuals.variants]]
+name = "size_64"
+source = "source/achievements/award_special.svg"
+output = "visual/runtime/v1/ui/awards/award_special_64.png"
+width = 64
+height = 64
+
+[[visuals.variants]]
+name = "locked"
+source = "source/achievements/award_special_locked.svg"
+output = "visual/runtime/v1/ui/awards/award_special_locked_160.png"
+width = 160
+height = 160
+
+[[visuals.variants]]
+name = "locked_112"
+source = "source/achievements/award_special_locked.svg"
+output = "visual/runtime/v1/ui/awards/award_special_locked_112.png"
+width = 112
+height = 112
+
+[[visuals.variants]]
+name = "locked_64"
+source = "source/achievements/award_special_locked.svg"
+output = "visual/runtime/v1/ui/awards/award_special_locked_64.png"
+width = 64
+height = 64
+
 # First environment/runtime scene family. These IDs are reused from the
 # reviewed Forest/Meadow source catalogue rather than inventing a parallel
 # runtime naming scheme.

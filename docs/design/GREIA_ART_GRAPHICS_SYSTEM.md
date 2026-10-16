@@ -599,6 +599,10 @@ Root category controls use `ui.button.primary/default|hover`.
 
 The in-category Back control intentionally retains its existing dedicated geometry because the reviewed wide primary button asset is not an appropriate shape for it.
 
+## 13.3a Award frames and the Badge Library (2026-10-16, SOURCE + DESKTOP VISUAL REVIEW)
+
+Award frames are shared UI art: `ui.award.<bronze|silver|gold|special>` with `default`/`size_112`/`size_64` and `locked`/`locked_112`/`locked_64` renditions (160/112/64 px) built from the flat masters in `assets/source/achievements/`. Tier is carried by shape and colour (round copper medal / scalloped silver medal / cup trophy / purple rosette over a star burst; locked = grey silhouette + padlock). `PygameAchievementBadgeRenderer` composites the Activity emblem or Greia icon into the frame's cream slot once per cached size and falls back to procedural frames. The celebration reuses `fx.sparkle` (gold/secret: `fx.star_burst`, `fx.confetti`) and the cast greeter; the trophy-shelf library reuses `bg.meadow_day.home`, `ui.shadow.soft`, `fx.sparkle` and the cast `pose_point`/`happy`/`pose_think` variants. Owner of behaviour: `docs/design/GREIA_ACHIEVEMENTS_AND_BADGE_LIBRARY.md`.
+
 ## 13.4 Fail-soft rule
 
 A corrupt/missing optional visual may disable only the affected visual treatment where possible.
