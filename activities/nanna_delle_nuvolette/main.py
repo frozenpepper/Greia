@@ -1,35 +1,45 @@
-"""Thin Greia composition root for Nanna delle Nuvolette."""
+"""Cloud Bedtime (Nanna delle Nuvolette) — thin composition root.
+
+Build the collaborators (resources, audio, storage-backed progress, events,
+canvas) and enter the Activity lifecycle. The real work lives in
+:mod:`cloud_app` (flow and input), :mod:`cloud_model` (rules),
+:mod:`cloud_content` (colours, quilts, the night ladder), :mod:`cloud_layout`
+(geometry), :mod:`cloud_renderer` and :mod:`cloud_art` (presentation),
+:mod:`cloud_controls` (shared control kit), :mod:`cloud_audio` and
+:mod:`cloud_services`.
+"""
 
 from __future__ import annotations
 
 from pathlib import Path
-import time
+import random
 
 import pygame
 
+from greia_platform.activity_api import get_profile_locale
 from greia_platform.localization import LocalizedResources, activity_resources
+from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .cloud_app import CloudActivity
-    from .cloud_art import CloudArt
     from .cloud_audio import CloudAudio
-    from .cloud_model import REFERENCE_HEIGHT, REFERENCE_WIDTH
-    from .cloud_renderer import CloudRenderer
-    from .cloud_services import GreiaCloudEvents, GreiaCloudStorage
+    from .cloud_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from .cloud_services import GreiaBedtimeProgress, GreiaCloudEvents
 else:
     from cloud_app import CloudActivity
-    from cloud_art import CloudArt
     from cloud_audio import CloudAudio
-    from cloud_model import REFERENCE_HEIGHT, REFERENCE_WIDTH
-    from cloud_renderer import CloudRenderer
-    from cloud_services import GreiaCloudEvents, GreiaCloudStorage
+    from cloud_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from cloud_services import GreiaBedtimeProgress, GreiaCloudEvents
+
+__all__ = ["CloudActivity", "CloudAudio", "REFERENCE_HEIGHT", "REFERENCE_WIDTH", "main"]
 
 
-def _locale_and_resources() -> tuple[str, LocalizedResources]:
-    """Resolve the profile language from this package's declared locales."""
-    resources = activity_resources(Path(__file__).resolve().parent)
-    return resources.context.selected.language, resources
+def _resources() -> LocalizedResources | None:
+    try:
+        return activity_resources(Path(__file__).resolve().parent, requested_locale=get_profile_locale())
+    except Exception:
+        return None
 
 
 def main() -> int:
@@ -39,23 +49,28 @@ def main() -> int:
         screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
     pygame.mouse.set_visible(True)
 
-    locale, resources = _locale_and_resources()
-    typography = GreiaTypography()
-    art = CloudArt(REFERENCE_WIDTH, REFERENCE_HEIGHT)
-    renderer = CloudRenderer(art, typography, resources)
-    audio = CloudAudio()
-    events = GreiaCloudEvents()
-    storage = GreiaCloudStorage()
-
+    resources = _resources()
+    locale = resources.context.selected.language if resources is not None else "en"
+    if resources is not None:
+        try:
+            pygame.display.set_caption(resources.text("activity.title"))
+        except Exception:
+            pass
+    rng = random.Random()
     app = CloudActivity(
-        screen,
-        renderer,
-        audio,
-        events,
-        storage,
-        night_id=f"night-{int(time.time()):06d}",
+        screen=screen,
+        canvas=PygameReferenceCanvas(screen),
+        typography=GreiaTypography(),
+        resources=resources,
+        audio=CloudAudio(locale=locale, rng=rng),
+        progress=GreiaBedtimeProgress(),
+        events=GreiaCloudEvents(),
+        rng=rng,
     )
-    return app.run()
+    try:
+        return app.run()
+    finally:
+        pygame.quit()
 
 
 if __name__ == "__main__":

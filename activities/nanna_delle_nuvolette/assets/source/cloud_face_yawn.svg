@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Nanna delle Nuvolette: big sleepy yawn (eyes squeezed shut, round open mouth). -->
+  <g id="face">
+    <g id="cheeks">
+      <ellipse cx="84" cy="138" rx="11" ry="6.5" fill="#FDA4AF" opacity="0.6"/>
+      <ellipse cx="172" cy="138" rx="11" ry="6.5" fill="#FDA4AF" opacity="0.6"/>
+    </g>
+    <g id="eyes">
+      <path d="M93 121 Q105 113 117 121" fill="none" stroke="#342C35" stroke-width="4" stroke-linecap="round"/>
+      <path d="M139 121 Q151 113 163 121" fill="none" stroke="#342C35" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    <g id="mouth">
+      <ellipse cx="128" cy="140" rx="9" ry="10.5" fill="#8E3B4A" stroke="#4B372F" stroke-width="3"/>
+      <ellipse cx="128" cy="145" rx="5.5" ry="3.5" fill="#F48FA0"/>
+    </g>
+  </g>
+</svg>

@@ -1,171 +1,168 @@
-"""Domain model and calm bedtime state for Nanna delle Nuvolette."""
+"""Rules of one bedtime night (no Pygame): who dreams of what, and offers.
+
+A ``BedtimeNight`` owns the three ``SleepyCloud`` friends and the quilt tray.
+The child offers a tray quilt to a cloud: the dreamed quilt is kept (the cloud
+starts to yawn, the tray slot empties); any other quilt is declined and stays
+in the tray (it may be exactly what another cloud dreams of). Misses are
+counted per cloud (hints grow with them) and per night (the ladder adapts).
+"""
 
 from __future__ import annotations
 
-from typing import Final, Sequence
+from dataclasses import dataclass, field
+from enum import StrEnum
+from typing import Final
 
 if __package__:
-    from .cloud_content import BLANKETS_BY_ID, VALID_BLANKET_IDS, Blanket
+    from .cloud_content import CLOUDS_PER_NIGHT, MAX_LEVEL, LEVELS, NightLevel, NightPlan, Quilt
 else:
-    from cloud_content import BLANKETS_BY_ID, VALID_BLANKET_IDS, Blanket
+    from cloud_content import CLOUDS_PER_NIGHT, MAX_LEVEL, LEVELS, NightLevel, NightPlan, Quilt
+
+# A night with this many misses (or more) steps one rung down the ladder.
+STEP_DOWN_MISSES: Final = 3
 
 
-REFERENCE_WIDTH: Final = 1024
-REFERENCE_HEIGHT: Final = 600
-MAX_STARS_PER_CLOUD: Final = 3
-TOTAL_CLOUDS: Final = 3
-INITIAL_STARS: Final = 9
+class CloudState(StrEnum):
+    AWAKE = "awake"
+    YAWNING = "yawning"
+    ASLEEP = "asleep"
 
 
-class CloudFriend:
-    """One sweet little cloud friend that can receive a blanket and stars."""
+@dataclass(slots=True)
+class SleepyCloud:
+    """One little cloud: its dream, its quilt once tucked in, and its misses."""
 
-    def __init__(
-        self,
-        cloud_id: str,
-        name_key: str,
-        center_x: int,
-        center_y: int,
-        *,
-        blanket_id: str | None = None,
-        star_ids: Sequence[str] = (),
-        asleep: bool = False,
-    ) -> None:
-        self.cloud_id = cloud_id
-        self.name_key = name_key
-        self.center_x = center_x
-        self.center_y = center_y
-        self.blanket_id = blanket_id if blanket_id in VALID_BLANKET_IDS else None
-        self._star_ids: list[str] = list(star_ids[:MAX_STARS_PER_CLOUD])
-        self.asleep = asleep
-        self.is_yawning = False
-        self.yawn_start_time = 0.0
-        self.hint_start_time = 0.0
+    index: int
+    dream: Quilt
+    state: CloudState = CloudState.AWAKE
+    quilt: Quilt | None = None
+    misses: int = 0
 
     @property
-    def star_ids(self) -> tuple[str, ...]:
-        return tuple(self._star_ids)
+    def awake(self) -> bool:
+        return self.state is CloudState.AWAKE
 
     @property
-    def star_count(self) -> int:
-        return len(self._star_ids)
+    def asleep(self) -> bool:
+        return self.state is CloudState.ASLEEP
+
+
+class Offer(StrEnum):
+    RIGHT = "right"
+    WRONG = "wrong"
+    IGNORED = "ignored"
+
+
+@dataclass(frozen=True, slots=True)
+class OfferOutcome:
+    offer: Offer
+    cloud_misses: int = 0
+
+
+@dataclass(slots=True)
+class BedtimeNight:
+    """Three dreaming clouds and one tray of quilts for one finite night."""
+
+    level: int
+    plan: NightPlan
+    clouds: list[SleepyCloud] = field(init=False)
+    tray: list[Quilt | None] = field(init=False)
+    misses: int = field(init=False, default=0)
+
+    def __post_init__(self) -> None:
+        if len(self.plan.dreams) != CLOUDS_PER_NIGHT:
+            raise ValueError("a night has exactly three clouds")
+        self.level = max(0, min(MAX_LEVEL, int(self.level)))
+        self.clouds = [SleepyCloud(index, dream) for index, dream in enumerate(self.plan.dreams)]
+        self.tray = list(self.plan.tray)
 
     @property
-    def is_ready_to_sleep(self) -> bool:
-        return self.blanket_id is not None and len(self._star_ids) >= 1
+    def rung(self) -> NightLevel:
+        return LEVELS[self.level]
 
     @property
-    def ready_to_sleep(self) -> bool:
-        return self.is_ready_to_sleep
+    def asleep_count(self) -> int:
+        return sum(1 for cloud in self.clouds if cloud.asleep)
 
-    def trigger_hint(self, now: float) -> None:
-        self.hint_start_time = now
+    @property
+    def tucked_count(self) -> int:
+        return sum(1 for cloud in self.clouds if cloud.quilt is not None)
 
-    def is_hint_active(self, now: float) -> bool:
-        return (now - self.hint_start_time) < 1.2
+    @property
+    def complete(self) -> bool:
+        return all(cloud.asleep for cloud in self.clouds)
 
-    def give_blanket(self, blanket_id: str) -> bool:
-        if self.asleep:
+    @property
+    def first_try(self) -> int:
+        return sum(1 for cloud in self.clouds if cloud.quilt is not None and cloud.misses == 0)
+
+    @property
+    def stars_given(self) -> int:
+        return sum(cloud.quilt.stars for cloud in self.clouds if cloud.quilt is not None)
+
+    def offer(self, tray_index: int, cloud_index: int) -> OfferOutcome:
+        """The child gives tray quilt ``tray_index`` to cloud ``cloud_index``."""
+
+        if not (0 <= tray_index < len(self.tray) and 0 <= cloud_index < len(self.clouds)):
+            return OfferOutcome(Offer.IGNORED)
+        quilt = self.tray[tray_index]
+        cloud = self.clouds[cloud_index]
+        if quilt is None or not cloud.awake:
+            return OfferOutcome(Offer.IGNORED)
+        if quilt == cloud.dream:
+            cloud.quilt = quilt
+            cloud.state = CloudState.YAWNING
+            self.tray[tray_index] = None
+            return OfferOutcome(Offer.RIGHT, cloud.misses)
+        cloud.misses += 1
+        self.misses += 1
+        return OfferOutcome(Offer.WRONG, cloud.misses)
+
+    def fall_asleep(self, cloud_index: int) -> bool:
+        """A yawning cloud closes its eyes; True when this changed the state."""
+
+        if not 0 <= cloud_index < len(self.clouds):
             return False
-        if blanket_id in VALID_BLANKET_IDS:
-            self.blanket_id = blanket_id
-            return True
-        return False
-
-    def give_star(self, star_id: str | None = None) -> bool:
-        if self.asleep:
+        cloud = self.clouds[cloud_index]
+        if cloud.state is not CloudState.YAWNING:
             return False
-        if len(self._star_ids) < MAX_STARS_PER_CLOUD:
-            sid = star_id or f"star_{self.cloud_id}_{len(self._star_ids) + 1}"
-            self._star_ids.append(sid)
-            return True
-        return False
+        cloud.state = CloudState.ASLEEP
+        return True
 
-    def tap_to_tuck_in(self, now: float) -> bool:
-        """Handle tap on cloud: yawn-to-sleep if ready, gentle neutral hint if not."""
-        if self.asleep or self.is_yawning:
-            return False
-        if self.is_ready_to_sleep:
-            self.is_yawning = True
-            self.yawn_start_time = now
-            return True
-        else:
-            self.hint_start_time = now
-            return False
+    def answer_for(self, cloud_index: int) -> int | None:
+        """Tray index of the quilt this cloud dreams of (hints only)."""
 
-    def update(self, now: float) -> bool:
-        """Advance timers; return True if state changed."""
-        if self.is_yawning and (now - self.yawn_start_time) >= 0.8:
-            self.is_yawning = False
-            self.asleep = True
-            return True
-        return False
+        if not 0 <= cloud_index < len(self.clouds):
+            return None
+        dream = self.clouds[cloud_index].dream
+        for index, quilt in enumerate(self.tray):
+            if quilt == dream:
+                return index
+        return None
+
+    def next_awake(self) -> int | None:
+        for cloud in self.clouds:
+            if cloud.awake:
+                return cloud.index
+        return None
 
 
-class NightScene:
-    """Own the three clouds, bedtime items, and peaceful night state."""
+def adapt_level(level: int, misses: int) -> int:
+    """A clean night climbs a rung; a hard night (3+ misses) steps down one."""
 
-    def __init__(self, night_id: str, default_blankets: Sequence[str | None] = ()) -> None:
-        self.night_id = night_id
-        self.held_item: str | None = None
-        self.completed_emitted = False
+    if misses == 0:
+        return min(MAX_LEVEL, level + 1)
+    if misses >= STEP_DOWN_MISSES:
+        return max(0, level - 1)
+    return max(0, min(MAX_LEVEL, level))
 
-        b_ids: list[str | None] = [None, None, None]
-        for i, b in enumerate(default_blankets[:3]):
-            if b in VALID_BLANKET_IDS:
-                b_ids[i] = b
 
-        self.clouds: tuple[CloudFriend, CloudFriend, CloudFriend] = (
-            CloudFriend("cloud_1", "cloud.1", 245, 230, blanket_id=b_ids[0]),
-            CloudFriend("cloud_2", "cloud.2", 511, 200, blanket_id=b_ids[1]),
-            CloudFriend("cloud_3", "cloud.3", 775, 230, blanket_id=b_ids[2]),
-        )
-
-    @classmethod
-    def create_night(cls, night_id: str, default_blankets: Sequence[str | None] = ()) -> NightScene:
-        return cls(night_id, default_blankets=default_blankets)
-
-    @property
-    def all_asleep(self) -> bool:
-        return all(c.asleep for c in self.clouds)
-
-    @property
-    def all_sleeping(self) -> bool:
-        return self.all_asleep
-
-    @property
-    def total_stars(self) -> int:
-        return sum(c.star_count for c in self.clouds)
-
-    @property
-    def available_stars(self) -> int:
-        return max(0, INITIAL_STARS - self.total_stars)
-
-    def tuck_blanket(self, cloud_id: str, blanket_id: str) -> bool:
-        for c in self.clouds:
-            if c.cloud_id == cloud_id:
-                return c.give_blanket(blanket_id)
-        return False
-
-    def add_star(self, cloud_id: str) -> bool:
-        if self.available_stars <= 0:
-            return False
-        for c in self.clouds:
-            if c.cloud_id == cloud_id:
-                return c.give_star()
-        return False
-
-    def put_to_sleep(self, cloud_id: str) -> bool:
-        for c in self.clouds:
-            if c.cloud_id == cloud_id:
-                if c.ready_to_sleep:
-                    c.asleep = True
-                    return True
-        return False
-
-    def update(self, now: float) -> bool:
-        changed = False
-        for c in self.clouds:
-            if c.update(now):
-                changed = True
-        return changed
+__all__ = [
+    "BedtimeNight",
+    "CloudState",
+    "Offer",
+    "OfferOutcome",
+    "STEP_DOWN_MISSES",
+    "SleepyCloud",
+    "adapt_level",
+]

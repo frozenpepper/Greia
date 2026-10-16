@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Nanna delle Nuvolette: tucked quilt contour and turned-down sheet band. -->
+  <g id="line">
+    <path d="M30 170 Q128 146 226 170 Q238 174 238 186 L238 188 Q128 162 18 188 L18 186 Q18 174 30 170 Z" fill="#FFFFFF" opacity="0.55"/>
+    <path d="M18 192 Q128 168 238 192" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/>
+    <path d="M30 170 Q128 146 226 170 Q238 174 238 186 L240 226 Q222 240 204 228 Q186 240 168 228 Q150 240 132 228 Q114 240 96 228 Q78 240 60 228 Q40 240 16 226 L18 186 Q18 174 30 170 Z" fill="none" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M40 176 Q60 168 80 164" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+  </g>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Nanna delle Nuvolette: little cloud body fill (no contour). Neutral white so the
+       Activity can tint it once per wish colour (multiply); same silhouette as
+       prop.nature.cloud, taller. Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- white -> lavender light (mix 40% white) -->
+    <linearGradient id="nanna_cloud_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E8E2F4"/>
+    </linearGradient>
+  </defs>
+  <g id="body">
+    <path d="M58 206 C24 206 16 153 46 141 C40 98 76 74 104 93 C112 52 166 45 180 88 C210 79 238 108 226 144 C250 156 244 206 214 206 Z" fill="url(#nanna_cloud_body)"/>
+  </g>
+</svg>

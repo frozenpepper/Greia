@@ -5,19 +5,10 @@
   "strings": {
     "activity.title": "Nanna delle Nuvolette",
     "activity.nanna_delle_nuvolette.title": "Nanna delle Nuvolette",
-    "activity.nanna_delle_nuvolette.description": "Accompagna tre dolci nuvolette a fare la nanna con copertine morbide e stelline luminose.",
-    "prompt.scene": "Metti una coperta e le stelline a ogni nuvoletta, poi falla addormentare!",
-    "basket.label": "Stelline ⭐",
-    "button.new_night": "Nuova notte 🌙",
-    "cloud.1": "Nuvola Rosa",
-    "cloud.2": "Nuvola Blu",
-    "cloud.3": "Nuvola Viola",
-    "blanket.rose": "Coperta Rosa",
-    "blanket.amber": "Coperta Gialla",
-    "blanket.mint": "Coperta Verde",
-    "blanket.sky": "Coperta Azzurra",
-    "blanket.lavender": "Coperta Lilla",
-    "blanket.peach": "Coperta Pesca"
+    "activity.nanna_delle_nuvolette.description": "Rimbocca le copertine alle nuvolette assonnate: scegli il colore e le stelline che sognano e guardale addormentarsi.",
+    "victory.title": "Sogni d'oro!",
+    "victory.body": "Tutte le nuvolette dormono.",
+    "btn.another_night": "Un'altra notte"
   },
   "audio": {
     "activity.title": {

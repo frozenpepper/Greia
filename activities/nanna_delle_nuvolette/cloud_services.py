@@ -1,79 +1,118 @@
-"""Platform event publishing and preferences storage for Nanna delle Nuvolette."""
+"""Greia persistence and event adapters for Cloud Bedtime.
+
+Progress lives under ``nanna_delle_nuvolette.progress.v1`` (profile-scoped
+Greia Storage): the ladder rung and the number of finished nights. The
+pre-rework Activity saved favourite blanket colours under
+``nanna_delle_nuvolette.preferences.v1``; that key is history the child
+created, so it is never rewritten or deleted. A child who already finished a
+night with the old game (the old key exists) simply starts the new ladder at
+its first rung, like everyone else. Anything unknown or corrupt loads as a
+fresh start and is only written back after the child finishes a night.
+"""
 
 from __future__ import annotations
 
-import json
-from typing import Any, Final, Sequence
+from dataclasses import dataclass
+from typing import Any, Final, Protocol
 
 from greia_platform.activity_api import emit_activity_event, get_storage
 
 if __package__:
-    from .cloud_content import VALID_BLANKET_IDS
+    from .cloud_content import MAX_LEVEL, STORAGE_KEY
 else:
-    from cloud_content import VALID_BLANKET_IDS
+    from cloud_content import MAX_LEVEL, STORAGE_KEY
+
+SCHEMA_VERSION: Final = 1
+MAX_NIGHTS: Final = 1_000_000
+EVENT_REST_COMPLETED: Final = "cloud.rest_completed"
 
 
-STORAGE_KEY: Final[str] = "nanna_delle_nuvolette.preferences.v1"
-EVENT_REST_COMPLETED: Final[str] = "cloud.rest_completed"
+@dataclass(frozen=True, slots=True)
+class BedtimeProgress:
+    level: int = 0
+    nights: int = 0
 
-DEFAULT_BLANKET_IDS: Final[tuple[str, str, str]] = ("rose", "amber", "mint")
+
+class ProgressPort(Protocol):
+    def load(self) -> BedtimeProgress: ...
+    def save(self, progress: BedtimeProgress) -> None: ...
+
+
+class EventPort(Protocol):
+    def rest_completed(self, session_id: str, payload: dict[str, Any]) -> None: ...
+
+
+def _int(value: object, default: int, low: int, high: int) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        return default
+    return max(low, min(high, value))
+
+
+def parse_progress(raw: object) -> BedtimeProgress:
+    """Bounded parse of any stored payload (current or corrupt)."""
+
+    if not isinstance(raw, dict) or raw.get("schema_version") != SCHEMA_VERSION:
+        return BedtimeProgress()
+    return BedtimeProgress(
+        level=_int(raw.get("level"), 0, 0, MAX_LEVEL),
+        nights=_int(raw.get("nights"), 0, 0, MAX_NIGHTS),
+    )
+
+
+def progress_payload(progress: BedtimeProgress) -> dict[str, Any]:
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "level": max(0, min(MAX_LEVEL, int(progress.level))),
+        "nights": max(0, min(MAX_NIGHTS, int(progress.nights))),
+    }
+
+
+class GreiaBedtimeProgress:
+    """Map bounded progress onto profile-scoped Greia Storage (fail-soft)."""
+
+    def __init__(self, storage=None) -> None:
+        if storage is None:
+            try:
+                storage = get_storage()
+            except Exception:
+                storage = None
+        self._storage = storage
+
+    def load(self) -> BedtimeProgress:
+        if self._storage is None:
+            return BedtimeProgress()
+        try:
+            return parse_progress(self._storage.kv_get(STORAGE_KEY))
+        except Exception:
+            return BedtimeProgress()
+
+    def save(self, progress: BedtimeProgress) -> None:
+        if self._storage is None:
+            return
+        try:
+            self._storage.kv_set(STORAGE_KEY, progress_payload(progress))
+        except Exception:
+            return
 
 
 class GreiaCloudEvents:
-    """Safe emission of rest completion event."""
+    """Publish the completion fact declared by the manifest."""
 
     def rest_completed(self, session_id: str, payload: dict[str, Any]) -> None:
-        """Emit cloud.rest_completed when all 3 clouds are asleep."""
         try:
             emit_activity_event(EVENT_REST_COMPLETED, payload, idempotency_key=f"cloud-rest:{session_id}")
         except Exception:
-            pass
+            return
 
 
-class GreiaCloudStorage:
-    """Persistence for favorite blankets across nights."""
-
-    def __init__(self, storage=None, key: str = STORAGE_KEY) -> None:
-        self._storage = storage if storage is not None else get_storage()
-        self._key = key
-
-    def load_preferences(self) -> tuple[str, str, str]:
-        try:
-            raw = self._storage.kv_get(self._key)
-            if not raw:
-                return DEFAULT_BLANKET_IDS
-
-            data = json.loads(raw)
-            if not isinstance(data, dict):
-                return DEFAULT_BLANKET_IDS
-
-            b_ids = data.get("blanket_ids")
-            if not isinstance(b_ids, list) or len(b_ids) != 3:
-                return DEFAULT_BLANKET_IDS
-
-            sanitized: list[str] = []
-            for b in b_ids:
-                if isinstance(b, str) and b in VALID_BLANKET_IDS:
-                    sanitized.append(b)
-                else:
-                    return DEFAULT_BLANKET_IDS
-
-            return (sanitized[0], sanitized[1], sanitized[2])
-        except Exception:
-            return DEFAULT_BLANKET_IDS
-
-    def save_preferences(self, blanket_ids: Sequence[str]) -> bool:
-        if len(blanket_ids) != 3:
-            return False
-
-        for b in blanket_ids:
-            if b not in VALID_BLANKET_IDS:
-                return False
-
-        try:
-            payload = {"blanket_ids": list(blanket_ids)}
-            raw = json.dumps(payload, ensure_ascii=False)
-            self._storage.kv_set(self._key, raw)
-            return True
-        except Exception:
-            return False
+__all__ = [
+    "BedtimeProgress",
+    "EVENT_REST_COMPLETED",
+    "EventPort",
+    "GreiaBedtimeProgress",
+    "GreiaCloudEvents",
+    "ProgressPort",
+    "SCHEMA_VERSION",
+    "parse_progress",
+    "progress_payload",
+]

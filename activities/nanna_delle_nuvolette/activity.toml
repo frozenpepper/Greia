@@ -2,7 +2,7 @@
 id = "org.greia.nanna-delle-nuvolette"
 legacy_ids = []
 title_key = "activity.nanna_delle_nuvolette.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
@@ -11,13 +11,24 @@ categories = ["play", "explore"]
 discovery_tags = ["care", "nature"]
 
 [education]
-categories = ["sequencing", "cause_and_effect", "color_shape_matching"]
+# A calm wind-down: three sleepy clouds each dream of a blanket (shown in a
+# dream bubble). The child tucks every cloud in with the blanket it dreams
+# of: same colour, and from the third rung on the same small number of stars
+# (1-3, then 1-5; the dream shows the stars as a dice face, the blankets in a
+# row, so the number is compared, not the picture). Blankets that are not
+# dreamed of are declined kindly and stay in the tray. One finite night of
+# three clouds; a five-rung ladder adapts from the misses of each night.
+categories = ["color_shape_matching", "early_math", "sensory_calm"]
 difficulty = 1
 recommended_age_min = 3
+difficulty_min = 1
+difficulty_max = 5
+adaptive_difficulty = true
 skills = [
-  { id = "sensory.calm_engagement", weight = 3 },
-  { id = "cognitive.cause_and_effect", weight = 3 },
-  { id = "math.small_sets", weight = 2 },
+  { id = "cognition.matching.color", weight = 3 },
+  { id = "math.small_sets", weight = 3 },
+  { id = "math.quantity.subitizing", weight = 2 },
+  { id = "sensory.calm_engagement", weight = 2 },
 ]
 events = [
   { id = "cloud.rest_completed", kind = "completion" },
@@ -29,11 +40,11 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "pointer"
+profile = "hybrid"
 
 [requirements]
 required_capabilities = ["display", "pointer"]
-optional_capabilities = ["touch", "audio.basic"]
+optional_capabilities = ["keyboard", "touch", "audio.basic"]
 
 [permissions]
 requested = []

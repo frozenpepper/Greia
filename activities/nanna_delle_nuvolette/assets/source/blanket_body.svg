@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Nanna delle Nuvolette: quilt blanket fill (no contour). Neutral so the Activity
+       tints it once per colour (multiply). Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- white -> lavender light (mix 40% white) -->
+    <linearGradient id="nanna_blanket_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E3DCEF"/>
+    </linearGradient>
+  </defs>
+  <g id="body">
+    <path d="M30 72 L226 72 Q242 72 242 88 L242 176 Q223 192 204 180 Q185 192 166 180 Q147 192 128 180 Q109 192 90 180 Q71 192 52 180 Q33 192 14 176 L14 88 Q14 72 30 72 Z" fill="url(#nanna_blanket_body)"/>
+  </g>
+</svg>

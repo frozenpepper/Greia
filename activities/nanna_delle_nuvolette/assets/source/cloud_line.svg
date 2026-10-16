@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Nanna delle Nuvolette: little cloud contour + one highlight (drawn over the tinted body). -->
+  <g id="line">
+    <path d="M58 206 C24 206 16 153 46 141 C40 98 76 74 104 93 C112 52 166 45 180 88 C210 79 238 108 226 144 C250 156 244 206 214 206 Z" fill="none" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M58 139 C62 120 74 108 88 105" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.9"/>
+  </g>
+</svg>

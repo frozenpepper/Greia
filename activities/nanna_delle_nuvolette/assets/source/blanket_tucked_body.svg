@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Nanna delle Nuvolette: quilt tucked over a little cloud (fill only, neutral for tinting).
+       Same 256 frame as cloud_body.svg so it overlays the cloud exactly. -->
+  <defs>
+    <!-- white -> lavender light (mix 40% white) -->
+    <linearGradient id="nanna_tucked_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E3DCEF"/>
+    </linearGradient>
+  </defs>
+  <g id="body">
+    <path d="M30 170 Q128 146 226 170 Q238 174 238 186 L240 226 Q222 240 204 228 Q186 240 168 228 Q150 240 132 228 Q114 240 96 228 Q78 240 60 228 Q40 240 16 226 L18 186 Q18 174 30 170 Z" fill="url(#nanna_tucked_body)"/>
+  </g>
+</svg>

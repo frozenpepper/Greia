@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Nanna delle Nuvolette: dream (thought) bubble; the wish is drawn inside by the Activity. -->
+  <defs>
+    <!-- white -> lavender (theme token #E8DDF7) -->
+    <linearGradient id="nanna_bubble_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E8DDF7"/>
+    </linearGradient>
+  </defs>
+  <g id="bubble" stroke="#4B372F" stroke-width="4" stroke-linejoin="round">
+    <circle cx="104" cy="226" r="8" fill="#F4EEFB"/>
+    <circle cx="116" cy="204" r="12" fill="#F4EEFB"/>
+    <path d="M52 182 C24 182 14 150 34 134 C14 112 28 76 58 78 C60 44 100 30 124 50 C144 22 192 28 200 62 C232 62 248 96 230 120 C250 140 236 180 204 178 C192 198 160 198 146 184 C128 198 96 198 84 182 Z" fill="url(#nanna_bubble_body)"/>
+    <path d="M46 116 C44 98 54 88 68 86" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.9"/>
+  </g>
+</svg>
