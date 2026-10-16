@@ -234,8 +234,10 @@ class SingleAudioOwnerTests(unittest.TestCase):
         # The mic input-gain path (Capture/Mic) is a disjoint domain and stays.
         owner = ROOT / "src/greia_platform/system_controls_legacy_x.py"
         offenders: list[str] = []
-        for candidate in list(ROOT.rglob("src/**/*.py")) + list(
-            ROOT.rglob("build/**/*")
+        # Anchor the scan at the checkout's own src/ and build/ so nested
+        # git worktrees (e.g. .claude/worktrees/*) are never scanned.
+        for candidate in list((ROOT / "src").rglob("*.py")) + list(
+            (ROOT / "build").rglob("*")
         ):
             if not candidate.is_file() or candidate == owner:
                 continue
