@@ -110,6 +110,10 @@ class GreiaLauncherPresentation(LauncherApplication):
         # Replace the old unbounded presentation dictionaries with explicit LRU
         # bounds while preserving the mapping surface used by the base class.
         self._icon_cache = BoundedCache(96)
+        # Decoded 256x256 package icons are only needed while building cards
+        # and decorated icons; keep a few, not one per Activity (~12 MB on the
+        # Atom when 96 stayed resident). Long-session memory investigation, 2026-10-16.
+        self._raw_icon_cache: BoundedCache[tuple[str, str], Any] = BoundedCache(8)
         self._font_cache = BoundedCache(24)
         self._shadow_cache: BoundedCache[tuple[int, int, int], Any] = BoundedCache(16)
         self._decorated_icon_cache: BoundedCache[tuple[str, str, int], Any] = BoundedCache(64)
@@ -562,6 +566,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                 if screen.get_size() != last_display_size:
                     last_display_size = screen.get_size()
                     self._icon_cache.clear()
+                    self._raw_icon_cache.clear()
                     self._font_cache.clear()
                     self._shadow_cache.clear()
                     self._decorated_icon_cache.clear()
@@ -2175,8 +2180,8 @@ class GreiaLauncherPresentation(LauncherApplication):
     ) -> Any:
         """Return the decoded package icon once per Activity version (bounded cache)."""
 
-        raw_key = ("raw_icon", activity.activity_id, activity.version)
-        raw_source = self._icon_cache.get(raw_key)
+        raw_key = (activity.activity_id, activity.version)
+        raw_source = self._raw_icon_cache.get(raw_key)
         if raw_source is None:
             try:
                 package_path = package_icon_path(activity)
@@ -2187,7 +2192,7 @@ class GreiaLauncherPresentation(LauncherApplication):
             except (ActivityIconError, OSError, ValueError, pygame.error):
                 self._catalogue_error = True
                 raw_source = self._load_icon("robot", size, pygame)
-            self._icon_cache[raw_key] = raw_source
+            self._raw_icon_cache[raw_key] = raw_source
         return raw_source
 
     def _shadow_for(self, size: tuple[int, int], pygame: Any) -> Any:
