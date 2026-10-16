@@ -61,6 +61,16 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-16 — Test suite: fast/full lanes, os.sync fix, leak fix, duplicate pruning
+
+**Evidence class: SOURCE** (local macOS runs, other agents' suites and builds running concurrently). No hardware.
+
+- **Lanes** (owner `tests/suite_lanes.py`, runner `tools/run_tests.py`, pytest adapter `tests/conftest.py`): `make test`/`make verify` = fast lane; `make test-full`/`make verify-full` adds the heavy evidence suites (`tests/test_x8_qemu/*`, install RSS gate, whole-repository sweeps); `make test-slow` runs only those. Run `verify-full` before claiming install/update/release/lifecycle work complete. Naming a module explicitly always runs it.
+- **Root cause of the 73-min suite:** durable boot/update writers call host-wide `os.sync()` (3.3 s per call on this Mac under load). The test process now neutralises only that call (fsync/rename/dir-sync/re-read still run); production code unchanged. The "hang after the summary" was a test blocked in that call (`grub_ab.py:949`).
+- **Leak:** simulator supervision tests orphaned `greia_simulator/python_activity.py` when READY timed out; they now share `tests/simulator_supervision.py` (bounded load-tolerant waits + `addCleanup` reaper).
+- **Measured:** before 5,341 tests / 73.5 min (pytest, loaded). After: fast lane 4,936 tests in 370 s (~6.6 min wall); slow lane 465 tests in 169 s, all green. Fast-lane red at the time were other sessions' uncommitted work only (`test_launcher_long_session_memory`, Corsa Bacche READY-after-present).
+- Deleted 16 exact-duplicate or Markdown-prose tests (see commit `9434cc09`).
+
 ## 2026-10-16 — Badges: celebration moment, trophy shelf, flat award art, 15 badges
 
 **Evidence class: SOURCE + DESKTOP VISUAL REVIEW** (headless 1024x600 / 800x480 renders, macOS). No Acer deploy, no audible review, no Simulator/VM/physical evidence.
