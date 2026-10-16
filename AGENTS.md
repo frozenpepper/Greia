@@ -10,6 +10,7 @@ This repository implements a child-first educational Linux appliance/platform. T
 - Before substantive writes, refresh the current `main` head so concurrent work is preserved.
 - If concurrent work has advanced `main`, reconcile the intended changes with that current history and commit the result back to `main`; do not solve divergence by creating another branch unless explicitly instructed.
 - Pull requests or branch-based review workflows are used only when the repository owner explicitly requests them.
+- External contributors work from forks and open pull requests as described in `CONTRIBUTING.md`; the rules above govern the core team and its agents.
 
 ## Authoritative read order and active plan
 
@@ -42,8 +43,7 @@ Before changing implementation or architecture, read:
 21. **`skills/greia-os-work/SKILL.md` whenever creating, modifying, reviewing, refactoring, optimizing, testing or documenting Greia OS/platform/Shell/Parent/installer/simulator/build/runtime/hardware-service implementation**;
 22. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
 23. `skills/greia-visual-authoring/SKILL.md` whenever creating, modifying, reviewing, generating, or integrating Greia visual assets or Activity art;
-24. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan;
-25. `docs/archive/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as historical/supporting Phase-0 context where it is not superseded.
+24. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan. Older lessons are indexed in `docs/archive/README.md`; nothing there is current instruction.
 
 `docs/DOCUMENTATION.md` defines which document class owns which fact. In short:
 
@@ -62,43 +62,11 @@ Do not resolve contradictions by choosing whichever document is convenient. Iden
 
 The architecture-remediation plan remains the active **blocking implementation** plan for its remaining non-lifecycle obligations until its final completion criteria are satisfied. It does **not** own install/update/release lifecycle routing: that route is `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor). Resume non-lifecycle work from the first incomplete blocking phase in the remediation plan; route all install/update/release/multiplatform lifecycle work from the 2026-09-15 plan. Do not create a competing implementation plan or jump ahead to a more visible feature while an earlier authority/safety prerequisite remains open. The old signed `.greiaupdate` v2 / release-signing-key route is superseded by ADR 0036 and must not be treated as the normal production route.
 
-**Current owner-authorized Activity release + Creations workstream:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` is the **single unified product/content implementation plan** for the typed child Creations Library, universal pre-reader picker/viewer, adaptable disk budget, Painting/Shape Garden/Theatre/voice/text interoperability, complete built-in Activity quality audit, and deliberate catalogue selection. Continue from `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PROGRESS.md` and append accurate session results. This owner-requested scoped program coordinates those features but **does not supersede** the architectural-remediation and release-install/first-boot lifecycle authorities above; those still govern safety prerequisites, image installation, update, rollback and hardware acceptance. Product/source work may proceed in parallel without making hardware claims. Do not spin up a second competing catalogue, picker, or creative-media plan.
+**Scoped owner-authorized workstreams** (the Creations Library and Activity release programme, and the four-language localization and voice-production rollout) are listed with their plans, progress files, current work orders and owner approvals in `HANDOVER.md` § Active workstreams. They coordinate product/source work in parallel but do **not** supersede the remediation and lifecycle authorities above, which still govern safety prerequisites, installation, update, rollback and hardware acceptance. Do not start a competing catalogue, picker, creative-media, language-registry or voice plan. Standing decisions from those workstreams:
 
-**Owner-authorized localization workstream (2026-10-12):**
-`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md` is the
-scoped implementation plan for reducing misleading language choices,
-completing EN/IT gaps, and extending real installer/OS/Parent/Activity
-text and voice support to ES/FR. Its standing local-agent speech design and cue-source authority is
-`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`.
-**Current executable voice-production work order:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md`
-(owner instruction 2026-10-14; archived full-run instruction). The owner approved
-every **currently authored** EN/IT/ES/FR text translation, and personally
-reviewed and approved **all committed recordings**. New missing files from
-the targeted task still need fresh acceptance. Neither decision promotes ES/FR.
-An available, registered zero-new-spend local Greia Voice Engine provider may
-be used to record without waiting for a future Modal provider, but paid
-cloud/model installation still needs separate explicit cost approval.
-**Owner-directed shared localization consolidation (2026-10-15):**
-`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md`
-is the active bounded design for reusing the existing `LocalizedResources`
-owner for semantic text/audio IDs, file-exists selected-locale lookup and
-English fallback for **all** speech, and gradual migration of Activity-local
-loaders. Existing committed audio is **owner-reviewed and accepted**;
-never regenerate it for perceived provenance problems. The user does **not**
-want file anti-tampering, signing or elaborate asset verification; users may
-edit their files. Follow the focused new-recordings assignment in
-`docs/testing/2026-10-15_GREIA_TARGETED_MISSING_VOICES_LOCAL_AGENT.md`.
-Update the Activity-creation skill/voice companion **after the code API is real**;
-retain the current callable interface meanwhile. This refactor does not
-independently promote ES/FR system selection.
-The sole practical local-agent task queue remains
-`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
-The canonical selectable registry currently contains **only en/it**;
-es/fr are staged until explicit complete-language release gates pass.
-This scope does not override ADR 0028, accepted architecture,
-installer/first-boot/lifecycle test gates or the Creations/Activity
-audit programme. Do not invent a second language registry or silently
-promote unvoiced locales.
+- committed recordings are owner-reviewed and accepted; never regenerate them for perceived provenance problems. New speech goes through `tools/greia_voice.py` and needs fresh human acceptance;
+- do not add file anti-tampering, signing or elaborate asset verification; users may edit their own files;
+- the selectable language registry contains only languages whose release gates passed (currently en, it). Do not silently promote staged locales or invent a second registry.
 
 The visual-foundation plan is the current **art/visual workstream** plan. It owns art sequencing, checkpoints and append-only art progress while active, but it is subordinate to the blocking architecture plan and accepted ADRs. `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` is the stable visual-system architecture/index and must remain interpretable after the current plan becomes historical. Art/design/library work may advance where it does not bypass platform prerequisites; a visual task must not be used as justification to deepen provisional X11 coupling, invent a parallel runtime/UI architecture, weaken protected system chrome, or claim hardware/runtime evidence that did not execute.
 
@@ -154,7 +122,7 @@ Reading/editing workflow **source files** as ordinary repository source is allow
 
 Repository commits/pushes/PR review are allowed and expected for source persistence. Verification runs locally or on an explicitly owner-approved execution environment.
 
-Do not treat available hosted compute as implicit permission to spend money.
+Do not treat available hosted compute as implicit permission to spend money. Installing or using a paid cloud model/provider likewise needs explicit owner cost approval.
 
 ## Developer remote-control boundary
 
