@@ -36,7 +36,14 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
 
                 helper_text = helper.read_text(encoding="utf-8")
                 self.assertIn("developer-remote", helper_text)
-                self.assertIn("AuthenticationMethods password", helper_text)
+                # Password login always; key login is added (OR) only when an
+                # operator public key is installed.
+                self.assertIn("methods=password", helper_text)
+                self.assertIn('methods="publickey password"', helper_text)
+                self.assertIn("AuthenticationMethods $methods", helper_text)
+                self.assertIn("/etc/ssh/greia-operator-keys/greia", helper_text)
+                self.assertNotIn("publickey,password", helper_text.replace(
+                    "accidentally used `publickey,password`", ""))
                 self.assertIn("PasswordAuthentication yes", helper_text)
                 self.assertIn("KbdInteractiveAuthentication no", helper_text)
                 self.assertIn("PermitRootLogin no", helper_text)
@@ -46,7 +53,8 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
                 self.assertIn("ssh-keygen -q -t ed25519", helper_text)
                 self.assertIn("/usr/sbin/sshd -T", helper_text)
                 self.assertIn("passwordauthentication yes", helper_text)
-                self.assertIn("authenticationmethods password", helper_text)
+                self.assertIn('grep -qx "authenticationmethods $methods"', helper_text)
+                self.assertIn('grep -qx "pubkeyauthentication $pubkey"', helper_text)
                 self.assertNotIn("AuthenticationMethods any", helper_text)
 
                 unit = dropin.read_text(encoding="utf-8")
@@ -143,7 +151,11 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         self.assertIn('console_arg="console=null"', grub)
         self.assertIn('panic_arg="panic=0"', grub)
         self.assertIn('console_arg="console=tty1"', grub)
-        self.assertIn('visibility_args="loglevel=4 systemd.show_status=true', grub)
+        self.assertIn('diagnostic_args="loglevel=4 systemd.show_status=true', grub)
+        self.assertIn('visibility_args="$diagnostic_args"', grub)
+        # The console policy is its own image fact, not the developer marker.
+        self.assertIn("/etc/greia-os/boot-console-policy", grub)
+        self.assertNotRegex(grub, r"panic=[1-9]")
 
     def test_boot_art_generator_preserves_colour_and_builds_safe_canvas(self) -> None:
         generator = (ROOT / "tools/generate_boot_artwork.py").read_text(
@@ -231,7 +243,8 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         self.assertIn("etc/shadow", installer)
         self.assertIn("multi-user.target.wants/ssh.service", installer)
         self.assertIn("prepare-developer-ssh", installer)
-        self.assertIn("AuthenticationMethods password", installer)
+        self.assertIn("methods=password", installer)
+        self.assertIn("verify-composed-root.sh", installer)
         self.assertIn("20-greia-wired.network", installer)
         self.assertIn("25-greia-wireless.network", installer)
         self.assertIn("developer-remote", installer)

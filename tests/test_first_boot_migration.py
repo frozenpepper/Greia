@@ -94,7 +94,7 @@ class FreshImageMembershipTests(unittest.TestCase):
         useradd = next(
             line
             for line in builder.splitlines()
-            if "--groups pipsettings,pipprofiles,audio greiakid" in line
+            if "--groups pipsettings,pipprofiles,audio,netdev greiakid" in line
         )
         self.assertNotIn("video", useradd)
         self.assertNotIn("render", useradd)

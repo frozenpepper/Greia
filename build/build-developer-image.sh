@@ -16,10 +16,15 @@ PACKAGE_ROOT="$PROJECT_ROOT/build/package-sets"
 
 PROFILE_PATH="$PROJECT_ROOT/build/profiles/${PROFILE}.toml"
 [[ -r "$PROFILE_PATH" ]] || { echo "Developer profile not found: $PROFILE_PATH" >&2; exit 1; }
-[[ "$PROFILE" == *-dev ]] || {
-  echo "Refusing developer build for a non-dev profile: $PROFILE" >&2
-  exit 1
-}
+# *-dev (diagnostic console) and the developer release candidate *-rc (quiet
+# console, SSH on); both must still carry developer-remote (checked below).
+case "$PROFILE" in
+  *-dev|*-rc) ;;
+  *)
+    echo "Refusing developer build for a non-dev profile: $PROFILE" >&2
+    exit 1
+    ;;
+esac
 python3 "$PROFILE_TOOL" --package-root "$PACKAGE_ROOT" validate "$PROFILE_PATH" >/dev/null
 sets="$(python3 "$PROFILE_TOOL" --package-root "$PACKAGE_ROOT" package-sets "$PROFILE_PATH" --scope target)"
 printf '%s\n' "$sets" | grep -qx 'developer-remote' || {
@@ -51,6 +56,6 @@ Greia developer image ready.
 Profile: $PROFILE
 Image: $image
 SSH user: greia
-Host hint after first boot: greia-dev.local
+Host hint after first boot: $(python3 "$PROFILE_TOOL" shell "$PROFILE_PATH" | sed -n "s/^HOSTNAME=//p" | tr -d "'").local
 SSH login mode: simple password; no operator SSH key file is generated or required.
 EOF

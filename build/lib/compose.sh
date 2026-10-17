@@ -365,6 +365,23 @@ BUILDINFO
   fi
 }
 
+# Boot console policy (profile boot.console_policy: quiet|diagnostic). The
+# installed GRUB generator (/etc/grub.d/10_greia_appliance) reads it; it is
+# deliberately separate from the developer-remote marker so an image can keep
+# SSH while booting quietly (release candidate). Written for both roles so the
+# live root records the policy its USB template was chosen with.
+compose_write_boot_console_policy() {
+  local rootfs="$1"
+  case "${BOOT_CONSOLE_POLICY:-}" in
+    quiet|diagnostic) ;;
+    *) echo "Unknown boot console policy: '${BOOT_CONSOLE_POLICY:-}'." >&2; return 1 ;;
+  esac
+  install -d -m 0755 "$rootfs/etc/greia-os"
+  printf '%s\n' "$BOOT_CONSOLE_POLICY" > "$rootfs/etc/greia-os/boot-console-policy"
+  chmod 0644 "$rootfs/etc/greia-os/boot-console-policy"
+  chown root:root "$rootfs/etc/greia-os/boot-console-policy"
+}
+
 compose_write_sources_hostname_hosts() {
   local rootfs="$1"
   local role="$2"
@@ -397,14 +414,27 @@ HOSTS
 # registry/tree shared by the launcher and typed parent profile controls;
 # pipsettings owns only bounded input/display preference state.
 # Target role only; the live-installer root carries no appliance accounts.
+#
+# netdev: iwd's shipped system-bus policy lets only root and group netdev talk
+# to net.connman.iwd, so the Shell (greiakid) and Parent (greiapanel) need it
+# to scan and join Wi-Fi (Acer parity audit A1, 2026-10-17). The launcher and
+# Parent units also grant it through SupplementaryGroups=, which is what the
+# running services actually use; the account membership keeps the identity
+# self-describing. groupadd -f: netdev may already exist from a package.
+#
+# The group names stay pipsettings/pipprofiles on purpose: tmpfiles, first
+# boot, the installer engine and the verifiers all use them, and the
+# 2026-10-01 /run/greia-os boot loop came from one place using another name.
+# A rename needs one coordinated tranche with a migration.
 compose_create_users_groups() {
   local rootfs="$1"
   chroot "$rootfs" groupadd --system pipsettings
   chroot "$rootfs" groupadd --system pipprofiles
+  chroot "$rootfs" groupadd --system -f netdev
   chroot "$rootfs" useradd --system --create-home --home-dir /var/lib/greia-kid \
-    --shell /usr/sbin/nologin --user-group --groups pipsettings,pipprofiles,audio greiakid
+    --shell /usr/sbin/nologin --user-group --groups pipsettings,pipprofiles,audio,netdev greiakid
   chroot "$rootfs" useradd --system --create-home --home-dir /var/lib/greia-os \
-    --shell /usr/sbin/nologin --user-group --groups pipsettings,pipprofiles greiapanel
+    --shell /usr/sbin/nologin --user-group --groups pipsettings,pipprofiles,netdev greiapanel
   chroot "$rootfs" useradd --create-home --home-dir /var/lib/greia-admin \
     --shell /bin/bash --groups sudo greiaadmin
   chroot "$rootfs" passwd --lock greiaadmin
@@ -414,6 +444,11 @@ compose_create_users_groups() {
   chroot "$rootfs" useradd --create-home --home-dir /var/lib/greia \
     --shell /bin/bash --groups sudo greia
   chroot "$rootfs" passwd --lock greia
+  # iwd owns Wi-Fi credentials in /var/lib/iwd (root-only, 0700). Create it
+  # explicitly so an installer-side Wi-Fi hand-off can write
+  # <target>/var/lib/iwd/<network>.psk (root:root 0600) before first boot and
+  # iwd on the installed system picks it up at start.
+  install -d -m 0700 -o root -g root "$rootfs/var/lib/iwd"
 }
 
 # Greia content installation (role-selected). Target installs the curated
@@ -585,6 +620,22 @@ compose_install_live_content() {
   rsync -a "$project_root/assets/icons/core/v1/256/" "$rootfs/opt/greia-os/assets/icons/core/v1/256/"
   install -d -m 0755 "$rootfs/opt/greia-os/assets/fonts"
   rsync -a "$project_root/assets/fonts/" "$rootfs/opt/greia-os/assets/fonts/"
+  # Installer look and boot intro (src/greia_installer/presentation.py,
+  # boot_intro.py, greia_platform.boot_animation/boot_chime): the 52 logo
+  # frames + static canvas, the boot chime, and the shared-visual catalogue
+  # with its runtime renditions (bg.meadow_day.home, character.leo). The
+  # catalogue loader resolves every catalogued path strictly, so the whole
+  # visual/runtime tree ships (about 10 MiB, live medium only, never the
+  # installed target budget); a partial subset would make the catalogue fail
+  # and silently fall back to the procedural meadow.
+  rsync -a --exclude 'source/' --exclude '*contact_sheet*' \
+    --include '/boot/' --include '/boot/frames/***' --include '/boot/static/***' \
+    --include '/audio/' --include '/audio/system/' \
+    --include '/audio/system/greia-boot-chime.wav' \
+    --include '/catalog/' --include '/catalog/shared_visuals_v1.toml' \
+    --include '/visual/' --include '/visual/runtime/***' \
+    --exclude '*' \
+    "$project_root/assets/" "$rootfs/opt/greia-os/assets/"
   install -d -m 0755 "$rootfs/usr/lib/python3/dist-packages"
   printf '%s\n' /opt/greia-os/src > "$rootfs/usr/lib/python3/dist-packages/pip_os.pth"
   chown -R root:root "$rootfs/opt/greia-os"
@@ -623,35 +674,79 @@ GREIA_FSTAB_EOF
 
 compose_build_audio_endpoint_plugin() {
   local rootfs="$1"
+  local project_root="${COMPOSE_PROJECT_ROOT:-$_COMPOSE_PROJECT_ROOT_DEFAULT}"
   # The greia_mic_light ALSA ExtPlugin is what makes microphone processing
   # real. Without it /etc/asound.conf still defines the PCM, but opening it
-  # fails with "No such device or address", the availability probe correctly
-  # declines to write its marker, and the audio service reports both processing
-  # endpoints unavailable - so noise cancelling silently fell back to off on a
-  # machine whose PCM was listed by aplay -L.
+  # fails, the availability probe declines to write its marker, and noise
+  # cancelling silently falls back to off.
   #
   # Built with the target toolchain inside the root, like the framebuffer
   # renderer, because the module must match the image's ABI. The compiler and
   # headers are development-only and are removed again afterwards.
+  #
+  # Every step returns explicitly: callers run this as `... || return 1`,
+  # which disables `set -e` for the whole function body. That is how earlier
+  # images shipped without the module (2026-10-17 mic review §2): the compile
+  # failed (libc6-dev missing), dpkg-architecture was absent (empty multiarch)
+  # and only the final purge's status counted.
+  local build_packages=(gcc libc6-dev libasound2-dev libspeexdsp-dev)
+  compose_apt_options
   chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
-    apt-get "${APT_ACQUIRE_OPTIONS[@]}" update
+    apt-get "${APT_ACQUIRE_OPTIONS[@]}" update || return 1
   chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
     apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold \
-    install -y --no-install-recommends gcc libasound2-dev libspeexdsp-dev >/dev/null
-  install -d -m 0755 "$rootfs/usr/src/greia-audio"
+    install -y --no-install-recommends "${build_packages[@]}" >/dev/null || return 1
+  install -d -m 0755 "$rootfs/usr/src/greia-audio" || return 1
   cp "$project_root/src/greia_platform/audio_alsa/greia_mic_light.c" \
-    "$rootfs/usr/src/greia-audio/greia_mic_light.c"
+    "$rootfs/usr/src/greia-audio/greia_mic_light.c" || return 1
   local multiarch
-  multiarch="$(chroot "$rootfs" dpkg-architecture -qDEB_HOST_MULTIARCH)"
+  multiarch="$(chroot "$rootfs" gcc -print-multiarch)" || return 1
+  [[ -n "$multiarch" ]] || { echo "Cannot determine the target multiarch triplet." >&2; return 1; }
   chroot "$rootfs" /bin/sh -c \
-    'cd /usr/src/greia-audio && gcc -O2 -Wall -fPIC -shared -o greia_mic_light.so greia_mic_light.c -lasound -lspeexdsp'
-  install -d -m 0755 "$rootfs/usr/lib/$multiarch/alsa-lib"
-  install -m 0755 "$rootfs/usr/src/greia-audio/greia_mic_light.so" \
-    "$rootfs/usr/lib/$multiarch/alsa-lib/libasound_module_pcm_greia_mic_light.so"
+    'cd /usr/src/greia-audio && gcc -O2 -Wall -fPIC -shared -o greia_mic_light.so greia_mic_light.c -lasound -lspeexdsp -lm' \
+    || { echo "greia_mic_light ALSA plugin failed to compile." >&2; return 1; }
+  local module="$rootfs/usr/lib/$multiarch/alsa-lib/libasound_module_pcm_greia_mic_light.so"
+  install -D -m 0755 "$rootfs/usr/src/greia-audio/greia_mic_light.so" "$module" || return 1
   rm -rf "$rootfs/usr/src/greia-audio"
   chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
-    apt-get "${APT_ACQUIRE_OPTIONS[@]}" -y remove --purge \
-    gcc libasound2-dev libspeexdsp-dev >/dev/null
+    apt-get "${APT_ACQUIRE_OPTIONS[@]}" -y remove --purge "${build_packages[@]}" >/dev/null || return 1
+  chroot "$rootfs" apt-get -y autoremove >/dev/null 2>&1 || true
+  compose_verify_audio_endpoint_plugin "$rootfs" || return 1
+}
+
+# Fail the build when the microphone plugin is missing or built for the wrong
+# architecture. Also used by consumers after later steps (apt autoremove,
+# footprint pruning) so nothing can silently delete it again.
+compose_verify_audio_endpoint_plugin() {
+  local rootfs="$1"
+  local module="" module_count=0 found
+  while IFS= read -r found; do
+    module_count=$((module_count + 1))
+    module="$found"
+  done < <(find "$rootfs/usr/lib" -mindepth 3 -maxdepth 3 -type f \
+    -path '*/alsa-lib/libasound_module_pcm_greia_mic_light.so' 2>/dev/null)
+  (( module_count == 1 )) || {
+    echo "Expected exactly one greia_mic_light ALSA module under $rootfs/usr/lib/<multiarch>/alsa-lib; found $module_count." >&2
+    return 1
+  }
+  [[ -s "$module" ]] || { echo "greia_mic_light ALSA module is empty: $module" >&2; return 1; }
+  local elf_machine
+  elf_machine="$(readelf -h "$module" 2>/dev/null | awk '/Machine:/{print $2, $3}')"
+  case "$ARCH" in
+    i386)
+      [[ "$elf_machine" == "Intel 80386" ]] || {
+        echo "greia_mic_light module architecture ($elf_machine) does not match i386 target." >&2
+        return 1
+      }
+      ;;
+    amd64)
+      [[ "$elf_machine" == "Advanced Micro" || "$elf_machine" == "AMD x86-64" ]] || {
+        echo "greia_mic_light module architecture ($elf_machine) does not match amd64 target." >&2
+        return 1
+      }
+      ;;
+  esac
+  echo "greia_mic_light ALSA module: ${module#"$rootfs"} ($elf_machine)"
 }
 
 # Build the Greia-owned early framebuffer boot cover for the TARGET
@@ -805,8 +900,11 @@ compose_provision_developer_ssh_target() {
   # is allowed).
   printf 'greia:greia\n' | chroot "$rootfs" /usr/sbin/chpasswd
   chroot "$rootfs" /usr/bin/passwd -u greia
-  # Write BOTH sshd drop-ins consistently. sshd_config.d is included in glob
-  # order and the first value wins; the base builder writes 20-greia-parent.conf
+  # Write BOTH sshd drop-ins consistently (prepare-developer-ssh regenerates
+  # them on every sshd start with the same password policy, plus key login when
+  # an operator key is installed). `publickey,password` would mean BOTH methods,
+  # so the build-time floor uses plain `password`. sshd_config.d is included in
+  # glob order and the first value wins; the base builder writes 20-greia-parent.conf
   # with PasswordAuthentication no / AuthenticationMethods publickey, which
   # would otherwise defeat the developer floor. The dev floor must be coherent
   # across every included file so the greia/greia password login works.
@@ -814,9 +912,9 @@ compose_provision_developer_ssh_target() {
 # Target development security floor (owner-approved greia/greia).
 # Enables the development/test SSH identity greia/greia; root stays denied.
 PasswordAuthentication yes
-KbdInteractiveAuthentication yes
+KbdInteractiveAuthentication no
 PermitRootLogin no
-AuthenticationMethods publickey,password
+AuthenticationMethods password
 DenyUsers root
 AllowUsers greia
 FLOOR
@@ -824,9 +922,9 @@ FLOOR
   cat > "$rootfs/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'DEVSSH'
 # Development target SSH policy (owner-approved greia/greia).
 PasswordAuthentication yes
-KbdInteractiveAuthentication yes
+KbdInteractiveAuthentication no
 PermitRootLogin no
-AuthenticationMethods publickey,password
+AuthenticationMethods password
 AllowUsers greia
 X11Forwarding no
 AllowTcpForwarding no
@@ -834,9 +932,10 @@ PermitTunnel no
 DEVSSH
   chmod 0644 "$rootfs/etc/ssh/sshd_config.d/20-greia-parent.conf"
   systemctl --root="$rootfs" enable ssh.service
-  # Developer marker: keeps the installed boot observable (console=tty1,
-  # panic=30) via grub.d/10_greia_appliance and identifies this image as a
-  # developer/test build.
+  # Developer marker: identifies this image as a developer/test build (SSH,
+  # greia-devctl, developer Activity source). The boot console is chosen
+  # separately by /etc/greia-os/boot-console-policy (diagnostic for -dev
+  # profiles, quiet for the release candidate); panic=0 in every policy.
   install -d -m 0755 "$rootfs/etc/greia-os"
   printf '%s\n' "profile=$PROFILE_ID" > "$rootfs/etc/greia-os/developer-remote"
   chmod 0644 "$rootfs/etc/greia-os/developer-remote"
@@ -911,6 +1010,50 @@ compose_write_developer_display_endpoint() {
   chmod 0644 "$rootfs/etc/greia-os/developer-display.json"
 }
 
+# Developer target images keep a bounded persistent journal so a first-boot
+# failure or boot loop survives the reboot that follows it (premortem §0.2:
+# the volatile journal left nothing to read after the 2026-10-07 loop).
+# Release images keep the volatile journal from the overlay.
+compose_configure_developer_journal() {
+  local rootfs="$1"
+  install -d -m 0755 "$rootfs/etc/systemd/journald.conf.d"
+  cat > "$rootfs/etc/systemd/journald.conf.d/20-greia-developer-persistent.conf" <<'JOURNAL'
+# Developer/RC images only (written by build/lib/compose.sh): keep the journal
+# across reboots, bounded so it can never fill the 7 GB reference disk.
+[Journal]
+Storage=persistent
+SystemMaxUse=48M
+SystemKeepFree=256M
+SystemMaxFileSize=8M
+MaxRetentionSec=14day
+JOURNAL
+  chmod 0644 "$rootfs/etc/systemd/journald.conf.d/20-greia-developer-persistent.conf"
+  install -d -m 2755 -o root -g root "$rootfs/var/log/journal"
+  chroot "$rootfs" chgrp systemd-journal /var/log/journal 2>/dev/null || true
+}
+
+# Optional operator PUBLIC key for key-only agent access to developer images.
+# Input: GREIA_OPERATOR_AUTHORIZED_KEY_FILE (a host path, never committed).
+# Installed root-owned at /etc/ssh/greia-operator-keys/greia, which the runtime
+# SSH bootstrap (prepare-developer-ssh) lists in AuthorizedKeysFile, so it
+# survives reboots and sshd restarts. Password login stays available.
+compose_install_operator_key() {
+  local rootfs="$1"
+  local developer="$2"
+  local source="${GREIA_OPERATOR_AUTHORIZED_KEY_FILE:-}"
+  [[ -n "$source" ]] || return 0
+  [[ "$developer" == "1" ]] || {
+    echo "GREIA_OPERATOR_AUTHORIZED_KEY_FILE is set but profile $PROFILE_ID has no developer-remote set; refusing." >&2
+    return 1
+  }
+  local project_root="${COMPOSE_PROJECT_ROOT:-$_COMPOSE_PROJECT_ROOT_DEFAULT}"
+  install -d -m 0755 -o root -g root "$rootfs/etc/ssh/greia-operator-keys" || return 1
+  python3 -I "$project_root/build/lib/operator_key.py" \
+    "$source" "$rootfs/etc/ssh/greia-operator-keys/greia" || return 1
+  chown root:root "$rootfs/etc/ssh/greia-operator-keys/greia" || return 1
+  chmod 0644 "$rootfs/etc/ssh/greia-operator-keys/greia" || return 1
+}
+
 compose_maybe_provision_developer_ssh() {
   local rootfs="$1"
   local role="$2"
@@ -924,8 +1067,14 @@ compose_maybe_provision_developer_ssh() {
     else
       echo "Developer installer profile: enabling greia/greia SSH (root denied)."
     fi
-    compose_provision_developer_ssh "$rootfs" "$role"
-    compose_write_developer_display_endpoint "$rootfs" "$role"
+    compose_provision_developer_ssh "$rootfs" "$role" || return 1
+    compose_write_developer_display_endpoint "$rootfs" "$role" || return 1
+    if [[ "$role" == "target" ]]; then
+      compose_configure_developer_journal "$rootfs" || return 1
+    fi
+    compose_install_operator_key "$rootfs" 1 || return 1
+  else
+    compose_install_operator_key "$rootfs" 0 || return 1
   fi
   COMPOSE_ROLE_SETS="$role_sets"
 }
@@ -1025,7 +1174,8 @@ compose_footprint_hygiene() {
   find "$rootfs/var/log" -type f -exec truncate -s 0 '{}' +
 }
 
-# Image-owned, read-only Python bytecode prefix (greia_platform.bytecode_cache).
+# Image-owned, read-only Python bytecode prefix (greia_platform.bytecode_cache),
+# built for the target AND the live-installer root.
 # Footprint hygiene above deletes every in-tree __pycache__ and Greia processes
 # never write bytecode, so without this every Shell start and Activity launch
 # recompiled ~200+ modules (~3.2 s per launch on the Atom N270 reference).
@@ -1105,6 +1255,7 @@ compose_root() {
   compose_debootstrap "$rootfs" || return 1
   compose_apply_overlay "$rootfs" "$role" || return 1
   compose_write_build_info "$rootfs" "$role" || return 1
+  compose_write_boot_console_policy "$rootfs" || return 1
   compose_write_sources_hostname_hosts "$rootfs" "$role" || return 1
   if [[ "$role" == "live-installer" ]]; then
     compose_prepare_live_media_identity "$rootfs" || return 1
@@ -1126,9 +1277,10 @@ compose_root() {
   compose_footprint_prune "$rootfs" || return 1
   compose_write_metadata_manifests "$rootfs" "$role" || return 1
   compose_footprint_hygiene "$rootfs" || return 1
-  if [[ "$role" == "target" ]]; then
-    compose_precompile_bytecode "$rootfs" || return 1
-  fi
+  # Both roles: the live installer previously cold-compiled the Shell-import
+  # class (~7.6 s on the Atom) into its RAM overlay on every boot.
+  compose_precompile_bytecode "$rootfs" || return 1
+  compose_verify_audio_endpoint_plugin "$rootfs" || return 1
   # Clone-neutral target state is composer-owned so both the thin disk-image
   # consumer and the release-payload staging path share it. The live-installer
   # role stays role-specific (see compose_prepare_clone_neutral_target).

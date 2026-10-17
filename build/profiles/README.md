@@ -15,11 +15,11 @@ ADR 0012 distinguishes these concepts deliberately:
 - `[platform]`: platform family and C0–C3 compatibility/resource class;
 - `[base]`: Debian suite, CPU architecture, mirrors, support deadline, kernel meta-package;
 - `[image]`: image layout, allocation size, hostname;
-- `[boot]`: installed-system boot adapter, installer boot adapter, graphical cover backend;
+- `[boot]`: installed-system boot adapter, installer boot adapter, graphical cover backend, optional `console_policy` (`quiet` | `diagnostic`; default `diagnostic` for profiles with `developer-remote`, otherwise `quiet`; `diagnostic` requires `developer-remote`);
 - `[display]`: selected display adapter plus profile-specific video packages;
 - `[runtimes]`: platform-owned Activity runtime families included in the target image;
 - `[packages]`: general target/installer package sets and narrowly justified extra packages;
-- `[resources]`: profile-specific preferred/hard/architecture-review installed-core limits.
+- `[resources]`: profile-specific preferred/hard/architecture-review installed-core limits (single-root profiles: hard gate 1,300 MiB per the owner decision of 2026-10-17; the A/B profile stays at 1,000 MiB because its slot is 1 GiB).
 
 Adapter and runtime package sets are composed by `tools/build_profile.py`; profiles do not duplicate those implementation mappings.
 
@@ -63,6 +63,10 @@ Remote-control details and Acer acceptance are documented in:
 docs/testing/2026-08-09_DEVELOPER_REMOTE_CONTROL.md
 docs/testing/2026-08-15_ACER_REMOTE_AGENT_ACCEPTANCE.md
 ```
+
+## Developer release candidate
+
+`legacy-x86-i686-rc` is `legacy-x86-i686` plus the `developer-remote` set in both artifacts, hostname `greia-rc` and `boot.console_policy = "quiet"`: the child sees no console text while SSH stays on for agents. It is `experimental` and never an ADR 0036 release. Runbook: `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` §13.
 
 ## Useful commands
 

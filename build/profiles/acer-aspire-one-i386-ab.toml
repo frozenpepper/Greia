@@ -59,6 +59,9 @@ installer_sets = ["installer-base", "system-update"]
 extra_packages = ["xserver-xorg-legacy"]
 
 [resources]
+# Kept at 1,000 MiB although the owner accepted 1,300 MiB single-root images
+# (2026-10-17): each A/B system slot is 1 GiB (storage.system_slot_bytes), so
+# a larger root cannot fit a slot. Raise both together, never one alone.
 preferred_core_mib = 800
 required_core_mib = 1000
 architecture_review_mib = 1250

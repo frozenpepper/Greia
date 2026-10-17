@@ -1,0 +1,33 @@
+# Greia live installer - QUIET syslinux configuration (BIOS legacy USB).
+#
+# Selected by tools/build-live-usb.sh when the installer image declares
+# boot.console_policy = "quiet" (the developer release-candidate profile).
+# Developer images with the diagnostic policy keep syslinux.cfg.in unchanged.
+#
+# The default entry boots silently: no kernel/systemd/live-boot text, no
+# cursor. panic=0 still holds: a fatal kernel/initramfs error is never turned
+# into a timed reboot loop.
+#
+# Verbose recovery path (owner only, no menu is ever shown to a child): hold
+# Shift or Alt (or switch Caps Lock / Scroll Lock on) while the stick boots.
+# Syslinux then shows its "boot:" prompt; type   verbose   and press Enter.
+# That entry carries exactly the diagnostic arguments of syslinux.cfg.in
+# (console=tty1, status output, visible cursor).
+#
+# Not hidden by this file: the two short Syslinux lines (version banner and
+# "Loading ...") printed before the kernel starts. Hiding them needs the
+# clear-screen display-file trick that the 2026-08-20 regression review banned; it
+# requires an explicit owner decision and a physical Acer test first.
+DEFAULT live
+PROMPT 0
+TIMEOUT 0
+
+LABEL live
+    LINUX /vmlinuz
+    INITRD /initrd.img
+    APPEND boot=live components live-media-path=/ live-media-timeout=30 nopersistence noeject overlay-size=128M greia.live_media_id=LIVE_MEDIA_ID silent quiet splash loglevel=0 console=null panic=0 systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0
+
+LABEL verbose
+    LINUX /vmlinuz
+    INITRD /initrd.img
+    APPEND boot=live components live-media-path=/ live-media-timeout=30 nopersistence noeject overlay-size=128M greia.live_media_id=LIVE_MEDIA_ID console=tty1 panic=0 loglevel=4 systemd.show_status=true rd.systemd.show_status=true systemd.crash_shell=no udev.log_priority=4 vt.global_cursor_default=1 consoleblank=0

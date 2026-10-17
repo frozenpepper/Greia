@@ -323,6 +323,15 @@ Developer target entry point currently includes:
 sudo bash build/build-developer-image.sh out
 ```
 
+Reference-Acer USB front door (diagnostic developer image, or the quiet release candidate):
+
+```bash
+sudo bash tools/build-and-flash-development-usb.sh legacy-x86-i686-dev /dev/sdX
+sudo bash tools/build-and-flash-development-usb.sh legacy-x86-i686-rc /dev/sdX ./out --operator-key ~/greia-operator.pub
+```
+
+The release-candidate runbook (frozen SHA, operator public key, USB identification, required PASS lines, pre-build gates G1–G11) is `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` §13. Boot console policy (`diagnostic` vs `quiet`, hidden verbose paths) is §7 there.
+
 Do not add destructive disk/removable-media writes to a generic setup helper.
 
 ## 11. Setup map

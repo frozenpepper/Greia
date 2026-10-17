@@ -71,6 +71,14 @@ _BOOT_COVER_PACKAGE_SETS: Mapping[str, str] = {
 # Empty by design in Phase 0. A future backend must be deliberately registered
 # here only after its noninteractive/no-text failure behavior is accepted.
 _RELEASE_SAFE_BOOT_COVERS: frozenset[str] = frozenset()
+# Boot console policy (greia_platform.boot_contract.BootConsolePolicy). It is
+# independent of the developer-remote capability: "diagnostic" keeps tty1
+# status output for hardware recovery and needs a developer profile; "quiet"
+# is the child-facing appliance boot (release, and the developer RC that keeps
+# SSH). When a profile omits it, developer profiles stay diagnostic and every
+# other profile is quiet, which is exactly the behaviour before the flag.
+_ALLOWED_CONSOLE_POLICIES = frozenset({"quiet", "diagnostic"})
+_DEVELOPER_REMOTE_SET = "developer-remote"
 _DISPLAY_PACKAGE_SETS: Mapping[str, str] = {
     "xorg": "display-xorg",
 }
@@ -156,6 +164,7 @@ class BootDefinition:
     installed_adapter: str
     installer_adapter: str
     cover_backend: str
+    console_policy: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -280,6 +289,15 @@ class BuildProfile:
                 installed_adapter=_string(boot, "installed_adapter"),
                 installer_adapter=_string(boot, "installer_adapter"),
                 cover_backend=_string(boot, "cover_backend"),
+                console_policy=(
+                    _string(boot, "console_policy")
+                    if "console_policy" in boot
+                    else (
+                        "diagnostic"
+                        if _DEVELOPER_REMOTE_SET in _string_list(packages, "target_sets")
+                        else "quiet"
+                    )
+                ),
             ),
             display=DisplayDefinition(
                 adapter=_string(display, "adapter"),
@@ -383,7 +401,22 @@ class BuildProfile:
                 "image.size_mib must exceed resources.required_core_mib to leave writable headroom"
             )
         _safe_identifier(self.platform.board, "platform.board")
+        self._validate_console_policy()
         self._validate_storage_lifecycle()
+
+    def _validate_console_policy(self) -> None:
+        """The diagnostic console is a developer-image property only."""
+        if self.boot.console_policy not in _ALLOWED_CONSOLE_POLICIES:
+            raise BuildProfileError(
+                "boot.console_policy must be one of: "
+                + ", ".join(sorted(_ALLOWED_CONSOLE_POLICIES))
+            )
+        developer = _DEVELOPER_REMOTE_SET in self.packages.target_sets
+        if self.boot.console_policy == "diagnostic" and not developer:
+            raise BuildProfileError(
+                "boot.console_policy='diagnostic' requires the developer-remote "
+                "target package set; release images always boot quietly"
+            )
 
     def _validate_storage_lifecycle(self) -> None:
         """Fail closed on invalid storage/target/update/setup combinations."""
@@ -681,6 +714,7 @@ class BuildProfile:
             "INSTALLED_BOOT_ADAPTER": self.boot.installed_adapter,
             "INSTALLER_BOOT_ADAPTER": self.boot.installer_adapter,
             "BOOT_COVER_BACKEND": self.boot.cover_backend,
+            "BOOT_CONSOLE_POLICY": self.boot.console_policy,
             "DISPLAY_ADAPTER": self.display.adapter,
             "VIDEO_PACKAGES": " ".join(self.display.video_packages),
             "RUNTIME_FAMILIES": " ".join(self.runtimes.enabled),

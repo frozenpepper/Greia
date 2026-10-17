@@ -1,9 +1,19 @@
+# Development-only remote preparation (legacy helper; NOT enabled by any
+# current image builder). Nothing on the active developer/RC path needs it:
+# greia-devctl creates its own state directories, the base overlay already
+# runs wired DHCP (20-greia-wired.network), avahi-daemon provides mDNS and
+# prepare-developer-ssh owns SSH host identity and policy. It is kept because
+# the retired key-provisioning tools (tools/provision_developer_*.py) still
+# install and enable it. Repaired 2026-10-17 (Acer parity audit D1): it used
+# Requires= on networkd/resolved and then restarted them, which stopped this
+# very unit (observed SIGTERM), and it failed under set -e without an
+# operator key.
 [Unit]
 Description=Greia development-only remote preparation
 ConditionPathExists=/etc/greia-os/developer-remote
 After=local-fs.target greia-first-boot.service systemd-networkd.service systemd-resolved.service
-Requires=greia-first-boot.service systemd-networkd.service systemd-resolved.service
-Wants=avahi-daemon.service
+Wants=systemd-networkd.service systemd-resolved.service avahi-daemon.service
+Requires=greia-first-boot.service
 Before=ssh.service
 
 [Service]

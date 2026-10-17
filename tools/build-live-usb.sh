@@ -16,6 +16,8 @@ set -Eeuo pipefail
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../build/lib/safe-cleanup.sh
 source "$PROJECT_ROOT/build/lib/safe-cleanup.sh"
+# shellcheck source=../build/lib/live-syslinux.sh
+source "$PROJECT_ROOT/build/lib/live-syslinux.sh"
 
 usage() {
   cat <<'USAGE'
@@ -87,6 +89,11 @@ LIVE_MEDIA_ID="$(tr -d '\r\n' < "$IMG_MOUNT/.disk/live-uuid" 2>/dev/null || true
   echo "Installer image is missing a valid .disk/live-uuid." >&2
   exit 1
 }
+# Console policy comes from the image's own declared manifest (quiet RC media
+# vs the diagnostic developer template); resolve it before wiping anything.
+LIVE_CONSOLE_POLICY="$(greia_live_console_policy "$IMG_MOUNT")"
+SYSLINUX_TEMPLATE="$(greia_live_syslinux_template "$PROJECT_ROOT" "$LIVE_CONSOLE_POLICY")"
+[[ -r "$SYSLINUX_TEMPLATE" ]] || { echo "Syslinux template missing: $SYSLINUX_TEMPLATE" >&2; exit 1; }
 
 # Wipe and create one active FAT32 partition starting at sector 2048.
 wipefs --all --force "$DEVICE" >/dev/null 2>&1 || true
@@ -120,7 +127,7 @@ if [ -d /usr/lib/syslinux/modules/bios ]; then
   cp /usr/lib/syslinux/modules/bios/*.c32 "$USB_MOUNT/boot/syslinux/" 2>/dev/null || true
 fi
 sed "s/LIVE_MEDIA_ID/$LIVE_MEDIA_ID/" \
-  "$PROJECT_ROOT/build/live-syslinux/syslinux.cfg.in" \
+  "$SYSLINUX_TEMPLATE" \
   > "$USB_MOUNT/boot/syslinux/syslinux.cfg"
 chmod 0644 "$USB_MOUNT/boot/syslinux/syslinux.cfg"
 syslinux --install --directory /boot/syslinux "$USB_PART"
@@ -133,5 +140,6 @@ partprobe "$DEVICE" 2>/dev/null || true
 
 echo "Greia syslinux/FAT32 live USB ready on $DEVICE"
 echo "  live_media_id=$LIVE_MEDIA_ID"
+echo "  live_console_policy=$LIVE_CONSOLE_POLICY"
 echo "  bootloader=syslinux (VBR) + mbr.bin (MBR)"
 echo "  NOTE: device may be re-detected; identify it before unplugging."

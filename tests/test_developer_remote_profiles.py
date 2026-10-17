@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import json
 import sys
 import tempfile
@@ -40,7 +41,13 @@ class DeveloperRemoteProfileTests(unittest.TestCase):
                     normal.platform.compatibility_class,
                 )
                 self.assertEqual(dev.display, normal.display)
-                self.assertEqual(dev.boot, normal.boot)
+                # Same boot adapters; only the console policy differs: -dev
+                # images keep the diagnostic console, release ones are quiet.
+                self.assertEqual(
+                    dataclasses.replace(dev.boot, console_policy="quiet"), normal.boot
+                )
+                self.assertEqual(dev.boot.console_policy, "diagnostic")
+                self.assertEqual(normal.boot.console_policy, "quiet")
                 self.assertEqual(dev.runtimes, normal.runtimes)
                 self.assertEqual(dev.image.size_mib, normal.image.size_mib)
                 self.assertEqual(dev.image.layout, normal.image.layout)

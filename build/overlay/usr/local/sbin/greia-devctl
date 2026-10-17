@@ -1,6 +1,13 @@
 #!/bin/sh
 set -eu
 
+# In-place source deploy (tools/dev_source_deploy.py) is a fixed-path shell
+# helper rather than Python under /opt/greia-os, because it replaces that tree.
+if [ "${1:-}" = source-deploy ]; then
+  shift
+  exec /bin/sh /usr/local/lib/greia-os/greia-source-deploy "$@"
+fi
+
 module=greia_platform.developer_control
 case "${1:-}" in
   key|mousemove|click|type)

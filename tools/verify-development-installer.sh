@@ -4,6 +4,8 @@ set -Eeuo pipefail
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../build/lib/safe-cleanup.sh
 source "$PROJECT_ROOT/build/lib/safe-cleanup.sh"
+# shellcheck source=../build/lib/verify-composed-root.sh
+source "$PROJECT_ROOT/build/lib/verify-composed-root.sh"
 
 usage() {
   echo "Usage: sudo bash tools/verify-development-installer.sh INSTALLER_IMAGE" >&2
@@ -90,7 +92,7 @@ check_ssh_runtime() {
     exit 1
   }
   for required in \
-    'AuthenticationMethods password' \
+    'methods=password' \
     'PasswordAuthentication yes' \
     'KbdInteractiveAuthentication no' \
     'PermitRootLogin no' \
@@ -202,6 +204,8 @@ check_installed_dev_boot_diagnostics() {
     echo "installed-system payload: Greia GRUB policy is missing." >&2
     exit 1
   }
+  # The generator must keep the diagnostic branch for -dev profiles (selected
+  # by /etc/greia-os/boot-console-policy, checked in check_composed_roots).
   for required in \
     'developer-remote' \
     'console_arg="console=tty1"' \
@@ -215,6 +219,36 @@ check_installed_dev_boot_diagnostics() {
       exit 1
     }
   done
+}
+
+# Extract the small set of paths the shared root contract reads (no code from
+# the image runs) and apply it to both artifacts.
+extract_for_contract() {
+  local squash="$1" dest="$2" path
+  local paths=(etc boot/grub/grub.cfg var/lib/iwd usr/local/lib/greia-os usr/bin/aplay
+    usr/lib/greia/pycache/opt/greia-os/src/greia_platform opt/greia-os/assets)
+  while IFS= read -r path; do
+    paths+=("$path")
+  done < <(unsquashfs -ll "$squash" 2>/dev/null \
+    | awk '{print $NF}' | sed -n 's|^squashfs-root/||p' \
+    | grep -E '^usr/lib/[^/]+/alsa-lib/libasound_module_pcm_greia_mic_light\.so$' || true)
+  unsquashfs -q -n -d "$dest" "$squash" "${paths[@]}" >/dev/null 2>&1 || true
+  [[ -d "$dest/etc" ]] || {
+    echo "Cannot extract contract paths from $squash" >&2
+    exit 1
+  }
+}
+
+check_composed_roots() {
+  extract_for_contract "$TARGET" "$WORK/target-root"
+  greia_verify_composed_root "$WORK/target-root" target "installed-system payload" "$PROJECT_ROOT"
+  TARGET_CONSOLE_POLICY="$BOOT_CONSOLE_POLICY_FOUND"
+  extract_for_contract "$LIVE" "$WORK/live-root"
+  greia_verify_composed_root "$WORK/live-root" live-installer "live installer" "$PROJECT_ROOT"
+  [[ "$BOOT_CONSOLE_POLICY_FOUND" == "$TARGET_CONSOLE_POLICY" ]] || {
+    echo "live installer and installed payload declare different console policies." >&2
+    exit 1
+  }
 }
 
 check_runtime_directory_contract() {
@@ -487,6 +521,7 @@ check_account "$TARGET" "installed-system payload"
 check_ssh_runtime "$TARGET" "installed-system payload"
 check_network "$TARGET" "installed-system payload" "networkd"
 check_installed_dev_boot_diagnostics "$TARGET"
+check_composed_roots
 check_runtime_directory_contract
 check_installed_first_boot_contract
 check_boot_progress_contract
@@ -509,10 +544,15 @@ printf '%s\n' "$TARGET_BUILD_INFO" | grep -Fq 'PIP_BUILD_PROFILE=' || exit 1
 printf '%s\n' "Developer installer artifact verification: PASS"
 printf '%s\n' "- live installer: password-enabled greia account, sshd bootstrap, DHCP policy"
 printf '%s\n' "- installed payload: password-enabled greia account, sshd bootstrap, DHCP policy"
-printf '%s\n' "- installed dev boot: tty1 diagnostics, panic=0 (no timed reboot)"
+if [[ "$TARGET_CONSOLE_POLICY" == quiet ]]; then
+  printf '%s\n' "- boot console: quiet (installer + installed), panic=0; hidden Syslinux 'verbose' + owner-only GRUB diagnostics"
+else
+  printf '%s\n' "- installed dev boot: tty1 diagnostics, panic=0 (no timed reboot)"
+fi
+printf '%s\n' "- both roots: mic ALSA module, HDA power_save=0, bytecode prefix; target: netdev, /var/lib/iwd, persistent journal"
 printf '%s\n' "- runtime roots: recurring tmpfiles ownership verified; one-time/launcher ownership race rejected"
 printf '%s\n' "- first boot: launcher VT/client split, Xwrapper/input and Activity sandbox contracts verified"
 printf '%s\n' "- boot progress: truthful milestones 15/30/45/55/65/78 + launcher 92 handoff verified"
 printf '%s\n' "- splash: full-colour 1024x600 canvas verified in live PPM, target PPM, GRUB PNG and launcher PNG"
 printf '%s\n' "- GRUB splash: proportional padding + centred; raw stretch path rejected"
-printf '%s\n' "- root SSH remains denied; no operator SSH key is required"
+printf '%s\n' "- root SSH remains denied; password login always; operator key login when built with --operator-key"

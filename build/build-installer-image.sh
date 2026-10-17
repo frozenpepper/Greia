@@ -245,6 +245,7 @@ LIVE_POOL_CACHE_MOUNT="$(mount_pool_cache "$LIVE_ROOT")"; MOUNTS+=("$LIVE_POOL_C
 compose_debootstrap "$LIVE_ROOT"
 compose_apply_overlay "$LIVE_ROOT" "live-installer"
 compose_write_build_info "$LIVE_ROOT" "live-installer"
+compose_write_boot_console_policy "$LIVE_ROOT"
 # The live installer is a second Debian root carrying the target payload
 # reference: record the expected payload digest and the target manifest
 # beside the live build-info before any package install.
@@ -292,6 +293,9 @@ PY
 
 compose_install_greia_content "$LIVE_ROOT" "live-installer"
 compose_build_early_framebuffer "$LIVE_ROOT"
+# Same engine step as the target role (compose_root runs it for both roles);
+# the explicit failure checks inside make a missing module stop the build.
+compose_build_audio_endpoint_plugin "$LIVE_ROOT"
 compose_configure_systemd "$LIVE_ROOT" "live-installer"
 compose_configure_ssh_base "$LIVE_ROOT"
 compose_maybe_provision_developer_ssh "$LIVE_ROOT" "live-installer"
@@ -312,6 +316,12 @@ cp "$LIVE_ROOT/etc/greia-os/package-manifest.tsv" "$OUTPUT_DIR/greia-os-installe
 cp "$LIVE_ROOT/etc/greia-os/base-system-manifest" "$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-live-base-system-manifest.txt"
 cp "$LIVE_ROOT/etc/greia-os/security-support-status.txt" "$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-live-security-support-status.txt"
 compose_footprint_hygiene "$LIVE_ROOT"
+# Read-only bytecode prefix for the live installer too (greia-installer.service
+# carries PYTHONPYCACHEPREFIX): the Atom otherwise cold-compiles the installer
+# UI into the 128 MiB RAM overlay on every boot. Runs after hygiene so nothing
+# deletes it; the module check re-asserts the plugin survived pruning.
+compose_precompile_bytecode "$LIVE_ROOT"
+compose_verify_audio_endpoint_plugin "$LIVE_ROOT"
 
 # POSTR1-P2: immutable image-owned A/B release facts (installer-ab.env).
 # For A/B target profiles the installer medium carries one small typed
@@ -526,6 +536,7 @@ install -m 0644 "$INSTALLER_PROFILE_MANIFEST" "$INSTALLER_PROFILE_REPORT"
   echo "live_media_id=$live_media_id"
   echo "live_media_marker=/.disk/live-uuid"
   echo "boot_cover_backend=$BOOT_COVER_BACKEND"
+  echo "boot_console_policy=$BOOT_CONSOLE_POLICY"
   echo "installer_profile_manifest=$INSTALLER_PROFILE_REPORT"
   echo "installer_profile_manifest_sha256=$(sha256sum "$INSTALLER_PROFILE_MANIFEST" | awk '{print $1}')"
   echo "payload_profile_manifest=$PAYLOAD_PROFILE_REPORT"

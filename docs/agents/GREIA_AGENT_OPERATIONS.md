@@ -256,11 +256,11 @@ If the target is unreachable, return the completed source/Simulator evidence and
 
 ### Developer Acer: in-place source deploy (no installer)
 
-Use this to test a frozen `HEAD` on an already-installed developer Acer without reimaging. It needs operator key authentication and `sudo -n` provisioned by the owner; never touch `sshd`, sudoers or `authorized_keys`, and keep addresses and credentials out of commands you record. The older `tools/deploy_to_acer.py` is a password-based extract-in-place script that leaves `/opt/greia-os` owned by `greiakid`; it does not follow this procedure and must not be used for it.
+Use this to test a frozen `HEAD` on an already-installed developer Acer without reimaging. It needs operator key authentication and the bounded developer privilege path; never touch `sshd`, sudoers or `authorized_keys`, and keep addresses and credentials out of commands you record. Images built from 2026-10-17 on accept an operator **public** key at build time (`--operator-key key.pub` on `tools/build-and-flash-development-usb.sh` / `tools/build-development-installer.sh`, installed root-owned at `/etc/ssh/greia-operator-keys/greia`; key OR password login, regenerated on every sshd start so it survives reboots) and expose the deploy as `sudo -n /usr/local/sbin/greia-devctl source-deploy probe|prepare|extract|parse-gate|swap|status|cleanup` (the only passwordless sudo entry). Images older than that (the Acer installed 2026-10-06) need `--legacy-generic-sudo`, which uses the hand-provisioned generic `sudo -n` and the old `/bin/sh -c` scripts. The older `tools/deploy_to_acer.py` is a password-based extract-in-place script that leaves `/opt/greia-os` owned by `greiakid`; it does not follow this procedure and must not be used for it.
 
 **Device facts.** Atom N270, i686, 1 GB RAM, no swap, Python 3.11, Xorg 1024x600. There is no `rsync`, and `/var/tmp` is a 32 MB tmpfs, so stage under `/var/lib/greia/deploy`.
 
-**Use the tool.** `python3 tools/dev_source_deploy.py deploy --target <operator>@<device>` (or set `GREIA_DEV_TARGET`; nothing is hard-coded, and it uses `ssh` with `BatchMode=yes`, so your own key/agent and `known_hosts` only, never a password). Subcommands: `stage` (build the bundle locally), `push` (stage + upload + parse-gate), `swap`, `deploy` (= push + swap), `status` (is-active, `NRestarts`, deployed SHA), `cleanup` (remove `prev`/`new`/tarballs on the device, only after verification). Every remote command runs as `sudo -n`; if that fails the tool stops with a clear message. Tests: `tests/test_dev_source_deploy.py`.
+**Use the tool.** `python3 tools/dev_source_deploy.py deploy --target <operator>@<device>` (or set `GREIA_DEV_TARGET`; nothing is hard-coded, and it uses `ssh` with `BatchMode=yes`, so your own key/agent and `known_hosts` only, never a password). Subcommands: `stage` (build the bundle locally), `push` (stage + upload + parse-gate), `swap`, `deploy` (= push + swap), `status` (is-active, `NRestarts`, deployed SHA), `cleanup` (remove `prev`/`new`/tarballs on the device, only after verification). Every privileged step is one fixed `greia-devctl source-deploy` verb (or, with `--legacy-generic-sudo`, `sudo -n /bin/sh -c <fixed script>`); if the probe fails the tool stops with a clear message. Tests: `tests/test_dev_source_deploy.py`.
 
 What it does (the former manual procedure, kept as the contract):
 
@@ -390,6 +390,9 @@ Developer-image convenience must not leak into normal/release profiles.
   is not in the `disk` group, so an unprivileged driver run fails pre-QEMU at
   clone injection with `losetup: Permission denied` (observed V12F; not a
   product finding). Disposable `/tmp` media only.
+- Release-candidate build (quiet boot, SSH on, optional operator public key):
+  profile `legacy-x86-i686-rc`, runbook `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md`
+  §13 (pre-build gates, USB identification, required PASS lines).
 - Detach a long build+flash properly: `setsid nohup sudo -n bash
   tools/build-and-flash-development-usb.sh <profile> /dev/sdX > <log> 2>&1
   < /dev/null &`. A plain `nohup ... &` launched from an agent tool call is

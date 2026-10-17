@@ -4,6 +4,8 @@ set -Eeuo pipefail
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../build/lib/safe-cleanup.sh
 source "$PROJECT_ROOT/build/lib/safe-cleanup.sh"
+# shellcheck source=../build/lib/verify-composed-root.sh
+source "$PROJECT_ROOT/build/lib/verify-composed-root.sh"
 
 [[ $# -eq 1 ]] || {
   echo "Usage: sudo bash tools/verify-development-target-image.sh IMAGE" >&2
@@ -13,7 +15,7 @@ source "$PROJECT_ROOT/build/lib/safe-cleanup.sh"
 IMAGE="$(realpath "$1")"
 [[ -f "$IMAGE" ]] || { echo "Developer image not found: $IMAGE" >&2; exit 1; }
 
-for command_name in losetup partx blockdev udevadm findmnt mount umount mountpoint awk grep realpath; do
+for command_name in losetup partx blockdev udevadm findmnt mount umount mountpoint awk grep realpath python3 cmp; do
   command -v "$command_name" >/dev/null || {
     echo "Missing verifier dependency: $command_name" >&2
     exit 1
@@ -59,7 +61,7 @@ DROPIN="$MOUNT/etc/systemd/system/ssh.service.d/10-greia-developer-bootstrap.con
   exit 1
 }
 for required in \
-  'AuthenticationMethods password' \
+  'methods=password' \
   'PasswordAuthentication yes' \
   'KbdInteractiveAuthentication no' \
   'PermitRootLogin no' \
@@ -120,10 +122,12 @@ if awk '
   exit 1
 fi
 
-# Hardware-recovery target images must preserve the postmortem diagnostic
-# channel: tty1 visible, no timed panic reboot, and enough kernel/systemd status
-# to identify the failing stage. Normal/release behavior remains conditional in
-# this same generator and is not changed by the development marker.
+# Boot console policy is a profile fact independent of SSH: -dev profiles keep
+# the postmortem diagnostic channel (tty1 visible, status output); the release
+# candidate boots quietly but keeps a hidden owner-only diagnostics entry.
+# Every policy keeps panic=0 (no timed reboot). The shared check also renders
+# nothing: it validates the grub.cfg build-image.sh produced, plus the mic
+# module, bytecode prefix, netdev grants, iwd directory and journal.
 GRUB_POLICY="$MOUNT/etc/grub.d/10_greia_appliance"
 [[ -f "$GRUB_POLICY" ]] || {
   echo "Developer target: Greia GRUB policy is missing." >&2
@@ -142,6 +146,7 @@ do
     exit 1
   }
 done
+greia_verify_composed_root "$MOUNT" target "Developer target" "$PROJECT_ROOT"
 
 # A raw/cloned image must not carry a server private identity. The runtime
 # bootstrap creates one Ed25519 host key on the actual booted machine.
@@ -154,5 +159,10 @@ printf '%s\n' "Developer target artifact verification: PASS"
 printf '%s\n' "- password-enabled greia recovery account"
 printf '%s\n' "- ssh.service enabled with runtime effective-policy validation"
 printf '%s\n' "- DHCP policies present; root SSH denied by runtime contract"
-printf '%s\n' "- tty1 diagnostics with panic=0 (no timed reboot)"
+if [[ "$BOOT_CONSOLE_POLICY_FOUND" == quiet ]]; then
+  printf '%s\n' "- quiet boot (no console text), panic=0; owner-only GRUB diagnostics entry (hold Shift)"
+else
+  printf '%s\n' "- tty1 diagnostics with panic=0 (no timed reboot)"
+fi
+printf '%s\n' "- mic ALSA module, bytecode prefix, netdev Wi-Fi grants, /var/lib/iwd, persistent journal"
 printf '%s\n' "- no cloned SSH host private key"

@@ -16,6 +16,8 @@ PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$PROJECT_ROOT/tools/verify-live-usb-fsck-policy.sh"
 # shellcheck source=../build/lib/safe-cleanup.sh
 source "$PROJECT_ROOT/build/lib/safe-cleanup.sh"
+# shellcheck source=../build/lib/live-syslinux.sh
+source "$PROJECT_ROOT/build/lib/live-syslinux.sh"
 
 usage() {
   cat >&2 <<'EOF'
@@ -150,26 +152,61 @@ LIVE_MEDIA_ID="$(tr -d '\r\n' < "$IMG_MOUNT/.disk/live-uuid" 2>/dev/null || true
   exit 1
 }
 
+LIVE_CONSOLE_POLICY="$(greia_live_console_policy "$IMG_MOUNT")"
+SYSLINUX_TEMPLATE="$(greia_live_syslinux_template "$PROJECT_ROOT" "$LIVE_CONSOLE_POLICY")"
 sed "s/LIVE_MEDIA_ID/$LIVE_MEDIA_ID/" \
-  "$PROJECT_ROOT/build/live-syslinux/syslinux.cfg.in" > "$EXPECTED_CFG"
+  "$SYSLINUX_TEMPLATE" > "$EXPECTED_CFG"
 
 # Guard the accepted Acer recovery diagnostics contract from the postmortems.
-# The current hardware-recovery USB must expose tty1, must not auto-reboot a
-# panic, and must not deliberately suppress the early evidence we need to
-# distinguish Syslinux/kernel/initramfs/live-boot failures. Production polish
-# is a separate acceptance step after the reference hardware is healthy again.
-grep -q 'console=tty1' "$EXPECTED_CFG" || {
-  echo "Refusing: current Syslinux template is not observable (missing console=tty1)." >&2
-  exit 1
-}
-grep -q 'panic=0' "$EXPECTED_CFG" || {
-  echo "Refusing: Acer recovery template must use panic=0 so fatal errors remain on screen." >&2
-  exit 1
-}
-if grep -Eq 'console=null|DISPLAY .*clear\.msg|panic=[1-9][0-9]*|(^|[[:space:]])quiet([[:space:]]|$)|(^|[[:space:]])splash([[:space:]]|$)|loglevel=0' "$EXPECTED_CFG"; then
-  echo "Refusing: current Syslinux template reintroduces hidden or auto-rebooting recovery behavior." >&2
+# Every template must never auto-reboot a panic (panic=0 everywhere) and must
+# never use the banned Syslinux display-clearing trick.
+if grep -Eq 'DISPLAY .*clear\.msg|panic=[1-9][0-9]*' "$EXPECTED_CFG"; then
+  echo "Refusing: Syslinux template clears the display or auto-reboots on panic." >&2
   exit 1
 fi
+# Kernel APPEND line of one LABEL block.
+label_append() {
+  awk -v want="$1" '
+    $1 == "LABEL" { label = $2; next }
+    label == want && $1 == "APPEND" { sub(/^[[:space:]]*APPEND[[:space:]]+/, ""); print; exit }
+  ' "$EXPECTED_CFG"
+}
+require_diagnostic_append() {
+  local append="$1" what="$2"
+  for required in console=tty1 panic=0 loglevel=4 systemd.show_status=true; do
+    [[ " $append " == *" $required "* ]] || {
+      echo "Refusing: $what is not observable (missing $required)." >&2
+      exit 1
+    }
+  done
+  if [[ " $append " =~ [[:space:]](console=null|quiet|splash|loglevel=0)[[:space:]] ]]; then
+    echo "Refusing: $what reintroduces hidden recovery behavior." >&2
+    exit 1
+  fi
+}
+case "$LIVE_CONSOLE_POLICY" in
+  diagnostic)
+    # The developer recovery USB must expose tty1 and must not suppress the
+    # early evidence that distinguishes Syslinux/kernel/initramfs/live-boot
+    # failures.
+    require_diagnostic_append "$(label_append live)" "diagnostic Syslinux template"
+    grep -q 'console=tty1' "$EXPECTED_CFG" || exit 1
+    ;;
+  quiet)
+    # Release-candidate media: the default entry is silent, and the hidden
+    # LABEL verbose (Shift/Alt at boot, PROMPT 0 semantics) keeps today's full
+    # diagnostic arguments reachable.
+    default_append="$(label_append live)"
+    for required in quiet splash loglevel=0 console=null panic=0 vt.global_cursor_default=0 systemd.show_status=false; do
+      [[ " $default_append " == *" $required "* ]] || {
+        echo "Refusing: quiet Syslinux default entry lacks $required." >&2
+        exit 1
+      }
+    done
+    grep -qx 'PROMPT 0' "$EXPECTED_CFG" || { echo "Refusing: quiet template must keep PROMPT 0." >&2; exit 1; }
+    require_diagnostic_append "$(label_append verbose)" "quiet template's verbose recovery entry"
+    ;;
+esac
 
 for mapping in \
   "live/vmlinuz:vmlinuz" \
@@ -220,5 +257,10 @@ echo "Greia live USB read-only verification: PASS"
 echo "  usb_readback_verification=PASS"
 echo "  bootloader=syslinux (MBR+VBR)"
 echo "  live_media_id=$LIVE_MEDIA_ID"
-echo "  diagnostic_console=tty1"
+echo "  live_console_policy=$LIVE_CONSOLE_POLICY"
+if [[ "$LIVE_CONSOLE_POLICY" == quiet ]]; then
+  echo "  diagnostic_console=hidden LABEL verbose (hold Shift/Alt at boot, type verbose)"
+else
+  echo "  diagnostic_console=tty1"
+fi
 echo "  panic_policy=halt-on-panic"

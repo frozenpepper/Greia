@@ -118,50 +118,68 @@ Always reason about the **regenerated installed initramfs**, not only the initra
 
 ## 6. Development SSH is a hard invariant
 
-For explicit `*-dev` profiles, both the live installer and installed OS must expose:
+For explicit developer profiles (`*-dev`, and the release candidate `legacy-x86-i686-rc`), both the live installer and installed OS must expose:
 
 ```text
 user: greia
 password: greia
 ```
 
-No operator/client SSH private key is required. No generated 16-character operator password is part of the development workflow. Root SSH remains denied.
-
-The build provisions the `greia` account and enables sshd. Immediately before sshd validation/start, the Greia development bootstrap enforces the effective policy:
+Root SSH remains denied. The build provisions the `greia` account and enables sshd. Immediately before sshd validation/start, `prepare-developer-ssh` regenerates the effective policy (so nothing hand-edited survives a restart by accident):
 
 ```text
 PasswordAuthentication yes
 KbdInteractiveAuthentication no
-AuthenticationMethods password
+PubkeyAuthentication no|yes
+AuthorizedKeysFile /etc/ssh/greia-operator-keys/%u .ssh/authorized_keys
+AuthenticationMethods password            # no operator key installed
+AuthenticationMethods publickey password  # key OR password, when a key is installed
 PermitRootLogin no
 AllowUsers greia
 ```
 
-It also generates one machine-local Ed25519 **server host key** when needed. That server identity is automatic and is not a credential the operator types or preserves.
+**Operator key for agents (optional, public key only).** Pass `--operator-key /path/key.pub` to `tools/build-and-flash-development-usb.sh` or `tools/build-development-installer.sh` (or export `GREIA_OPERATOR_AUTHORIZED_KEY_FILE`). `build/lib/operator_key.py` refuses private keys, `authorized_keys` options and malformed lines, and prints the SHA256 fingerprint. The key is installed root-owned at `/etc/ssh/greia-operator-keys/greia` in both roots. A non-developer profile refuses the input. A hand-provisioned `~greia/.ssh/authorized_keys` also switches the policy to key-or-password, so key access no longer disappears on an sshd restart (Acer parity audit B1). Never commit the key file or a private key.
 
-The artifact verifier inspects both squashfs roots for this recovery contract before reporting PASS.
+**Passwordless privilege stays bounded.** The only sudoers entry is `greia ALL=(root) NOPASSWD: /usr/local/sbin/greia-devctl`. In-place source deploys (`tools/dev_source_deploy.py`) use `greia-devctl source-deploy probe|prepare|extract|parse-gate|swap|status|cleanup` (fixed paths, `build/overlay/usr/local/lib/greia-os/greia-source-deploy`); older images need `--legacy-generic-sudo` and a hand-provisioned generic `sudo -n`. Replacing `/opt/greia-os` is root-equivalent by nature; the verb keeps it auditable, it is not a boundary against the operator.
 
-## 7. Development boot diagnostics
+The verifier also generates nothing: one machine-local Ed25519 **server host key** is created on first sshd start. The artifact verifiers inspect both squashfs roots for this contract before reporting PASS.
 
-During the current Acer recovery gate, development boots intentionally remain observable and non-rebooting on fatal errors:
+## 7. Boot console policy (diagnostic vs quiet)
 
-```text
-console=tty1
-panic=0
-loglevel=4
-systemd.show_status=true
-rd.systemd.show_status=true
-```
+The console is a profile fact, `boot.console_policy`, independent of the developer marker. When a profile omits it, `*-dev` profiles are `diagnostic` and all others `quiet`, so existing profiles behave exactly as before.
 
-Normal/release appliance presentation can return to console suppression only after the hardware path is accepted.
+| Policy | Profiles | Kernel line | Hidden fallback |
+| --- | --- | --- | --- |
+| `diagnostic` | `*-dev` | `console=tty1 panic=0 loglevel=4 systemd.show_status=true rd.systemd.show_status=true vt.global_cursor_default=1` | not needed |
+| `quiet` | release profiles, `legacy-x86-i686-rc` | `quiet splash loglevel=0 console=null panic=0 systemd.show_status=false rd.systemd.show_status=false udev.log_priority=3 vt.global_cursor_default=0` | RC only: Syslinux `LABEL verbose`, GRUB `greia-os-diagnostics` |
 
-If the screen stops on a successful systemd line such as:
+Every policy keeps `panic=0`: a fatal kernel/initramfs error is never turned into a timed reboot loop.
+
+Where it is enforced (change all of them together):
+
+- `tools/build_profile.py` (schema, default, `diagnostic` requires `developer-remote`; manifest `boot.console_policy`, shell `BOOT_CONSOLE_POLICY`);
+- `build/lib/compose.sh` writes `/etc/greia-os/boot-console-policy` in both roots;
+- `build/overlay/etc/grub.d/10_greia_appliance` renders the installed entry and declares `# greia-boot-console-policy: <policy>`; a quiet developer image adds `insmod keystatus` + "hold Shift shows the menu" and an owner-restricted (no `--unrestricted`) `greia-os-diagnostics` entry with the diagnostic arguments;
+- `src/greia_platform/boot_contract.py` validates both (`BootConsolePolicy`, `--console-policy`); the installer engine's post-install check passes only `developer=`, and the declaration in the generated `grub.cfg` selects the policy;
+- `src/greia_platform/grub_ab.py` takes the same optional `console_policy`;
+- live USB: `build/lib/live-syslinux.sh` reads `.disk/installer-image-profile.json` and selects `build/live-syslinux/syslinux.cfg.in` (diagnostic, unchanged) or `syslinux-quiet.cfg.in`; `tools/verify-live-usb.sh` uses the same selection;
+- `tools/verify-development-installer.sh` and `tools/verify-development-target-image.sh` (shared `build/lib/verify-composed-root.sh`) check the recorded policy and run the boot contract on the rendered `grub.cfg`.
+
+**Reaching the diagnostics on a quiet RC (owner only):**
+
+- USB installer: hold **Shift** or **Alt** (or turn Caps Lock / Scroll Lock on) while the stick boots. Syslinux shows `boot:`; type `verbose` and Enter. That label carries exactly the diagnostic APPEND line.
+- Installed OS: hold **Shift** while GRUB starts. The menu appears; choose *Greia OS diagnostics* and enter the GRUB owner credential (`greia` + the recovery code).
+- Both paths are UNPROVEN on the Acer until checked physically (premortem F2).
+
+Still visible on the quiet RC: the two Syslinux lines (banner and `Loading ...`) before the kernel starts. Hiding them needs the clear-screen display-file trick banned by the 2026-08-20 regression review; that needs an owner decision and a physical test first.
+
+If a diagnostic boot stops on a successful systemd line such as:
 
 ```text
 Finished systemd-update-utmp-runlevel.service -- Record Runlevel Change in UTMP
 ```
 
-that line is not automatically the blocker. It may simply be the last successful unit printed before the graphical target starts. In particular, inspect `greia-launcher.service`/Xorg over the development SSH channel before diagnosing a systemd runlevel hang.
+that line is not automatically the blocker. It may simply be the last successful unit printed before the graphical target starts. Inspect `greia-launcher.service`/Xorg over SSH, and the persistent developer journal (`journalctl -b -1`), before diagnosing a systemd runlevel hang.
 
 ## 8. Splash presentation — current corrected contract
 
@@ -277,3 +295,91 @@ boot_artwork_grub_scaling=padding-centered
 ```
 
 Do not call the splash physically fixed until the Acer itself shows the corrected image.
+
+## 13. Release-candidate build runbook (`legacy-x86-i686-rc`)
+
+The RC is one build (installer redesign + boot animation + quiet boot), installed on the reference Acer through the graphical installer. It is a **developer RC**, not an ADR 0036 release: it carries all Activities, SSH is on and the release roster is still draft.
+
+**What the RC image contains beyond `legacy-x86-i686`:** the `developer-remote` set in both roots (SSH, mDNS, `greia-devctl`), hostname `greia-rc`, `boot.console_policy = "quiet"`, a bounded persistent journal (`/etc/systemd/journald.conf.d/20-greia-developer-persistent.conf`, 48 MiB), the read-only bytecode prefix in both roots, the microphone ALSA module in both roots (the build fails if it is missing) and `snd_hda_intel power_save=0`. The hard size gate is 1,300 MiB (owner decision 2026-10-17).
+
+### 13.1 Pre-build gates (premortem G1–G11)
+
+Run G1–G8 on the frozen SHA before touching the build host. Nothing lands on `main` during the build.
+
+| Gate | Where | Check |
+| --- | --- | --- |
+| G1 | local | `git status` clean; record the frozen SHA; the build host uses a fresh clone at that SHA (the composer rsyncs the working tree) |
+| G2 | local | `make verify-full` green (known load-flakes re-run in isolation) |
+| G3 | local | `make validate`, `make visual-assets-check`, `make assets-check`, `make shell-check` |
+| G4 | local | `tools/audit_activity_backend_independence.py activities`; `tools/audit_activity_system_chrome_ownership.py --strict` |
+| G5 | local | the focused contract list in the premortem §4, plus `tests/test_rc_image_contract.py`, `tests/test_boot_contract.py`, `tests/test_grub_ab.py`, `tests/test_dev_source_deploy.py` |
+| G6 | local | footprint estimate below 1,300 MiB with margin (see the RC report) |
+| G7 | local | `tools/panel_screenshots.py` and `tools/installer_screenshots.py` at 1024×600 and 800×480; no overlap |
+| G8 | Acer | `python3 tools/dev_source_deploy.py deploy --target greia@<acer>` (current image: add `--legacy-generic-sudo`), then `status`, launch 5 Activities, `cleanup` |
+| G9 | build host | `smartctl -a`, `journalctl -k -p err --since -1d`, root fs below 80 %, **reboot**, `losetup -a \| grep greia` empty, apt/pool caches present |
+| G10 | build host | the front door below reports every PASS line |
+| G11 | build host (optional) | `build/verify-image-qemu.sh` on the target `.img` (768 MiB, 1 vCPU) |
+
+### 13.2 Build host commands (Debian x86, no Docker)
+
+```bash
+# Once per host (as root): build prerequisites
+apt-get install -y debootstrap parted e2fsprogs dosfstools grub-pc-bin grub-common \
+  rsync squashfs-tools syslinux syslinux-common mtools python3 python3-pil \
+  util-linux gdisk binutils smartmontools
+
+# Fresh clone at the frozen SHA (never the working tree of another checkout)
+git clone https://github.com/frozenpepper/Greia.git greia-rc && cd greia-rc
+git checkout --detach <FROZEN_SHA>
+git status --porcelain            # must print nothing
+
+# Operator PUBLIC key for agent SSH (copy only the .pub file to the host)
+ls -l ~/greia-operator.pub         # never a private key, never committed
+```
+
+### 13.3 Identify the USB stick before writing
+
+```bash
+lsblk -d -o NAME,SIZE,MODEL,SERIAL,TRAN,RM,TYPE
+# Pick the line whose SIZE, MODEL and SERIAL match the stick in your hand,
+# with TRAN=usb RM=1 TYPE=disk. Unplug it, re-run lsblk, confirm that exact
+# line disappears, plug it back, confirm it returns under the same /dev/sdX.
+udevadm info --query=property --name=/dev/sdX | grep -E 'ID_SERIAL=|ID_BUS='
+```
+
+The front door refuses non-removable or mounted devices, but only the size/model/serial check above proves it is the right stick.
+
+### 13.4 Build, flash and verify in one command
+
+```bash
+mkdir -p ./out
+setsid nohup sudo -n bash tools/build-and-flash-development-usb.sh \
+  legacy-x86-i686-rc /dev/sdX ./out \
+  --operator-key ~/greia-operator.pub \
+  > ./out/rc-build.log 2>&1 < /dev/null &
+# (setsid before sudo: see docs/agents/GREIA_AGENT_OPERATIONS.md, detached build+flash)
+tail -f ./out/rc-build.log
+```
+
+Required lines in the log (G10):
+
+```text
+operator_ssh_key=SHA256:...                       (matches ssh-keygen -lf of the .pub)
+greia_mic_light ALSA module: /usr/lib/i386-linux-gnu/alsa-lib/... (Intel 80386)   (target and live)
+bytecode prefix /usr/lib/greia/pycache ... greia=N   (target and live, no "error:" lines)
+GRUB boot contract passed for 1 kernel command line(s).
+Budgeted/accounted: NNN MiB                        (below 1,300)
+Developer installer artifact verification: PASS
+- boot console: quiet (installer + installed), panic=0; hidden Syslinux 'verbose' + owner-only GRUB diagnostics
+Greia live USB read-only verification: PASS
+  usb_readback_verification=PASS
+  live_console_policy=quiet
+boot_console_policy=quiet
+loop_hygiene_verification=PASS
+```
+
+Also record from `out/greia-os-installer-legacy-x86-i686-rc-report.txt`: `sha256`, `boot_console_policy`, `boot_artwork_*`, `live_security_support_state`; and from the payload footprint report `accounted_mib` and `security_support_state`. Afterwards `losetup -a | grep greia` must be empty.
+
+### 13.5 First boot
+
+Follow the Acer acceptance checklist in `docs/reviews/2026-10-17_RC_IMAGE_PREMORTEM.md` §5. Remote checks: `ssh -i <private key> greia@greia-rc.local` (installed) or `greia@greia-installer.local` (installer), `sudo -n /usr/local/sbin/greia-devctl status`, `journalctl -b -1` after any reboot. Check the hidden verbose paths once (F2). Wi-Fi joined in the installer is expected to carry over to the installed system once the installer hand-off lands (credentials in `/var/lib/iwd`, root-only); until then re-join from the Parent panel.

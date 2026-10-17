@@ -4,10 +4,17 @@
 This is the reusable form of the procedure in ``docs/agents/GREIA_AGENT_OPERATIONS.md``
 section 8 ("Developer Acer: in-place source deploy (no installer)"). It needs the
 operator's own SSH key/agent and a ``known_hosts`` entry (``BatchMode=yes``: no
-password is ever prompted for or handled) and ``sudo -n`` provisioned on the
-device. It never touches ``sshd``, sudoers or ``authorized_keys``, and no host,
-address or credential is stored in the repository: the target comes from
-``--target user@host`` or the ``GREIA_DEV_TARGET`` environment variable.
+password is ever prompted for or handled). Privileged steps run through the
+bounded developer command ``sudo -n /usr/local/sbin/greia-devctl source-deploy
+VERB`` (fixed paths, see ``build/overlay/usr/local/lib/greia-os/greia-source-deploy``),
+which is the only passwordless sudo entry a developer image carries. Images
+built before that verb existed need ``--legacy-generic-sudo`` and a
+hand-provisioned generic ``sudo -n``. Build an image with
+``GREIA_OPERATOR_AUTHORIZED_KEY_FILE`` (or the front door's ``--operator-key``)
+for key login. The tool never touches ``sshd``, sudoers or ``authorized_keys``,
+and no host, address or credential is stored in the repository: the target
+comes from ``--target user@host`` or the ``GREIA_DEV_TARGET`` environment
+variable.
 
 Usage::
 
@@ -393,17 +400,32 @@ echo "deployed sha: $(cat "$LIVE/.deployed-sha" 2>/dev/null || echo unknown)"
         ) + 'rm -rf "$PREV" "$NEW"\nrm -f "$D"/*.tar.gz\necho "removed prev/new/tarballs under $D"\n'
 
 
+DEVCTL = "/usr/local/sbin/greia-devctl"
+
+
 class RemoteDevice:
-    """Builds and runs ssh commands against one validated ``user@host`` target."""
+    """Builds and runs ssh commands against one validated ``user@host`` target.
+
+    By default every privileged step is one fixed ``greia-devctl source-deploy``
+    verb (the device owns the paths and scripts). ``legacy_generic_sudo``
+    restores the old ``sudo -n /bin/sh -c <script>`` path for images that
+    predate the verb; it needs generic passwordless sudo on the device.
+    """
 
     SSH_OPTIONS = ("-o", "BatchMode=yes", "-o", "ConnectTimeout=15")
 
     def __init__(self, target: str, runner: Runner | None = None,
-                 paths: DevicePaths = DevicePaths()) -> None:
+                 paths: DevicePaths = DevicePaths(), *,
+                 legacy_generic_sudo: bool = False) -> None:
         self.target = validate_target(target)
         self._runner = runner or SubprocessRunner()
         self.paths = paths
         self.scripts = RemoteScripts(paths)
+        self.legacy_generic_sudo = legacy_generic_sudo
+
+    @staticmethod
+    def devctl(verb: str) -> str:
+        return shlex.join(["sudo", "-n", DEVCTL, "source-deploy", verb])
 
     def ssh_argv(self, remote_command: str) -> list[str]:
         return ["ssh", *self.SSH_OPTIONS, "--", self.target, remote_command]
@@ -422,43 +444,64 @@ class RemoteDevice:
             raise DeployError(f"{what} failed on the device (exit {code})")
 
     def require_sudo(self) -> None:
-        code = self._runner.run(self.ssh_argv(self.sudo(["true"])))
+        if self.legacy_generic_sudo:
+            code = self._runner.run(self.ssh_argv(self.sudo(["true"])))
+            if code != 0:
+                raise DeployError(
+                    "cannot run 'sudo -n' on the device (ssh key login or passwordless sudo is "
+                    "not provisioned for this operator); stopping. Ask the device owner."
+                )
+            return
+        code = self._runner.run(self.ssh_argv(self.devctl("probe")))
         if code != 0:
             raise DeployError(
-                "cannot run 'sudo -n' on the device (ssh key login or passwordless sudo is "
-                "not provisioned for this operator); stopping. Ask the device owner."
+                "cannot run 'sudo -n greia-devctl source-deploy' on the device (no ssh key "
+                "login, not a developer image, or an image older than the bounded deploy "
+                "verb; such images need --legacy-generic-sudo). Stopping; ask the device owner."
             )
+
+    def _privileged(self, verb: str, legacy_script: str, what: str,
+                    stdin_path: Path | None = None) -> None:
+        command = self.sudo_script(legacy_script) if self.legacy_generic_sudo else self.devctl(verb)
+        self._run(command, what, stdin_path)
 
     def push(self, bundle: Path) -> None:
         self.require_sudo()
-        self._run(self.sudo_script(self.scripts.prepare()), "preparing staging area")
-        self._run(
-            self.sudo(["tar", "-xzf", "-", "-C", self.paths.new, "--no-same-owner"]),
-            "extracting bundle", stdin_path=bundle,
-        )
-        self._run(
-            self.sudo(["python3", "-I", "-B", "-c", PARSE_GATE_CODE, self.paths.new + "/opt/greia-os"]),
-            "Python 3.11 parse gate",
-        )
+        if self.legacy_generic_sudo:
+            self._run(self.sudo_script(self.scripts.prepare()), "preparing staging area")
+            self._run(
+                self.sudo(["tar", "-xzf", "-", "-C", self.paths.new, "--no-same-owner"]),
+                "extracting bundle", stdin_path=bundle,
+            )
+            self._run(
+                self.sudo(["python3", "-I", "-B", "-c", PARSE_GATE_CODE,
+                           self.paths.new + "/opt/greia-os"]),
+                "Python 3.11 parse gate",
+            )
+            return
+        self._run(self.devctl("prepare"), "preparing staging area")
+        self._run(self.devctl("extract"), "extracting bundle", stdin_path=bundle)
+        self._run(self.devctl("parse-gate"), "Python 3.11 parse gate")
 
     def swap(self) -> None:
         self.require_sudo()
         try:
-            self._run(self.sudo_script(self.scripts.swap()), "swap")
+            self._privileged("swap", self.scripts.swap(), "swap")
         except DeployError as exc:
             raise DeployError(
                 f"{exc}. Services may be stopped; the previous tree, if moved, is in "
                 f"{self.paths.prev}. Fix forward from 'journalctl -u greia-launcher'."
             ) from exc
-        self.status()
+        if self.legacy_generic_sudo:
+            self.status()
 
     def status(self) -> None:
         self.require_sudo()
-        self._run(self.sudo_script(self.scripts.health()), "health check")
+        self._privileged("status", self.scripts.health(), "health check")
 
     def cleanup(self) -> None:
         self.require_sudo()
-        self._run(self.sudo_script(self.scripts.cleanup()), "cleanup")
+        self._privileged("cleanup", self.scripts.cleanup(), "cleanup")
 
 
 # ---------------------------------------------------------------------------
@@ -491,6 +534,9 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
         command = sub.add_parser(name, help=text)
         command.add_argument("--target", default=os.environ.get(TARGET_ENV),
                              help=f"operator@device (default: ${TARGET_ENV})")
+        command.add_argument("--legacy-generic-sudo", action="store_true",
+                             help="images without 'greia-devctl source-deploy': use generic "
+                                  "'sudo -n /bin/sh -c' (needs hand-provisioned sudo)")
     return parser.parse_args(argv)
 
 
@@ -511,7 +557,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 0
         if not args.target:
             raise DeployError(f"--target operator@device is required (or set {TARGET_ENV})")
-        device = RemoteDevice(args.target)
+        device = RemoteDevice(args.target, legacy_generic_sudo=args.legacy_generic_sudo)
         if args.command in ("push", "deploy"):
             if stager.dirty():
                 print("note: uncommitted changes are NOT deployed (bundle is git archive HEAD)",

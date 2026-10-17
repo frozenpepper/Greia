@@ -6,21 +6,49 @@ root_uuid="$(cat "$uuid_file")"
 case "$root_uuid" in
   *[!0-9A-Fa-f-]*|'') echo "Invalid Pip root filesystem UUID" >&2; exit 1 ;;
 esac
-# Normal/release builds remain appliance-like and consoleless. Development
-# builds deliberately keep fatal boot failures on tty1 without an automatic
-# panic reboot. The accepted installed-OS postmortem established that a timed
-# reboot + suppressed console turns root/initramfs failures into an opaque grey
-# loop and destroys the most useful hardware evidence.
+# Two independent facts select the kernel line:
+#
+# * /etc/greia-os/developer-remote  - developer image (SSH, greia-devctl);
+# * /etc/greia-os/boot-console-policy - "quiet" or "diagnostic", written by
+#   the composer from the profile's boot.console_policy.
+#
+# Release images are always quiet and consoleless. Developer images default to
+# the diagnostic console (tty1 status, visible cursor); the release-candidate
+# profile keeps SSH but declares "quiet". Every policy keeps panic=0: the
+# accepted installed-OS postmortem established that a timed reboot plus a
+# suppressed console turns root/initramfs failures into an opaque grey loop and
+# destroys the most useful hardware evidence.
+developer=0
+[ -f /etc/greia-os/developer-remote ] && developer=1
+policy=quiet
+[ "$developer" -eq 1 ] && policy=diagnostic
+policy_file=/etc/greia-os/boot-console-policy
+if [ -s "$policy_file" ]; then
+  declared="$(tr -d ' \t\r\n' < "$policy_file")"
+  case "$declared" in
+    quiet|diagnostic) policy="$declared" ;;
+    *) echo "Invalid Greia boot console policy: $declared" >&2; exit 1 ;;
+  esac
+fi
+if [ "$developer" -eq 0 ] && [ "$policy" = diagnostic ]; then
+  echo "A release image cannot use the diagnostic boot console policy" >&2
+  exit 1
+fi
+
+quiet_args="quiet splash loglevel=0 systemd.show_status=false rd.systemd.show_status=false udev.log_priority=3 vt.global_cursor_default=0"
+diagnostic_args="loglevel=4 systemd.show_status=true rd.systemd.show_status=true udev.log_priority=4 vt.global_cursor_default=1"
 console_arg="console=null"
 panic_arg="panic=0"
-visibility_args="quiet splash loglevel=0 systemd.show_status=false rd.systemd.show_status=false udev.log_priority=3 vt.global_cursor_default=0"
-if [ -f /etc/greia-os/developer-remote ]; then
+visibility_args="$quiet_args"
+if [ "$policy" = diagnostic ]; then
   console_arg="console=tty1"
   panic_arg="panic=0"
-  visibility_args="loglevel=4 systemd.show_status=true rd.systemd.show_status=true udev.log_priority=4 vt.global_cursor_default=1"
+  visibility_args="$diagnostic_args"
 fi
+common_args="systemd.crash_shell=no systemd.crash_chvt=0 consoleblank=0"
 theme="/boot/grub/greia-theme.txt"
 cat <<EOF
+# greia-boot-console-policy: $policy
 if loadfont unicode ; then
   set gfxmode=auto
   insmod all_video
@@ -39,9 +67,35 @@ if [ -f $theme ]; then
 fi
 set timeout=0
 set timeout_style=hidden
+EOF
+if [ "$developer" -eq 1 ] && [ "$policy" = quiet ]; then
+  # Quiet developer (release-candidate) image: holding Shift while GRUB starts
+  # shows the menu, whose second entry is an owner-restricted diagnostic boot
+  # (same kernel, today's verbose developer arguments). Without Shift the boot
+  # is identical to a release boot. A missing keystatus module only means the
+  # menu stays hidden.
+  cat <<'EOF'
+insmod keystatus
+if keystatus --shift ; then
+  set timeout_style=menu
+  set timeout=-1
+fi
+EOF
+fi
+cat <<EOF
 menuentry 'Greia OS' --unrestricted --id greia-os {
   search --no-floppy --fs-uuid --set=root $root_uuid
-  linux /vmlinuz root=UUID=$root_uuid ro $visibility_args $console_arg $panic_arg systemd.crash_shell=no systemd.crash_chvt=0 consoleblank=0
+  linux /vmlinuz root=UUID=$root_uuid ro $visibility_args $console_arg $panic_arg $common_args
   initrd /initrd.img
 }
 EOF
+if [ "$developer" -eq 1 ] && [ "$policy" = quiet ]; then
+  # No --unrestricted: only the GRUB owner credential can boot this entry.
+  cat <<EOF
+menuentry 'Greia OS diagnostics' --id greia-os-diagnostics {
+  search --no-floppy --fs-uuid --set=root $root_uuid
+  linux /vmlinuz root=UUID=$root_uuid ro $diagnostic_args console=tty1 panic=0 $common_args
+  initrd /initrd.img
+}
+EOF
+fi

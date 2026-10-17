@@ -97,13 +97,14 @@ class StorageLifecycleAdapterTests(unittest.TestCase):
         # R4-B-CAPACITY: image.size_mib sizes the intermediate single-root
         # build artifact, never the installed-device minimum, so shrinking
         # it below the old layout-capacity bound keeps a valid profile valid
-        # (1001 MiB still exceeds the 1000 MiB resource floor).
+        # (1301 MiB still exceeds the 1300 MiB resource floor that the owner
+        # accepted for single-root images on 2026-10-17).
         profile = _load_mutated(
             "acer-aspire-one-i386.toml",
             "size_mib = 2048",
-            "size_mib = 1001",
+            "size_mib = 1301",
         )
-        self.assertEqual(1001, profile.image.size_mib)
+        self.assertEqual(1301, profile.image.size_mib)
 
     def test_image_at_resource_floor_and_persist_below_schema_floor_fail_closed(self) -> None:
         # R4-B-CAPACITY: the remaining artifact-relevant image gates are the
@@ -116,7 +117,7 @@ class StorageLifecycleAdapterTests(unittest.TestCase):
             _load_mutated(
                 "acer-aspire-one-i386.toml",
                 "size_mib = 2048",
-                "size_mib = 1000",
+                "size_mib = 1300",
             )
         with self.assertRaisesRegex(BuildProfileError, "below the PERSIST"):
             _load_mutated(

@@ -48,7 +48,10 @@ Group=greiakid
 # truth; this directive resolves the launcher process groups at start.
 # Group `tty` is additionally required so the unprivileged X server can open the
 # controlling VT with O_RDWR; the stock tty node is write-only for its group.
-SupplementaryGroups=audio tty
+# Group `netdev` lets the Shell reach iwd on the system bus (iwd's shipped
+# policy allows only root and netdev); without it the Shell cannot scan or
+# join Wi-Fi (Acer parity audit A1). Keep tty: dropping it breaks Xorg VT1.
+SupplementaryGroups=audio tty netdev
 PAMName=login
 WorkingDirectory=/opt/greia-os
 Environment=GREIA_OS_ROOT=/opt/greia-os

@@ -26,14 +26,31 @@ case "$account_status" in
         ;;
 esac
 
-cat > /etc/ssh/sshd_config.d/00-greia-security-floor.conf <<'EOF'
+# Optional key login for agents that must never type a password. The image
+# builder installs operator PUBLIC keys root-owned at $operator_keys
+# (GREIA_OPERATOR_AUTHORIZED_KEY_FILE); a hand-provisioned
+# ~greia/.ssh/authorized_keys is honoured too. Either one switches the policy
+# to "publickey OR password". The password login is never removed, and this
+# script regenerates the policy on every sshd start, so key access survives
+# reboots and restarts instead of being overwritten (parity audit B1).
+operator_keys=/etc/ssh/greia-operator-keys/greia
+methods=password
+pubkey=no
+if [ -s "$operator_keys" ] || [ -s /var/lib/greia/.ssh/authorized_keys ]; then
+    methods="publickey password"
+    pubkey=yes
+fi
+
+cat > /etc/ssh/sshd_config.d/00-greia-security-floor.conf <<EOF
 # Development Greia SSH security floor.
 PasswordAuthentication yes
 KbdInteractiveAuthentication no
 UsePAM yes
 PermitEmptyPasswords no
 PermitRootLogin no
-AuthenticationMethods password
+PubkeyAuthentication $pubkey
+AuthorizedKeysFile /etc/ssh/greia-operator-keys/%u .ssh/authorized_keys
+AuthenticationMethods $methods
 DenyUsers root
 AllowUsers greia
 HostKey /etc/ssh/ssh_host_ed25519_key
@@ -41,14 +58,16 @@ UseDNS no
 EOF
 chmod 0644 /etc/ssh/sshd_config.d/00-greia-security-floor.conf
 
-cat > /etc/ssh/sshd_config.d/20-greia-parent.conf <<'EOF'
+cat > /etc/ssh/sshd_config.d/20-greia-parent.conf <<EOF
 # Development live-installer SSH policy.
 PasswordAuthentication yes
 KbdInteractiveAuthentication no
 UsePAM yes
 PermitEmptyPasswords no
 PermitRootLogin no
-AuthenticationMethods password
+PubkeyAuthentication $pubkey
+AuthorizedKeysFile /etc/ssh/greia-operator-keys/%u .ssh/authorized_keys
+AuthenticationMethods $methods
 AllowUsers greia
 HostKey /etc/ssh/ssh_host_ed25519_key
 UseDNS no
@@ -83,6 +102,7 @@ effective="$(/usr/sbin/sshd -T -C user=greia,host=localhost,addr=127.0.0.1)"
 printf '%s\n' "$effective" | grep -qx 'passwordauthentication yes'
 printf '%s\n' "$effective" | grep -qx 'kbdinteractiveauthentication no'
 printf '%s\n' "$effective" | grep -qx 'permitrootlogin no'
-printf '%s\n' "$effective" | grep -qx 'authenticationmethods password'
+printf '%s\n' "$effective" | grep -qx "authenticationmethods $methods"
+printf '%s\n' "$effective" | grep -qx "pubkeyauthentication $pubkey"
 printf '%s\n' "$effective" | grep -qx 'hostkey /etc/ssh/ssh_host_ed25519_key'
 printf '%s\n' "$effective" | grep '^allowusers ' | grep -qw greia

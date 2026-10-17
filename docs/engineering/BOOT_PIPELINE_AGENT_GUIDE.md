@@ -192,7 +192,9 @@ A boot/image change on the reference development Acer must preserve automatic SS
 
 ## 5. Developer boots must preserve failure evidence
 
-The accepted developer/test generated kernel policy is source-owned by `10_greia_appliance` and `boot_contract.py`. Current required developer arguments include:
+The console is a profile fact, `boot.console_policy` (`diagnostic` | `quiet`), independent of the developer/SSH marker since 2026-10-17. `*-dev` profiles default to `diagnostic`; release profiles and the developer release candidate `legacy-x86-i686-rc` are `quiet`. The composer writes `/etc/greia-os/boot-console-policy`; `10_greia_appliance` renders from it and declares `# greia-boot-console-policy: <policy>` in `grub.cfg`; `boot_contract.py` (`BootConsolePolicy`, `--console-policy`) validates it; the live USB template is chosen from the installer manifest (`build/lib/live-syslinux.sh`). A quiet developer image keeps diagnostics reachable: Syslinux `LABEL verbose` (hold Shift/Alt, type `verbose`) and an owner-restricted GRUB entry `greia-os-diagnostics` (hold Shift). Developer images also keep a bounded persistent journal (`journalctl -b -1` after a failed boot). Details: `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` §7.
+
+The diagnostic generated kernel policy is source-owned by `10_greia_appliance` and `boot_contract.py`. Current required diagnostic arguments include:
 
 ```text
 console=tty1
@@ -206,7 +208,7 @@ vt.global_cursor_default=1
 
 `panic=0` is critical: a fatal kernel/initramfs problem remains visible instead of rebooting after a few seconds and recreating an opaque loop.
 
-Never reintroduce timed panic reboot (`panic=5`, `panic=30`, etc.) on developer/test hardware during bring-up.
+Never reintroduce timed panic reboot (`panic=5`, `panic=30`, etc.) on developer/test hardware during bring-up. The quiet policy keeps `panic=0` too.
 
 The current **release** source is deliberately different and remains source-owned. Do not invent a replacement "canonical release bootline" in this document. In particular, the provisional Xorg backend and release console policy still require explicit physical acceptance before a release claim. `greia-launcher.service` currently launches Xorg via `xinit ... vt1`; that compatibility fact must be reviewed together with generated kernel args rather than changed from prose alone.
 

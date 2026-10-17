@@ -224,7 +224,9 @@ Console suppression is independent from splash implementation.
 
 Normal/release Greia intends to suppress ordinary child-visible console presentation while preserving diagnostics through the journal and authorized maintenance paths. Exact current release kernel arguments are source-owned by `10_greia_appliance` + `boot_contract.py` and must not be copied from stale prose.
 
-During current Acer development/recovery, explicit development profiles intentionally use visible diagnostics, including tty1 and non-rebooting panic behavior. Current developer source requires `panic=0`, so a fatal kernel/initramfs error remains observable instead of automatically rebooting into an evidence-destroying loop.
+During current Acer development/recovery, explicit development profiles (`*-dev`, `boot.console_policy = "diagnostic"`) intentionally use visible diagnostics, including tty1 and non-rebooting panic behavior. Every policy requires `panic=0`, so a fatal kernel/initramfs error remains observable instead of automatically rebooting into an evidence-destroying loop.
+
+The developer release candidate (`legacy-x86-i686-rc`, 2026-10-17) keeps SSH but uses the quiet policy in both the installer and the installed OS: no kernel, systemd, live-boot or login text and no cursor; the Greia artwork and animation are the only visible stages. Diagnostics stay available, not visible: the Syslinux `verbose` label (hold Shift/Alt at USB boot), the owner-restricted GRUB `greia-os-diagnostics` entry (hold Shift), developer SSH and a bounded persistent journal. Still visible: the two short Syslinux banner/`Loading` lines before the kernel (hiding them needs the banned clear-screen trick and an owner decision). Exact arguments and enforcement points: `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` §7. Physical evidence for the quiet RC path: UNPROVEN.
 
 Do not solve consolelessness by deleting diagnostics. **Invisible is not the same as unavailable.**
 

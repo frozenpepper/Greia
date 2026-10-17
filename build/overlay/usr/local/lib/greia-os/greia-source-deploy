@@ -1,0 +1,123 @@
+#!/bin/sh
+# Bounded in-place source deploy for developer images (tools/dev_source_deploy.py).
+#
+# Reached only as `sudo -n /usr/local/sbin/greia-devctl source-deploy VERB`:
+# the developer sudoers entry admits greia-devctl and nothing else, so the
+# deploy needs no generic root shell (AGENTS.md "Developer remote-control
+# boundary"). Every path below is fixed; the only input is the gzip tar bundle
+# on stdin for `extract`.
+#
+# Honest scope note: replacing /opt/greia-os replaces code that root-owned
+# services execute, so this verb is root-equivalent by nature. It exists only
+# on images carrying /etc/greia-os/developer-remote and keeps the deploy
+# auditable and fixed-path; it is not a security boundary against the operator.
+set -eu
+
+[ "$(id -u)" -eq 0 ] || { echo "greia-source-deploy must run as root (via greia-devctl)" >&2; exit 1; }
+[ -f /etc/greia-os/developer-remote ] || { echo "not a Greia developer image" >&2; exit 1; }
+
+D=/var/lib/greia/deploy
+NEW="$D/new"
+PREV="$D/prev"
+LIVE=/opt/greia-os
+INDEX=/usr/share/greia/activity-index-v1.json
+UNITS=/etc/systemd/system
+SERVICES="greia-launcher greia-parent"
+
+parse_gate() {
+  /usr/bin/python3 -I -B - "$NEW/opt/greia-os" <<'PY'
+import os, sys
+if sys.version_info < (3, 11):
+    sys.exit("device Python is older than 3.11: %s" % (sys.version,))
+count = 0
+for root, dirs, files in os.walk(sys.argv[1]):
+    dirs.sort()
+    for name in sorted(files):
+        if not name.endswith(".py"):
+            continue
+        path = os.path.join(root, name)
+        with open(path, "rb") as handle:
+            data = handle.read()
+        try:
+            compile(data, path, "exec", dont_inherit=True)
+        except (SyntaxError, ValueError) as exc:
+            sys.exit("PARSE GATE FAILED: %s: %s" % (path, exc))
+        count += 1
+print("parse gate ok: %d files, python %d.%d" % (count, *sys.version_info[:2]))
+PY
+}
+
+health() {
+  for unit in $SERVICES; do
+    active=$(systemctl is-active "$unit" || true)
+    restarts=$(systemctl show "$unit" -p NRestarts --value || true)
+    echo "$unit active=$active restarts=$restarts"
+  done
+  echo "deployed sha: $(cat "$LIVE/.deployed-sha" 2>/dev/null || echo unknown)"
+}
+
+case "${1:-}" in
+  probe)
+    echo "greia-source-deploy ok"
+    ;;
+  prepare)
+    install -d -m 0755 "$D"
+    rm -rf "$NEW"
+    install -d -m 0755 "$NEW"
+    ;;
+  extract)
+    [ -d "$NEW" ] || { echo "run prepare first" >&2; exit 2; }
+    # GNU tar strips leading '/' and refuses '..' members; links are refused
+    # after extraction so nothing can point outside the staging tree.
+    tar -xzf - -C "$NEW" --no-same-owner --no-same-permissions
+    if find "$NEW" -type l | grep -q .; then
+      rm -rf "$NEW"
+      echo "refusing bundle: it contains symbolic links" >&2
+      exit 1
+    fi
+    ;;
+  parse-gate)
+    parse_gate
+    ;;
+  swap)
+    [ -d "$NEW/opt/greia-os/src" ] || { echo "no staged bundle in $NEW; run push first" >&2; exit 2; }
+    [ -f "$NEW/usr/share/greia/activity-index-v1.json" ] || { echo "staged bundle has no index" >&2; exit 2; }
+    systemctl stop $SERVICES
+    rm -rf "$PREV"
+    install -d -m 0755 "$PREV"
+    if [ -d "$LIVE" ]; then mv "$LIVE" "$PREV/greia-os"; fi
+    if [ -f "$INDEX" ]; then cp -p "$INDEX" "$PREV/activity-index-v1.json"; fi
+    mv "$NEW/opt/greia-os" "$LIVE"
+    install -D -m 0644 -o root -g root "$NEW/usr/share/greia/activity-index-v1.json" "$INDEX"
+    chown -R root:root "$LIVE"
+    chmod -R a-w "$LIVE"
+    changed=0
+    for unit in $SERVICES; do
+      src="$NEW/units/$unit.service"
+      dst="$UNITS/$unit.service"
+      if [ -f "$src" ] && ! cmp -s "$src" "$dst"; then
+        install -m 0644 -o root -g root "$src" "$dst"
+        echo "unit updated: $unit"
+        changed=1
+      fi
+    done
+    if [ "$changed" = 1 ]; then systemctl daemon-reload; fi
+    /usr/bin/python3 -I -B "$NEW/tools/precompile_greia_bytecode.py" --greia-root "$LIVE" \
+      || echo "WARNING: bytecode prefix rebuild failed; launch timings are not meaningful" >&2
+    systemctl start $SERVICES
+    sleep 5
+    health
+    ;;
+  status)
+    health
+    ;;
+  cleanup)
+    rm -rf "$PREV" "$NEW"
+    rm -f "$D"/*.tar.gz
+    echo "removed prev/new/tarballs under $D"
+    ;;
+  *)
+    echo "usage: greia-devctl source-deploy probe|prepare|extract|parse-gate|swap|status|cleanup" >&2
+    exit 2
+    ;;
+esac

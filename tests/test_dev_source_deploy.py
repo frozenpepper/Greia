@@ -128,9 +128,55 @@ class RemoteCommandTests(unittest.TestCase):
         script = deploy.RemoteDevice.sudo_script(tricky)
         self.assertEqual(shlex.split(script), ["sudo", "-n", "/bin/sh", "-c", tricky])
 
-    def test_push_sequence(self) -> None:
+    def test_bounded_push_uses_only_greia_devctl_verbs(self) -> None:
+        runner = FakeRunner()
+        deploy.RemoteDevice("op@dev", runner).push(Path("/stage/bundle.tar.gz"))
+        commands = [shlex.split(call[0][-1]) for call in runner.calls]
+        prefix = ["sudo", "-n", "/usr/local/sbin/greia-devctl", "source-deploy"]
+        self.assertTrue(all(c[:4] == prefix for c in commands), commands)
+        self.assertEqual([c[4] for c in commands], ["probe", "prepare", "extract", "parse-gate"])
+        self.assertEqual(runner.calls[2][1], Path("/stage/bundle.tar.gz"))
+        self.assertTrue(all(len(c) == 5 for c in commands))
+
+    def test_bounded_swap_status_cleanup(self) -> None:
         runner = FakeRunner()
         device = deploy.RemoteDevice("op@dev", runner)
+        device.swap()
+        device.status()
+        device.cleanup()
+        verbs = [shlex.split(call[0][-1])[4] for call in runner.calls]
+        self.assertEqual(verbs, ["probe", "swap", "probe", "status", "probe", "cleanup"])
+
+    def test_bounded_push_stops_when_verb_unavailable(self) -> None:
+        runner = FakeRunner(codes=(1,))
+        with self.assertRaises(deploy.DeployError) as ctx:
+            deploy.RemoteDevice("op@dev", runner).push(Path("/x"))
+        self.assertIn("--legacy-generic-sudo", str(ctx.exception))
+        self.assertEqual(len(runner.calls), 1)
+
+    def test_device_helper_matches_tool_contract(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        helper = (root / "build/overlay/usr/local/lib/greia-os/greia-source-deploy").read_text(
+            encoding="utf-8"
+        )
+        devctl = (root / "build/overlay/usr/local/sbin/greia-devctl").read_text(encoding="utf-8")
+        self.assertIn("source-deploy", devctl)
+        self.assertIn("/usr/local/lib/greia-os/greia-source-deploy", devctl)
+        for verb in ("probe)", "prepare)", "extract)", "parse-gate)", "swap)", "status)", "cleanup)"):
+            self.assertIn(verb, helper)
+        self.assertIn("/etc/greia-os/developer-remote", helper)
+        self.assertIn("precompile_greia_bytecode.py", helper)
+        self.assertIn("--no-same-owner", helper)
+        self.assertIn("-type l", helper)
+        paths = deploy.DevicePaths()
+        self.assertIn(f"D={paths.deploy}", helper)
+        self.assertIn(f"LIVE={paths.live}", helper)
+        self.assertIn(f"INDEX={paths.index}", helper)
+        self.assertIn("SERVICES=\"greia-launcher greia-parent\"", helper)
+
+    def test_legacy_push_sequence(self) -> None:
+        runner = FakeRunner()
+        device = deploy.RemoteDevice("op@dev", runner, legacy_generic_sudo=True)
         device.push(Path("/stage/bundle.tar.gz"))
         commands = [shlex.split(call[0][-1]) for call in runner.calls]
         self.assertTrue(all(c[:2] == ["sudo", "-n"] for c in commands))
@@ -140,17 +186,17 @@ class RemoteCommandTests(unittest.TestCase):
         self.assertEqual(commands[3][2:6], ["python3", "-I", "-B", "-c"])
         self.assertEqual(len(commands), 4)
 
-    def test_push_stops_when_sudo_unavailable(self) -> None:
+    def test_legacy_push_stops_when_sudo_unavailable(self) -> None:
         runner = FakeRunner(codes=(1,))
         with self.assertRaises(deploy.DeployError) as ctx:
-            deploy.RemoteDevice("op@dev", runner).push(Path("/x"))
+            deploy.RemoteDevice("op@dev", runner, legacy_generic_sudo=True).push(Path("/x"))
         self.assertIn("sudo -n", str(ctx.exception))
         self.assertEqual(len(runner.calls), 1)
 
     def test_parse_failure_stops(self) -> None:
         runner = FakeRunner(codes=(0, 0, 0, 1))
         with self.assertRaises(deploy.DeployError):
-            deploy.RemoteDevice("op@dev", runner).push(Path("/x"))
+            deploy.RemoteDevice("op@dev", runner, legacy_generic_sudo=True).push(Path("/x"))
 
     def test_swap_script_contents_and_quoting(self) -> None:
         paths = deploy.DevicePaths(deploy="/d ir/it's")
@@ -161,9 +207,9 @@ class RemoteCommandTests(unittest.TestCase):
         self.assertIn("precompile_greia_bytecode.py", script)
         self.assertIn("SERVICES='greia-launcher greia-parent'", script)
 
-    def test_swap_runs_scripts_through_sudo_sh(self) -> None:
+    def test_legacy_swap_runs_scripts_through_sudo_sh(self) -> None:
         runner = FakeRunner()
-        deploy.RemoteDevice("op@dev", runner).swap()
+        deploy.RemoteDevice("op@dev", runner, legacy_generic_sudo=True).swap()
         commands = [shlex.split(call[0][-1]) for call in runner.calls]
         self.assertEqual(commands[1][:5], ["sudo", "-n", "/bin/sh", "-c", deploy.RemoteScripts().swap()])
         self.assertIn("NRestarts", commands[3][-1])

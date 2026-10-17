@@ -89,7 +89,7 @@ class BuildProfileTests(unittest.TestCase):
 
     def test_invalid_resource_budget_is_rejected(self) -> None:
         source = (PROJECT_ROOT / "build/profiles/acer-aspire-one-i386.toml").read_text()
-        source = source.replace("preferred_core_mib = 800", "preferred_core_mib = 1000")
+        source = source.replace("preferred_core_mib = 800", "preferred_core_mib = 1300")
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "bad.toml"
             path.write_text(source)

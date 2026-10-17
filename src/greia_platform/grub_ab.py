@@ -48,8 +48,7 @@ from typing import Mapping
 
 from greia_platform.boot_contract import (
     COMMON_REQUIRED_ARGUMENTS,
-    DEVELOPER_REQUIRED_ARGUMENTS,
-    RELEASE_REQUIRED_ARGUMENTS,
+    BootConsolePolicy,
     GrubContractError,
     KernelCommandLine,
     kernel_command_lines,
@@ -167,10 +166,32 @@ GRUB_KERNEL_PATH = "/" + SLOT_KERNEL_PATH
 GRUB_INITRAMFS_PATH = "/" + SLOT_INITRAMFS_PATH
 
 
-def _kernel_arguments(*, root_partuuid: str, developer: bool) -> tuple[str, ...]:
+def _effective_policy(
+    developer: bool, console_policy: BootConsolePolicy | str | None
+) -> BootConsolePolicy:
+    """Console policy for A/B entries; ``developer`` alone keeps today's default.
+
+    Release images are always quiet. A developer image defaults to the
+    diagnostic console unless a quiet policy is requested explicitly (the
+    release-candidate profile), mirroring :mod:`greia_platform.boot_contract`.
+    """
+    if console_policy is None:
+        return BootConsolePolicy.DIAGNOSTIC if developer else BootConsolePolicy.QUIET
+    policy = BootConsolePolicy.parse(console_policy)
+    if not developer and policy is BootConsolePolicy.DIAGNOSTIC:
+        raise GrubAbConfigError("a release image must use the quiet console policy")
+    return policy
+
+
+def _kernel_arguments(
+    *,
+    root_partuuid: str,
+    developer: bool,
+    console_policy: BootConsolePolicy | str | None = None,
+) -> tuple[str, ...]:
     """Deterministic kernel arguments for one slot entry (sorted pools)."""
     pool = set(COMMON_REQUIRED_ARGUMENTS)
-    pool |= DEVELOPER_REQUIRED_ARGUMENTS if developer else RELEASE_REQUIRED_ARGUMENTS
+    pool |= _effective_policy(developer, console_policy).required_arguments
     return ("ro", f"root=PARTUUID={root_partuuid}", *sorted(pool))
 
 
@@ -201,6 +222,7 @@ def render_grub_ab_config(
     artifact_b: BootArtifactSet,
     password_hash: str,
     developer: bool = False,
+    console_policy: BootConsolePolicy | str | None = None,
 ) -> str:
     """Render the fixed two-entry GRUB configuration for slots A and B.
 
@@ -226,6 +248,7 @@ def render_grub_ab_config(
         ),
         password_hash=password_hash,
         developer=developer,
+        console_policy=console_policy,
     )
 
 
@@ -234,6 +257,7 @@ def render_grub_ab_config_from_record(
     record: InstalledLayoutRecord,
     password_hash: str,
     developer: bool = False,
+    console_policy: BootConsolePolicy | str | None = None,
 ) -> str:
     """Render the fixed two-entry configuration from the trusted layout record.
 
@@ -272,6 +296,7 @@ def render_grub_ab_config_from_record(
         ),
         password_hash=password_hash,
         developer=developer,
+        console_policy=console_policy,
     )
 
 
@@ -283,6 +308,7 @@ def _render_entries(
     fs_uuid_b: str,
     password_hash: str,
     developer: bool,
+    console_policy: BootConsolePolicy | str | None = None,
 ) -> str:
     """Shared deterministic template: adapter paths plus slot bindings.
 
@@ -297,7 +323,13 @@ def _render_entries(
         raise GrubAbConfigError("developer must be a boolean")
 
     def _entry(slot: str, partuuid: str, fs_uuid: str) -> str:
-        args = " ".join(_kernel_arguments(root_partuuid=partuuid, developer=developer))
+        args = " ".join(
+            _kernel_arguments(
+                root_partuuid=partuuid,
+                developer=developer,
+                console_policy=console_policy,
+            )
+        )
         return (
             f"menuentry 'Greia Slot {slot}' --unrestricted --id {GRUB_ENTRY_NAMES[slot]} {{\n"
             f"  search --no-floppy --fs-uuid --set=root {fs_uuid}\n"
@@ -372,6 +404,7 @@ def validate_grub_ab_text(
     text: str,
     *,
     developer: bool = False,
+    console_policy: BootConsolePolicy | str | None = None,
     artifact_a: BootArtifactSet | None = None,
     artifact_b: BootArtifactSet | None = None,
     record: InstalledLayoutRecord | None = None,
@@ -519,7 +552,11 @@ def validate_grub_ab_text(
         )
     try:
         for line in entries:
-            validate_kernel_command_line(line, developer=developer)
+            validate_kernel_command_line(
+                line,
+                developer=developer,
+                console_policy=_effective_policy(developer, console_policy),
+            )
     except GrubContractError as exc:
         raise GrubAbConfigError(f"kernel command-line contract failed: {exc}") from exc
 

@@ -14,7 +14,7 @@ VERIFIER="$PROJECT_ROOT/tools/verify-development-installer.sh"
 
 usage() {
   cat >&2 <<'EOF'
-Usage: sudo bash tools/build-development-installer.sh PROFILE [OUTPUT_DIR] [--release-bundle PATH]
+Usage: sudo bash tools/build-development-installer.sh PROFILE [OUTPUT_DIR] [--release-bundle PATH] [--operator-key PUBKEY_FILE]
 
 Build a Greia development installer only when BOTH the live installer and the
 installed-system payload explicitly include the developer-remote capability.
@@ -24,6 +24,10 @@ finished image and both embedded squashfs artifacts are checked for the
 SSH/network recovery contract.
 For A/B target profiles pass --release-bundle (forwarded to the installer
 builder with the validated .greiaupdate v3 artifact).
+--operator-key installs an operator SSH PUBLIC key (never a private key) for
+the greia account in both artifacts (key OR password login; root stays denied).
+Profiles: explicit developer profiles (*-dev) and the developer release
+candidate (*-rc, quiet boot). Both must carry developer-remote in both scopes.
 EOF
 }
 
@@ -31,6 +35,12 @@ RELEASE_BUNDLE_ARGS=()
 positional=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --operator-key)
+      [[ $# -ge 2 ]] || { echo "--operator-key requires a PUBKEY_FILE argument." >&2; exit 2; }
+      GREIA_OPERATOR_AUTHORIZED_KEY_FILE="$(realpath "$2")"
+      export GREIA_OPERATOR_AUTHORIZED_KEY_FILE
+      shift 2
+      ;;
     --release-bundle)
       [[ $# -ge 2 ]] || { echo "--release-bundle requires a PATH argument." >&2; exit 2; }
       RELEASE_BUNDLE_ARGS=(--release-bundle "$2")
@@ -93,10 +103,23 @@ PY
 PROFILE_ID="${PROFILE_FACTS[0]}"
 PLATFORM_FAMILY="${PROFILE_FACTS[1]}"
 TARGET_HOSTNAME="${PROFILE_FACTS[2]}"
-[[ "$PROFILE_ID" == *-dev ]] || {
-  echo "Refusing development installer: profile id is not explicitly *-dev: $PROFILE_ID" >&2
-  exit 1
-}
+case "$PROFILE_ID" in
+  *-dev|*-rc) ;;
+  *)
+    echo "Refusing development installer: profile id is not explicitly *-dev or *-rc: $PROFILE_ID" >&2
+    exit 1
+    ;;
+esac
+if [[ -n "${GREIA_OPERATOR_AUTHORIZED_KEY_FILE:-}" ]]; then
+  # Validate before spending an hour on the build; prints public fingerprints.
+  key_check="$(mktemp)"
+  python3 -I "$PROJECT_ROOT/build/lib/operator_key.py" "$GREIA_OPERATOR_AUTHORIZED_KEY_FILE" "$key_check" || {
+    rm -f "$key_check"
+    exit 1
+  }
+  rm -f "$key_check"
+fi
+CONSOLE_POLICY="$(python3 "$PROFILE_TOOL" shell "$PROFILE_PATH" | sed -n "s/^BOOT_CONSOLE_POLICY=//p" | tr -d "'")"
 
 OUTPUT_DIR="${positional[1]:-$PROJECT_ROOT/out}"
 mkdir -p "$OUTPUT_DIR"
@@ -131,5 +154,6 @@ Development installer ready: $IMAGE
 Live installer host: greia-installer.local
 Installed host: ${TARGET_HOSTNAME}.local
 SSH user: greia
-SSH login mode: simple password; no operator SSH key required
+SSH login mode: password (greia/greia)${GREIA_OPERATOR_AUTHORIZED_KEY_FILE:+ or operator public key}
+Boot console policy: ${CONSOLE_POLICY}
 EOF

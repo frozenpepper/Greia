@@ -3,7 +3,24 @@
 The child-visible boot path has one automatic unrestricted menu entry. GRUB
 command-line and entry editing are protected by the canonical Greia owner
 credential, stored as a PBKDF2 hash, and every kernel line is forced onto the
-appropriate release or developer appliance path.
+appropriate console policy.
+
+Two independent facts drive validation:
+
+* ``developer`` -- the image carries the explicit developer-remote marker
+  (SSH, ``greia-devctl``). It no longer implies a verbose console by itself.
+* the **boot console policy** (:class:`BootConsolePolicy`): ``quiet`` (the
+  child-facing appliance path: no kernel/systemd text, no cursor) or
+  ``diagnostic`` (tty1 status output kept for hardware recovery). Release
+  images are always ``quiet``. Developer images default to ``diagnostic``
+  and may declare ``quiet`` (the release-candidate profile does). Both
+  policies keep ``panic=0``: a fatal error is never turned into a timed
+  reboot loop.
+
+The installed GRUB generator declares the policy it rendered with a
+``# greia-boot-console-policy: <policy>`` comment. A quiet developer
+configuration may carry one extra owner-restricted (not ``--unrestricted``)
+diagnostics entry so a verbose boot stays reachable without editing.
 """
 
 from __future__ import annotations
@@ -12,6 +29,7 @@ import argparse
 import shlex
 import uuid
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from typing import Sequence
 
@@ -76,6 +94,107 @@ DEVELOPER_FORBIDDEN_ARGUMENTS = {
     "systemd.show_status=false",
     "rd.systemd.show_status=false",
 }
+
+
+
+class BootConsolePolicy(str, Enum):
+    """What the boot path shows on the console (profile ``boot.console_policy``)."""
+
+    QUIET = "quiet"
+    DIAGNOSTIC = "diagnostic"
+
+    @classmethod
+    def parse(cls, value: object) -> "BootConsolePolicy":
+        if isinstance(value, cls):
+            return value
+        try:
+            return cls(str(value).strip())
+        except ValueError as exc:
+            raise GrubContractError(
+                f"unknown boot console policy {value!r}; expected quiet or diagnostic"
+            ) from exc
+
+    @property
+    def required_arguments(self) -> frozenset[str]:
+        if self is BootConsolePolicy.DIAGNOSTIC:
+            return frozenset(DEVELOPER_REQUIRED_ARGUMENTS)
+        return frozenset(RELEASE_REQUIRED_ARGUMENTS)
+
+    @property
+    def forbidden_arguments(self) -> frozenset[str]:
+        if self is BootConsolePolicy.DIAGNOSTIC:
+            return frozenset(DEVELOPER_FORBIDDEN_ARGUMENTS)
+        return frozenset(RELEASE_FORBIDDEN_ARGUMENTS)
+
+
+#: Comment line the installed GRUB generator emits to declare its policy.
+CONSOLE_POLICY_DECLARATION = "# greia-boot-console-policy:"
+#: Root-owned image file the generator reads (written by the composer).
+CONSOLE_POLICY_FILE = Path("etc/greia-os/boot-console-policy")
+#: Stable id of the optional owner-restricted diagnostics entry.
+DIAGNOSTIC_ENTRY_ID = "greia-os-diagnostics"
+
+
+def declared_console_policy(text: str) -> BootConsolePolicy | None:
+    """Return the policy declared by a generated GRUB configuration, if any."""
+
+    declared: list[str] = []
+    for raw_line in text.splitlines():
+        stripped = raw_line.strip()
+        if stripped.startswith(CONSOLE_POLICY_DECLARATION):
+            declared.append(stripped[len(CONSOLE_POLICY_DECLARATION):].strip())
+    if not declared:
+        return None
+    if len(set(declared)) != 1:
+        raise GrubContractError(
+            f"conflicting boot console policy declarations: {sorted(set(declared))!r}"
+        )
+    return BootConsolePolicy.parse(declared[0])
+
+
+def resolve_console_policy(
+    text: str,
+    *,
+    developer: bool,
+    console_policy: BootConsolePolicy | str | None = None,
+) -> BootConsolePolicy:
+    """Resolve the effective console policy for one GRUB configuration.
+
+    Release images (``developer=False``) are always ``quiet``. Developer
+    images default to ``diagnostic`` unless the configuration (or the caller)
+    declares ``quiet``. An explicit caller policy must agree with any
+    declaration in the text, so a build cannot validate the wrong mode.
+    """
+
+    declared = declared_console_policy(text)
+    requested = None if console_policy is None else BootConsolePolicy.parse(console_policy)
+    if requested is not None and declared is not None and requested is not declared:
+        raise GrubContractError(
+            f"GRUB configuration declares console policy {declared.value!r} "
+            f"but {requested.value!r} was required"
+        )
+    effective = requested or declared
+    if not developer:
+        if effective is BootConsolePolicy.DIAGNOSTIC:
+            raise GrubContractError(
+                "a non-developer (release) image must use the quiet console policy"
+            )
+        return BootConsolePolicy.QUIET
+    return effective or BootConsolePolicy.DIAGNOSTIC
+
+
+def read_root_console_policy(root: Path | str) -> BootConsolePolicy | None:
+    """Read ``/etc/greia-os/boot-console-policy`` below an image/target root."""
+
+    path = Path(root) / CONSOLE_POLICY_FILE
+    try:
+        value = path.read_text(encoding="ascii").strip()
+    except FileNotFoundError:
+        return None
+    except (OSError, UnicodeDecodeError) as exc:
+        raise GrubContractError(f"cannot read boot console policy {path}: {exc}") from exc
+    return BootConsolePolicy.parse(value)
+
 
 # Compatibility aliases
 _REQUIRED_ARGUMENTS = COMMON_REQUIRED_ARGUMENTS | RELEASE_REQUIRED_ARGUMENTS
@@ -183,9 +302,32 @@ def kernel_command_lines(text: str) -> tuple[KernelCommandLine, ...]:
     return tuple(lines)
 
 
-def _menu_errors(text: str) -> list[str]:
+@dataclass(frozen=True)
+class _MenuEntry:
+    line_number: int
+    tokens: tuple[str, ...]
+    kernel_lines: tuple[KernelCommandLine, ...]
+
+    @property
+    def unrestricted(self) -> bool:
+        return "--unrestricted" in self.tokens
+
+    @property
+    def entry_id(self) -> str | None:
+        if "--id" not in self.tokens:
+            return None
+        marker = self.tokens.index("--id")
+        return self.tokens[marker + 1] if marker + 1 < len(self.tokens) else None
+
+
+def _menu_entries(text: str) -> tuple[list[_MenuEntry], list[str]]:
+    """Group kernel command lines under the menuentry that contains them."""
+
     errors: list[str] = []
-    menu_lines: list[tuple[int, list[str]]] = []
+    kernels = {line.line_number: line for line in kernel_command_lines(text)}
+    entries: list[_MenuEntry] = []
+    current: tuple[int, tuple[str, ...]] | None = None
+    current_kernels: list[KernelCommandLine] = []
     for line_number, raw_line in enumerate(text.splitlines(), start=1):
         stripped = raw_line.strip()
         if not stripped or stripped.startswith("#"):
@@ -194,14 +336,22 @@ def _menu_errors(text: str) -> list[str]:
         if tokens and tokens[0] == "submenu":
             errors.append(f"line {line_number}: submenus are forbidden in the appliance boot menu")
         if tokens and tokens[0] == "menuentry":
-            menu_lines.append((line_number, tokens))
-            if "--unrestricted" not in tokens:
-                errors.append(
-                    f"line {line_number}: normal automatic boot entry must be --unrestricted"
-                )
-    if len(menu_lines) != 1:
-        errors.append(f"expected exactly one appliance menuentry; found {len(menu_lines)}")
+            if current is not None:
+                entries.append(_MenuEntry(current[0], current[1], tuple(current_kernels)))
+            current = (line_number, tuple(tokens))
+            current_kernels = []
+        elif line_number in kernels:
+            if current is None:
+                errors.append(f"line {line_number}: Linux kernel line outside a menuentry")
+            else:
+                current_kernels.append(kernels[line_number])
+    if current is not None:
+        entries.append(_MenuEntry(current[0], current[1], tuple(current_kernels)))
+    return entries, errors
 
+
+def _auth_errors(text: str) -> list[str]:
+    errors: list[str] = []
     superuser_double = f'set superusers="{GRUB_USER}"'
     superuser_single = f"set superusers='{GRUB_USER}'"
     if superuser_double not in text and superuser_single not in text:
@@ -220,21 +370,32 @@ def _menu_errors(text: str) -> list[str]:
     return errors
 
 
-def _line_errors(line: KernelCommandLine, *, live_installer: bool, developer: bool) -> list[str]:
+def _line_errors(
+    line: KernelCommandLine,
+    *,
+    live_installer: bool,
+    developer: bool,
+    console_policy: BootConsolePolicy | str | None = None,
+) -> list[str]:
     errors: list[str] = []
     args = line.arguments
 
-    # Developer/test builds deliberately keep the boot observable: a kernel
-    # panic prints to tty1 and does not auto-reboot (panic=0) so failure state
-    # remains observable. Normal/release builds stay silent and consoleless.
+    # The diagnostic policy keeps the boot observable: status on tty1, and a
+    # kernel panic stays on screen (panic=0) so failure state remains
+    # observable. The quiet policy (release, and the developer RC) is silent
+    # and consoleless but also never reboots on panic.
     # See docs/INSTALLED_OS_BOOT_POSTMORTEM.md §16.
-    required_pool = set(COMMON_REQUIRED_ARGUMENTS)
-    if developer:
-        required_pool |= DEVELOPER_REQUIRED_ARGUMENTS
-        profile_forbidden = DEVELOPER_FORBIDDEN_ARGUMENTS
+    if console_policy is None:
+        policy = BootConsolePolicy.DIAGNOSTIC if developer else BootConsolePolicy.QUIET
     else:
-        required_pool |= RELEASE_REQUIRED_ARGUMENTS
-        profile_forbidden = RELEASE_FORBIDDEN_ARGUMENTS
+        policy = BootConsolePolicy.parse(console_policy)
+        if not developer and policy is BootConsolePolicy.DIAGNOSTIC:
+            return [
+                f"line {line.line_number}: a non-developer (release) image must use "
+                "the quiet console policy"
+            ]
+    required_pool = set(COMMON_REQUIRED_ARGUMENTS) | set(policy.required_arguments)
+    profile_forbidden = policy.forbidden_arguments
 
     if live_installer:
         required_pool |= LIVE_REQUIRED_ARGUMENTS
@@ -253,7 +414,7 @@ def _line_errors(line: KernelCommandLine, *, live_installer: bool, developer: bo
 
     for argument in args:
         if argument in profile_forbidden:
-            mode_name = "developer" if developer else "release"
+            mode_name = policy.value
             errors.append(
                 f"line {line.line_number}: forbidden {mode_name} argument {argument}"
             )
@@ -300,24 +461,91 @@ def validate_grub_text(
     *,
     live_installer: bool = False,
     developer: bool = False,
+    console_policy: BootConsolePolicy | str | None = None,
 ) -> tuple[KernelCommandLine, ...]:
-    """Validate the complete appliance GRUB configuration."""
+    """Validate the complete appliance GRUB configuration.
 
-    entries = kernel_command_lines(text)
-    errors: list[str] = _menu_errors(text)
-    if len(entries) != 1:
-        errors.append(f"expected exactly one Linux kernel command line; found {len(entries)}")
+    Exactly one ``--unrestricted`` appliance entry must exist and match the
+    effective console policy (:func:`resolve_console_policy`). Only a quiet
+    developer image may add one owner-restricted entry with id
+    ``greia-os-diagnostics`` whose kernel line follows the diagnostic policy.
+    Returns the appliance entry's kernel line(s).
+    """
+
+    errors: list[str] = _auth_errors(text)
+    try:
+        policy = resolve_console_policy(
+            text, developer=developer, console_policy=console_policy
+        )
+    except GrubContractError as exc:
+        raise GrubContractError(str(exc)) from None
+    entries, structure_errors = _menu_entries(text)
+    errors.extend(structure_errors)
+
+    diagnostic_entry_allowed = (
+        developer and policy is BootConsolePolicy.QUIET and not live_installer
+    )
+    appliance = [entry for entry in entries if entry.unrestricted]
+    restricted = [entry for entry in entries if not entry.unrestricted]
+    if len(appliance) != 1:
+        errors.append(f"expected exactly one appliance menuentry; found {len(appliance)}")
+    for entry in restricted:
+        if not diagnostic_entry_allowed:
+            errors.append(
+                f"line {entry.line_number}: normal automatic boot entry must be --unrestricted"
+            )
+        elif entry.entry_id != DIAGNOSTIC_ENTRY_ID:
+            errors.append(
+                f"line {entry.line_number}: the only restricted entry allowed is "
+                f"--id {DIAGNOSTIC_ENTRY_ID}"
+            )
+    if len(restricted) > 1:
+        errors.append(f"at most one owner-restricted diagnostics entry; found {len(restricted)}")
+    if appliance and entries and entries[0] is not appliance[0]:
+        errors.append("the appliance entry must be the first (default) menuentry")
 
     lowered = text.casefold()
     if "recovery mode" in lowered:
         errors.append("generated GRUB configuration contains a recovery-mode entry")
 
-    for entry in entries:
-        errors.extend(_line_errors(entry, live_installer=live_installer, developer=developer))
+    appliance_lines: tuple[KernelCommandLine, ...] = ()
+    all_lines = kernel_command_lines(text)
+    grouped = sum(len(entry.kernel_lines) for entry in entries)
+    if grouped != len(all_lines):
+        errors.append("every Linux kernel command line must belong to a menuentry")
+    if len(appliance) == 1:
+        appliance_lines = appliance[0].kernel_lines
+        if len(appliance_lines) != 1:
+            errors.append(
+                f"expected exactly one Linux kernel command line; found {len(appliance_lines)}"
+            )
+        for line in appliance_lines:
+            errors.extend(
+                _line_errors(
+                    line,
+                    live_installer=live_installer,
+                    developer=developer,
+                    console_policy=policy,
+                )
+            )
+    for entry in restricted:
+        if len(entry.kernel_lines) != 1:
+            errors.append(
+                f"line {entry.line_number}: diagnostics entry needs exactly one kernel line"
+            )
+        for line in entry.kernel_lines:
+            errors.extend(
+                _line_errors(
+                    line,
+                    live_installer=live_installer,
+                    developer=developer,
+                    console_policy=BootConsolePolicy.DIAGNOSTIC,
+                )
+            )
 
     if errors:
         raise GrubContractError("; ".join(errors))
-    return entries
+    return appliance_lines
 
 
 def validate_kernel_command_line(
@@ -325,6 +553,7 @@ def validate_kernel_command_line(
     *,
     live_installer: bool = False,
     developer: bool = False,
+    console_policy: BootConsolePolicy | str | None = None,
 ) -> None:
     """Validate one parsed kernel command line against appliance boot policy.
 
@@ -334,7 +563,12 @@ def validate_kernel_command_line(
     Raises :class:`GrubContractError` on the first policy violation set.
     """
 
-    errors = _line_errors(line, live_installer=live_installer, developer=developer)
+    errors = _line_errors(
+        line,
+        live_installer=live_installer,
+        developer=developer,
+        console_policy=console_policy,
+    )
     if errors:
         raise GrubContractError("; ".join(errors))
 
@@ -344,13 +578,19 @@ def validate_grub_config(
     *,
     live_installer: bool = False,
     developer: bool = False,
+    console_policy: BootConsolePolicy | str | None = None,
 ) -> tuple[KernelCommandLine, ...]:
     config_path = Path(path)
     try:
         text = config_path.read_text(encoding="utf-8")
     except OSError as exc:
         raise GrubContractError(f"cannot read generated GRUB configuration: {exc}") from exc
-    return validate_grub_text(text, live_installer=live_installer, developer=developer)
+    return validate_grub_text(
+        text,
+        live_installer=live_installer,
+        developer=developer,
+        console_policy=console_policy,
+    )
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -362,7 +602,16 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--developer",
         action="store_true",
-        help="developer/test build: keep boot observable (console=tty1, panic=0)",
+        help="image carries the developer-remote marker (SSH/greia-devctl)",
+    )
+    parser.add_argument(
+        "--console-policy",
+        choices=[policy.value for policy in BootConsolePolicy],
+        default=None,
+        help=(
+            "required console policy (default: quiet for release, the "
+            "declared policy or diagnostic for developer images)"
+        ),
     )
     return parser
 
@@ -374,6 +623,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.config,
             live_installer=args.live_installer,
             developer=args.developer,
+            console_policy=args.console_policy,
         )
     except GrubContractError as exc:
         print(f"GRUB boot contract failed: {exc}")

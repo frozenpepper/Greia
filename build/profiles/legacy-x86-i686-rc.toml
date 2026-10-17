@@ -1,0 +1,82 @@
+schema_version = 1
+# Release-candidate composition (2026-10-17): identical to legacy-x86-i686 except
+# the developer-remote package set (SSH, mDNS, greia-devctl) in both artifacts,
+# hostname greia-rc and the explicit quiet boot console policy below.
+
+[profile]
+id = "legacy-x86-i686-rc"
+certification_state = "experimental"
+description = "Developer release candidate for the reference Acer and other legacy-x86/i686 PCs: the base legacy-x86-i686 composition plus default-on SSH/mDNS for remote operators, with the quiet child-facing boot (no kernel, systemd, login or cursor text). Not an ADR 0036 release image."
+
+[platform]
+family = "legacy-x86"
+board = "none"
+compatibility_class = "C0"
+
+[base]
+suite = "bookworm"
+architecture = "i386"
+mirror = "https://deb.debian.org/debian"
+security_mirror = "https://security.debian.org/debian-security"
+support_end_date = "2028-06-30"
+kernel_package = "linux-image-686"
+
+[image]
+layout = "bios-single-ext4"
+size_mib = 2048
+hostname = "greia-rc"
+
+[boot]
+installed_adapter = "grub-pc-bios"
+installer_adapter = "grub-pc-bios-live"
+cover_backend = "greia-early-framebuffer-v1"
+# Quiet boot despite the developer-remote set: SSH stays on for agents, the
+# child sees only Greia artwork. Diagnostics stay reachable through the hidden
+# Syslinux "verbose" label and the owner-restricted GRUB diagnostics entry
+# (hold Shift at boot). panic=0 everywhere (never a timed reboot loop).
+console_policy = "quiet"
+
+[display]
+adapter = "xorg"
+video_packages = ["xserver-xorg-video-intel", "xserver-xorg-video-vesa", "xserver-xorg-video-fbdev"]
+
+[runtimes]
+enabled = ["python"]
+
+[packages]
+target_sets = [
+  "platform-base",
+  "platform-shell-pygame",
+  "activity-sandbox",
+  "network-basic",
+  "removable-media-common",
+  "parent-recovery",
+  "developer-remote",
+]
+installer_sets = [
+  "installer-base",
+  "developer-remote",
+]
+extra_packages = ["xserver-xorg-legacy"]
+
+[resources]
+# Owner decision 2026-10-17: installed images up to 1,300 MiB are accepted
+# (AGENTS.md contract 6). build/build-image.sh fails at >= required_core_mib.
+preferred_core_mib = 800
+required_core_mib = 1300
+architecture_review_mib = 1300
+
+[storage]
+layout_adapter = "bios-single-ext4"
+system_slot_bytes = 1073741824
+persistent_minimum_bytes = 268435456
+
+[installer]
+target_policy = "pc-internal-v1"
+
+[updates]
+boot_backend = "none-v1"
+required = false
+
+[setup]
+live_boot_adapter = "pc-live-syslinux-v1"

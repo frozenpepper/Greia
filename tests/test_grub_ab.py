@@ -155,7 +155,7 @@ class ConfigGenerationTests(unittest.TestCase):
         render_params = list(
             inspect.signature(render_grub_ab_config_from_record).parameters
         )
-        self.assertEqual(render_params, ["record", "password_hash", "developer"])
+        self.assertEqual(render_params, ["record", "password_hash", "developer", "console_policy"])
 
     def test_record_render_rejects_single_root_and_foreign_backends(self) -> None:
         single = InstalledLayoutRecord.from_dict(
@@ -190,6 +190,24 @@ class ConfigGenerationTests(unittest.TestCase):
             validate_grub_ab_text(release, developer=True)
         with self.assertRaises((GrubAbConfigError, GrubContractError)):
             validate_grub_ab_text(developer)
+
+    def test_quiet_developer_policy_is_decoupled_from_ssh(self) -> None:
+        # The developer RC keeps SSH (developer=True) but boots quietly.
+        artifact_a, artifact_b = _artifacts()
+        quiet_dev = render_grub_ab_config(
+            artifact_a=artifact_a, artifact_b=artifact_b,
+            password_hash=_PASSWORD_HASH, developer=True, console_policy="quiet",
+        )
+        self.assertEqual(quiet_dev, _config())
+        validate_grub_ab_text(quiet_dev, developer=True, console_policy="quiet")
+        with self.assertRaises((GrubAbConfigError, GrubContractError)):
+            validate_grub_ab_text(quiet_dev, developer=True)
+        with self.assertRaises(GrubAbConfigError):
+            render_grub_ab_config(
+                artifact_a=artifact_a, artifact_b=artifact_b,
+                password_hash=_PASSWORD_HASH, developer=False,
+                console_policy="diagnostic",
+            )
 
     def test_rejects_mismatched_or_foreign_artifact_sets(self) -> None:
         artifact_a, artifact_b = _artifacts()
@@ -471,7 +489,7 @@ class NoParentAuthorityTests(unittest.TestCase):
         render_params = list(inspect.signature(render_grub_ab_config).parameters)
         self.assertEqual(
             render_params,
-            ["artifact_a", "artifact_b", "password_hash", "developer"],
+            ["artifact_a", "artifact_b", "password_hash", "developer", "console_policy"],
         )
         with tempfile.TemporaryDirectory() as raw:
             backend = GrubEnvBackend.initialize(Path(raw) / "env", default_slot="A")

@@ -35,7 +35,10 @@ Group=nogroup
 # group iwd already designates for network clients keeps the grant inside the
 # boundary the vendor declares, rather than adding a Greia policy that punches
 # a wider hole in the system bus.
-SupplementaryGroups=video input tty netdev
+#
+# `audio` only lets the UI open the ALSA PCM for the one-shot boot chime
+# (aplay, greia_platform.boot_chime); it grants no other device or capability.
+SupplementaryGroups=video input tty netdev audio
 # Service-private runtime root, owned by this unit's unprivileged user, so the
 # X server has a log path it may actually write. Without it Xorg aborts with
 # "Cannot open log file /var/log/Xorg.0.log" because /var/log is root-owned.
@@ -47,6 +50,13 @@ Environment=GREIA_TARGET_IMAGE_PROFILE=/etc/greia-os/target-image-profile.json
 Environment=PYTHONPATH=/opt/greia-os/src
 Environment=PYTHONNOUSERSITE=1
 Environment=PYTHONDONTWRITEBYTECODE=1
+# Read-only bytecode prefix precompiled into the live root at image time
+# (compose_precompile_bytecode); avoids a cold compile into the RAM overlay.
+Environment=PYTHONPYCACHEPREFIX=/usr/lib/greia/pycache
+# Same as greia-launcher.service: keep SDL on the software framebuffer path.
+# Otherwise pygame loads Mesa/GL (+~70 MB RSS, 0.7-1.2 s set_mode) inside a
+# RAM-only live session (overlay-size=128M). Premortem N2.
+Environment=SDL_FRAMEBUFFER_ACCELERATION=0
 # prepare-installer-vt creates /run/greia-os and owns VT/X preconditions as
 # root; the '+' prefix keeps that privilege after the UI itself dropped to
 # the unprivileged identity.

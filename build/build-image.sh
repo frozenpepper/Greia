@@ -146,7 +146,9 @@ install -m 0644 "$PROJECT_ROOT/assets/boot/static/greia-boot-logo.png" \
 chroot "$ROOTFS" update-initramfs -u -k all
 chroot "$ROOTFS" update-grub
 chroot "$ROOTFS" grub-script-check /boot/grub/grub.cfg
-BOOT_CONTRACT_ARGS=()
+# Developer marker and console policy are independent: the release-candidate
+# profile keeps SSH (--developer) but boots quietly (boot.console_policy).
+BOOT_CONTRACT_ARGS=(--console-policy "$BOOT_CONSOLE_POLICY")
 if [[ "${COMPOSE_ROLE_SETS:-}" == *developer-remote* ]]; then
   BOOT_CONTRACT_ARGS+=(--developer)
 fi
@@ -201,6 +203,7 @@ accounted_mib="$(( accounted_bytes / 1024 / 1024 ))"
   echo "declared_profile_manifest=$PROFILE_MANIFEST_REPORT"
   echo "declared_profile_manifest_sha256=$(sha256sum "$DECLARED_PROFILE_MANIFEST" | awk '{print $1}')"
   echo "boot_cover_backend=$BOOT_COVER_BACKEND"
+  echo "boot_console_policy=$BOOT_CONSOLE_POLICY"
   echo "security_support_state=$COMPOSE_SECURITY_SUPPORT_STATE"
   echo "security_support_probe_exit=$COMPOSE_SECURITY_SUPPORT_EXIT"
   echo "grub_recovery_code=$RECOVERY_CODE_REPORT"
@@ -212,6 +215,10 @@ accounted_mib="$(( accounted_bytes / 1024 / 1024 ))"
   chroot "$ROOTFS" dpkg-query -W -f='${Installed-Size}\t${Package}\t${Version}\n' | sort -nr
 } > "$REPORT"
 
+# Hard installed-size gate. The limit is profile data (resources.
+# required_core_mib): 1,300 MiB for single-root profiles since the owner
+# accepted images up to 1.3 GB on 2026-10-17 (AGENTS.md contract 6); the A/B
+# profile stays at 1,000 MiB because its system slot is 1 GiB.
 required_limit_bytes=$((REQUIRED_LIMIT_MIB * 1024 * 1024))
 preferred_limit_bytes=$((PREFERRED_LIMIT_MIB * 1024 * 1024))
 if (( accounted_bytes >= required_limit_bytes )); then

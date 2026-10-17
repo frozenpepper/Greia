@@ -48,19 +48,26 @@ RESOLVED
 chmod 0644 /etc/systemd/resolved.conf.d/20-greia-developer.conf
 ln -sfn ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
-systemctl restart systemd-networkd.service systemd-resolved.service
-systemctl restart avahi-daemon.service 2>/dev/null || true
+# Reload instead of restart, without blocking: this unit is ordered after
+# networkd/resolved, and restarting them synchronously from inside it used to
+# take this unit down with them.
+networkctl reload 2>/dev/null || systemctl --no-block try-restart systemd-networkd.service
+systemctl --no-block try-reload-or-restart systemd-resolved.service || true
+systemctl --no-block try-restart avahi-daemon.service 2>/dev/null || true
 
-# Production/recovery images deliberately omit SSH host keys. Developer images
-# generate them on the actual machine so cloned image files never share host
-# identity.
-/usr/bin/ssh-keygen -A
+# SSH host identity belongs to prepare-developer-ssh (one Ed25519 key per
+# booted machine); do not generate the full ssh-keygen -A set here.
 
-# The client key is provisioned during developer-image creation. Keep the
-# account locked for password auth; sshd accepts the explicit public key only.
-chown -R greiaadmin:greiaadmin /var/lib/greia-admin/.ssh
-chmod 0700 /var/lib/greia-admin/.ssh
-chmod 0600 "$authorized_keys"
+# Optional legacy operator key for greiaadmin. Absent keys are normal: the
+# greia password login (and the image-installed operator key for greia) is the
+# supported path.
+if [ -d /var/lib/greia-admin/.ssh ]; then
+  chown -R greiaadmin:greiaadmin /var/lib/greia-admin/.ssh
+  chmod 0700 /var/lib/greia-admin/.ssh
+  if [ -f "$authorized_keys" ]; then
+    chmod 0600 "$authorized_keys"
+  fi
+fi
 
 printf '%s\n' ready > /var/lib/greia-developer/remote-ready
 chmod 0600 /var/lib/greia-developer/remote-ready
