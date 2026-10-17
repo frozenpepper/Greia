@@ -16,9 +16,9 @@ There is deliberately no engine drone. Every call fails soft without a mixer.
 from __future__ import annotations
 
 from collections import OrderedDict
-from itertools import accumulate, repeat
+from itertools import accumulate
 import math
-from operator import add, mul
+from operator import mul
 from pathlib import Path
 import random
 from typing import Final
@@ -26,7 +26,13 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import DeferredSoundBank, current_pcm16_mixer_spec, mono_pcm16_bytes
+from greia_platform.pygame_audio import (
+    DeferredSoundBank,
+    bell_sound,
+    current_pcm16_mixer_spec,
+    decaying_sine,
+    mono_pcm16_bytes,
+)
 
 SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
@@ -140,76 +146,16 @@ class CollineAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds.define("star", lambda: _bell(rate, channels, (1046.5, 1318.5, 1568.0), 0.36, 2300))
-        self._sounds.define("flag", lambda: _bell(rate, channels, (784.0, 1046.5), 0.32, 2100))
-        self._sounds.define("sparkle", lambda: _bell(rate, channels, (1046.5, 1318.5, 1568.0, 2093.0), 0.8, 1900))
-        self._sounds.define("fanfare", lambda: _bell(rate, channels, (523.3, 659.3, 784.0, 1046.5, 1318.5), 1.2, 2600))
+        self._sounds.define("star", lambda: bell_sound(rate, channels, (1046.5, 1318.5, 1568.0), 0.36, 2300))
+        self._sounds.define("flag", lambda: bell_sound(rate, channels, (784.0, 1046.5), 0.32, 2100))
+        self._sounds.define("sparkle", lambda: bell_sound(rate, channels, (1046.5, 1318.5, 1568.0, 2093.0), 0.8, 1900))
+        self._sounds.define("fanfare", lambda: bell_sound(rate, channels, (523.3, 659.3, 784.0, 1046.5, 1318.5), 1.2, 2600))
         self._sounds.define("boing", lambda: _boing(rate, channels))
         # The whoosh draws its noise from the shared game RNG: build it now so
         # the game's random sequence is exactly what it was before deferral.
         whoosh = _whoosh(rate, channels, self._rng)
         self._sounds.define("whoosh", lambda: whoosh)
         self._sounds.define("thump", lambda: _thump(rate, channels))
-
-
-def _decaying_sine(
-    rate: int,
-    count: int,
-    frequency: float,
-    decay: float,
-    *,
-    start: float = 0.0,
-    attack: float = 0.0,
-) -> list[float]:
-    """``sin(2*pi*f*local) * exp(-decay*local) * min(1, local/attack)`` for one partial.
-
-    ``local`` is the time since ``start`` seconds; the list covers sample indices
-    ``0..count-1`` (zeros before ``start``). Instead of a ``sin`` and an ``exp``
-    call per sample (the dominant start-up cost on the Atom), the partial is a
-    complex phasor multiplied by one constant per sample, accumulated in C by
-    ``itertools.accumulate``: the same curve to ~1e-11, a few times cheaper.
-    """
-
-    first = int(start * rate)
-    while first / rate < start:
-        first += 1
-    while first > 0 and (first - 1) / rate >= start:
-        first -= 1
-    if first >= count:
-        return [0.0] * count
-    omega = 2.0 * math.pi * frequency
-    offset = first / rate - start
-    fade = math.exp(-decay / rate)
-    start_amplitude = math.exp(-decay * offset)
-    phasors = accumulate(
-        repeat(complex(fade * math.cos(omega / rate), fade * math.sin(omega / rate)), count - first - 1),
-        mul,
-        initial=complex(start_amplitude * math.cos(omega * offset), start_amplitude * math.sin(omega * offset)),
-    )
-    values = [z.imag for z in phasors]
-    if attack > 0.0:
-        for index in range(min(len(values), int(attack * rate) + 2)):
-            values[index] *= min(1.0, (offset + index / rate) / attack)
-    return [0.0] * first + values if first else values
-
-
-def _mix(parts: list[list[float]]) -> list[float]:
-    total = parts[0]
-    for part in parts[1:]:
-        total = list(map(add, total, part))
-    return total
-
-
-def _bell(rate: int, channels: int, notes: tuple[float, ...], duration: float, volume: int) -> pygame.mixer.Sound:
-    """Soft celesta notes, one after another (a quick rising run for >1 note)."""
-
-    count = int(rate * duration)
-    step = duration / (len(notes) + 1)
-    parts = [
-        _decaying_sine(rate, count, frequency, 5.0 / duration, start=order * step, attack=0.006)
-        for order, frequency in enumerate(notes)
-    ]
-    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(_mix(parts), channels, scale=volume))
 
 
 def _boing(rate: int, channels: int) -> pygame.mixer.Sound:
@@ -243,8 +189,8 @@ def _whoosh(rate: int, channels: int, rng: random.Random) -> pygame.mixer.Sound:
 
 def _thump(rate: int, channels: int) -> pygame.mixer.Sound:
     count = int(rate * 0.16)
-    low = _decaying_sine(rate, count, 120.0, 26.0)
-    high = _decaying_sine(rate, count, 260.0, 26.0)
+    low = decaying_sine(rate, count, 120.0, 26.0)
+    high = decaying_sine(rate, count, 260.0, 26.0)
     samples = [0.8 * a + 0.2 * b for a, b in zip(low, high)]
     return pygame.mixer.Sound(buffer=mono_pcm16_bytes(samples, channels, scale=7000))
 

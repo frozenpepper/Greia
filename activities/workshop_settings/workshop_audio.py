@@ -14,9 +14,7 @@ generated once, after the first frame; every call fails soft without a mixer.
 
 from __future__ import annotations
 
-from itertools import accumulate
 import math
-from operator import mul
 from pathlib import Path
 import random
 import time
@@ -25,7 +23,12 @@ from typing import Callable, Final
 import pygame
 
 from greia_platform.localization import LocalizedResources, LocaleTag, shared_character_audio_path
-from greia_platform.pygame_audio import DeferredSoundBank, current_pcm16_mixer_spec, mono_pcm16_bytes
+from greia_platform.pygame_audio import (
+    DeferredSoundBank,
+    current_pcm16_mixer_spec,
+    mono_pcm16_bytes,
+    sweep_sound,
+)
 
 if not __package__:
     __package__ = "activities.workshop_settings"  # type: ignore[assignment]
@@ -160,8 +163,8 @@ class MyGreiaAudio:
             return
         rate, channels = spec
         self._sounds.define("pick", lambda: _sparkle(rate, channels))
-        self._sounds.define("tab", lambda: _sweep(rate, channels, 0.12, 520.0, 780.0, 6500))
-        self._sounds.define("undo", lambda: _sweep(rate, channels, 0.16, 780.0, 470.0, 6500))
+        self._sounds.define("tab", lambda: sweep_sound(rate, channels, 0.12, 520.0, 780.0, 6500))
+        self._sounds.define("undo", lambda: sweep_sound(rate, channels, 0.16, 780.0, 470.0, 6500))
 
 
 def _sparkle(rate: int, channels: int) -> pygame.mixer.Sound:
@@ -179,15 +182,6 @@ def _sparkle(rate: int, channels: int) -> pygame.mixer.Sound:
                 value += (math.sin(angle) + 0.3 * math.sin(2.0 * angle)) * math.exp(-5.0 * local / length)
         samples.append(int(value * 7000))
     return pygame.mixer.Sound(buffer=mono_pcm16_bytes(samples, channels))
-
-
-def _sweep(rate: int, channels: int, duration: float, start: float, end: float, volume: int) -> pygame.mixer.Sound:
-    count = int(rate * duration)
-    times = [index / rate for index in range(count)]
-    per_sample = 2.0 * math.pi / rate
-    phases = accumulate([(start + (end - start) * (t / duration)) * per_sample for t in times])
-    envelope = [math.sin(math.pi * t / duration) for t in times]
-    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(map(mul, map(math.sin, phases), envelope), channels, scale=volume))
 
 
 __all__ = ["MyGreiaAudio"]

@@ -9,6 +9,12 @@ _SRC = Path(__file__).resolve().parents[1] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
+from greia_launcher.runtime_adapter import (
+    PythonRuntimeAdapter,
+    PythonRuntimePolicy,
+    RuntimeLaunchAdapter,
+    WebRuntimeAdapter,
+)
 from greia_platform.activities import ActivityRegistry, RuntimeCatalogue, package_digest
 from greia_platform.activity_backend_policy import (
     assert_python_activity_backend_independent,
@@ -31,6 +37,22 @@ def validation_source(activity_root: Path, project_root: Path) -> ActivitySource
     return ActivitySource(root.parent, PackageTrust.DEVELOPER_UNSIGNED, "standalone-validation")
 
 
+def runtime_adapters(runtime_path: Path) -> dict[str, RuntimeLaunchAdapter]:
+    """Runtime adapters configured exactly as launch composition configures them.
+
+    The Python adapter carries the curated :class:`PythonRuntimePolicy` from
+    ``child-runtime.toml``, so packaging validation rejects the same imports,
+    shadowing modules and forbidden files that the launcher refuses at start
+    (otherwise an Activity can validate here and still fail to launch).
+    """
+
+    adapters = (
+        PythonRuntimeAdapter(policy=PythonRuntimePolicy.load(runtime_path)),
+        WebRuntimeAdapter(),
+    )
+    return {adapter.runtime_type: adapter for adapter in adapters}
+
+
 def main() -> int:
     project_root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description="Validate one curated Greia OS activity package.")
@@ -46,6 +68,9 @@ def main() -> int:
     source = validation_source(root, project_root)
     registry = ActivityRegistry([source], runtime)
     manifest = registry.validate_registration(root, source).manifest
+    # Runtime package policy: the import allow/deny roots, forbidden files and
+    # suffixes, dynamic imports and backend independence (RuntimeValidationError).
+    runtime_adapters(args.runtime)[manifest.runtime_type].validate_package(manifest)
     if manifest.runtime_type == "python":
         # R7 hard gate: SDL/Pygame rendering remains valid, but Activity source
         # may not select/probe/own X11, Wayland, DRM/KMS or raw host input.

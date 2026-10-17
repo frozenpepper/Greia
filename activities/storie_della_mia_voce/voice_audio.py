@@ -17,9 +17,6 @@ microphone opens so Leo or an effect never ends up inside a recording.
 from __future__ import annotations
 
 import io
-from itertools import accumulate, repeat
-import math
-from operator import add, mul
 from pathlib import Path
 import random
 import wave
@@ -28,7 +25,13 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import DeferredSoundBank, current_pcm16_mixer_spec, mono_pcm16_bytes
+from greia_platform.pygame_audio import (
+    DeferredSoundBank,
+    chord_sound,
+    current_pcm16_mixer_spec,
+    fanfare_sound,
+    sweep_sound,
+)
 
 SPEECH_CHANNEL: Final = 0
 VOICE_CHANNEL: Final = 1
@@ -190,101 +193,16 @@ class StoryAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds.define("pop", lambda: _sweep(rate, channels, 0.12, 520.0, 900.0, 7200))
-        self._sounds.define("unpop", lambda: _sweep(rate, channels, 0.12, 760.0, 460.0, 5600))
-        self._sounds.define("whoosh", lambda: _sweep(rate, channels, 0.24, 900.0, 1500.0, 3600))
-        self._sounds.define("chime", lambda: _chord(rate, channels, (659.25, 783.99, 1046.5), 0.5))
-        self._sounds.define("boop", lambda: _sweep(rate, channels, 0.22, 420.0, 330.0, 6000))
-        self._sounds.define("pip", lambda: _sweep(rate, channels, 0.08, 880.0, 880.0, 6000))
-        self._sounds.define("rec_on", lambda: _chord(rate, channels, (880.0, 1318.5), 0.28))
-        self._sounds.define("rec_off", lambda: _sweep(rate, channels, 0.16, 990.0, 660.0, 6400))
-        self._sounds.define("page", lambda: _sweep(rate, channels, 0.18, 1200.0, 700.0, 2800))
-        self._sounds.define("fanfare", lambda: _fanfare(rate, channels))
-
-
-def _decaying_sine(
-    rate: int,
-    count: int,
-    frequency: float,
-    decay: float,
-    *,
-    start: float = 0.0,
-    stop: float | None = None,
-    attack: float = 0.0,
-    gain: float = 1.0,
-) -> list[float]:
-    """``gain * sin(2*pi*f*local) * exp(-decay*local) * min(1, local/attack)`` for one partial.
-
-    ``local`` is the time since ``start`` seconds; the list covers sample indices
-    ``0..count-1`` and is zero before ``start`` and from ``stop`` on. Instead of a
-    ``sin`` and an ``exp`` call per sample (the dominant start-up cost on the
-    Atom), the partial is a complex phasor multiplied by one constant per
-    sample and accumulated in C by ``itertools.accumulate``: the same curve to
-    ~1e-11 (identical 16-bit samples), about three times cheaper.
-    """
-
-    first = int(start * rate)
-    while first / rate < start:
-        first += 1
-    while first > 0 and (first - 1) / rate >= start:
-        first -= 1
-    last = count
-    if stop is not None:
-        last = min(count, int(stop * rate))
-        while last / rate < stop:
-            last += 1
-        last = min(count, last)
-    if first >= last:
-        return [0.0] * count
-    omega = 2.0 * math.pi * frequency
-    offset = first / rate - start
-    fade = math.exp(-decay / rate)  # |r| per sample; r = fade * exp(i*omega/rate), z0 = gain * exp((-decay + i*omega) * offset)
-    start_amplitude = gain * math.exp(-decay * offset)
-    phasors = accumulate(
-        repeat(complex(fade * math.cos(omega / rate), fade * math.sin(omega / rate)), last - first - 1),
-        mul,
-        initial=complex(start_amplitude * math.cos(omega * offset), start_amplitude * math.sin(omega * offset)),
-    )
-    values = [z.imag for z in phasors]
-    if attack > 0.0:
-        for index in range(min(len(values), int(attack * rate) + 2)):
-            values[index] *= min(1.0, (offset + index / rate) / attack)
-    return [0.0] * first + values + [0.0] * (count - last)
-
-
-def _mix(parts: list[list[float]]) -> list[float]:
-    """Sum equally long sample lists."""
-
-    total = parts[0]
-    for part in parts[1:]:
-        total = list(map(add, total, part))
-    return total
-
-
-def _sweep(rate: int, channels: int, duration: float, start: float, end: float, volume: int) -> pygame.mixer.Sound:
-    count = int(rate * duration)
-    times = [index / rate for index in range(count)]
-    per_sample = 2.0 * math.pi / rate
-    phases = accumulate([(start + (end - start) * (t / duration)) * per_sample for t in times])
-    envelope = [math.sin(math.pi * t / duration) for t in times]
-    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(map(mul, map(math.sin, phases), envelope), channels, scale=volume))
-
-
-def _chord(rate: int, channels: int, notes: tuple[float, ...], duration: float) -> pygame.mixer.Sound:
-    stagger = 0.06
-    count = int(rate * duration)
-    parts = [
-        _decaying_sine(rate, count, frequency, 5.0 / duration, start=order * stagger)
-        for order, frequency in enumerate(notes)
-    ]
-    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(_mix(parts), channels, scale=7000 / max(1, len(notes)) * 1.6))
-
-
-def _fanfare(rate: int, channels: int) -> pygame.mixer.Sound:
-    notes = ((0.0, 0.15, 523.25), (0.12, 0.15, 659.25), (0.24, 0.15, 783.99), (0.36, 0.45, 1046.5))
-    count = int(rate * 0.81)  # the last note ends at 0.81 s; the old 0.85 s buffer ended in silence
-    parts = [_decaying_sine(rate, count, frequency, 3.5 / length, start=start, stop=start + length) for start, length, frequency in notes]
-    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(_mix(parts), channels, scale=10000))
+        self._sounds.define("pop", lambda: sweep_sound(rate, channels, 0.12, 520.0, 900.0, 7200))
+        self._sounds.define("unpop", lambda: sweep_sound(rate, channels, 0.12, 760.0, 460.0, 5600))
+        self._sounds.define("whoosh", lambda: sweep_sound(rate, channels, 0.24, 900.0, 1500.0, 3600))
+        self._sounds.define("chime", lambda: chord_sound(rate, channels, (659.25, 783.99, 1046.5), 0.5))
+        self._sounds.define("boop", lambda: sweep_sound(rate, channels, 0.22, 420.0, 330.0, 6000))
+        self._sounds.define("pip", lambda: sweep_sound(rate, channels, 0.08, 880.0, 880.0, 6000))
+        self._sounds.define("rec_on", lambda: chord_sound(rate, channels, (880.0, 1318.5), 0.28))
+        self._sounds.define("rec_off", lambda: sweep_sound(rate, channels, 0.16, 990.0, 660.0, 6400))
+        self._sounds.define("page", lambda: sweep_sound(rate, channels, 0.18, 1200.0, 700.0, 2800))
+        self._sounds.define("fanfare", lambda: fanfare_sound(rate, channels))
 
 
 __all__ = ["HOST_CUES", "StoryAudio"]

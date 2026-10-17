@@ -18,9 +18,7 @@ once in the mixer's own format. Every call fails soft without a mixer.
 from __future__ import annotations
 
 from collections import OrderedDict
-from itertools import accumulate, repeat
 import math
-from operator import add, mul
 from pathlib import Path
 import random
 from typing import Final
@@ -28,7 +26,12 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import LocalizedResources, shared_character_audio_path
-from greia_platform.pygame_audio import DeferredSoundBank, current_pcm16_mixer_spec, mono_pcm16_bytes
+from greia_platform.pygame_audio import (
+    DeferredSoundBank,
+    bell_sound,
+    current_pcm16_mixer_spec,
+    mono_pcm16_bytes,
+)
 
 if __package__:
     from .mirror_model import ShapeKind
@@ -175,82 +178,11 @@ class MirrorAudio:
         if spec is None:
             return
         rate, channels = spec
-        self._sounds.define("pick", lambda: _bell(rate, channels, (987.8,), 0.16, 2400))
-        self._sounds.define("place", lambda: _bell(rate, channels, (659.3,), 0.22, 3000))
-        self._sounds.define("chime", lambda: _bell(rate, channels, (784.0, 1174.7), 0.5, 2600))
+        self._sounds.define("pick", lambda: bell_sound(rate, channels, (987.8,), 0.16, 2400))
+        self._sounds.define("place", lambda: bell_sound(rate, channels, (659.3,), 0.22, 3000))
+        self._sounds.define("chime", lambda: bell_sound(rate, channels, (784.0, 1174.7), 0.5, 2600))
         self._sounds.define("hum", lambda: _hum(rate, channels))
-        self._sounds.define("sparkle", lambda: _bell(rate, channels, (1318.5, 1568.0, 2093.0), 0.9, 1900))
-
-
-def _decaying_sine(
-    rate: int,
-    count: int,
-    frequency: float,
-    decay: float,
-    *,
-    start: float = 0.0,
-    stop: float | None = None,
-    attack: float = 0.0,
-    gain: float = 1.0,
-) -> list[float]:
-    """``gain * sin(2*pi*f*local) * exp(-decay*local) * min(1, local/attack)`` for one partial.
-
-    ``local`` is the time since ``start`` seconds; the list covers sample indices
-    ``0..count-1`` and is zero before ``start`` and from ``stop`` on. Instead of a
-    ``sin`` and an ``exp`` call per sample (the dominant start-up cost on the
-    Atom), the partial is a complex phasor multiplied by one constant per
-    sample and accumulated in C by ``itertools.accumulate``: the same curve to
-    ~1e-11 (identical 16-bit samples), about three times cheaper.
-    """
-
-    first = int(start * rate)
-    while first / rate < start:
-        first += 1
-    while first > 0 and (first - 1) / rate >= start:
-        first -= 1
-    last = count
-    if stop is not None:
-        last = min(count, int(stop * rate))
-        while last / rate < stop:
-            last += 1
-        last = min(count, last)
-    if first >= last:
-        return [0.0] * count
-    omega = 2.0 * math.pi * frequency
-    offset = first / rate - start
-    fade = math.exp(-decay / rate)  # |r| per sample; r = fade * exp(i*omega/rate), z0 = gain * exp((-decay + i*omega) * offset)
-    start_amplitude = gain * math.exp(-decay * offset)
-    phasors = accumulate(
-        repeat(complex(fade * math.cos(omega / rate), fade * math.sin(omega / rate)), last - first - 1),
-        mul,
-        initial=complex(start_amplitude * math.cos(omega * offset), start_amplitude * math.sin(omega * offset)),
-    )
-    values = [z.imag for z in phasors]
-    if attack > 0.0:
-        for index in range(min(len(values), int(attack * rate) + 2)):
-            values[index] *= min(1.0, (offset + index / rate) / attack)
-    return [0.0] * first + values + [0.0] * (count - last)
-
-
-def _mix(parts: list[list[float]]) -> list[float]:
-    """Sum equally long sample lists."""
-
-    total = parts[0]
-    for part in parts[1:]:
-        total = list(map(add, total, part))
-    return total
-
-
-def _bell(rate: int, channels: int, notes: tuple[float, ...], duration: float, volume: int) -> pygame.mixer.Sound:
-    """Soft celesta notes, one after another (a quick rising run for >1 note)."""
-
-    count = int(rate * duration)
-    step = duration / (len(notes) + 1)
-    parts = [
-        _decaying_sine(rate, count, frequency, 5.0 / duration, start=order * step, attack=0.006)
-        for order, frequency in enumerate(notes)
-    ]
-    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(_mix(parts), channels, scale=volume))
+        self._sounds.define("sparkle", lambda: bell_sound(rate, channels, (1318.5, 1568.0, 2093.0), 0.9, 1900))
 
 
 def _hum(rate: int, channels: int) -> pygame.mixer.Sound:
