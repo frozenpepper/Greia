@@ -232,12 +232,58 @@ class SystemChromeCoordinator:
         self._phase = SystemChromePhase.PREPARED
         return lease
 
-    def activity_ready(self, lease: SystemChromeLease) -> None:
+    def paint_launch_picture(self, surface: Any, pygame: Any) -> Any | None:
+        """Let the backend paint Home's picture on the Shell's launch screen.
+
+        Optional backend capability (``paint_launch_picture(surface, pygame)``
+        returning the Home hit box). Returns that box, or ``None`` when the
+        backend has no picture or painting failed (fail-soft: the trusted
+        chrome itself still appears at launch).
+        """
+
+        painter = getattr(self._backend, "paint_launch_picture", None)
+        if not callable(painter):
+            return None
+        try:
+            return painter(surface, pygame)
+        except Exception:  # noqa: BLE001 - a picture never blocks a launch
+            return None
+
+    def launch_started(self, lease: SystemChromeLease) -> None:
+        """Show Home from the launch onward (ADR 0019: Home is present while
+        the Activity is visible, and its window is visible from the launch
+        card on).
+
+        PREPARED -> VISIBLE before READY. Home pressed now cancels the launch
+        through the same lifecycle authority. Failure is fail-closed exactly
+        like a failed show at READY.
+        """
+
         self._require_lease(lease)
         if self._phase is not SystemChromePhase.PREPARED:
             raise SystemChromeError(
                 f"cannot show system chrome while phase is {self._phase.value}"
             )
+        self._show(lease)
+
+    def activity_ready(self, lease: SystemChromeLease) -> None:
+        """READY: show Home, or restack it when already shown at launch.
+
+        The Activity's window was mapped after the chrome during start-up,
+        so a chrome shown at launch is raised again above that surface.
+        """
+
+        self._require_lease(lease)
+        if self._phase is SystemChromePhase.VISIBLE:
+            self.ensure_visible(lease)
+            return
+        if self._phase is not SystemChromePhase.PREPARED:
+            raise SystemChromeError(
+                f"cannot show system chrome while phase is {self._phase.value}"
+            )
+        self._show(lease)
+
+    def _show(self, lease: SystemChromeLease) -> None:
         try:
             self._backend.show(lease.session_id)
         except Exception as exc:
@@ -362,15 +408,30 @@ class SystemChromeNavigationBridge:
         request = SystemNavigationRequest(session.session_id, action)
         if action is SystemNavigationAction.HOME:
             self._request = (lease.generation, request)
-            self._stop_controller.request_stop(session)
+            self._stop(session)
         elif action is SystemNavigationAction.BACK:
             activity_id = getattr(session, "activity_id", None)
             if activity_id in {"org.greia.enciclopedia"}:
                 self._dispatch_back_to_activity(session)
             else:
                 self._request = (lease.generation, request)
-                self._stop_controller.request_stop(session)
+                self._stop(session)
         return request
+
+    def _stop(self, session: ActivitySession) -> None:
+        """End the Activity: cancel a launch still before READY, else stop.
+
+        Before READY the Activity has presented nothing of its own and may
+        not run its loop (or see the graceful stop marker) yet, so waiting
+        out the graceful deadline would only delay the child's way home.
+        A controller offering ``cancel_launch`` ends such a session at once.
+        """
+
+        cancel = getattr(self._stop_controller, "cancel_launch", None)
+        if callable(cancel) and getattr(session, "ready_at", 0.0) is None:
+            cancel(session)
+            return
+        self._stop_controller.request_stop(session)
 
     def _dispatch_back_to_activity(self, session: ActivitySession) -> None:
         try:

@@ -19,21 +19,28 @@ The hand-off has three steps, all runtime-neutral and pure Pygame:
 2. :mod:`greia_platform.python_activity_entry` reads the card before any
    Activity code runs (a plain file read, ~6 ms for 1024x600 on the Atom) and
    wraps ``pygame.display.set_mode`` once (:class:`ActivityLaunchCover`).
-   Right after the Activity's first ``set_mode`` returns, the wrapper blits the
-   card at the window origin, flips once and restores the original function,
-   so the screen goes Shell launch screen -> identical card -> the Activity's
-   first frame. A missing or damaged card falls back to the profile theme's
-   background colour (never black). The cover never paints after the
-   Activity's own frames: it runs inside the first ``set_mode``, before the
-   Activity can draw.
+   The wrapper opens the Activity's first window **hidden** (``HIDDEN``),
+   then shows it with a second ``set_mode`` call carrying ``SHOWN``, blits
+   the card at the window origin, flips once and restores the original
+   function, so the screen goes Shell launch screen -> identical card -> the
+   Activity's first frame. Opening hidden matters: a window mapped by the
+   first ``set_mode`` showed black for one frame (51-83 ms on the Acer at
+   4d6e9c5e) before the card's flip; a hidden first window maps only on the
+   showing call, after SDL has its surface, so the next thing on screen is the
+   card. Both calls are public Pygame 2 API (no X11). A missing or damaged
+   card falls back to the profile theme's background colour (never black).
+   The cover never paints after the Activity's own frames: it runs inside the
+   first ``set_mode``, before the Activity can draw.
 3. The entry then removes the card file. Its absence tells the Shell that the
    Activity window now covers the screen, so the Shell stops repainting its
    hidden launch screen and leaves the CPU to the starting Activity.
 
 What it does not change: READY still means the Activity's own first presented
 frame (the Activity calls ``mark_activity_ready`` after its own flip; the
-cover's flip is not READY), protected Home/Back system chrome still appears at
-READY exactly as before, and nothing here touches X11. Launches outside a Greia
+cover's flip is not READY), and nothing here touches X11. Protected Home is
+Greia's, not the cover's: the Shell draws it on its launch screen (so the card
+carries its picture) and the trusted chrome is shown from the launch onward
+(see ``greia_launcher.trusted_chrome_supervisor``). Launches outside a Greia
 session (no ``GREIA_ACTIVITY_SESSION_ID``: tests, headless captures, developer
 runs) install nothing.
 """
@@ -258,11 +265,11 @@ def read_launch_card(path: Path) -> LaunchCard | None:
 class ActivityLaunchCover:
     """Activity side: paint the launch card once, right after the first set_mode.
 
-    ``install`` wraps ``pygame.display.set_mode``. The wrapper calls the real
-    function, restores it (when nobody wrapped it further in the meantime),
-    paints the card or the fallback colour, flips once and removes the card
-    file. Any failure is swallowed: the Activity then simply starts as it
-    always did.
+    ``install`` wraps ``pygame.display.set_mode``. The wrapper restores the
+    real function (when nobody wrapped it further in the meantime), opens the
+    window hidden and shows it (:meth:`open_window`), paints the card or the
+    fallback colour, flips once and removes the card file. Any failure is
+    swallowed: the Activity then simply starts as it always did.
     """
 
     def __init__(
@@ -304,14 +311,53 @@ class ActivityLaunchCover:
         cover = self
 
         def set_mode(*args: Any, **kwargs: Any) -> Any:
-            surface = original(*args, **kwargs)
             if display.set_mode is set_mode:
                 display.set_mode = original
-            if not cover._painted:
-                cover.paint(surface, pygame)
+            if cover._painted:
+                return original(*args, **kwargs)
+            surface = cover.open_window(original, pygame, args, kwargs)
+            cover.paint(surface, pygame)
             return surface
 
         display.set_mode = set_mode
+
+    @staticmethod
+    def open_window(
+        set_mode: Callable[..., Any],
+        pygame: Any,
+        args: tuple[Any, ...],
+        kwargs: Mapping[str, Any],
+    ) -> Any:
+        """Create the first window hidden, then show it; return its surface.
+
+        ``set_mode(size, flags, ...)`` is called twice: once with ``HIDDEN``
+        (the window exists but is not mapped, so nothing black can reach the
+        screen) and once with ``SHOWN`` (Pygame reuses the window and maps
+        it). The caller then paints and flips the card, the first pixels the
+        child sees. Calls that already ask for ``HIDDEN`` or ``OPENGL``, or a
+        Pygame without the flags, go through unchanged. If the hidden call
+        fails the plain call runs, so the Activity behaves exactly as without
+        the cover; errors of the showing call are the Activity's own.
+        """
+
+        hidden = getattr(pygame, "HIDDEN", 0)
+        shown = getattr(pygame, "SHOWN", 0)
+        flags = _set_mode_flags(args, kwargs)
+        if (
+            not hidden
+            or not shown
+            or flags is None
+            or flags & (hidden | getattr(pygame, "OPENGL", 0))
+        ):
+            return set_mode(*args, **kwargs)
+        try:
+            positional, named = _with_set_mode_flags(args, kwargs, flags | hidden)
+            set_mode(*positional, **named)
+        except Exception as exc:  # noqa: BLE001 - fall back to the plain call
+            print(f"greia: hidden first window unavailable: {exc}", file=sys.stderr)
+            return set_mode(*args, **kwargs)
+        positional, named = _with_set_mode_flags(args, kwargs, (flags & ~hidden) | shown)
+        return set_mode(*positional, **named)
 
     def paint(self, surface: Any, pygame: Any) -> bool:
         """Paint and present the cover once; return whether it was presented."""
@@ -342,6 +388,30 @@ class ActivityLaunchCover:
         if self._card_path is not None:
             self._remove_card(self._card_path)
         return True
+
+
+def _set_mode_flags(args: tuple[Any, ...], kwargs: Mapping[str, Any]) -> int | None:
+    """The ``flags`` of a ``set_mode(size=(0, 0), flags=0, ...)`` call, or None."""
+
+    value = args[1] if len(args) > 1 else kwargs.get("flags", 0)
+    if isinstance(value, bool) or not isinstance(value, int):
+        return None
+    return value
+
+
+def _with_set_mode_flags(
+    args: tuple[Any, ...], kwargs: Mapping[str, Any], flags: int
+) -> tuple[tuple[Any, ...], dict[str, Any]]:
+    """The same ``set_mode`` call with ``flags`` replaced."""
+
+    named = dict(kwargs)
+    if len(args) > 1:
+        return (args[0], flags, *args[2:]), named
+    named["flags"] = flags
+    if args:
+        return (args[0],), named
+    named.setdefault("size", (0, 0))
+    return (), named
 
 
 def _unlink_quietly(path: Path) -> None:

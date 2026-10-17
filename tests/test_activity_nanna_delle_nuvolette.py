@@ -517,6 +517,34 @@ class AppLoopTests(unittest.TestCase):
     def test_lullaby_uses_only_synthesized_notes(self) -> None:
         self.assertTrue(all(name.startswith("sleep_") for _, name in LULLABY))
 
+    def test_home_stop_ends_the_real_loop_promptly_and_saves(self) -> None:
+        """Greia's graceful stop (Home) ends ``run`` on the next pass, in time.
+
+        Acer sweep at 4d6e9c5e saw one 2.9 s forced stop; 19 later in-Shell
+        Home stops measured 0.75-1.3 s. The loop must never wait on anything
+        but one bounded frame wait before honouring the stop marker.
+        """
+
+        import time as real_time
+
+        app = self.make()
+        app.clock = real_time.monotonic
+        calls = {"n": 0}
+
+        def stop_requested() -> bool:
+            calls["n"] += 1
+            return calls["n"] > 3
+
+        saves_before = self.progress.saves
+        with mock.patch("activities.nanna_delle_nuvolette.cloud_app.activity_stop_requested", stop_requested), \
+                mock.patch("activities.nanna_delle_nuvolette.cloud_app.mark_activity_ready"):
+            started = real_time.monotonic()
+            self.assertEqual(app.run(), 0)
+            elapsed = real_time.monotonic() - started
+        self.assertEqual(calls["n"], 4)  # left on the first check that saw the stop
+        self.assertEqual(self.progress.saves, saves_before + 1)
+        self.assertLess(elapsed, 2.0)  # the supervisor's graceful deadline
+
     def test_renders_at_supported_sizes(self) -> None:
         for size in ((1024, 600), (800, 480), (480, 320)):
             self.screen = pygame.display.set_mode(size)

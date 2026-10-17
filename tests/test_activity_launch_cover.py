@@ -250,6 +250,66 @@ class ActivityLaunchCoverTests(unittest.TestCase):
             self.assertFalse(cover.paint(BrokenSurface(), pygame))
         self.assertFalse(cover.paint(None, pygame))
 
+    def _record_set_mode(self, *, fail_hidden: bool = False) -> list[tuple[tuple, dict]]:
+        calls: list[tuple[tuple, dict]] = []
+        real = pygame.display.set_mode
+
+        def recording(*args: object, **kwargs: object) -> object:
+            calls.append((args, dict(kwargs)))
+            flags = args[1] if len(args) > 1 else kwargs.get("flags", 0)
+            if fail_hidden and flags & pygame.HIDDEN:
+                raise pygame.error("no hidden windows here")
+            return real(*args, **kwargs)
+
+        pygame.display.set_mode = recording
+        return calls
+
+    def test_first_window_opens_hidden_then_shows_before_the_card_flip(self) -> None:
+        # The black frame at 4d6e9c5e came from mapping the window in the
+        # first set_mode; the window must be unmapped until it is shown.
+        LaunchCardPublisher().publish(self.data, _solid_card((96, 64), CORAL))
+        calls = self._record_set_mode()
+        install_activity_launch_cover(pygame, self._environment())
+        with _FlipCounter() as flips:
+            screen = pygame.display.set_mode((96, 64), pygame.RESIZABLE)
+        self.assertEqual(len(calls), 2)
+        hidden_args, _ = calls[0]
+        shown_args, _ = calls[1]
+        self.assertEqual(hidden_args[0], (96, 64))
+        self.assertTrue(hidden_args[1] & pygame.HIDDEN)
+        self.assertTrue(hidden_args[1] & pygame.RESIZABLE)
+        self.assertFalse(shown_args[1] & pygame.HIDDEN)
+        self.assertTrue(shown_args[1] & pygame.SHOWN)
+        self.assertTrue(shown_args[1] & pygame.RESIZABLE)
+        self.assertEqual(flips.count, 1)
+        self.assertIs(screen, pygame.display.get_surface())
+        self.assertEqual(tuple(screen.get_at((50, 30)))[:3], CORAL)
+
+    def test_keyword_and_default_flags_also_open_hidden(self) -> None:
+        calls = self._record_set_mode()
+        install_activity_launch_cover(pygame, self._environment())
+        pygame.display.set_mode(size=(40, 30))
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(calls[0][1]["flags"], pygame.HIDDEN)
+        self.assertEqual(calls[1][1]["flags"], pygame.SHOWN)
+        self.assertEqual(calls[1][1]["size"], (40, 30))
+
+    def test_hidden_or_opengl_requests_pass_through_once(self) -> None:
+        calls = self._record_set_mode()
+        install_activity_launch_cover(pygame, self._environment())
+        pygame.display.set_mode((40, 30), pygame.HIDDEN)
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][0][1], pygame.HIDDEN)
+
+    def test_a_failing_hidden_window_falls_back_to_the_plain_call(self) -> None:
+        LaunchCardPublisher().publish(self.data, _solid_card((40, 30), CORAL))
+        calls = self._record_set_mode(fail_hidden=True)
+        install_activity_launch_cover(pygame, self._environment())
+        with contextlib.redirect_stderr(io.StringIO()):
+            screen = pygame.display.set_mode((40, 30))
+        self.assertEqual([args[1] if len(args) > 1 else None for args, _ in calls][-1], None)
+        self.assertEqual(tuple(screen.get_at((5, 5)))[:3], CORAL)
+
     def test_nothing_is_installed_outside_a_greia_session(self) -> None:
         environment = self._environment()
         del environment["GREIA_ACTIVITY_SESSION_ID"]
@@ -357,6 +417,91 @@ class ShellLaunchHandOffTests(unittest.TestCase):
         self.assertEqual(self.card.size, (64, 48))
         self.assertEqual(bytes(self.card.rgb[:3]), bytes(CORAL))
         self.assertFalse(launch_card_path(self.data).exists())
+
+
+class _HomeAwareSupervisor(_CoveringActivitySupervisor):
+    """Adds the trusted-chrome hooks the Shell uses during a launch."""
+
+    def __init__(self, data_dir: Path) -> None:
+        super().__init__(data_dir)
+        self.cancelled = 0
+        self.restacked: list[int] = []
+        self.tap_during_start: tuple[int, int] | None = None
+
+    def start(self, manifest: object, profile: object, authority: object) -> _Session:
+        session = super().start(manifest, profile, authority)
+        if self.tap_during_start is not None:
+            # The child taps the launch screen's Home while the Shell is busy.
+            pygame.event.post(
+                pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=self.tap_during_start)
+            )
+        return session
+
+    def paint_launch_home(self, surface: object, pygame_module: object) -> object:
+        surface.fill((78, 56, 40), (8, 8, 20, 20))
+        return SimpleNamespace(x=8, y=8, width=20, height=20)
+
+    def cancel_launch(self, session: _Session) -> None:
+        self.cancelled += 1
+        session.result = "cancelled"
+
+    def poll(self, session: _Session) -> object | None:
+        if session.result is not None:
+            return session.result
+        return super().poll(session)
+
+    def ensure_system_chrome_visible(self, session: _Session) -> bool:
+        self.restacked.append(self.polls)
+        return True
+
+
+class _HomeShell(_Shell):
+    """Subclasses (the child Shell) replace the overlay; Home is still drawn."""
+
+
+class ShellLaunchHomeTests(unittest.TestCase):
+    """Home is on the launch screen and works before the Activity is READY."""
+
+    setUp = ShellLaunchHandOffTests.setUp
+    tearDown = ShellLaunchHandOffTests.tearDown
+    _shell = ShellLaunchHandOffTests._shell
+
+    def _home_shell(self) -> _HomeShell:
+        shell = self._shell()
+        shell.__class__ = _HomeShell
+        shell.supervisor = _HomeAwareSupervisor(self.data)
+        return shell
+
+    def test_launch_card_carries_home(self) -> None:
+        shell = self._home_shell()
+        shell.supervisor.start = lambda manifest, profile, authority: (
+            self.__setattr__("card", read_launch_card(launch_card_path(self.data)))
+            or SimpleNamespace(result="refused")
+        )
+        shell._launch_selected(pygame)
+        offset = (10 * 64 + 10) * 3  # pixel (10, 10) of the 64x48 card
+        self.assertEqual(bytes(self.card.rgb[offset:offset + 3]), bytes((78, 56, 40)))
+
+    def test_home_tap_on_the_launch_screen_cancels_the_launch(self) -> None:
+        shell = self._home_shell()
+        shell.supervisor.tap_during_start = (12, 12)
+        shell._launch_selected(pygame)
+        self.assertEqual(shell.supervisor.cancelled, 1)
+        self.assertEqual(shell._last_result, "cancelled")
+        self.assertFalse(launch_card_path(self.data).exists())
+
+    def test_tap_outside_home_is_ignored(self) -> None:
+        shell = self._home_shell()
+        shell.supervisor.tap_during_start = (40, 30)
+        shell._launch_selected(pygame)
+        self.assertEqual(shell.supervisor.cancelled, 0)
+        self.assertEqual(shell._last_result, "done")
+
+    def test_home_is_restacked_once_the_activity_window_covers_the_shell(self) -> None:
+        shell = self._home_shell()
+        shell._launch_selected(pygame)
+        # The fake Activity consumed the card on poll 3: restacked right then.
+        self.assertEqual(shell.supervisor.restacked, [3])
 
 
 class ActivityEntryIntegrationTests(unittest.TestCase):

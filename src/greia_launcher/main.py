@@ -1120,6 +1120,7 @@ class LauncherApplication:
         # brokers, sandbox), then hand its exact pixels to the Activity, whose
         # entry presents them in its new window at once instead of black.
         self._draw_launch_overlay(pygame, text=launch_feedback(getattr(self, "_active_locale", "en")).overlay)
+        self._paint_launch_home(pygame, pygame.display.get_surface())
         pygame.display.flip()
         self._on_frame_presented(pygame.display.get_surface(), pygame)
         _launch_feedback = time.monotonic()
@@ -1197,6 +1198,17 @@ class LauncherApplication:
                     if callable(poll_hooks):
                         poll_hooks(pygame)
                 events = tuple(pygame.event.get())
+                if (
+                    not launch_covered
+                    and activity_session.state == ActivitySessionState.STARTING
+                    and self._launch_home_tapped(pygame, events)
+                ):
+                    # Home on the Shell's own launch screen (tapped while the
+                    # Shell was busy starting the Activity): cancel through the
+                    # same lifecycle authority as the trusted chrome.
+                    cancel = getattr(self.supervisor, "cancel_launch", None)
+                    if callable(cancel):
+                        cancel(activity_session)
                 self._last_result = self.supervisor.poll(activity_session)
                 if self._last_result is not None:
                     break
@@ -1280,6 +1292,15 @@ class LauncherApplication:
                     launch_covered = self._launch_card_publisher.consumed(
                         launch_card_dir
                     )
+                    if launch_covered:
+                        # The Activity window has just mapped over the trusted
+                        # Home shown at launch: raise Home again now (the card
+                        # carries Home's picture for these few milliseconds).
+                        restack = getattr(
+                            self.supervisor, "ensure_system_chrome_visible", None
+                        )
+                        if callable(restack):
+                            restack(activity_session)
                 if (
                     not is_running
                     and not is_ready
@@ -1287,6 +1308,7 @@ class LauncherApplication:
                     and self.FOREGROUND_CADENCE.wait_screen_due(now, _launch_feedback)
                 ):
                     self._draw_launch_overlay(pygame, text=launch_feedback(getattr(self, "_active_locale", "en")).overlay)
+                    self._paint_launch_home(pygame, pygame.display.get_surface())
                     pygame.display.flip()
                     self._on_frame_presented(
                         pygame.display.get_surface(), pygame
@@ -1384,6 +1406,35 @@ class LauncherApplication:
         hint = self._typography.font(FontRole.BODY, 20)
         hint_label = hint.render(launch_feedback(getattr(self, "_active_locale", "en")).wait, True, (130, 120, 100))
         screen.blit(hint_label, hint_label.get_rect(center=(center[0], center[1] + 65)))
+
+    def _paint_launch_home(self, pygame: Any, screen: Any) -> None:
+        """Protected Home on the launch screen (ADR 0019), drawn by the Shell.
+
+        The trusted chrome backend paints its own Home picture at the
+        protected location, so Home is visible from the first launch frame,
+        while the Shell is still starting the Activity, and the launch card
+        the Activity repaints carries it too. Taps on it are answered by
+        :meth:`_launch_home_tapped` while the Shell window is on top; the
+        trusted chrome window takes over the region once it is shown.
+        """
+
+        paint = getattr(self.supervisor, "paint_launch_home", None)
+        self._launch_home_box = (
+            paint(screen, pygame) if callable(paint) and screen is not None else None
+        )
+
+    def _launch_home_tapped(self, pygame: Any, events: tuple[Any, ...]) -> bool:
+        """Whether a primary release landed on the launch screen's Home."""
+
+        box = getattr(self, "_launch_home_box", None)
+        if box is None:
+            return False
+        for event in events:
+            if getattr(event, "type", None) == pygame.MOUSEBUTTONUP and getattr(event, "button", 0) == 1:
+                x, y = event.pos
+                if box.x <= x < box.x + box.width and box.y <= y < box.y + box.height:
+                    return True
+        return False
 
     def _installed_root(self) -> bool:
         return self.paths.root == Path("/opt/greia-os")

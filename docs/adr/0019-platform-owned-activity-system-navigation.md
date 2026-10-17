@@ -92,6 +92,10 @@ The current provisional Xorg/xinit path remains operational during R7 but is not
 
 Writing, Painting and every other Greia-built Activity use the same system navigation boundary as third-party Activities.
 
+### 8. Launch phase (amendment 2026-10-17)
+
+An Activity's window is visible from the launch card on (ADR 0037 §6a), so Home is present from the launch, not only from READY. The Shell draws the chrome backend's Home *picture* at the protected location on its launch screen (so the launch card carries it), the trusted chrome is prepared **and shown** as soon as the session exists (`SystemChromeCoordinator.launch_started`), raised again when the Activity window maps and at READY. Home before READY (trusted chrome, a tap on the Shell's launch-screen Home, or the controller guide button) cancels the launch through lifecycle authority: an immediate bounded forced stop (`TrustedChromeActivitySupervisor.cancel_launch`), because the process has presented nothing of its own. After READY, Home remains the graceful stop. A launch whose chrome cannot be shown fails closed. The picture is never an input surface once the trusted chrome is shown.
+
 ## Initial source implementation
 
 Renderer-neutral product geometry/actions:

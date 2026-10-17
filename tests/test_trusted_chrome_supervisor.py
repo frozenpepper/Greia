@@ -152,7 +152,7 @@ def _supervisor(process: _Process, backend: _ChromeBackend):
 
 
 class TrustedChromeActivitySupervisorTests(unittest.TestCase):
-    def test_chrome_prepares_before_ready_shows_on_ready_and_hides_on_exit(self) -> None:
+    def test_chrome_shows_at_launch_restacks_on_ready_and_hides_on_exit(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             manifest = _manifest(root / "activity")
@@ -163,14 +163,21 @@ class TrustedChromeActivitySupervisorTests(unittest.TestCase):
             supervisor, coordinator = _supervisor(process, backend)
 
             session = supervisor.start(manifest, profile, authority)
-            self.assertEqual(backend.calls, [("prepare", session.session_id, False)])
-            self.assertEqual(coordinator.snapshot.phase, SystemChromePhase.PREPARED)
+            # ADR 0019: Home is present from the launch on, before READY.
+            self.assertEqual(
+                backend.calls,
+                [("prepare", session.session_id, False), ("show", session.session_id)],
+            )
+            self.assertEqual(session.state, ActivitySessionState.STARTING)
+            self.assertEqual(coordinator.snapshot.phase, SystemChromePhase.VISIBLE)
 
             with mock.patch.object(type(session.control), "ready", return_value=True):
                 self.assertIsNone(supervisor.poll(session))
             self.assertEqual(session.state, ActivitySessionState.RUNNING)
             self.assertEqual(coordinator.snapshot.phase, SystemChromePhase.VISIBLE)
-            self.assertIn(("show", session.session_id), backend.calls)
+            # Raised again above the Activity surface mapped after it.
+            self.assertIn(("restack", session.session_id), backend.calls)
+            self.assertEqual(backend.calls.count(("show", session.session_id)), 1)
 
             process.returncode = 0
             result = supervisor.poll(session)
@@ -283,6 +290,84 @@ class TrustedChromeActivitySupervisorTests(unittest.TestCase):
 
         self.assertEqual(session.state, ActivitySessionState.STOPPING)
         self.assertIsNotNone(session.stop_requested_at)
+
+
+class LaunchPhaseHomeTests(unittest.TestCase):
+    """Home is visible and working while the Activity is still STARTING."""
+
+    def _start(self, temporary: str, backend: _ChromeBackend | None = None):
+        root = Path(temporary)
+        manifest = _manifest(root / "activity")
+        profile = _ProfileContext(root / "profile")
+        process = _Process()
+        backend = backend or _ChromeBackend()
+        supervisor, coordinator = _supervisor(process, backend)
+        session = supervisor.start(manifest, profile, _Authority(manifest.activity_id))
+        return supervisor, coordinator, backend, process, session
+
+    def test_home_before_ready_cancels_the_launch_at_once(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            supervisor, coordinator, backend, process, session = self._start(temporary)
+            self.assertIsNone(supervisor.poll(session))  # still starting, Home polled
+            self.assertIn(("poll", session.session_id), backend.calls)
+
+            backend.actions.append(SystemNavigationAction.HOME)
+            result = supervisor.poll(session)
+
+        # No graceful wait for a process that never presented a frame.
+        self.assertTrue(process.killed)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.exit_reason, ActivityExitReason.FORCED_STOP)
+        self.assertFalse(result.ready)
+        self.assertEqual(coordinator.snapshot.phase, SystemChromePhase.HIDDEN)
+        self.assertIn(("hide", session.session_id), backend.calls)
+
+    def test_home_after_ready_keeps_the_graceful_stop(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            supervisor, _coordinator, backend, process, session = self._start(temporary)
+            with mock.patch.object(type(session.control), "ready", return_value=True):
+                self.assertIsNone(supervisor.poll(session))
+            backend.actions.append(SystemNavigationAction.HOME)
+            self.assertIsNone(supervisor.poll(session))
+        self.assertFalse(process.killed)
+        self.assertEqual(session.state, ActivitySessionState.STOPPING)
+
+    def test_controller_guide_before_ready_cancels_the_launch(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            supervisor, _coordinator, _backend, process, session = self._start(temporary)
+            supervisor._controller_set = type("Guide", (), {"poll_guide_button": lambda self: True})()
+            result = supervisor.poll(session)
+        self.assertTrue(process.killed)
+        self.assertEqual(result.exit_reason, ActivityExitReason.FORCED_STOP)
+
+    def test_launch_show_failure_fails_closed(self) -> None:
+        backend = _ChromeBackend()
+        backend.fail_show = True
+        with tempfile.TemporaryDirectory() as temporary:
+            _supervisor_, coordinator, backend, process, session = self._start(temporary, backend)
+        self.assertTrue(process.killed)
+        self.assertEqual(session.result.exit_reason, ActivityExitReason.PLATFORM_FAILURE)
+        self.assertEqual(coordinator.snapshot.phase, SystemChromePhase.HIDDEN)
+
+    def test_restack_is_allowed_while_starting(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            supervisor, _coordinator, backend, _process, session = self._start(temporary)
+            self.assertTrue(supervisor.ensure_system_chrome_visible(session))
+        self.assertIn(("restack", session.session_id), backend.calls)
+
+    def test_launch_picture_is_the_backends_and_optional(self) -> None:
+        class _PictureBackend(_ChromeBackend):
+            def paint_launch_picture(self, surface: object, pygame: object) -> object:
+                self.calls.append(("picture", surface))
+                return "home-box"
+
+        with tempfile.TemporaryDirectory() as temporary:
+            supervisor, _c, backend, _p, _s = self._start(temporary, _PictureBackend())
+            self.assertEqual(supervisor.paint_launch_home("screen", None), "home-box")
+            self.assertIn(("picture", "screen"), backend.calls)
+        with tempfile.TemporaryDirectory() as temporary:
+            supervisor, _c, _b, _p, _s = self._start(temporary)
+            self.assertIsNone(supervisor.paint_launch_home("screen", None))
 
 
 if __name__ == "__main__":

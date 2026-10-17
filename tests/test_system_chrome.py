@@ -395,6 +395,33 @@ class SystemChromeCoordinatorTests(unittest.TestCase):
             ],
         )
 
+    def test_launch_show_then_ready_restacks_without_a_second_show(self) -> None:
+        backend = RecordingChromeBackend()
+        coordinator = SystemChromeCoordinator(backend)
+        lease = coordinator.prepare("session-a", back_available=False)
+        coordinator.launch_started(lease)
+        self.assertIs(coordinator.snapshot.phase, SystemChromePhase.VISIBLE)
+        backend.actions.append(SystemNavigationAction.HOME)
+        self.assertIs(coordinator.poll_action(lease), SystemNavigationAction.HOME)
+        coordinator.activity_ready(lease)
+        self.assertIs(coordinator.snapshot.phase, SystemChromePhase.VISIBLE)
+        with self.assertRaises(SystemChromeError):
+            coordinator.launch_started(lease)  # only from PREPARED
+        self.assertEqual(
+            [event[0] for event in backend.events],
+            ["prepare", "show", "poll", "restack"],
+        )
+
+    def test_launch_picture_is_optional_and_fail_soft(self) -> None:
+        coordinator = SystemChromeCoordinator(RecordingChromeBackend())
+        self.assertIsNone(coordinator.paint_launch_picture(object(), object()))
+
+        class Broken(RecordingChromeBackend):
+            def paint_launch_picture(self, surface: object, pygame: object) -> object:
+                raise RuntimeError("no picture")
+
+        self.assertIsNone(SystemChromeCoordinator(Broken()).paint_launch_picture(object(), object()))
+
     def test_prepare_failure_recovers_hidden_when_backend_cleanup_succeeds(self) -> None:
         backend = RecordingChromeBackend()
         backend.fail_prepare = True

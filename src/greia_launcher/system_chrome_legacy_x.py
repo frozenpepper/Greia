@@ -14,6 +14,7 @@ from greia_platform.system_chrome import (
 )
 
 from .system_chrome import resolve_trusted_action_minimum_px
+from .system_chrome_picture import HomeChromePalette, paint_home_chrome_picture
 
 
 def layout_for_surface_with_metrics(
@@ -781,6 +782,26 @@ class LegacyXSystemChromeBackend:
         if point is None:
             return None
         return layout.action_at(*point)
+
+    def paint_launch_picture(self, surface: Any, pygame: Any) -> Any:
+        """Paint Home's picture on the Shell's launch screen; return its hit box."""
+
+        width, height = surface.get_size()
+        layout = layout_for_surface_with_metrics(width, height)
+        bridge = CtypesLegacyXChromeBridge
+        paint_home_chrome_picture(
+            surface,
+            pygame,
+            layout,
+            HomeChromePalette.from_rgb_ints(
+                window=bridge._COLOR_WINDOW,
+                border=bridge._COLOR_BORDER,
+                button=bridge._COLOR_CREAM,
+                outline=bridge._COLOR_OUTLINE,
+                door=bridge._COLOR_DOOR,
+            ),
+        )
+        return layout.home_hitbox
 
     def hide(self, session_id: str) -> None:
         # Coordinator recovery may call hide twice after a show failure: once as

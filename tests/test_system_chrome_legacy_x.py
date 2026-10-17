@@ -108,6 +108,25 @@ class LegacyXSystemChromeBackendTests(unittest.TestCase):
             backend.prepare("session-b", back_available=False)
         backend.hide("session-a")
 
+    def test_launch_picture_matches_the_native_home_geometry(self) -> None:
+        import os
+
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        import pygame
+
+        surface = pygame.Surface((1024, 600))
+        surface.fill((0, 0, 0))
+        box = LegacyXSystemChromeBackend(bridge=_Bridge()).paint_launch_picture(surface, pygame)
+        self.assertEqual((box.x, box.y, box.width, box.height), (8, 8, 60, 60))
+        outline = (0x4E, 0x38, 0x28)
+        # Roof and cottage body in the outline colour, attic window cream,
+        # capsule background, and nothing painted outside the capsule.
+        self.assertEqual(tuple(surface.get_at((30, 34)))[:3], outline)
+        self.assertEqual(tuple(surface.get_at((27, 40)))[:3], outline)
+        self.assertEqual(tuple(surface.get_at((38, 33)))[:3], (0xFF, 0xF8, 0xEB))
+        self.assertEqual(tuple(surface.get_at((38, 72)))[:3], (0xFF, 0xF8, 0xEB))
+        self.assertEqual(tuple(surface.get_at((100, 38)))[:3], (0, 0, 0))
+
     def test_source_is_not_a_second_pygame_or_process_render_path(self) -> None:
         source = SOURCE.read_text(encoding="utf-8")
         self.assertNotIn("import pygame", source)
