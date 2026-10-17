@@ -61,6 +61,28 @@ class ParentCredentialUnavailable(RuntimeError):
     """
 
 
+class ParentPasswordRejected(RuntimeError):
+    """The Parent service answered, and the answer was "no".
+
+    Raised by :meth:`ParentCredentialClient.authenticate` for the definite
+    rejections (a wrong password, a malformed request, or a spent attempt
+    budget). Distinct from :class:`ParentCredentialUnavailable`: ``authenticate``
+    used to raise *that* for every non-201 reply, so on the device a mistyped
+    password read as "Cannot check the password right now" — the exact confusion
+    ``verify`` was written to prevent. Access is refused either way.
+    """
+
+    def __init__(self, status: int) -> None:
+        super().__init__(f"parent password rejected ({status})")
+        self.status = int(status)
+
+    @property
+    def rate_limited(self) -> bool:
+        """True when the service refused because of too many attempts."""
+
+        return self.status == 429
+
+
 @runtime_checkable
 class ParentPasswordVerifier(Protocol):
     """Narrow dependency the panel needs: is this candidate password correct?
@@ -142,6 +164,8 @@ class ParentCredentialClient:
             {"password": password, "device_name": self._device_name},
             authenticated=False,
         )
+        if status in _DEFINITE_REJECTIONS:
+            raise ParentPasswordRejected(status)
         if status != 201:
             raise ParentCredentialUnavailable(
                 f"parent service returned unexpected status {status}"
@@ -439,6 +463,7 @@ __all__ = [
     "ChildAccount",
     "ParentCredentialClient",
     "ParentCredentialUnavailable",
+    "ParentPasswordRejected",
     "ParentPasswordVerifier",
     "ParentRequestFailed",
     "ParentSession",

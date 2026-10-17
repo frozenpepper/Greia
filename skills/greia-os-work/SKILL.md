@@ -387,8 +387,11 @@ UI text, ensure `_device_locale` participates in the Parent
 overlay's cached composite and pre-rendered chrome keys; reuse
 `panel_layout.fit_single_line` or measured wrapping so longer
 translated text cannot overflow on the 1024×600/Acer floor.
-Follow `tests/test_panel_localization.py` and
-`tests/test_panel_frame_cache.py`. The implemented Parent forms, audio, pointer, Wi-Fi, SSH and Info
+Follow `tests/test_panel_localization.py`,
+`tests/test_panel_frame_cache.py` and `tests/test_parent_panel_polish.py`;
+draw panel controls with the overlay's `_kit_button`/`_kit_toggle`
+helpers (ADR 0037 look, `_Ink` tokens) and check layout with
+`tools/panel_screenshots.py` (1024×600 + 800×480, EN/IT/ES/FR). The implemented Parent forms, audio, pointer, Wi-Fi, SSH and Info
 tab copy now also use the same locale resource; service-origin
 errors and any custom/inline text not yet extracted are still
 coverage items. A failed hardware setting write must never be

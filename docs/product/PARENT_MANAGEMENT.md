@@ -421,12 +421,17 @@ Greia physical devices provide an on-device Parent Settings Panel directly on th
 
 - **Hidden activation gesture:** Holding keys `s` and `t` simultaneously for 5.0 seconds on the initial user selection screen (`_mode == "profiles"`).
 - **Accidental-activation resistance:** If either key is released before 5.0 seconds have elapsed, the hold timer resets immediately without disturbing ordinary child navigation.
-- **Parent authentication gate:** Opening the panel requires entering the main Parent password (`greia` by default, validated via `MainCredentialStore`).
-- **On-device capabilities:**
-  1. **Language:** choose the Greia system language through the typed language service.
-  2. **Audio & Mic:** inspect and adjust the bounded microphone input gain through `HardwareSettingsStore`. Microphone-processing mode is currently managed through the typed Parent API/HTML client; an on-device presentation may be added later without changing the Audio Service contract.
-  3. **Wi-Fi Manager:** scan nearby SSIDs, select a network, enter a passphrase with on-screen masking, and connect via the platform Wi-Fi service.
-  4. **SSH Maintenance Switch:** on-demand toggle to enable or disable SSH with connection guidance.
-  5. **Remote Companion Diagnostics:** display device LAN IP, mDNS status, and instructions for connecting via browser at `http://<ip>:8766` during the provisional HTTP phase.
+- **Parent authentication gate:** Opening the panel requires entering the main Parent password (`greia` by default). The password is checked by the Parent service (`ParentCredentialClient.authenticate`, rate limited); the panel never reads the credential. A wrong password reads "Incorrect password", a spent attempt budget "Too many attempts", and only an unreachable service "Cannot check the password right now". Access is refused in every non-success case.
+- **On-device capabilities** (a section rail on the left; every privileged write goes through the Parent service):
+  1. **Language:** choose the Greia device language (each language under its own name) through the typed language service; offers exactly the languages in `SUPPORTED_SYSTEM_LANGUAGES`.
+  2. **Audio & Mic:** live microphone input meter, noise cancelling (standard filter / advanced reduction when available) and the bounded microphone gain (presets flanked by −25%/+25% steps).
+  3. **Kids:** add, rename and remove child accounts (removal needs the explicit red confirmation; paged when more children exist than fit).
+  4. **Password:** change the Parent password.
+  5. **Wi-Fi:** scan nearby SSIDs, select a network, enter a passphrase with on-screen masking, and connect via the platform Wi-Fi service.
+  6. **SSH:** on-demand maintenance switch with connection guidance and the security warning first.
+  7. **Remote access:** device LAN IP, mDNS service and instructions for the browser client at `http://<ip>:8766` during the provisional HTTP phase.
+  8. **Pointer:** touchpad/mouse speed presets, tap-to-click, natural scrolling, off-while-typing, reset and a test area.
+- **Keyboard and controller:** Tab moves to the next section (walking a form's fields first); arrows and Enter/Space act inside the current section; Backspace edits the focused field; Esc (controller cancel) leaves an open form or confirmation first and otherwise closes the panel. Focus rings appear only after keyboard/controller input. The Shell maps controllers to arrows/activate/cancel only, so a controller cannot change section yet.
+- **Layout evidence:** `tools/panel_screenshots.py` renders every section and state at 1024×600 and 800×480 in EN/IT/ES/FR and reports overlapping or clipped controls; `tests/test_parent_panel_polish.py` repeats the 800×480 check in the suite.
 
 The on-device panel and network client are two presentations over Greia-owned typed services; neither is allowed to become a parallel Linux administration surface.

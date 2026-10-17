@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from greia_launcher.parent_credential_client import ParentSession
+from greia_launcher.parent_credential_client import ParentPasswordRejected, ParentSession
 from greia_platform.hardware import HardwareSettingsStore
 from greia_platform.main_credential import MainCredentialStore
 
@@ -36,10 +36,10 @@ class ParentServiceDouble:
         return bool(self._credentials.verify(password))
 
     def authenticate(self, password: str) -> ParentSession:
-        # A wrong password must stay a plain rejection for the panel, which
-        # treats any exception as "check failed" rather than "incorrect".
+        # A wrong password is a definite rejection, exactly as the real client
+        # reports a 403 from the bootstrap endpoint.
         if not self.verify(password):
-            raise PermissionError("rejected")
+            raise ParentPasswordRejected(403)
         return self.session
 
     # Child accounts (the panel only lists them when the tab is opened) -

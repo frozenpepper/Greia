@@ -45,7 +45,7 @@ TAB_LANGUAGE = "Language"
 TAB_AUDIO = "Audio & Mic"
 TAB_WIFI = "Wi-Fi"
 TAB_SSH = "SSH"
-TAB_INFO = "Remote & Pairing"
+TAB_INFO = "Remote access"
 TAB_POINTER = "Pointer"
 TAB_ACCOUNTS = "Kids"
 TAB_SECURITY = "Password"
@@ -156,7 +156,7 @@ AUDIO_NOISE_TITLE = "Noise cancelling"
 AUDIO_NOISE_NOTE = (
     "Light processing always applies; advanced needs a supported microphone."
 )
-AUDIO_NOISE_PROCESSING = "Noise cancelling"
+AUDIO_NOISE_PROCESSING = "Standard filter"
 AUDIO_NOISE_ADVANCED = "Advanced reduction"
 
 #: Shown when the input level service has not answered yet. The capture device is

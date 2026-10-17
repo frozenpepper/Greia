@@ -20,7 +20,7 @@ os.environ["GREIA_MAIN_CREDENTIAL_PATH"] = os.path.join(TMP_DIR, "parent-credent
 os.environ["GREIA_OS_ROOT"] = str(REPO_ROOT)
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
-from greia_launcher.parent_panel import ParentPanelState, ParentSettingsOverlay
+from greia_launcher.parent_panel import ParentPanelState, ParentPanelTab, ParentSettingsOverlay
 from greia_launcher.child_shell import GreiaChildShell
 from greia_platform.hardware import HardwareSettingsStore
 from greia_platform.main_credential import MainCredentialStore
@@ -141,9 +141,14 @@ class NonBlockingSshStatusTests(unittest.TestCase):
 
         overlay.handle_key(_PygameKeys.K_RETURN, _PygameKeys)
         self.assertEqual(overlay.state, ParentPanelState.PANEL)
-        overlay.handle_key(_PygameKeys.K_TAB, _PygameKeys)  # AUDIO
-        overlay.handle_key(_PygameKeys.K_TAB, _PygameKeys)  # WIFI
-        overlay.handle_key(_PygameKeys.K_TAB, _PygameKeys)  # SSH
+        # Tab visits every section in rail order; on the password section it
+        # first walks the three fields, then moves on.
+        for _ in range(4):  # AUDIO, ACCOUNTS, SECURITY (current field)
+            overlay.handle_key(_PygameKeys.K_TAB, _PygameKeys)
+            if overlay.active_tab is ParentPanelTab.SECURITY:
+                break
+        while overlay.active_tab is not ParentPanelTab.SSH:
+            overlay.handle_key(_PygameKeys.K_TAB, _PygameKeys)
 
         overlay.handle_key(_PygameKeys.K_SPACE, _PygameKeys)
         self.assertIsNotNone(overlay.ssh_status)

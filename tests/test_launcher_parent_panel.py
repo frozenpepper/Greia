@@ -113,29 +113,30 @@ class ParentSettingsOverlayTests(unittest.TestCase):
         self.assertEqual(self.overlay.state, ParentPanelState.PANEL)
         self.assertEqual(self.overlay.active_tab, ParentPanelTab.LANGUAGE)
 
-        # Tab -> AUDIO
-        self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
-        self.assertEqual(self.overlay.active_tab, ParentPanelTab.AUDIO)
-
-        # Tab -> WIFI
-        self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
-        self.assertEqual(self.overlay.active_tab, ParentPanelTab.WIFI)
-
-        # Tab -> SSH
-        self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
-        self.assertEqual(self.overlay.active_tab, ParentPanelTab.SSH)
-
-        # Tab -> INFO
-        self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
-        self.assertEqual(self.overlay.active_tab, ParentPanelTab.INFO)
-
-        # Tab -> POINTER
-        self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
-        self.assertEqual(self.overlay.active_tab, ParentPanelTab.POINTER)
-
-        # Tab -> LANGUAGE
-        self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
-        self.assertEqual(self.overlay.active_tab, ParentPanelTab.LANGUAGE)
+        # Tab visits every section in rail order (accounts and password were
+        # unreachable by keyboard before). On the password section Tab first
+        # walks its three fields, then moves on, so it never traps the keyboard.
+        expected = [
+            ParentPanelTab.AUDIO,
+            ParentPanelTab.ACCOUNTS,
+            ParentPanelTab.SECURITY,
+            ParentPanelTab.WIFI,
+            ParentPanelTab.SSH,
+            ParentPanelTab.INFO,
+            ParentPanelTab.POINTER,
+            ParentPanelTab.LANGUAGE,
+        ]
+        for tab in expected:
+            self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
+            self.assertEqual(self.overlay.active_tab, tab)
+            if tab is ParentPanelTab.SECURITY:
+                self.assertEqual(self.overlay._text_field, "security_current")
+                self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
+                self.assertEqual(self.overlay._text_field, "security_new")
+                self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
+                self.assertEqual(self.overlay._text_field, "security_confirm")
+                self.assertEqual(self.overlay.active_tab, ParentPanelTab.SECURITY)
+        self.assertIsNone(self.overlay._text_field)
 
     def test_audio_gain_adjustment_in_audio_tab(self) -> None:
         self.overlay.open()

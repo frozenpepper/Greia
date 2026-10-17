@@ -28,6 +28,7 @@ from greia_launcher.parent_credential_client import (
     ChildAccount,
     ParentCredentialClient,
     ParentCredentialUnavailable,
+    ParentPasswordRejected,
     ParentPasswordVerifier,
     ParentRequestFailed,
     ParentSession,
@@ -81,6 +82,46 @@ _PASSWORD_REJECTED = "Incorrect password"
 #: Shown when no verdict could be obtained at all. Distinct from a rejection:
 #: the parent may have typed the right thing.
 _PASSWORD_CHECK_FAILED = "Cannot check the password right now"
+
+#: Shown when the service refused because the attempt budget is spent. It
+#: answered, so this is not an outage, but "incorrect password" would invite the
+#: parent to keep guessing into the limit.
+_PASSWORD_RATE_LIMITED = "Too many attempts"
+
+
+class _Ink:
+    """Colour tokens for the panel.
+
+    These are the shared control kit's tokens (ADR 0037,
+    ``greia_platform.activity_controls``: ink contour, cocoa text, cream face,
+    sunshine accent), so the adult panel reads as the same product as the Shell.
+    They are restated rather than imported to keep the kit's pygame-bound
+    module out of the launcher's start-up import path.
+    """
+
+    CONTOUR = (75, 55, 47)
+    TEXT = (61, 44, 31)
+    MUTED = (118, 104, 93)
+    FAINT = (150, 138, 126)
+    PANEL = (255, 250, 240)
+    CARD = (247, 238, 216)
+    FACE = (255, 249, 236)
+    ACCENT = (255, 194, 52)
+    TRACK = (222, 208, 178)
+    DISABLED = (222, 214, 201)
+    DANGER = (181, 46, 46)
+    SUCCESS = (47, 117, 81)
+    WHITE = (255, 255, 255)
+
+
+def _mix(color: tuple[int, int, int], other: tuple[int, int, int], amount: float) -> tuple[int, int, int]:
+    """Linear blend, the kit's ``mix`` (GREIA_SVG_AUTHORING_RULES derived steps)."""
+
+    amount = max(0.0, min(1.0, float(amount)))
+    return tuple(  # type: ignore[return-value]
+        int(round(a * (1.0 - amount) + b * amount)) for a, b in zip(color, other)
+    )
+
 
 class ParentSettingsOverlay:
     """On-device Parent Settings Panel for physical Greia devices.
@@ -177,6 +218,12 @@ class ParentSettingsOverlay:
         self._language_message = ""
         self._language_message_is_error = False
         self._audio_message = ""
+        self._audio_message_is_error = False
+        # Focus rings appear only after keyboard/controller input and hide again
+        # on pointer use ("focus-visible", as in the control kit).
+        self._keyboard_focus_visible = False
+        self._accounts_page = 0
+        self._profile_policy_cache: Any = None
         self._backdrop_surface: Any = None
         self._cached_mic_gain: float | None = None
         self._content_origin: tuple[int, int] = (0, 0)
@@ -189,7 +236,7 @@ class ParentSettingsOverlay:
         # them per frame ran at 10-15 fps. Chips render each fill+outline
         # combination once into an opaque surface whose corners carry the
         # known backdrop color, so every later frame is one fast opaque blit.
-        self._chip_cache: BoundedCache[tuple[Any, ...], Any] = BoundedCache(128)
+        self._chip_cache: BoundedCache[tuple[Any, ...], Any] = BoundedCache(192)
         # The AUTH card and the main panel sit on the launcher's dimmed
         # underlay whose pixels are not a single solid color, so they cannot be
         # chips with a baked backdrop. They are instead composed once, on top
@@ -230,6 +277,7 @@ class ParentSettingsOverlay:
         self._pointer_probe_at = 0.0
         self._pointer_probe_known = False
         self._pointer_message = ""
+        self._pointer_message_is_error = False
         self._pointer_focus = 0
         self._audio_processing_enabled = True
         self._audio_advanced_enabled = False
@@ -238,14 +286,44 @@ class ParentSettingsOverlay:
         self._pointer_test_flash: int | None = None
         self._pointer_test_flash_at = 0.0
 
+    # --- shared panel controls ---------------------------------------------
+    #
+    # Every control in the panel is drawn by the helpers below, so the whole
+    # surface uses one vocabulary: kit-style bodies (one ink contour, cream or
+    # accent face, a darker tactile lip) as in ADR 0037, one spacing grid and one
+    # set of text sizes. Bodies are opaque chips with the backdrop baked into
+    # their corners, cached in ``_chip_cache``; the composite frame cache means
+    # they are only blitted when the frame actually changes.
+
+    #: Height of the header row that holds the title and the close control.
+    _HEADER_H = 54
+
+    @staticmethod
+    def _panel_rect(size: tuple[int, int]) -> Any:
+        """The main panel card. Tighter margins on short screens (800x480)."""
+
+        import pygame
+
+        margin = 20 if size[1] >= 560 else 12
+        return pygame.Rect(margin, margin, size[0] - 2 * margin, size[1] - 2 * margin)
+
+    @classmethod
+    def _panel_close_button_rect(cls, size: tuple[int, int]) -> Any:
+        import pygame
+
+        panel = cls._panel_rect(size)
+        rect = pygame.Rect(0, 0, 42, 42)
+        rect.center = (panel.right - 14 - 21, panel.top + cls._HEADER_H // 2 + 2)
+        return rect
+
     def auth_card_rect(self, size: tuple[int, int]) -> Any:
         """Return the centered Parent-password card rectangle."""
 
         import pygame
 
         width, height = size
-        card_w = min(480, width - 40)
-        card_h = min(320, height - 40)
+        card_w = min(460, width - 32)
+        card_h = min(288, height - 32)
         card = pygame.Rect(0, 0, card_w, card_h)
         card.center = (width // 2, height // 2)
         return card
@@ -259,24 +337,41 @@ class ParentSettingsOverlay:
         outline: tuple[int, int, int] | None = None,
         width: int = 0,
         pygame: Any = None,
+        lip: int = 0,
     ) -> Any:
         """Return a cached opaque rounded chip matching `size`.
 
         The chip bakes `backdrop` into its corners so blitting it over the
         surface it was cut for is pixel-identical to drawing the rounded rect
-        in place, without per-frame software corner geometry.
+        in place, without per-frame software corner geometry. ``lip`` adds the
+        control kit's tactile bottom band: the face sits ``lip`` pixels above a
+        darker shade of its own fill, all inside one ink contour.
         """
 
-        key = (size, radius, backdrop, fill, outline, width)
+        key = (size, radius, backdrop, fill, outline, width, lip)
         cached = self._chip_cache.get(key)
         if cached is not None:
             return cached
         chip = pygame.Surface(size).convert()
         chip.fill(backdrop)
         rect = chip.get_rect()
-        pygame.draw.rect(chip, fill, rect, border_radius=radius)
-        if outline is not None and width > 0:
-            pygame.draw.rect(chip, outline, rect, width=width, border_radius=radius)
+        if lip > 0 and outline is not None and width > 0:
+            pygame.draw.rect(chip, outline, rect, border_radius=radius)
+            pygame.draw.rect(
+                chip, _mix(fill, _Ink.CONTOUR, 0.34),
+                rect.inflate(-2 * width, -2 * width),
+                border_radius=max(1, radius - width),
+            )
+            face = pygame.Rect(0, 0, rect.width, rect.height - lip)
+            pygame.draw.rect(chip, outline, face, border_radius=radius)
+            pygame.draw.rect(
+                chip, fill, face.inflate(-2 * width, -2 * width),
+                border_radius=max(1, radius - width),
+            )
+        else:
+            pygame.draw.rect(chip, fill, rect, border_radius=radius)
+            if outline is not None and width > 0:
+                pygame.draw.rect(chip, outline, rect, width=width, border_radius=radius)
         self._chip_cache[key] = chip
         return chip
 
@@ -290,6 +385,7 @@ class ParentSettingsOverlay:
         outline: tuple[int, int, int] | None = None,
         width: int = 0,
         radius: int | None = None,
+        lip: int = 0,
     ) -> None:
         if radius is None:
             radius = 12
@@ -301,8 +397,188 @@ class ParentSettingsOverlay:
             outline,
             width,
             pygame,
+            lip,
         )
         screen.blit(chip, rect.topleft)
+
+    @staticmethod
+    def _blit_centered(screen: Any, block: Any, rect: Any) -> Any:
+        """Blit a measured text block centred (both axes) inside ``rect``.
+
+        ``panel_layout.blit_block(..., align="center")`` centres horizontally
+        only and takes ``y`` as the *top*. Passing a rect's ``centery`` there is
+        what put every button and tab label in the lower half of its control.
+        """
+
+        target = block.surface.get_rect(center=rect.center)
+        target.clamp_ip(rect)
+        screen.blit(block.surface, target)
+        return target
+
+    def _kit_button(
+        self,
+        screen: Any,
+        rect: Any,
+        label: str,
+        typography: GreiaTypography,
+        pygame: Any,
+        *,
+        backdrop: tuple[int, int, int] = _Ink.CARD,
+        role: str = "neutral",
+        shape: str = "pill",
+        selected: bool = False,
+        disabled: bool = False,
+        focused: bool = False,
+        size: int = 16,
+        sublabel: str | None = None,
+        align: str = "center",
+    ) -> Any:
+        """Draw one kit-style control and return its face rectangle.
+
+        ``role`` is ``neutral`` (cream), ``primary`` (accent), ``danger`` (red,
+        white label) or ``danger_text`` (cream, red label). ``selected`` gives an
+        exclusive option the accent fill. ``shape`` is ``pill`` for actions and
+        ``tile`` for options. The focus ring is drawn only when ``focused``.
+        """
+
+        if role == "danger":
+            base, ink = _Ink.DANGER, _Ink.WHITE
+        elif role == "primary" or selected:
+            base, ink = _Ink.ACCENT, _Ink.TEXT
+        elif role == "danger_text":
+            base, ink = _Ink.FACE, _Ink.DANGER
+        else:
+            base, ink = _Ink.FACE, _Ink.TEXT
+        lip = 0 if disabled or rect.height < 30 else 3
+        if disabled:
+            base = _mix(base, _Ink.DISABLED, 0.62)
+            ink = _mix(_Ink.TEXT, _Ink.DISABLED, 0.55)
+        face = pygame.Rect(rect.left, rect.top, rect.width, rect.height - lip)
+        radius = (min(face.height, rect.width) // 2) if shape == "pill" else 12
+        self._blit_rounded_card(
+            screen, rect, backdrop, base, pygame, _Ink.CONTOUR,
+            3 if selected else 2, radius=radius, lip=lip,
+        )
+        if label:
+            text_w = max(1, face.width - (28 if align == "left" else 16))
+            block = panel_layout.fit_single_line(
+                typography, label, FontRole.CONTROL, size, ink, text_w, min_size=11
+            )
+            if sublabel:
+                sub = panel_layout.fit_single_line(
+                    typography, sublabel, FontRole.BODY, 14, _mix(ink, base, 0.25),
+                    text_w, min_size=10,
+                )
+                total = block.height + sub.height
+                top = face.centery - total // 2
+                screen.blit(block.surface, block.surface.get_rect(midtop=(face.centerx, top)))
+                screen.blit(
+                    sub.surface,
+                    sub.surface.get_rect(midtop=(face.centerx, top + block.height)),
+                )
+            elif align == "left":
+                screen.blit(
+                    block.surface,
+                    block.surface.get_rect(midleft=(face.left + 14, face.centery)),
+                )
+            else:
+                self._blit_centered(screen, block, face)
+        if focused:
+            self._kit_focus_ring(screen, rect, radius, pygame)
+        return face
+
+    @staticmethod
+    def _kit_focus_ring(screen: Any, rect: Any, radius: int, pygame: Any) -> None:
+        """Keyboard/controller focus: accent band inside an ink band (ADR 0037)."""
+
+        pygame.draw.rect(
+            screen, _Ink.ACCENT, rect.inflate(8, 8), width=3, border_radius=radius + 4
+        )
+        pygame.draw.rect(
+            screen, _Ink.CONTOUR, rect.inflate(13, 13), width=2, border_radius=radius + 6
+        )
+
+    def _kit_switch(
+        self,
+        screen: Any,
+        rect: Any,
+        on: bool,
+        enabled: bool,
+        backdrop: tuple[int, int, int],
+        pygame: Any,
+    ) -> None:
+        """A drawn on/off switch: the state is a shape, not a word to read."""
+
+        fill = _Ink.ACCENT if (on and enabled) else (_Ink.TRACK if enabled else _Ink.DISABLED)
+        self._blit_rounded_card(
+            screen, rect, backdrop, fill, pygame, _Ink.CONTOUR, 2, radius=rect.height // 2
+        )
+        knob_r = rect.height // 2 - 4
+        cx = rect.right - rect.height // 2 if on else rect.left + rect.height // 2
+        knob_fill = _Ink.WHITE if enabled else _Ink.FACE
+        pygame.draw.circle(screen, _Ink.CONTOUR, (cx, rect.centery), knob_r + 1)
+        pygame.draw.circle(screen, knob_fill, (cx, rect.centery), knob_r - 1)
+
+    def _kit_toggle(
+        self,
+        screen: Any,
+        rect: Any,
+        label: str,
+        on: bool,
+        enabled: bool,
+        typography: GreiaTypography,
+        pygame: Any,
+        *,
+        focused: bool = False,
+        note: str | None = None,
+        stacked: bool = False,
+        backdrop: tuple[int, int, int] = _Ink.CARD,
+    ) -> None:
+        """A labelled tile carrying a switch. ``stacked`` puts the switch below."""
+
+        lip = 3 if enabled else 0
+        tile_fill = _Ink.FACE if enabled else _mix(_Ink.FACE, _Ink.DISABLED, 0.62)
+        self._blit_rounded_card(
+            screen, rect, backdrop, tile_fill, pygame, _Ink.CONTOUR, 2, radius=12, lip=lip
+        )
+        face = pygame.Rect(rect.left, rect.top, rect.width, rect.height - lip)
+        ink = _Ink.TEXT if enabled else _mix(_Ink.TEXT, _Ink.DISABLED, 0.55)
+        switch = pygame.Rect(0, 0, 42, 24)
+        if stacked:
+            switch.midbottom = (face.centerx, face.bottom - 7)
+            text_w = max(1, face.width - 12)
+            block = panel_layout.fit_text_block(
+                typography, label, FontRole.BODY, 14, ink, text_w, max_lines=2,
+            )
+            area = pygame.Rect(face.left + 6, face.top + 4, face.width - 12, switch.top - face.top - 6)
+            screen.blit(block.surface, block.surface.get_rect(center=area.center))
+        else:
+            switch.midright = (face.right - 12, face.centery)
+            text_w = max(1, switch.left - face.left - 22)
+            block = panel_layout.fit_text_block(
+                typography, label, FontRole.BODY, 15, ink, text_w, max_lines=2,
+            )
+            if note:
+                sub = panel_layout.fit_single_line(
+                    typography, note, FontRole.BODY, 13, _Ink.MUTED, text_w, min_size=10
+                )
+                top = face.centery - (block.height + sub.height) // 2
+                screen.blit(block.surface, (face.left + 12, top))
+                screen.blit(sub.surface, (face.left + 12, top + block.height))
+            else:
+                screen.blit(
+                    block.surface,
+                    block.surface.get_rect(midleft=(face.left + 12, face.centery)),
+                )
+        self._kit_switch(screen, switch, on, enabled, tile_fill, pygame)
+        if focused:
+            self._kit_focus_ring(screen, rect, 12, pygame)
+
+    def _content_card(self, screen: Any, rect: Any, pygame: Any) -> int:
+        """Paint a tab's content card and return its inner padding."""
+
+        self._blit_rounded_card(screen, rect, _Ink.PANEL, _Ink.CARD, pygame, radius=16)
+        return 20 if rect.width >= 600 else 16
 
     def open(self) -> None:
         self.state = ParentPanelState.AUTH
@@ -312,8 +588,15 @@ class ParentSettingsOverlay:
         self._password_problem = None
         self._language_message = ""
         self._pointer_message = ""
+        self._pointer_message_is_error = False
+        self._audio_message = ""
+        self._audio_message_is_error = False
         self._pointer_focus = 0
         self._pointer_test_flash = None
+        self._keyboard_focus_visible = False
+        self._text_field = None
+        self._accounts_mode = "list"
+        self._accounts_page = 0
         self._sync_language_selection()
         self._targets.clear()
         self.wifi_controller.begin()
@@ -322,6 +605,14 @@ class ParentSettingsOverlay:
     def close(self) -> None:
         self.state = ParentPanelState.CLOSED
         self.password_text = ""
+        # Typed secrets and the unlocked session do not outlive the panel: the
+        # next open asks for the password again anyway.
+        self._security_current = ""
+        self._security_new = ""
+        self._security_confirm = ""
+        self._security_message = None
+        self._session = None
+        self._text_field = None
         self.wifi_controller.skip()
 
     @property
@@ -417,20 +708,23 @@ class ParentSettingsOverlay:
             return True
 
         if self.state == ParentPanelState.PANEL:
+            self._keyboard_focus_visible = True
             if key == pygame.K_ESCAPE:
+                # Back one level first (an open form or confirmation), then close.
+                if self._back_one_level():
+                    return True
                 self.close()
                 return False
             if key == pygame.K_TAB:
-                tabs = [
-                    ParentPanelTab.LANGUAGE,
-                    ParentPanelTab.AUDIO,
-                    ParentPanelTab.WIFI,
-                    ParentPanelTab.SSH,
-                    ParentPanelTab.INFO,
-                    ParentPanelTab.POINTER,
-                ]
-                idx = (tabs.index(self.active_tab) + 1) % len(tabs)
-                self.active_tab = tabs[idx]
+                # Tab walks a form's fields, then carries on to the next section,
+                # so it can never trap the keyboard inside a form.
+                fields = self._form_fields()
+                if self._text_field in fields and self._text_field != fields[-1]:
+                    self._move_text_field(1)
+                    return True
+                order = [ParentPanelTab(value) for _, value in text.TABS]
+                idx = (order.index(self.active_tab) + 1) % len(order)
+                self._select_tab(order[idx])
                 return True
 
             if self.active_tab == ParentPanelTab.LANGUAGE:
@@ -457,6 +751,10 @@ class ParentSettingsOverlay:
                 self._pointer_handle_key(key, pygame)
                 return True
 
+            if self.active_tab in {ParentPanelTab.ACCOUNTS, ParentPanelTab.SECURITY}:
+                self._form_handle_key(key, pygame)
+                return True
+
             if self.active_tab == ParentPanelTab.WIFI:
                 if key == pygame.K_UP:
                     self.wifi_controller.move_selection(-1)
@@ -468,15 +766,108 @@ class ParentSettingsOverlay:
                     self.wifi_controller.connect()
 
             elif self.active_tab == ParentPanelTab.SSH:
-                if key in {pygame.K_RETURN, pygame.K_SPACE}:
+                if key in {pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE}:
                     self._toggle_ssh()
 
             return True
 
         return False
 
+    # Text fields of each form, in keyboard order.
+    _FORM_FIELDS = {
+        "add": ("account_name", "account_age"),
+        "security": ("security_current", "security_new", "security_confirm"),
+    }
+
+    def _form_fields(self) -> tuple[str, ...]:
+        if self.active_tab == ParentPanelTab.SECURITY:
+            return self._FORM_FIELDS["security"]
+        if self.active_tab == ParentPanelTab.ACCOUNTS and self._accounts_mode == "add":
+            return self._FORM_FIELDS["add"]
+        return ()
+
+    def _move_text_field(self, step: int) -> None:
+        fields = self._form_fields()
+        if not fields:
+            return
+        if self._text_field in fields:
+            index = (fields.index(self._text_field) + step) % len(fields)
+        else:
+            index = 0 if step > 0 else len(fields) - 1
+        self._text_field = fields[index]
+
+    def _form_handle_key(self, key: int, pygame: Any) -> None:
+        """Keyboard editing for the account form and the password form.
+
+        These forms took typed characters but had no Backspace, no way to move
+        between fields and no Enter, so a typo could only be fixed by closing
+        the panel. Up/Down move between fields, Enter submits.
+        """
+
+        fields = self._form_fields()
+        if key == pygame.K_BACKSPACE:
+            if self._text_field in fields:
+                self._set_field_value(
+                    self._text_field, self._field_value(self._text_field)[:-1]
+                )
+            return
+        if key in {pygame.K_DOWN, pygame.K_UP} and fields:
+            self._move_text_field(1 if key == pygame.K_DOWN else -1)
+            return
+        if key not in {pygame.K_RETURN, pygame.K_KP_ENTER}:
+            return
+        if self.active_tab == ParentPanelTab.SECURITY:
+            self._change_password()
+        elif self._accounts_mode == "add":
+            if self._renaming is not None:
+                self._save_rename()
+            else:
+                self._create_account()
+        elif self._accounts_mode == "confirm":
+            # Enter on a destructive confirmation does nothing: removing a
+            # child's data needs the explicit red button, never a stray key.
+            return
+        elif len(self._accounts) < self._max_profiles():
+            self._open_account_form()
+
+    def _open_account_form(self) -> None:
+        self._accounts_mode = "add"
+        self._renaming = None
+        self._account_name = ""
+        self._account_age = ""
+        self._text_field = "account_name"
+        self._set_accounts_message(None)
+
+    def _back_one_level(self) -> bool:
+        """Leave an open sub-screen. Returns False when there is none."""
+
+        if self.active_tab == ParentPanelTab.ACCOUNTS and self._accounts_mode != "list":
+            self._accounts_mode = "list"
+            self._pending_remove = None
+            self._renaming = None
+            self._text_field = None
+            self._set_accounts_message(None)
+            return True
+        return False
+
+    def _select_tab(self, tab: ParentPanelTab) -> None:
+        """Switch section without carrying a focused field into it.
+
+        A field focused on one tab used to stay focused after switching, so
+        typing on the accounts list went into a password field on another tab.
+        """
+
+        self.active_tab = tab
+        if tab == ParentPanelTab.SECURITY:
+            self._text_field = "security_current"
+        elif tab == ParentPanelTab.ACCOUNTS and self._accounts_mode == "add":
+            self._text_field = "account_name"
+        else:
+            self._text_field = None
+
     def handle_click(self, pos: tuple[int, int], pygame: Any = None) -> bool:
         """Handle click input. Returns True if handled, False if overlay closed."""
+        self._keyboard_focus_visible = False
         for target in reversed(self._targets):
             if not target.rect.collidepoint(pos):
                 continue
@@ -490,12 +881,12 @@ class ParentSettingsOverlay:
                     return True
                 elif target.action == "switch_tab":
                     if isinstance(target.value, ParentPanelTab):
-                        self.active_tab = target.value
+                        self._select_tab(target.value)
                     elif isinstance(target.value, str):
                         val = str(target.value)
                         for tab in ParentPanelTab:
                             if tab.value == val or tab.name.lower() == val.lower() or str(tab) == val:
-                                self.active_tab = tab
+                                self._select_tab(tab)
                                 break
                     return True
                 elif target.action == "language_select":
@@ -530,9 +921,10 @@ class ParentSettingsOverlay:
                     self._text_field = str(target.value)
                     return True
                 elif target.action == "account_add":
-                    self._accounts_mode = "add"
-                    self._text_field = "account_name"
-                    self._set_accounts_message(None)
+                    self._open_account_form()
+                    return True
+                elif target.action == "account_page":
+                    self._accounts_page = max(0, self._accounts_page + int(target.value))
                     return True
                 elif target.action == "account_cancel":
                     self._accounts_mode = "list"
@@ -649,10 +1041,12 @@ class ParentSettingsOverlay:
 
         if advanced and not self._audio_advanced_available:
             self._audio_message = self._ui_message("audio.processing.unavailable")
+            self._audio_message_is_error = True
             return
         client, session = self._parent_client(), self._session
         if client is None or session is None:
             self._audio_message = self._copy("STATUS_OFFLINE")
+            self._audio_message_is_error = True
             return
         try:
             client.set_microphone_processing(
@@ -660,7 +1054,9 @@ class ParentSettingsOverlay:
             )
         except Exception as exc:
             self._audio_message = self._ui_message("audio.processing.failed", detail=str(exc))
+            self._audio_message_is_error = True
             return
+        self._audio_message_is_error = False
         self._audio_processing_enabled = enabled
         self._audio_advanced_enabled = advanced
         mode_key = (
@@ -701,8 +1097,11 @@ class ParentSettingsOverlay:
         ):
             self._cached_mic_gain = float(val)
             self._mic_gain_read_at = time.monotonic()
+            self._audio_message = self._pointer_message
+            self._audio_message_is_error = False
         else:
             self._audio_message = self._pointer_message
+            self._audio_message_is_error = True
 
     def _adjust_mic_gain(self, delta: float) -> None:
         current = self._current_mic_gain()
@@ -826,9 +1225,11 @@ class ParentSettingsOverlay:
             return
         if which == "touchpad" and not self._pointer_has_touchpad():
             self._pointer_message = self._ui_message("pointer.disabled.touchpad")
+            self._pointer_message_is_error = True
             return
         if which == "mouse" and not self._pointer_has_relative():
             self._pointer_message = self._ui_message("pointer.disabled.mouse")
+            self._pointer_message_is_error = True
             return
         if self.hardware_store is None:
             return
@@ -874,14 +1275,17 @@ class ParentSettingsOverlay:
         client, session = self._parent_client(), self._session
         if client is None or session is None:
             self._pointer_message = self._copy("STATUS_OFFLINE")
+            self._pointer_message_is_error = True
             return False
         try:
             updated = client.update_hardware_settings(session, changes)
         except Exception as exc:
             self._pointer_message = self._ui_message("pointer.change.failed", detail=str(exc))
+            self._pointer_message_is_error = True
             return False
         self._adopt_service_settings(updated)
         self._pointer_message = success
+        self._pointer_message_is_error = False
         return True
 
     def _adopt_service_settings(self, payload: Any) -> None:
@@ -916,6 +1320,7 @@ class ParentSettingsOverlay:
             return
         if field in ("touchpad_tap", "disable_while_typing") and not self._pointer_has_touchpad():
             self._pointer_message = self._ui_message("pointer.disabled.toggle")
+            self._pointer_message_is_error = True
             return
         if self.hardware_store is None:
             return
@@ -943,10 +1348,12 @@ class ParentSettingsOverlay:
                 updated = client.reset_hardware_settings(session)
             except Exception as exc:
                 self._pointer_message = self._ui_message("pointer.reset.failed", detail=str(exc))
+                self._pointer_message_is_error = True
                 return
             self._adopt_service_settings(updated)
             self._pointer_focus = 0
             self._pointer_message = self._ui_message("pointer.reset.done")
+            self._pointer_message_is_error = False
             return
         if self.hardware_store is None:
             return
@@ -954,11 +1361,13 @@ class ParentSettingsOverlay:
             updated = self.hardware_store.reset()
         except Exception as exc:
             self._pointer_message = self._ui_message("pointer.reset.failed", detail=str(exc))
+            self._pointer_message_is_error = True
             return
         self._cached_pointer_settings = updated
         self._pointer_settings_read_at = time.monotonic()
         self._pointer_focus = 0
         self._pointer_message = self._ui_message("pointer.reset.done")
+        self._pointer_message_is_error = False
 
     def _flash_pointer_test_target(self, index: int) -> None:
         try:
@@ -969,6 +1378,7 @@ class ParentSettingsOverlay:
             self._pointer_test_flash = index
             self._pointer_test_flash_at = time.monotonic()
             self._pointer_message = self._ui_message("pointer.test.done")
+            self._pointer_message_is_error = False
 
     def _pointer_focus_items(self) -> list[str]:
         items = [
@@ -1043,6 +1453,17 @@ class ParentSettingsOverlay:
                 verified = True
             else:
                 verified = bool(self.credential_verifier.verify(self.password_text))
+        except ParentPasswordRejected as rejection:
+            # A definite "no" from the service: wrong password, or the attempt
+            # budget is spent. Never an outage message.
+            verified = False
+            self._session = None
+            self._password_problem = (
+                _PASSWORD_RATE_LIMITED if rejection.rate_limited else None
+            )
+            self.password_text = ""
+            self.password_error_until = time.monotonic() + 1.2
+            return
         except ParentCredentialUnavailable:
             # The check could not be performed. Say so. Reporting this as an
             # incorrect password is what cost a full diagnosis cycle: an
@@ -1267,6 +1688,10 @@ class ParentSettingsOverlay:
         "_ssh_enabled",
         "_info_lines",
         "_content_animating",
+        "_audio_message_is_error",
+        "_pointer_message_is_error",
+        "_keyboard_focus_visible",
+        "_accounts_page",
     )
 
     def _composite_key(self, base_key: Any, size: tuple[int, int]) -> Any:
@@ -1317,6 +1742,10 @@ class ParentSettingsOverlay:
                     str(getattr(snapshot, "selected_index", "")),
                     str(getattr(snapshot, "connected_ssid", "")),
                     str(getattr(snapshot, "error", "")),
+                    # Length only: the mask shows how many characters were
+                    # typed, and the secret itself must not live in a cache key.
+                    # Without it typing a Wi-Fi password never updated the dots.
+                    len(str(getattr(snapshot, "passphrase", "") or "")),
                 )
             )
         except Exception:
@@ -1390,35 +1819,65 @@ class ParentSettingsOverlay:
 
         base = base_surface.copy()
         if self.state == ParentPanelState.AUTH:
-            card = self.auth_card_rect(size)
-            pygame.draw.rect(base, (255, 250, 240), card, border_radius=24)
-            pygame.draw.rect(base, (61, 44, 31), card, width=3, border_radius=24)
+            self._paint_auth_chrome(base, size, pygame)
         else:
-            panel_rect = pygame.Rect(20, 20, size[0] - 40, size[1] - 40)
-            pygame.draw.rect(base, (255, 250, 240), panel_rect, border_radius=24)
-            pygame.draw.rect(base, (61, 44, 31), panel_rect, width=3, border_radius=24)
-
-            # Static header identity: title text and the close control.
-            title = typography.render(
-                self._ui_message("parent.title"), FontRole.TITLE, 24, (61, 44, 31)
-            )
-            base.blit(title, (panel_rect.left + 24, panel_rect.top + 16))
-            close_btn = pygame.Rect(
-                panel_rect.right - 50, panel_rect.top + 10, 36, 36
-            )
-            pygame.draw.rect(base, (246, 236, 209), close_btn, border_radius=10)
-            pygame.draw.rect(base, (61, 44, 31), close_btn, width=2, border_radius=10)
-            icon_close = load_icon_fn("close_button", 22, pygame)
-            base.blit(icon_close, icon_close.get_rect(center=close_btn.center))
-
+            self._paint_panel_chrome(base, size, typography, pygame, load_icon_fn)
         self._panel_base = base.convert()
         self._panel_base_key = key
 
-    @staticmethod
-    def _panel_close_button_rect(size: tuple[int, int]) -> Any:
-        import pygame
+    def _paint_auth_chrome(self, surface: Any, size: tuple[int, int], pygame: Any) -> None:
+        card = self.auth_card_rect(size)
+        pygame.draw.rect(surface, _Ink.PANEL, card, border_radius=24)
+        pygame.draw.rect(surface, _Ink.CONTOUR, card, width=3, border_radius=24)
 
-        return pygame.Rect(size[0] - 70, 30, 36, 36)
+    def _paint_panel_chrome(
+        self,
+        surface: Any,
+        size: tuple[int, int],
+        typography: GreiaTypography,
+        pygame: Any,
+        load_icon_fn: Callable[[str, int, Any], Any],
+    ) -> None:
+        """Static panel identity: card, title, key hint, close control, divider.
+
+        One painter for both the composed-base path the Shell uses and the
+        standalone path, so the two can no longer drift apart (they did: the
+        close button was drawn at one place and hit-tested at another).
+        """
+
+        panel = self._panel_rect(size)
+        pygame.draw.rect(surface, _Ink.PANEL, panel, border_radius=24)
+        pygame.draw.rect(surface, _Ink.CONTOUR, panel, width=3, border_radius=24)
+        header_mid = panel.top + self._HEADER_H // 2 + 2
+        close = self._panel_close_button_rect(size)
+        title = panel_layout.fit_single_line(
+            typography, self._ui_message("parent.title"), FontRole.TITLE, 24,
+            _Ink.TEXT, max(1, (close.left - panel.left) // 2), min_size=16,
+        )
+        surface.blit(title.surface, title.surface.get_rect(midleft=(panel.left + 22, header_mid)))
+        hint_left = panel.left + 22 + title.width + 24
+        hint_w = close.left - 16 - hint_left
+        if hint_w > 80:
+            hint = panel_layout.fit_single_line(
+                typography, self._ui_message("panel.hint"), FontRole.BODY, 14,
+                _Ink.MUTED, hint_w, min_size=14,
+            )
+            if hint.fits:
+                surface.blit(
+                    hint.surface,
+                    hint.surface.get_rect(midright=(close.left - 16, header_mid)),
+                )
+        chip = self._rounded_card(
+            close.size, close.width // 2, _Ink.PANEL, _Ink.FACE, _Ink.CONTOUR, 2, pygame, 3
+        )
+        surface.blit(chip, close.topleft)
+        icon = load_icon_fn("close_button", 20, pygame)
+        face = pygame.Rect(close.left, close.top, close.width, close.height - 3)
+        surface.blit(icon, icon.get_rect(center=face.center))
+        divider_y = panel.top + self._HEADER_H + 2
+        pygame.draw.line(
+            surface, _Ink.TRACK, (panel.left + 20, divider_y), (panel.right - 20, divider_y), 2
+        )
 
     def _draw_auth_dialog(
         self,
@@ -1430,79 +1889,97 @@ class ParentSettingsOverlay:
         chrome_in_base: bool = False,
     ) -> None:
         width, height = screen.get_size()
-
-        # Card chrome (rounded fill + border) is baked into the composed
-        # base when the launcher provides one.
         card = self.auth_card_rect((width, height))
-        card_w = card.width
         if not chrome_in_base:
-            self._blit_rounded_card(
-                screen, card, theme.background, (255, 250, 240),
-                pygame, (61, 44, 31), 3, radius=24,
-            )
+            self._paint_auth_chrome(screen, (width, height), pygame)
+        pad = 26
+        inner_w = max(1, card.width - pad * 2)
+        y = card.top + 22
 
         title = panel_layout.fit_single_line(
             typography, self._ui_message("parent.title"),
-            FontRole.TITLE, 28, (61, 44, 31),
-            max(1, card_w - 32), min_size=16,
+            FontRole.TITLE, 26, _Ink.TEXT, inner_w, min_size=16,
         )
-        panel_layout.blit_block(
-            screen, title, pygame, card.centerx,
-            card.top + 36 - title.height // 2,
-            align="center", bounds=card,
-        )
-
+        screen.blit(title.surface, title.surface.get_rect(midtop=(card.centerx, y)))
+        y += title.height + 2
         subtitle = panel_layout.fit_single_line(
             typography, self._ui_message("auth.prompt"),
-            FontRole.BODY, 18, (118, 104, 93),
-            max(1, card_w - 32), min_size=12,
+            FontRole.BODY, 17, _Ink.MUTED, inner_w, min_size=12,
         )
-        panel_layout.blit_block(
-            screen, subtitle, pygame, card.centerx,
-            card.top + 70 - subtitle.height // 2,
-            align="center", bounds=card,
+        screen.blit(subtitle.surface, subtitle.surface.get_rect(midtop=(card.centerx, y)))
+        y += subtitle.height + 14
+
+        failing = time.monotonic() < self.password_error_until
+        input_rect = pygame.Rect(card.left + pad, y, inner_w, 52)
+        self._blit_rounded_card(
+            screen, input_rect, _Ink.PANEL, _Ink.FACE, pygame,
+            _Ink.DANGER if failing else _Ink.ACCENT, 3, radius=14,
         )
+        masked = self._masked_password(max(3, (input_rect.width - 40) // 14))
+        caret_x = input_rect.left + 18
+        if masked:
+            text_surf = self._get_text(masked, FontRole.CONTROL, 24, _Ink.TEXT, typography)
+            text_rect = text_surf.get_rect(midleft=(input_rect.left + 18, input_rect.centery))
+            screen.blit(text_surf, text_rect)
+            caret_x = text_rect.right + 4
+        if not failing:
+            # A static caret says "type here" without animating the frame.
+            pygame.draw.line(
+                screen, _Ink.TEXT,
+                (caret_x, input_rect.centery - 12), (caret_x, input_rect.centery + 12), 2,
+            )
+        y = input_rect.bottom + 8
 
-        input_rect = pygame.Rect(card.left + 30, card.top + 106, card_w - 60, 52)
-        border_col = (181, 46, 46) if time.monotonic() < self.password_error_until else (241, 185, 35)
-        self._blit_rounded_card(screen, input_rect, (255, 250, 240), (246, 236, 209), pygame, border_col, 3, radius=14)
-
-        masked = self._masked_password(max(3, (input_rect.width - 32) // 14)) or "…"
-        text_surf = self._get_text(masked, FontRole.CONTROL, 24, (61, 44, 31), typography)
-        screen.blit(text_surf, text_surf.get_rect(midleft=(input_rect.left + 16, input_rect.centery)))
-
-        if time.monotonic() < self.password_error_until:
-            reason = self._password_problem or _PASSWORD_REJECTED
-            if reason == _PASSWORD_REJECTED:
-                reason = self._ui_message("auth.rejected")
-            elif reason == _PASSWORD_CHECK_FAILED:
-                reason = self._ui_message("auth.unavailable")
+        # The reason line always reserves its height, so an error does not make
+        # the buttons jump under the parent's finger.
+        line_h = 22
+        if failing:
+            problem = self._password_problem or _PASSWORD_REJECTED
+            reason = {
+                _PASSWORD_REJECTED: self._ui_message("auth.rejected"),
+                _PASSWORD_CHECK_FAILED: self._ui_message("auth.unavailable"),
+                _PASSWORD_RATE_LIMITED: self._ui_message("auth.rate_limited"),
+            }.get(problem, problem)
             reason_label = panel_layout.fit_single_line(
-                typography, reason, FontRole.BODY, 15, (181, 46, 46),
-                max(1, card_w - 32), min_size=11,
+                typography, reason, FontRole.CONTROL, 15, _Ink.DANGER, inner_w, min_size=11,
             )
-            panel_layout.blit_block(
-                screen, reason_label, pygame, card.centerx,
-                input_rect.bottom + 16 - reason_label.height // 2,
-                align="center", bounds=card,
+            screen.blit(
+                reason_label.surface,
+                reason_label.surface.get_rect(center=(card.centerx, y + line_h // 2)),
             )
-
-        btn_w = (card_w - 80) // 2
+        hint = panel_layout.fit_single_line(
+            typography, self._ui_message("auth.hint"), FontRole.BODY, 14,
+            _Ink.MUTED, inner_w, min_size=11,
+        )
         btn_h = 48
-        btn_y = card.bottom - 66
-
-        cancel_rect = pygame.Rect(card.left + 30, btn_y, btn_w, btn_h)
-        confirm_rect = pygame.Rect(card.right - 30 - btn_w, btn_y, btn_w, btn_h)
-
-        self._blit_rounded_card(screen, cancel_rect, (255, 250, 240), (230, 220, 205), pygame, radius=14)
-        lbl_cancel = self._get_text(self._ui_message("auth.cancel"), FontRole.BODY, 18, (61, 44, 31), typography)
-        screen.blit(lbl_cancel, lbl_cancel.get_rect(center=cancel_rect.center))
+        hint_y = card.bottom - 16 - hint.height
+        btn_y = min(y + line_h + 10, hint_y - 10 - btn_h)
+        gap = 14
+        btn_w = (inner_w - gap) // 2
+        cancel_rect = pygame.Rect(card.left + pad, btn_y, btn_w, btn_h)
+        confirm_rect = pygame.Rect(card.right - pad - btn_w, btn_y, btn_w, btn_h)
+        self._kit_button(
+            screen, cancel_rect, self._ui_message("auth.cancel"), typography, pygame,
+            backdrop=_Ink.PANEL, size=17,
+        )
         self._targets.append(PanelHitTarget("cancel_auth", None, cancel_rect))
-
-        self._blit_rounded_card(screen, confirm_rect, (255, 250, 240), (241, 185, 35), pygame, radius=14)
-        lbl_confirm = self._get_text(self._ui_message("auth.unlock"), FontRole.BODY, 18, (61, 44, 31), typography)
-        screen.blit(lbl_confirm, lbl_confirm.get_rect(center=confirm_rect.center))
+        self._kit_button(
+            screen, confirm_rect, self._ui_message("auth.unlock"), typography, pygame,
+            backdrop=_Ink.PANEL, role="primary", size=17,
+        )
         self._targets.append(PanelHitTarget("confirm_auth", None, confirm_rect))
+        screen.blit(hint.surface, hint.surface.get_rect(midtop=(card.centerx, hint_y)))
+
+    def _rail_width(self, typography: GreiaTypography, panel_width: int) -> int:
+        """Width of the section rail: the longest label plus padding, bounded."""
+
+        widest = max(
+            panel_layout.measure(
+                typography, self._ui_message(f"tab.{value}"), FontRole.CONTROL, 16
+            )[0]
+            for _, value in text.TABS
+        )
+        return max(128, min(int(panel_width * 0.22), widest + 34))
 
     def _draw_panel(
         self,
@@ -1514,25 +1991,9 @@ class ParentSettingsOverlay:
         chrome_in_base: bool = False,
     ) -> None:
         width, height = screen.get_size()
-        panel_rect = pygame.Rect(20, 20, width - 40, height - 40)
-
-        header_h = 56
-        header_rect = pygame.Rect(panel_rect.left, panel_rect.top, panel_rect.width, header_h)
-
+        panel_rect = self._panel_rect((width, height))
         if not chrome_in_base:
-            # Standalone rendering (no composed base): draw all chrome here.
-            self._blit_rounded_card(
-                screen, panel_rect, theme.background, (255, 250, 240),
-                pygame, (61, 44, 31), 3, radius=24,
-            )
-
-            title = self._get_text(self._ui_message("parent.title"), FontRole.TITLE, 24, (61, 44, 31), typography)
-            screen.blit(title, (header_rect.left + 24, header_rect.top + 16))
-
-            close_btn = self._panel_close_button_rect((width, height))
-            self._blit_rounded_card(screen, close_btn, (255, 250, 240), (246, 236, 209), pygame, (61, 44, 31), 2, radius=10)
-            icon_close = load_icon_fn("close_button", 22, pygame)
-            screen.blit(icon_close, icon_close.get_rect(center=close_btn.center))
+            self._paint_panel_chrome(screen, (width, height), typography, pygame, load_icon_fn)
 
         # The close control's pixels live in the composed base when present;
         # its hit target must exist on every frame either way.
@@ -1542,62 +2003,33 @@ class ParentSettingsOverlay:
             )
         )
 
-        tab_y = header_rect.bottom + 8
-        tab_gap = 10
-        tab_pad = 24
-        tab_h = 38
-        # Minimum column that still reads as a word. Below this the strip wraps
-        # onto another row rather than shrinking every label into an ellipsis,
-        # which is the same "grow downwards" rule the body text follows and the
-        # only honest answer to a translated label that is wider than English.
-        min_tab_w = 104
-        usable = panel_rect.width - tab_pad * 2
-        per_row = max(1, (usable + tab_gap) // (min_tab_w + tab_gap))
-        rows = -(-len(text.TABS) // per_row)  # ceiling division
-        row_widths = [
-            panel_layout.even_columns(usable, count, tab_gap)
-            for count in (
-                [per_row] * (rows - 1) + [len(text.TABS) - per_row * (rows - 1)]
+        # Sections sit in a vertical rail on the left. A horizontal strip had to
+        # wrap onto a second row in Italian, which cost the content 46 px and
+        # clipped the audio presets, the account form buttons, the third
+        # password field and the pointer reset at 800x480. Landscape screens
+        # have width to spare and no height to spare, so the rail spends width.
+        top = panel_rect.top + self._HEADER_H + 12
+        bottom = panel_rect.bottom - 12
+        rail_w = self._rail_width(typography, panel_rect.width)
+        rail = pygame.Rect(panel_rect.left + 12, top, rail_w, bottom - top)
+        count = len(text.TABS)
+        gap = 6 if rail.height < 420 else 8
+        item_h = max(34, min(48, (rail.height - gap * (count - 1)) // count))
+        for index, (_, tab_value) in enumerate(text.TABS):
+            tab_id = ParentPanelTab(tab_value)
+            tab_rect = pygame.Rect(
+                rail.left, rail.top + index * (item_h + gap), rail.width, item_h
             )
-        ]
+            self._kit_button(
+                screen, tab_rect, self._ui_message(f"tab.{tab_value}"), typography, pygame,
+                backdrop=_Ink.PANEL, shape="tile", selected=self.active_tab == tab_id,
+                align="left",
+            )
+            self._targets.append(PanelHitTarget("switch_tab", tab_id, tab_rect))
 
-        tab_x = panel_rect.left + tab_pad
-        tab_row_top = tab_y
-        index = 0
-        for row, row_widths_for_row in enumerate(row_widths):
-            for column, tab_w in enumerate(row_widths_for_row):
-                _, tab_value = text.TABS[index]
-                label = self._ui_message(f"tab.{tab_value}")
-                tab_id = ParentPanelTab(tab_value)
-                is_active = self.active_tab == tab_id
-                tab_rect = pygame.Rect(tab_x, tab_row_top + row * (tab_h + tab_gap), tab_w, tab_h)
-                bg = (241, 185, 35) if is_active else (246, 236, 209)
-                self._blit_rounded_card(
-                    screen, tab_rect, (255, 250, 240), bg, pygame,
-                    (61, 44, 31), 2 if is_active else 1, radius=12,
-                )
-                # Still measured, so an over-long single word shrinks before it
-                # would ever be clipped.
-                block = panel_layout.fit_single_line(
-                    typography, label, FontRole.CONTROL, 16, (61, 44, 31),
-                    tab_w - 12,
-                )
-                panel_layout.blit_block(
-                    screen, block, pygame, tab_rect.centerx, tab_rect.centery,
-                    align="center", bounds=tab_rect,
-                )
-                self._targets.append(PanelHitTarget("switch_tab", tab_id, tab_rect))
-                tab_x += tab_w + tab_gap
-                index += 1
-            tab_x = panel_rect.left + tab_pad
-        tab_strip_bottom = tab_row_top + rows * (tab_h + tab_gap) - tab_gap
-
-        content_top = tab_strip_bottom + 12
+        content_left = rail.right + 12
         content_rect = pygame.Rect(
-            panel_rect.left + 24,
-            content_top,
-            panel_rect.width - 48,
-            max(80, panel_rect.bottom - content_top - 12),
+            content_left, top, panel_rect.right - 12 - content_left, max(80, bottom - top)
         )
 
         # Tab content is composed on its own surface of exactly the content rect
@@ -1613,8 +2045,8 @@ class ParentSettingsOverlay:
         # Their hit targets are content-local too and are rebased to screen space
         # after drawing.
         local_rect = pygame.Rect(0, 0, content_surface.get_width(), content_surface.get_height())
-        # Everything registered before this point (the close control and the tab
-        # strip) is already in screen coordinates and must not be rebased.
+        # Everything registered before this point (the close control and the
+        # section rail) is already in screen coordinates and must not be rebased.
         content_target_start = len(self._targets)
 
         if self.active_tab == ParentPanelTab.LANGUAGE:
@@ -1666,70 +2098,69 @@ class ParentSettingsOverlay:
         typography: GreiaTypography,
         pygame: Any,
     ) -> None:
-        font_body_size = 16
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
-        self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
-        title = self._get_text(self._ui_message("language.title"), FontRole.TITLE, 22, (61, 44, 31), typography)
-        screen.blit(title, (card.left + 20, card.top + 14))
-        note = panel_layout.fit_single_line(
-            typography, self._ui_message("language.note"),
-            FontRole.BODY, font_body_size, (118, 104, 93),
-            max(1, card.width - 40), min_size=11,
+        pad = self._content_card(screen, card, pygame)
+        inner_w = card.width - pad * 2
+        y = self._draw_card_header(
+            screen, pygame, typography, card, pad,
+            self._ui_message("language.title"), self._ui_message("language.note"),
         )
-        panel_layout.blit_block(
-            screen, note, pygame, card.left + 20, card.top + 44,
-            bounds=card,
-        )
-
-        columns = 3
-        gap = 10
-        left = card.left + 18
-        top = card.top + 78
-        width = card.width - 36
-        cell_w = (width - gap * (columns - 1)) // columns
-        cell_h = 62
+        gap = 12
+        columns = 2 if len(SUPPORTED_SYSTEM_LANGUAGES) <= 4 else 3
+        cell_w = min(280, (inner_w - gap * (columns - 1)) // columns)
+        cell_h = 60
         for index, language in enumerate(SUPPORTED_SYSTEM_LANGUAGES):
             row, column = divmod(index, columns)
             cell = pygame.Rect(
-                left + column * (cell_w + gap),
-                top + row * (cell_h + 8),
+                card.left + pad + column * (cell_w + gap),
+                y + row * (cell_h + gap),
                 cell_w,
                 cell_h,
             )
             selected = index == self._language_index
-            self._blit_rounded_card(
-                screen,
-                cell,
-                (246, 236, 209),
-                (241, 185, 35) if selected else (255, 250, 240),
-                pygame,
-                (61, 44, 31),
-                3 if selected else 1,
-                radius=12,
+            face = self._kit_button(
+                screen, cell, "", typography, pygame, shape="tile", selected=selected,
+                focused=selected and self._keyboard_focus_visible,
             )
-            flag = self._get_text(language.flag, FontRole.DISPLAY, 28, (61, 44, 31), typography)
-            screen.blit(flag, flag.get_rect(midleft=(cell.left + 10, cell.centery)))
+            flag = self._get_text(language.flag, FontRole.DISPLAY, 26, _Ink.TEXT, typography)
+            screen.blit(flag, flag.get_rect(midleft=(face.left + 14, face.centery)))
+            applied = language.locale == self._device_locale
+            # Each language under its own name, so a parent who cannot read the
+            # current one still finds theirs; the name in the current language
+            # sits underneath when it differs.
+            label_w = max(1, face.width - 54 - (30 if applied else 0))
+            native = str(getattr(language, "native_name", "") or "")
+            localized = self._ui_message(f"language.option.{language.locale}")
             label = panel_layout.fit_single_line(
-                typography, self._ui_message(f"language.option.{language.locale}"),
-                FontRole.BODY, font_body_size, (61, 44, 31),
-                max(1, cell.width - 60), min_size=11,
+                typography, native or localized, FontRole.CONTROL, 17, _Ink.TEXT,
+                label_w, min_size=11,
             )
-            panel_layout.blit_block(
-                screen, label, pygame, cell.left + 54,
-                cell.centery - label.height // 2,
-                align="left", bounds=cell,
-            )
+            if native and localized != native:
+                sub = panel_layout.fit_single_line(
+                    typography, localized, FontRole.BODY, 13, _Ink.MUTED, label_w, min_size=10
+                )
+                top = face.centery - (label.height + sub.height) // 2
+                screen.blit(label.surface, (face.left + 50, top))
+                screen.blit(sub.surface, (face.left + 50, top + label.height))
+            else:
+                screen.blit(
+                    label.surface, label.surface.get_rect(midleft=(face.left + 50, face.centery))
+                )
+            if applied:
+                # The language in force gets a drawn check mark: the selection
+                # can move with the arrow keys before Enter applies it.
+                cx, cy = face.right - 22, face.centery
+                pygame.draw.lines(
+                    screen, _Ink.TEXT, False,
+                    [(cx - 8, cy), (cx - 2, cy + 6), (cx + 9, cy - 7)], 4,
+                )
             self._targets.append(PanelHitTarget("language_select", index, cell))
-
-        if self._language_message:
-            message = self._get_text(
-                self._language_message,
-                FontRole.BODY,
-                font_body_size,
-                (181, 46, 46) if self._language_message_is_error else (47, 117, 81),
-                typography,
-            )
-            screen.blit(message, (card.left + 20, card.bottom - 26))
+        rows = -(-len(SUPPORTED_SYSTEM_LANGUAGES) // columns)
+        y += rows * (cell_h + gap) + 6
+        self._draw_status(
+            screen, pygame, typography, card, pad, y,
+            self._language_message, self._language_message_is_error,
+        )
 
     # --- Child accounts and Parent password -------------------------------
     #
@@ -1746,6 +2177,26 @@ class ParentSettingsOverlay:
             self.credential_verifier, "list_child_accounts"
         ) else None
 
+    def _profile_policy(self) -> Any:
+        """The shipped profile policy, loaded once per panel instance.
+
+        The account tab asked for it three times per frame it composed and once
+        per typed character, each a TOML parse from disk. Returns None when the
+        policy cannot be read; callers keep their previous fallbacks.
+        """
+
+        if getattr(self, "_profile_policy_cache", None) is None:
+            try:
+                from greia_platform.profiles import ProfilePolicy
+
+                root = Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os"))
+                self._profile_policy_cache = ProfilePolicy.load(
+                    root / "runtime" / "profile-defaults.toml"
+                )
+            except Exception:
+                return None
+        return self._profile_policy_cache
+
     def _available_avatars(self) -> tuple[str, ...]:
         """Avatars from the shipped profile policy, never a duplicated list.
 
@@ -1755,11 +2206,8 @@ class ParentSettingsOverlay:
         store's own default, so the tab still renders.
         """
 
+        policy = self._profile_policy()
         try:
-            from greia_platform.profiles import ProfilePolicy
-
-            root = Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os"))
-            policy = ProfilePolicy.load(root / "runtime" / "profile-defaults.toml")
             if policy.avatars:
                 return tuple(policy.avatars)
             return (policy.default_avatar,)
@@ -1768,25 +2216,13 @@ class ParentSettingsOverlay:
 
     def _max_profiles(self) -> int:
         try:
-            from greia_platform.profiles import ProfilePolicy
-
-            root = Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os"))
-            return int(
-                ProfilePolicy.load(root / "runtime" / "profile-defaults.toml").max_profiles
-            )
+            return int(self._profile_policy().max_profiles)
         except Exception:
             return 8
 
     def _max_name_characters(self) -> int:
         try:
-            from greia_platform.profiles import ProfilePolicy
-
-            root = Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os"))
-            return int(
-                ProfilePolicy.load(
-                    root / "runtime" / "profile-defaults.toml"
-                ).max_name_characters
-            )
+            return int(self._profile_policy().max_name_characters)
         except Exception:
             return 24
 
@@ -1810,6 +2246,7 @@ class ParentSettingsOverlay:
         try:
             self._accounts = list(client.list_child_accounts(session))
             self._accounts_loaded = True
+            self._accounts_page = 0
         except ParentCredentialUnavailable:
             self._set_accounts_message(self._copy("STATUS_OFFLINE"), error=True)
         except Exception:
@@ -1985,26 +2422,34 @@ class ParentSettingsOverlay:
         placeholder: str = "",
         secret: bool = False,
     ) -> None:
-        """A labelled single-line input whose width is driven by measurement."""
+        """A single-line input; the focused one carries an accent border and caret."""
 
+        focused = self._text_field == field
         self._blit_rounded_card(
-            screen, rect, (255, 250, 240), (246, 236, 209), pygame,
-            (61, 44, 31), 2 if self._text_field == field else 1, radius=12,
+            screen, rect, _Ink.CARD, _Ink.PANEL, pygame,
+            _Ink.ACCENT if focused else _Ink.CONTOUR, 3 if focused else 1, radius=12,
         )
-        shown = ("\u2022" * len(value)) if secret else value
-        if not shown and placeholder:
+        shown = ("•" * len(value)) if secret else value
+        text_x = rect.left + 14
+        caret_x = text_x
+        max_w = max(1, rect.width - 32)
+        if shown:
             body = panel_layout.fit_single_line(
-                typography, placeholder, FontRole.BODY, 16, (150, 138, 126),
-                rect.width - 20,
+                typography, shown, FontRole.BODY, 17, _Ink.TEXT, max_w, min_size=12
             )
-        else:
+            body_rect = body.surface.get_rect(midleft=(text_x, rect.centery))
+            screen.blit(body.surface, body_rect)
+            caret_x = body_rect.right + 3
+        elif placeholder and not focused:
             body = panel_layout.fit_single_line(
-                typography, shown, FontRole.BODY, 16, (61, 44, 31), rect.width - 20
+                typography, placeholder, FontRole.BODY, 16, _Ink.FAINT, max_w, min_size=12
             )
-        panel_layout.blit_block(
-            screen, body, pygame, rect.left + 10, rect.centery,
-            bounds=rect,
-        )
+            screen.blit(body.surface, body.surface.get_rect(midleft=(text_x, rect.centery)))
+        if focused:
+            caret_x = min(caret_x, rect.right - 12)
+            pygame.draw.line(
+                screen, _Ink.TEXT, (caret_x, rect.centery - 11), (caret_x, rect.centery + 11), 2
+            )
         self._targets.append(PanelHitTarget("focus_field", field, rect))
 
     def _draw_card_header(
@@ -2022,22 +2467,25 @@ class ParentSettingsOverlay:
         """Draw a wrapped title and intro, returning the next free y.
 
         ``reserve_right`` narrows the text so a header-row action button cannot
-        sit on top of it. Without it the intro ran the full card width and the
-        button was painted over the first line.
+        sit on top of it. The intro is limited to two lines on short cards so a
+        long translation cannot push the controls out of the card.
         """
 
         y = card.top + 16 if top is None else top
-        text_w = card.width - pad * 2 - reserve_right
+        text_w = max(1, card.width - pad * 2 - reserve_right)
         title = panel_layout.fit_text_block(
-            typography, title_text, FontRole.TITLE, 22, (61, 44, 31), text_w
+            typography, title_text, FontRole.TITLE, 22, _Ink.TEXT, text_w, max_lines=2
         )
         panel_layout.blit_block(screen, title, pygame, card.left + pad, y)
-        y += title.height + 8
-        intro = panel_layout.fit_text_block(
-            typography, intro_text, FontRole.BODY, 16, (118, 104, 93), text_w
-        )
-        panel_layout.blit_block(screen, intro, pygame, card.left + pad, y)
-        return y + intro.height + 18
+        y += title.height + 4
+        if intro_text:
+            intro = panel_layout.fit_text_block(
+                typography, intro_text, FontRole.BODY, 15, _Ink.MUTED, text_w,
+                max_lines=2 if card.height < 440 else 3,
+            )
+            panel_layout.blit_block(screen, intro, pygame, card.left + pad, y)
+            y += intro.height
+        return y + 14
 
     def _draw_status(
         self,
@@ -2049,15 +2497,22 @@ class ParentSettingsOverlay:
         y: int,
         message: str | None,
         is_error: bool,
-    ) -> None:
+        width: int | None = None,
+        left: int | None = None,
+    ) -> int:
+        """Draw a feedback line (red for errors, green otherwise); return its height."""
+
         if not message:
-            return
+            return 0
         block = panel_layout.fit_text_block(
-            typography, message, FontRole.BODY, 16,
-            (181, 46, 46) if is_error else (47, 117, 81),
-            card.width - pad * 2, max_lines=3,
+            typography, message, FontRole.CONTROL, 15,
+            _Ink.DANGER if is_error else _Ink.SUCCESS,
+            width if width is not None else card.width - pad * 2, max_lines=2,
         )
-        panel_layout.blit_block(screen, block, pygame, card.left + pad, y)
+        panel_layout.blit_block(
+            screen, block, pygame, card.left + pad if left is None else left, y
+        )
+        return block.height
 
     def _draw_accounts_tab(
         self,
@@ -2067,8 +2522,7 @@ class ParentSettingsOverlay:
         pygame: Any,
     ) -> None:
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
-        self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
-        pad = 24
+        pad = self._content_card(screen, card, pygame)
         inner_w = card.width - pad * 2
 
         if self._accounts_mode == "add":
@@ -2078,12 +2532,12 @@ class ParentSettingsOverlay:
                 self._copy("ACCOUNTS_EDIT") if editing else self._copy("ACCOUNTS_ADD"),
                 self._copy("ACCOUNTS_INTRO"),
             )
-            # Name and age share a row. Stacked, the form was taller than the
-            # card at 600 px with a wrapped tab strip, and the action buttons
-            # were clipped in half. Sharing a row is layout-driven, not cosmetic.
+            # Name and age share a row: stacked, the form is taller than the card
+            # on the 480 px floor.
             gap = 12
-            age_w = min(220, inner_w // 3)
+            age_w = min(200, inner_w // 3)
             name_w = inner_w - age_w - gap
+            caption_h = 0
             for index, (label, field, value, placeholder, field_w) in enumerate((
                 (self._copy("ACCOUNTS_NAME_LABEL"), "account_name", self._account_name,
                  self._copy("ACCOUNTS_NAME_PLACEHOLDER"), name_w),
@@ -2091,102 +2545,75 @@ class ParentSettingsOverlay:
                  self._copy("ACCOUNTS_AGE_PLACEHOLDER"), age_w),
             )):
                 field_x = card.left + pad + (0 if index == 0 else name_w + gap)
-                caption = panel_layout.fit_text_block(
-                    typography, label, FontRole.BODY, 15, (118, 104, 93), field_w
+                caption = panel_layout.fit_single_line(
+                    typography, label, FontRole.CONTROL, 15, _Ink.MUTED, field_w, min_size=11
                 )
                 panel_layout.blit_block(screen, caption, pygame, field_x, y)
-                caption_h = caption.height
+                caption_h = max(caption_h, caption.height)
+            for index, (field, value, placeholder, field_w) in enumerate((
+                ("account_name", self._account_name, self._copy("ACCOUNTS_NAME_PLACEHOLDER"), name_w),
+                ("account_age", self._account_age, self._copy("ACCOUNTS_AGE_PLACEHOLDER"), age_w),
+            )):
+                field_x = card.left + pad + (0 if index == 0 else name_w + gap)
                 field_rect = pygame.Rect(field_x, y + caption_h + 4, field_w, 44)
                 self._draw_text_field(
-                    screen, pygame, typography, field_rect, label, value, field,
+                    screen, pygame, typography, field_rect, "", value, field,
                     placeholder=placeholder,
                 )
-            y += caption_h + 4 + 44 + 16
+            y += caption_h + 4 + 44 + 12
 
             avatars = self._available_avatars()
-            caption = panel_layout.fit_text_block(
-                typography, self._copy("ACCOUNTS_AVATAR_LABEL"), FontRole.BODY, 15,
-                (118, 104, 93), inner_w,
+            caption = panel_layout.fit_single_line(
+                typography, self._copy("ACCOUNTS_AVATAR_LABEL"), FontRole.CONTROL, 15,
+                _Ink.MUTED, inner_w, min_size=11,
             )
             panel_layout.blit_block(screen, caption, pygame, card.left + pad, y)
             y += caption.height + 4
             picker = pygame.Rect(card.left + pad, y, inner_w, 48)
             self._blit_rounded_card(
-                screen, picker, (255, 250, 240), (246, 236, 209), pygame,
-                (61, 44, 31), 1, radius=12,
+                screen, picker, _Ink.CARD, _Ink.PANEL, pygame, _Ink.CONTOUR, 1, radius=12,
             )
             current = avatars[self._account_avatar_index % len(avatars)]
             name_block = panel_layout.fit_single_line(
-                typography, current.replace("_", " "), FontRole.CONTROL, 17,
-                (61, 44, 31), picker.width - 140,
+                typography, current.replace("_", " ").capitalize(), FontRole.CONTROL, 17,
+                _Ink.TEXT, max(1, picker.width - 150),
             )
-            panel_layout.blit_block(
-                screen, name_block, pygame, picker.centerx, picker.centery,
-                align="center", bounds=picker,
-            )
-            step_w = 64
+            self._blit_centered(screen, name_block, picker)
+            step_w = 60
             for side, step in (("prev", -1), ("next", 1)):
-                btn = pygame.Rect(
-                    picker.right - 12 - step_w if side == "prev" else picker.right - 12 - step_w,
-                    picker.top + 6, step_w, picker.height - 12,
-                )
-                if side == "prev":
-                    btn.x = picker.left + 12
-                self._blit_rounded_card(
-                    screen, btn, (246, 236, 209), (255, 250, 240), pygame,
-                    (61, 44, 31), 1, radius=10,
+                btn = pygame.Rect(0, picker.top + 5, step_w, picker.height - 10)
+                btn.x = picker.left + 6 if side == "prev" else picker.right - 6 - step_w
+                face = self._kit_button(
+                    screen, btn, "", typography, pygame, backdrop=_Ink.PANEL
                 )
                 # Drawn, not typeset: U+25C0/U+25B6 are absent from the bundled
-                # fonts and rendered as grey tofu boxes, the same defect the
-                # audio tab's U+2796 step buttons had.
-                cx, cy = btn.centerx, btn.centery
-                size = min(btn.width, btn.height) // 4
-                if side == "prev":
-                    points = [
-                        (cx + size // 2, cy - size),
-                        (cx + size // 2, cy + size),
-                        (cx - size // 2, cy),
-                    ]
-                else:
-                    points = [
-                        (cx - size // 2, cy - size),
-                        (cx - size // 2, cy + size),
-                        (cx + size // 2, cy),
-                    ]
-                pygame.draw.polygon(screen, (61, 44, 31), points)
+                # fonts and rendered as grey tofu boxes.
+                cx, cy = face.centerx, face.centery
+                size = min(face.width, face.height) // 4
+                sign = -1 if side == "prev" else 1
+                points = [
+                    (cx - sign * size // 2, cy - size),
+                    (cx - sign * size // 2, cy + size),
+                    (cx + sign * size // 2, cy),
+                ]
+                pygame.draw.polygon(screen, _Ink.TEXT, points)
                 self._targets.append(PanelHitTarget("account_avatar", step, btn))
-            y += 48 + 18
+            y += 48 + 14
 
             gap = 12
             half = (inner_w - gap) // 2
-            for index, (label, action) in enumerate((
-                (self._copy("ACCOUNTS_CANCEL"), "account_cancel"),
+            for index, (label, action, role) in enumerate((
+                (self._copy("ACCOUNTS_CANCEL"), "account_cancel", "neutral"),
                 (
                     self._copy("ACCOUNTS_SAVE") if editing else self._copy("ACCOUNTS_CREATE"),
                     "account_save" if editing else "account_create",
+                    "primary",
                 ),
             )):
-                btn = pygame.Rect(
-                    card.left + pad + index * (half + gap), y, half, 48
-                )
-                self._blit_rounded_card(
-                    screen, btn, (255, 250, 240),
-                    (241, 185, 35)
-                    if action in {"account_create", "account_save"}
-                    else (246, 236, 209),
-                    pygame, (61, 44, 31),
-                    2 if action in {"account_create", "account_save"} else 1,
-                    radius=12,
-                )
-                block = panel_layout.fit_single_line(
-                    typography, label, FontRole.CONTROL, 17, (61, 44, 31), btn.width - 14
-                )
-                panel_layout.blit_block(
-                    screen, block, pygame, btn.centerx, btn.centery,
-                    align="center", bounds=btn,
-                )
+                btn = pygame.Rect(card.left + pad + index * (half + gap), y, half, 46)
+                self._kit_button(screen, btn, label, typography, pygame, role=role, size=17)
                 self._targets.append(PanelHitTarget(action, None, btn))
-            y += 48 + 12
+            y += 46 + 10
             self._draw_status(
                 screen, pygame, typography, card, pad, y,
                 self._accounts_message, self._accounts_message_is_error,
@@ -2201,128 +2628,151 @@ class ParentSettingsOverlay:
             )
             name = panel_layout.fit_text_block(
                 typography, self._pending_remove.display_name, FontRole.TITLE, 20,
-                (61, 44, 31), inner_w,
+                _Ink.TEXT, inner_w, max_lines=1,
             )
             panel_layout.blit_block(screen, name, pygame, card.left + pad, y)
-            y += name.height + 20
+            y += name.height + 16
             gap = 12
             half = (inner_w - gap) // 2
-            for index, (label, action, tone) in enumerate((
-                (self._copy("ACCOUNTS_CANCEL"), "account_remove_cancel", (246, 236, 209)),
-                (self._copy("ACCOUNTS_CONFIRM_REMOVE_YES"), "account_remove_confirm", (181, 46, 46)),
+            for index, (label, action, role) in enumerate((
+                (self._copy("ACCOUNTS_CANCEL"), "account_remove_cancel", "neutral"),
+                (self._copy("ACCOUNTS_CONFIRM_REMOVE_YES"), "account_remove_confirm", "danger"),
             )):
-                btn = pygame.Rect(card.left + pad + index * (half + gap), y, half, 48)
-                self._blit_rounded_card(
-                    screen, btn, (255, 250, 240), tone, pygame, (61, 44, 31), 2, radius=12
-                )
-                block = panel_layout.fit_single_line(
-                    typography, label, FontRole.CONTROL, 16, (61, 44, 31), btn.width - 14
-                )
-                panel_layout.blit_block(
-                    screen, block, pygame, btn.centerx, btn.centery,
-                    align="center", bounds=btn,
-                )
+                btn = pygame.Rect(card.left + pad + index * (half + gap), y, half, 46)
+                self._kit_button(screen, btn, label, typography, pygame, role=role, size=17)
                 self._targets.append(PanelHitTarget(action, None, btn))
+            y += 46 + 10
+            self._draw_status(
+                screen, pygame, typography, card, pad, y,
+                self._accounts_message, self._accounts_message_is_error,
+            )
             return
 
-        # The "Add child" button shares the title's row, so the flow below it
-        # starts under the button rather than beside it. Letting the intro run
-        # full width under the button only avoided it by vertical luck.
+        # The "Add child" button shares the title's row; the flow below it
+        # starts under the button rather than beside it.
         header_top = card.top + 16
-        add_w = 168
+        limit = self._max_profiles()
+        at_limit = len(self._accounts) >= limit
+        add_label = self._copy("ACCOUNTS_ADD")
+        add_w = min(
+            inner_w // 2,
+            max(150, panel_layout.measure(typography, add_label, FontRole.CONTROL, 17)[0] + 40),
+        )
         y = self._draw_card_header(
             screen, pygame, typography, card, pad,
             self._copy("ACCOUNTS_TITLE"), self._copy("ACCOUNTS_INTRO"), top=header_top,
             reserve_right=add_w + 12,
         )
-        y = max(y, header_top + 42 + 12)
-        limit = self._max_profiles()
-        at_limit = len(self._accounts) >= limit
-        add_rect = pygame.Rect(card.right - pad - add_w, header_top, add_w, 42)
-        self._blit_rounded_card(
-            screen, add_rect, (255, 250, 240),
-            (222, 208, 178) if at_limit else (241, 185, 35), pygame,
-            (61, 44, 31), 1, radius=12,
-        )
-        block = panel_layout.fit_single_line(
-            typography, self._copy("ACCOUNTS_ADD"), FontRole.CONTROL, 17, (61, 44, 31), add_w - 14
-        )
-        panel_layout.blit_block(
-            screen, block, pygame, add_rect.centerx, add_rect.centery,
-            align="center", bounds=add_rect,
+        y = max(y, header_top + 46 + 12)
+        add_rect = pygame.Rect(card.right - pad - add_w, header_top, add_w, 46)
+        self._kit_button(
+            screen, add_rect, add_label, typography, pygame, role="primary",
+            disabled=at_limit, size=17,
         )
         if not at_limit:
             self._targets.append(PanelHitTarget("account_add", None, add_rect))
 
         if not self._accounts_loaded:
             self._refresh_accounts()
+        status_reserve = 46
         if not self._accounts:
-            empty = panel_layout.fit_text_block(
-                typography, self._copy("ACCOUNTS_EMPTY"), FontRole.BODY, 16,
-                (118, 104, 93), inner_w,
-            )
-            panel_layout.blit_block(screen, empty, pygame, card.left + pad, y + 8)
+            if self._accounts_loaded:
+                empty = panel_layout.fit_text_block(
+                    typography, self._copy("ACCOUNTS_EMPTY"), FontRole.BODY, 16,
+                    _Ink.MUTED, inner_w,
+                )
+                panel_layout.blit_block(screen, empty, pygame, card.left + pad, y + 4)
+                y += empty.height + 16
         else:
-            row_h = 60
-            gap_y = 10
-            for index, account in enumerate(self._accounts):
-                row = pygame.Rect(
-                    card.left + pad, y + index * (row_h + gap_y), inner_w, row_h
-                )
-                if row.bottom > card.bottom - 40:
-                    break
+            row_h = 56
+            gap_y = 8
+            pager_h = 40
+            space = card.bottom - status_reserve - y
+            per_page = max(1, space // (row_h + gap_y))
+            pages = -(-len(self._accounts) // per_page)
+            if pages > 1:
+                # Paging instead of silently dropping the rows that do not fit:
+                # eight children is the shipped policy maximum and only four or
+                # five rows fit on the 480 px floor.
+                per_page = max(1, (space - pager_h) // (row_h + gap_y))
+                pages = -(-len(self._accounts) // per_page)
+            page = max(0, min(pages - 1, int(self._accounts_page)))
+            shown = self._accounts[page * per_page:(page + 1) * per_page]
+            button_w = min(130, max(96, inner_w // 5))
+            for index, account in enumerate(shown):
+                row = pygame.Rect(card.left + pad, y + index * (row_h + gap_y), inner_w, row_h)
                 self._blit_rounded_card(
-                    screen, row, (246, 236, 209), (255, 250, 240), pygame,
-                    (61, 44, 31), 1, radius=12,
+                    screen, row, _Ink.CARD, _Ink.PANEL, pygame, _Ink.CONTOUR, 1, radius=14,
                 )
-                name = panel_layout.fit_single_line(
-                    typography, account.display_name, FontRole.CONTROL, 18,
-                    (61, 44, 31),
-                    row.width - (rename_w + remove_w + 38),
-                )
-                panel_layout.blit_block(
-                    screen, name, pygame, row.left + 14, row.centery, bounds=row
-                )
-                remove_w = 110
-                rename_w = 110
                 remove_rect = pygame.Rect(
-                    row.right - 14 - remove_w, row.top + 9, remove_w, row_h - 18
+                    row.right - 8 - button_w, row.top + 7, button_w, row_h - 14
                 )
                 rename_rect = pygame.Rect(
-                    remove_rect.left - 10 - rename_w, row.top + 9, rename_w, row_h - 18
+                    remove_rect.left - 8 - button_w, row.top + 7, button_w, row_h - 14
                 )
-                self._blit_rounded_card(
-                    screen, rename_rect, (255, 250, 240), (246, 236, 209), pygame,
-                    (61, 44, 31), 1, radius=10,
+                name_w = max(1, rename_rect.left - row.left - 24)
+                name = panel_layout.fit_single_line(
+                    typography, account.display_name, FontRole.CONTROL, 18, _Ink.TEXT,
+                    name_w, min_size=12,
                 )
-                rename_label = panel_layout.fit_single_line(
-                    typography, self._copy("ACCOUNTS_RENAME"), FontRole.CONTROL, 16,
-                    (61, 44, 31), rename_w - 12,
+                details = account.avatar_id.replace("_", " ").capitalize()
+                if account.approximate_age is not None:
+                    details = f"{details} · {account.approximate_age}"
+                sub = panel_layout.fit_single_line(
+                    typography, details, FontRole.BODY, 13, _Ink.MUTED, name_w, min_size=10
                 )
-                panel_layout.blit_block(
-                    screen, rename_label, pygame, rename_rect.centerx,
-                    rename_rect.centery, align="center", bounds=rename_rect,
+                top = row.centery - (name.height + sub.height) // 2
+                screen.blit(name.surface, (row.left + 16, top))
+                screen.blit(sub.surface, (row.left + 16, top + name.height))
+                self._kit_button(
+                    screen, rename_rect, self._copy("ACCOUNTS_RENAME"), typography, pygame,
+                    backdrop=_Ink.PANEL, size=15,
                 )
                 self._targets.append(
                     PanelHitTarget("account_rename", account.profile_id, rename_rect)
                 )
-                self._blit_rounded_card(
-                    screen, remove_rect, (255, 250, 240), (246, 236, 209), pygame,
-                    (181, 46, 46), 1, radius=10,
-                )
-                remove_label = panel_layout.fit_single_line(
-                    typography, self._copy("ACCOUNTS_REMOVE"), FontRole.CONTROL, 16,
-                    (181, 46, 46), remove_w - 12,
-                )
-                panel_layout.blit_block(
-                    screen, remove_label, pygame, remove_rect.centerx,
-                    remove_rect.centery, align="center", bounds=remove_rect,
+                self._kit_button(
+                    screen, remove_rect, self._copy("ACCOUNTS_REMOVE"), typography, pygame,
+                    backdrop=_Ink.PANEL, role="danger_text", size=15,
                 )
                 self._targets.append(
                     PanelHitTarget("account_remove", account.profile_id, remove_rect)
                 )
-            y += len(self._accounts) * (row_h + gap_y)
-        y += 12
+            y += len(shown) * (row_h + gap_y)
+            if pages > 1:
+                pager_w = 56
+                label = panel_layout.fit_single_line(
+                    typography, f"{page + 1} / {pages}", FontRole.CONTROL, 15,
+                    _Ink.TEXT, 80,
+                )
+                prev_rect = pygame.Rect(card.left + pad, y, pager_w, pager_h - 4)
+                next_rect = pygame.Rect(prev_rect.right + 96, y, pager_w, pager_h - 4)
+                for btn, step in ((prev_rect, -1), (next_rect, 1)):
+                    enabled = 0 <= page + step < pages
+                    face = self._kit_button(
+                        screen, btn, "", typography, pygame, disabled=not enabled
+                    )
+                    cx, cy, size = face.centerx, face.centery, 7
+                    points = [
+                        (cx + step * -size // 2, cy - size),
+                        (cx + step * -size // 2, cy + size),
+                        (cx + step * size // 2, cy),
+                    ]
+                    pygame.draw.polygon(
+                        screen,
+                        _Ink.TEXT if enabled else _mix(_Ink.TEXT, _Ink.DISABLED, 0.55),
+                        points,
+                    )
+                    if enabled:
+                        self._targets.append(PanelHitTarget("account_page", step, btn))
+                screen.blit(
+                    label.surface,
+                    label.surface.get_rect(
+                        center=((prev_rect.right + next_rect.left) // 2, prev_rect.centery)
+                    ),
+                )
+                y += pager_h
+        y += 6
         if at_limit:
             self._draw_status(
                 screen, pygame, typography, card, pad, y,
@@ -2342,53 +2792,64 @@ class ParentSettingsOverlay:
         pygame: Any,
     ) -> None:
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
-        self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
-        pad = 24
+        pad = self._content_card(screen, card, pygame)
         inner_w = card.width - pad * 2
-        header_top = card.top + 16
-        action_w = 200
         y = self._draw_card_header(
             screen, pygame, typography, card, pad,
-            self._copy("SECURITY_TITLE"), self._copy("SECURITY_INTRO"), top=header_top,
-            reserve_right=action_w + 12,
+            self._copy("SECURITY_TITLE"), self._copy("SECURITY_INTRO"),
         )
-        # The action sits on the title's row, as "Add child" does on the accounts
-        # tab. Stacked below three masked fields it was clipped in half at 600 px
-        # once the tab strip wrapped onto two rows.
-        action = pygame.Rect(card.right - pad - action_w, header_top, action_w, 42)
-        self._blit_rounded_card(
-            screen, action, (255, 250, 240), (241, 185, 35), pygame, (61, 44, 31), 2, radius=12
+        # Current password on its own row, new + repeat side by side, then the
+        # action after the fields it submits (it used to sit on the title row,
+        # above the fields, which read backwards).
+        gap = 12
+        half = (inner_w - gap) // 2
+        rows = (
+            ((self._copy("SECURITY_CURRENT_LABEL"), "security_current", self._security_current, half),),
+            (
+                (self._copy("SECURITY_NEW_LABEL"), "security_new", self._security_new, half),
+                (self._copy("SECURITY_CONFIRM_LABEL"), "security_confirm", self._security_confirm, half),
+            ),
         )
-        action_label = panel_layout.fit_single_line(
-            typography, self._copy("SECURITY_CHANGE"), FontRole.CONTROL, 16, (61, 44, 31),
-            action_w - 14,
+        for row in rows:
+            caption_h = 0
+            for column, (label, field, value, field_w) in enumerate(row):
+                caption = panel_layout.fit_single_line(
+                    typography, label, FontRole.CONTROL, 15, _Ink.MUTED, field_w, min_size=11
+                )
+                panel_layout.blit_block(
+                    screen, caption, pygame, card.left + pad + column * (half + gap), y
+                )
+                caption_h = max(caption_h, caption.height)
+            for column, (label, field, value, field_w) in enumerate(row):
+                field_rect = pygame.Rect(
+                    card.left + pad + column * (half + gap), y + caption_h + 4, field_w, 44
+                )
+                self._draw_text_field(
+                    screen, pygame, typography, field_rect, label, value, field, secret=True
+                )
+            y += caption_h + 4 + 44 + 12
+        action_label = self._copy("SECURITY_CHANGE")
+        action_w = min(
+            inner_w,
+            max(180, panel_layout.measure(typography, action_label, FontRole.CONTROL, 17)[0] + 44),
         )
-        panel_layout.blit_block(
-            screen, action_label, pygame, action.centerx, action.centery,
-            align="center", bounds=action,
+        action = pygame.Rect(card.right - pad - action_w, y + 2, action_w, 46)
+        self._kit_button(
+            screen, action, action_label, typography, pygame, role="primary", size=17,
+            focused=self._keyboard_focus_visible and self._text_field is None,
         )
         self._targets.append(PanelHitTarget("security_change", None, action))
-        y = max(y, header_top + 42 + 14)
-
-        for label, field, value in (
-            (self._copy("SECURITY_CURRENT_LABEL"), "security_current", self._security_current),
-            (self._copy("SECURITY_NEW_LABEL"), "security_new", self._security_new),
-            (self._copy("SECURITY_CONFIRM_LABEL"), "security_confirm", self._security_confirm),
-        ):
-            caption = panel_layout.fit_text_block(
-                typography, label, FontRole.BODY, 15, (118, 104, 93), inner_w
+        status_w = action.left - (card.left + pad) - 12
+        if status_w >= 200:
+            self._draw_status(
+                screen, pygame, typography, card, pad, y + 6,
+                self._security_message, self._security_message_is_error, width=status_w,
             )
-            panel_layout.blit_block(screen, caption, pygame, card.left + pad, y)
-            y += caption.height + 4
-            field_rect = pygame.Rect(card.left + pad, y, inner_w, 44)
-            self._draw_text_field(
-                screen, pygame, typography, field_rect, label, value, field, secret=True
+        else:
+            self._draw_status(
+                screen, pygame, typography, card, pad, action.bottom + 8,
+                self._security_message, self._security_message_is_error,
             )
-            y += 44 + 14
-        self._draw_status(
-            screen, pygame, typography, card, pad, y,
-            self._security_message, self._security_message_is_error,
-        )
 
     #: Height reserved below the readout for the value row, its gap and the bar,
     #: so a band's height does not depend on which readout is showing.
@@ -2463,7 +2924,8 @@ class ParentSettingsOverlay:
         bottom = self._paint_input_meter(
             screen, pygame, typography, card, pad, y, inner_w
         )
-        band_w = inner_w - self._noise_column_width(inner_w) - 12
+        noise_w = self._noise_column_width(inner_w)
+        band_w = inner_w - noise_w - 16 if noise_w else inner_w
         self._meter_band_rect = pygame.Rect(
             card.left + pad - 4, start, band_w + 8, max(0, bottom - start) + 6
         )
@@ -2478,9 +2940,12 @@ class ParentSettingsOverlay:
         typography = self._typography_for_overlay
         if typography is None:
             return
-        pygame.draw.rect(screen, (255, 250, 240), band, border_radius=8)
+        # Card colour, so the repainted band is invisible against the card it
+        # sits on (it used to be the lighter panel colour, a visible patch).
+        pygame.draw.rect(screen, _Ink.CARD, band)
         self._paint_input_meter(
-            screen, pygame, typography, band, 8, band.top + 3, band.width - 16
+            screen, pygame, typography, band, 4, band.top, band.width - 8,
+            full_width=True,
         )
 
     def _paint_input_meter(
@@ -2492,18 +2957,22 @@ class ParentSettingsOverlay:
         pad: int,
         y: int,
         inner_w: int,
+        *,
+        full_width: bool = False,
     ) -> int:
         """Live microphone input level, with a peak hold and a clip warning.
 
-        The gain meter below shows the *setting*. This shows what the microphone
+        The gain controls below show the *setting*. This shows what the microphone
         is actually hearing, which is the only way a parent can tell a working
         microphone from a muted one, and the only way to notice that a gain is
         too high. Measured on the reference Acer, whose ALC268 input was peaking
         at 0.0 dBFS, i.e. clipping, with no indication of it anywhere in the UI.
+        ``full_width`` is used by the repaint, whose band is already the meter's
+        own width.
         """
 
-        noise_w = self._noise_column_width(inner_w)
-        meter_w = inner_w - noise_w - 12 if noise_w else inner_w
+        noise_w = 0 if full_width else self._noise_column_width(inner_w)
+        meter_w = inner_w - noise_w - 16 if noise_w else inner_w
         level: MicrophoneLevel = self._mic_level_reader.level
         # Hysteresis on the silent label. A quiet room sits on the silence floor
         # and the label flickered on and off, which looked like a broken meter.
@@ -2523,12 +2992,12 @@ class ParentSettingsOverlay:
                     SILENCE_FLOOR_DBFS, self._mic_peak_hold_dbfs - 1.0
                 )
 
-        title = panel_layout.fit_text_block(
-            typography, self._copy("AUDIO_INPUT_LABEL"), FontRole.CONTROL, 18,
-            (61, 44, 31), meter_w,
+        title = panel_layout.fit_single_line(
+            typography, self._copy("AUDIO_INPUT_LABEL"), FontRole.CONTROL, 16,
+            _Ink.TEXT, max(1, meter_w // 2 + meter_w // 4), min_size=11,
         )
         panel_layout.blit_block(screen, title, pygame, card.left + pad, y)
-        y += title.height + 6
+        line_h = title.height
 
         if not level.available:
             # "No microphone" is only honest when the endpoint itself is gone. The
@@ -2540,15 +3009,14 @@ class ParentSettingsOverlay:
             note = panel_layout.fit_text_block(
                 typography,
                 self._copy("AUDIO_INPUT_WAITING") if waiting else self._copy("AUDIO_INPUT_UNAVAILABLE"),
-                FontRole.BODY, 15, (150, 138, 126), meter_w,
+                FontRole.BODY, 15, _Ink.MUTED, meter_w, max_lines=2,
             )
-            panel_layout.blit_block(screen, note, pygame, card.left + pad, y)
-            # Reserve the same height the value row and bar would occupy. The
-            # repaint band is captured from one of these draws and replayed on
-            # cached frames, so a band measured while the input looked unavailable
-            # was shorter than the bar actually needed, and repainting a live
-            # level then painted over the gain controls below.
-            return y + note.height + self._METER_RESERVED_TAIL
+            panel_layout.blit_block(screen, note, pygame, card.left + pad, y + line_h + 6)
+            # Reserve the same height the bar would occupy. The repaint band is
+            # captured from one of these draws and replayed on cached frames, so a
+            # band measured while the input looked unavailable must not be shorter
+            # than the live bar.
+            return y + line_h + 6 + max(note.height, self._METER_RESERVED_TAIL - 6)
 
         readout = self._copy("AUDIO_INPUT_SILENT") if quiet else f"{level.rms_dbfs:+.0f} dB"
         if level.clipping:
@@ -2556,21 +3024,18 @@ class ParentSettingsOverlay:
             clipping = self._copy("AUDIO_INPUT_CLIPPING")
             readout = f"{clipping}  {level.rms_dbfs:+.0f} dB"
         value = panel_layout.fit_single_line(
-            typography, readout, FontRole.CONTROL, 16,
-            (181, 46, 46) if level.clipping else (61, 44, 31), meter_w,
+            typography, readout, FontRole.CONTROL, 15,
+            _Ink.DANGER if level.clipping else _Ink.MUTED,
+            max(1, meter_w - title.width - 12), min_size=11,
         )
-        # Right-aligned inside the meter's own width. It was placed at
-        # card.left + pad + inner_w, which is the far edge of the whole row: it
-        # landed under the noise cancelling column and clamp_ip then shoved it to
-        # the panel edge, leaving a stray "dB" fragment there.
-        panel_layout.blit_block(
-            screen, value, pygame, card.left + pad + meter_w, y,
-            align="right",
-        )
+        # Right-aligned by its own measured width inside the meter's width.
+        # blit_block has no right alignment (anything but "center" is left), so
+        # passing the right edge put the readout under the noise column.
+        screen.blit(value.surface, (card.left + pad + meter_w - value.width, y + 1))
 
         bar_h = 16
-        track = pygame.Rect(card.left + pad, y + value.height + 4, meter_w, bar_h)
-        pygame.draw.rect(screen, (222, 208, 178), track, border_radius=bar_h // 2)
+        track = pygame.Rect(card.left + pad, y + line_h + 10, meter_w, bar_h)
+        pygame.draw.rect(screen, _Ink.TRACK, track, border_radius=bar_h // 2)
 
         def position(db: float) -> int:
             span = 0.0 - SILENCE_FLOOR_DBFS
@@ -2580,16 +3045,16 @@ class ParentSettingsOverlay:
         filled = position(level.rms_dbfs)
         if filled > 0:
             pygame.draw.rect(
-                screen, (181, 46, 46) if level.clipping else (241, 185, 35),
-                pygame.Rect(track.left, track.top, filled, track.height),
+                screen, _Ink.DANGER if level.clipping else _Ink.ACCENT,
+                pygame.Rect(track.left, track.top, max(filled, bar_h), track.height),
                 border_radius=bar_h // 2,
             )
         peak_x = track.left + position(self._mic_peak_hold_dbfs)
         pygame.draw.rect(
-            screen, (61, 44, 31),
+            screen, _Ink.CONTOUR,
             pygame.Rect(peak_x - 1, track.top - 3, 3, track.height + 6),
         )
-        return track.bottom
+        return track.bottom + 4
 
     def _draw_audio_tab(
         self,
@@ -2602,173 +3067,81 @@ class ParentSettingsOverlay:
         if not self._audio_settings_loaded:
             self._refresh_audio_processing()
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
-        self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
-        pad = 24
+        pad = self._content_card(screen, card, pygame)
         inner_w = card.width - pad * 2
-        y = card.top + 16
-
-        # Title and intro are measured, not placed at fixed offsets, so a
-        # translated string that needs two lines pushes everything below it
-        # down instead of landing on the first control.
-        title = panel_layout.fit_text_block(
-            typography, self._copy("AUDIO_TITLE"), FontRole.TITLE, 22, (61, 44, 31), inner_w
+        y = self._draw_card_header(
+            screen, pygame, typography, card, pad,
+            self._copy("AUDIO_TITLE"), self._copy("AUDIO_INTRO"),
         )
-        panel_layout.blit_block(screen, title, pygame, card.left + pad, y)
-        y += title.height + 8
 
-        intro = panel_layout.fit_text_block(
-            typography, self._copy("AUDIO_INTRO"), FontRole.BODY, 16, (118, 104, 93), inner_w
-        )
-        panel_layout.blit_block(screen, intro, pygame, card.left + pad, y)
-        y += intro.height + 18
-
+        # Row 1: what the microphone hears, with noise cancelling beside it (or
+        # below it when the card is too narrow for two columns).
         meter_top = y
-        y = self._draw_input_meter(screen, pygame, typography, card, pad, y, inner_w)
-        # The noise cancelling controls sit beside the meter rather than below
-        # it. The audio tab already fills the 600 px reference screen vertically,
-        # and this is the one region the layout was leaving empty.
-        self._draw_noise_cancelling(
-            screen, pygame, typography, card, pad, meter_top,
-            self._meter_band_rect.height if self._meter_band_rect else 0,
+        meter_bottom = self._draw_input_meter(screen, pygame, typography, card, pad, y, inner_w)
+        noise_bottom = self._draw_noise_cancelling(
+            screen, pygame, typography, card, pad, meter_top, meter_bottom
         )
-        y += 8
+        y = max(meter_bottom, noise_bottom) + 14
 
+        # Row 2: the gain. The steppers flank the presets in one row of tiles,
+        # so the setting, its named levels and the fine adjustment read as one
+        # control; the exact value is in the caption. The former separate badge
+        # + track + preset rows did not fit the 480 px floor at all.
         current_gain = self._current_mic_gain()
         pct = int(round(current_gain * 100))
-
-        # Level row: a readout, a real meter, and the two step controls. The
-        # widths are distributed rather than hard-coded, and each label is fitted
-        # to the box it lives in. The previous version centred the level text in
-        # a fixed 300 px badge with no measurement, so it overlapped these
-        # buttons, and used U+2796/U+2795, which the bundled fonts lack and
-        # which rendered as a grey tofu box.
-        step_w = 104
-        gap = 12
-        meter_w = max(120, inner_w - step_w * 2 - gap * 2)
-        # The readout and the track are separate bands inside one card. Centring
-        # the text across the whole card and then drawing the track near its
-        # bottom edge put the track straight through the text, which the
-        # screenshot review caught.
-        text_band = 30
-        track_h = 8
-        row_h = text_band + 10 + track_h + 12
-
-        badge_rect = pygame.Rect(card.left + pad, y, meter_w, row_h)
-        self._blit_rounded_card(
-            screen, badge_rect, (246, 236, 209), (255, 250, 240), pygame,
-            (241, 185, 35), 2, radius=12,
+        caption = panel_layout.fit_single_line(
+            typography, f"{self._copy('AUDIO_LEVEL_LABEL')}: {pct}%", FontRole.CONTROL, 16,
+            _Ink.TEXT, inner_w,
         )
-        level_label = self._copy("AUDIO_LEVEL_LABEL")
-        badge_text = f"{level_label}: {pct}%"
-        badge = panel_layout.fit_single_line(
-            typography, badge_text, FontRole.CONTROL, 17, (61, 44, 31), meter_w - 24
-        )
-        panel_layout.blit_block(
-            screen, badge, pygame, badge_rect.centerx, badge_rect.top + 6,
-            align="center", bounds=badge_rect,
-        )
-
-        # The meter itself: a track with a filled portion, sized from the
-        # actual gain rather than implied by a number in a badge.
-        track = pygame.Rect(
-            badge_rect.left + 12, badge_rect.top + text_band + 8,
-            badge_rect.width - 24, track_h,
-        )
-        pygame.draw.rect(screen, (222, 208, 178), track, border_radius=track_h // 2)
-        filled_w = int(track.width * max(0.0, min(1.0, (current_gain - 1.0) / 3.0)))
-        if filled_w > 0:
-            pygame.draw.rect(
-                screen, (241, 185, 35),
-                pygame.Rect(track.left, track.top, filled_w, track.height),
-                border_radius=track_h // 2,
-            )
-        knob_x = track.left + filled_w
-        # draw.circle has no border_radius; a plain disc is what we want anyway.
-        pygame.draw.circle(screen, (61, 44, 31), (knob_x, track.centery), 7)
-        pygame.draw.circle(screen, (255, 250, 240), (knob_x, track.centery), 4)
-
-        for offset, delta, label in (
-            (meter_w + gap, -0.25, self._copy("AUDIO_DECREASE")),
-            (meter_w + gap + step_w + gap, 0.25, self._copy("AUDIO_INCREASE")),
-        ):
-            btn = pygame.Rect(card.left + pad + offset, y, step_w, row_h)
-            self._blit_rounded_card(
-                screen, btn, (246, 236, 209), (255, 250, 240), pygame,
-                (61, 44, 31), 1, radius=12,
-            )
-            block = panel_layout.fit_single_line(
-                typography, label, FontRole.CONTROL, 17, (61, 44, 31), btn.width - 12
-            )
-            panel_layout.blit_block(
-                screen, block, pygame, btn.centerx, btn.centery,
-                align="center", bounds=btn,
-            )
-            self._targets.append(PanelHitTarget("mic_gain_adjust", delta, btn))
-        y += row_h + 20
-
-        presets_title = panel_layout.fit_text_block(
-            typography, self._copy("AUDIO_PRESETS_TITLE"), FontRole.CONTROL, 18,
-            (61, 44, 31), inner_w,
-        )
-        panel_layout.blit_block(screen, presets_title, pygame, card.left + pad, y)
-        y += presets_title.height + 10
+        panel_layout.blit_block(screen, caption, pygame, card.left + pad, y)
+        y += caption.height + 6
 
         values = sorted(text.AUDIO_PRESET_NAMES)
-        gap_x = 10
-        widths = panel_layout.even_columns(inner_w, len(values), gap_x)
-        preset_h = 58
+        gap = 8
+        step_w = 76 if inner_w >= 560 else 64
+        preset_area = inner_w - 2 * (step_w + gap)
+        widths = panel_layout.even_columns(preset_area, len(values), gap)
+        tile_h = 54
+        x = card.left + pad
+        down = pygame.Rect(x, y, step_w, tile_h)
+        self._kit_button(
+            screen, down, self._copy("AUDIO_DECREASE"), typography, pygame,
+            shape="tile", size=16, disabled=current_gain <= 0.5,
+        )
+        self._targets.append(PanelHitTarget("mic_gain_adjust", -0.25, down))
+        x = down.right + gap
         for index, value in enumerate(values):
-            p_rect = pygame.Rect(
-                card.left + pad + sum(widths[:index]) + gap_x * index, y,
-                widths[index], preset_h,
+            tile = pygame.Rect(x, y, widths[index], tile_h)
+            self._kit_button(
+                screen, tile, f"{int(value * 100)}%", typography, pygame, shape="tile",
+                selected=abs(current_gain - value) < 0.05, size=16,
+                sublabel=panel_audio_preset(value, self._device_locale),
             )
-            is_active = abs(current_gain - value) < 0.05
-            self._blit_rounded_card(
-                screen, p_rect, (246, 236, 209),
-                (241, 185, 35) if is_active else (255, 250, 240),
-                pygame, (61, 44, 31), 3 if is_active else 1, radius=14,
-            )
-            percent = panel_layout.fit_single_line(
-                typography, f"{int(value * 100)}%", FontRole.CONTROL, 17,
-                (61, 44, 31), p_rect.width - 12,
-            )
-            panel_layout.blit_block(
-                screen, percent, pygame, p_rect.centerx, p_rect.top + 16,
-                align="center", bounds=p_rect,
-            )
-            name = panel_layout.fit_single_line(
-                typography, panel_audio_preset(value, self._device_locale), FontRole.BODY, 13,
-                (90, 80, 70), p_rect.width - 12,
-            )
-            panel_layout.blit_block(
-                screen, name, pygame, p_rect.centerx, p_rect.top + 36,
-                align="center", bounds=p_rect,
-            )
-            self._targets.append(PanelHitTarget("mic_gain_set", value, p_rect))
-        y += preset_h + 12
+            self._targets.append(PanelHitTarget("mic_gain_set", value, tile))
+            x = tile.right + gap
+        up = pygame.Rect(x, y, card.left + pad + inner_w - x, tile_h)
+        self._kit_button(
+            screen, up, self._copy("AUDIO_INCREASE"), typography, pygame,
+            shape="tile", size=16, disabled=current_gain >= 4.0,
+        )
+        self._targets.append(PanelHitTarget("mic_gain_adjust", 0.25, up))
+        y += tile_h + 12
 
-        if self._audio_message:
-            message = panel_layout.fit_text_block(
-                typography, self._audio_message, FontRole.BODY, 16,
-                (47, 117, 81), inner_w, max_lines=2,
-            )
-            # Anchored to the flow, not the card bottom, so a two-line message
-            # cannot ride up over the presets.
-            panel_layout.blit_block(screen, message, pygame, card.left + pad, y)
+        self._draw_status(
+            screen, pygame, typography, card, pad, y,
+            self._audio_message, self._audio_message_is_error,
+        )
 
     def _noise_column_width(self, inner_w: int) -> int:
         """Width of the noise cancelling column beside the meter, or 0.
 
         The meter's bar and the column share one row, so both must agree on where
-        the split is. They did not: the bar was drawn at the full inner width and
-        ran underneath the column, and its readout was clipped. That only ever
-        showed up with a live input - with the microphone unavailable there is no
-        bar to collide.
+        the split is (the bar used to run underneath the column).
         """
 
-        if inner_w < 420:
+        if inner_w < 460:
             return 0
-        return int(inner_w * 0.34)
+        return max(200, int(inner_w * 0.38))
 
     def _draw_noise_cancelling(
         self,
@@ -2778,14 +3151,12 @@ class ParentSettingsOverlay:
         card: Any,
         pad: int,
         top: int,
-        height: int,
-    ) -> None:
+        meter_bottom: int,
+    ) -> int:
         """Noise cancelling: processing on/off, and advanced reduction.
 
-        Drawn in the column beside the live meter. The policy already existed in
-        greia_platform.audio but was exposed nowhere - not the Parent API, not this
-        panel - and the tab was already full-height on the 600 px reference
-        screen, so this needed a home that did not push anything else out.
+        Drawn in a column beside the live meter, or as a row below it on a narrow
+        card. Returns the bottom of what it drew.
 
         Read and written through the Parent service: the settings directory is
         greiapel-owned and this panel runs as greiakid, which has read but not
@@ -2795,19 +3166,6 @@ class ParentSettingsOverlay:
 
         inner_w = card.width - pad * 2
         col_w = self._noise_column_width(inner_w)
-        if height <= 0 or col_w < 120:
-            return
-        col_x = card.left + pad + inner_w - col_w
-        top = top - 4
-
-        title = panel_layout.fit_text_block(
-            typography, self._copy("AUDIO_NOISE_TITLE"), FontRole.CONTROL, 15,
-            (61, 44, 31), col_w, max_lines=1,
-        )
-        panel_layout.blit_block(screen, title, pygame, col_x, top)
-        row_y = top + title.height + 4
-        row_h = min(30, max(24, (height - title.height - 4 - 8) // 2))
-
         toggles = [
             (
                 "mic_processing",
@@ -2822,45 +3180,44 @@ class ParentSettingsOverlay:
                 self._audio_advanced_available and self._audio_processing_enabled,
             ),
         ]
+        unavailable = self._ui_message("state.unavailable")
+        if col_w:
+            col_x = card.left + pad + inner_w - col_w
+            title = panel_layout.fit_single_line(
+                typography, self._copy("AUDIO_NOISE_TITLE"), FontRole.CONTROL, 16,
+                _Ink.TEXT, col_w, min_size=11,
+            )
+            panel_layout.blit_block(screen, title, pygame, col_x, top)
+            y = top + title.height + 6
+            for field, label, is_on, enabled in toggles:
+                box = pygame.Rect(col_x, y, col_w, 46)
+                self._kit_toggle(
+                    screen, box, label, is_on, enabled, typography, pygame,
+                    note=None if enabled else unavailable,
+                )
+                if enabled:
+                    self._targets.append(PanelHitTarget("mic_processing_toggle", field, box))
+                y += 46 + 8
+            return y - 8
+        # Narrow card: a titled row of two tiles under the meter.
+        y = meter_bottom + 10
+        title = panel_layout.fit_single_line(
+            typography, self._copy("AUDIO_NOISE_TITLE"), FontRole.CONTROL, 16,
+            _Ink.TEXT, inner_w, min_size=11,
+        )
+        panel_layout.blit_block(screen, title, pygame, card.left + pad, y)
+        y += title.height + 6
+        gap = 10
+        half = (inner_w - gap) // 2
         for index, (field, label, is_on, enabled) in enumerate(toggles):
-            box = pygame.Rect(col_x, row_y + index * (row_h + 8), col_w, row_h)
-            self._blit_rounded_card(
-                screen, box, (246, 236, 209),
-                (241, 185, 35) if (is_on and enabled) else (
-                    (235, 228, 214) if not enabled else (255, 250, 240)
-                ),
-                pygame, (61, 44, 31), 3 if (is_on and enabled) else 1, radius=10,
-            )
-            state = self._ui_message(
-                "state.on" if (is_on and enabled) else
-                "state.unavailable" if not enabled else "state.off"
-            )
-            # One line, state right-aligned. Two stacked lines never fitted in
-            # the height available beside the meter, and the second line was drawn
-            # over the first.
-            state_w = 96
-            t1 = panel_layout.fit_single_line(
-                typography, label, FontRole.BODY, 12, (61, 44, 31),
-                max(40, col_w - state_w - 18),
-            )
-            panel_layout.blit_block(
-                screen, t1, pygame, box.left + 6, box.top + 9, bounds=box
-            )
-            t2 = panel_layout.fit_single_line(
-                typography, state, FontRole.CONTROL, 12, (61, 44, 31), state_w
-            )
-            # Blit_block's "right" alignment sets the block's *centre*, not its
-            # right edge, so passing box.right put half the state outside the
-            # button. Place it by its own measured width instead.
-            state_x = box.right - 8 - t2.surface.get_width()
-            panel_layout.blit_block(
-                screen, t2, pygame, max(box.left + 6, state_x), box.top + 9,
-                bounds=box,
+            box = pygame.Rect(card.left + pad + index * (half + gap), y, half, 46)
+            self._kit_toggle(
+                screen, box, label, is_on, enabled, typography, pygame,
+                note=None if enabled else unavailable,
             )
             if enabled:
-                self._targets.append(
-                    PanelHitTarget("mic_processing_toggle", field, box)
-                )
+                self._targets.append(PanelHitTarget("mic_processing_toggle", field, box))
+        return y + 46
 
     def _draw_pointer_tab(
         self,
@@ -2870,20 +3227,14 @@ class ParentSettingsOverlay:
         pygame: Any,
     ) -> None:
         """Draw the dedicated pointer-feel tab (semantic settings only)."""
-        card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
-        self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
 
-        title = panel_layout.fit_single_line(
-            typography, self._ui_message("pointer.title"), FontRole.TITLE, 22,
-            (61, 44, 31), max(1, card.width - 40), min_size=14,
+        card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
+        pad = self._content_card(screen, card, pygame)
+        y = self._draw_card_header(
+            screen, pygame, typography, card, pad,
+            self._ui_message("pointer.title"), self._ui_message("pointer.note"),
         )
-        panel_layout.blit_block(screen, title, pygame, card.left + 20, card.top + 12, bounds=card)
-        note = panel_layout.fit_text_block(
-            typography, self._ui_message("pointer.note"), FontRole.BODY, 13,
-            (118, 104, 93), max(1, card.width - 40), max_lines=2,
-        )
-        panel_layout.blit_block(screen, note, pygame, card.left + 20, card.top + 40, bounds=card)
-        section_top = max(card.top + 62, card.top + 44 + note.height + 6)
+        section_top = y
 
         settings = self._pointer_settings()
         min_touch = self._pointer_min_touch_px()
@@ -2905,115 +3256,106 @@ class ParentSettingsOverlay:
         except (TypeError, ValueError):
             focus = 0
         focus = max(0, min(len(focus_items) - 1, focus))
+        focused_item = focus_items[focus] if self._keyboard_focus_visible else None
 
-        left_w = int(card.width * 0.58)
-        left = card.left + 16
-        right = card.left + 16 + left_w + 12
-        test_w = card.width - (left_w + 12 + 32)
-        row_h = max(34, min(44, min_touch - 4))
+        inner_w = card.width - pad * 2
+        test_w = max(120, int(inner_w * 0.28))
+        left_w = inner_w - test_w - 16
+        left = card.left + pad
+        right = left + left_w + 16
+        # Shorter chips on the 480 px floor so the toggles and reset still fit.
+        row_h = max(36, min(44 if card.height >= 420 else 36, min_touch - 4))
+        gap = 8
 
-        # --- Touchpad speed presets ---
-        y = section_top
-        lbl = self._get_text(self._ui_message("pointer.touchpad.speed"), FontRole.CONTROL, 15, (61, 44, 31), typography)
-        screen.blit(lbl, (left, y))
-        if not has_touchpad:
-            hint = self._get_text(self._ui_message("pointer.touchpad.none"), FontRole.BODY, 13, (118, 104, 93), typography)
-            screen.blit(hint, (left + lbl.get_width() + 8, y + 2))
-        y += 20
-        chip_w = max(40, (left_w - 8 * (len(presets) - 1)) // max(1, len(presets)))
-        for idx, name in enumerate(presets):
-            chip = pygame.Rect(left + idx * (chip_w + 8), y, chip_w, row_h)
-            active = name == touch_preset and has_touchpad
-            focused = focus_items[focus] == "touchpad_speed" and idx == presets.index(touch_preset)
-            self._blit_rounded_card(
-                screen, chip, (246, 236, 209),
-                (241, 185, 35) if active else ((235, 228, 214) if not has_touchpad else (255, 250, 240)),
-                pygame, (61, 44, 31), 3 if (active or focused) else 1, radius=10,
+        for which, label_key, none_key, current, available, action in (
+            ("touchpad_speed", "pointer.touchpad.speed", "pointer.touchpad.none",
+             touch_preset, has_touchpad, "pointer_touchpad_preset"),
+            ("mouse_speed", "pointer.mouse.speed", "pointer.mouse.none",
+             mouse_preset, has_relative, "pointer_mouse_preset"),
+        ):
+            caption_text = self._ui_message(label_key)
+            if not available:
+                caption_text = f"{caption_text}  {self._ui_message(none_key)}"
+            caption = panel_layout.fit_single_line(
+                typography, caption_text, FontRole.CONTROL, 15,
+                _Ink.TEXT if available else _Ink.MUTED, left_w, min_size=11,
             )
-            short = self._ui_message(f"pointer.preset.short.{name}")
-            txt = self._get_text(short, FontRole.BODY, 13, (61, 44, 31), typography)
-            screen.blit(txt, txt.get_rect(center=chip.center))
-            self._targets.append(PanelHitTarget("pointer_touchpad_preset", name, chip))
+            panel_layout.blit_block(screen, caption, pygame, left, y)
+            y += caption.height + 4
+            widths = panel_layout.even_columns(left_w, len(presets), 6)
+            x = left
+            for idx, name in enumerate(presets):
+                chip = pygame.Rect(x, y, widths[idx], row_h)
+                self._kit_button(
+                    screen, chip, self._ui_message(f"pointer.preset.short.{name}"),
+                    typography, pygame, shape="tile", size=14,
+                    selected=name == current and available, disabled=not available,
+                    focused=focused_item == which and name == current,
+                )
+                self._targets.append(PanelHitTarget(action, name, chip))
+                x = chip.right + 6
+            y += row_h + 10
 
-        # --- Mouse speed presets ---
-        y += row_h + 10
-        lbl = self._get_text(self._ui_message("pointer.mouse.speed"), FontRole.CONTROL, 15, (61, 44, 31), typography)
-        screen.blit(lbl, (left, y))
-        if not has_relative:
-            hint = self._get_text(self._ui_message("pointer.mouse.none"), FontRole.BODY, 13, (118, 104, 93), typography)
-            screen.blit(hint, (left + lbl.get_width() + 8, y + 2))
-        y += 20
-        for idx, name in enumerate(presets):
-            chip = pygame.Rect(left + idx * (chip_w + 8), y, chip_w, row_h)
-            active = name == mouse_preset and has_relative
-            focused = focus_items[focus] == "mouse_speed" and idx == presets.index(mouse_preset)
-            self._blit_rounded_card(
-                screen, chip, (246, 236, 209),
-                (241, 185, 35) if active else ((235, 228, 214) if not has_relative else (255, 250, 240)),
-                pygame, (61, 44, 31), 3 if (active or focused) else 1, radius=10,
-            )
-            short = self._ui_message(f"pointer.preset.short.{name}")
-            txt = self._get_text(short, FontRole.BODY, 13, (61, 44, 31), typography)
-            screen.blit(txt, txt.get_rect(center=chip.center))
-            self._targets.append(PanelHitTarget("pointer_mouse_preset", name, chip))
-
-        # --- Toggles ---
-        y += row_h + 10
         toggles = [
             ("touchpad_tap", self._ui_message("pointer.toggle.tap"), tap_on, has_touchpad),
             ("natural_scrolling", self._ui_message("pointer.toggle.scroll"), natural_on, True),
             ("disable_while_typing", self._ui_message("pointer.toggle.typing"), dwt_on, has_touchpad),
         ]
-        tog_w = max(60, (left_w - 2 * 8) // 3)
-        tog_h = max(40, min(52, min_touch))
+        widths = panel_layout.even_columns(left_w, len(toggles), gap)
+        tog_h = 78  # two label lines above the switch
+        x = left
         for idx, (field, label, is_on, enabled) in enumerate(toggles):
-            tog = pygame.Rect(left + idx * (tog_w + 8), y, tog_w, tog_h)
-            focused = focus_items[focus] == field
-            self._blit_rounded_card(
-                screen, tog, (246, 236, 209),
-                (241, 185, 35) if (is_on and enabled) else ((235, 228, 214) if not enabled else (255, 250, 240)),
-                pygame, (61, 44, 31), 3 if (focused or (is_on and enabled)) else 1, radius=10,
+            tog = pygame.Rect(x, y, widths[idx], tog_h)
+            self._kit_toggle(
+                screen, tog, label, is_on, enabled, typography, pygame,
+                focused=focused_item == field, stacked=True,
             )
-            state = self._ui_message("state.on" if (is_on and enabled) else "state.off")
-            t1 = panel_layout.fit_single_line(
-                typography, label, FontRole.BODY, 12, (61, 44, 31),
-                max(1, tog.width - 8), min_size=10,
-            )
-            panel_layout.blit_block(
-                screen, t1, pygame, tog.centerx, tog.top + 14 - t1.height // 2,
-                align="center", bounds=tog,
-            )
-            t2 = self._get_text(state, FontRole.CONTROL, 13, (61, 44, 31), typography)
-            screen.blit(t2, t2.get_rect(center=(tog.centerx, tog.top + 30)))
             self._targets.append(PanelHitTarget("pointer_toggle", field, tog))
+            x = tog.right + gap
+        y += tog_h + 10
 
-        # --- Reset + message ---
-        y += tog_h + 8
-        reset_rect = pygame.Rect(left, y, min(220, left_w), 34)
-        focused = focus_items[focus] == "reset"
-        self._blit_rounded_card(
-            screen, reset_rect, (246, 236, 209), (255, 250, 240),
-            pygame, (61, 44, 31), 3 if focused else 1, radius=10,
+        reset_label = self._ui_message("pointer.reset")
+        reset_w = min(
+            left_w,
+            max(150, panel_layout.measure(typography, reset_label, FontRole.CONTROL, 15)[0] + 36),
         )
-        lbl = self._get_text(self._ui_message("pointer.reset"), FontRole.CONTROL, 14, (61, 44, 31), typography)
-        screen.blit(lbl, lbl.get_rect(center=reset_rect.center))
+        reset_rect = pygame.Rect(left, y, reset_w, 42)
+        self._kit_button(
+            screen, reset_rect, reset_label, typography, pygame, size=15,
+            focused=focused_item == "reset",
+        )
         self._targets.append(PanelHitTarget("pointer_reset", None, reset_rect))
-        if self._pointer_message:
-            msg = self._get_text(self._pointer_message[:80], FontRole.BODY, 13, (47, 117, 81), typography)
-            screen.blit(msg, (reset_rect.right + 10, reset_rect.top + 9))
+        message_w = left_w - reset_w - 12
+        if message_w >= 140:
+            self._draw_status(
+                screen, pygame, typography, card, pad, reset_rect.top + 2,
+                self._pointer_message, self._pointer_message_is_error,
+                width=message_w, left=reset_rect.right + 12,
+            )
+        else:
+            self._draw_status(
+                screen, pygame, typography, card, pad, reset_rect.bottom + 6,
+                self._pointer_message, self._pointer_message_is_error, width=left_w,
+            )
 
         # --- Bounded test region (right column) ---
-        test_top = section_top
-        test_h = card.bottom - test_top - 12
-        test_rect = pygame.Rect(right, test_top, max(120, test_w), max(80, test_h))
-        self._blit_rounded_card(screen, test_rect, (246, 236, 209), (255, 250, 240), pygame, (220, 210, 190), 1, radius=12)
-        cap = self._get_text(self._ui_message("pointer.test"), FontRole.CONTROL, 14, (61, 44, 31), typography)
-        screen.blit(cap, (test_rect.left + 10, test_rect.top + 6))
+        test_rect = pygame.Rect(
+            right, section_top, card.left + pad + inner_w - right,
+            max(120, card.bottom - pad - section_top),
+        )
+        self._blit_rounded_card(
+            screen, test_rect, _Ink.CARD, _Ink.PANEL, pygame, _Ink.TRACK, 2, radius=14
+        )
+        cap = panel_layout.fit_single_line(
+            typography, self._ui_message("pointer.test"), FontRole.CONTROL, 15,
+            _Ink.MUTED, test_rect.width - 20, min_size=11,
+        )
+        screen.blit(cap.surface, cap.surface.get_rect(center=test_rect.center))
         margin = 10
-        cell = max(min_touch, 56)
+        cell = max(min_touch, 52)
         positions = [
-            (test_rect.left + margin, test_rect.top + 30),
-            (test_rect.right - margin - cell, test_rect.top + 30),
+            (test_rect.left + margin, test_rect.top + margin),
+            (test_rect.right - margin - cell, test_rect.top + margin),
             (test_rect.left + margin, test_rect.bottom - margin - cell),
             (test_rect.right - margin - cell, test_rect.bottom - margin - cell),
         ]
@@ -3025,14 +3367,18 @@ class ParentSettingsOverlay:
                 continue
             target = pygame.Rect(int(tx), int(ty), int(cell), int(cell))
             flashed = self._pointer_test_flash == idx and now - self._pointer_test_flash_at < 0.6
-            focused = focus_items[focus] == f"test{idx}"
+            fill = _Ink.SUCCESS if flashed else _Ink.ACCENT
             self._blit_rounded_card(
-                screen, target, (255, 250, 240),
-                (47, 117, 81) if flashed else (241, 185, 35),
-                pygame, (61, 44, 31), 3 if (flashed or focused) else 2, radius=12,
+                screen, target, _Ink.PANEL, fill, pygame, _Ink.CONTOUR, 2,
+                radius=cell // 2, lip=3,
             )
-            glyph = self._get_text("●", FontRole.CONTROL, 20, (255, 255, 255) if flashed else (61, 44, 31), typography)
-            screen.blit(glyph, glyph.get_rect(center=target.center))
+            # Drawn dot: U+25CF is missing from the bundled fonts (tofu box).
+            pygame.draw.circle(
+                screen, _Ink.WHITE if flashed else _Ink.TEXT,
+                (target.centerx, target.centery - 2), max(4, cell // 8),
+            )
+            if focused_item == f"test{idx}":
+                self._kit_focus_ring(screen, target, cell // 2, pygame)
             self._targets.append(PanelHitTarget("pointer_test", idx, target))
 
     def _draw_wifi_tab(
@@ -3044,91 +3390,153 @@ class ParentSettingsOverlay:
         load_icon_fn: Callable[[str, int, Any], Any],
     ) -> None:
         snapshot = self.wifi_controller.snapshot
-        def _body(text, color=(61, 44, 31)):
-            return self._get_text(text, FontRole.BODY, 18, color, typography)
-        def _bold(text, color=(61, 44, 31)):
-            return self._get_text(text, FontRole.CONTROL, 18, color, typography)
+        card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
+        pad = self._content_card(screen, card, pygame)
+        inner_w = card.width - pad * 2
 
-        top_bar = pygame.Rect(rect.left, rect.top, rect.width, 42)
-        status_text = self._ui_message("wifi.status", phase=snapshot.phase.value.title())
+        scan_label = self._ui_message("wifi.scan")
+        scan_w = max(110, panel_layout.measure(typography, scan_label, FontRole.CONTROL, 16)[0] + 40)
+        scan = pygame.Rect(card.right - pad - scan_w, card.top + 14, scan_w, 42)
+        self._kit_button(screen, scan, scan_label, typography, pygame, size=16)
+        self._targets.append(PanelHitTarget("wifi_refresh", None, scan))
+
+        title_w = max(1, scan.left - card.left - pad - 12)
+        title = panel_layout.fit_single_line(
+            typography, self._ui_message("wifi.title"), FontRole.TITLE, 22, _Ink.TEXT,
+            title_w, min_size=14,
+        )
+        panel_layout.blit_block(screen, title, pygame, card.left + pad, card.top + 14)
+        phase = self._ui_message(f"wifi.phase.{snapshot.phase.value}")
+        status_text = self._ui_message("wifi.status", phase=phase)
         if snapshot.connected_ssid:
             status_text += self._ui_message("wifi.connected", ssid=snapshot.connected_ssid)
         if snapshot.error:
             status_text = self._ui_message("wifi.error", detail=str(snapshot.error))
+        status = panel_layout.fit_text_block(
+            typography, status_text, FontRole.BODY, 15,
+            _Ink.DANGER if snapshot.error else _Ink.MUTED, title_w, max_lines=2,
+        )
+        panel_layout.blit_block(
+            screen, status, pygame, card.left + pad, card.top + 14 + title.height
+        )
+        top = max(scan.bottom, card.top + 14 + title.height + status.height) + 12
 
-        status_surf = _body(status_text, (181, 46, 46) if snapshot.error else (61, 44, 31))
-        screen.blit(status_surf, (top_bar.left, top_bar.top + 10))
-
-        refresh_btn = pygame.Rect(top_bar.right - 110, top_bar.top, 100, 36)
-        self._blit_rounded_card(screen, refresh_btn, (255, 250, 240), (246, 236, 209), pygame, (61, 44, 31), 1, radius=10)
-        lbl_refresh = _body(self._ui_message("wifi.scan"))
-        screen.blit(lbl_refresh, lbl_refresh.get_rect(center=refresh_btn.center))
-        self._targets.append(PanelHitTarget("wifi_refresh", None, refresh_btn))
-
-        list_rect = pygame.Rect(rect.left, top_bar.bottom + 10, rect.width // 2 - 10, rect.height - 52)
-        self._blit_rounded_card(screen, list_rect, (255, 250, 240), (246, 236, 209), pygame, (220, 210, 190), 1, radius=16)
-
+        gap = 14
+        list_w = (inner_w - gap) // 2
+        body_h = card.bottom - pad - top
+        list_rect = pygame.Rect(card.left + pad, top, list_w, body_h)
+        self._blit_rounded_card(
+            screen, list_rect, _Ink.CARD, _Ink.PANEL, pygame, _Ink.TRACK, 2, radius=14
+        )
+        item_h = 44
+        capacity = max(0, (list_rect.height - 12) // (item_h + 6))
         item_y = list_rect.top + 8
-        for idx, network in enumerate(snapshot.networks[:6]):
-            item_rect = pygame.Rect(list_rect.left + 8, item_y, list_rect.width - 16, 40)
-            is_selected = idx == snapshot.selected_index
-            bg = (241, 185, 35) if is_selected else (255, 250, 240)
-            self._blit_rounded_card(
-                screen,
-                item_rect,
-                (246, 236, 209),
-                bg,
-                pygame,
-                (61, 44, 31),
-                2 if is_selected else 1,
-                radius=10,
+        security_note = {
+            WifiSecurity.PERSONAL: "wifi.security.personal",
+            WifiSecurity.ENTERPRISE: "wifi.security.enterprise",
+        }
+        for idx, network in enumerate(snapshot.networks[:capacity]):
+            item_rect = pygame.Rect(list_rect.left + 8, item_y, list_rect.width - 16, item_h)
+            face = self._kit_button(
+                screen, item_rect, "", typography, pygame, backdrop=_Ink.PANEL,
+                shape="tile", selected=idx == snapshot.selected_index,
             )
-
-            label = network.ssid
-            if network.security == WifiSecurity.PERSONAL:
-                label += " 🔒"
-            elif network.security == WifiSecurity.ENTERPRISE:
-                label += self._ui_message("wifi.enterprise")
-            txt_surf = _body(label)
-            screen.blit(txt_surf, (item_rect.left + 12, item_rect.top + 10))
-
+            name = panel_layout.fit_single_line(
+                typography, network.ssid, FontRole.CONTROL, 16, _Ink.TEXT,
+                max(1, face.width - 72), min_size=11,
+            )
+            screen.blit(name.surface, name.surface.get_rect(midleft=(face.left + 12, face.centery)))
+            self._paint_signal(screen, face, network.signal_dbm, pygame)
+            if network.security in security_note:
+                # A drawn padlock: the emoji lock needs the colour-emoji font.
+                lx, ly = face.right - 46, face.centery
+                pygame.draw.rect(screen, _Ink.TEXT, pygame.Rect(lx - 5, ly - 1, 10, 8), border_radius=2)
+                pygame.draw.arc(screen, _Ink.TEXT, pygame.Rect(lx - 4, ly - 8, 8, 10), 0, 3.15, 2)
             self._targets.append(PanelHitTarget("wifi_select", idx, item_rect))
-            item_y += 46
+            item_y += item_h + 6
 
         if not snapshot.networks:
-            no_nets = _body(self._ui_message("wifi.empty"), (118, 104, 93))
-            screen.blit(no_nets, no_nets.get_rect(center=list_rect.center))
+            empty = panel_layout.fit_text_block(
+                typography, self._ui_message("wifi.empty"), FontRole.BODY, 15,
+                _Ink.MUTED, list_rect.width - 24, max_lines=3,
+            )
+            screen.blit(empty.surface, empty.surface.get_rect(center=list_rect.center))
 
-        form_rect = pygame.Rect(list_rect.right + 20, top_bar.bottom + 10, rect.width // 2 - 10, rect.height - 52)
-        self._blit_rounded_card(screen, form_rect, (255, 250, 240), (246, 236, 209), pygame, radius=16)
-
+        form_rect = pygame.Rect(list_rect.right + gap, top, inner_w - list_w - gap, body_h)
         selected = snapshot.selected_network
-        if selected is not None:
-            lbl_title = _bold(self._ui_message("wifi.network", ssid=selected.ssid))
-            screen.blit(lbl_title, (form_rect.left + 16, form_rect.top + 16))
+        if selected is None:
+            hint = panel_layout.fit_text_block(
+                typography, self._ui_message("wifi.choose"), FontRole.BODY, 15,
+                _Ink.MUTED, form_rect.width - 24, max_lines=3,
+            )
+            screen.blit(hint.surface, hint.surface.get_rect(center=form_rect.center))
+            return
+        y = form_rect.top + 4
+        name = panel_layout.fit_text_block(
+            typography, selected.ssid, FontRole.TITLE, 20, _Ink.TEXT, form_rect.width, max_lines=2
+        )
+        panel_layout.blit_block(screen, name, pygame, form_rect.left, y)
+        y += name.height + 2
+        security_key = {
+            WifiSecurity.PERSONAL: "wifi.security.personal",
+            WifiSecurity.ENTERPRISE: "wifi.security.enterprise",
+        }.get(selected.security, "wifi.security.open")
+        sec = panel_layout.fit_single_line(
+            typography, self._ui_message(security_key), FontRole.BODY, 15, _Ink.MUTED,
+            form_rect.width, min_size=11,
+        )
+        panel_layout.blit_block(screen, sec, pygame, form_rect.left, y)
+        y += sec.height + 12
+        if selected.security == WifiSecurity.PERSONAL:
+            caption = panel_layout.fit_single_line(
+                typography, self._ui_message("wifi.password"), FontRole.CONTROL, 15,
+                _Ink.MUTED, form_rect.width, min_size=11,
+            )
+            panel_layout.blit_block(screen, caption, pygame, form_rect.left, y)
+            y += caption.height + 4
+            pwd_box = pygame.Rect(form_rect.left, y, form_rect.width, 44)
+            self._blit_rounded_card(
+                screen, pwd_box, _Ink.CARD, _Ink.PANEL, pygame, _Ink.ACCENT, 3, radius=12
+            )
+            if snapshot.passphrase:
+                masked = panel_layout.fit_single_line(
+                    typography, "•" * len(snapshot.passphrase), FontRole.BODY, 17,
+                    _Ink.TEXT, pwd_box.width - 32, min_size=10,
+                )
+                masked_rect = masked.surface.get_rect(midleft=(pwd_box.left + 14, pwd_box.centery))
+                screen.blit(masked.surface, masked_rect)
+                caret_x = min(masked_rect.right + 3, pwd_box.right - 12)
+            else:
+                caret_x = pwd_box.left + 14
+                placeholder = panel_layout.fit_single_line(
+                    typography, self._ui_message("wifi.password.placeholder"), FontRole.BODY,
+                    16, _Ink.FAINT, pwd_box.width - 40, min_size=11,
+                )
+                screen.blit(
+                    placeholder.surface,
+                    placeholder.surface.get_rect(midleft=(pwd_box.left + 22, pwd_box.centery)),
+                )
+            pygame.draw.line(
+                screen, _Ink.TEXT, (caret_x, pwd_box.centery - 11), (caret_x, pwd_box.centery + 11), 2
+            )
+        connect_btn = pygame.Rect(form_rect.left, form_rect.bottom - 48, form_rect.width, 48)
+        self._kit_button(
+            screen, connect_btn, self._ui_message("wifi.connect"), typography, pygame,
+            role="primary", size=17,
+        )
+        self._targets.append(PanelHitTarget("wifi_connect", None, connect_btn))
 
-            lbl_sec = _body(self._ui_message("wifi.security", level=selected.security.value.upper()), (118, 104, 93))
-            screen.blit(lbl_sec, (form_rect.left + 16, form_rect.top + 46))
+    @staticmethod
+    def _paint_signal(screen: Any, face: Any, signal_dbm: float, pygame: Any) -> None:
+        """Three rising bars, filled by signal strength (-90 .. -50 dBm)."""
 
-            if selected.security == WifiSecurity.PERSONAL:
-                pwd_label = _body(self._ui_message("wifi.password"))
-                screen.blit(pwd_label, (form_rect.left + 16, form_rect.top + 80))
-
-                pwd_box = pygame.Rect(form_rect.left + 16, form_rect.top + 106, form_rect.width - 32, 44)
-                self._blit_rounded_card(screen, pwd_box, (246, 236, 209), (255, 250, 240), pygame, (61, 44, 31), 1, radius=10)
-
-                masked = "•" * len(snapshot.passphrase) or self._ui_message("wifi.password.placeholder")
-                txt = _body(masked, (61, 44, 31) if snapshot.passphrase else (150, 140, 130))
-                screen.blit(txt, (pwd_box.left + 12, pwd_box.top + 12))
-
-            connect_btn = pygame.Rect(form_rect.left + 16, form_rect.bottom - 60, form_rect.width - 32, 44)
-            self._blit_rounded_card(screen, connect_btn, (246, 236, 209), (241, 185, 35), pygame, (61, 44, 31), 2, radius=12)
-            lbl_conn = _bold(self._ui_message("wifi.connect"))
-            screen.blit(lbl_conn, lbl_conn.get_rect(center=connect_btn.center))
-            self._targets.append(PanelHitTarget("wifi_connect", None, connect_btn))
-        else:
-            hint = _body(self._ui_message("wifi.choose"), (118, 104, 93))
-            screen.blit(hint, hint.get_rect(center=form_rect.center))
+        strength = max(0.0, min(1.0, (float(signal_dbm) + 90.0) / 40.0))
+        lit = 1 + int(strength * 2.999)
+        base_x, base_y = face.right - 26, face.centery + 8
+        for bar in range(3):
+            h = 6 + bar * 5
+            color = _Ink.TEXT if bar < lit else _Ink.TRACK
+            pygame.draw.rect(screen, color, pygame.Rect(base_x + bar * 6, base_y - h, 4, h))
 
     def _draw_ssh_tab(
         self,
@@ -3145,39 +3553,46 @@ class ParentSettingsOverlay:
         status = self._ssh_cached_status
 
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
-        self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
-
-        title = panel_layout.fit_single_line(
-            typography, self._ui_message("ssh.title"),
-            FontRole.TITLE, 22, (61, 44, 31), max(1, card.width - 48),
-            min_size=14,
+        pad = self._content_card(screen, card, pygame)
+        inner_w = card.width - pad * 2
+        # The warning is the intro, at the top, where it is read before the
+        # switch rather than after it.
+        y = self._draw_card_header(
+            screen, pygame, typography, card, pad,
+            self._ui_message("ssh.title"), self._ui_message("ssh.note"),
         )
-        panel_layout.blit_block(screen, title, pygame, card.left + 24, card.top + 20, bounds=card)
 
         if status is None:
-            waiting = self._get_text(self._ui_message("ssh.checking"), FontRole.BODY, 18, (118, 104, 93), typography)
-            screen.blit(waiting, (card.left + 24, card.top + 70))
+            waiting = panel_layout.fit_single_line(
+                typography, self._ui_message("ssh.checking"), FontRole.BODY, 16,
+                _Ink.MUTED, inner_w,
+            )
+            panel_layout.blit_block(screen, waiting, pygame, card.left + pad, y)
             return
 
-        def _body(text, color=(61, 44, 31)):
-            return self._get_text(text, FontRole.BODY, 18, color, typography)
-        def _bold(text, color=(61, 44, 31)):
-            return self._get_text(text, FontRole.CONTROL, 18, color, typography)
-
         is_on = status.active or status.enabled
-        badge_rect = pygame.Rect(card.left + 24, card.top + 58, 140, 36)
-        badge_bg = (47, 117, 81) if is_on else (181, 46, 46)
-        self._blit_rounded_card(screen, badge_rect, (246, 236, 209), badge_bg, pygame, radius=10)
-        lbl_status = _bold(self._ui_message("ssh.enabled") if is_on else self._ui_message("ssh.disabled"), (255, 255, 255))
-        screen.blit(lbl_status, lbl_status.get_rect(center=badge_rect.center))
+        badge_label = self._ui_message("ssh.enabled") if is_on else self._ui_message("ssh.disabled")
+        badge_w = max(150, panel_layout.measure(typography, badge_label, FontRole.CONTROL, 16)[0] + 36)
+        badge_rect = pygame.Rect(card.left + pad, y, badge_w, 44)
+        self._blit_rounded_card(
+            screen, badge_rect, _Ink.CARD, _Ink.SUCCESS if is_on else _Ink.MUTED, pygame,
+            radius=22,
+        )
+        badge = panel_layout.fit_single_line(
+            typography, badge_label, FontRole.CONTROL, 16, _Ink.WHITE, badge_w - 20
+        )
+        self._blit_centered(screen, badge, badge_rect)
 
-        toggle_btn = pygame.Rect(badge_rect.right + 20, card.top + 58, 160, 36)
-        self._blit_rounded_card(screen, toggle_btn, (246, 236, 209), (241, 185, 35), pygame, (61, 44, 31), 2, radius=10)
-        lbl_toggle = _bold(self._ui_message("ssh.turn_off") if is_on else self._ui_message("ssh.turn_on"))
-        screen.blit(lbl_toggle, lbl_toggle.get_rect(center=toggle_btn.center))
+        toggle_label = self._ui_message("ssh.turn_off") if is_on else self._ui_message("ssh.turn_on")
+        toggle_w = max(150, panel_layout.measure(typography, toggle_label, FontRole.CONTROL, 16)[0] + 40)
+        toggle_btn = pygame.Rect(badge_rect.right + 14, y, toggle_w, 46)
+        self._kit_button(
+            screen, toggle_btn, toggle_label, typography, pygame, role="primary", size=16,
+            focused=self._keyboard_focus_visible,
+        )
         self._targets.append(PanelHitTarget("ssh_toggle", None, toggle_btn))
+        y += 46 + 18
 
-        y = card.top + 116
         lines = [
             self._ui_message("ssh.admin", username=status.username),
             self._ui_message("ssh.ip", ip=status.host_ip),
@@ -3185,23 +3600,11 @@ class ParentSettingsOverlay:
             self._ui_message("ssh.command", username=status.username, ip=status.host_ip),
         ]
         for line in lines:
-            line_label = panel_layout.fit_single_line(
-                typography, line, FontRole.BODY, 18, (61, 44, 31),
-                max(1, card.width - 48), min_size=12,
+            block = panel_layout.fit_text_block(
+                typography, line, FontRole.BODY, 16, _Ink.TEXT, inner_w, max_lines=2,
             )
-            panel_layout.blit_block(screen, line_label, pygame, card.left + 24, y, bounds=card)
-            y += 28
-
-        note = panel_layout.fit_text_block(
-            typography, self._ui_message("ssh.note"),
-            FontRole.BODY, 16, (118, 104, 93),
-            max(1, card.width - 48), max_lines=2,
-        )
-        panel_layout.blit_block(
-            screen, note, pygame, card.left + 24,
-            max(y + 4, card.bottom - note.height - 16),
-            bounds=card,
-        )
+            panel_layout.blit_block(screen, block, pygame, card.left + pad, y)
+            y += block.height + 6
 
     def _draw_info_tab(
         self,
@@ -3219,27 +3622,23 @@ class ParentSettingsOverlay:
         host_ip = cached_status.host_ip if cached_status is not None else "…"
 
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
-        self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
-
-        title = panel_layout.fit_single_line(
-            typography, self._ui_message("info.title"),
-            FontRole.TITLE, 22, (61, 44, 31), max(1, card.width - 48),
-            min_size=14,
+        pad = self._content_card(screen, card, pygame)
+        inner_w = card.width - pad * 2
+        y = self._draw_card_header(
+            screen, pygame, typography, card, pad,
+            self._ui_message("info.title"), self._ui_message("info.intro"),
         )
-        panel_layout.blit_block(screen, title, pygame, card.left + 24, card.top + 20, bounds=card)
-
-        y = card.top + 64
-        lines = [
-            self._ui_message("info.intro"),
-            self._ui_message("info.step_wifi"),
-            self._ui_message("info.step_url", ip=host_ip),
-            self._ui_message("info.step_mdns"),
-            self._ui_message("info.step_login"),
-        ]
-        for line in lines:
-            block = panel_layout.fit_single_line(
-                typography, line, FontRole.BODY, 18,
-                (61, 44, 31), max(1, card.width - 48), min_size=11,
+        # Steps wrap instead of shrinking: fit_single_line squeezed the longer
+        # Italian steps to an 11 px size nobody could read across a room.
+        for key, variables, role in (
+            ("info.step_wifi", {}, FontRole.BODY),
+            ("info.step_url", {"ip": host_ip}, FontRole.CONTROL),
+            ("info.step_mdns", {}, FontRole.BODY),
+            ("info.step_login", {}, FontRole.BODY),
+        ):
+            block = panel_layout.fit_text_block(
+                typography, self._ui_message(key, **variables), role, 16, _Ink.TEXT,
+                inner_w, max_lines=2,
             )
-            panel_layout.blit_block(screen, block, pygame, card.left + 24, y, bounds=card)
-            y += 32
+            panel_layout.blit_block(screen, block, pygame, card.left + pad, y)
+            y += block.height + 10
