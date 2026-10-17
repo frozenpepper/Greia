@@ -61,6 +61,21 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-17 — Acer: playable games, mouse-first controls, launch hand-off, faster launches
+
+**Evidence class: PHYSICAL (developer Acer, remote `xdotool` input — not physical-input evidence) + SOURCE.** Details and tables: `docs/reviews/acer/2026-10-16_ACER_ACTIVITY_SWEEP.md` (sections from "Game verification at fce322b9" to "Final child-path sweep at 4d6e9c5e"); `make test` green at each commit (last 5,157 tests).
+
+**Done (fce322b9 … df4454c6):**
+- **Motion games playable on the Atom:** root cause was SDL per-pixel-alpha blits (~0.22 µs/px ≈ 134 ms full screen on pygame 2.1.2/SDL 2.26.5); `greia_platform.pygame_blit` RLE preparation in games, the control kit and cast poses; deadline frame pacing. Colline 4 → 24 fps, Dolphin 4.3 → 24, Volo 12 → 24, Treno 8.7 → 20, others 19–24; scenes come to rest when the child stops (no self-finishing; owner OK'd Colline's hold-to-drive).
+- **Mouse-first controls (owner rule):** compact control clusters + keycap keyboard hints (`ControlLayout.cluster`, `activity_keyboard_hint`, `ui.keycap.*`, catalogue 0.8.0) in 13 Activities; rules in `docs/product/ACTIVITY_INPUT_STANDARDS.md` and ADR 0037 §4a/§4b; audit `docs/reviews/activities/2026-10-16_CONTROL_PLACEMENT_AUDIT.md` (all items closed).
+- **Audio:** Activity mixer lease (closes after 30 s with no input/motion; Sound/Channel guarded — pygame 2.1.2 segfaults on a closed mixer); paced, faster synthesis with shared primitives in `greia_platform.pygame_audio` (242 cues byte-identical).
+- **Launch:** Shell launch card shown before `supervisor.start` and repainted by the Activity in a hidden-then-shown first window (black 1.3–4.3 s → 0 frames); protected Home visible from the card and cancels a loading launch (ADR 0019 §8); single-pass validation + per-session validation cache for unchanged built-ins (Encyclopedia repeat launch 14 → 5.3 s).
+- **Tooling/docs:** `tools/dev_source_deploy.py`; `validate_activity` enforces the runtime import allowlist (`cmath`, `numbers` added); Activity authoring skill consolidated with a one-shot checklist and a keep-current rule (owner request).
+
+**Open:** Quattro Amici token drop 10–16 fps; first launch after a Shell restart ~8 s median (a deploy-time validation record would remove the first-launch parse); Web Activities don't use the launch cover; two observed Home taps on a Collection page logged the profile out (check intended behaviour); Treno is hidden by the test profile's parental filter (no in-play fps); the badge card waits for a tap and its description touches the card edge; `final.mp4` and `launch-video/` at the repo root are another session's untracked work.
+
+**Next exact step:** re-film launches on df4454c6 through the Shell (0 black frames, Home visible from the card), then Quattro Amici token drop, then the deploy-time validation record in `tools/dev_source_deploy.py` / image build.
+
 ## 2026-10-16 — Acer reference device: in-place deploys, three sweeps, performance fixes
 
 **Evidence class: PHYSICAL (developer Acer Aspire One, Atom N270 i686, 1 GB, Debian 12, Python 3.11) for the measured items; input was remote `xdotool`, never physical-input evidence.** Full method, per-Activity tables and what was not verified: `docs/reviews/acer/2026-10-16_ACER_ACTIVITY_SWEEP.md` (sweep at 0148f113, re-sweep at 0f560c2e, third sweep at 15212f44, targeted re-measure at a8be76d7).
