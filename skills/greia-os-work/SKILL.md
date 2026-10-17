@@ -653,6 +653,11 @@ tile badge. Focused pure tests:
 provider-free suite and display acceptance still pending.
 
 
+### Activity launch hand-off (2026-10-17)
+
+`LauncherApplication._launch_selected` (`src/greia_launcher/main.py`) presents the launch screen before `supervisor.start` (package validation, brokers and sandbox set-up used to run with no feedback), captures it as a `LaunchCard` and publishes it to `<activity data>/.greia/launch-card` (`greia_platform.activity_launch_cover.LaunchCardPublisher`; fail-soft, symlink-safe, discarded when the launch lifecycle returns). The Activity entry paints it right after the Activity's first `set_mode` and removes it; the Shell treats the missing card as "covered" and stops repainting its hidden wait screen. Keep that order (present, publish, start) and keep the card a raw frame of what the Shell shows, so the hand-off stays seamless; a future display backend (R7) can keep the same contract. READY and Home/Back chrome timing are unchanged. Tests: `tests/test_activity_launch_cover.py`. ADR 0037 §6a *Launch cover*.
+
+
 ### Display-string API contract and render-path audit (2026-10-13)
 
 `LocalizedResources.text(key, variables=None)` is the actual public

@@ -20,6 +20,23 @@ from greia_platform.profiles import ProfileError
 from greia_platform.storage import StorageError
 
 
+class _FakeDisplay:
+    """No display surface: the pre-start launch screen draws nothing."""
+
+    def __init__(self) -> None:
+        self.flips = 0
+
+    def get_surface(self) -> None:
+        return None
+
+    def flip(self) -> None:
+        self.flips += 1
+
+
+def _fake_pygame() -> SimpleNamespace:
+    return SimpleNamespace(event=_FakeEvents(), display=_FakeDisplay())
+
+
 class _FakeEvents:
     def __init__(self) -> None:
         self.cleared = 0
@@ -65,7 +82,7 @@ class LaunchFailureContainmentTests(unittest.TestCase):
             )
         )
         shell = _shell(supervisor)
-        pygame = SimpleNamespace(event=_FakeEvents())
+        pygame = _fake_pygame()
 
         with self.assertLogs("greia_launcher.main", level="ERROR") as logs:
             shell._launch_selected(pygame)  # must not raise
@@ -96,20 +113,20 @@ class LaunchFailureContainmentTests(unittest.TestCase):
             with self.subTest(error=type(error).__name__):
                 shell = _shell(_RaisingSupervisor(error))
                 with self.assertLogs("greia_launcher.main", level="ERROR"):
-                    shell._launch_selected(SimpleNamespace(event=_FakeEvents()))
+                    shell._launch_selected(_fake_pygame())
                 self.assertTrue(shell._catalogue_error)
 
     def test_programming_error_is_contained_but_logged_with_traceback(self) -> None:
         shell = _shell(_RaisingSupervisor(AttributeError("bug in launch path")))
         with self.assertLogs("greia_launcher.main", level="ERROR") as logs:
-            shell._launch_selected(SimpleNamespace(event=_FakeEvents()))
+            shell._launch_selected(_fake_pygame())
         self.assertTrue(shell._catalogue_error)
         self.assertIsNotNone(logs.records[0].exc_info)
 
     def test_logged_cause_is_bounded(self) -> None:
         shell = _shell(_RaisingSupervisor(ProfileError("x" * 10_000)))
         with self.assertLogs("greia_launcher.main", level="ERROR") as logs:
-            shell._launch_selected(SimpleNamespace(event=_FakeEvents()))
+            shell._launch_selected(_fake_pygame())
         self.assertLess(len(logs.records[0].getMessage()), 600)
 
 

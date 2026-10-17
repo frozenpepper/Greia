@@ -52,6 +52,7 @@ from greia_platform.profiles import (
 )
 
 from greia_platform.history import HistoryError
+from greia_platform.activity_launch_cover import LaunchCard, LaunchCardPublisher
 from greia_platform.input_core import SemanticAction
 from greia_platform.storage import StorageError
 from .bootstrap import (
@@ -259,6 +260,8 @@ class LauncherApplication:
     RESCAN_SECONDS = 2.0
     #: State-dependent service cadence while an Activity owns the foreground.
     FOREGROUND_CADENCE = ActivityForegroundCadence()
+    #: Stateless, fail-soft owner of the per-launch card file (launch hand-off).
+    _launch_card_publisher = LaunchCardPublisher()
 
     def __init__(
         self,
@@ -1112,6 +1115,57 @@ class LauncherApplication:
             self._catalogue_error = True
             return
 
+        # Launch hand-off (see greia_platform.activity_launch_cover): present
+        # the launch screen *before* the start work (package validation,
+        # brokers, sandbox), then hand its exact pixels to the Activity, whose
+        # entry presents them in its new window at once instead of black.
+        self._draw_launch_overlay(pygame, text=launch_feedback(getattr(self, "_active_locale", "en")).overlay)
+        pygame.display.flip()
+        self._on_frame_presented(pygame.display.get_surface(), pygame)
+        _launch_feedback = time.monotonic()
+        launch_card_dir = self._publish_launch_card(manifest, pygame)
+        try:
+            self._run_launched_activity(
+                pygame, manifest, profile_id, authority, launch_card_dir, _launch_feedback
+            )
+        finally:
+            if launch_card_dir is not None:
+                self._launch_card_publisher.discard(launch_card_dir)
+
+    def _publish_launch_card(self, manifest: ActivityManifest, pygame: Any) -> Path | None:
+        """Publish the presented launch screen as this launch's card.
+
+        Returns the Activity data directory holding the card, or ``None``
+        (the Activity then covers its window with the theme colour). A stale
+        card left by an interrupted earlier launch is removed on failure.
+        """
+
+        profile = self._active_profile
+        screen = pygame.display.get_surface()
+        if profile is None or screen is None:
+            return None
+        try:
+            data_dir = profile.activity_data_dir(manifest.activity_id)
+        except (ProfileError, OSError):
+            return None
+        try:
+            card = LaunchCard.from_surface(screen, pygame)
+        except Exception:  # fail-soft: no card only means a theme-colour cover
+            card = None
+        if card is not None and self._launch_card_publisher.publish(data_dir, card):
+            return data_dir
+        self._launch_card_publisher.discard(data_dir)
+        return None
+
+    def _run_launched_activity(
+        self,
+        pygame: Any,
+        manifest: ActivityManifest,
+        profile_id: str,
+        authority: Any,
+        launch_card_dir: Path | None,
+        _launch_feedback: float,
+    ) -> None:
         try:
             activity_session = self.supervisor.start(
                 manifest, self._active_profile, authority
@@ -1123,11 +1177,10 @@ class LauncherApplication:
         picker_host = None
         picker_prepare_deadline = 0.0
         picker_next_prepare = 0.0
-
-        self._draw_launch_overlay(pygame, text=launch_feedback(getattr(self, "_active_locale", "en")).overlay)
-        pygame.display.flip()
-        self._on_frame_presented(pygame.display.get_surface(), pygame)
-        _launch_feedback = time.monotonic()
+        # True once the Activity entry painted the card in its own window and
+        # removed it: the Shell's wait screen is then hidden behind that
+        # window, so repainting it would only steal CPU from the start-up.
+        launch_covered = launch_card_dir is None
 
         try:
             while self._last_result is None:
@@ -1221,10 +1274,16 @@ class LauncherApplication:
                                 pygame.display.get_surface(), pygame
                             )
                 # While no trusted modal is visible the child owns the foreground;
-                # never repaint the hidden Shell except for pre-READY feedback.
+                # never repaint the hidden Shell except for pre-READY feedback
+                # that is still visible (not yet covered by the launch card).
+                if not launch_covered and not is_running:
+                    launch_covered = self._launch_card_publisher.consumed(
+                        launch_card_dir
+                    )
                 if (
                     not is_running
                     and not is_ready
+                    and not launch_covered
                     and self.FOREGROUND_CADENCE.wait_screen_due(now, _launch_feedback)
                 ):
                     self._draw_launch_overlay(pygame, text=launch_feedback(getattr(self, "_active_locale", "en")).overlay)
@@ -1272,9 +1331,10 @@ class LauncherApplication:
     ) -> None:
         """Fail one launch without taking the child Shell down.
 
-        Nothing has been presented yet, so the Shell simply stays on the
-        Collection page with the existing launch-error badge. Expected faults
-        log one bounded line; unexpected ones keep their traceback.
+        Only the launch screen has been presented; the next Shell frame
+        repaints the Collection page with the existing launch-error badge.
+        Expected faults log one bounded line; unexpected ones keep their
+        traceback.
         """
 
         detail = str(exc)[:_LAUNCH_ERROR_TEXT_LIMIT]
