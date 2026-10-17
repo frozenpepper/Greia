@@ -167,7 +167,7 @@ class FourLanguageRuntimeTextContract(unittest.TestCase):
         states = ("up", "down", "big", "small", "in", "out",
                   "open", "closed", "fast", "slow")
         manifest = tomllib.loads((activity / "activity.toml").read_text(encoding="utf-8"))
-        self.assertEqual(set(manifest["activity"]["languages"]), {"it", "en"})
+        self.assertEqual(set(manifest["activity"]["languages"]), {"it", "en", "es", "fr"})
         for language in LANGUAGES:
             with self.subTest(language=language):
                 strings = _strings(activity, language)

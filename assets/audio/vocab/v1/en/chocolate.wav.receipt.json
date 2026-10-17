@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:41:34.480647+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "en",
+    "text": "Chocolate",
+    "cue_id": "greia.vocab.chocolate.en",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/vocab/v1/en/chocolate.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Samantha",
+    "rate_wpm": 180,
+    "synthesis_text": "chocolate"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/vocab/v1/en/chocolate.wav",
+    "bytes": 25080,
+    "sha256": "e785a7a64bf922368b51c6cb2b5e4faeef65c49ce50bc46a2c8ee37260dfbe8e"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:57:23.136392+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Thank you!",
+    "cue_id": "greia.requested.thank_you.en",
+    "output": "tmp/greia-four-languages-20261017/review/activities/pasticceria_magica/assets/audio/en/thank_you.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.lilli.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "en",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Thank you.",
+    "score": 1.0,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/pasticceria_magica/assets/audio/en/thank_you.wav",
+    "bytes": 35800,
+    "sha256": "7883dd3ded6fa47546dc29a1108f5d51f35873203369f00ad931f3b08bb4efd8"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

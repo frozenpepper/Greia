@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:56:35.946380+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Allons pique-niquer !",
+    "cue_id": "greia.requested.lets_picnic.fr",
+    "output": "tmp/greia-four-languages-20261017/review/activities/costruiamo_ponti/assets/audio/fr/lets_picnic.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.tito.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "A l'on pique n'i kie,",
+    "score": 0.5367,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "activities/costruiamo_ponti/assets/audio/fr/lets_picnic.wav",
+    "bytes": 37122,
+    "sha256": "2ccb527d026da27a6fc8e5759944ff0a8d1d8d356d8ee9f86b1de611c9c1225c"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:42:03.711959+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Es hora de dormir",
+    "cue_id": "greia.requested.time_for_bed.es",
+    "output": "tmp/greia-four-languages-20261017/review/activities/cucciolo_mio/assets/audio/es/time_for_bed.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.lilli.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "es hora de dormir.",
+    "score": 1.0,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/cucciolo_mio/assets/audio/es/time_for_bed.wav",
+    "bytes": 68214,
+    "sha256": "0322f5b0000842f14e320e6063f053610c681edea84f21815682ecc35266f843"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

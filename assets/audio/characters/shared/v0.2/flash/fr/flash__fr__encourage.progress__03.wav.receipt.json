@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:49:25.397372+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Vas-y, continue !",
+    "cue_id": "greia.shared.flash__fr__encourage.progress__03.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/flash/fr/flash__fr__encourage.progress__03.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.flash.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Vas-y continue.",
+    "score": 1.0,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/flash/fr/flash__fr__encourage.progress__03.wav",
+    "bytes": 57188,
+    "sha256": "ee0f783a61b4f8af3372b7235de772bcdb0f7f4f79253a3c3e761731bc3a430b"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

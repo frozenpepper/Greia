@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:52:59.383221+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Fai saltare Oskar",
+    "cue_id": "greia.requested.jump_oskar.it",
+    "output": "tmp/greia-four-languages-20261017/review/activities/baia_delle_orche/assets/audio/it/jump_oskar.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.tito.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "it",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Fai sautaurioskele!",
+    "score": 0.5857,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "activities/baia_delle_orche/assets/audio/it/jump_oskar.wav",
+    "bytes": 46604,
+    "sha256": "ca77da6be0810dda5bb6643a2b897777671dcdbfc74016a1e3d039ef1810956a"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

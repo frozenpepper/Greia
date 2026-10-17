@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T09:00:00.429084+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Nuota fino al traguardo e raccogli le perle!",
+    "cue_id": "greia.requested.swim_finish.it",
+    "output": "tmp/greia-four-languages-20261017/review/activities/viaggio_delfino/assets/audio/it/swim_finish.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.tito.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "it",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "nuota fino al traguardo era cogile perle.",
+    "score": 0.8442,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/viaggio_delfino/assets/audio/it/swim_finish.wav",
+    "bytes": 116944,
+    "sha256": "9013ab8547f2ad4afc835044e4db5c288dafad0e1715907ff3752b92b8e8f3e0"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:47:18.673515+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "es",
+    "text": "¡Chu chu!",
+    "cue_id": "greia.requested.toot.es",
+    "output": "tmp/greia-four-languages-20261017/review/activities/treno_numeri/assets/audio/es/toot.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Mónica",
+    "rate_wpm": 185,
+    "synthesis_text": "¡Chu chu!"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/treno_numeri/assets/audio/es/toot.wav",
+    "bytes": 20006,
+    "sha256": "66340b8afc725165b87218bb73a97eb49df1e83c08684c79edb53f236de75c74"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

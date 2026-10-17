@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:01:28.776690+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Scegli un album!",
+    "cue_id": "greia.requested.choose_album.it",
+    "output": "tmp/greia-four-languages-20261017/review/activities/memory_meraviglie/assets/audio/it/choose_album.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.lilli.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "it",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Sceli un'album",
+    "score": 0.8609,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/memory_meraviglie/assets/audio/it/choose_album.wav",
+    "bytes": 61158,
+    "sha256": "462e8e1d845ceef3b97eedad84fe672d5456aa7f580b5dacdfeb69fde81f7145"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

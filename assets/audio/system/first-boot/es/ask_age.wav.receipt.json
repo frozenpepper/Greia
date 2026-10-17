@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:20:49.140546+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¿Cuántos años tienes? Elige tu número. También puedes saltarlo.",
+    "cue_id": "greia.first_boot.ask_age.es",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/system/first-boot/es/ask_age.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Cuantos años tienes? Elige tu número, también puedes saltarlo.",
+    "score": 0.9501,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/system/first-boot/es/ask_age.wav",
+    "bytes": 194118,
+    "sha256": "aa70e83cdef59705cf3fbd17a930846a088006f4eae712071e3377b188e100c9"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

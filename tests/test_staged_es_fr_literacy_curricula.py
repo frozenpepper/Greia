@@ -74,11 +74,11 @@ class StagedLiteracyCurriculumTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             get_sound_units("de")
 
-    def test_staged_lessons_are_not_advertised_without_approved_speech(self) -> None:
+    def test_literacy_lessons_advertise_the_four_released_languages(self) -> None:
         for activity in ("festa_delle_rime", "officina_dei_suoni"):
             with self.subTest(activity=activity):
                 manifest = tomllib.loads((ROOT / "activities" / activity / "activity.toml").read_text(encoding="utf-8"))
-                self.assertEqual(manifest["activity"]["languages"], ["it", "en"])
+                self.assertEqual(manifest["activity"]["languages"], ["it", "en", "es", "fr"])
 
 
     def test_source_only_inventory_contains_staged_voices_without_fake_scripts(self) -> None:

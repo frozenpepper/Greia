@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:25:18.913050+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "en",
+    "text": "Two!",
+    "cue_id": "greia.numbers.2.en",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/numbers/v1/en/2.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Samantha",
+    "rate_wpm": 180,
+    "synthesis_text": "two!"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/numbers/v1/en/2.wav",
+    "bytes": 16090,
+    "sha256": "eeb666b508a836fd3b7c5621b7998e217459efe5d00c1e870273a055a4ef9278"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T11:31:07.488923+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Hourra ! Ta Greia est prête. Allons explorer !",
+    "cue_id": "greia.first_boot.celebrate.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/system/first-boot/fr/celebrate.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "«Oh raaaaaa ! » Tegré YAY PRIT ! All Loix Blourie !",
+    "score": 0.3289,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "assets/audio/system/first-boot/fr/celebrate.wav",
+    "bytes": 191028,
+    "sha256": "10bf03820615e13803bb9d4fa7fe329c6c427ee0504f4f0e5ae71c1d38753e09"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

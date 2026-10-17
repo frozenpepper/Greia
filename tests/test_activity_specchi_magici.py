@@ -339,7 +339,7 @@ class PackageTests(unittest.TestCase):
         manifest = tomllib.loads((ACTIVITY_ROOT / "activity.toml").read_text(encoding="utf-8"))
         education = manifest["education"]
         self.assertEqual(manifest["activity"]["id"], "org.greia.specchi-magici")
-        self.assertEqual(manifest["activity"]["languages"], ["it", "en"])
+        self.assertEqual(manifest["activity"]["languages"], ["it", "en", "es", "fr"])
         self.assertEqual(manifest["input"]["profile"], "hybrid")
         self.assertIn("symmetry", education["categories"])
         self.assertEqual((education["recommended_age_min"], education["recommended_age_max"]), (5, 7))

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:59:15.267111+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Hourra !",
+    "cue_id": "greia.shared.momo__fr__celebrate.success__02.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__celebrate.success__02.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.momo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/momo/fr/momo__fr__celebrate.success__02.wav",
+    "bytes": 47928,
+    "sha256": "088be35ce0626cfce783782a3c77b30c64d7c79ec303aa35f8226d54825c4057"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

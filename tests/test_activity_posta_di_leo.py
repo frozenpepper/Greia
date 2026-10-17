@@ -281,7 +281,7 @@ class ManifestAndLocaleTests(unittest.TestCase):
     def test_manifest_matches_the_picture_postcard_experience(self) -> None:
         manifest = tomllib.loads((ACTIVITY_ROOT / "activity.toml").read_text(encoding="utf-8"))
         self.assertEqual(manifest["activity"]["id"], "org.greia.posta-di-leo")
-        self.assertEqual(manifest["activity"]["languages"], ["it", "en"])
+        self.assertEqual(manifest["activity"]["languages"], ["it", "en", "es", "fr"])
         self.assertEqual(manifest["input"]["profile"], "hybrid")
         self.assertEqual(manifest["requirements"]["required_capabilities"], ["display", "pointer"])
         self.assertEqual(manifest["education"]["recommended_age_min"], 4)

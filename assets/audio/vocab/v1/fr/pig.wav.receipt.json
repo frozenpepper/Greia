@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:43:52.698708+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "fr",
+    "text": "Cochon",
+    "cue_id": "greia.vocab.pig.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/vocab/v1/fr/pig.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Thomas",
+    "rate_wpm": 175,
+    "synthesis_text": "cochon"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/vocab/v1/fr/pig.wav",
+    "bytes": 19906,
+    "sha256": "a7645a7971595621acd87d7c4a2997e1b30140ba981793a8bf703b2ded3403de"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:41:29.965785+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "fr",
+    "text": "Chaise",
+    "cue_id": "greia.vocab.chair.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/vocab/v1/fr/chair.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Thomas",
+    "rate_wpm": 175,
+    "synthesis_text": "chaise"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/vocab/v1/fr/chair.wav",
+    "bytes": 25504,
+    "sha256": "bcb7242f7bf414bcc8727af4469fc3a01fb7a5179fd1ae0d91264bf765107b71"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:11:50.025073+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Trois alignés !",
+    "cue_id": "greia.requested.three_in_row.fr",
+    "output": "tmp/greia-four-languages-20261017/review/activities/quattro_amici/assets/audio/fr/three_in_row.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Tot a l'iné",
+    "score": 0.4333,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "activities/quattro_amici/assets/audio/fr/three_in_row.wav",
+    "bytes": 56750,
+    "sha256": "04382de76a68bc59c75ff50aecdba5ce54438a31b63e70fc50314ebc8df8e15d"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

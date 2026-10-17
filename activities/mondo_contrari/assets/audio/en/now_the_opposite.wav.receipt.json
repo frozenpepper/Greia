@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:00:47.202599+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Now the opposite!",
+    "cue_id": "greia.requested.now_the_opposite.en",
+    "output": "tmp/greia-four-languages-20261017/review/activities/mondo_contrari/assets/audio/en/now_the_opposite.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.flash.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "en",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Now the opposite.",
+    "score": 1.0,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/mondo_contrari/assets/audio/en/now_the_opposite.wav",
+    "bytes": 69980,
+    "sha256": "de3d979bb47236f0c7edfd67c5d0cb32d4dc1a6793617b9ca4ab1c6dfb6ea3fa"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:48:06.134776+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "en",
+    "text": "What a beautiful garden!",
+    "cue_id": "greia.requested.beautiful_garden.en",
+    "output": "tmp/greia-four-languages-20261017/review/activities/shape_garden/assets/audio/en/beautiful_garden.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Samantha",
+    "rate_wpm": 190,
+    "synthesis_text": "What a beautiful garden!"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/shape_garden/assets/audio/en/beautiful_garden.wav",
+    "bytes": 48890,
+    "sha256": "5c50130c4ce15b80368009f7fc6191ea831c9e2a1c6f9d248b930a442f7f2e6e"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

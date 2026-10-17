@@ -85,7 +85,12 @@ class StagedActivityTranslationTests(unittest.TestCase):
                             _fields(value), _fields(english["strings"][key]),
                             f"{activity}/{locale}/{key}: missing interpolation placeholders"
                         )
-                    self.assertEqual(localized["audio"], {})
+                    # A declared ES/FR audio cue must be a real file in that
+                    # language (never an English clip reused under ES/FR).
+                    for key, entry in localized["audio"].items():
+                        relative = entry["path"]
+                        self.assertIn(f"/{locale}/", f"/{relative}", key)
+                        self.assertTrue((root / relative).is_file(), relative)
 
     def test_submarine_orders_and_spoken_aliases_have_consistent_translation(self) -> None:
         package = ROOT / "activities/sottomarino_giramondo/locales"
@@ -118,7 +123,7 @@ class StagedActivityTranslationTests(unittest.TestCase):
             base = ROOT / "activities" / activity
             source = json.loads((base / "locales/en.json").read_text(encoding="utf-8"))
             manifest = tomllib.loads((base / "activity.toml").read_text(encoding="utf-8"))
-            self.assertEqual(set(manifest["activity"]["languages"]), {"en", "it"})
+            self.assertEqual(set(manifest["activity"]["languages"]), {"en", "it", "es", "fr"})
             for locale in ("es", "fr"):
                 with self.subTest(activity=activity, locale=locale):
                     bundle = json.loads((base / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
@@ -186,8 +191,8 @@ class StagedActivityTranslationTests(unittest.TestCase):
                     .read_text(encoding="utf-8")
                 )
                 self.assertEqual(
-                    set(manifest["activity"]["languages"]), {"en", "it"},
-                    "Candidate vocabulary does not authorize ES/FR launch",
+                    set(manifest["activity"]["languages"]), {"en", "it", "es", "fr"},
+                    "Word Forest advertises the four released languages",
                 )
 
     def test_existing_dolphin_voice_cues_use_exact_caption_keys_in_both_base_locales(self) -> None:
@@ -219,7 +224,7 @@ class StagedActivityTranslationTests(unittest.TestCase):
         self.assertEqual(len(en["strings"]), 260)
         self.assertEqual(len(en["audio"]), 200)
         manifest = tomllib.loads((base / "activity.toml").read_text(encoding="utf-8"))
-        self.assertEqual(set(manifest["activity"]["languages"]), {"en", "it"})
+        self.assertEqual(set(manifest["activity"]["languages"]), {"en", "it", "es", "fr"})
         for locale in ("es", "fr"):
             with self.subTest(locale=locale):
                 staged = json.loads((base / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
@@ -290,8 +295,8 @@ class StagedActivityTranslationTests(unittest.TestCase):
                     f"{activity}: neutral declaration changed",
                 )
                 continue
-            self.assertEqual(set(declared), {"en", "it"},
-                             f"{activity}: do not claim ES/FR before voice acceptance")
+            self.assertEqual(set(declared), {"en", "it", "es", "fr"},
+                             f"{activity}: must declare exactly the four released languages")
 
     def test_staging_does_not_duplicate_english_copy_for_all_strings(self) -> None:
         for activity in STAGED:

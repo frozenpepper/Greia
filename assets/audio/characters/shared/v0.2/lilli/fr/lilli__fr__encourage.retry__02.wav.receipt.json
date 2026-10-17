@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T11:54:06.363202+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Presque ! On essaie encore !",
+    "cue_id": "greia.shared.lilli__fr__encourage.retry__02.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__encourage.retry__02.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.lilli.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "presque omission encore",
+    "score": 0.7255,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__encourage.retry__02.wav",
+    "bytes": 92688,
+    "sha256": "47fc6182ad013278917b58f1f0058e39f63e193b6a1659550c49cfad13b51626"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

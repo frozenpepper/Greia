@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T11:36:57.356458+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Aligne-en trois !",
+    "cue_id": "greia.requested.make_three_in_row.fr",
+    "output": "tmp/greia-four-languages-20261017/review/activities/quattro_amici/assets/audio/fr/make_three_in_row.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Elle電焽tre",
+    "score": 0.2167,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "activities/quattro_amici/assets/audio/fr/make_three_in_row.wav",
+    "bytes": 36904,
+    "sha256": "24126366a5901983e70accf06dda6123a617a4ea998b8af11ed497fcff3e2fdb"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

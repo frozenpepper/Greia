@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:08:05.700517+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Try this spot!",
+    "cue_id": "greia.requested.try_this_spot.en",
+    "output": "tmp/greia-four-languages-20261017/review/activities/specchi_magici/assets/audio/en/try_this_spot.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.lilli.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "en",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Try this spot.",
+    "score": 1.0,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/specchi_magici/assets/audio/en/try_this_spot.wav",
+    "bytes": 49694,
+    "sha256": "3cb5beb44446929ea51821437704b50bcadcf697b7317f4b20f3040e036ad136"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:32:01.815048+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "it",
+    "text": "Nove!",
+    "cue_id": "greia.wired.count_9.it",
+    "output": "tmp/greia-four-languages-20261017/review/activities/treno_numeri/assets/audio/it/count_9.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Alice",
+    "rate_wpm": 175,
+    "synthesis_text": "nove!"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/treno_numeri/assets/audio/it/count_9.wav",
+    "bytes": 18422,
+    "sha256": "20b63c1dde70344618919e96aee5400ae2b316a9a5ec9552cc56c77661dbac7a"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

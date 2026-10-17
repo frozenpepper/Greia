@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:05:53.128470+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Hola! ¡Soy Lilli! Me encanta inventar historias, dibujar cosas de colores y encontrar un poco de magia en todas partes. ¿Tienes una idea divertida? ¡Ven conmigo!",
+    "cue_id": "greia.shared.lilli.es",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/_intros/es/lilli.ogg",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.lilli.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "¡Hola! Soy Líi! Me encanta inventar historias, dibujar cosas de colores y encontrar un poco de magia en todas partes. Tienes una idea divertida, me incommigo.",
+    "score": 0.9407,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/_intros/es/lilli.ogg",
+    "bytes": 92021,
+    "sha256": "09c84bda507b2d7cb64cd6a19285e8b013a7f0f6d507b71f70da2a17b39fc69e"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

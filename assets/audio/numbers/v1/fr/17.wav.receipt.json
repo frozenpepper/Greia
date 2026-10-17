@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:27:19.076077+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "fr",
+    "text": "Dix-sept !",
+    "cue_id": "greia.numbers.17.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/numbers/v1/fr/17.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Thomas",
+    "rate_wpm": 175,
+    "synthesis_text": "dix-sept !"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/numbers/v1/fr/17.wav",
+    "bytes": 37952,
+    "sha256": "90ea43e078d045a016dcd995593d42ebdcd32b3f37746391bf9da22bbbd98ffe"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:25:13.519435+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Mar",
+    "cue_id": "greia.launcher.sea.es",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/system/launcher-labels/es/sea.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/system/launcher-labels/es/sea.wav",
+    "bytes": 26758,
+    "sha256": "433f44b042c133d38e534fbce4e513dc348c02bc6141d4312416a8eecc30367b"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

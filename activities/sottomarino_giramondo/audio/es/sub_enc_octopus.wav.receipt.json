@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:29:13.766299+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡El pulpo le hace cosquillas al cristal! ¡Toca la sirena o haz burbujas!",
+    "cue_id": "greia.submarine.sub_enc_octopus.es",
+    "output": "tmp/greia-four-languages-20261017/review/activities/sottomarino_giramondo/audio/es/sub_enc_octopus.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "El pulpo le hace cosquillas al cristal, toca la sirena o asburbúcas.",
+    "score": 0.9192,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/sottomarino_giramondo/audio/es/sub_enc_octopus.wav",
+    "bytes": 234250,
+    "sha256": "1e462fb6b71cd055af6022275da9c41f42742792957e978de3f708c63f1255e4"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

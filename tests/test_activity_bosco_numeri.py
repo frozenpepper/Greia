@@ -61,7 +61,7 @@ class ManifestTests(unittest.TestCase):
         data = tomllib.loads((ACTIVITY_ROOT / "activity.toml").read_text(encoding="utf-8"))
         act = data["activity"]
         self.assertEqual(act["id"], "org.greia.bosco-numeri")  # package id kept
-        self.assertEqual(act["languages"], ["it", "en"])
+        self.assertEqual(act["languages"], ["it", "en", "es", "fr"])
         edu = data["education"]
         self.assertEqual((edu["recommended_age_min"], edu["recommended_age_max"]), (4, 6))
         self.assertTrue(edu["adaptive_difficulty"])
@@ -105,8 +105,10 @@ class ContentTests(unittest.TestCase):
                 with self.subTest(locale=locale, value=value):
                     self.assertEqual(_receipt_text(locale, f"count_{value}"), f"{words[value - 1]}!")
                     self.assertIn(str(value), _receipt_text(locale, f"ask_{value}"))
-        # Zero has no recording yet: it stays silent (requested from the owner).
-        self.assertFalse((ACTIVITY_ROOT / "assets" / "audio" / "en" / "count_0.wav").exists())
+        # Zero was recorded on 2026-10-17 (owner-approved request list).
+        self.assertEqual(_receipt_text("en", "count_0"), "Zero!")
+        self.assertEqual(_receipt_text("it", "count_0"), "Zero!")
+        self.assertIn("0", _receipt_text("en", "ask_0"))
 
     def test_every_numeral_has_a_library_friend_and_stroke_shapes(self) -> None:
         from bosco_art import resolve_picture
@@ -603,7 +605,7 @@ class AudioTests(unittest.TestCase):
             self.assertTrue(audio.has_speech("ask_10"))
             self.assertTrue(audio.has_speech("intro"))
             self.assertFalse(audio.has_speech("mode_count"))  # old counting-mode line unused
-            self.assertFalse(audio.has_speech("count_0"))
+            self.assertTrue(audio.has_speech("count_0"))
             self.assertTrue(audio.has_speech("tito.retry"))
         finally:
             pygame.mixer.quit()

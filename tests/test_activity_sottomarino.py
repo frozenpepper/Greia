@@ -101,7 +101,7 @@ class SottomarinoModelTests(unittest.TestCase):
         self.assertNotIn("submarine.depth_milestone", events)
         self.assertNotIn("create", data["presentation"]["categories"])
         self.assertEqual(data["activity"]["id"], "org.greia.sottomarino-giramondo")
-        self.assertEqual(set(data["activity"]["languages"]), {"it", "en"})
+        self.assertEqual(set(data["activity"]["languages"]), {"it", "en", "es", "fr"})
 
     def test_biome_transitions(self):
         self.assertEqual(get_biome(0.0), BiomeType.SHALLOW_REEF)

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:46:43.144528+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "it",
+    "text": "Tartaruga",
+    "cue_id": "greia.vocab.turtle.it",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/vocab/v1/it/turtle.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Alice",
+    "rate_wpm": 175,
+    "synthesis_text": "tartaruga"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/vocab/v1/it/turtle.wav",
+    "bytes": 27386,
+    "sha256": "5e4f9e556e8c2b9409683c48bb540cba67999564c45d5fa05973e0f574f8e5a3"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

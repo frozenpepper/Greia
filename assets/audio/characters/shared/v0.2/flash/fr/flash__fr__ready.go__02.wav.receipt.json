@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:50:19.585282+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "C'est prêt ? Partez !",
+    "cue_id": "greia.shared.flash__fr__ready.go__02.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/flash/fr/flash__fr__ready.go__02.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.flash.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "C'est prêt ? Parti !",
+    "score": 0.8534,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/flash/fr/flash__fr__ready.go__02.wav",
+    "bytes": 56526,
+    "sha256": "9dde41cb8725037c4d345f6a5aaabc5f8946102efd9bdda3397c493be5336b73"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

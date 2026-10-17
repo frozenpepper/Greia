@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:04:19.350548+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "C'est prêt ? Partez !",
+    "cue_id": "greia.shared.momo__fr__ready.go__02.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/momo/fr/momo__fr__ready.go__02.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.momo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "C'est prêt ? D'arté !",
+    "score": 0.7686,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/momo/fr/momo__fr__ready.go__02.wav",
+    "bytes": 80340,
+    "sha256": "9d997fbf434daf384aa3e14934cfd0c3f391e15f57d8dfbcb28e1a76623a910a"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

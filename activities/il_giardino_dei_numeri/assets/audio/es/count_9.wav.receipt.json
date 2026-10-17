@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:28:27.861550+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "es",
+    "text": "¡Nueve!",
+    "cue_id": "greia.wired.count_9.es",
+    "output": "tmp/greia-four-languages-20261017/review/activities/il_giardino_dei_numeri/assets/audio/es/count_9.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Mónica",
+    "rate_wpm": 175,
+    "synthesis_text": "¡nueve!"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/il_giardino_dei_numeri/assets/audio/es/count_9.wav",
+    "bytes": 17810,
+    "sha256": "d310c054ca682377927c7632ab8082b2bcb65cc3e6e0dcd6bb4dde761f1cc37b"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

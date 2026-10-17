@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T11:33:13.485139+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Est-ce assez long ?",
+    "cue_id": "greia.requested.long_enough.fr",
+    "output": "tmp/greia-four-languages-20261017/review/activities/costruiamo_ponti/assets/audio/fr/long_enough.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.tito.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Essasseraons.",
+    "score": 0.3586,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "activities/costruiamo_ponti/assets/audio/fr/long_enough.wav",
+    "bytes": 35138,
+    "sha256": "5c062a97ae659a419585a7d85bf11d409c870846eb13dd846475d5a322a93c34"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:10:51.803956+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Leo is thinking…",
+    "cue_id": "greia.requested.leo_thinking.en",
+    "output": "tmp/greia-four-languages-20261017/review/activities/quattro_amici/assets/audio/en/leo_thinking.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.flash.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "en",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Leo is thinking",
+    "score": 1.0,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "activities/quattro_amici/assets/audio/en/leo_thinking.wav",
+    "bytes": 78358,
+    "sha256": "40bc2f08da6fc84ee772f687633afce778bef4df5ecffe23b5a84ed301ab97b6"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

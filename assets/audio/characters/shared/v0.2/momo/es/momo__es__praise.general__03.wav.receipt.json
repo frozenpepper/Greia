@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:58:02.436509+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "shared_character_utterance",
+    "locale": "es",
+    "text": "¡Muy bien hecho!",
+    "cue_id": "greia.shared.momo__es__praise.general__03.es",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/momo/es/momo__es__praise.general__03.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.momo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Muy bien, ¿no?",
+    "score": 0.7533,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/momo/es/momo__es__praise.general__03.wav",
+    "bytes": 82768,
+    "sha256": "46486bfa5affb87d9e1aa7000bc40c8bc867ee22c45585015d49be74d0ba6bd0"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

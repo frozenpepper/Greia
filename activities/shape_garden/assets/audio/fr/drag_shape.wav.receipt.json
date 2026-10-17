@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:48:05.071313+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "fr",
+    "text": "Fais glisser une forme dans le jardin !",
+    "cue_id": "greia.requested.drag_shape.fr",
+    "output": "tmp/greia-four-languages-20261017/review/activities/shape_garden/assets/audio/fr/drag_shape.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Thomas",
+    "rate_wpm": 185,
+    "synthesis_text": "Fais glisser une forme dans le jardin !"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/shape_garden/assets/audio/fr/drag_shape.wav",
+    "bytes": 81800,
+    "sha256": "e5e2edfea55333065f2f7f4c168ce083eb309c5a0eea354fac946c2f9eb808ec"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

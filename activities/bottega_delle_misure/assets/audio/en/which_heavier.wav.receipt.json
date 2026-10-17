@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:47:34.844977+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "en",
+    "text": "Which one is heavier?",
+    "cue_id": "greia.requested.which_heavier.en",
+    "output": "tmp/greia-four-languages-20261017/review/activities/bottega_delle_misure/assets/audio/en/which_heavier.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Samantha",
+    "rate_wpm": 190,
+    "synthesis_text": "Which one is heavier?"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/bottega_delle_misure/assets/audio/en/which_heavier.wav",
+    "bytes": 45292,
+    "sha256": "18d3cdebfe17177f12e6947875712c6c91651265912ea762d4d69579be86834c"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:47:57.056401+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "es",
+    "text": "¡Gíralo!",
+    "cue_id": "greia.requested.turn_it.es",
+    "output": "tmp/greia-four-languages-20261017/review/activities/torre_forme/assets/audio/es/turn_it.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Mónica",
+    "rate_wpm": 185,
+    "synthesis_text": "¡Gíralo!"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/torre_forme/assets/audio/es/turn_it.wav",
+    "bytes": 20512,
+    "sha256": "2449f01eb09f1be2bc1a04e7fdca45f40cef83812df138ad91008ebc9d6dd03b"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

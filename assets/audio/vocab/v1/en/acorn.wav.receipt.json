@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:40:38.254829+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "en",
+    "text": "Acorn",
+    "cue_id": "greia.vocab.acorn.en",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/vocab/v1/en/acorn.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Samantha",
+    "rate_wpm": 180,
+    "synthesis_text": "acorn"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/vocab/v1/en/acorn.wav",
+    "bytes": 27574,
+    "sha256": "63878c0d8a542e2f6f565ea18865cb654d213fc98134c25f2d4bbaa7dfcbe9ee"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

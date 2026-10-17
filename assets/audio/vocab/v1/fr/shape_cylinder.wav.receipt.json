@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:45:12.616638+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "fr",
+    "text": "Cylindre",
+    "cue_id": "greia.vocab.shape_cylinder.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/vocab/v1/fr/shape_cylinder.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Thomas",
+    "rate_wpm": 175,
+    "synthesis_text": "cylindre"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/vocab/v1/fr/shape_cylinder.wav",
+    "bytes": 31148,
+    "sha256": "8ce8bcd9a97b60db11954e278c8ea04c105d40bcdd82f8da343a7a75cd1a7e6b"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

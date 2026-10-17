@@ -264,7 +264,7 @@ class PackageTests(unittest.TestCase):
         manifest = tomllib.loads((ACTIVITY_DIR / "activity.toml").read_text(encoding="utf-8"))
         education = manifest["education"]
         self.assertEqual(manifest["activity"]["id"], "org.greia.nanna-delle-nuvolette")
-        self.assertEqual(set(manifest["activity"]["languages"]), {"en", "it"})
+        self.assertEqual(set(manifest["activity"]["languages"]), {"en", "it", "es", "fr"})
         self.assertEqual(manifest["input"]["profile"], "hybrid")
         self.assertIn("color_shape_matching", education["categories"])
         skills = {skill["id"] for skill in education["skills"]}

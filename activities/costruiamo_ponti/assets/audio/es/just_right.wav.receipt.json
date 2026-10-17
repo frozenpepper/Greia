@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:54:06.160323+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Justo!",
+    "cue_id": "greia.requested.just_right.es",
+    "output": "tmp/greia-four-languages-20261017/review/activities/costruiamo_ponti/assets/audio/es/just_right.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.tito.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/costruiamo_ponti/assets/audio/es/just_right.wav",
+    "bytes": 37344,
+    "sha256": "d1f15ca6418813d65cad0b454761d32c0b8c7237eea2b69ac44193195442ee5e"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T11:59:52.160229+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Plein de bulles d'air !",
+    "cue_id": "greia.submarine.sub_btn_bubbles.fr",
+    "output": "tmp/greia-four-languages-20261017/review/activities/sottomarino_giramondo/audio/fr/sub_btn_bubbles.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Plein de boule d'air.",
+    "score": 0.8824,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/sottomarino_giramondo/audio/fr/sub_btn_bubbles.wav",
+    "bytes": 70638,
+    "sha256": "2e0ed05db7b169c9b4723a3e4dff81b43de399beeba147312c714a9a0ce5c72c"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

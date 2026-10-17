@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:30:15.621898+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Un nuovo amico!",
+    "cue_id": "greia.requested.new_friend.it",
+    "output": "tmp/greia-four-languages-20261017/review/activities/morbidi_mostriciattoli/assets/audio/it/new_friend.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.momo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "it",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "un nuovo amico",
+    "score": 1.0,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/morbidi_mostriciattoli/assets/audio/it/new_friend.wav",
+    "bytes": 62700,
+    "sha256": "efabd44b3ff4cc413b5e93668c338a18b8e8b1a2c6a6264c7497fd30c9f26387"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

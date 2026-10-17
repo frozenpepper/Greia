@@ -183,7 +183,7 @@ class ManifestAndLocaleTests(unittest.TestCase):
         manifest = tomllib.loads((ACTIVITY_ROOT / "activity.toml").read_text(encoding="utf-8"))
         self.assertEqual(manifest["activity"]["id"], "org.greia.mondo-contrari")
         self.assertEqual(manifest["activity"]["legacy_ids"], ["mondo_contrari"])
-        self.assertEqual(set(manifest["activity"]["languages"]), {"it", "en"})
+        self.assertEqual(set(manifest["activity"]["languages"]), {"it", "en", "es", "fr"})
         education = manifest["education"]
         self.assertEqual((education["recommended_age_min"], education["recommended_age_max"]), (3, 5))
         self.assertTrue(education["adaptive_difficulty"])

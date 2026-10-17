@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:28:21.508846+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "fr",
+    "text": "Huit !",
+    "cue_id": "greia.wired.count_8.fr",
+    "output": "tmp/greia-four-languages-20261017/review/activities/il_giardino_dei_numeri/assets/audio/fr/count_8.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Thomas",
+    "rate_wpm": 175,
+    "synthesis_text": "huit !"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/il_giardino_dei_numeri/assets/audio/fr/count_8.wav",
+    "bytes": 19934,
+    "sha256": "78f91bd362239823ef59b181617c68733fee87dc32a27be928fe51ab171c595e"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

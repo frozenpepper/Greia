@@ -226,7 +226,7 @@ class ManifestAndLocaleTests(unittest.TestCase):
     def test_manifest_matches_the_subitizing_rung(self) -> None:
         manifest = tomllib.loads((ACTIVITY_ROOT / "activity.toml").read_text(encoding="utf-8"))
         self.assertEqual(manifest["activity"]["id"], "org.greia.luci-di-momo")
-        self.assertEqual(manifest["activity"]["languages"], ["it", "en"])
+        self.assertEqual(manifest["activity"]["languages"], ["it", "en", "es", "fr"])
         self.assertEqual(manifest["input"]["profile"], "hybrid")
         education = manifest["education"]
         self.assertEqual((education["recommended_age_min"], education["recommended_age_max"]), (4, 6))

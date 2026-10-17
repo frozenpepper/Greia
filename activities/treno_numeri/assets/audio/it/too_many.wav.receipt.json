@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:47:11.089355+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "it",
+    "text": "Troppi! Togline qualcuno.",
+    "cue_id": "greia.requested.too_many.it",
+    "output": "tmp/greia-four-languages-20261017/review/activities/treno_numeri/assets/audio/it/too_many.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Alice",
+    "rate_wpm": 185,
+    "synthesis_text": "Troppi! Togline qualcuno."
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/treno_numeri/assets/audio/it/too_many.wav",
+    "bytes": 70602,
+    "sha256": "dcaf110016e620e94c1765ee9e72c42ce073841625b0cd6d572b0082402bc6ba"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

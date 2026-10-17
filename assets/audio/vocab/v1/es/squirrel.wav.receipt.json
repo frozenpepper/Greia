@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:46:00.779304+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "es",
+    "text": "Ardilla",
+    "cue_id": "greia.vocab.squirrel.es",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/vocab/v1/es/squirrel.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Mónica",
+    "rate_wpm": 175,
+    "synthesis_text": "ardilla"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/vocab/v1/es/squirrel.wav",
+    "bytes": 24004,
+    "sha256": "5ead9337008dcde362e7beb2e08d27f4f55ed8798dbb71acf33dd354abc1b9ad"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

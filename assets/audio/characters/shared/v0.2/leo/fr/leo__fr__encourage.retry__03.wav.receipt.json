@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T11:55:41.590079+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Encore une fois !",
+    "cue_id": "greia.shared.leo__fr__encourage.retry__03.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/leo/fr/leo__fr__encourage.retry__03.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Brit à Gauren Forre",
+    "score": 0.1912,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/leo/fr/leo__fr__encourage.retry__03.wav",
+    "bytes": 41314,
+    "sha256": "991122db2876d90b81f9773746bea9dc996d5ce900d01b7f70dec09837fc3b1e"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

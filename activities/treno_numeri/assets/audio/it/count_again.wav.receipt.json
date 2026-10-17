@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:47:04.352791+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "it",
+    "text": "Contiamo di nuovo.",
+    "cue_id": "greia.requested.count_again.it",
+    "output": "tmp/greia-four-languages-20261017/review/activities/treno_numeri/assets/audio/it/count_again.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Alice",
+    "rate_wpm": 185,
+    "synthesis_text": "Contiamo di nuovo."
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/treno_numeri/assets/audio/it/count_again.wav",
+    "bytes": 43712,
+    "sha256": "b0f9482b56b20a77848150e6b7a2e571ba47b2062119b4b5ead5f98c88462e87"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

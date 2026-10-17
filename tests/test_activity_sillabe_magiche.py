@@ -281,7 +281,7 @@ class ManifestAndTextTests(unittest.TestCase):
     def test_manifest_matches_the_literacy_ladder_rung(self) -> None:
         manifest = tomllib.loads((ACTIVITY_ROOT / "activity.toml").read_text(encoding="utf-8"))
         self.assertEqual(manifest["activity"]["id"], "org.greia.sillabe-magiche")
-        self.assertEqual(manifest["activity"]["languages"], ["it", "en"])
+        self.assertEqual(manifest["activity"]["languages"], ["it", "en", "es", "fr"])
         self.assertEqual(manifest["input"]["profile"], "navigation")
         education = manifest["education"]
         self.assertEqual((education["recommended_age_min"], education["recommended_age_max"]), (5, 6))

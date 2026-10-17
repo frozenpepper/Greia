@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:23:44.975762+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Presque ! On essaie encore !",
+    "cue_id": "greia.shared.dani__fr__encourage.retry__02.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/dani/fr/dani__fr__encourage.retry__02.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Thomas",
+    "rate_wpm": 185,
+    "synthesis_text": "Presque ! On essaie encore !"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/dani/fr/dani__fr__encourage.retry__02.wav",
+    "bytes": 84108,
+    "sha256": "9c7025290fdf93efb9e7f9b3874f43d064597c3bb270698519651f9043449fe5"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

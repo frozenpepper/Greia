@@ -129,7 +129,7 @@ class ManifestAndLocaleTests(unittest.TestCase):
             data = tomllib.load(handle)
         self.assertEqual(data["activity"]["id"], "org.greia.quattro-stagioni")
         self.assertEqual(data["activity"]["legacy_ids"], ["quattro_stagioni"])
-        self.assertEqual(sorted(data["activity"]["languages"]), ["en", "it"])  # ES/FR stay staged
+        self.assertEqual(sorted(data["activity"]["languages"]), ["en", "es", "fr", "it"])  # four released languages (owner 2026-10-17)
         self.assertEqual(data["presentation"]["categories"], ["explore", "learn"])
         self.assertEqual(data["input"]["profile"], "hybrid")
         education = data["education"]
@@ -403,8 +403,9 @@ class AudioTests(unittest.TestCase):
             self.assertTrue(audio.has_clip(cue), cue)
         self.assertFalse(audio.has_clip("day_and_night"))
         self.assertFalse(audio.say("not-a-clip"))
-        self.assertFalse(audio.say_name("snowman"))  # no approved recording: silent
+        self.assertTrue(audio.say_name("snowman"))  # shared vocab bank clip (2026-10-17)
         self.assertEqual(audio.last_speech, "vocab.snowman")
+        self.assertFalse(audio.say_name("unicorn"))  # no recording: silent
 
     def test_audio_without_mixer_fails_soft(self) -> None:
         with mock.patch("pygame.mixer.get_init", return_value=None):

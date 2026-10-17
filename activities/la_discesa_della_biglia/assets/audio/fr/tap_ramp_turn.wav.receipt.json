@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:05:34.493422+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Touche la rampe pour la tourner !",
+    "cue_id": "greia.requested.tap_ramp_turn.fr",
+    "output": "tmp/greia-four-languages-20261017/review/activities/la_discesa_della_biglia/assets/audio/fr/tap_ramp_turn.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.tito.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "tout cela rempe pour la tourner.",
+    "score": 0.778,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/la_discesa_della_biglia/assets/audio/fr/tap_ramp_turn.wav",
+    "bytes": 69316,
+    "sha256": "baa864b30ef5d2ec8a2c3cf820bda306afb9ba2bd08a8c3f2b4825332cd39c92"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

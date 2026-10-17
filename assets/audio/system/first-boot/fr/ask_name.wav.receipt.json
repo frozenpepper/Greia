@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:18:00.763486+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Comment tu t'appelles ? Trouve les lettres et écris ton prénom. Un grand peut t'aider !",
+    "cue_id": "greia.first_boot.ask_name.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/system/first-boot/fr/ask_name.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "comment tu d'appelles ? Touvrez l'être et crie ton prénom. Un grand peu délis.",
+    "score": 0.7283,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "assets/audio/system/first-boot/fr/ask_name.wav",
+    "bytes": 174714,
+    "sha256": "4ace25cb451bb98c78f37686a7928b57988f0d2704eb616722fda319dd813acb"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

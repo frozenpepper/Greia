@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:59:13.283286+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Vola dentro gli anelli arcobaleno!",
+    "cue_id": "greia.requested.fly_rings.it",
+    "output": "tmp/greia-four-languages-20261017/review/activities/volo_draghetto/assets/audio/it/fly_rings.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.flash.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "it",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Vola dentro i anelli al cuballino.",
+    "score": 0.7424,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "activities/volo_draghetto/assets/audio/it/fly_rings.wav",
+    "bytes": 109006,
+    "sha256": "13c9d82fb4749b2bcf8d3904610dd0017a706d6ab107a91e5846538f756d1c4a"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

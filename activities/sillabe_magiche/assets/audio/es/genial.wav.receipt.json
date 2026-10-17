@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:24:31.587911+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "es",
+    "text": "¡Genial!",
+    "cue_id": "greia.literacy.genial.es",
+    "output": "tmp/greia-four-languages-20261017/review/activities/sillabe_magiche/assets/audio/es/genial.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Mónica",
+    "rate_wpm": 185,
+    "synthesis_text": "¡Genial!"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/sillabe_magiche/assets/audio/es/genial.wav",
+    "bytes": 23072,
+    "sha256": "537472574ca350629fe50f0cad368f96b0ce23540df88f8f3adbd0ecf0be5de6"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

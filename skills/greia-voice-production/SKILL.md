@@ -59,8 +59,9 @@ cloud/Modal spend, heavy downloads, direct backend scripting, or
 unreviewed voice anchors. Owner-approved visible text does not fill in
 an absent long spoken transcript or decide preschool letter-name
 versus phoneme; those are `BLOCKED_SCRIPT` cue rows pending a complete
-script. Audio remains human-review pending and ES/FR are not selectable
-Greia product languages until their separate release gates close.
+script. EN/IT/ES/FR are all released (2026-10-17): every new line is
+recorded in all four with the same speaker, and integrated with
+`tools/integrate_reviewed_voices.py --layout mirror` (never overwrites).
 
 ## Voice Studio identity and existing owner-approved assets
 

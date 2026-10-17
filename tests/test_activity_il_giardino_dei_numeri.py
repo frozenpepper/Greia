@@ -65,7 +65,7 @@ class ManifestTests(unittest.TestCase):
         act = data["activity"]
         self.assertEqual(act["id"], "org.greia.il-giardino-dei-numeri")
         self.assertEqual(act["title_key"], "activity.il_giardino_dei_numeri.title")
-        self.assertEqual(act["languages"], ["it", "en"])  # ES/FR stay staged
+        self.assertEqual(act["languages"], ["it", "en", "es", "fr"])  # four released languages (owner 2026-10-17)
         edu = data["education"]
         self.assertEqual((edu["recommended_age_min"], edu["recommended_age_max"]), (2, 5))
         self.assertEqual((edu["difficulty_min"], edu["difficulty_max"]), (1, MAX_STAGE))

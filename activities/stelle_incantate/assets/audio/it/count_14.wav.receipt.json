@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:30:08.924688+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "it",
+    "text": "Quattordici!",
+    "cue_id": "greia.wired.count_14.it",
+    "output": "tmp/greia-four-languages-20261017/review/activities/stelle_incantate/assets/audio/it/count_14.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Alice",
+    "rate_wpm": 175,
+    "synthesis_text": "quattordici!"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/stelle_incantate/assets/audio/it/count_14.wav",
+    "bytes": 39036,
+    "sha256": "6f56b3b5a7d5d026199f9fe5087a5780df4becd3bef37d8dc0fb5b0364f554d9"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

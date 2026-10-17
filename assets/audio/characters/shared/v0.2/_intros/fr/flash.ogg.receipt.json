@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:09:21.594467+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Hé ! Moi, c'est Flash ! J'adore courir, jouer et tenter des défis super rapides. Si tu entends quelqu'un crier partez, c'est sûrement que je suis déjà parti !",
+    "cue_id": "greia.shared.flash.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/_intros/fr/flash.ogg",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.flash.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Et moi c'est flâche ! J'adore courir, jouer et tenter des défis super rapides. Si tu entends quelqu'un qui est parti, c'est sûrement que je suis déjà parti.",
+    "score": 0.9175,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/_intros/fr/flash.ogg",
+    "bytes": 61968,
+    "sha256": "daf7489814ce847ac2bb186a7e9eff2a220b726d823819e74aeb45535f2ab883"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

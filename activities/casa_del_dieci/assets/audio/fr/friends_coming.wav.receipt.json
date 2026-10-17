@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:47:22.922487+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "fr",
+    "text": "Des amis arrivent ! Fais-les entrer.",
+    "cue_id": "greia.requested.friends_coming.fr",
+    "output": "tmp/greia-four-languages-20261017/review/activities/casa_del_dieci/assets/audio/fr/friends_coming.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Thomas",
+    "rate_wpm": 185,
+    "synthesis_text": "Des amis arrivent ! Fais-les entrer."
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/casa_del_dieci/assets/audio/fr/friends_coming.wav",
+    "bytes": 88650,
+    "sha256": "4adadd63fc2aa4caba08b9caa96c2fcbcc6757d79dde6b499374a952b159903e"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

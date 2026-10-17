@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:10:58.292905+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Leo sta pensando…",
+    "cue_id": "greia.requested.leo_thinking.it",
+    "output": "tmp/greia-four-languages-20261017/review/activities/quattro_amici/assets/audio/it/leo_thinking.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.flash.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "it",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Le ho sta pensando.",
+    "score": 0.8118,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/quattro_amici/assets/audio/it/leo_thinking.wav",
+    "bytes": 60716,
+    "sha256": "4640b08675bff0336cb758260a64e248684309255a5125cd9d21227da0a4f397"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

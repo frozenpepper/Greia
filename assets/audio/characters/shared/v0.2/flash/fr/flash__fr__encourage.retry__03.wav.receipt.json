@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T11:56:35.229557+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Encore une fois !",
+    "cue_id": "greia.shared.flash__fr__encourage.retry__03.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/flash/fr/flash__fr__encourage.retry__03.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.flash.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Un coinefois.",
+    "score": 0.4333,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/flash/fr/flash__fr__encourage.retry__03.wav",
+    "bytes": 42196,
+    "sha256": "fe79666a2b7bb6d0bd7cccf069f922a11b1948e0798e92da83710de150f56119"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

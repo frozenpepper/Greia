@@ -348,6 +348,36 @@ def shared_vocab_audio_path(
     return None
 
 
+NUMBER_AUDIO_VERSION = "v1"
+NUMBER_AUDIO_MAX = 25
+
+
+def shared_number_audio_path(
+    project_root: Path,
+    number: int,
+    locale: str,
+) -> Path | None:
+    """Resolve a shared spoken number clip (0..25), or None for silence.
+
+    Numbers live once in the platform-owned bank
+    ``assets/audio/numbers/v1/<language>/<n>.wav`` (see the README there) so
+    counting Activities need no per-package copies.  Same fallback policy as
+    :func:`shared_vocab_audio_path`: requested locale chain, base language,
+    English, then None.  Out-of-range or non-integer values return None.
+    """
+    if isinstance(number, bool) or not isinstance(number, int):
+        return None
+    if not 0 <= number <= NUMBER_AUDIO_MAX:
+        return None
+    root = project_root / "assets" / "audio" / "numbers" / NUMBER_AUDIO_VERSION
+    languages = [tag.value for tag in LocaleTag.parse(locale).fallback_chain()]
+    for language in dict.fromkeys((*languages, "en")):
+        candidate = root / language / f"{number}.wav"
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 @dataclass(frozen=True, slots=True)
 class LocalizedAudioCue:
     path: Path

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:30:35.622279+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Un nouvel ami !",
+    "cue_id": "greia.requested.new_friend.fr",
+    "output": "tmp/greia-four-languages-20261017/review/activities/morbidi_mostriciattoli/assets/audio/fr/new_friend.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.momo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Bah, un nouvel ami !",
+    "score": 0.8633,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "activities/morbidi_mostriciattoli/assets/audio/fr/new_friend.wav",
+    "bytes": 103272,
+    "sha256": "0c186f0d4f7e18876502c32cf2a9667bcb9ed4261146ea166b74e0c4400c33bf"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

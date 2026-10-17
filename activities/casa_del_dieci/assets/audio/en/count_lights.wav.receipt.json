@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:47:27.392978+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "en",
+    "text": "Count the lights with me!",
+    "cue_id": "greia.requested.count_lights.en",
+    "output": "tmp/greia-four-languages-20261017/review/activities/casa_del_dieci/assets/audio/en/count_lights.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Samantha",
+    "rate_wpm": 190,
+    "synthesis_text": "Count the lights with me!"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/casa_del_dieci/assets/audio/en/count_lights.wav",
+    "bytes": 49858,
+    "sha256": "6eabac6b19f5c94c5812f597e0da5f9f8b00e988ad7189eec1b24bb9e13b74b4"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

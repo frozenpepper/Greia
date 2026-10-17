@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:47:47.885173+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "fr",
+    "text": "Il mesure combien de cubes de long ?",
+    "cue_id": "greia.requested.how_many_long.fr",
+    "output": "tmp/greia-four-languages-20261017/review/activities/bottega_delle_misure/assets/audio/fr/how_many_long.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Thomas",
+    "rate_wpm": 185,
+    "synthesis_text": "Il mesure combien de cubes de long ?"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/bottega_delle_misure/assets/audio/fr/how_many_long.wav",
+    "bytes": 75266,
+    "sha256": "58e3066f539f1543c2edd80193ee07a5153395a95113af032475813bdcb12b56"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

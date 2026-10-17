@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:35:23.920375+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Where does it hurt?",
+    "cue_id": "greia.requested.where_hurt.en",
+    "output": "tmp/greia-four-languages-20261017/review/activities/clinica_cuccioli/assets/audio/en/where_hurt.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.momo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "en",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Where does it hurt?",
+    "score": 1.0,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/clinica_cuccioli/assets/audio/en/where_hurt.wav",
+    "bytes": 54762,
+    "sha256": "86b9b3aafef6b14e62314b58b6884757b32325e8f6a9138496fa5323620a572e"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:47:49.552832+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "it",
+    "text": "Ora trova un altro suono nella parola!",
+    "cue_id": "greia.requested.find_another_sound.it",
+    "output": "tmp/greia-four-languages-20261017/review/activities/officina_dei_suoni/assets/audio/it/find_another_sound.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Alice",
+    "rate_wpm": 185,
+    "synthesis_text": "Ora trova un altro suono nella parola!"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/officina_dei_suoni/assets/audio/it/find_another_sound.wav",
+    "bytes": 86020,
+    "sha256": "831f111a09be37121bd74b5f856d6e23d7544bea88bab4ab47f442c27ba0d774"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:08:53.957316+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Ey! ¡Soy Flash! Me encanta correr, jugar y probar retos superrápidos. Si oyes a alguien gritar ya, ¡seguro que yo ya he salido!",
+    "cue_id": "greia.shared.flash.es",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/_intros/es/flash.ogg",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.flash.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "¡Hey! ¡Solfwash! Me encanta coler, jugar y probar reto super rápido. Si hoy salgué en Guitar Ya, seguro que yo ya es salido.",
+    "score": 0.7559,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/_intros/es/flash.ogg",
+    "bytes": 58237,
+    "sha256": "32688a1bbef4a889767b24c5658e53d9fa794b993accf813b6d6f2b8f17fbafb"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

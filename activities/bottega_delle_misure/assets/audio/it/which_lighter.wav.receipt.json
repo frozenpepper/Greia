@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:47:39.398631+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "it",
+    "text": "Quale è più leggero?",
+    "cue_id": "greia.requested.which_lighter.it",
+    "output": "tmp/greia-four-languages-20261017/review/activities/bottega_delle_misure/assets/audio/it/which_lighter.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Alice",
+    "rate_wpm": 185,
+    "synthesis_text": "Quale è più leggero?"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/bottega_delle_misure/assets/audio/it/which_lighter.wav",
+    "bytes": 40614,
+    "sha256": "c76d869e43efbf22766056591308d0758ddac55efa08f4cd97a672307c9335f3"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

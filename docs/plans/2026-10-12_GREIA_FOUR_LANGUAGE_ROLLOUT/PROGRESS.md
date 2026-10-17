@@ -1346,3 +1346,36 @@ Created [`VOICE_LINES_REQUESTED_2026-10-16.md`](./VOICE_LINES_REQUESTED_2026-10-
 
 **Evidence:** DESIGN SPEC / request list only. No voice was generated, recorded or listened to; no audio file or receipt was touched; no hardware. The owner review of the list is the next step; ES/FR remain unselectable.
 
+
+## 2026-10-17 — ES/FR released; selectors trimmed to four; missing voice recorded in all four languages (SOURCE + LOCAL RECORDING, executed)
+
+**Owner decisions (2026-10-17):** EN/IT/ES/FR are all released; every selector offers exactly these four; all missing voice lines approved ("I approve all lines"); image ceiling 1.3 GB.
+
+**Registry and selectors.** `SUPPORTED_SYSTEM_LANGUAGES` in `src/greia_platform/system_language.py` now holds en/it/es/fr (plus a derived `SUPPORTED_SYSTEM_LOCALES`); no second registry. The installer language-first screen, on-device Parent panel, Parent API and `greia-languagectl` already read it; the developer simulator's own five-language list (with German) now reads it too. All 44 localized built-in manifests declare `["it", "en", "es", "fr"]` (Shape Garden stays `["*"]`); Submarine and Dolphin's hard-coded `("it", "en")` supports gained es/fr. The Creations gallery painter (Shell) was a two-branch IT/EN lookup; it now has a four-language table. Tests that encoded "ES/FR staged / not selectable" now require four-language parity; new `tests/test_four_language_release_contract.py` covers registry, selectors, manifests, four-way key/placeholder parity and the shared spoken banks.
+
+**Shell device language.** The Shell, the Activity launch environment (supervisor) and achievement chrome fell back to a hard-coded `"it"` when no `GREIA_*` locale variable was set (always on an installed device). New `resolve_device_locale` / `resolve_child_locale` / `CachedDeviceLocale` in `system_language.py` read the persisted device language (parent override, else the installer's choice), validated against the registry, falling back to `en`; `tests/test_shell_device_locale.py`.
+
+**Text parity.** All 45 Activities already had identical string keys and placeholders in en/it/es/fr (0 keys added); Parent panel, installer and achievement tables were already four-language. Stelle Incantate ES/FR facts were recorded under underscore names the resolver could not find (English played); the ES/FR bundles now map them.
+
+**Voice inventory and recording.** Resolver-aware inventory (`LocalizedResources`, shared resolvers and static scan of code-probed cues) plus the two request lists (`VOICE_LINES_REQUESTED_2026-10-16.md`, `VOICE_LINES_FIRST_BOOT_WIZARD.md`). Full table: [`VOICE_RECORDING_LEDGER_2026-10-17.csv`](./VOICE_RECORDING_LEDGER_2026-10-17.csv) (1,595 rows; 1,557 recorded, 38 existing). Recorded with `tools/greia_voice.py` (Chatterbox MLX for Leo/Lilli/Flash/Tito/Momo with their canonical anchors; macOS `say` for Dani and `pedagogical`: Samantha/Alice/Mónica/Thomas). Every take matches the provider, voice and anchor of the existing approved receipts for the same speaker and language. Integrated with `tools/integrate_reviewed_voices.py --layout mirror`, which now refuses to overwrite any existing file (0 committed audio/receipt files changed).
+
+| set | EN | IT | ES | FR |
+|---|---|---|---|---|
+| shared character v0.2 (30 cues × 3 takes + intro, 6 characters) | – | – | 96 | 96 |
+| first-boot wizard (Leo) | 8 | 8 | 8 | 8 |
+| launcher label `sea` / missing titles (Bottega, Casa) | 1 | 1 | 3 | 3 |
+| Submarine (buttons, encounters, creatures; EN alarm) | 1 | – | 15 | 15 |
+| literacy gaps (ES Ñ, ES/FR syllable praise, FR é syllables) | – | – | 5 | 11 |
+| numbers bank 0–25 (new `shared_number_audio_path`) | 26 | 26 | 26 | 26 |
+| wired per-Activity cues (Giardino count 6–10 + how_many, Stelle count 1–20, Treno 1–10, Bosco 0, Luci 6–10, Specchi rhombus/heart) | 45 | 45 | 45 | 45 |
+| vocabulary bank (nouns, colours, positions, shapes) | 98 | 102 | 119 | 119 |
+| per-Activity requested lines (section B) | 139 | 139 | 139 | 139 |
+| **total** | **318** | **321** | **456** | **462** |
+
+Disk: +70.1 MiB audio (EN 13.5, IT 14.6, ES 21.4, FR 20.7) + 2.0 MiB receipts. Of that, 33.9 MiB is section-B requested lines that **no Activity code plays yet** (files sit at `activities/<id>/assets/audio/<locale>/<cue>.wav`, resolvable by `audio_path("<cue>")`); wiring them is per-Activity follow-up.
+
+**Listen-check (programmatic, no human listening).** All 1,557 decode, no silence or truncation; 114 clips with Whisper-tiny WARN < 0.6 were re-taken once and the better take kept. 53 short Chatterbox lines (mostly French: "On réessaie !", "Encore une fois !") still have low Whisper-tiny scores with plausible durations; they are marked in the ledger (`asr`/`asr_score`) and should be heard first. FR "Un !" is 0.18 s (single nasal syllable). Receipts carry `human_review = APPROVED` with a note that approval was given before listening.
+
+**Not recorded (no script / needs design):** variable-number templates (`thats_n`, `write_n`, `show_n`, `order_n`, `order_n_toppings`); constellation names, story titles, shelf-full lines, per-friend thank-you, coloured-blanket, per-plant harvest, 12 further aquarium missions, season mission prompts, monster name syllables, Sound Workshop stage-3 phonemes, new Word Forest lessons (not yet in the lesson source), `this_is_letter`. Not overwritten (approved files kept): Luci ES/FR `prompt_choose` wrong instruction, Specchi ES/FR shape lines in Leo's voice, Dolphin welcome mentioning mouse/space, Bosco intro "count to ten". Installer has no spoken UX (boot chime only); Parent panel does not speak.
+
+**Evidence:** focused suites green (1,834 Activity/contract/localization tests); `make test` (fast lane) ran 5,353 tests: OK, 8 skipped. No rendered, installed-image or hardware run.

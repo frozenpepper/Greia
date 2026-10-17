@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:47:48.827462+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "en",
+    "text": "Now find another sound in the word!",
+    "cue_id": "greia.requested.find_another_sound.en",
+    "output": "tmp/greia-four-languages-20261017/review/activities/officina_dei_suoni/assets/audio/en/find_another_sound.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Samantha",
+    "rate_wpm": 190,
+    "synthesis_text": "Now find another sound in the word!"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/officina_dei_suoni/assets/audio/en/find_another_sound.wav",
+    "bytes": 74162,
+    "sha256": "df9ea6ed6530c0af49a8a1a14d3bd8dfff4ca74cae5394a160258ace5ac706da"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

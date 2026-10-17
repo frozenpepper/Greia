@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:33:52.572998+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Goodnight, little cloud",
+    "cue_id": "greia.requested.goodnight_cloud.en",
+    "output": "tmp/greia-four-languages-20261017/review/activities/nanna_delle_nuvolette/assets/audio/en/goodnight_cloud.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.momo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "en",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Good night, little cloud.",
+    "score": 0.8356,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/nanna_delle_nuvolette/assets/audio/en/goodnight_cloud.wav",
+    "bytes": 55866,
+    "sha256": "155fc6b538a357348030f750b2c7a5229a241c146c38ab76a568778c7341d6a7"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

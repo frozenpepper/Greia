@@ -326,7 +326,7 @@ class PackageTests(unittest.TestCase):
         manifest = tomllib.loads((ACTIVITY_ROOT / "activity.toml").read_text(encoding="utf-8"))
         education = manifest["education"]
         self.assertEqual(manifest["activity"]["id"], "org.greia.torre-forme")
-        self.assertEqual(manifest["activity"]["languages"], ["it", "en"])
+        self.assertEqual(manifest["activity"]["languages"], ["it", "en", "es", "fr"])
         self.assertEqual(manifest["presentation"]["categories"], ["play"])
         self.assertEqual(manifest["input"]["profile"], "hybrid")
         self.assertEqual(set(education["categories"]), {"spatial", "geometry"})

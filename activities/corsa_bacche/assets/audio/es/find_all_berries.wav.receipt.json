@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:55:16.551198+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Encuentra todas las bayas!",
+    "cue_id": "greia.requested.find_all_berries.es",
+    "output": "tmp/greia-four-languages-20261017/review/activities/corsa_bacche/assets/audio/es/find_all_berries.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.momo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Encuentra todas las baias.",
+    "score": 0.8865,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/corsa_bacche/assets/audio/es/find_all_berries.wav",
+    "bytes": 77476,
+    "sha256": "98ec9813092c9e54338d47312ff969b065772a8aad1e9cb15b6970d2726eb603"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

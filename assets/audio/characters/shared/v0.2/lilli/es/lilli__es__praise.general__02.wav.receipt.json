@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:32:52.164601+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "shared_character_utterance",
+    "locale": "es",
+    "text": "¡Buen trabajo!",
+    "cue_id": "greia.shared.lilli__es__praise.general__02.es",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__praise.general__02.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.lilli.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "¡Muen trabajo!",
+    "score": 0.7708,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/lilli/es/lilli__es__praise.general__02.wav",
+    "bytes": 61378,
+    "sha256": "c9737b5d3166142650ff63e8f06c1b35883e7bd2216f5cf0da05f452856ee9e4"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

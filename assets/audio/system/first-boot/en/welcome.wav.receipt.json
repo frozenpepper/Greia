@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:13:11.234170+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Oh, hello! I'm Leo. This Greia is brand new, so let's make a place just for you!",
+    "cue_id": "greia.first_boot.welcome.en",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/system/first-boot/en/welcome.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "en",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Hello, our sister, EA! I'm Leo. This Greya is brand new, so let's make a place just for you.",
+    "score": 0.8708,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/system/first-boot/en/welcome.wav",
+    "bytes": 378016,
+    "sha256": "1f44a9d33a950809496d973b8bbd6e0cf68fa7677861efe63018a9f53344b707"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

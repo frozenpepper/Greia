@@ -225,14 +225,15 @@ class ParentPanelLocaleStateTests(unittest.TestCase):
         self.assertIn("Souris", captured[0])
         self.assertIn("Rapide", captured[0])
 
-    def test_staged_french_and_spanish_are_not_advertised(self) -> None:
-        self.assertEqual(tuple(x.locale for x in SUPPORTED_SYSTEM_LANGUAGES), ("en", "it"))
+    def test_panel_offers_exactly_the_four_released_languages(self) -> None:
+        self.assertEqual(
+            tuple(x.locale for x in SUPPORTED_SYSTEM_LANGUAGES), ("en", "it", "es", "fr")
+        )
+        self.assertEqual(tuple(x.locale for x in SUPPORTED_SYSTEM_LANGUAGES), LOCALES)
         panel = self._overlay("fr")
         panel._sync_language_selection()
-        # A test/prototype can preview staged strings without extending the
-        # product registry or introducing new Parent API mutations.
         self.assertEqual(panel._ui_message("language.title"), "Langue de Greia")
-        self.assertEqual(panel._language_index, 0)
+        self.assertEqual(panel._language_index, 3)
 
 
 if __name__ == "__main__":

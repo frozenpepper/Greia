@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:24:26.152156+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "fr",
+    "text": "Bip-bop ! Moi, c'est Dani ! J'aime les nombres, les motifs, les casse-têtes et les choses qui s'emboîtent pile au bon endroit. Mode amitié : activé !",
+    "cue_id": "greia.shared.dani.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/_intros/fr/dani.ogg",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Thomas",
+    "rate_wpm": 185,
+    "synthesis_text": "Bip-bop ! Moi, c'est Dani ! J'aime les nombres, les motifs, les casse-têtes et les choses qui s'emboîtent pile au bon endroit. Mode amitié : activé !"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/_intros/fr/dani.ogg",
+    "bytes": 69969,
+    "sha256": "45437973a6cfcee8db657a6111a4ab4f6a87ced33aea22d93bf3e01bf99365e0"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

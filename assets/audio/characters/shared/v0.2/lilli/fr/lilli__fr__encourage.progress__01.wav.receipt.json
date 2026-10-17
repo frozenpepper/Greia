@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:36:32.974993+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Continue comme ça !",
+    "cue_id": "greia.shared.lilli__fr__encourage.progress__01.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__encourage.progress__01.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.lilli.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Continue comme ça..",
+    "score": 1.0,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__encourage.progress__01.wav",
+    "bytes": 76152,
+    "sha256": "041e6a519f7c70d983bd2f1a3df0f3325865c366d51147ae8b7fde7779880113"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

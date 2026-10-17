@@ -1,6 +1,6 @@
 # Voice lines requested by the 2026-10 Activity reworks (for owner review)
 
-**Date:** 2026-10-16 · **Status:** REQUEST LIST — **nothing in this file has been generated, recorded or accepted.**
+**Date:** 2026-10-16 · **Status:** RECORDED 2026-10-17 in EN/IT/ES/FR after the owner approved all lines (local Voice Studio, programmatic listen-check only, no human listening yet). Per-line state: [`VOICE_RECORDING_LEDGER_2026-10-17.csv`](./VOICE_RECORDING_LEDGER_2026-10-17.csv); rows with no authored text or a variable number are listed as not recorded in `PROGRESS.md` (2026-10-17).
 **Owner:** four-language rollout ([PLAN.md](./PLAN.md), [PROGRESS.md](./PROGRESS.md)); cue/voice policy in [LOCAL_AGENT_VOICE_PRODUCTION.md](./LOCAL_AGENT_VOICE_PRODUCTION.md); executable recording order in [LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md](./LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md). Product context: P7 in `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P7_ACTIVITY_QUALITY_PROGRAM.md` (foundation F6).
 
 ## What this is

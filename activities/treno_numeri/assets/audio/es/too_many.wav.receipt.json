@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:47:11.907318+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "es",
+    "text": "¡Demasiados! Saca algunos.",
+    "cue_id": "greia.requested.too_many.es",
+    "output": "tmp/greia-four-languages-20261017/review/activities/treno_numeri/assets/audio/es/too_many.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Mónica",
+    "rate_wpm": 185,
+    "synthesis_text": "¡Demasiados! Saca algunos."
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/treno_numeri/assets/audio/es/too_many.wav",
+    "bytes": 82348,
+    "sha256": "88e9287c6fe456db8640fb3dfcac4b7d0b5d94747edd8a2adefe3772ad44e272"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

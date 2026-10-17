@@ -310,7 +310,7 @@ class QuattroPackageTests(unittest.TestCase):
         manifest = ActivityRegistry([source], runtime).validate_package(PACKAGE)
         self.assertEqual(manifest.activity_id, "org.greia.quattro-amici")
         self.assertEqual(manifest.title_key, "activity.quattro_amici.title")
-        self.assertEqual(set(manifest.languages), {"en", "it"})
+        self.assertEqual(set(manifest.languages), {"en", "it", "es", "fr"})
         self.assertTrue(manifest.adaptive_difficulty)
         self.assertEqual(manifest.difficulty_min, FIRST_STAGE)
         self.assertEqual(manifest.difficulty_max, LAST_STAGE)

@@ -54,7 +54,7 @@ Follow every line to get a decent Activity before any live test. Numbers are Ace
 **Data and language**
 - Never emit facts (or write storage) on the frame thread in a tap's path: an emit is a synchronous broker round trip (Acer: 61–86 ms, outliers 0.5–1.6 s), so quattro_amici froze the falling disc 95–618 ms after every child tap; a bounded one-worker FIFO (`GreiaQuattroEvents`, `GreiaDelfinoEvents`) brought release → first falling frame to 31–58 ms.
 - Event/idempotency keys ≤64 bytes (`runtime/history-policy.toml`); declare a bound for every new interpolated value in `tests/test_activity_event_key_bounds.py` (§10).
-- Text only via `resources.text(key, variables)` (`$name` placeholders), resolved once; no fixed-language fallback sentences; manifests advertise only released locales (en, it) (§7A).
+- Text only via `resources.text(key, variables)` (`$name` placeholders), resolved once; no fixed-language fallback sentences; manifests declare the four released locales en/it/es/fr (§7A).
 
 **Pre-flight without hardware**
 - `tools/validate_activity.py`, focused tests, headless captures at both sizes (one with `--press-key`), `tools/measure_activity_idle_cpu.py --settle 15` (~0 presents/s on a still screen); then the Acer method in `docs/agents/GREIA_AGENT_OPERATIONS.md` §8 with `tools/dev_source_deploy.py` (§13, §16).
@@ -221,16 +221,17 @@ Localization returns a string or a file path; it never plays audio.
 - For a finite list of known IDs request each `resources.audio_path("cue.id")`. When migrating an existing sound manager that eagerly preloads legacy cue files, use `resources.speech_paths()` (`{stem: Path}` from `assets/audio/<locale>/` and `locales/<locale>/audio/`, selected language first, English for gaps); the Activity still decodes into Pygame Sounds (deferred, §11.4). Never add another per-Activity locale scanner or duplicate an audio map per language.
 - Fallback for all speech, including literacy and phonics for now: selected locale, then its base for a regional locale (`es-MX → es`), then English, then silence. Text keys follow the same regional/base order before the package default. Keep a silent path: the Activity must stay fully playable without any clip.
 - Shared cast lines: `shared_character_audio_path(project_root, speaker, cue_id, locale)` (shared character v0.2 library). Shared picture names: `shared_vocab_audio_path(project_root, noun_id, locale)` over `assets/audio/vocab/v1/<locale>/<noun_id>.wav` (+ `.receipt.json`), `noun_id` = the language-neutral last segment of the picture's semantic id. Never copy cast or noun clips into an Activity package (installed-disk budget); add missing approved nouns to the bank (clip, receipt, README provenance row); the bank ships with the rest of `assets/audio/**` and is read from `project_root`. Never reach shared audio through relative `../..` paths (installed-image safety).
-- Spoken numbers will come from a shared `shared_number_audio_path` that is not in source yet (awaiting voice approval); probe it with `getattr(localization, "shared_number_audio_path", None)` as `pasticceria_magica` does.
+- Spoken numbers 0..25: `shared_number_audio_path(project_root, n, locale)` over `assets/audio/numbers/v1/<locale>/<n>.wav` (same fallback; out-of-range returns `None`). Use it instead of new per-package `count_<n>` copies.
 - Keep procedural SFX, speech channels, event ordering and caching in the Activity's sound owner.
 - All committed voice files are owner-reviewed and accepted: never regenerate them for perceived provenance problems. No anti-tamper or signing; user-edited files are permitted.
 
-**Locale promotion**
+**Released languages**
 
-- The selectable registry contains only languages whose release gates passed (currently en, it). Every built-in Activity also carries staged `locales/es.json` / `locales/fr.json` source text, but manifests advertise only en/it.
-- Never add `es`/`fr` to a manifest or fill `audio` mappings with nonexistent WAVs because translated text exists; staged text is not accepted language-bearing speech. Promotion needs real recorded and listened speech, exact prompt scripts, pedagogical review of language-relative teaching rules, then UI, voice and profile-language-inheritance tests. Staged ES/FR rendering is exercised only through explicit test-only resource injection.
-- Authorities: `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`, its `PROGRESS.md` roster, `LOCAL_AGENT_VOICE_PRODUCTION.md` (voice work order) and `SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md`. Activities still on legacy loaders migrate incrementally without replacing approved audio.
-- Tests: `tests/test_staged_activity_translations.py` (per-language interpolation), `tests/test_four_language_activity_runtime_text.py`, `tests/test_painting_contract.py`, `tests/test_activity_mondo_contrari.py`, `tests/test_word_forest_phonics_inventory.py`.
+- Greia ships exactly four selectable languages: `en`, `it`, `es`, `fr` (owner decision 2026-10-17). The single registry is `SUPPORTED_SYSTEM_LANGUAGES` / `SUPPORTED_SYSTEM_LOCALES` in `greia_platform.system_language`; every selector (installer, Parent panel, simulator) reads it. Never add a second list.
+- A built-in Activity declares `languages = ["it", "en", "es", "fr"]` (or `["*"]` when language-neutral) and ships `locales/{en,it,es,fr}.json` with identical string keys and placeholders. New text keys land in all four bundles in the same change.
+- A new spoken line is recorded in all four languages with the same speaker (Leo/Lilli/Flash/Tito/Momo via Chatterbox, Dani and `pedagogical` via macOS voices Samantha/Alice/Mónica/Thomas) through `tools/greia_voice.py`, staged outside the repo, then copied with `tools/integrate_reviewed_voices.py --layout mirror` (never overwrites). An ES/FR `audio` map entry must name a real file in that language.
+- Authorities: `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`, its `PROGRESS.md`, `LOCAL_AGENT_VOICE_PRODUCTION.md` and `SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md`.
+- Tests: `tests/test_four_language_release_contract.py` (registry, manifests, four-way key parity, shared spoken banks), `tests/test_staged_activity_translations.py`, `tests/test_four_language_activity_runtime_text.py`.
 
 ## 8. Greia already owns voice production
 
@@ -249,7 +250,7 @@ Do not classify all speech in an educational Activity as `pedagogical_speech`. W
 
 ### Shared character speech
 
-Accepted shared v0.2 assets live at `assets/audio/characters/shared/v0.2/` (180 shared reactions, 12 canonical character introductions). Documented generic families include `ready.go`, `praise.general`, `celebrate.success`, `encourage.retry`, `encourage.progress`. Reuse them instead of generating duplicate generic praise when the resolver exposes the family. Do not assume a generic greeting family exists, and do not copy the shared WAV catalogue into Activities.
+Shared v0.2 assets live at `assets/audio/characters/shared/v0.2/` (EN/IT: 180 reactions + 12 introductions accepted 2026-08-28; ES/FR: the same 30 cues × 3 takes per character + intros added 2026-10-17). Documented generic families include `ready.go`, `praise.general`, `celebrate.success`, `encourage.retry`, `encourage.progress`. Reuse them instead of generating duplicate generic praise when the resolver exposes the family. Do not assume a generic greeting family exists, and do not copy the shared WAV catalogue into Activities.
 
 ## 9. Resolve semantic feedback before playing sound
 

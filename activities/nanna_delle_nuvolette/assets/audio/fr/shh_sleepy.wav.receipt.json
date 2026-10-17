@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:35:17.363974+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Chut, c'est l'heure de dormir",
+    "cue_id": "greia.requested.shh_sleepy.fr",
+    "output": "tmp/greia-four-languages-20261017/review/activities/nanna_delle_nuvolette/assets/audio/fr/shh_sleepy.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.momo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Aaaaaaah ! Je suis... c'est l'air de dormir.",
+    "score": 0.6521,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "activities/nanna_delle_nuvolette/assets/audio/fr/shh_sleepy.wav",
+    "bytes": 144286,
+    "sha256": "b8bcfce109fd8b10baaace5950970870356528633151865a91a5e83e36335e42"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

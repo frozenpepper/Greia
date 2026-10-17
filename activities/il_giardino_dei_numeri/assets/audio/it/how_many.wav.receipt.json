@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:32:13.843358+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "it",
+    "text": "Quanti sono nella cassetta?",
+    "cue_id": "greia.wired.how_many.it",
+    "output": "tmp/greia-four-languages-20261017/review/activities/il_giardino_dei_numeri/assets/audio/it/how_many.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Alice",
+    "rate_wpm": 185,
+    "synthesis_text": "Quanti sono nella cassetta?"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/il_giardino_dei_numeri/assets/audio/it/how_many.wav",
+    "bytes": 63654,
+    "sha256": "e208745ed1db4ec33d60fd219c3a66150da5c9e63b3bc5aac66b0615c4cdc4ee"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

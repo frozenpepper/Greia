@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:04:37.940348+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Trouve la clé pour ouvrir la porte !",
+    "cue_id": "greia.requested.find_key.fr",
+    "output": "tmp/greia-four-languages-20261017/review/activities/labirinto_magico/assets/audio/fr/find_key.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.tito.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "trouve la clip au ouvrir la porte.",
+    "score": 0.8154,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/labirinto_magico/assets/audio/fr/find_key.wav",
+    "bytes": 73726,
+    "sha256": "e7f17fdb5dc888ae6799ba34108be1df799d9eef3d68ba36c4b3f82e1d27dd2c"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

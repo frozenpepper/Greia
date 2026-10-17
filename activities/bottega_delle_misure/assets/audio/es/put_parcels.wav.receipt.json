@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:47:32.790584+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "es",
+    "text": "Pon los dos paquetes en la balanza.",
+    "cue_id": "greia.requested.put_parcels.es",
+    "output": "tmp/greia-four-languages-20261017/review/activities/bottega_delle_misure/assets/audio/es/put_parcels.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Mónica",
+    "rate_wpm": 185,
+    "synthesis_text": "Pon los dos paquetes en la balanza."
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/bottega_delle_misure/assets/audio/es/put_parcels.wav",
+    "bytes": 71942,
+    "sha256": "b9857fb463f36c0f3326d7db25958ab87b1860f8942b3919f463ace889c10c1b"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

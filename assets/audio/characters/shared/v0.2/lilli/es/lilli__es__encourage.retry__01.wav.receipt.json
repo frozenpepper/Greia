@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:34:38.771933+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "shared_character_utterance",
+    "locale": "es",
+    "text": "¡Probemos otra vez!",
+    "cue_id": "greia.shared.lilli__es__encourage.retry__01.es",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__01.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.lilli.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "¡Lo vemos otra vez!",
+    "score": 0.7353,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/lilli/es/lilli__es__encourage.retry__01.wav",
+    "bytes": 71080,
+    "sha256": "745ea6e5738ac674be5ecc5238677d43e97f51c08051cddd54f8d14f7664464a"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

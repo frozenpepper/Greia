@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:07:36.449063+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Oh, hola! Soy Leo. Me gustan los cuentos, las palabras y todas esas preguntas que empiezan con por qué. Si hay algo por descubrir, ¡estoy listo!",
+    "cue_id": "greia.shared.leo.es",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/_intros/es/leo.ogg",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "¡Ay, wow, hola! Soy Leo! Me gustan los cuentos, las palabras y todas esas preguntas que empiezan con por qué. Si hay algo por descubrir, estoy listo.",
+    "score": 0.9653,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/_intros/es/leo.ogg",
+    "bytes": 88863,
+    "sha256": "e1a43e12b7db1e9a008e81b04583daad4190e38eedf648061541e80604b28d1f"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

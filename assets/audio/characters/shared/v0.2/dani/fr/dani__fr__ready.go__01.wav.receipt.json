@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:24:09.543399+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Allez, on y va !",
+    "cue_id": "greia.shared.dani__fr__ready.go__01.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/dani/fr/dani__fr__ready.go__01.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Thomas",
+    "rate_wpm": 185,
+    "synthesis_text": "Allez, on y va !"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/dani/fr/dani__fr__ready.go__01.wav",
+    "bytes": 48650,
+    "sha256": "b2f47d05cc4c51dfb2fa6724dbe07a7f0b44a3720c8fc114ca45b185998808f5"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

@@ -76,7 +76,15 @@ def _is_safe_relative(path_str: str, activity_root: Path) -> bool:
         return False
 
 
-def audit_activities(required_locales: tuple[str, ...] = ("it", "en")) -> dict[str, int | list[str]]:
+def _released_locales() -> tuple[str, ...]:
+    sys.path.insert(0, str(PROJECT_ROOT / "src"))
+    from greia_platform.system_language import SUPPORTED_SYSTEM_LOCALES
+
+    return tuple(SUPPORTED_SYSTEM_LOCALES)
+
+
+def audit_activities(required_locales: tuple[str, ...] | None = None) -> dict[str, int | list[str]]:
+    required_locales = required_locales or _released_locales()
     built_in_roots = sorted(
         p for p in ACTIVITIES_ROOT.iterdir() if p.is_dir() and (p / "activity.toml").is_file()
     )
@@ -107,8 +115,21 @@ def audit_activities(required_locales: tuple[str, ...] = ("it", "en")) -> dict[s
             audio = data.get("audio", {}) if isinstance(data.get("audio"), dict) else {}
             entry = audio.get("activity.title")
             if not isinstance(entry, dict):
-                missing_mapping.append(f"{act_root.name}/{locale}")
-                continue
+                # The shared runtime resolver projects the conventional title
+                # file into every locale (greia_platform.localization), so an
+                # empty locale audio map is complete when that file exists.
+                conventional = next(
+                    (
+                        f"locales/{locale}/audio/activity-title{suffix}"
+                        for suffix in (".wav", ".ogg")
+                        if (act_root / "locales" / locale / "audio" / f"activity-title{suffix}").is_file()
+                    ),
+                    None,
+                )
+                if conventional is None:
+                    missing_mapping.append(f"{act_root.name}/{locale}")
+                    continue
+                entry = {"path": conventional, "caption_key": "activity.title"}
             path_str = entry.get("path")
             caption = entry.get("caption_key")
             if not isinstance(path_str, str) or not path_str.strip():
@@ -166,7 +187,8 @@ def audit_activities(required_locales: tuple[str, ...] = ("it", "en")) -> dict[s
     }
 
 
-def audit_collections(required_locales: tuple[str, ...] = ("it", "en")) -> dict[str, int | list[str]]:
+def audit_collections(required_locales: tuple[str, ...] | None = None) -> dict[str, int | list[str]]:
+    required_locales = required_locales or _released_locales()
     try:
         cids = _load_collection_ids()
     except RuntimeError as exc:
@@ -214,11 +236,14 @@ def audit_collections(required_locales: tuple[str, ...] = ("it", "en")) -> dict[
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Audit launcher spoken-label completeness")
-    parser.add_argument("--locales", nargs="+", default=["it", "en"], help="required locales")
+    parser.add_argument(
+        "--locales", nargs="+", default=None,
+        help="required locales (default: every released Greia language)",
+    )
     parser.add_argument("--json", action="store_true", help="emit JSON")
     args = parser.parse_args(argv)
 
-    locales = tuple(args.locales)
+    locales = tuple(args.locales) if args.locales else _released_locales()
     act = audit_activities(locales)
     coll = audit_collections(locales)
 

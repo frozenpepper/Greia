@@ -21,6 +21,7 @@ from greia_platform.history import (
 from greia_platform.permissions import ActivityAuthority
 from greia_platform.profiles import ProfileContext, ProfileError
 from greia_platform.storage import ActivityStorageService, StorageError
+from greia_platform.system_language import resolve_child_locale, resolve_device_locale
 
 from .creation_selection import SelectionRequest
 from .display_session import (
@@ -993,8 +994,8 @@ class ActivitySupervisor:
                 "GREIA_PROFILE_ID": profile.profile.profile_id,
                 "GREIA_PROFILE_NAME": profile.profile.display_name,
                 "GREIA_PROFILE_AVATAR": profile.profile.avatar_id,
-                "GREIA_PROFILE_LOCALE": getattr(profile.profile, "locale", None) or os.environ.get("GREIA_PROFILE_LOCALE") or os.environ.get("GREIA_DEVICE_LOCALE") or "it",
-                "GREIA_DEVICE_LOCALE": os.environ.get("GREIA_DEVICE_LOCALE") or "it",
+                "GREIA_PROFILE_LOCALE": resolve_child_locale(getattr(profile.profile, "locale", None)),
+                "GREIA_DEVICE_LOCALE": resolve_device_locale(),
                 "GREIA_PROFILE_UPPERCASE": (
                     "uppercase"
                     if getattr(profile.profile, "uppercase_text", True)

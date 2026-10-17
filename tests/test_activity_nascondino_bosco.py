@@ -119,7 +119,7 @@ class ManifestAndLocaleTests(unittest.TestCase):
             data = tomllib.load(handle)
         self.assertEqual(data["activity"]["id"], "org.greia.nascondino-bosco")
         self.assertEqual(data["activity"]["title_key"], "activity.nascondino_bosco.title")
-        self.assertEqual(sorted(data["activity"]["languages"]), ["en", "it"])  # ES/FR stay staged
+        self.assertEqual(sorted(data["activity"]["languages"]), ["en", "es", "fr", "it"])  # four released languages (owner 2026-10-17)
         self.assertEqual(data["input"]["profile"], "hybrid")
         education = data["education"]
         self.assertEqual((education["recommended_age_min"], education["recommended_age_max"]), (3, 5))

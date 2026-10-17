@@ -111,7 +111,7 @@ class JourneyContentTests(unittest.TestCase):
         self.assertIn("sea", manifest["presentation"]["discovery_tags"])
         events = {event["id"] for event in education["events"]}
         self.assertEqual(events, {"dolphin.chapter_completed", "dolphin.fact_opened", "dolphin.journey_score"})
-        self.assertEqual(set(manifest["activity"]["languages"]), {"it", "en"})
+        self.assertEqual(set(manifest["activity"]["languages"]), {"it", "en", "es", "fr"})
 
 
 class LocaleParityTests(unittest.TestCase):

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:23:55.104845+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Continue comme ça !",
+    "cue_id": "greia.shared.dani__fr__encourage.progress__01.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/dani/fr/dani__fr__encourage.progress__01.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Thomas",
+    "rate_wpm": 185,
+    "synthesis_text": "Continue comme ça !"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/dani/fr/dani__fr__encourage.progress__01.wav",
+    "bytes": 44002,
+    "sha256": "c2d1dbdddc056ec5d18649b281a95090faba0416bb19d29b86dcacb3b14dc656"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

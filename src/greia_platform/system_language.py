@@ -4,6 +4,8 @@ import argparse
 import json
 import os
 import subprocess
+import time
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -47,14 +49,21 @@ class SystemLanguage:
 
 
 # This is the ONE canonical selectable-language registry for the installer,
-# installed Parent panel, privileged helper and Parent API clients. Offering a
-# locale is a product support claim, not merely an ability to persist its tag.
-# Spanish/French translations are being authored but MUST NOT enter this list
-# until text, locale switching, voice inventory and release checks are complete.
-# See docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md.
+# installed Parent panel, privileged helper, Parent API clients and every
+# built-in Activity manifest. Offering a locale is a product support claim, not
+# merely an ability to persist its tag. The owner released Spanish and French
+# alongside English and Italian on 2026-10-17; every selector offers exactly
+# these four (tests enforce four-language text parity across Shell, installer,
+# Parent panel and Activities). See
+# docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md.
 SUPPORTED_SYSTEM_LANGUAGES: tuple[SystemLanguage, ...] = (
     SystemLanguage("en", "English", "English", "🇬🇧"),
     SystemLanguage("it", "Italian", "Italiano", "🇮🇹"),
+    SystemLanguage("es", "Spanish", "Español", "🇪🇸"),
+    SystemLanguage("fr", "French", "Français", "🇫🇷"),
+)
+SUPPORTED_SYSTEM_LOCALES: tuple[str, ...] = tuple(
+    item.locale for item in SUPPORTED_SYSTEM_LANGUAGES
 )
 _LANGUAGES_BY_LOCALE = {item.locale: item for item in SUPPORTED_SYSTEM_LANGUAGES}
 
@@ -169,6 +178,84 @@ class SystemLanguageStore:
             return system_language(locale)
         except SystemLanguageError:
             return None
+
+
+def resolve_device_locale(
+    environ: Mapping[str, str] | None = None,
+    *,
+    store: "SystemLanguageStore | None" = None,
+) -> str:
+    """Return the Greia device-default UI locale (single source of truth).
+
+    An explicit ``GREIA_DEVICE_LOCALE`` launch value (simulator, test harness,
+    supervisor-injected Activity environment) wins when it names a released
+    language. Otherwise the persisted device language is read: the parent's
+    choice in ``language.json`` or, before any change, the installer's choice in
+    the install record. Anything unreadable or retired falls back to
+    ``DEFAULT_SYSTEM_LOCALE``. Never guesses a language from Linux ``LANG``.
+    """
+
+    env = os.environ if environ is None else environ
+    explicit = (env.get("GREIA_DEVICE_LOCALE") or "").strip()
+    if explicit:
+        try:
+            return system_language(explicit).locale
+        except SystemLanguageError:
+            pass
+    try:
+        return (store or SystemLanguageStore.from_environment()).read().locale
+    except (SystemLanguageError, OSError, ValueError):
+        return DEFAULT_SYSTEM_LOCALE
+
+
+def resolve_child_locale(
+    profile_locale: str | None = None,
+    environ: Mapping[str, str] | None = None,
+    *,
+    store: "SystemLanguageStore | None" = None,
+) -> str:
+    """Return the child's effective UI locale: profile override, then device.
+
+    ``profile_locale`` (a profile's own override) or an explicit
+    ``GREIA_PROFILE_LOCALE`` win when they name a released language; otherwise
+    :func:`resolve_device_locale` applies.
+    """
+
+    env = os.environ if environ is None else environ
+    for candidate in (profile_locale, env.get("GREIA_PROFILE_LOCALE")):
+        value = (candidate or "").strip()
+        if not value:
+            continue
+        try:
+            return system_language(value).locale
+        except SystemLanguageError:
+            continue
+    return resolve_device_locale(env, store=store)
+
+
+class CachedDeviceLocale:
+    """Tiny time-bounded cache of :func:`resolve_device_locale` for render loops.
+
+    The Shell asks for its language every frame; re-reading two small JSON
+    files that often is wasteful on the Acer floor. A parent's change is
+    picked up within ``ttl_seconds``.
+    """
+
+    def __init__(self, ttl_seconds: float = 2.0, *, clock=time.monotonic) -> None:
+        self._ttl = float(ttl_seconds)
+        self._clock = clock
+        self._value: str | None = None
+        self._read_at = 0.0
+
+    def get(self) -> str:
+        now = self._clock()
+        if self._value is None or now - self._read_at >= self._ttl:
+            self._value = resolve_device_locale()
+            self._read_at = now
+        return self._value
+
+    def invalidate(self) -> None:
+        self._value = None
 
 
 class SystemLanguageService:

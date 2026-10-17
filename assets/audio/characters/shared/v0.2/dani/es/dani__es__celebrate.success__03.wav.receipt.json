@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:23:37.045797+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "shared_character_utterance",
+    "locale": "es",
+    "text": "¡Qué maravilla!",
+    "cue_id": "greia.shared.dani__es__celebrate.success__03.es",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/dani/es/dani__es__celebrate.success__03.wav",
+    "verification": "off",
+    "max_attempts": 2
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Mónica",
+    "rate_wpm": 185,
+    "synthesis_text": "¡Qué maravilla!"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/dani/es/dani__es__celebrate.success__03.wav",
+    "bytes": 31508,
+    "sha256": "2e16faab26cfe431352c5f5a5c75d80676b17607e07fc105c3eae8fb8067cb06"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

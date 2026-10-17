@@ -91,7 +91,7 @@ class ManifestAndLocaleTests(unittest.TestCase):
     def test_manifest_matches_the_numbers_rung(self) -> None:
         manifest = tomllib.loads((PACKAGE / "activity.toml").read_text(encoding="utf-8"))
         self.assertEqual(manifest["activity"]["id"], "org.greia.stelle-incantate")
-        self.assertEqual(manifest["activity"]["languages"], ["it", "en"])
+        self.assertEqual(manifest["activity"]["languages"], ["it", "en", "es", "fr"])
         education = manifest["education"]
         self.assertEqual((education["recommended_age_min"], education["recommended_age_max"]), (4, 6))
         self.assertEqual(education["difficulty_max"], MAX_STAGE)
@@ -117,8 +117,15 @@ class ManifestAndLocaleTests(unittest.TestCase):
                         self.assertTrue(bundle["strings"][figure.fact_key].strip())
                 for key in ("victory.title", "victory.subtitle", "button.play_again"):
                     self.assertTrue(bundle["strings"][key].strip())
-        self.assertEqual(bundles["es"]["audio"], {})
-        self.assertEqual(bundles["fr"]["audio"], {})
+        # ES/FR facts were recorded under underscore names; the bundles map
+        # them explicitly so the resolver never falls back to English.
+        for locale in ("es", "fr"):
+            audio = bundles[locale]["audio"]
+            real = [figure for figure in ALL_FIGURES if figure.real]
+            self.assertLessEqual({figure.fact_key for figure in real}, set(audio))
+            for entry in audio.values():
+                self.assertTrue(entry["path"].startswith(f"assets/audio/{locale}/"))
+                self.assertTrue((PACKAGE / entry["path"]).is_file())
 
     def test_real_constellation_facts_keep_their_voice_in_en_and_it(self) -> None:
         for locale in ("en", "it"):

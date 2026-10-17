@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:17:22.715465+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¿Cómo te llamas? Busca las letras y escribe tu nombre. ¡Un adulto te puede ayudar!",
+    "cue_id": "greia.first_boot.ask_name.es",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/system/first-boot/es/ask_name.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "como te llamas. Busca las letras y escribé tu nombre. Un adulto de puede ayudar.",
+    "score": 0.9143,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/system/first-boot/es/ask_name.wav",
+    "bytes": 266442,
+    "sha256": "50056cc159556516e50c46b1e9cca8863ee25af1c3f9337d2a6092c67a85dd14"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

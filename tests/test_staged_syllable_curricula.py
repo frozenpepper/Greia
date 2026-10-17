@@ -83,8 +83,11 @@ class StagedSyllableCurriculumTests(unittest.TestCase):
                 if locale == "fr":
                     self.assertNotIn("ME", approved)
                     self.assertIn("MÉ", approved)
-                    # Family syllables without a French recording are never offered.
-                    self.assertNotIn("MÉ", TrainRoundFactory(random.Random(1), "fr", clip_exists=recorded).approved)
+                    # MÉ was recorded on 2026-10-17, so it is offered now ...
+                    self.assertIn("MÉ", TrainRoundFactory(random.Random(1), "fr", clip_exists=recorded).approved)
+                    # ... and a family syllable without a recording is never offered.
+                    without = lambda stem: stem != "syl_mé" and recorded(stem)
+                    self.assertNotIn("MÉ", TrainRoundFactory(random.Random(1), "fr", clip_exists=without).approved)
                 else:
                     self.assertNotIn("CE", approved)  # Not in the ES families or words.
 
@@ -102,7 +105,7 @@ class StagedSyllableCurriculumTests(unittest.TestCase):
 
     def test_staged_languages_are_not_advertised(self) -> None:
         manifest = tomllib.loads((PACKAGE / "activity.toml").read_text(encoding="utf-8"))
-        self.assertEqual(manifest["activity"]["languages"], ["it", "en"])
+        self.assertEqual(manifest["activity"]["languages"], ["it", "en", "es", "fr"])
 
     def test_source_syllable_audio_inventory_exposes_required_unvoiced_cues(self) -> None:
         from tools.audit_greia_language_coverage import _syllable_lesson_audio

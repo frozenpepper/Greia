@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T11:57:26.764105+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Encore une fois !",
+    "cue_id": "greia.shared.tito__fr__encourage.retry__03.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/tito/fr/tito__fr__encourage.retry__03.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.tito.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "ah… On peut lui encore dire…",
+    "score": 0.3314,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/tito/fr/tito__fr__encourage.retry__03.wav",
+    "bytes": 79900,
+    "sha256": "c989a3c719ef0f42b91dd6303bdc368bd6812b87c7d0a05b957d56b1de09da00"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

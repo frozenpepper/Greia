@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:59:22.571404+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Vuela a través de los aros de arcoíris!",
+    "cue_id": "greia.requested.fly_rings.es",
+    "output": "tmp/greia-four-languages-20261017/review/activities/volo_draghetto/assets/audio/es/fly_rings.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.flash.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "uela a través de los Aros de Arcoíris.",
+    "score": 0.9413,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/volo_draghetto/assets/audio/es/fly_rings.wav",
+    "bytes": 114298,
+    "sha256": "82a4eed70339efe00a1e7ec1082050be8b067b13a1d81253b1bf19fadd6c86e6"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

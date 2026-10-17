@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T06:36:01.159619+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "shared_character_utterance",
+    "locale": "fr",
+    "text": "Encore une fois !",
+    "cue_id": "greia.shared.lilli__fr__encourage.retry__03.fr",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__encourage.retry__03.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.lilli.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "On le�� et un peu plus efficace.",
+    "score": 0.2659,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/lilli/fr/lilli__fr__encourage.retry__03.wav",
+    "bytes": 53660,
+    "sha256": "736a5a18bb0abec5d898f90ff03fe7f01a8cb5f6ef40cae68e5076f008f91aad"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

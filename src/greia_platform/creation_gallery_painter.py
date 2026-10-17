@@ -72,6 +72,28 @@ def nine_slice(source: Any, size: tuple[int, int], insets: tuple[int, int, int, 
     return out
 
 
+# Four released Greia languages (en/it/es/fr); English is the fallback.
+_GALLERY_TEXT: dict[str, dict[str, str]] = {
+    "title.library": {
+        "en": "My Creations", "it": "Le mie creazioni",
+        "es": "Mis creaciones", "fr": "Mes créations",
+    },
+    "title.pick": {
+        "en": "Choose a creation", "it": "Scegli una creazione",
+        "es": "Elige una creación", "fr": "Choisis une création",
+    },
+    "empty": {
+        "en": "Your creations will appear here!",
+        "it": "Qui nasceranno nuove creazioni!",
+        "es": "¡Aquí aparecerán tus creaciones!",
+        "fr": "Tes créations apparaîtront ici !",
+    },
+    "confirm.delete": {
+        "en": "Delete?", "it": "Eliminare?", "es": "¿Borrar?", "fr": "Supprimer ?",
+    },
+}
+
+
 class CreationsPygamePainter:
     """One renderer for both My Creations and the child selection surface."""
 
@@ -98,7 +120,8 @@ class CreationsPygamePainter:
     ) -> None:
         self.controller = controller
         self.typography = typography
-        self.locale = "it" if locale.startswith("it") else "en"
+        language = (locale or "en").split("-", 1)[0].lower()
+        self.locale = language if language in _GALLERY_TEXT["title.library"] else "en"
         self._visual_cache = visual_cache
         self._backdrop = backdrop
         self._greeter = greeter
@@ -125,8 +148,9 @@ class CreationsPygamePainter:
         self._frames.clear()
         self._targets.clear()
 
-    def _label(self, it: str, en: str) -> str:
-        return self._text_transform(it if self.locale == "it" else en)
+    def _label(self, key: str) -> str:
+        options = _GALLERY_TEXT[key]
+        return self._text_transform(options.get(self.locale, options["en"]))
 
     def _text(self, target: Any, label: str, x: int, y: int, size: int, *, center: bool = False) -> None:
         font = self.typography.font(FontRole.TITLE if size >= 27 else FontRole.CONTROL, size)
@@ -362,7 +386,7 @@ class CreationsPygamePainter:
     def _grid(self, screen: Any, layout: CreationGalleryLayout, pygame: Any) -> None:
         page=self.controller.page
         width, height = screen.get_size()
-        title=self._label("Le mie creazioni","My Creations") if self.controller.mode==GalleryMode.LIBRARY else self._label("Scegli una creazione","Choose a creation")
+        title=self._label("title.library") if self.controller.mode==GalleryMode.LIBRARY else self._label("title.pick")
         self._title(screen, layout, title, pygame)
         labels={
             CreationFamily.ALL:("Tutte","All","all"),
@@ -467,7 +491,7 @@ class CreationsPygamePainter:
             }[only_type]
         else:
             empty_icon = kind_by_family.get(page.family, "all")
-        caption = self._label("Qui nasceranno nuove creazioni!", "Your creations will appear here!")
+        caption = self._label("empty")
         if self._storybook:
             show_caption = width >= 740 and height >= 490
             frame_h = max(90, min(260, bottom - top - (44 if show_caption else 0)))
@@ -548,7 +572,7 @@ class CreationsPygamePainter:
         shield.fill((10,16,38,185) if not self._on_scene else (61, 44, 31, 150))
         screen.blit(shield,(0,0))
         dialog=pygame.Rect(screen.get_width()//2-230,screen.get_height()//2-140,460,220)
-        caption=self._label("Eliminare?","Delete?")
+        caption=self._label("confirm.delete")
         frame = None
         if self._storybook:
             # Sized to stay clear of the answer buttons on every screen.

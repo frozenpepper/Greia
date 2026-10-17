@@ -27,8 +27,8 @@ class SystemLanguageTests(unittest.TestCase):
         locales = [item.locale for item in SUPPORTED_SYSTEM_LANGUAGES]
         self.assertEqual(len(locales), len(set(locales)))
         self.assertEqual(DEFAULT_SYSTEM_LOCALE, "en")
-        self.assertEqual(locales, ["en", "it"])
-        for unavailable in ("es", "fr", "de", "zh-CN", "pt", "ar", "hi", "id", "bn", "sw"):
+        self.assertEqual(locales, ["en", "it", "es", "fr"])
+        for unavailable in ("de", "zh-CN", "pt", "ar", "hi", "id", "bn", "sw"):
             self.assertNotIn(unavailable, locales)
             with self.assertRaises(SystemLanguageError):
                 system_language(unavailable)
@@ -61,17 +61,18 @@ class SystemLanguageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             record = root / "install-record.json"
-            record.write_text(json.dumps({"locale": "es"}), encoding="utf-8")
+            # Retired tags from the old twelve-language registry fail soft.
+            record.write_text(json.dumps({"locale": "de"}), encoding="utf-8")
             settings = root / "settings"
             settings.mkdir()
             override = settings / "language.json"
             override.write_text(
-                json.dumps({"schema_version": 1, "locale": "fr"}), encoding="utf-8"
+                json.dumps({"schema_version": 1, "locale": "zh-CN"}), encoding="utf-8"
             )
             store = SystemLanguageStore(settings, install_record_path=record)
             self.assertEqual(store.read().locale, "en")
-            self.assertEqual(json.loads(record.read_text())["locale"], "es")
-            self.assertEqual(json.loads(override.read_text())["locale"], "fr")
+            self.assertEqual(json.loads(record.read_text())["locale"], "de")
+            self.assertEqual(json.loads(override.read_text())["locale"], "zh-CN")
             store.replace("it")
             self.assertEqual(store.read().locale, "it")
 
@@ -141,7 +142,7 @@ class SystemLanguageTests(unittest.TestCase):
                     active_profile_status_path=root / "active-profile.json",
                 )
                 self.assertEqual(app.language_payload()["locale"], "it")
-                self.assertEqual([item["locale"] for item in app.language_payload()["languages"]], ["en", "it"])
+                self.assertEqual([item["locale"] for item in app.language_payload()["languages"]], ["en", "it", "es", "fr"])
                 with self.assertRaises(SystemLanguageError):
                     app.update_language("hi")
                 self.assertEqual(app.update_language("en")["locale"], "en")

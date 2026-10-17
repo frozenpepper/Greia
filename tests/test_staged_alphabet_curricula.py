@@ -70,7 +70,7 @@ class StagedAlphabetCurriculumTests(unittest.TestCase):
         manifest = tomllib.loads(
             (ROOT / "activities/alfabeto_leo/activity.toml").read_text(encoding="utf-8")
         )
-        self.assertEqual(manifest["activity"]["languages"], ["it", "en"])
+        self.assertEqual(manifest["activity"]["languages"], ["it", "en", "es", "fr"])
 
     def test_real_alphabet_audio_inventory_counts_enye_and_blocks_scripts(self) -> None:
         from tools.audit_greia_language_coverage import _alphabet_lesson_audio

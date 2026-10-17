@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:03:10.743421+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Aide Tito à trouver le chemin de sa tente !",
+    "cue_id": "greia.requested.help_tito_tent.fr",
+    "output": "tmp/greia-four-languages-20261017/review/activities/labirinto_magico/assets/audio/fr/help_tito_tent.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.tito.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "et d'étitaux à trouver le chemin de sa tente.",
+    "score": 0.8238,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/labirinto_magico/assets/audio/fr/help_tito_tent.wav",
+    "bytes": 114298,
+    "sha256": "e8cbd31b692335ee8eb9d863a8ecb63acc5d32fa5fab6f73ec6db16bb9fe1ad5"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

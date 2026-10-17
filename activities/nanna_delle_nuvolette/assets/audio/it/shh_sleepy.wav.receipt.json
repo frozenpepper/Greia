@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T11:45:48.370609+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Shh, è ora di nanna",
+    "cue_id": "greia.requested.shh_sleepy.it",
+    "output": "tmp/greia-four-languages-20261017/review/activities/nanna_delle_nuvolette/assets/audio/it/shh_sleepy.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.momo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "it",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "E ora di nada",
+    "score": 0.6168,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "activities/nanna_delle_nuvolette/assets/audio/it/shh_sleepy.wav",
+    "bytes": 91806,
+    "sha256": "96d600a4ae39f8e02f35ed8b8eb2b9bfe3f3f206468135a90f9ee621ec56e9b4"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

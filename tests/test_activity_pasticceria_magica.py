@@ -212,18 +212,18 @@ class FreeCakeAndSaveTests(unittest.TestCase):
 
 class SpokenWordsTests(unittest.TestCase):
     def test_numbers_are_spoken_only_when_the_shared_bank_exists(self) -> None:
+        from unittest import mock
+
         from greia_platform import localization
         from activities.pasticceria_magica.pasticceria_audio import BakeryAudio
 
-        audio = BakeryAudio(locale="it")
-        self.assertFalse(audio.has_number(3))
-        self.assertFalse(audio.say_number(3))
-        clip = next((ROOT / "assets/audio/characters/shared/v0.2/momo/it").glob("*.wav"))
-        localization.shared_number_audio_path = lambda root, value, locale: clip
-        try:
-            self.assertTrue(BakeryAudio(locale="it").has_number(3))
-        finally:
-            del localization.shared_number_audio_path
+        # The shared numbers bank (assets/audio/numbers/v1) ships 0..25 in all
+        # four released languages since 2026-10-17.
+        self.assertTrue(BakeryAudio(locale="it").has_number(3))
+        with mock.patch.object(localization, "shared_number_audio_path", lambda root, value, locale: None):
+            audio = BakeryAudio(locale="it")
+            self.assertFalse(audio.has_number(3))
+            self.assertFalse(audio.say_number(3))
 
 
 class LocaleAndManifestTests(unittest.TestCase):
@@ -248,7 +248,7 @@ class LocaleAndManifestTests(unittest.TestCase):
         events = {event["id"] for event in manifest["education"]["events"]}
         self.assertEqual(events, {"recipe.completed", "pattern.solved", "round.completed", "creation.completed"})
         self.assertEqual(manifest["input"]["profile"], "hybrid")
-        self.assertEqual(manifest["activity"]["languages"], ["it", "en"])
+        self.assertEqual(manifest["activity"]["languages"], ["it", "en", "es", "fr"])
 
 
 # -- app loop ------------------------------------------------------------------------------

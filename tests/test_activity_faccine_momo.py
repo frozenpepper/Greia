@@ -129,7 +129,7 @@ class ManifestAndLocaleTests(unittest.TestCase):
         data = tomllib.loads((ACTIVITY_DIR / "activity.toml").read_text(encoding="utf-8"))
         self.assertEqual(data["activity"]["id"], "org.greia.faccine-momo")
         self.assertEqual(data["activity"]["legacy_ids"], ["faccine_momo"])
-        self.assertEqual(data["activity"]["languages"], ["it", "en"])
+        self.assertEqual(data["activity"]["languages"], ["it", "en", "es", "fr"])
         education = data["education"]
         self.assertEqual((education["recommended_age_min"], education["recommended_age_max"]), (3, 5))
         self.assertTrue(education["adaptive_difficulty"])

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 
 from greia_platform.system_language import (
     DEFAULT_SYSTEM_LOCALE,
     SUPPORTED_SYSTEM_LANGUAGES,
     SystemLanguageError,
-    SystemLanguageStore,
+    resolve_child_locale,
     system_language,
 )
 
@@ -111,21 +110,8 @@ def resolve_achievement_locale() -> str:
     language store remains authoritative.
     """
 
-    for variable in ("GREIA_PROFILE_LOCALE", "GREIA_DEVICE_LOCALE"):
-        explicit = (os.environ.get(variable) or "").strip()
-        if not explicit:
-            continue
-        try:
-            return system_language(explicit).locale
-        except SystemLanguageError:
-            # A malformed higher-priority process-local value must not hide a
-            # valid lower-priority launch value or installed device setting.
-            continue
-
-    try:
-        return SystemLanguageStore.from_environment().read().locale
-    except (SystemLanguageError, OSError, ValueError):
-        return DEFAULT_SYSTEM_LOCALE
+    # A malformed higher-priority value never hides a valid lower-priority one.
+    return resolve_child_locale()
 
 
 def achievement_ui_strings(locale: str | None) -> AchievementUiStrings:

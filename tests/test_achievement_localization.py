@@ -44,14 +44,19 @@ class AchievementLocalizationTests(unittest.TestCase):
         self.assertEqual(copy.new_badge, "NUOVO DISTINTIVO!")
         self.assertNotIn("MY BADGES", copy.library_title)
 
-    def test_staged_languages_keep_complete_copy_but_are_not_selectable_yet(self) -> None:
-        # ES/FR (and the other staged tags) are not selectable system languages
-        # until their release gates pass, so selecting one fails soft to the
-        # default; their translated chrome stays staged in the table.
-        from greia_launcher.achievement_localization import _UI_STRINGS
+    def test_released_spanish_and_french_use_their_own_chrome(self) -> None:
+        # ES/FR were released on 2026-10-17 alongside EN/IT; retired tags
+        # (for example German) still fail soft to the English default.
+        from greia_launcher.achievement_localization import (
+            _UI_STRINGS,
+            missing_supported_locales,
+        )
 
+        self.assertEqual(missing_supported_locales(), ())
+        self.assertEqual(achievement_ui_strings("es"), _UI_STRINGS["es"])
+        self.assertEqual(achievement_ui_strings("fr"), _UI_STRINGS["fr"])
         self.assertEqual(
-            achievement_ui_strings("es"), achievement_ui_strings("en")
+            achievement_ui_strings("de"), achievement_ui_strings("en")
         )
         self.assertEqual(_UI_STRINGS["es"].library_title, "MIS INSIGNIAS")
         self.assertEqual(_UI_STRINGS["es"].new_label, "NUEVO")

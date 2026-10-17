@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T11:53:12.984723+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Vole à travers les anneaux arc-en-ciel !",
+    "cue_id": "greia.requested.fly_rings.fr",
+    "output": "tmp/greia-four-languages-20261017/review/activities/volo_draghetto/assets/audio/fr/fly_rings.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.flash.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Voilà à travers les annos à consiel.",
+    "score": 0.6308,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "activities/volo_draghetto/assets/audio/fr/fly_rings.wav",
+    "bytes": 104154,
+    "sha256": "0a2af5739f1307e130cf6e859a85e86eec5f42d7d43626a9e0bc294f9c8fef27"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

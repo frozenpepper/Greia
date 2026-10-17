@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T07:13:41.905739+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Oh, ciao! Io sono Leo. Questa Greia è tutta nuova: prepariamo un posto solo per te!",
+    "cue_id": "greia.first_boot.welcome.it",
+    "output": "tmp/greia-four-languages-20261017/review/assets/audio/system/first-boot/it/welcome.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "it",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "hai oh ciao e io sono Leo questa graia tutta nuova prepariamo un posto solo per te",
+    "score": 0.9063,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/system/first-boot/it/welcome.wav",
+    "bytes": 266442,
+    "sha256": "23175404ffa27533572c22030cd7945ce4f4dc4e5b04d01a1f5cae8ad2424859"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T11:52:07.188821+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Le hérisson dort. Passe sur la pointe des pieds !",
+    "cue_id": "greia.requested.hedgehog_sleeping.fr",
+    "output": "tmp/greia-four-languages-20261017/review/activities/corsa_bacche/assets/audio/fr/hedgehog_sleeping.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.momo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Levé vissons d'or, passe sur la point de pied.",
+    "score": 0.6739,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "activities/corsa_bacche/assets/audio/fr/hedgehog_sleeping.wav",
+    "bytes": 137230,
+    "sha256": "3d645d1b7bb8898c7b6f3fa3c587ff8783823a62cff09ddae7c51739e360b540"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

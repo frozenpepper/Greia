@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-17T08:04:59.723543+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Pon las piezas en los sitios que brillan!",
+    "cue_id": "greia.requested.pieces_in_spots.es",
+    "output": "tmp/greia-four-languages-20261017/review/activities/la_discesa_della_biglia/assets/audio/es/pieces_in_spots.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.tito.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "con las piezas en los sitios que brillan.",
+    "score": 0.94,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/la_discesa_della_biglia/assets/audio/es/pieces_in_spots.wav",
+    "bytes": 99744,
+    "sha256": "8eb1a3d7d79c6d9783ca3d5405f5a562a789d2d7bb54262f74db0502c75c41d7"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+}

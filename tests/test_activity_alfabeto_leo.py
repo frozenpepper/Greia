@@ -53,7 +53,7 @@ class ManifestTests(unittest.TestCase):
         act = data["activity"]
         self.assertEqual(act["id"], "org.greia.alfabeto-leo")
         self.assertEqual(act["title_key"], "activity.alfabeto_leo.title")
-        self.assertEqual(act["languages"], ["it", "en"])
+        self.assertEqual(act["languages"], ["it", "en", "es", "fr"])
         edu = data["education"]
         self.assertEqual((edu["recommended_age_min"], edu["recommended_age_max"]), (3, 5))
         self.assertTrue(edu["adaptive_difficulty"])

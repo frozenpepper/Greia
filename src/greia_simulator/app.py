@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from greia_platform.activities import RuntimeCatalogue
+from greia_platform.system_language import SUPPORTED_SYSTEM_LANGUAGES
 from greia_platform.ui_preferences import UiPreferencesStore
 
 from .device import (
@@ -113,12 +114,10 @@ class SimulatorDesktopApp:
             state="readonly",
         ).pack(side="right")
 
+        # Offer exactly the canonical released device languages.
         self._language_mapping = {
-            "Italiano 🇮🇹 (it)": "it",
-            "English 🇬🇧 (en)": "en",
-            "Español 🇪🇸 (es)": "es",
-            "Deutsch 🇩🇪 (de)": "de",
-            "Français 🇫🇷 (fr)": "fr",
+            f"{item.native_name} {item.flag} ({item.locale})": item.locale
+            for item in SUPPORTED_SYSTEM_LANGUAGES
         }
         lang_row = ttk.Frame(profile_group)
         lang_row.pack(fill="x", pady=(8, 0))

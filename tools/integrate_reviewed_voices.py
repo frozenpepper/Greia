@@ -4,6 +4,17 @@
 Copies staged review audio candidates (.wav, .ogg) and their .receipt.json records
 into their canonical locations in activities/, assets/audio/, and activity_incubator/.
 Updates receipt human_review status to APPROVED and records owner acceptance.
+
+Committed recordings are owner-approved and final: this tool NEVER overwrites an
+existing destination file (audio or receipt). A collision is reported and skipped,
+and the run exits non-zero so the operator notices.
+
+Layouts:
+
+* ``app`` (default, historical): ``<review>/<app>/<locale>/<subpath>``;
+* ``mirror``: ``<review>/<repository-relative path>`` — the review tree mirrors the
+  canonical destination exactly (shared character library, vocabulary/number
+  banks, first-boot lines, Activity packages).
 """
 
 from __future__ import annotations
@@ -46,18 +57,27 @@ def compute_destination(app: str, loc: str, subpath: Path) -> list[Path]:
     return destinations
 
 
-def integrate(review_dir: Path, ledger_path: Path | None = None, progress_path: Path | None = None) -> int:
+DEFAULT_ACCEPTANCE_NOTE = "Approved by repository owner on 2026-10-15."
+
+
+def integrate(
+    review_dir: Path,
+    ledger_path: Path | None = None,
+    progress_path: Path | None = None,
+    *,
+    layout: str = "app",
+    acceptance_note: str = DEFAULT_ACCEPTANCE_NOTE,
+    dry_run: bool = False,
+) -> int:
     audio_files = sorted(p for p in review_dir.glob("**/*") if p.is_file() and p.suffix in (".wav", ".ogg"))
     print(f"Found {len(audio_files)} audio candidates in {review_dir}")
 
     installed_count = 0
     receipts_count = 0
+    collisions: list[Path] = []
 
     for af in audio_files:
         rel = af.relative_to(review_dir)
-        app = rel.parts[0]
-        loc = rel.parts[1]
-        subpath = Path(*rel.parts[2:])
         receipt_source = af.with_name(af.name + ".receipt.json")
 
         receipt_data: dict[str, object] | None = None
@@ -67,8 +87,18 @@ def integrate(review_dir: Path, ledger_path: Path | None = None, progress_path: 
             except Exception as e:
                 print(f"Warning: failed to read receipt {receipt_source}: {e}", file=sys.stderr)
 
-        targets = compute_destination(app, loc, subpath)
+        if layout == "mirror":
+            targets = [PROJECT_ROOT / rel]
+        else:
+            targets = compute_destination(rel.parts[0], rel.parts[1], Path(*rel.parts[2:]))
         for dest in targets:
+            dest_receipt_path = dest.with_name(dest.name + ".receipt.json")
+            if dest.exists() or dest_receipt_path.exists():
+                collisions.append(dest)
+                continue
+            if dry_run:
+                installed_count += 1
+                continue
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(af, dest)
             installed_count += 1
@@ -77,7 +107,7 @@ def integrate(review_dir: Path, ledger_path: Path | None = None, progress_path: 
                 dest_receipt = dest.with_name(dest.name + ".receipt.json")
                 updated_receipt = dict(receipt_data)
                 updated_receipt["human_review"] = "APPROVED"
-                updated_receipt["acceptance_note"] = "Approved by repository owner on 2026-10-15."
+                updated_receipt["acceptance_note"] = acceptance_note
                 dest_sha = _sha256(dest)
                 updated_receipt["output"] = {
                     "path": str(dest.relative_to(PROJECT_ROOT)),
@@ -91,9 +121,11 @@ def integrate(review_dir: Path, ledger_path: Path | None = None, progress_path: 
                 receipts_count += 1
 
     print(f"Successfully integrated {installed_count} audio files and {receipts_count} receipts.")
+    for dest in collisions:
+        print(f"SKIPPED existing destination (never overwritten): {dest}", file=sys.stderr)
 
     # Update ledger if available
-    if ledger_path and ledger_path.exists():
+    if not dry_run and ledger_path and ledger_path.exists():
         rows: list[dict[str, str]] = []
         with open(ledger_path, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
@@ -111,7 +143,7 @@ def integrate(review_dir: Path, ledger_path: Path | None = None, progress_path: 
         print(f"Updated recording ledger: {ledger_path}")
 
     # Update progress if available
-    if progress_path and progress_path.exists():
+    if not dry_run and progress_path and progress_path.exists():
         rows = []
         with open(progress_path, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
@@ -127,7 +159,7 @@ def integrate(review_dir: Path, ledger_path: Path | None = None, progress_path: 
             writer.writerows(rows)
         print(f"Updated app progress: {progress_path}")
 
-    return 0
+    return 3 if collisions else 0
 
 
 def main() -> int:
@@ -135,8 +167,18 @@ def main() -> int:
     parser.add_argument("--review-dir", type=Path, default=DEFAULT_REVIEW_DIR)
     parser.add_argument("--ledger", type=Path, default=DEFAULT_LEDGER)
     parser.add_argument("--progress", type=Path, default=DEFAULT_PROGRESS)
+    parser.add_argument("--layout", choices=("app", "mirror"), default="app")
+    parser.add_argument("--acceptance-note", default=DEFAULT_ACCEPTANCE_NOTE)
+    parser.add_argument("--dry-run", action="store_true", help="report what would be copied")
     args = parser.parse_args()
-    return integrate(args.review_dir, args.ledger, args.progress)
+    return integrate(
+        args.review_dir,
+        args.ledger,
+        args.progress,
+        layout=args.layout,
+        acceptance_note=args.acceptance_note,
+        dry_run=args.dry_run,
+    )
 
 
 if __name__ == "__main__":

@@ -255,8 +255,16 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
         )
         self.assertTrue(expected.is_file())
         self.assertEqual(
-            shared_character_audio_path(root, "flash", "celebrate.success", "fr"),
+            shared_character_audio_path(root, "flash", "celebrate.success", "en-GB"),
             expected,
+        )
+        french = (
+            root / "assets/audio/characters/shared/v0.2/flash/fr/"
+            "flash__fr__celebrate.success__01.wav"
+        )
+        self.assertEqual(
+            shared_character_audio_path(root, "flash", "celebrate.success", "fr"),
+            french,
         )
         italian = (
             root / "assets/audio/characters/shared/v0.2/flash/it/"
@@ -273,9 +281,10 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
         bank = root / "assets/audio/vocab/v1"
         self.assertEqual(shared_vocab_audio_path(root, "apple", "it"), bank / "it/apple.wav")
         self.assertEqual(shared_vocab_audio_path(root, "apple", "it-IT"), bank / "it/apple.wav")
-        # No Italian "lion" clip yet and no Spanish bank: English is the floor.
-        self.assertEqual(shared_vocab_audio_path(root, "lion", "it"), bank / "en/lion.wav")
-        self.assertEqual(shared_vocab_audio_path(root, "apple", "es-ES"), bank / "en/apple.wav")
+        # Regional tags resolve to the base-language clip of the released bank.
+        self.assertEqual(shared_vocab_audio_path(root, "lion", "it"), bank / "it/lion.wav")
+        self.assertEqual(shared_vocab_audio_path(root, "apple", "es-ES"), bank / "es/apple.wav")
+        self.assertEqual(shared_vocab_audio_path(root, "apple", "fr-CA"), bank / "fr/apple.wav")
         self.assertIsNone(shared_vocab_audio_path(root, "not_a_noun", "en"))
         for noun in ("apple", "pizza"):
             for locale in ("en", "it"):
@@ -433,8 +442,10 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
             with self.subTest(activity=name):
                 english = activity_resources(root, requested_locale="en")
                 self.assertEqual(english.context.selected.value, "en")
-                staged = activity_resources(root, requested_locale="fr")
-                self.assertEqual(staged.context.selected.value, "it")
+                french = activity_resources(root, requested_locale="fr")
+                self.assertEqual(french.context.selected.value, "fr")
+                spanish = activity_resources(root, requested_locale="es-MX")
+                self.assertEqual(spanish.context.selected.value, "es")
 
 
 if __name__ == "__main__":

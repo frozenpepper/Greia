@@ -1,6 +1,6 @@
 # Greia System Language and Localization
 
-**Status:** accepted product behavior; language choices narrowed to currently shipped EN/IT, ES/FR in staged translation rollout  
+**Status:** accepted product behavior; four released languages EN/IT/ES/FR (owner decision 2026-10-17)  
 **Date:** 2026-08-19  
 **Architecture authority:** ADR 0028  
 **Canonical implementation:** `src/greia_platform/system_language.py`
@@ -27,11 +27,12 @@ The first graphical installer screen is a flag-first language chooser. It appear
 |---|---|---|
 | `en` | English | 🇬🇧 |
 | `it` | Italian | 🇮🇹 |
+| `es` | Spanish | 🇪🇸 |
+| `fr` | French | 🇫🇷 |
 
-Spanish `es` 🇪🇸 and French `fr` 🇫🇷 are the active next-language
-translation targets, but **not yet selectable**. They will be added to
-the same canonical registry only after installer, platform, Parent,
-built-in Activities and voice acceptance. German `de`, Simplified
+The owner released Spanish and French alongside English and Italian on
+2026-10-17: every selector offers exactly these four, no more, no fewer.
+German `de`, Simplified
 Chinese `zh-CN`, Portuguese `pt`, Arabic `ar`, Hindi `hi`,
 Indonesian `id`, Bengali `bn` and Swahili `sw` are not supported
 product choices at this time. Former twelve-language source/persistence
@@ -189,17 +190,12 @@ Selecting Italian does **not** make an English-only Activity invalid. The Activi
 
 ## 10. Selectable languages and truthful completeness
 
-The selectable languages are **currently English and Italian**,
-not the former twelve. Both still require a full gap audit for inline
-OS strings, legacy Activity speech and release-specific audio. Do not
-claim complete end-to-end voice or translation coverage until
-the four-language plan's L6 criteria are met.
-
-Spanish and French are staged as translation and audio targets. The
-installer now has Spanish/French maps for its known static messages
-and dynamic message formats, but the language selector intentionally
-does not advertise them yet. They must not be promoted merely because
-an install-time translation file exists.
+The selectable languages are **English, Italian, Spanish and French**
+(owner decision 2026-10-17), not the former twelve. Text keys have
+four-way parity across installer, Shell, Parent panel and all 45
+built-in Activities, and the shared spoken banks exist in all four
+(`tests/test_four_language_release_contract.py`). Rendered, installed
+and hardware evidence remain separate from that source contract.
 
 Complete acceptance for each promised language requires:
 
@@ -272,7 +268,7 @@ four-language program. Source changes narrow
 installer translations while local recording tools and authoring
 agents fill the true coverage gaps.
 
-**Current visible devices choices:** en, it. **Promotion targets:**
-es, fr. All other language tags are retired from device selection
+**Superseded 2026-10-17:** the owner released es and fr; current visible
+device choices are en, it, es, fr. All other language tags are retired from device selection
 until independently supported. New platform and installer source
 commits do not establish unit/visual/hardware acceptance.

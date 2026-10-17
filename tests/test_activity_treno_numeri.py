@@ -83,7 +83,7 @@ class ManifestTests(unittest.TestCase):
         data = tomllib.loads((ACTIVITY_ROOT / "activity.toml").read_text(encoding="utf-8"))
         act = data["activity"]
         self.assertEqual(act["id"], "org.greia.treno-numeri")
-        self.assertEqual(act["languages"], ["it", "en"])  # ES/FR stay staged
+        self.assertEqual(act["languages"], ["it", "en", "es", "fr"])  # four released languages (owner 2026-10-17)
         edu = data["education"]
         self.assertEqual((edu["recommended_age_min"], edu["recommended_age_max"]), (4, 5))
         self.assertEqual((edu["difficulty_min"], edu["difficulty_max"]), (1, MAX_STAGE))

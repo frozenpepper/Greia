@@ -246,7 +246,7 @@ class DelfinoJourneyApp:
 
     def _init_localization(self) -> None:
         package_root = Path(__file__).parent
-        support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
+        support = ActivityLocaleSupport.localized(("it", "en", "es", "fr"), default_ui_locale="it")
         try:
             context = resolve_activity_locale(get_profile_locale(), support)
             self._resources = LocalizedResources(package_root, context) if context else None

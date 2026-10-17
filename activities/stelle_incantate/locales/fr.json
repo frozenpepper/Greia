@@ -29,5 +29,24 @@
     "victory.subtitle": "Tu as illuminé tout le ciel de la nuit !",
     "button.play_again": "Encore !"
   },
-  "audio": {}
+  "audio": {
+    "curiosity.triangolo.fact": {
+      "path": "assets/audio/fr/curiosity_triangolo.ogg"
+    },
+    "curiosity.cassiopea.fact": {
+      "path": "assets/audio/fr/curiosity_cassiopea.ogg"
+    },
+    "curiosity.cigno.fact": {
+      "path": "assets/audio/fr/curiosity_cigno.ogg"
+    },
+    "curiosity.carro.fact": {
+      "path": "assets/audio/fr/curiosity_carro.ogg"
+    },
+    "curiosity.leone.fact": {
+      "path": "assets/audio/fr/curiosity_leone.ogg"
+    },
+    "curiosity.orione.fact": {
+      "path": "assets/audio/fr/curiosity_orione.ogg"
+    }
+  }
 }

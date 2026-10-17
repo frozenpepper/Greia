@@ -153,7 +153,7 @@ class ManifestAndPackageTests(CollineBase):
         data = tomllib.loads((ACTIVITY_DIR / "activity.toml").read_text(encoding="utf-8"))
         self.assertEqual(data["activity"]["id"], "org.greia.colline-allegre")
         self.assertEqual(data["activity"]["version"], "0.2.0")
-        self.assertEqual(data["activity"]["languages"], ["it", "en"])
+        self.assertEqual(data["activity"]["languages"], ["it", "en", "es", "fr"])
         self.assertEqual(data["input"]["profile"], "game")
         education = data["education"]
         self.assertEqual((education["recommended_age_min"], education["recommended_age_max"]), (4, 7))

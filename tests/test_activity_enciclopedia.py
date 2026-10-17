@@ -84,7 +84,7 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         with (ACTIVITY / "activity.toml").open("rb") as handle:
             raw = tomllib.load(handle)
         self.assertEqual(raw["activity"]["id"], "org.greia.enciclopedia")
-        self.assertEqual(raw["activity"]["languages"], ["it", "en"])
+        self.assertEqual(raw["activity"]["languages"], ["it", "en", "es", "fr"])
         self.assertEqual(raw["input"]["profile"], "navigation")
         self.assertNotIn("network", raw["requirements"]["required_capabilities"])
         self.assertNotIn("network", raw["requirements"]["optional_capabilities"])

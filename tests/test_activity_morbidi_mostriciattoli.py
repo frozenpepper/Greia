@@ -398,7 +398,7 @@ class ManifestAndLocaleTests(unittest.TestCase):
         self.assertIn("controller", manifest["requirements"]["optional_capabilities"])
         self.assertEqual(manifest["creations"]["produces"], ["image/png"])
         self.assertEqual(manifest["storage"]["schema_version"], 1)
-        self.assertEqual(manifest["activity"]["languages"], ["it", "en"])
+        self.assertEqual(manifest["activity"]["languages"], ["it", "en", "es", "fr"])
 
     def test_four_locale_key_parity(self) -> None:
         keys = None

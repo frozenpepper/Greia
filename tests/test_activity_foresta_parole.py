@@ -144,7 +144,7 @@ class ManifestAndContentTests(unittest.TestCase):
         data = tomllib.loads((ACTIVITY_DIR / "activity.toml").read_text(encoding="utf-8"))
         self.assertEqual(data["activity"]["id"], "org.greia.foresta-parole")
         self.assertEqual(data["activity"]["version"], "0.2.0")
-        self.assertEqual(set(data["activity"]["languages"]), {"it", "en"})
+        self.assertEqual(set(data["activity"]["languages"]), {"it", "en", "es", "fr"})
         self.assertEqual(data["input"]["profile"], "directional")
         self.assertEqual((data["education"]["recommended_age_min"], data["education"]["recommended_age_max"]), (5, 7))
         self.assertNotIn("phonics", data["education"]["categories"])

@@ -109,7 +109,7 @@ class ManifestLocaleAndArtTests(unittest.TestCase):
         data = tomllib.loads((ACTIVITY_ROOT / "activity.toml").read_text(encoding="utf-8"))
         self.assertEqual(data["activity"]["id"], "org.greia.piccola-serra")
         self.assertEqual(data["activity"]["version"], "0.2.0")
-        self.assertEqual(set(data["activity"]["languages"]), {"it", "en"})  # ES/FR stay staged
+        self.assertEqual(set(data["activity"]["languages"]), {"it", "en", "es", "fr"})  # four released languages (owner 2026-10-17)
         self.assertEqual(data["input"]["profile"], "hybrid")
         education = data["education"]
         self.assertEqual((education["recommended_age_min"], education["recommended_age_max"]), (4, 6))

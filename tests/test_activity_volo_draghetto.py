@@ -249,7 +249,7 @@ class VoloAssetsAndLocaleTests(unittest.TestCase):
             {(e["id"], e["kind"]) for e in data["education"]["events"]},
             {("flight.ring_passed", "milestone"), ("flight.course_completed", "completion")},
         )
-        self.assertEqual(set(data["activity"]["languages"]), {"it", "en"})
+        self.assertEqual(set(data["activity"]["languages"]), {"it", "en", "es", "fr"})
 
     def test_four_locales_share_keys_used_by_the_app(self) -> None:
         used = {"activity.title", "victory.title", "victory.subtitle", "victory.new_look", "button.fly_again", "button.next"}

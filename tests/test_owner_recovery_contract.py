@@ -63,7 +63,7 @@ class OwnerRecoveryContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("developer-remote", helper)
         self.assertIn("PasswordAuthentication yes", helper)
-        self.assertIn("AuthenticationMethods password", helper)
+        self.assertIn("methods=password", helper)
         self.assertIn("AllowUsers greia", helper)
         self.assertIn("passwd -S greia", helper)
         self.assertIn("prepare-developer-ssh", unit)

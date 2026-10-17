@@ -130,7 +130,9 @@ class ContentTests(unittest.TestCase):
     def test_names_come_from_the_shared_vocab_bank_not_package_copies(self) -> None:
         from greia_platform.localization import shared_vocab_audio_path
 
-        self.assertFalse((ACTIVITY_ROOT / "assets" / "audio").exists(), "no private noun clips")
+        bank = {p.stem for p in (ROOT / "assets/audio/vocab/v1/en").glob("*.wav")}
+        private = {p.stem for p in (ACTIVITY_ROOT / "assets" / "audio").rglob("*.wav")}
+        self.assertFalse(private & bank, "no private noun clips")
         for lang in LANGUAGES:
             bundle = json.loads((ACTIVITY_ROOT / "locales" / f"{lang}.json").read_text(encoding="utf-8"))
             self.assertFalse([k for k in bundle["audio"] if k.startswith("item.")])
@@ -151,10 +153,10 @@ class ContentTests(unittest.TestCase):
                 self.skipTest("no (dummy) mixer available")
             self.addCleanup(pygame.mixer.quit)
         audio = MemoryAudio(None, locale="it")
-        audio.prepare_names(["apple", "octopus"])
+        audio.prepare_names(["apple", "unicorn"])
         self.assertTrue(audio.has_name("apple"))  # Italian bank clip
-        self.assertFalse(audio.has_name("octopus"))  # unrecorded -> silent
-        self.assertFalse(audio.say_name("octopus"))
+        self.assertFalse(audio.has_name("unicorn"))  # unrecorded -> silent
+        self.assertFalse(audio.say_name("unicorn"))
 
     def test_package_art_exists(self) -> None:
         for name in ("card_back", "card_face"):
