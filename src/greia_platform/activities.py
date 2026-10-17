@@ -795,6 +795,16 @@ def _tree_fingerprint(root: Path) -> tuple[tuple[object, ...], ...]:
     return tuple(items)
 
 
+def package_tree_fingerprint(root: Path) -> tuple[tuple[object, ...], ...]:
+    """Public stat-only change detector for a package tree (no content read).
+
+    Used as a cache key by memoised validations (the registry tree cache here
+    and the launcher's ``LaunchValidationCache``): any differing entry means
+    the full validation runs again. Not an integrity check.
+    """
+    return _tree_fingerprint(root)
+
+
 def package_digest(root: Path) -> str:
     hasher = hashlib.sha256()
     for path in sorted(item for item in root.rglob("*") if item.is_file()):

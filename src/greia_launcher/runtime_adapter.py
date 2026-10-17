@@ -13,13 +13,16 @@ from typing import Callable, Mapping, Protocol, Sequence
 from greia_platform.activities import ActivityManifest
 from greia_platform.activity_backend_policy import (
     BackendFindingSeverity,
-    scan_python_source_tree_backend_policy,
+    scan_python_source,
 )
 from greia_platform.bytecode_cache import (
     PYCACHE_PREFIX_ENVIRONMENT,
     TrustedBytecodePrefix,
 )
 from greia_platform.device_capabilities import DeviceCapabilityService
+from greia_platform.trust import PackageTrust
+
+from .launch_validation_cache import LaunchValidationCache
 
 from .lifecycle import (
     ActivityControlChannel,
@@ -246,6 +249,14 @@ class PythonRuntimeAdapter:
         )
 
     def validate_package(self, manifest: ActivityManifest) -> None:
+        """Full source/import/path-safety validation of one Python package.
+
+        One directory walk applies the path policy and lists the ``.py``
+        sources; each source is read and parsed once and walked once
+        (``scan_python_source``) for backend independence, the curated import
+        allowlist and dynamic-import rejection. Launch-time reuse of a passed
+        validation is decided above this method by ``LaunchValidationCache``.
+        """
         if manifest.runtime_type != self.runtime_type:
             raise RuntimeValidationError(
                 f"Python adapter cannot validate runtime {manifest.runtime_type!r}"
@@ -266,34 +277,18 @@ class PythonRuntimeAdapter:
                     raise RuntimeValidationError(
                         f"Activity package may not shadow curated module {module_name!r}: {path.name}"
                     )
-            for path in list(manifest.root.rglob("*")):
-                if not path.exists():
-                    continue
-                if "__pycache__" in path.parts:
-                    continue
-                folded_name = path.name.casefold()
-                if path.is_dir() and folded_name in policy.forbidden_path_names:
-                    raise RuntimeValidationError(
-                        f"forbidden Python package directory: {path.name}"
-                    )
-                if path.is_file():
-                    if folded_name in policy.forbidden_file_names:
-                        raise RuntimeValidationError(
-                            f"forbidden Python package file: {path.name}"
-                        )
-                    if path.suffix.casefold() in policy.forbidden_suffixes:
-                        raise RuntimeValidationError(
-                            f"forbidden Python package suffix: {path}"
-                        )
-        for path in sorted(manifest.root.rglob("*.py")):
+        sources = _python_package_sources(manifest.root, policy)
+        local_roots: dict[str, bool] = {}
+        for path in sources:
             try:
                 tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
             except (OSError, UnicodeDecodeError, SyntaxError) as exc:
                 raise RuntimeValidationError(f"cannot parse Python source {path}: {exc}") from exc
 
+            scan = scan_python_source(path, tree)
             backend_blockers = tuple(
                 finding
-                for finding in scan_python_source_tree_backend_policy(path, tree)
+                for finding in scan.findings
                 if finding.severity is BackendFindingSeverity.BLOCKER
             )
             if backend_blockers:
@@ -306,25 +301,28 @@ class PythonRuntimeAdapter:
                     + rendered
                 )
 
-            for node in ast.walk(tree):
-                root_name: str | None = None
+            for node in scan.import_and_call_nodes:
                 if isinstance(node, ast.Import):
                     for alias in node.names:
-                        self._validate_import_root(alias.name.split(".", 1)[0], path, manifest)
+                        self._validate_import_root(
+                            alias.name.split(".", 1)[0], path, manifest, local_roots
+                        )
                 elif isinstance(node, ast.ImportFrom):
-                    if node.level:
-                        continue
-                    if node.module:
-                        root_name = node.module.split(".", 1)[0]
+                    if not node.level and node.module:
+                        self._validate_import_root(
+                            node.module.split(".", 1)[0], path, manifest, local_roots
+                        )
                 elif isinstance(node, ast.Call) and _is_dynamic_import_call(node):
                     raise RuntimeValidationError(
                         f"dynamic Python imports are forbidden: {path}:{node.lineno}"
                     )
-                if root_name:
-                    self._validate_import_root(root_name, path, manifest)
 
     def _validate_import_root(
-        self, root_name: str, path: Path, manifest: ActivityManifest
+        self,
+        root_name: str,
+        path: Path,
+        manifest: ActivityManifest,
+        local_roots: dict[str, bool] | None = None,
     ) -> None:
         policy = self._policy
         if policy is None:
@@ -334,7 +332,14 @@ class PythonRuntimeAdapter:
             return
         if root_name in policy.forbidden_import_roots:
             raise RuntimeValidationError(f"forbidden Python import {root_name!r} in {path}")
-        if (manifest.root / f"{root_name}.py").is_file() or (manifest.root / root_name).is_dir():
+        local = local_roots.get(root_name) if local_roots is not None else None
+        if local is None:
+            local = (manifest.root / f"{root_name}.py").is_file() or (
+                manifest.root / root_name
+            ).is_dir()
+            if local_roots is not None:
+                local_roots[root_name] = local
+        if local:
             return
         if root_name not in policy.allowed_import_roots:
             raise RuntimeValidationError(
@@ -441,6 +446,8 @@ class RuntimeManager:
         self,
         adapters: Sequence[RuntimeLaunchAdapter] | Mapping[str, RuntimeLaunchAdapter],
         device_capabilities: DeviceCapabilityService,
+        *,
+        validation_cache: LaunchValidationCache | None = None,
     ):
         values = tuple(adapters.values()) if isinstance(adapters, Mapping) else tuple(adapters)
         by_type: dict[str, RuntimeLaunchAdapter] = {}
@@ -455,6 +462,9 @@ class RuntimeManager:
             raise RuntimeAdapterError("at least one runtime adapter is required")
         self._adapters = by_type
         self._device_capabilities = device_capabilities
+        self._validation_cache = (
+            validation_cache if validation_cache is not None else LaunchValidationCache()
+        )
 
     @property
     def runtime_types(self) -> frozenset[str]:
@@ -535,9 +545,17 @@ class RuntimeManager:
         manifest: ActivityManifest,
         *,
         expected_device_snapshot_token: str | None = None,
+        package_trust: PackageTrust | None = None,
     ) -> RuntimeLaunchPreparation:
+        """Validate, check compatibility and build the runtime command.
+
+        ``package_trust`` is the platform-assigned trust from the launch
+        authority. It only decides whether ``LaunchValidationCache`` may reuse
+        an earlier successful validation of an unchanged read-only built-in
+        tree; ``None`` (or any non-built-in trust) always validates fully.
+        """
         adapter = self.adapter_for(manifest.runtime_type)
-        adapter.validate_package(manifest)
+        self._validation_cache.validate(adapter, manifest, package_trust)
         compatibility = self.compatibility_for(manifest)
         if (
             expected_device_snapshot_token is not None
@@ -685,6 +703,63 @@ def _casefolded_string_set(
     if len(set(normalized)) != len(normalized):
         raise RuntimeValidationError(f"python.{key} must not contain duplicates")
     return frozenset(normalized)
+
+
+def _python_package_sources(
+    root: Path, policy: PythonRuntimePolicy | None
+) -> list[Path]:
+    """Apply the package path policy and return the sorted ``*.py`` paths.
+
+    One ``os.scandir`` walk replaces ``rglob("*")`` plus per-path
+    exists/is_dir/is_file calls and a second ``rglob("*.py")``. Semantics
+    match the previous pair: symlinked directories are reported but not
+    descended into, ``__pycache__`` subtrees skip the name/suffix policy (but
+    their sources are still parsed), broken links are ignored by the policy,
+    and every entry whose name matches ``*.py`` is returned for parsing.
+    """
+
+    sources: list[Path] = []
+    stack: list[tuple[str, bool]] = [(str(root), False)]
+    try:
+        while stack:
+            directory, in_pycache = stack.pop()
+            with os.scandir(directory) as entries:
+                for entry in entries:
+                    name = entry.name
+                    entry_in_pycache = in_pycache or name == "__pycache__"
+                    try:
+                        is_dir = entry.is_dir()
+                    except OSError:
+                        is_dir = False
+                    if policy is not None and not entry_in_pycache:
+                        folded = name.casefold()
+                        if is_dir:
+                            if folded in policy.forbidden_path_names:
+                                raise RuntimeValidationError(
+                                    f"forbidden Python package directory: {name}"
+                                )
+                        else:
+                            try:
+                                is_file = entry.is_file()
+                            except OSError:
+                                is_file = False
+                            if is_file:
+                                if folded in policy.forbidden_file_names:
+                                    raise RuntimeValidationError(
+                                        f"forbidden Python package file: {name}"
+                                    )
+                                if Path(name).suffix.casefold() in policy.forbidden_suffixes:
+                                    raise RuntimeValidationError(
+                                        f"forbidden Python package suffix: {entry.path}"
+                                    )
+                    if name.endswith(".py"):
+                        sources.append(Path(entry.path))
+                    if is_dir and not entry.is_symlink():
+                        stack.append((entry.path, entry_in_pycache))
+    except OSError as exc:
+        raise RuntimeValidationError(f"cannot inspect Python Activity package: {exc}") from exc
+    sources.sort()
+    return sources
 
 
 def _is_dynamic_import_call(node: ast.Call) -> bool:

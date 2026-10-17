@@ -281,6 +281,7 @@ class ActivitySupervisor:
             preparation = self._runtime_manager.prepare_launch(
                 manifest,
                 expected_device_snapshot_token=authority.device_snapshot_token,
+                package_trust=authority.package_trust,
             )
         except RuntimeAdapterError:
             return self._failed_launch_session(

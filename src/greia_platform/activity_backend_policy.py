@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+from collections import deque
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -152,148 +153,244 @@ def scan_python_source_tree_backend_policy(
 ) -> tuple[BackendPolicyFinding, ...]:
     """Inspect one already-parsed Python source tree.
 
-    Runtime adapters use this seam while they already hold the AST so launch
-    validation does not perform a second source read/parse merely to enforce
-    the R7 policy. Validation-time efficiency matters on Greia's low-resource
-    floor even though this code never runs in a render/input hot path.
+    Runtime adapters use ``scan_python_source`` (one traversal that also
+    returns the import/call nodes their own import policy needs) while they
+    already hold the AST, so launch validation does not perform a second
+    source read/parse or AST walk merely to enforce the R7 policy.
     """
 
+    return scan_python_source(path, tree).findings
+
+
+@dataclass(frozen=True, slots=True)
+class PythonSourceScan:
+    """Facts gathered from one traversal of one parsed Activity source.
+
+    ``findings`` are exactly the backend-policy findings of
+    ``scan_python_source_tree_backend_policy``. ``import_and_call_nodes``
+    holds every ``Import``/``ImportFrom``/``Call`` node in ``ast.walk``
+    (breadth-first) order so a runtime adapter can apply its own import
+    allowlist and dynamic-import rejection without walking the tree again.
+    """
+
+    findings: tuple[BackendPolicyFinding, ...]
+    import_and_call_nodes: tuple[ast.AST, ...]
+
+
+def scan_python_source(path: Path, tree: ast.AST) -> PythonSourceScan:
+    """Single-traversal backend-policy scan of one parsed source.
+
+    The tree is walked once (``_policy_nodes``) instead of three times
+    (alias collection, policy findings and the adapter's import check each
+    used to run their own ``ast.walk``). On the Atom N270 reference floor the
+    walks, not the parse, dominated launch-time validation.
+    """
+
+    nodes = _policy_nodes(tree)
+    aliases = _aliases_from_nodes(nodes)
     findings: list[BackendPolicyFinding] = []
-    aliases = _import_aliases(tree)
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            for alias in node.names:
-                root = alias.name.split(".", 1)[0].casefold()
-                if root in _FORBIDDEN_IMPORT_ROOTS:
-                    findings.append(
-                        _finding(
-                            path,
-                            node,
-                            BackendFindingSeverity.BLOCKER,
-                            "backend-import",
-                            f"direct backend/device import {alias.name!r} is platform-owned",
-                        )
-                    )
-        elif isinstance(node, ast.ImportFrom):
-            module = node.module or ""
-            root = module.split(".", 1)[0].casefold()
-            if not node.level and root in _FORBIDDEN_IMPORT_ROOTS:
+    import_and_call_nodes: list[ast.AST] = []
+    for node in nodes:
+        if isinstance(node, (ast.Import, ast.ImportFrom, ast.Call)):
+            import_and_call_nodes.append(node)
+        _node_findings(path, node, aliases, findings)
+    return PythonSourceScan(
+        findings=_deduplicate(findings),
+        import_and_call_nodes=tuple(import_and_call_nodes),
+    )
+
+
+#: Node types any policy check inspects. Everything else is traversed only.
+_POLICY_NODE_TYPES = (
+    ast.Import, ast.ImportFrom, ast.Subscript, ast.Call, ast.Constant, ast.Attribute, ast.Name,
+)
+#: Per-class answer to "is this a policy node type" (subclasses included).
+#: Bounded by the number of AST node classes.
+_POLICY_CLASS_CACHE: dict[type, bool] = {}
+#: Childless singleton nodes (expression contexts, operators). ``ast.walk``
+#: visits one per Name/Attribute/BinOp; skipping them is pure overhead removal.
+_LEAF_NODE_TYPES = frozenset(
+    {
+        cls
+        for base in (ast.expr_context, ast.boolop, ast.operator, ast.unaryop, ast.cmpop)
+        for cls in base.__subclasses__()
+    }
+)
+
+
+def _policy_nodes(tree: ast.AST) -> list[ast.AST]:
+    """Return the policy-relevant nodes of ``tree`` in ``ast.walk`` order.
+
+    Same breadth-first order and child enumeration as ``ast.walk`` /
+    ``ast.iter_child_nodes`` (fields in ``_fields`` order, list items in
+    order), inlined because the generator-per-node overhead of ``ast.walk``
+    is most of the validation cost on the reference hardware.
+    """
+
+    ast_type = ast.AST
+    wanted = _POLICY_CLASS_CACHE
+    leaves = _LEAF_NODE_TYPES
+    selected: list[ast.AST] = []
+    queue: deque[ast.AST] = deque((tree,))
+    popleft = queue.popleft
+    append = queue.append
+    while queue:
+        node = popleft()
+        cls = node.__class__
+        is_policy_node = wanted.get(cls)
+        if is_policy_node is None:
+            is_policy_node = wanted[cls] = issubclass(cls, _POLICY_NODE_TYPES)
+        if is_policy_node:
+            selected.append(node)
+        for field in node._fields:
+            value = getattr(node, field, None)
+            if value.__class__ is list:
+                for item in value:
+                    if isinstance(item, ast_type) and item.__class__ not in leaves:
+                        append(item)
+            elif isinstance(value, ast_type) and value.__class__ not in leaves:
+                append(value)
+    return selected
+
+
+def _node_findings(
+    path: Path,
+    node: ast.AST,
+    aliases: dict[str, tuple[str, ...]],
+    findings: list[BackendPolicyFinding],
+) -> None:
+    if isinstance(node, ast.Import):
+        for alias in node.names:
+            root = alias.name.split(".", 1)[0].casefold()
+            if root in _FORBIDDEN_IMPORT_ROOTS:
                 findings.append(
                     _finding(
                         path,
                         node,
                         BackendFindingSeverity.BLOCKER,
                         "backend-import",
-                        f"direct backend/device import {module!r} is platform-owned",
+                        f"direct backend/device import {alias.name!r} is platform-owned",
                     )
                 )
-            if module in _MIGRATION_CHROME_MODULES:
-                for alias in node.names:
-                    if alias.name in _MIGRATION_CHROME_SYMBOLS:
-                        findings.append(
-                            _finding(
-                                path,
-                                node,
-                                BackendFindingSeverity.MIGRATION,
-                                "activity-system-chrome",
-                                f"Activity-side {alias.name} must move to trusted R7 chrome",
-                            )
-                        )
-            if module == "pygame":
-                for alias in node.names:
-                    if alias.name == "joystick":
-                        findings.append(
-                            _finding(
-                                path,
-                                node,
-                                BackendFindingSeverity.MIGRATION,
-                                "raw-controller",
-                                "direct pygame.joystick ownership must migrate to Greia input authority",
-                            )
-                        )
-        elif isinstance(node, ast.Subscript):
-            key = _environment_subscript_key(node, aliases)
-            if key in _FORBIDDEN_ENVIRONMENT_KEYS:
-                findings.append(
-                    _finding(
-                        path,
-                        node,
-                        BackendFindingSeverity.BLOCKER,
-                        "backend-environment",
-                        f"Activity source must not read or set platform-owned {key}",
-                    )
-                )
-        elif isinstance(node, ast.Call):
-            chain = _resolved_chain(node.func, aliases)
-            if chain in _FORBIDDEN_API_CHAINS:
-                findings.append(
-                    _finding(
-                        path,
-                        node,
-                        BackendFindingSeverity.BLOCKER,
-                        "backend-introspection",
-                        f"backend-introspection API {'.'.join(chain)} is platform-owned",
-                    )
-                )
-            env_key = _environment_call_key(node, aliases)
-            if env_key in _FORBIDDEN_ENVIRONMENT_KEYS:
-                findings.append(
-                    _finding(
-                        path,
-                        node,
-                        BackendFindingSeverity.BLOCKER,
-                        "backend-environment",
-                        f"Activity source must not read or set platform-owned {env_key}",
-                    )
-                )
-            command = _static_process_command(node, aliases)
-            if command in _FORBIDDEN_COMMANDS:
-                findings.append(
-                    _finding(
-                        path,
-                        node,
-                        BackendFindingSeverity.BLOCKER,
-                        "backend-command",
-                        f"host display/input command {command!r} is platform-owned",
-                    )
-                )
-            library = _static_native_library_probe(node, aliases)
-            if library is not None and library.casefold() in _FORBIDDEN_NATIVE_LIBRARIES:
-                findings.append(
-                    _finding(
-                        path,
-                        node,
-                        BackendFindingSeverity.BLOCKER,
-                        "backend-native-library",
-                        f"native backend library {library!r} is platform-owned",
-                    )
-                )
-        elif isinstance(node, ast.Constant) and isinstance(node.value, str):
-            literal = node.value
-            for prefix in _FORBIDDEN_DEVICE_PREFIXES:
-                if literal == prefix or literal.startswith(prefix + "/"):
-                    findings.append(
-                        _finding(
-                            path,
-                            node,
-                            BackendFindingSeverity.BLOCKER,
-                            "raw-device-path",
-                            f"Activity source must not address platform-owned device path {prefix}",
-                        )
-                    )
-        elif isinstance(node, (ast.Attribute, ast.Name)) and _resolved_chain(
-            node, aliases
-        )[:2] == ("pygame", "joystick"):
+    elif isinstance(node, ast.ImportFrom):
+        module = node.module or ""
+        root = module.split(".", 1)[0].casefold()
+        if not node.level and root in _FORBIDDEN_IMPORT_ROOTS:
             findings.append(
                 _finding(
                     path,
                     node,
-                    BackendFindingSeverity.MIGRATION,
-                    "raw-controller",
-                    "direct pygame.joystick ownership must migrate to Greia input authority",
+                    BackendFindingSeverity.BLOCKER,
+                    "backend-import",
+                    f"direct backend/device import {module!r} is platform-owned",
                 )
             )
-    return _deduplicate(findings)
+        if module in _MIGRATION_CHROME_MODULES:
+            for alias in node.names:
+                if alias.name in _MIGRATION_CHROME_SYMBOLS:
+                    findings.append(
+                        _finding(
+                            path,
+                            node,
+                            BackendFindingSeverity.MIGRATION,
+                            "activity-system-chrome",
+                            f"Activity-side {alias.name} must move to trusted R7 chrome",
+                        )
+                    )
+        if module == "pygame":
+            for alias in node.names:
+                if alias.name == "joystick":
+                    findings.append(
+                        _finding(
+                            path,
+                            node,
+                            BackendFindingSeverity.MIGRATION,
+                            "raw-controller",
+                            "direct pygame.joystick ownership must migrate to Greia input authority",
+                        )
+                    )
+    elif isinstance(node, ast.Subscript):
+        key = _environment_subscript_key(node, aliases)
+        if key in _FORBIDDEN_ENVIRONMENT_KEYS:
+            findings.append(
+                _finding(
+                    path,
+                    node,
+                    BackendFindingSeverity.BLOCKER,
+                    "backend-environment",
+                    f"Activity source must not read or set platform-owned {key}",
+                )
+            )
+    elif isinstance(node, ast.Call):
+        chain = _resolved_chain(node.func, aliases)
+        if chain in _FORBIDDEN_API_CHAINS:
+            findings.append(
+                _finding(
+                    path,
+                    node,
+                    BackendFindingSeverity.BLOCKER,
+                    "backend-introspection",
+                    f"backend-introspection API {'.'.join(chain)} is platform-owned",
+                )
+            )
+        env_key = _environment_call_key(node, aliases)
+        if env_key in _FORBIDDEN_ENVIRONMENT_KEYS:
+            findings.append(
+                _finding(
+                    path,
+                    node,
+                    BackendFindingSeverity.BLOCKER,
+                    "backend-environment",
+                    f"Activity source must not read or set platform-owned {env_key}",
+                )
+            )
+        command = _static_process_command(node, aliases)
+        if command in _FORBIDDEN_COMMANDS:
+            findings.append(
+                _finding(
+                    path,
+                    node,
+                    BackendFindingSeverity.BLOCKER,
+                    "backend-command",
+                    f"host display/input command {command!r} is platform-owned",
+                )
+            )
+        library = _static_native_library_probe(node, aliases)
+        if library is not None and library.casefold() in _FORBIDDEN_NATIVE_LIBRARIES:
+            findings.append(
+                _finding(
+                    path,
+                    node,
+                    BackendFindingSeverity.BLOCKER,
+                    "backend-native-library",
+                    f"native backend library {library!r} is platform-owned",
+                )
+            )
+    elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+        literal = node.value
+        for prefix in _FORBIDDEN_DEVICE_PREFIXES:
+            if literal == prefix or literal.startswith(prefix + "/"):
+                findings.append(
+                    _finding(
+                        path,
+                        node,
+                        BackendFindingSeverity.BLOCKER,
+                        "raw-device-path",
+                        f"Activity source must not address platform-owned device path {prefix}",
+                    )
+                )
+    elif isinstance(node, (ast.Attribute, ast.Name)) and _resolved_chain(
+        node, aliases
+    )[:2] == ("pygame", "joystick"):
+        findings.append(
+            _finding(
+                path,
+                node,
+                BackendFindingSeverity.MIGRATION,
+                "raw-controller",
+                "direct pygame.joystick ownership must migrate to Greia input authority",
+            )
+        )
 
 
 def assert_python_activity_backend_independent(activity_root: Path) -> None:
@@ -328,8 +425,14 @@ def migration_findings(activity_root: Path) -> tuple[BackendPolicyFinding, ...]:
 def _import_aliases(tree: ast.AST) -> dict[str, tuple[str, ...]]:
     """Resolve simple import aliases so policy cannot be bypassed by renaming imports."""
 
+    return _aliases_from_nodes(_policy_nodes(tree))
+
+
+def _aliases_from_nodes(nodes: Iterable[ast.AST]) -> dict[str, tuple[str, ...]]:
+    """Alias table from nodes in ``ast.walk`` order (later bindings win)."""
+
     aliases: dict[str, tuple[str, ...]] = {}
-    for node in ast.walk(tree):
+    for node in nodes:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 target = tuple(alias.name.split("."))
@@ -499,8 +602,10 @@ __all__ = [
     "ActivityBackendPolicyError",
     "BackendFindingSeverity",
     "BackendPolicyFinding",
+    "PythonSourceScan",
     "assert_python_activity_backend_independent",
     "migration_findings",
     "scan_python_activity_backend_policy",
+    "scan_python_source",
     "scan_python_source_tree_backend_policy",
 ]
