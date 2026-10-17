@@ -536,6 +536,17 @@ Reasons:
 - per-profile customization is visible immediately;
 - password protection cannot work reliably if selection is bypassed.
 
+**Amendment 2026-10-17 — first-profile setup.** On a brand-new device the
+registry holds only the placeholder that `ProfileStore.ensure_initialized`
+creates (marked `first_profile_setup` in `profiles.json`). While that holds,
+the child Shell shows the voiced first-profile setup Screen instead of a picker
+with an anonymous placeholder card; finishing it writes the profile through
+`ProfileStore.complete_first_profile` and enters Home with it. This is explicit
+creation by the person at the device, not a silent resume: every later boot
+reaches the profile picker as above, and any Parent create/rename/delete ends
+setup. Adding further children remains Parent-gated. Product behaviour:
+`docs/product/FIRST_BOOT_PROFILE_SETUP.md`.
+
 ### 15.2 Boot cover is a contract, not a brand animation detail
 
 The boot cover MUST be noninteractive from the child's perspective. Ordinary keys must not reveal diagnostic details. The platform must have a graphical failure strategy for the portion of boot it controls.

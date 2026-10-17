@@ -38,6 +38,7 @@ from .composition import (
 from .display_session import DisplaySessionCoordinator
 from .event_broker import ActivityEventBroker
 from .feedback_presentation import SharedUiFeedbackMixin
+from .first_profile_presentation import FirstProfileSetupMixin
 from .home_animation_presentation import HomeAnimationMixin
 from .home_layout import usage_pill_rect
 from .launch_timing import ready_timeout_for
@@ -138,6 +139,7 @@ class ProfileVisualActivitySupervisor(TrustedChromeActivitySupervisor):
 
 
 class GreiaChildShell(
+    FirstProfileSetupMixin,
     PolicyEnforcedAdaptiveActivityDiscoveryMixin,
     AchievementLibraryMixin,
     HomeAnimationMixin,

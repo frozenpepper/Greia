@@ -20,6 +20,11 @@ from typing import Iterator, Mapping
 from .activity_discovery import ChallengePreference
 
 
+#: Registry key naming the auto-created placeholder profile while the device
+#: still awaits its first-profile setup (see ``ProfileStore.first_profile_setup``).
+FIRST_PROFILE_SETUP_KEY = "first_profile_setup"
+
+
 class ProfileError(ValueError):
     """Raised when child-profile data violates the bounded platform contract."""
 
@@ -274,6 +279,14 @@ class ProfileStore:
         return cls(ProfilePolicy.load(policy_path), root)
 
     def ensure_initialized(self) -> tuple[ChildProfile, ...]:
+        """Return the registry, creating one placeholder profile if it is empty.
+
+        The placeholder keeps every caller's "at least one profile" invariant
+        (Shell, Parent service, simulator). It is recorded in the registry as
+        awaiting first-profile setup so the child Shell can run its one-time
+        setup wizard (``first_profile_setup``/``complete_first_profile``).
+        """
+
         with self._mutation_lock():
             profiles = self._read_unlocked()
             if profiles:
@@ -286,8 +299,55 @@ class ProfileStore:
                 self.policy.default_mask_secret,
             )
             profiles = (profile,)
-            self._commit_new_profile(profile, profiles)
+            self._commit_new_profile(profile, profiles, setup_placeholder=True)
             return profiles
+
+    def first_profile_setup(self) -> ChildProfile | None:
+        """Return the placeholder still awaiting first-profile setup, or ``None``.
+
+        Setup is pending only while the registry holds exactly the one profile
+        ``ensure_initialized`` created on an empty registry and nobody has
+        changed profiles since: every ordinary create/update/delete rewrites
+        the registry without the marker, so a Parent adding or renaming a
+        child ends setup too. Unreadable registries report ``None``.
+        """
+
+        try:
+            profiles, placeholder_id = self._read_registry_unlocked()
+        except ProfileError:
+            return None
+        if len(profiles) == 1 and profiles[0].profile_id == placeholder_id:
+            return profiles[0]
+        return None
+
+    def complete_first_profile(
+        self,
+        display_name: str,
+        avatar_id: str,
+        *,
+        approximate_age: int | None = None,
+    ) -> ChildProfile:
+        """Turn the setup placeholder into the first real child profile.
+
+        This is explicit creation by the person at the device: the placeholder's
+        identity and already-prepared directories are kept, its name/avatar/age
+        are replaced with validated values and the setup marker is cleared in
+        the same atomic registry write. Raises ``ProfileError`` when setup is no
+        longer pending (for example a Parent created a child meanwhile).
+        """
+
+        with self._mutation_lock():
+            profiles, placeholder_id = self._read_registry_unlocked()
+            if len(profiles) != 1 or profiles[0].profile_id != placeholder_id:
+                raise ProfileError("first-profile setup is no longer pending")
+            updated = replace(
+                profiles[0],
+                display_name=self.policy.validate_name(display_name),
+                avatar_id=self.policy.validate_avatar(avatar_id),
+                approximate_age=self.policy.validate_approximate_age(approximate_age),
+            )
+            self._write_unlocked((updated,))
+            return updated
 
     def list_profiles(self) -> tuple[ChildProfile, ...]:
         profiles = self._read_unlocked()
@@ -473,6 +533,8 @@ class ProfileStore:
         self,
         profile: ChildProfile,
         profiles: tuple[ChildProfile, ...],
+        *,
+        setup_placeholder: bool = False,
     ) -> None:
         """Establish the shared directory contract before publishing a profile.
 
@@ -486,7 +548,10 @@ class ProfileStore:
         existed_before = os.path.lexists(profile_root)
         try:
             self._ensure_profile_directories((profile,))
-            self._write_unlocked(profiles)
+            self._write_unlocked(
+                profiles,
+                setup_placeholder_id=profile.profile_id if setup_placeholder else None,
+            )
         except BaseException:
             if (
                 not existed_before
@@ -527,10 +592,15 @@ class ProfileStore:
         )
 
     def _read_unlocked(self) -> tuple[ChildProfile, ...]:
+        return self._read_registry_unlocked()[0]
+
+    def _read_registry_unlocked(self) -> tuple[tuple[ChildProfile, ...], str | None]:
+        """Return the parsed profiles plus the first-profile setup marker."""
+
         try:
             raw = json.loads(self.registry_path.read_text(encoding="utf-8"))
         except FileNotFoundError:
-            return ()
+            return (), None
         except (OSError, UnicodeDecodeError, json.JSONDecodeError) as primary_exc:
             try:
                 raw = json.loads(self.backup_path.read_text(encoding="utf-8"))
@@ -547,7 +617,8 @@ class ProfileStore:
         ids = [profile.profile_id for profile in profiles]
         if len(set(ids)) != len(ids):
             raise ProfileError("duplicate profile identifier")
-        return profiles
+        placeholder = raw.get(FIRST_PROFILE_SETUP_KEY)
+        return profiles, placeholder if isinstance(placeholder, str) else None
 
     def _parse_profile(self, raw: object) -> ChildProfile:
         if not isinstance(raw, dict):
@@ -610,11 +681,20 @@ class ProfileStore:
             uppercase_text,
         )
 
-    def _write_unlocked(self, profiles: tuple[ChildProfile, ...]) -> None:
-        payload = {
+    def _write_unlocked(
+        self,
+        profiles: tuple[ChildProfile, ...],
+        *,
+        setup_placeholder_id: str | None = None,
+    ) -> None:
+        payload: dict[str, object] = {
             "schema_version": self.policy.schema_version,
             "profiles": [profile.storage_dict() for profile in profiles],
         }
+        # Only ensure_initialized passes a placeholder; every other write drops
+        # the marker, which is what ends first-profile setup.
+        if setup_placeholder_id is not None:
+            payload[FIRST_PROFILE_SETUP_KEY] = setup_placeholder_id
         _atomic_write_json(self.registry_path, payload)
         try:
             _atomic_write_json(self.backup_path, payload)

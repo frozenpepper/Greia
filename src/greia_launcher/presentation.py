@@ -519,6 +519,8 @@ class GreiaLauncherPresentation(LauncherApplication):
                         elif self._mode == "secret":
                             self._handle_secret_text(event.text)
                             _needs_redraw = True
+                        elif self._handle_shell_text_input(event.text):
+                            _needs_redraw = True
                     elif event.type == pygame.KEYDOWN:
                         if self._mode == "parent_panel":
                             _needs_redraw = True
@@ -636,6 +638,16 @@ class GreiaLauncherPresentation(LauncherApplication):
 
     def _poll_input_hooks(self, pygame: Any) -> None:
         """Optional hook called before polling pygame events each frame."""
+
+    def _handle_shell_text_input(self, text: str) -> bool:
+        """Optional typed-text hook for trusted Shell modes (e.g. first-boot setup).
+
+        Called for TEXTINPUT outside the Parent panel and profile-secret modes;
+        returns True when the text changed what is shown. The base Shell has
+        no other text consumer.
+        """
+
+        return False
 
     def _present_ambient_frame(self, screen: Any, pygame: Any, now: float) -> bool:
         """Optional incremental frame for bounded ambient animation.

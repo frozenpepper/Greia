@@ -355,18 +355,18 @@ src/greia_platform/activity_backend_policy.py
 
 For Activity implementation itself, use `skills/greia-activity-authoring/SKILL.md`.
 
-## Supported-language declaration and staged ES/FR translation
+## Supported-language declaration (four released languages)
 
-The current **selectable** OS device locales are `en` and `it` only.
-The former 12-language installer/on-device/Parent API roster has been
-reduced at its unique owner `src/greia_platform/system_language.py`.
-Spanish and French are actively staged but NOT selectable until
-installer, Shell, Parent HTML/overlay, built-in Activities, media and
-source/physical acceptance pass. Follow
-`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`
-and `LOCAL_AGENT_VOICE_PRODUCTION.md` in that directory.
-`src/greia_installer/i18n_es_fr.py` contains staged copy; never
-misinterpret it as a shipped Spanish/French install-flow claim.
+The **selectable** OS device locales are exactly `en`, `it`, `es`, `fr`
+(owner decision 2026-10-17). The single registry is
+`SUPPORTED_SYSTEM_LANGUAGES` / `SUPPORTED_SYSTEM_LOCALES` in
+`src/greia_platform/system_language.py`; the installer language-first
+screen, on-device Parent panel, Parent API, `greia-languagectl` and the
+developer simulator all read it, and every built-in Activity manifest
+declares the same four. `tests/test_four_language_release_contract.py`
+enforces registry/selector/manifest/key parity and the shared spoken
+banks. Follow `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
+Any new Shell/installer/Parent string lands in all four languages.
 Historical unsupported records are left intact and read as safe
 English runtime fallback. Do not install voice/TTS models on Greia OS.
 New authoring-time provider adapters belong only under
@@ -378,7 +378,7 @@ not a current runtime feature.
 On-device Parent Settings `ParentSettingsOverlay` renders semantic
 password/authentication, eight tabs, title and device language controls
 via `src/greia_launcher/panel_localization.py`. This is source-staged
-for EN/IT/ES/FR; only EN/IT are currently selectable globally.
+for EN/IT/ES/FR, all four selectable.
 **Do not** introduce a second locale store, set Linux `LANG`,
 or translate user-entered child names, SSIDs, passwords or service
 machine data through an arbitrary substring dictionary.
@@ -628,6 +628,13 @@ is load-bearing:
 - the Parent unit currently uses `UMask=0007` so setgid inheritance produces
   the correct shared mode without weakening `RestrictSUIDSGID=yes`;
 - never swallow a failed profile-directory permission repair.
+
+First-profile setup (2026-10-17): `ProfileStore.ensure_initialized` marks its
+placeholder in `profiles.json` (`first_profile_setup`); while only that
+placeholder exists the child Shell runs the voiced setup wizard
+(`greia_launcher.first_profile_*`, `docs/product/FIRST_BOOT_PROFILE_SETUP.md`)
+and writes through `ProfileStore.complete_first_profile`; any ordinary
+create/update/delete drops the marker. More children stay Parent-gated.
 
 First-boot B4/B5 are compatibility migrations, not substitutes for correct
 creation-time ownership. A physical first-boot acceptance must create/use a
