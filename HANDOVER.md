@@ -52,8 +52,10 @@ retain the current callable interface meanwhile. This refactor does not
 independently promote ES/FR system selection.
 The sole practical local-agent task queue remains
 `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
-The canonical selectable registry currently contains **only en/it**;
-es/fr are staged until explicit complete-language release gates pass.
+**Owner decision 2026-10-17:** EN, IT, ES and FR are all released and
+selectable (selectors offer exactly these four); missing voice lines in all
+four languages are owner-approved for recording with the local voice tooling
+(no paid spend without approval).
 This scope does not override ADR 0028, accepted architecture,
 installer/first-boot/lifecycle test gates or the Creations/Activity
 audit programme. Do not invent a second language registry or silently

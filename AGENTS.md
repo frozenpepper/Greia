@@ -66,7 +66,7 @@ The architecture-remediation plan remains the active **blocking implementation**
 
 - committed recordings are owner-reviewed and accepted; never regenerate them for perceived provenance problems. New speech goes through `tools/greia_voice.py` and needs fresh human acceptance;
 - do not add file anti-tampering, signing or elaborate asset verification; users may edit their own files;
-- the selectable language registry contains only languages whose release gates passed (currently en, it). Do not silently promote staged locales or invent a second registry.
+- the selectable language registry contains the owner-released languages (owner decision 2026-10-17: en, it, es, fr — all four ship with their audio; selectors offer exactly these four). Do not add further locales without an owner decision or invent a second registry.
 
 The visual-foundation plan is the current **art/visual workstream** plan. It owns art sequencing, checkpoints and append-only art progress while active, but it is subordinate to the blocking architecture plan and accepted ADRs. `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` is the stable visual-system architecture/index and must remain interpretable after the current plan becomes historical. Art/design/library work may advance where it does not bypass platform prerequisites; a visual task must not be used as justification to deepen provisional X11 coupling, invent a parallel runtime/UI architecture, weaken protected system chrome, or claim hardware/runtime evidence that did not execute.
 
@@ -148,7 +148,7 @@ This capability is **development-only**:
 3. **Activity is the universal abstraction.** Python, Web, and future runtimes are adapters below common Activity/package/storage/progression/permission/lifecycle contracts.
 4. **Reference floor:** first-generation Acer Aspire One remains the extreme low-resource reference, currently estimated around 768 MiB RAM, 7 GB storage, and 1024×600 until inventory evidence replaces estimates.
 5. **ARM is co-equal with legacy x86.** Raspberry Pi 400 and Raspberry Pi 500 are explicit first-class ARM reference devices. ARM is not a later port.
-6. **Disk budget:** current C0 preferred installed core ≤800 MiB; required target <1,000 MiB; >1,250 MiB requires architecture review.
+6. **Disk budget:** preferred installed core ≤800 MiB; owner-accepted ceiling (2026-10-17) ≤1,300 MiB for the four-language release image; anything above 1,300 MiB requires architecture review.
 7. **One curated environment per runtime family.** Phase 0 has one shared Python runtime. Activities may not install, download, compile, or resolve private dependencies. No Activity venvs, wheels/site-packages bundles, package managers, browser binaries, or executable installers.
 8. **Curated Activities only.** Packages must pass manifest, source/import, path-safety, capability, trust and footprint validation before inclusion.
 9. **Offline-first.** Core shell, Activities, saves, progression, language packs, and parent management must function without cloud services.
