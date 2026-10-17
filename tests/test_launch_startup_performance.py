@@ -291,6 +291,31 @@ class ImageBytecodeContractTests(unittest.TestCase):
         self.assertLess(hygiene, precompile)
         self.assertTrue((ROOT / "tools/precompile_greia_bytecode.py").is_file())
 
+    def test_precompile_runs_when_piped_on_stdin_like_composition(self) -> None:
+        """compose.sh pipes the script in (``python3 -I -B - < script``), where
+        ``__file__`` is "<stdin>"; the 2026-10-17 RC build crashed on that."""
+        import subprocess
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch) / "greia"
+            import shutil
+
+            shutil.copytree(
+                ROOT / "src" / "greia_platform", root / "src" / "greia_platform",
+                ignore=shutil.ignore_patterns("__pycache__"),
+            )
+            (root / "activities").mkdir()
+            prefix = Path(scratch) / "prefix"
+            script = (ROOT / "tools/precompile_greia_bytecode.py").read_bytes()
+            result = subprocess.run(
+                [sys.executable, "-I", "-B", "-", "--greia-root", str(root),
+                 "--prefix", str(prefix), "--no-distribution"],
+                input=script, capture_output=True, timeout=120,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr.decode(errors="replace"))
+            self.assertTrue(any(prefix.rglob("*.pyc")))
+
     def test_launcher_and_parent_read_the_trusted_prefix(self) -> None:
         units = ROOT / "build/overlay/etc/systemd/system"
         for unit in ("greia-launcher.service", "greia-parent.service"):

@@ -44,8 +44,10 @@ def _import_bytecode_cache(greia_root: Path):
     """
 
     candidates = [greia_root / "src"]
-    script = globals().get("__file__")  # absent when composition pipes via stdin
-    if script:
+    # Composition pipes this script in on stdin (``python3 -I -B - < script``),
+    # where ``__file__`` is the pseudo-name "<stdin>", not a path.
+    script = globals().get("__file__")
+    if script and not str(script).startswith("<"):
         candidates.append(Path(script).resolve().parents[1] / "src")
     for candidate in candidates:
         if (candidate / "greia_platform" / "bytecode_cache.py").is_file():
