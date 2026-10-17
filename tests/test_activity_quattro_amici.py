@@ -510,6 +510,42 @@ class QuattroAppLoopTests(unittest.TestCase):
         self.assertIn("quattro.game_started", events.ids())
         self.assertIn("quattro.token_dropped", events.ids())
 
+    def test_game_lines_follow_goal_turns_blocks_wins_draws_and_the_match(self) -> None:
+        from types import SimpleNamespace
+
+        from activities.quattro_amici.quattro_audio import PACKAGE_CUES
+        from greia_platform.localization import activity_resources
+
+        app, *_ = self._app(script=[0] * 8)  # Leo keeps to the left column
+        said: list[str] = []
+        real = app.audio.line
+        app.audio.line = lambda cue, **kw: (said.append(cue), real(cue, **kw))[1]
+        app._begin_game()
+        self.assertEqual(said, ["make_three_in_row"])  # stage 1: three in a row
+        for turn in range(2):
+            app._on_column(3)
+            self._run(app, 3.4)
+            self.assertEqual(said[-1], "your_turn")  # back to the child after Leo's move
+        self.assertEqual(said.count("leo_thinking"), 1)  # Flash says it once per game
+        app._on_column(3)  # three stacked: the child wins
+        self._run(app, 3.0)
+        self.assertIn("three_in_row", said)
+        said.clear()
+        app._block_moment(SimpleNamespace(player=F, row=0, col=1))
+        app._block_moment(SimpleNamespace(player=L, row=0, col=1))
+        self.assertEqual(said, ["you_blocked_me", "i_stopped_you"])
+        app._complete_match()  # one game, won by the child
+        self.assertEqual(said[-1], "you_won_match")
+        app, *_ = self._app()
+        draw_real = app.audio.line
+        app.audio.line = lambda cue, **kw: (said.append(cue), draw_real(cue, **kw))[1]
+        app._game_draw()
+        self.assertEqual(said[-1], "draw")
+        for locale in ("en", "it", "es", "fr"):
+            resources = activity_resources(PACKAGE, requested_locale=locale)
+            for cue in PACKAGE_CUES:
+                self.assertEqual(resources.audio_path(cue).parent.name, locale, (cue, locale))
+
     def test_two_friends_drop_back_to_back(self) -> None:
         app, *_ = self._app(mode=GameMode.TWO_PLAYERS)
         for turn in range(4):

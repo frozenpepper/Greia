@@ -3,9 +3,11 @@
 Speech uses only recorded, approved clips: Momo's shared character takes
 (``ready.go``, ``praise.general``, ``encourage.retry``,
 ``encourage.progress``, ``celebrate.success``) and the shared vocabulary
-bank for a patient's name where one exists ("cat", "mouse", "dog").
-Moments without an approved line ("where does it hurt?", tool names) stay
-pictorial and silent. Care sounds are generated once, after the first frame; every call
+bank for a patient's name and the kit tools' names ("stethoscope", "towel",
+...). Momo's owner-approved clinic lines (``assets/audio/<locale>/``: "where
+does it hurt?", "what do we do first?", "what's next?", "all better! bye
+bye!") are queued after the line already playing (``then``), never stacked.
+Care sounds are generated once, after the first frame; every call
 fails soft without a mixer.
 """
 
@@ -18,7 +20,12 @@ from typing import Final
 
 import pygame
 
-from greia_platform.localization import shared_character_audio_path, shared_vocab_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+    shared_vocab_audio_path,
+)
 from greia_platform.pygame_audio import (
     DeferredSoundBank,
     current_pcm16_mixer_spec,
@@ -33,6 +40,11 @@ SPEECH_CHANNEL: Final[int] = 0
 FIRST_SFX_CHANNEL: Final[int] = 2
 LAST_SFX_CHANNEL: Final[int] = 4
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent
+# Owner-approved per-Activity lines (``assets/audio/<locale>/<cue>.wav``).
+CLINIC_CUES: Final[tuple[str, ...]] = ("where_hurt", "what_first", "whats_next", "all_better")
+# Kit tools with a shared vocabulary-bank name (the cuddle has none).
+TOOL_NOUNS: Final[tuple[str, ...]] = ("stethoscope", "sponge", "towel", "medicine", "bandage")
 SPEAKER: Final = "momo"
 MOMO_CUES: Final[tuple[str, ...]] = (
     "ready.go",
@@ -96,6 +108,27 @@ class ClinicAudio:
         except (pygame.error, RuntimeError):
             return False
 
+    def then(self, cue: str) -> None:
+        """Queue one approved line after the one playing (now if quiet).
+
+        The mixer channel's own one-slot queue keeps lines in sequence
+        without polling; a newer queued line replaces an older one.
+        """
+
+        self.last_speech = cue
+        takes = self._speech.get(cue)
+        if not self._available or not takes:
+            return
+        try:
+            channel = pygame.mixer.Channel(SPEECH_CHANNEL)
+            sound = self._rng.choice(takes)
+            if channel.get_busy():
+                channel.queue(sound)
+            else:
+                channel.play(sound)
+        except (pygame.error, RuntimeError):
+            return
+
     def name(self, noun: str | None) -> None:
         """Say a patient's name from the shared vocabulary bank, if recorded."""
 
@@ -131,7 +164,16 @@ class ClinicAudio:
             prefix = first.name.rsplit("__", 1)[0]
             paths = sorted(first.parent.glob(f"{prefix}__*.wav"))[:MAX_TAKES] or [first]
             self._speech[cue] = [sound for sound in map(_load, paths) if sound is not None]
-        for noun in vocab:
+        try:
+            resources = activity_resources(PACKAGE_ROOT, requested_locale=self.locale)
+        except LocalizationError:
+            resources = None
+        for cue in CLINIC_CUES if resources is not None else ():
+            path = resources.audio_path(cue)
+            sound = _load(path) if path is not None else None
+            if sound is not None:
+                self._speech[cue] = [sound]
+        for noun in dict.fromkeys((*vocab, *TOOL_NOUNS)):
             path = shared_vocab_audio_path(self._project_root, noun, self.locale)
             sound = _load(path) if path is not None else None
             if sound is not None:
@@ -200,4 +242,4 @@ def _heartbeat(rate: int, channels: int) -> pygame.mixer.Sound:
     return pygame.mixer.Sound(buffer=mono_pcm16_bytes(samples, channels))
 
 
-__all__ = ["ClinicAudio", "MOMO_CUES"]
+__all__ = ["CLINIC_CUES", "ClinicAudio", "MOMO_CUES", "TOOL_NOUNS"]

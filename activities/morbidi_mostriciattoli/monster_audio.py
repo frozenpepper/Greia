@@ -7,9 +7,11 @@ or colour), ``giggle`` (the friend is tickled), ``rattle`` (surprise dice),
 ``chime`` (saved / shared), ``swish`` (a friend was deleted) and ``syllable.N``
 (a bright two-note chirp per name syllable — not speech).
 
-Momo, the host, speaks only owner-approved shared character clips
-(``shared_character_audio_path``: selected language -> English -> silence);
-no speech is generated here. Audio is fail-soft: without a mixer the bank is
+Momo, the host, speaks only owner-approved clips: shared character takes
+(``shared_character_audio_path``: selected language -> English -> silence)
+and two package lines (``assets/audio/<locale>/``: "a new friend!" queued
+after the save cheer, "surprise!" for the dice when Momo is quiet); no speech
+is generated here. Audio is fail-soft: without a mixer the bank is
 silent and never raises.
 """
 
@@ -23,7 +25,11 @@ import wave
 
 import pygame
 
-from greia_platform.localization import shared_character_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+)
 from greia_platform.pygame_audio import DeferredSoundBank, current_pcm16_mixer_spec, mono_pcm16_bytes
 
 if __package__:
@@ -40,6 +46,9 @@ HOST_LINES: Final[dict[str, tuple[str, int]]] = {
     "shared": ("praise.general", 2),  # "Great work!" / "Ottimo lavoro!"
     "nudge": ("encourage.progress", 1),  # "Keep going!" / "Continua così!"
 }
+# Owner-approved per-Activity lines (``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_LINES: Final[tuple[str, ...]] = ("new_friend", "surprise")
+PACKAGE_ROOT: Final = Path(__file__).resolve().parent
 MAX_VOICES: Final = 4
 
 
@@ -63,6 +72,11 @@ def _cue(samples: list[float], rate: int, channels: int) -> pygame.mixer.Sound:
 def host_clip_path(line: str, locale: str, *, project_root: Path = PROJECT_ROOT) -> Path | None:
     """Momo's approved clip for ``line`` in ``locale`` (English fallback) or None."""
 
+    if line in PACKAGE_LINES:
+        try:
+            return activity_resources(PACKAGE_ROOT, requested_locale=locale).audio_path(line)
+        except LocalizationError:
+            return None
     cue, take = HOST_LINES[line]
     try:
         first = shared_character_audio_path(project_root, HOST, cue, locale)
@@ -169,6 +183,35 @@ class MonsterAudio:
             return False
         return True
 
+    def host_then(self, line: str) -> bool:
+        """Queue one of Momo's lines after the one playing (now when quiet)."""
+
+        self.played.append(f"voice.{line}")
+        del self.played[:-24]
+        if self._voice_channel is None:
+            return False
+        sound = self._voice(line)
+        if sound is None:
+            return False
+        try:
+            if self._voice_channel.get_busy():
+                self._voice_channel.queue(sound)
+            else:
+                self._voice_channel.play(sound)
+        except pygame.error:
+            return False
+        return True
+
+    def host_says_if_quiet(self, line: str) -> bool:
+        """Momo's line only when no other line is playing (mashing stays calm)."""
+
+        try:
+            if self._voice_channel is not None and self._voice_channel.get_busy():
+                return False
+        except pygame.error:
+            return False
+        return self.host_says(line)
+
     def _voice(self, line: str) -> pygame.mixer.Sound | None:
         if line in self._voices:
             return self._voices[line]
@@ -192,4 +235,4 @@ class MonsterAudio:
             pass
 
 
-__all__ = ["HOST", "HOST_LINES", "MonsterAudio", "host_clip_path"]
+__all__ = ["HOST", "HOST_LINES", "MonsterAudio", "PACKAGE_LINES", "host_clip_path"]

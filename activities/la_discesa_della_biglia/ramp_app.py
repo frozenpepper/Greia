@@ -189,6 +189,7 @@ class MarbleRunActivity:
         self._last_activity = clock()
         self._hints = IdleHintScheduler(now=self._last_activity)
         self._last_retry_voice = -100.0
+        self._turn_told = False
         self._last_clack = -100.0
         self._said_go = False
         self._start_board()
@@ -474,6 +475,8 @@ class MarbleRunActivity:
         assert self.cast is not None
         self.cast.reset()
         self.cast.wave()
+        if self.visit.completed == 0:
+            self.audio.then("pieces_in_spots")  # the visit's goal, once
         self._sync(refocus=True)
         self._note_activity()
 
@@ -541,6 +544,10 @@ class MarbleRunActivity:
         self.motion.pops[slot] = now
         self.motion.add_fx("sparkle", self.view.slot_rect(self.board_state.board.slots[slot]).center, self.view.length(110), now)
         self.audio.play("place")
+        occupant = self.board_state.occupant(slot)
+        if not self._turn_told and occupant is not None and self.board_state.kind(occupant) is PieceKind.RAMP:
+            self._turn_told = True  # once per visit: the first ramp placed
+            self.audio.say_if_quiet("tap_ramp_turn")
 
     def _on_go(self) -> None:
         if self.state is not AppState.BUILD:
@@ -588,7 +595,7 @@ class MarbleRunActivity:
         self.state = AppState.CELEBRATE
         self.cast.correct()
         self.audio.play("basket")
-        self.audio.say("basket")
+        self.audio.say("into_basket")  # "Into the basket!"
         self.motion.wiggle = now
         basket = self.view.point(state.board.basket.x, state.board.basket.rim)
         self.motion.add_fx("confetti", (basket[0], basket[1] - self.view.length(110)), self.view.length(190), now)
@@ -613,7 +620,9 @@ class MarbleRunActivity:
         if outcome is Outcome.LOST:
             y = min(y, run.basket.floor) + MARBLE_RADIUS
         self.motion.add_fx("dust_puff", self.view.point(x, y), self.view.length(110), now)
-        if now - self._last_retry_voice >= RETRY_VOICE_GAP:
+        if outcome is Outcome.STOPPED:
+            self.audio.say("oops_stopped")  # "Oops, it stopped!"
+        elif now - self._last_retry_voice >= RETRY_VOICE_GAP:
             self._last_retry_voice = now
             self.audio.say("retry")
         self.events.basket_missed(self._visit_id, state.board.board_id, state.summary.runs, outcome.value)

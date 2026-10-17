@@ -109,10 +109,7 @@ class ManifestTests(unittest.TestCase):
                 for goal in Goal:
                     task = _job(stage, kind, goal)
                     cue = prompt_cue(task)
-                    if kind is TaskKind.WEIGH:
-                        self.assertIsNone(cue)  # pictorial until a line is recorded
-                    else:
-                        self.assertIn(cue, recorded)
+                    self.assertIn(cue, recorded)
 
     def test_private_art_has_source_and_rendition_and_no_cast_redraw(self) -> None:
         names = (
@@ -503,6 +500,9 @@ class AppLoopTests(unittest.TestCase):
             self.assertTrue(self._tap(app, "crate.0"))
             self._advance(app, now, 0.4)
         app.audio.spoken.clear()
+        app._on_listen()  # noqa: SLF001 - blocks laid: the "no gaps" line replays
+        self.assertEqual(app.audio.spoken, ["line_up_blocks"])
+        app.audio.spoken.clear()
         self.assertTrue(self._tap(app, "check"))
         self.assertIs(app.cast.feedback.pose, CastPose.THINK)
         self.assertEqual(app.audio.spoken, ["retry"])
@@ -520,6 +520,7 @@ class AppLoopTests(unittest.TestCase):
         self.assertIs(app.cast.feedback.pose, CastPose.CHEER)
         self._advance(app, now, 0.8)
         self.assertIs(task.phase, Phase.COUNTING)
+        self.assertEqual(app.audio.spoken[-1], "how_many_long")
         self.assertTrue(all(button.visible for button in app.controls.counts))
         self.assertFalse(app.controls.check.visible)
         # A wrong count: the blocks are counted out, the final number is held.
@@ -543,13 +544,15 @@ class AppLoopTests(unittest.TestCase):
         app, now, _ = self._app(stage=2, kind=TaskKind.WEIGH, goal=Goal.LESS)
         task = app.task
         self._advance(app, now, 0.7)
-        self.assertEqual(app.audio.spoken, [])  # no recorded line: the job card shows it
+        self.assertEqual(app.audio.spoken, ["put_parcels"])  # owner-approved balance line
         lighter = min(task.parcels, key=lambda parcel: parcel.weight).parcel_id
         self.assertTrue(self._tap(app, f"parcel.{lighter}"))  # first tap only loads it
         self.assertIs(task.phase, Phase.LOADING)
         self._advance(app, now, 0.6)
+        self.assertEqual(app.audio.spoken, ["put_parcels"])  # one parcel on: no question yet
         self.assertTrue(self._tap(app, f"parcel.{1 - lighter}"))
         self._advance(app, now, 2.0)
+        self.assertEqual(app.audio.spoken, ["put_parcels", "which_lighter"])
         self.assertAlmostEqual(app.motion.angle(now[0]), task.tilt() * 11.0, places=3)
         self.assertTrue(self._tap(app, f"parcel.{1 - lighter}"))  # the heavier one: try again
         self.assertIs(task.phase, Phase.DEMONSTRATING)

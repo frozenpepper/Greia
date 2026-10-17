@@ -405,6 +405,29 @@ class AppLoopTests(unittest.TestCase):
             waited += 0.1
         self.assertTrue(predicate(), f"timed out in state {app.state}")
 
+    def test_first_tracing_step_invites_tracing_once(self) -> None:
+        from greia_platform.localization import activity_resources
+
+        app = self._app("en")
+        steps = app.round.steps
+        traces = [i for i, s in enumerate(steps) if s.kind is StepKind.TRACE]
+        self.assertTrue(traces)
+        app.round._index = traces[0]  # noqa: SLF001 - jump to the round's first tracing step
+        self.audio.played.clear()
+        app._enter_step()  # noqa: SLF001
+        self._run(app, 6.0)
+        letter = f"letter_{steps[traces[0]].letter.char}"
+        self.assertLess(self.audio.played.index(letter), self.audio.played.index("trace_letter"))
+        if len(traces) > 1:
+            app.round._index = traces[1]  # noqa: SLF001
+            self.audio.played.clear()
+            app._enter_step()  # noqa: SLF001
+            self._run(app, 6.0)
+            self.assertNotIn("trace_letter", self.audio.played)  # once per round
+        for locale in ("en", "it", "es", "fr"):
+            resources = activity_resources(ACTIVITY_ROOT, requested_locale=locale)
+            self.assertEqual(resources.audio_path("trace_letter").parent.name, locale)
+
     def test_full_garden_round_plays_to_completion_with_feedback_grammar(self) -> None:
         from greia_platform.activity_feedback import CastPose
         from alfabeto_app import AppState

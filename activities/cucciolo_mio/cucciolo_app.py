@@ -94,6 +94,14 @@ else:
 TELL_EVERY = 4.0
 DAY_START_CALM = 2.6
 NAME_DELAY = 1.2
+# The pet's own owner-approved line for each need (package cue ids).
+NEED_LINES = {
+    Need.HUNGRY: "hungry",
+    Need.DIRTY: "muddy",
+    Need.PLAYFUL: "play",
+    Need.HURT: "ouch",
+    Need.SLEEPY: "sleepy",
+}
 CHOICE_PAUSE = 0.7
 NOT_NOW_LOCK = 0.55
 DEMO_DELAY = 0.65
@@ -368,6 +376,7 @@ class CuccioloApp:
         self._sync_species_cards()
         self.controls.show_adopt(self.selected_species, self._text("adopt.prompt", ""))
         self.cast.point(2.0)
+        self.audio.then_line("who_look_after")
         self._busy = False
         self._note_activity()
         self._dirty = True
@@ -398,6 +407,7 @@ class CuccioloApp:
         self.variant = "happy" if self.selected_name else "default"
         self.controls.show_name(self.selected_name, self._text("name.prompt", ""))
         self.cast.point(2.0)
+        self.audio.then_line("choose_name")
         self._note_activity()
         self._dirty = True
 
@@ -482,6 +492,7 @@ class CuccioloApp:
         if need is Need.DIRTY:
             self.motion.add_fx("dust_puff", (HOME_FLOOR[0] + 70, HOME_FLOOR[1] - 30), now)
         self.audio.play("chime")
+        self.audio.then_line(NEED_LINES[need])  # the pet says what it needs
         self.cast.point(1.6)
         self._busy = False
         self._note_activity()
@@ -515,6 +526,8 @@ class CuccioloApp:
             self.cast.try_again()
             if outcome.misses % 3 == 1:
                 self.audio.lilli("encourage.retry")
+            else:
+                self.audio.then_line("not_now")  # the pet's own gentle "not now"
             self._busy = True
             self.timeline.after(NOT_NOW_LOCK, self._unlock)
             misses = outcome.misses
@@ -547,6 +560,8 @@ class CuccioloApp:
         now = self.clock()
         target_room = CARES[care].room
         self._care_shown = care
+        if care is Care.BED:
+            self.audio.then_line("time_for_bed")
         if target_room is not self.room:
             self.motion.slide(self.room, target_room, now)
             self.room = target_room
@@ -663,7 +678,10 @@ class CuccioloApp:
         self.motion.add_fx("heart_pop", (pet.centerx, pet.top + 50), now)
         self.audio.play("heart")
         if len(day.cared) == max(1, (day.total - 1) // 2):
+            # Lilli's halfway cheer wins this time (one line, never two).
             self.timeline.after(0.6, lambda: self.audio.lilli("encourage.progress"))
+        else:
+            self.audio.then_line("thank_you")  # the cared-for pet says thank you
         self.timeline.after(HAPPY_SECONDS, self._go_home)
 
     def _go_home(self) -> None:

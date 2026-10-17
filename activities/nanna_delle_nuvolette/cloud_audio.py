@@ -3,8 +3,13 @@
 Speech uses only recorded, approved clips (no generated audio): Momo's shared
 character takes (``praise.general``, ``encourage.retry``,
 ``celebrate.success``), found through ``shared_character_audio_path``
-(locale -> English fallback), played softly. There is no approved recording
-of the bedtime wishes, numbers or colours yet, so the game is fully pictorial.
+(locale -> English fallback), played softly; Momo's two whispered package
+lines (``assets/audio/<locale>/``: "shh, sleepy time" as the night begins,
+"goodnight, little cloud" as a cloud falls asleep); and, when the child
+picks up a quilt, its colour from the shared vocabulary bank
+(``shared_vocab_audio_path``, ``colour_<id>``) and its star count from the
+shared numbers bank (``shared_number_audio_path``). Lines are queued after the
+one playing, never stacked, and the game stays fully playable in silence.
 
 The small effects are synthesized once, after the first frame in the mixer's own format,
 deliberately quiet and slow: a cotton rustle, a sleepy yawn, a music-box note
@@ -23,7 +28,13 @@ from typing import Final
 
 import pygame
 
-from greia_platform.localization import shared_character_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+    shared_number_audio_path,
+    shared_vocab_audio_path,
+)
 from greia_platform.pygame_audio import (
     DeferredSoundBank,
     current_pcm16_mixer_spec,
@@ -38,6 +49,9 @@ LAST_SFX_CHANNEL: Final = 4
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 HOST: Final = "momo"
 MOMO_CUES: Final = ("praise.general", "encourage.retry", "celebrate.success")
+PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent
+# Owner-approved whispered package lines (``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_CUES: Final = ("goodnight_cloud", "shh_sleepy")
 SPEECH_VOLUME: Final = 0.7   # Momo whispers a little at bedtime
 CLIP_CACHE_LIMIT: Final = 4
 EFFECTS: Final = ("pick", "rustle", "yawn", "hush", "twinkle", "sleep_0", "sleep_1", "sleep_2")
@@ -67,10 +81,12 @@ class CloudAudio:
         self._sounds = DeferredSoundBank()
         self._clips: OrderedDict[str, pygame.mixer.Sound | None] = OrderedDict()
         self._takes: dict[str, list[Path]] = {}
+        self._lines: dict[str, Path] = {}
         self._available = False
         self.last_speech: str | None = None
         self.last_effect: str | None = None
         self._find_takes()
+        self._find_lines()
         try:
             if pygame.mixer.get_init() is not None:
                 pygame.mixer.set_num_channels(max(pygame.mixer.get_num_channels(), LAST_SFX_CHANNEL + 1))
@@ -100,6 +116,51 @@ class CloudAudio:
             return False
         return True
 
+    def whisper(self, cue: str) -> bool:
+        """Queue one of Momo's whispered package lines after the one playing."""
+
+        self.last_speech = cue
+        path = self._lines.get(cue)
+        return path is not None and self._queue(cue, path)
+
+    def name_quilt(self, colour_id: str | None, stars: int) -> None:
+        """Say the picked quilt's colour and/or star count (shared banks).
+
+        Names only the quilt in the child's hand (never the answer); silent
+        for anything without a recording. A newer pick replaces the queue.
+        """
+
+        if colour_id is not None:
+            try:
+                path = shared_vocab_audio_path(self._project_root, f"colour_{colour_id}", self.locale)
+            except LocalizationError:
+                path = None
+            if path is not None:
+                self.last_speech = f"colour.{colour_id}"
+                self._queue(f"colour.{colour_id}", path, replace=True)
+        if stars > 0:
+            path = shared_number_audio_path(self._project_root, stars, self.locale)
+            if path is not None:
+                self.last_speech = f"number.{stars}"
+                self._queue(f"number.{stars}", path, replace=colour_id is None)
+
+    def _queue(self, key: str, path: Path, *, replace: bool = False) -> bool:
+        if not self._available:
+            return False
+        sound = self._clip(key, path)
+        if sound is None:
+            return False
+        try:
+            channel = pygame.mixer.Channel(SPEECH_CHANNEL)
+            channel.set_volume(SPEECH_VOLUME)
+            if channel.get_busy() and not replace:
+                channel.queue(sound)
+            else:
+                channel.play(sound)
+        except (pygame.error, RuntimeError):
+            return False
+        return True
+
     def stop_speech(self) -> None:
         if not self._available:
             return
@@ -120,6 +181,16 @@ class CloudAudio:
         while len(self._clips) > CLIP_CACHE_LIMIT:
             self._clips.popitem(last=False)
         return sound
+
+    def _find_lines(self) -> None:
+        try:
+            resources = activity_resources(PACKAGE_ROOT, requested_locale=self.locale)
+        except LocalizationError:
+            return
+        for cue in PACKAGE_CUES:
+            path = resources.audio_path(cue)
+            if path is not None:
+                self._lines[cue] = path
 
     def _find_takes(self) -> None:
         for cue in MOMO_CUES:

@@ -132,6 +132,7 @@ KEY_STEP = 28
 SCENE_COLUMNS, SCENE_ROWS = 4, 2
 MAX_SCHEDULED = 16
 HOST_CUES = (VOICE_READY, VOICE_SAVED, VOICE_WATCHED)
+COUNTDOWN_LINE = "three_two_one"  # Lilli's owner-approved package line
 KNOWN_PUPPETS = frozenset(PUPPET_IDS)
 SCENES_ID = "teatrino.scenes"
 VOICE_ID = "teatrino.voice"
@@ -745,6 +746,7 @@ class TeatrinoApp:
         if self.stage.full:
             # No more room: the friends on stage wobble "we're full!".
             self.sound_mgr.play("full")
+            self.host.say_if_quiet("stage_full")  # "The stage is full!" (never restarted by mashing)
             card = self.controls.card_for(puppet_id)
             if card is not None:
                 self.fx.burst("dust_puff", card.rect.midtop)
@@ -894,7 +896,14 @@ class TeatrinoApp:
         self.countdown_started = self.clock()
         self._countdown_beat_at = self.countdown_started
         self._countdown_lamps = 3
-        lead = max(CURTAIN_SECONDS + 0.2, min(1.6, self.host.say(VOICE_READY)))
+        countdown = self.host.say(COUNTDOWN_LINE)  # "Three, two, one... action!"
+        if countdown > 0.0:
+            # The lamps tick through the end of the line, and the curtain (and
+            # microphone) opens only once "action!" is over: the host's voice
+            # never lands inside the child's recording.
+            lead = max(CURTAIN_SECONDS + 0.2, countdown + 0.15 - 3 * COUNTDOWN_BEAT)
+        else:
+            lead = max(CURTAIN_SECONDS + 0.2, min(1.6, self.host.say(VOICE_READY)))
         for index in range(3):
             self.timeline.after(lead + index * COUNTDOWN_BEAT, self._countdown_tick)
         self.timeline.after(lead + 3 * COUNTDOWN_BEAT, self._open_for_recording)
@@ -910,6 +919,7 @@ class TeatrinoApp:
             return
         self.curtain.move(0.0)
         self.sound_mgr.play("curtain")
+        self.host.stop()  # nothing of the host may reach the microphone
         if not self._begin_capture():
             self.mode = StageMode.EDIT
             self._sync_mode()

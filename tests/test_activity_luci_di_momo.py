@@ -283,7 +283,7 @@ class _MockAudio:
         self.speech.append("prompt_choose")
 
     def play_count(self, quantity: int) -> bool:
-        if quantity > 5:
+        if quantity > 10:
             return False
         self.speech.append(f"count_{quantity}")
         return True
@@ -398,6 +398,8 @@ class FireflyAppTests(unittest.TestCase):
         self.assertTrue(app._busy)
         self.assertFalse(app.controls.replay.visible)
         self._wait_for_cards(app, now)
+        # After the try-again line Momo invites the child to count along.
+        self.assertLess(audio.speech.index("retry"), audio.speech.index("count_together"))
         # Momo counted together: the first part at once, then counting on.
         numbers = [badge.number for badge in app.motion.badges]
         self.assertEqual(numbers[0], current.groups[0])
@@ -414,11 +416,13 @@ class FireflyAppTests(unittest.TestCase):
         self.assertEqual(app.cast.pose.value, "cheer")
 
     def test_look_again_replays_once_and_counts_as_a_hint(self) -> None:
-        app, now, _, _, _ = self._build_app(level=2)
+        app, now, _, audio, _ = self._build_app(level=2)
         self._wait_for_cards(app, now)
+        self.assertNotIn("watch_closely", audio.speech)  # round one has the welcome
         replay = app.controls.replay
         self.assertTrue(replay.visible and replay.enabled)
         self.assertTrue(app.tap(self._physical(app, replay.rect)))
+        self.assertEqual(audio.speech[-1], "watch_closely")  # one more look
         self.assertTrue(app.session.replay_used)
         self.assertFalse(app.asking)
         self._wait_for_cards(app, now)
@@ -428,6 +432,19 @@ class FireflyAppTests(unittest.TestCase):
         assert current is not None
         self._tap_value(app, current.quantity)
         self.assertFalse(app.session.history[-1].first_attempt_success)
+
+    def test_second_round_glimpse_says_watch_closely(self) -> None:
+        app, now, _, audio, _ = self._build_app(level=1)
+        self._wait_for_cards(app, now)
+        current = app.session.current_round
+        assert current is not None
+        self.assertTrue(self._tap_value(app, current.quantity))
+        for _ in range(400):
+            if app.session.round_index == 1 and "watch_closely" in audio.speech:
+                break
+            self._advance(app, now, 0.05)
+        self.assertEqual(app.session.round_index, 1)
+        self.assertEqual(audio.speech.count("watch_closely"), 1)
 
     def test_idle_hint_points_then_repeats_the_question(self) -> None:
         app, now, _, audio, _ = self._build_app(level=1)
@@ -545,7 +562,7 @@ class AudioTests(unittest.TestCase):
             audio.chime(number)
         audio.play_welcome()
         audio.play_prompt_choose()
-        self.assertFalse(audio.play_count(7))
+        self.assertFalse(audio.play_count(11))  # beyond the recorded counts: praise instead
         audio.praise()
         audio.encourage()
         audio.play_feedback(True)
@@ -555,7 +572,12 @@ class AudioTests(unittest.TestCase):
         if pygame.mixer.get_init():
             self.assertGreater(audio.speech_seconds("welcome"), 1.0)
             self.assertTrue(audio.play_count(3))
+            self.assertTrue(audio.play_count(7))  # count_6..10 recorded 2026-10-17
         self.assertEqual(audio.speech_seconds("no_such_cue"), 0.0)
+        for locale in ("en", "it", "es", "fr"):
+            resources = activity_resources(ACTIVITY_ROOT, requested_locale=locale)
+            for cue in ("count_6", "count_7", "count_8", "count_9", "count_10", "watch_closely", "count_together"):
+                self.assertEqual(resources.audio_path(cue).parent.name, locale, (cue, locale))
 
 
 if __name__ == "__main__":

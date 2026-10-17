@@ -574,6 +574,7 @@ class TorreActivity:
             return False
         self.held = index
         self.audio.play("pick")
+        self.audio.block_name(session.kit_block(index).kind.value)  # "Arch!" (if Dani is quiet)
         self._sync_controls()
         self._dirty = True
         return True
@@ -655,7 +656,7 @@ class TorreActivity:
             return
         self.audio.play("chime")
         self.cast.correct()
-        if self._corrects % 2 == 1:
+        if self._corrects % 2 == 1 and not self.audio.say("it_fits"):  # "It fits!"
             self.audio.say("praise.general")
 
     def _declined(self, index: int, block, point: tuple[int, int], result: PlaceResult) -> None:
@@ -666,7 +667,9 @@ class TorreActivity:
         self._busy_until = now + WOBBLE_SECONDS * 0.6
         self.audio.play("hum")
         self.cast.try_again()
-        if session.misses % 2 == 1:
+        if result.outcome is PlaceOutcome.NEEDS_TURN:
+            self.audio.say("turn_it")  # "Turn it!": it fits once turned
+        elif session.misses % 2 == 1:
             self.audio.say("encourage.retry")
         if result.outcome is PlaceOutcome.NO_FIT:
             # This kind belongs nowhere in the build: it shakes "not me" and goes back.
@@ -754,6 +757,8 @@ class TorreActivity:
         self.motion.outline_pulse = now
         if self._welcomed:
             self.audio.noun(puzzle.plan.noun)
+        if session.puzzle_index == 0:
+            self.audio.then("fill_shape_blocks")  # the set's goal, after the name / "ready, go"
         if self._first_visit and session.puzzle_index == 0 and self._sets_played == 1:
             # The very first build ever: Dani shows the move once.
             self.timeline.after(1.2, lambda: self._demonstrate(self.clock()))

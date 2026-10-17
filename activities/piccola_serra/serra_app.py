@@ -87,6 +87,13 @@ else:
     from serra_services import EventPort, ProgressPort
 
 RETRY_VOICE_GAP = 8.0
+# Tito's owner-approved line for each plant need (package cue ids).
+NEED_LINES = {
+    Need.THIRSTY: "thirsty",
+    Need.DARK: "needs_light",
+    Need.SOGGY: "too_much_water",
+    Need.RIPE: "ripe_pick",
+}
 MAX_SCHEDULED = 32
 NEED_SETTLE = 0.6
 GROW_SETTLE = 0.8
@@ -340,6 +347,7 @@ class SerraActivity:
         self.controls.sync_progress(self.visit.completed)
         self.cast.point(1.6)
         self.audio.say("start")
+        self.audio.then("pick_seed")  # "Pick a seed!" after "ready, go"
         self.busy = False
         self._help_presses = 0
         self._note_activity()
@@ -354,6 +362,7 @@ class SerraActivity:
         self.busy = True
         self.events.seed_planted(self._visit_id, self.visit.completed + 1, plant_id)
         self.audio.play("seed")
+        self.audio.say_if_quiet(f"name.{plant_id}")  # the chosen plant's name
         now = self.clock()
         # The packet hops from its tile to the pot; the seed appears in the soil.
         packet = self.art.packet(plant_id, 96)
@@ -391,6 +400,7 @@ class SerraActivity:
             self.audio.play("drip")
         elif need is Need.RIPE:
             self.motion.add_fx("sparkle", FRUIT_SPOT, now, 150)
+        self.audio.then(NEED_LINES[need])  # Tito says what the plant needs
         self.timeline.after(NEED_SETTLE, self._ready_for_care)
 
     def _ready_for_care(self) -> None:
@@ -527,6 +537,7 @@ class SerraActivity:
         self.controls.focus_first()
         self.motion.slot_pulse = now
         self.cast.point(1.6)
+        self.audio.then("what_comes_first")  # after the harvest praise
         self.busy = False
         self._help_presses = 0
         self._note_activity()

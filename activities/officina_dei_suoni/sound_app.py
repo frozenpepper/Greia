@@ -570,6 +570,8 @@ class SoundWorkshopActivity:
         if challenge is not None and challenge.target_word is not None:
             # Re-anchor the next slot on the whole word.
             self.speech_queue.clear()
+            if challenge.mode is WorkshopMode.BUILD_WORD:
+                self.speech_queue.enqueue("find_another_sound", gap=0.3)  # the later slot
             self.speech_queue.enqueue(challenge.target_word.word_id, tag="screen", gap=0.4)
         self._quiet_since = now
 

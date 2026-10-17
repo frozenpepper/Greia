@@ -306,6 +306,39 @@ class AppLoopTests(unittest.TestCase):
         physical = app.canvas.mapper.transform.logical_to_physical(center)
         return app._handle_pointer((int(physical[0]), int(physical[1])))
 
+    def test_wrong_match_asks_do_they_rhyme_then_demonstrates_listening(self) -> None:
+        from rhyme_content import RhymeMode
+
+        found = None
+        for level in range(1, 8):
+            app = self._app("en", level=level)
+            for _ in range(CHALLENGE_COUNT):
+                challenge = app.session.current_challenge
+                if challenge.mode is RhymeMode.RHYME_MATCH and len(challenge.choices) >= 3:
+                    found = app
+                    break
+                app.session._index += 1  # noqa: SLF001 - skip to a three-choice match
+            if found is not None:
+                break
+        self.assertIsNotNone(found, "a level offers a three-lantern rhyme match")
+        app = found
+        self._run(app, 6.0)
+        challenge = app.session.current_challenge
+        wrong = [i for i in range(len(challenge.choices)) if i != challenge.correct_index]
+        self.audio.played.clear()
+        self.assertTrue(self._tap_choice(app, wrong[0]))
+        self._run(app, 6.0)
+        played = self.audio.played
+        # First miss: retry, the target and the child's pick, then "Do they rhyme?".
+        self.assertLess(played.index("leo.retry"), played.index("do_they_rhyme"))
+        self.assertNotIn("listen_end_of_word", played)
+        self.audio.played.clear()
+        self.assertTrue(self._tap_choice(app, wrong[1]))
+        self._run(app, 6.0)
+        # Second miss demonstrates: "Listen to the end of the word!" before the model pair.
+        played = self.audio.played
+        self.assertLess(played.index("listen_end_of_word"), played.index(challenge.answer.item_id))
+
     def test_full_round_plays_to_completion_with_feedback_grammar(self) -> None:
         from greia_platform.activity_feedback import CastPose
         from rhyme_app import AppState

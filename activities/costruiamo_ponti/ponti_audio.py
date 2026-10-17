@@ -5,9 +5,11 @@ Speech uses only the owner-accepted shared character takes
 ``shared_character_audio_path`` (selected language -> English -> silence), in
 the voice of the friend who is crossing: "ready, go" on the first GO of a
 crossing, praise at the picnic, the big cheer at the end of a set, "keep
-going" as the first idle nudge and "let's try again" after a stop. Moments
-without an approved line (placing a plank, a plank landing or bending) stay
-pictorial + sound. Sound effects are generated once, after the first frame; every call
+going" as the first idle nudge and "let's try again" after a stop. Tito's
+owner-approved bridge lines (``assets/audio/<locale>/``: "is it long
+enough?", "put a pillar on the rock!", "let's go to the picnic!", "just
+right!", "too short!", "too heavy - try a stone plank!") stay loaded across
+friends and are queued or skipped rather than stacked. Sound effects are generated once, after the first frame; every call
 fails soft without a mixer.
 """
 
@@ -20,7 +22,11 @@ from typing import Final
 
 import pygame
 
-from greia_platform.localization import shared_character_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+)
 from greia_platform.pygame_audio import (
     DeferredSoundBank,
     chime_run_sound,
@@ -33,6 +39,16 @@ SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
 LAST_SFX_CHANNEL: Final = 6
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent
+# Owner-approved per-Activity lines (Tito; ``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_CUES: Final[tuple[str, ...]] = (
+    "long_enough",
+    "too_short",
+    "just_right",
+    "too_heavy",
+    "pillar_on_rock",
+    "lets_picnic",
+)
 # Activity cue -> the speaker's shared take family.
 SHARED_CUES: Final[dict[str, str]] = {
     "go": "ready.go",
@@ -51,6 +67,7 @@ class BridgeAudio:
         self._project_root = project_root
         self._sounds = DeferredSoundBank()
         self._speech: dict[str, pygame.mixer.Sound] = {}
+        self._lines: dict[str, pygame.mixer.Sound] = {}
         self._speaker: str | None = None
         self._available = False
         self.last_speech: str | None = None
@@ -62,6 +79,22 @@ class BridgeAudio:
                 self._available = True
         except (pygame.error, RuntimeError, OSError):
             self._available = False
+        if self._available:
+            self._load_lines()
+
+    def _load_lines(self) -> None:
+        try:
+            resources = activity_resources(PACKAGE_ROOT, requested_locale=self.locale)
+        except LocalizationError:
+            return
+        for cue in PACKAGE_CUES:
+            path = resources.audio_path(cue)
+            if path is None:
+                continue
+            try:
+                self._lines[cue] = pygame.mixer.Sound(str(path))
+            except (pygame.error, OSError):
+                continue
 
     def use_speaker(self, speaker: str) -> None:
         """Load the takes of the friend who speaks now (drops the previous ones)."""
@@ -85,11 +118,41 @@ class BridgeAudio:
         """Speak one approved cue now (silent when the take is missing)."""
 
         self.last_speech = cue
-        sound = self._speech.get(cue)
+        sound = self._speech.get(cue) or self._lines.get(cue)
         if not self._available or sound is None:
             return
         try:
             pygame.mixer.Channel(SPEECH_CHANNEL).play(sound)
+        except (pygame.error, RuntimeError):
+            return
+
+    def speaking(self) -> bool:
+        if not self._available:
+            return False
+        try:
+            return bool(pygame.mixer.Channel(SPEECH_CHANNEL).get_busy())
+        except (pygame.error, RuntimeError):
+            return False
+
+    def say_if_quiet(self, cue: str) -> None:
+        """Speak a non-essential line only when no other line is playing."""
+
+        if not self.speaking():
+            self.say(cue)
+
+    def then(self, cue: str) -> None:
+        """Queue one line after the one playing (now when quiet), never stacked."""
+
+        self.last_speech = cue
+        sound = self._speech.get(cue) or self._lines.get(cue)
+        if not self._available or sound is None:
+            return
+        try:
+            channel = pygame.mixer.Channel(SPEECH_CHANNEL)
+            if channel.get_busy():
+                channel.queue(sound)
+            else:
+                channel.play(sound)
         except (pygame.error, RuntimeError):
             return
 
@@ -143,4 +206,4 @@ def _knock(rate: int, channels: int, frequency: float, duration: float, volume: 
     return pygame.mixer.Sound(buffer=mono_pcm16_bytes(samples, channels))
 
 
-__all__ = ["BridgeAudio", "SHARED_CUES"]
+__all__ = ["BridgeAudio", "PACKAGE_CUES", "SHARED_CUES"]

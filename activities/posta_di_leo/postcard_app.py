@@ -278,6 +278,7 @@ class PostcardActivity:
     def _opening_hint(self) -> None:
         if self.state is Screen.COMPOSER and self.sheet is None and self.draft.recipient_id is None:
             self.host.point(HALO_SECONDS)
+            self.audio.leo_says("who_is_it_for")  # "Who is it for?"
             self.motion.halos["tray"] = self.clock() + HALO_SECONDS
             self._dirty = True
 
@@ -725,6 +726,8 @@ class PostcardActivity:
             self.audio.play("flip")
         else:
             self.audio.play("tick")
+        if step == "picture" and previous == "friend":
+            self.audio.leo_says("pick_picture")  # "Pick a picture!"
         self.step = step
         self.toolbar_focus = False
         self._set_text_input(step == "message")
@@ -1048,6 +1051,7 @@ class PostcardActivity:
         self.motion.send_start = self.clock()
         self._set_text_input(False)
         self.audio.play("whoosh")
+        self.audio.leo_says("off_it_goes")  # "Off it goes!" as the card flies
         self.timeline.after(SEND_SECONDS - 0.5, self._landed)
         self.timeline.after(SEND_SECONDS + 0.15, self._show_delivered)
         # The postcard is saved: the draft starts over (and is forgotten).

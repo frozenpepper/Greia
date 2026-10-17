@@ -447,6 +447,8 @@ class OrcaBayActivity:
             if outcome is MissionOutcome.STARTED:
                 self.audio.play("bubble")
                 mission = self._missions.current
+                if mission is not None:
+                    self.audio.prompt(f"{mission.kind.value}_{mission.orca_id}")
                 if mission is not None and mission.food is not None:
                     target = self.pod.orca(mission.orca_id)
                     if target is not None:

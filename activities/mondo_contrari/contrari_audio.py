@@ -1,11 +1,11 @@
 """Approved speech plus small synthesized effects for Mondo Contrari.
 
 Speech uses only recorded, approved clips: this package's Flash cues
-(``welcome``, the ten concept words ``up`` .. ``slow`` and ``praise_1..3``)
+(``welcome``, the ten concept words ``up`` .. ``slow``, ``praise_1..3`` and
+``now_the_opposite`` before a pair's second word)
 through ``LocalizedResources`` (selected language -> base -> English ->
 silence), and Flash's shared character takes for "let's try again"
 (``encourage.retry``) and the end of a visit (``celebrate.success``).
-Moments without an approved line ("show me the opposite") stay pictorial.
 Effects are generated once, after the first frame; every call fails soft without a mixer.
 """
 

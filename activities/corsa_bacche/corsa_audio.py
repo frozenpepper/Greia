@@ -3,11 +3,15 @@
 Speech uses only Momo's owner-accepted shared character takes
 (``assets/audio/characters/shared/v0.2/momo``) through
 ``shared_character_audio_path`` (selected language -> English -> silence):
-"ready, go" when a garden starts, praise when the basket is full, the big
-cheer at the end of a visit, "keep going" as the first idle nudge and "let's
-try again" after a bump. Moments without an approved line (a berry, "wait
-for the ladybird") stay pictorial + sound. Sound effects are generated once,
-after the first frame; every call fails soft without a mixer. No generated speech.
+"ready, go" when a garden starts, the big cheer at the end of a visit, "keep
+going" as the first idle nudge and "let's try again" after a bump. Sound
+effects are generated once, after the first frame; every call fails soft
+without a mixer. No generated speech.
+
+Momo's owner-approved garden lines (``assets/audio/<locale>/``) are wired too:
+"find all the berries!" after the first garden's "ready, go", "shh... the
+ladybird is passing" when Momo waits for her, "the hedgehog is sleeping" at a
+hedgehog's first nap and "basket full!" when the garden is cleared.
 """
 
 from __future__ import annotations
@@ -19,7 +23,11 @@ from typing import Final
 
 import pygame
 
-from greia_platform.localization import shared_character_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+)
 from greia_platform.pygame_audio import (
     DeferredSoundBank,
     chime_run_sound,
@@ -32,6 +40,14 @@ SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
 LAST_SFX_CHANNEL: Final = 5
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent
+# Owner-approved per-Activity lines (``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_CUES: Final[tuple[str, ...]] = (
+    "find_all_berries",
+    "ladybird_passing",
+    "hedgehog_sleeping",
+    "basket_full",
+)
 SPEAKER: Final = "momo"
 # Activity cue -> Momo's shared take family.
 SHARED_CUES: Final[dict[str, str]] = {
@@ -84,6 +100,40 @@ class CorsaAudio:
         except (pygame.error, RuntimeError):
             return
 
+    def speaking(self) -> bool:
+        if not self._available:
+            return False
+        try:
+            return bool(pygame.mixer.Channel(SPEECH_CHANNEL).get_busy())
+        except (pygame.error, RuntimeError):
+            return False
+
+    def say_if_quiet(self, cue: str) -> None:
+        """Speak a non-essential line only when no other line is playing."""
+
+        if not self.speaking():
+            self.say(cue)
+
+    def then(self, cue: str) -> None:
+        """Queue one line after the one playing (now when quiet), never stacked.
+
+        Uses the speech channel's own one-slot queue: no polling, and a newer
+        queued line replaces an older one.
+        """
+
+        self.last_speech = cue
+        sound = self._speech.get(cue)
+        if not self._available or sound is None:
+            return
+        try:
+            channel = pygame.mixer.Channel(SPEECH_CHANNEL)
+            if channel.get_busy():
+                channel.queue(sound)
+            else:
+                channel.play(sound)
+        except (pygame.error, RuntimeError):
+            return
+
     def play(self, name: str) -> None:
         self.last_sound = name
         if not self._available:
@@ -109,6 +159,18 @@ class CorsaAudio:
                 path = shared_character_audio_path(self._project_root, SPEAKER, family, self.locale)
             except Exception:
                 path = None
+            if path is None:
+                continue
+            try:
+                self._speech[cue] = pygame.mixer.Sound(str(path))
+            except (pygame.error, OSError):
+                continue
+        try:
+            resources = activity_resources(PACKAGE_ROOT, requested_locale=self.locale)
+        except LocalizationError:
+            return
+        for cue in PACKAGE_CUES:
+            path = resources.audio_path(cue)
             if path is None:
                 continue
             try:

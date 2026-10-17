@@ -266,6 +266,7 @@ class QuattroApp:
         self._hints = IdleHintScheduler(now=self._last_activity)
         self._losses_in_a_row = 0
         self._game_serial = 0
+        self._leo_thinking_said = False
         self._pending: DropResult | None = None
         self._begin_game()
 
@@ -495,6 +496,11 @@ class QuattroApp:
         self._game_serial += 1
         starter = self.model.starter
         self.audio.say(starter.cast_id, "ready.go")
+        self._leo_thinking_said = False
+        # The goal of this board, after "ready, go" ("Make three/four in a row!").
+        goal = {3: "make_three_in_row", 4: "make_four_in_row"}.get(self.model.stage.target)
+        if goal is not None:
+            self.audio.line(goal, after=True)
         self._emit(
             "quattro.game_started",
             f"game-{self._game_serial}-started",
@@ -517,6 +523,8 @@ class QuattroApp:
             self._leo_move()
         else:
             self.phase = Phase.TURN
+            if self.vs_leo and self.model.history:
+                self.audio.line("your_turn", if_quiet=True)  # back to the child after Leo
             self._note_activity()
             if self.vs_leo and self._losses_in_a_row >= 2:
                 serial = self._turn_serial
@@ -535,6 +543,9 @@ class QuattroApp:
         think = self.rng.uniform(*LEO_THINK_SECONDS)
         glide = abs(choice - self.selected_col) * GLIDE_SECONDS_PER_COLUMN
         self.friends[Player.LEO].show("pose_think", think)
+        if not self._leo_thinking_said:
+            self._leo_thinking_said = True  # once per game: Flash, "Leo is thinking..."
+            self.audio.line("leo_thinking", if_quiet=True)
         serial = self._turn_serial
         self.timeline.after(think, lambda: self._leo_glide(serial, choice))
         self.timeline.after(think + glide + 0.25, lambda: self._leo_drop(serial, choice))
@@ -607,11 +618,14 @@ class QuattroApp:
             self.friends[result.player].correct()
             self.motion.add_fx("star_burst", center, now)
             self.audio.play("pop")
+            if self.vs_leo:
+                self.audio.line("you_blocked_me")  # Leo, about the child's clever block
         else:
             # Leo stopped the child's row: he points at it, Flash is surprised.
             self.friends[Player.LEO].show("pose_point", 1.6)
             self.friends[Player.FLASH].show("surprised", 1.2)
             self.motion.add_fx("sparkle", center, now)
+            self.audio.line("i_stopped_you")  # "I stopped you!"
 
     def _game_won(self, result: DropResult) -> None:
         self.phase = Phase.CELEBRATING
@@ -650,13 +664,18 @@ class QuattroApp:
         now = self.clock()
         self.friends[winner].correct()
         loser = winner.opponent
+        # A three-disc board names the win ("Three in a row!") instead of the
+        # generic reaction, so two lines never stack on the cheer.
+        three = self.model.stage.target == 3 and self.audio.line("three_in_row")
         if self.vs_leo and winner is Player.LEO:
             self.friends[loser].try_again()
-            self.audio.say("leo", "encourage.retry")
+            if not three:
+                self.audio.say("leo", "encourage.retry")
         elif self.vs_leo:
             self.friends[loser].show("happy", 1.6)
-            self.audio.say("leo", "praise.general")
-        else:
+            if not three:
+                self.audio.say("leo", "praise.general")
+        elif not three:
             self.audio.say(winner.cast_id, "celebrate.success")
         self.audio.play("fanfare")
         self.motion.add_fx("confetti", (self.geometry.grid.centerx, self.geometry.frame.top + 40), now)
@@ -674,7 +693,8 @@ class QuattroApp:
             friend.show("pose_wave", DRAW_HOLD)
         self.motion.add_fx("heart_pop", (self.geometry.grid.centerx, self.geometry.frame.top + 30), now)
         self.audio.play("pop")
-        self.audio.say("leo", "encourage.progress")
+        if not self.audio.line("draw"):  # "It's a draw!"
+            self.audio.say("leo", "encourage.progress")
         self._emit(
             "quattro.game_draw",
             f"game-{self._game_serial}-draw",
@@ -743,6 +763,8 @@ class QuattroApp:
         else:
             character, title_key, stars = "flash", "ui.match_tie", max(flash, leo)
         self.audio.say(character, "celebrate.success" if outcome is not MatchOutcome.TIE else "praise.general")
+        if mode is GameMode.VS_CPU and outcome is MatchOutcome.FLASH:
+            self.audio.line("you_won_match", after=True)  # Leo, after Flash's cheer
         self.completion = self._completion_for(character)
         self.completion.prepare(
             CompletionContent(

@@ -359,7 +359,8 @@ class AppIntegrationTests(unittest.TestCase):
         self.assertEqual(app.controls.caption.text, app.resources.text(first.text_key))
         self._advance(2.5)
         self.assertIs(app.session.current_ask.pole, opposite(first))
-        self.assertEqual(audio.spoken[-1], opposite(first).value)
+        # Flash: "Now the opposite!", then the opposite word itself.
+        self.assertEqual(audio.spoken[-2:], ["now_the_opposite", opposite(first).value])
         self.assertFalse(app.controls.caption.visible)
 
     def test_wrong_answer_thinks_demonstrates_and_allows_retry(self) -> None:

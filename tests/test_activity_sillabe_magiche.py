@@ -577,7 +577,7 @@ class AppLoopTests(unittest.TestCase):
 
     def test_only_approved_clips_are_spoken(self) -> None:
         allowed_prefixes = ("syl_", "word_", "vowel_", "leo.", "sfx:")
-        allowed = {"instruction_build", "parola_composta", "word_complete"}
+        allowed = {"instruction_build", "parola_composta", "word_complete", "clap_beats"}
         for locale in ("it", "en"):
             app, now, _, _, queue = build_app(level=1, locale=locale)
             wait_for_input(app, now)
@@ -590,6 +590,14 @@ class AppLoopTests(unittest.TestCase):
                         self.assertTrue(app.audio.has_clip(cue), cue)
             if locale == "en":
                 self.assertFalse([c for c in queue.cues if c.startswith(("vowel_", "word_complete"))])
+
+    def test_clap_beats_is_said_once_when_the_first_clapping_starts(self) -> None:
+        for locale in ("it", "en"):
+            app, now, _, _, queue = build_app(level=1, locale=locale)
+            AppLoopTests._play_round(self, app, now, use_keyboard=False)
+            with self.subTest(locale=locale):
+                self.assertEqual(queue.cues.count("clap_beats"), 1)
+                self.assertTrue(app.audio.has_clip("clap_beats"))
 
     def test_idle_hint_points_and_replays(self) -> None:
         app, now, _, _, queue = build_app(level=1, locale="it")

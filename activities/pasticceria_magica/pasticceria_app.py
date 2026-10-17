@@ -64,7 +64,7 @@ from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 
 if __package__:
     from .pasticceria_art import BakeryArt, bakery_visual_resolver
-    from .pasticceria_audio import BakeryAudio
+    from .pasticceria_audio import PACKAGE_SPEAKER, BakeryAudio
     from .pasticceria_content import BAKER, COUNT, ORDERS_PER_ROUND, REFERENCE_HEIGHT, REFERENCE_WIDTH, TOPPING_IDS
     from .pasticceria_controls import BakeryControls
     from .pasticceria_layout import (
@@ -94,7 +94,7 @@ if __package__:
     from .pasticceria_services import BakeryProgress, EventPort, PicturePort, ProgressPort, picture_digest
 else:
     from pasticceria_art import BakeryArt, bakery_visual_resolver
-    from pasticceria_audio import BakeryAudio
+    from pasticceria_audio import PACKAGE_SPEAKER, BakeryAudio
     from pasticceria_content import BAKER, COUNT, ORDERS_PER_ROUND, REFERENCE_HEIGHT, REFERENCE_WIDTH, TOPPING_IDS
     from pasticceria_controls import BakeryControls
     from pasticceria_layout import (
@@ -433,6 +433,8 @@ class PasticceriaApp:
         order = game.order
         if order.kind == COUNT:
             self.audio.say_order(tuple((item.amount, item.topping_id) for item in order.items))
+        elif game.customer == PACKAGE_SPEAKER:
+            self.audio.line("finish_pattern")  # Lilli's own pattern order
 
     def _on_topping(self, topping_id: str) -> None:
         if self.screen_id is Screen.FREE:
@@ -521,6 +523,8 @@ class PasticceriaApp:
         self.cast.correct()
         self.audio.play("yum")
         self.audio.cast(customer, "praise.general" if game.misses == 0 else "celebrate.success")
+        if customer == PACKAGE_SPEAKER:
+            self.audio.line("thank_you", after=True)  # Lilli thanks the baker after her cheer
         self.motion.add_fx("confetti", (FROSTING_CENTER[0], FROSTING_CENTER[1] - 40), now)
         self.motion.add_fx("heart_pop", (CUSTOMER_MIDBOTTOM[0], CUSTOMER_MIDBOTTOM[1] - 220), now)
         self.controls.set_progress(game.served)
@@ -567,11 +571,16 @@ class PasticceriaApp:
             self.audio.cast(game.customer, "encourage.retry")
         self._set_busy(True)
         now = self.clock()
-        self.motion.glow_card(now, DEMO_LEAD)
         steps = game.order.demonstration(game.cake)
+        lead = DEMO_LEAD
+        if game.misses > 1 and any(step.number > 0 for step in steps) and self.audio.line("count_together"):
+            # No retry line this time: "Let's count together", then the count
+            # starts once it has been said (numbers never cut it off).
+            lead += self.audio.line_seconds("count_together")
+        self.motion.glow_card(now, lead)
         for number, step in enumerate(steps):
-            self.timeline.after(DEMO_LEAD + number * DEMO_STEP, lambda st=step: self._demo_step(st))
-        end = DEMO_LEAD + len(steps) * DEMO_STEP
+            self.timeline.after(lead + number * DEMO_STEP, lambda st=step: self._demo_step(st))
+        end = lead + len(steps) * DEMO_STEP
         misses = game.misses
         self.timeline.after(end, lambda: self._demo_finish(verdict, misses))
 

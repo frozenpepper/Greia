@@ -86,6 +86,9 @@ class SilentHost:
         self.said.append(cue)
         return 0.0
 
+    def say_if_quiet(self, cue: str) -> float:
+        return self.say(cue)
+
     def stop(self) -> None:
         pass
 

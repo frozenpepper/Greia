@@ -287,6 +287,28 @@ class AquariumAppLoopTests(AquariumTestCase):
         self.frames(app, 30)
         app._draw()
 
+    def test_mission_invitations_and_creature_names_are_spoken(self) -> None:
+        from activities.acquario_magico.acquarium_audio import SPECIES_VOCAB, voice_paths
+
+        app = self.make_app()
+        octopus = next((c for c in app.session.creatures if c["spec"]["id"] == "octopus"), None)
+        if octopus is None:
+            octopus = app.session.spawn_creature(400, 250, [s["id"] for s in SPECIES].index("octopus"), 1)
+        app._missions.current = Mission(MissionKind.FIND, "octopus", octopus["uid"])
+        app._on_mission_outcome(MissionOutcome.STARTED, None)
+        app.audio.prompt.assert_called_with("find_octopus")  # only recorded invitations speak
+        app.audio.reset_mock()
+        app._missions.current = None
+        other = next(c for c in app.session.creatures if c["spec"]["id"] != "octopus")
+        app._touch_creature(other, int(other["x"]), int(other["y"]))
+        app.audio.name.assert_called_once_with(other["spec"]["id"])  # a light touch reply
+        for locale in ("en", "it", "es", "fr"):
+            paths = voice_paths(locale)
+            self.assertEqual(paths["find_octopus"].parent.name, locale)
+            self.assertEqual(paths["feed_turtle"].parent.name, locale)
+            for species_id in SPECIES_VOCAB:
+                self.assertEqual(paths[f"name.{species_id}"].parent.name, locale, species_id)
+
     def test_toolbar_is_kit_controls_and_day_night_keeps_the_tool(self) -> None:
         app = self.make_app()
         layer = app._controls.layer

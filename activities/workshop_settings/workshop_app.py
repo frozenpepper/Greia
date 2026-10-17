@@ -263,6 +263,8 @@ class MyGreiaApp:
         if self.model.set_tab(tab):
             self.controls.show(tab, self.model.look, custom=self.model.custom_available)
             self.audio.play("tab")
+            if tab is Tab.ME:
+                self.audio.line("pick_your_friend")  # "Pick your friend!"
         if from_keyboard:
             self.controls.focus_current_tab()
         self._dirty = True
@@ -310,9 +312,27 @@ class MyGreiaApp:
         self.controls.sync(look, can_undo=self.model.can_undo)
         self.preview.celebrate(look, changed)
         self.audio.play("undo" if undo else "pick")
-        self.audio.react(greeter_for(look.avatar), avatar_changed=ChoiceKind.AVATAR in changed)
+        if undo or ChoiceKind.AVATAR in changed or not self._describe(transition.before, look, changed):
+            self.audio.react(greeter_for(look.avatar), avatar_changed=ChoiceKind.AVATAR in changed)
         self.last_feedback = "undo" if undo else "changed"
         self._dirty = True
+
+
+    def _describe(self, before, look, changed) -> bool:
+        """Leo names the change ("Bigger!", "Blue!", "What a nice picture!")."""
+
+        if ChoiceKind.SIZE in changed:
+            sizes = self.choices.sizes
+            if before.size in sizes and look.size in sizes:
+                grown = sizes.index(look.size) > sizes.index(before.size)
+                return self.audio.line("bigger" if grown else "smaller")
+        if ChoiceKind.WALLPAPER in changed:
+            return self.audio.line("nice_picture")
+        if ChoiceKind.ACCENT in changed:
+            return self.audio.colour(look.accent)
+        if ChoiceKind.BACKGROUND in changed:
+            return self.audio.colour(look.background)
+        return False
 
 
 __all__ = ["MyGreiaApp"]

@@ -9,8 +9,13 @@ Speech uses only recorded, approved clips:
 * Lilli's shared takes (``ready.go``, ``celebrate.success``,
   ``encourage.retry``, ``encourage.progress``, ``praise.general``).
 
-There are no approved pet-need lines yet ("I'm hungry!"): needs are shown by
-body language only. Effects (need chime, "not now" hum, munch, bubbles,
+* the owner-approved package lines (``assets/audio/<locale>/``): the pet's
+  needs ("I'm hungry!", "I'm muddy!", "Let's play!", "Ouch!", "I'm
+  sleepy..."), "not now, thank you", "thank you!", "time for bed" and the
+  adoption prompts ("who will you look after?", "choose a name"), queued
+  after the line already playing (``then_line``) rather than stacked.
+
+Effects (need chime, "not now" hum, munch, bubbles,
 boing, plaster pop, cuddle hearts, yawn, lullaby, room swoosh) are
 synthesized once, after the first frame. Every call fails soft without a mixer.
 """
@@ -25,7 +30,12 @@ from typing import Final
 
 import pygame
 
-from greia_platform.localization import shared_character_audio_path, shared_vocab_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+    shared_vocab_audio_path,
+)
 from greia_platform.pygame_audio import (
     DeferredSoundBank,
     current_pcm16_mixer_spec,
@@ -39,6 +49,20 @@ SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
 LAST_SFX_CHANNEL: Final = 4
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent
+# Owner-approved per-Activity lines (``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_CUES: Final[tuple[str, ...]] = (
+    "hungry",
+    "muddy",
+    "play",
+    "ouch",
+    "sleepy",
+    "not_now",
+    "thank_you",
+    "time_for_bed",
+    "who_look_after",
+    "choose_name",
+)
 HOST: Final = "lilli"
 LILLI_CUES: Final = ("ready.go", "celebrate.success", "encourage.retry", "encourage.progress", "praise.general")
 NAME_CACHE_LIMIT: Final = 6
@@ -72,6 +96,7 @@ class CuccioloAudio:
         self._rng = rng if rng is not None else random.Random()
         self._sounds = DeferredSoundBank()
         self._lilli: dict[str, list[pygame.mixer.Sound]] = {}
+        self._lines: dict[str, Path] = {}
         self._names: OrderedDict[str, pygame.mixer.Sound | None] = OrderedDict()
         self._available = False
         self.last_speech: str | None = None
@@ -81,6 +106,7 @@ class CuccioloAudio:
                 pygame.mixer.set_num_channels(max(pygame.mixer.get_num_channels(), LAST_SFX_CHANNEL + 1))
                 self._build_sounds()
                 self._load_lilli()
+                self._load_lines()
                 self._available = True
         except (pygame.error, RuntimeError, OSError):
             self._available = False
@@ -112,6 +138,24 @@ class CuccioloAudio:
         if not self._available or not takes:
             return False
         return self._speak(self._rng.choice(takes))
+
+    def then_line(self, cue: str) -> bool:
+        """Queue one package line after the one playing (now when quiet)."""
+
+        self.last_speech = cue
+        path = self._lines.get(cue)
+        if not self._available or path is None:
+            return False
+        try:
+            sound = pygame.mixer.Sound(str(path))  # short clip, decoded on use
+            channel = pygame.mixer.Channel(SPEECH_CHANNEL)
+            if channel.get_busy():
+                channel.queue(sound)
+            else:
+                channel.play(sound)
+        except (pygame.error, RuntimeError, OSError):
+            return False
+        return True
 
     def _speak(self, sound: pygame.mixer.Sound | None) -> bool:
         if sound is None:
@@ -157,6 +201,16 @@ class CuccioloAudio:
             return pygame.mixer.Sound(str(path))
         except (pygame.error, OSError):
             return None
+
+    def _load_lines(self) -> None:
+        try:
+            resources = activity_resources(PACKAGE_ROOT, requested_locale=self.locale)
+        except LocalizationError:
+            return
+        for cue in PACKAGE_CUES:
+            path = resources.audio_path(cue)
+            if path is not None:
+                self._lines[cue] = path
 
     def _load_lilli(self) -> None:
         for cue in LILLI_CUES:

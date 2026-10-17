@@ -558,6 +558,7 @@ class MonsterActivity:
         if self.editor.surprise(self.rng):
             self._changed(None)
             self.audio.play("rattle")
+            self.audio.host_says_if_quiet("surprise")
             self.host.correct()
             self._show_studio(focus="surprise", keep_focus=False)
 
@@ -604,6 +605,7 @@ class MonsterActivity:
         self.open_id = recipe.portrait_id
         self.audio.play("chime")
         self.audio.host_says("saved")
+        self.audio.host_then("new_friend")  # "A new friend!" after the cheer
         self.big_host.correct()
         self.motion.react("hop")
         layout = self.friend_layout

@@ -484,6 +484,29 @@ class AppLoopTests(unittest.TestCase):
         self.assertEqual([item.value for item in app.walk.numerals], [3, 4])
         self.assertEqual(app.season, "woodland_autumn")  # each walk visits a new season
 
+    def test_tracing_zero_invites_writing_it(self) -> None:
+        from bosco_audio import PACKAGE_LINES
+
+        app = self._app("en", group=2)  # the walk that meets 5 and 0
+        steps = app.walk.steps
+        index = next(
+            (i for i, s in enumerate(steps) if s.kind is StepKind.TRACE and s.numeral.value == 0), None
+        )
+        self.assertIsNotNone(index, "the third walk traces zero")
+        app.walk._index = index  # noqa: SLF001 - jump to the zero tracing step
+        self.audio.played.clear()
+        app._enter_step()  # noqa: SLF001
+        for _ in range(120):
+            self.now[0] += 0.1
+            app.tick()
+        self.assertIn("write_zero", self.audio.played)  # "Let's write number 0!"
+        self.assertLess(self.audio.played.index("count_0"), self.audio.played.index("write_zero"))
+        self.assertIn("write_zero", PACKAGE_LINES)
+        from greia_platform.localization import activity_resources
+
+        for locale in ("en", "it", "es", "fr"):
+            self.assertEqual(activity_resources(ACTIVITY_ROOT, requested_locale=locale).audio_path("write_zero").parent.name, locale)
+
     def test_keyboard_and_controller_play_find_trace_and_show(self) -> None:
         from bosco_app import AppState
 

@@ -7,7 +7,11 @@ Speech uses only recorded, approved clips:
   usual locale -> base -> English fallback; a name without a recording stays
   silent and the request remains pictorial;
 * Lilli's shared takes (``ready.go``, ``celebrate.success``,
-  ``encourage.retry``, ``encourage.progress``, ``praise.general``).
+  ``encourage.retry``, ``encourage.progress``, ``praise.general``);
+* Lilli's owner-approved package lines (``assets/audio/<locale>/``):
+  "where is the...?" before the wanted friend's name, and the place phrase
+  ("behind the bush", "under the leaves", "in the pond", ...) queued after a
+  found friend's name.
 
 Effects (leaf rustle, found chime, hop pop, "not me" boing, hide whoosh,
 fanfare) are synthesized once, after the first frame. Every call fails soft without a
@@ -24,7 +28,12 @@ from typing import Final, Iterable
 
 import pygame
 
-from greia_platform.localization import shared_character_audio_path, shared_vocab_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+    shared_vocab_audio_path,
+)
 from greia_platform.pygame_audio import (
     DeferredSoundBank,
     chord_sound,
@@ -38,6 +47,22 @@ SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
 LAST_SFX_CHANNEL: Final = 4
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent
+# Hiding-place prop kind -> owner-approved place phrase (package cue id).
+PLACE_CUES: Final[dict[str, str]] = {
+    "bush": "place_bush",
+    "bush_autumn": "place_bush",
+    "bush_snow": "place_bush",
+    "rock": "place_rock",
+    "log": "place_log",
+    "mushroom": "place_mushroom",
+    "pumpkin": "place_pumpkin",
+    "leaves": "place_leaves",
+    "snow": "place_snow",
+    "pond": "place_pond",
+}
+WHERE_IS_CUE: Final = "where_is"
+PACKAGE_CUES: Final[tuple[str, ...]] = (*dict.fromkeys(PLACE_CUES.values()), WHERE_IS_CUE)
 HOST: Final = "lilli"
 LILLI_CUES: Final = ("ready.go", "celebrate.success", "encourage.retry", "encourage.progress", "praise.general")
 NAME_CACHE_LIMIT: Final = 12
@@ -61,6 +86,7 @@ class WoodlandAudio:
         self._lilli: dict[str, list[pygame.mixer.Sound]] = {}
         self._names: OrderedDict[str, pygame.mixer.Sound | None] = OrderedDict()
         self._name_paths: dict[str, bool] = {}
+        self._lines: dict[str, pygame.mixer.Sound] = {}
         self._available = False
         self.last_speech: str | None = None
         try:
@@ -68,6 +94,7 @@ class WoodlandAudio:
                 pygame.mixer.set_num_channels(max(pygame.mixer.get_num_channels(), LAST_SFX_CHANNEL + 1))
                 self._build_sounds()
                 self._load_lilli()
+                self._load_lines()
                 self._available = True
         except (pygame.error, RuntimeError, OSError):
             self._available = False
@@ -104,6 +131,29 @@ class WoodlandAudio:
             self.prepare_names((friend_id,))
         return self._speak(self._names.get(friend_id))
 
+    def ask_where(self, friend_id: str) -> bool:
+        """"Where is the...?" then the friend's name (just the name without it)."""
+
+        if not self._available:
+            self.last_speech = f"animal.{friend_id}"
+            return False
+        where = self._lines.get(WHERE_IS_CUE)
+        if where is None or not self._speak(where):
+            return self.say_name(friend_id)
+        if friend_id not in self._names:
+            self.prepare_names((friend_id,))
+        self.last_speech = f"animal.{friend_id}"
+        return self._queue(self._names.get(friend_id))
+
+    def say_place(self, prop_kind: str) -> bool:
+        """Queue the found friend's place phrase after the line playing."""
+
+        cue = PLACE_CUES.get(prop_kind)
+        if cue is None:
+            return False
+        self.last_speech = cue
+        return self._available and self._queue(self._lines.get(cue))
+
     def lilli(self, cue: str) -> bool:
         """Play one of Lilli's approved shared takes (random variant)."""
 
@@ -120,6 +170,33 @@ class WoodlandAudio:
             pygame.mixer.Channel(SPEECH_CHANNEL).stop()
         except (pygame.error, RuntimeError):
             return
+
+    def _queue(self, sound: pygame.mixer.Sound | None) -> bool:
+        if sound is None:
+            return False
+        try:
+            channel = pygame.mixer.Channel(SPEECH_CHANNEL)
+            if channel.get_busy():
+                channel.queue(sound)
+            else:
+                channel.play(sound)
+        except (pygame.error, RuntimeError):
+            return False
+        return True
+
+    def _load_lines(self) -> None:
+        try:
+            resources = activity_resources(PACKAGE_ROOT, requested_locale=self.locale)
+        except LocalizationError:
+            return
+        for cue in PACKAGE_CUES:
+            path = resources.audio_path(cue)
+            if path is None:
+                continue
+            try:
+                self._lines[cue] = pygame.mixer.Sound(str(path))
+            except (pygame.error, OSError):
+                continue
 
     def _speak(self, sound: pygame.mixer.Sound | None) -> bool:
         if sound is None:
@@ -227,4 +304,4 @@ def _boing(rate: int, channels: int) -> pygame.mixer.Sound:
     return pygame.mixer.Sound(buffer=mono_pcm16_bytes(samples, channels))
 
 
-__all__ = ["EFFECTS", "HOST", "LILLI_CUES", "WoodlandAudio"]
+__all__ = ["EFFECTS", "HOST", "LILLI_CUES", "PACKAGE_CUES", "PLACE_CUES", "WoodlandAudio"]

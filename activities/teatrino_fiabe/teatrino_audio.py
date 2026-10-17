@@ -8,7 +8,10 @@
 * ``SoundManager`` - the theatre's short synthesized cues (sound stickers,
   curtain, countdown pips), prepared once;
 * ``HostVoice`` - the host friend's owner-approved shared character takes
-  (selected language, then English, else silence). No speech is generated.
+  (selected language, then English, else silence) plus Lilli's two
+  owner-approved package lines (``assets/audio/<locale>/``: "three, two,
+  one... action!" over the curtain countdown, "the stage is full!"). No
+  speech is generated.
 """
 
 from __future__ import annotations
@@ -31,7 +34,11 @@ except ImportError:
 
 from greia_platform.activity_api import get_audio_capture_device, get_sdl_capture_device
 from greia_platform.creation_media import CreationMediaError, WavCodec
-from greia_platform.localization import shared_character_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+)
 from greia_platform.pygame_audio import DeferredSoundBank
 
 ENVELOPE_HZ = 15
@@ -392,10 +399,22 @@ class SoundManager:
                 pass
 
 
-class HostVoice:
-    """The host friend's approved shared takes, loaded once (or silence)."""
+# Owner-approved per-Activity lines (Lilli; ``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_CUES: tuple[str, ...] = ("three_two_one", "stage_full")
 
-    def __init__(self, speaker: str, cues: tuple[str, ...], locale: str, *, project_root: Path | None = None) -> None:
+
+class HostVoice:
+    """The host friend's approved shared takes and package lines, loaded once (or silence)."""
+
+    def __init__(
+        self,
+        speaker: str,
+        cues: tuple[str, ...],
+        locale: str,
+        *,
+        project_root: Path | None = None,
+        package_cues: tuple[str, ...] = PACKAGE_CUES,
+    ) -> None:
         self._voices: dict[str, pygame.mixer.Sound] = {}
         self._channel: pygame.mixer.Channel | None = None
         root = project_root if project_root is not None else Path(__file__).resolve().parents[2]
@@ -406,6 +425,26 @@ class HostVoice:
                     self._voices[cue] = pygame.mixer.Sound(str(path))
             except Exception:
                 continue
+        try:
+            resources = activity_resources(Path(__file__).resolve().parent, requested_locale=locale)
+        except LocalizationError:
+            resources = None
+        for cue in package_cues if resources is not None else ():
+            try:
+                path = resources.audio_path(cue)
+                if path is not None:
+                    self._voices[cue] = pygame.mixer.Sound(str(path))
+            except Exception:
+                continue
+
+    def say_if_quiet(self, cue: str) -> float:
+        """Play a line only when the host is not already speaking."""
+        try:
+            if self._channel is not None and self._channel.get_busy():
+                return 0.0
+        except Exception:
+            return 0.0
+        return self.say(cue)
 
     def say(self, cue: str) -> float:
         """Play one take; returns its length in seconds (0 when silent)."""
@@ -432,4 +471,4 @@ class HostVoice:
         return tuple(self._voices)
 
 
-__all__ = ["HostVoice", "ImportedNarrationTrack", "MicrophoneRecorder", "SoundManager", "VOICE_THRESHOLD"]
+__all__ = ["HostVoice", "ImportedNarrationTrack", "MicrophoneRecorder", "PACKAGE_CUES", "SoundManager", "VOICE_THRESHOLD"]

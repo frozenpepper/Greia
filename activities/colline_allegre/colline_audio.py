@@ -4,8 +4,10 @@ Speech uses only Tito's recorded, owner-approved shared character takes
 (``ready.go``, ``praise.general``, ``encourage.retry``,
 ``encourage.progress``, ``celebrate.success``) through
 ``shared_character_audio_path`` with the platform fallback (selected
-language -> base -> English -> silence). Clips are decoded lazily into a
-tiny LRU, never all at start-up. No new speech is generated here.
+language -> base -> English -> silence), plus two owner-approved package
+lines (``slow_down`` when the sign glows after a tumble, ``made_it_picnic``
+at each picnic) through ``LocalizedResources.audio_path``. Clips are decoded
+lazily into a tiny LRU, never all at start-up. No new speech is generated here.
 
 The effects (a star chime, a flag ding, a soft cartoon "boing" for a
 tumble, a mushroom whoosh, a landing thump, a finish fanfare and a sparkle
@@ -25,7 +27,11 @@ from typing import Final
 
 import pygame
 
-from greia_platform.localization import shared_character_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+)
 from greia_platform.pygame_audio import (
     DeferredSoundBank,
     bell_sound,
@@ -40,6 +46,9 @@ LAST_SFX_CHANNEL: Final = 5
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 HOST: Final = "tito"
 SHARED_CUES: Final = ("ready.go", "praise.general", "encourage.retry", "encourage.progress", "celebrate.success")
+PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent
+# Owner-approved per-Activity lines (``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_CUES: Final = ("slow_down", "made_it_picnic")
 CLIP_CACHE_LIMIT: Final = 5
 EFFECTS: Final = ("star", "flag", "boing", "whoosh", "thump", "fanfare", "sparkle")
 
@@ -61,6 +70,14 @@ class CollineAudio:
                 path = shared_character_audio_path(project_root, HOST, cue, self.locale)
             except Exception:
                 path = None
+            if path is not None:
+                self._paths[cue] = path
+        try:
+            resources = activity_resources(PACKAGE_ROOT, requested_locale=self.locale)
+        except LocalizationError:
+            resources = None
+        for cue in PACKAGE_CUES if resources is not None else ():
+            path = resources.audio_path(cue)
             if path is not None:
                 self._paths[cue] = path
         try:
@@ -195,4 +212,4 @@ def _thump(rate: int, channels: int) -> pygame.mixer.Sound:
     return pygame.mixer.Sound(buffer=mono_pcm16_bytes(samples, channels, scale=7000))
 
 
-__all__ = ["CLIP_CACHE_LIMIT", "CollineAudio", "EFFECTS", "HOST", "SHARED_CUES"]
+__all__ = ["CLIP_CACHE_LIMIT", "CollineAudio", "EFFECTS", "HOST", "PACKAGE_CUES", "SHARED_CUES"]

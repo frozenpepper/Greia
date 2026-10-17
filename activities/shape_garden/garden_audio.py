@@ -1,10 +1,14 @@
 """Shape Garden sounds: tiny synthesized cues plus Dani's approved clips.
 
 Speech uses only owner-approved recordings: Dani's shared ``ready.go``
-(first visit to an empty garden), ``encourage.progress`` (a growing garden),
+(first visit to an empty garden), ``encourage.progress`` (a growing garden,
+when the package line below is missing),
 ``celebrate.success`` (a ghost picture is complete) and ``praise.general``
-(a picture was shared). Shape names have no approved recording yet, so
-naming stays pictorial and silent.
+(a picture was shared); Dani's two owner-approved package lines
+(``assets/audio/<locale>/``: "drag a shape into the garden!" after the first
+"ready, go", "what a beautiful garden!" for a growing garden); and each
+planted shape's name from the shared vocabulary bank (``shape_<kind>``,
+``shared_vocab_audio_path``), only when no other line is playing.
 
 Cues are synthesized once for the active PCM16 mixer: one soft ``pop`` per
 shape kind (a C-major pentatonic step each, so every shape has its own
@@ -23,7 +27,12 @@ from typing import Callable, Final
 
 import pygame
 
-from greia_platform.localization import shared_character_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+    shared_vocab_audio_path,
+)
 from greia_platform.pygame_audio import DeferredSoundBank, current_pcm16_mixer_spec, mono_pcm16_bytes
 
 if __package__:
@@ -35,6 +44,27 @@ PROJECT_ROOT: Final = Path(__file__).resolve().parents[2]
 SPEECH_CHANNEL: Final = 0
 _NOTES: Final = (523.25, 587.33, 659.25, 783.99, 880.0, 1046.5, 1174.7, 1318.5)
 SPEECH_CUES: Final = ("ready.go", "encourage.progress", "celebrate.success", "praise.general")
+PACKAGE_ROOT: Final = Path(__file__).resolve().parent
+# Owner-approved per-Activity lines (``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_CUES: Final = ("drag_shape", "beautiful_garden")
+# The manifest is language-neutral (``*``) but the package ships these four
+# locale bundles, so its spoken lines resolve through them.
+PACKAGE_LOCALES: Final = ("it", "en", "es", "fr")
+
+
+def package_line_paths(locale: str) -> dict[str, Path]:
+    """Resolve the package lines (locale -> base -> English -> silence)."""
+
+    try:
+        resources = activity_resources(PACKAGE_ROOT, requested_locale=locale, supported_locales=PACKAGE_LOCALES)
+    except LocalizationError:
+        return {}
+    found: dict[str, Path] = {}
+    for cue in PACKAGE_CUES:
+        path = resources.audio_path(cue)
+        if path is not None:
+            found[cue] = path
+    return found
 
 
 def _wav(samples: list[float], rate: int, channels: int) -> bytes:
@@ -75,6 +105,12 @@ class GardenSounds:
                 path = shared_character_audio_path(project_root, "dani", cue, locale or "en")
                 if path is not None:
                     self._speech[cue] = pygame.mixer.Sound(str(path))
+            for cue, path in package_line_paths(locale or "en").items():
+                self._speech[cue] = pygame.mixer.Sound(str(path))
+            for kind in SHAPE_KINDS:
+                path = shared_vocab_audio_path(project_root, f"shape_{kind}", locale or "en")
+                if path is not None:
+                    self._speech[f"shape.{kind}"] = pygame.mixer.Sound(str(path))
         except Exception:  # noqa: BLE001 - audio must never break the garden
             self._sounds.clear()
             self._speech.clear()
@@ -121,16 +157,43 @@ class GardenSounds:
     def pop(self, kind: str) -> None:
         self.play(f"pop.{kind}")
 
-    def say(self, cue: str) -> None:
-        """Dani speaks one approved shared clip (silent when it is missing)."""
+    def name(self, kind: str) -> None:
+        """Say a planted shape's name, only when no other line is playing."""
+
+        try:
+            if pygame.mixer.get_init() and pygame.mixer.Channel(SPEECH_CHANNEL).get_busy():
+                return
+        except (pygame.error, RuntimeError):
+            return
+        self.say(f"shape.{kind}")
+
+    def then(self, cue: str) -> None:
+        """Queue one clip after the line playing (now when quiet)."""
+
         self.last_speech = cue
         sound = self._speech.get(cue)
         if sound is None:
             return
         try:
-            pygame.mixer.Channel(SPEECH_CHANNEL).play(sound)
+            channel = pygame.mixer.Channel(SPEECH_CHANNEL)
+            if channel.get_busy():
+                channel.queue(sound)
+            else:
+                channel.play(sound)
         except (pygame.error, RuntimeError):
             pass
 
+    def say(self, cue: str) -> bool:
+        """Dani speaks one approved clip; False (silent) when it is missing."""
+        self.last_speech = cue
+        sound = self._speech.get(cue)
+        if sound is None:
+            return False
+        try:
+            pygame.mixer.Channel(SPEECH_CHANNEL).play(sound)
+        except (pygame.error, RuntimeError):
+            return False
+        return True
 
-__all__ = ["GardenSounds", "SPEECH_CUES"]
+
+__all__ = ["GardenSounds", "PACKAGE_CUES", "SPEECH_CUES", "package_line_paths"]

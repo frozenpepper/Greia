@@ -361,6 +361,9 @@ class FireflyActivity:
         self.cast.reset()
         self.asking = False
         self._set_busy(True)
+        if 0 < self.session.round_index < SPOKEN_PROMPT_ROUNDS:
+            # The first round has Momo's welcome; the next one "Watch closely!".
+            self.timeline.after(lead, lambda: self.audio.play_speech("watch_closely"))
         self._glimpse(lead, CUE)
         self._dirty = True
 
@@ -423,6 +426,7 @@ class FireflyActivity:
         session.mark_replay()
         self.asking = False
         self._set_busy(True)
+        self.audio.play_speech("watch_closely")  # one more look
         self._glimpse(0.15, REPLAY_CUE)
         self._dirty = True
 
@@ -468,6 +472,8 @@ class FireflyActivity:
             steps.append((index + 1, (index,)))
         duration = 0.2 + COUNT_STEP * len(steps)
         self.cast.point(duration + 0.6)
+        # The try-again line ended during the think pause: "Let's count them together."
+        self.audio.play_speech("count_together")
         for order, (number, members) in enumerate(steps):
             delay = 0.2 + COUNT_STEP * order
             self.timeline.after(delay, lambda n=number, m=members: self._count_step(n, m))

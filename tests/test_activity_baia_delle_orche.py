@@ -329,6 +329,22 @@ class BaiaDelleOrcheAppTests(unittest.TestCase):
         self.assertGreater(app.renderer.fact_banner_rect.width, 0)
         self.assertEqual(app.canvas.surface.get_size(), (1024, 600))
 
+    def test_mission_start_speaks_its_invitation(self) -> None:
+        from activities.baia_delle_orche.orca_audio import MISSION_CUES
+
+        app, _pod, _events, _clock = self._app(missions=True)
+        for kind in (MissionKind.FIND, MissionKind.JUMP):
+            app._missions.current = Mission(kind, "luna")
+            app._on_mission_outcome(MissionOutcome.STARTED, None)
+            app.audio.prompt.assert_called_with(f"{kind.value}_luna")
+        self.assertEqual(len(MISSION_CUES), 9)
+        from greia_platform.localization import activity_resources
+
+        for locale in ("en", "it", "es", "fr"):
+            resources = activity_resources(ACTIVITY_DIR, requested_locale=locale)
+            for cue in MISSION_CUES:
+                self.assertEqual(resources.audio_path(cue).parent.name, locale, (cue, locale))
+
     def test_app_tools_and_fact_flow(self) -> None:
         app, pod, _, clock = self._app()
         app.handle_tool_click(Tool.FEED)

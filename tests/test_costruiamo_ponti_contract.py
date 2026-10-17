@@ -106,6 +106,12 @@ class _Audio:
     def say(self, cue: str) -> None:
         self.spoken.append(cue)
 
+    def say_if_quiet(self, cue: str) -> None:
+        self.spoken.append(cue)
+
+    def then(self, cue: str) -> None:
+        self.spoken.append(cue)
+
     def play(self, name: str) -> None:
         self.sounds.append(name)
 
@@ -532,6 +538,19 @@ class AppLoopTests(unittest.TestCase):
         self.assertTrue(app.tap(mapper.point(*app.controls.tray[1].rect.center)))
         self.assertTrue(app.bridge.in_tray(1))
 
+    def test_pillar_crossing_asks_for_a_pillar_and_a_good_plank_is_just_right(self) -> None:
+        from ponti_app import AppState
+
+        app, now, _ = self._app(next_set=2)
+        self.assertEqual(app.audio.spoken, ["pillar_on_rock"])
+        app, now, _ = self._app()  # le1: gap 2 -> the 2-board plank is just right
+        app._on_tray(1)
+        app._on_seat(0)
+        app._on_go()
+        self._until(app, now, {AppState.CELEBRATE})
+        self.assertEqual(app.audio.spoken.count("just_right"), 1)
+        self.assertLess(app.audio.spoken.index("just_right"), app.audio.spoken.index("arrive"))
+
     def test_a_lifted_pillar_is_never_dropped_on_a_span(self) -> None:
         app, now, _ = self._app(next_set=2)
         app.bridge.select(0)  # the pillar
@@ -545,14 +564,16 @@ class AppLoopTests(unittest.TestCase):
         from ponti_app import AppState
 
         app, now, _ = self._app()  # le1: gap 2, planks 1/2/3
+        self.assertEqual(app.audio.spoken, ["long_enough"])  # one gap: "Is it long enough?"
         app._on_tray(0)
         app._on_seat(0)  # the 1-board plank
         app._on_go()
+        self.assertEqual(app.audio.spoken[-2:], ["go", "lets_picnic"])
         self._until(app, now, {AppState.PAUSE})
         self.assertIs(app.cast.feedback.pose, CastPose.THINK)
         self.assertEqual(app.motion.missing, (1.0, 2.0))
         self.assertEqual(app.events.calls["crossing_missed"][0][-1], "short")
-        self.assertIn("retry", app.audio.spoken)
+        self.assertEqual(app.audio.spoken[-1], "too_short")  # the reason replaces "try again"
         app.render()
         self._until(app, now, {AppState.BUILD})
         self.assertEqual(app.bridge.seat_of[0], "bank", "the child's plank stays for fixing")

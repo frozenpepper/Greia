@@ -451,6 +451,43 @@ class BakeryAppTests(unittest.TestCase):
         self.assertTrue(app.last_serve.verdict.correct)
         self.assertEqual(app.round.total_misses, 2)
 
+    def test_lilli_lines_and_the_repeated_demonstration_line(self) -> None:
+        app = self._app(seed=2)
+        lines: list[str] = []
+        real = app.audio.line
+        app.audio.line = lambda cue, **kw: (lines.append(cue), real(cue, **kw))[1]
+        game = app.round
+        for _ in range(ORDERS_PER_ROUND):
+            if game.customer == "lilli":
+                break
+            game.next_customer()
+        self.assertEqual(game.customer, "lilli")
+        app._say_order()  # noqa: SLF001
+        self.assertEqual(lines, ["finish_pattern"] if game.order.kind == PATTERN else [])
+        app._celebrate(game)  # noqa: SLF001 - Lilli is served: she says thank you
+        self.assertEqual(lines[-1], "thank_you")
+        lines.clear()
+        app = self._app(seed=2)
+        app.audio.line = lambda cue, **kw: (lines.append(cue), real(cue, **kw))[1]
+        self._advance(app, 1.0)
+        order = app.round.order
+        if order.kind == PATTERN:
+            self.skipTest("seed starts with a pattern")
+        wrong = next(t for t in order.pantry if t not in {i.topping_id for i in order.items})
+        self._tap_topping(app, wrong)
+        app.tap(app.controls.serve.rect.center)
+        self.assertEqual(lines, [])  # first miss: the customer's own retry line
+        self._advance(app, 4.0)
+        self._tap_topping(app, order.items[0].topping_id)  # something to count this time
+        app.tap(app.controls.serve.rect.center)
+        self.assertEqual(lines, ["count_together"])  # second miss: Lilli invites, then the count
+        from greia_platform.localization import activity_resources
+
+        for locale in ("en", "it", "es", "fr"):
+            resources = activity_resources(PACKAGE, requested_locale=locale)
+            for cue in ("finish_pattern", "thank_you", "count_together"):
+                self.assertEqual(resources.audio_path(cue).parent.name, locale)
+
     def test_keyboard_and_controller_reach_pantry_and_bell(self) -> None:
         app = self._app(seed=7)
         self._advance(app, 1.0)

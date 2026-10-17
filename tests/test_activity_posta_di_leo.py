@@ -363,6 +363,19 @@ class AppLoopTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         pygame.init()
 
+    def test_blank_card_opening_asks_who_it_is_for(self) -> None:
+        from greia_platform.localization import activity_resources
+        from postcard_audio import LEO_LINES
+
+        app, now, _, _ = _app()
+        _advance(app, now, 1.2)
+        self.assertIn("line.who_is_it_for", app.audio.played)
+        root = Path(__file__).resolve().parents[1] / "activities" / "posta_di_leo"
+        for locale in ("en", "it", "es", "fr"):
+            resources = activity_resources(root, requested_locale=locale)
+            for cue in LEO_LINES:
+                self.assertEqual(resources.audio_path(cue).parent.name, locale, (cue, locale))
+
     def test_pointer_round_from_friend_to_delivery_postbox_and_delete(self) -> None:
         from postcard_app import Screen
 
@@ -373,6 +386,7 @@ class AppLoopTests(unittest.TestCase):
         self.assertEqual(app.draft.recipient_id, "lilli")
         _advance(app, now, 0.6)
         self.assertEqual(app.step, "picture")  # the next step opens by itself
+        self.assertIn("line.pick_picture", app.audio.played)  # Leo: "Pick a picture!"
         _tap_control(app, "scene.ocean")
         _advance(app, now, 0.6)
         self.assertEqual(app.step, "stickers")
@@ -388,6 +402,7 @@ class AppLoopTests(unittest.TestCase):
 
         _tap_control(app, "send")
         self.assertEqual(app.state, Screen.SENDING)
+        self.assertEqual(app.audio.played[-1], "line.off_it_goes")
         self.assertEqual(app.library.count, 1)
         card = app.library.cards[0]
         self.assertEqual((card.recipient_id, card.stamp_id, card.front), ("lilli", "rainbow", CardFront.scene("ocean")))

@@ -6,6 +6,11 @@
   Leo, resolved through ``shared_character_audio_path`` (selected language,
   then English, then silence). A cue's sibling takes (``__01``, ``__02``…)
   are loaded lazily on first use and kept in a small bounded table.
+* Nine owner-approved package lines (``assets/audio/<locale>/``; Leo, plus
+  Flash's "Leo is thinking...") name the game's moments: the goal, "your
+  turn!", a block either way, three in a row, a draw and a won match. They
+  are spoken now, queued after the line playing, or only when quiet, so
+  voices never stack.
 
 Every method is a silent no-op when the mixer is unavailable.
 """
@@ -19,7 +24,11 @@ from typing import Final
 
 import pygame
 
-from greia_platform.localization import shared_character_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+)
 from greia_platform.pygame_audio import DeferredSoundBank, current_pcm16_mixer_spec, mono_pcm16_bytes
 
 VOICE_CHANNEL: Final = 0
@@ -27,6 +36,19 @@ FIRST_SFX_CHANNEL: Final = 1
 LAST_SFX_CHANNEL: Final = 3
 MAX_TAKES: Final = 3
 SPEAKERS: Final = ("flash", "leo")
+PACKAGE_ROOT: Final = Path(__file__).resolve().parent
+# Owner-approved per-Activity lines (``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_CUES: Final[tuple[str, ...]] = (
+    "make_three_in_row",
+    "make_four_in_row",
+    "your_turn",
+    "leo_thinking",
+    "three_in_row",
+    "i_stopped_you",
+    "you_blocked_me",
+    "draw",
+    "you_won_match",
+)
 # Ascending notes for counting the discs of a winning row (C major pentatonic).
 _COUNT_NOTES: Final = (523.25, 587.33, 659.25, 783.99, 880.0)
 
@@ -40,6 +62,7 @@ class QuattroAudio:
         self._rng = rng or random.Random()
         self._sounds = DeferredSoundBank()
         self._voices: dict[tuple[str, str], list[pygame.mixer.Sound]] = {}
+        self._lines: dict[str, pygame.mixer.Sound | None] = {}
         self._available = False
         try:
             if pygame.mixer.get_init() is not None:
@@ -102,6 +125,39 @@ class QuattroAudio:
             pygame.mixer.Channel(VOICE_CHANNEL).play(takes[index])
         except (pygame.error, RuntimeError):
             return
+
+    def line(self, cue: str, *, after: bool = False, if_quiet: bool = False) -> bool:
+        """Speak one package line: now, ``after`` the line playing, or ``if_quiet``."""
+
+        if not self._available or cue not in PACKAGE_CUES:
+            return False
+        sound = self._line(cue)
+        if sound is None:
+            return False
+        try:
+            channel = pygame.mixer.Channel(VOICE_CHANNEL)
+            busy = channel.get_busy()
+            if busy and if_quiet:
+                return False
+            if busy and after:
+                channel.queue(sound)
+            else:
+                channel.play(sound)
+        except (pygame.error, RuntimeError):
+            return False
+        return True
+
+    def _line(self, cue: str) -> pygame.mixer.Sound | None:
+        if cue in self._lines:
+            return self._lines[cue]
+        sound: pygame.mixer.Sound | None = None
+        try:
+            path = activity_resources(PACKAGE_ROOT, requested_locale=self.locale).audio_path(cue)
+            sound = pygame.mixer.Sound(str(path)) if path is not None else None
+        except (LocalizationError, pygame.error, OSError):
+            sound = None
+        self._lines[cue] = sound  # bounded by PACKAGE_CUES
+        return sound
 
     def _takes(self, speaker: str, cue: str) -> list[pygame.mixer.Sound]:
         key = (speaker, cue)

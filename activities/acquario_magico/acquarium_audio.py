@@ -5,6 +5,10 @@ synthesizes the five short cues (bubble, nibble, glow, chest,
 splash) once, after the first frame, and loads Tito's owner-approved
 shared character takes (``celebrate.success``, ``praise.general``)
 once through the platform resolver (selected language, then English).
+Two owner-approved mission lines ("find the octopus", "feed the hungry
+turtle", ``assets/audio/<locale>/``) are spoken when that mission starts,
+and a touched creature's name comes from the shared vocabulary bank
+(``shared_vocab_audio_path``), never over another line.
 Playback is then a name lookup, which means the frame loop never
 re-decodes or re-synthesizes audio. No new speech is generated here.
 
@@ -23,12 +27,56 @@ import wave
 
 import pygame
 
-from greia_platform.localization import shared_character_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+    shared_vocab_audio_path,
+)
 from greia_platform.pygame_audio import DeferredSoundBank
 
 # Shared character takes this Activity uses (owner-approved v0.2 library).
 VOICE_SPEAKER = "tito"
 VOICE_CUES = ("celebrate.success", "praise.general")
+PACKAGE_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = PACKAGE_ROOT.parents[1]
+# Owner-approved per-Activity mission lines (cue id = "<kind>_<species>").
+MISSION_CUES = ("find_octopus", "feed_turtle")
+# Species id -> shared vocabulary-bank noun id (the tag shows the same word).
+SPECIES_VOCAB = {
+    "clownfish": "fish",
+    "turtle": "turtle",
+    "octopus": "octopus",
+    "dolphin": "dolphin",
+    "puffer": "pufferfish",
+    "seahorse": "seahorse",
+    "jellyfish": "jellyfish",
+    "starfish": "starfish",
+}
+
+
+def voice_paths(locale: str, project_root: Path = PROJECT_ROOT) -> dict[str, Path]:
+    """Resolve every recorded line this Activity speaks (no decoding).
+
+    Locale -> base -> English -> silence, through the platform resolvers.
+    Keys: the mission cue ids and ``name.<species_id>``.
+    """
+
+    found: dict[str, Path] = {}
+    try:
+        resources = activity_resources(PACKAGE_ROOT, requested_locale=locale)
+    except LocalizationError:
+        resources = None
+    if resources is not None:
+        for cue in MISSION_CUES:
+            path = resources.audio_path(cue)
+            if path is not None:
+                found[cue] = path
+    for species_id, noun in SPECIES_VOCAB.items():
+        path = shared_vocab_audio_path(project_root, noun, locale)
+        if path is not None:
+            found[f"name.{species_id}"] = path
+    return found
 
 
 def _synth_wav(samples: list[int], rate: int = 22050) -> bytes:
@@ -58,6 +106,7 @@ class AquariumAudio:
     def __init__(self, locale: str | None = None) -> None:
         self._sounds = DeferredSoundBank()
         self._voices: dict[str, pygame.mixer.Sound] = {}
+        self._last_voice: pygame.mixer.Sound | None = None
         try:
             if not pygame.mixer.get_init():
                 pygame.mixer.init(frequency=22050, size=-16, channels=1, buffer=512)
@@ -70,7 +119,12 @@ class AquariumAudio:
             self._load_voices(locale)
 
     def _load_voices(self, locale: str) -> None:
-        project_root = Path(__file__).resolve().parents[2]
+        project_root = PROJECT_ROOT
+        for cue, path in voice_paths(locale, project_root).items():
+            try:
+                self._voices[cue] = pygame.mixer.Sound(str(path))
+            except Exception:
+                continue
         for cue in VOICE_CUES:
             try:
                 path = shared_character_audio_path(project_root, VOICE_SPEAKER, cue, locale)
@@ -91,8 +145,30 @@ class AquariumAudio:
             return
         try:
             voice.play()
+            self._last_voice = voice
         except Exception:
             pass
+
+    def speaking(self) -> bool:
+        voice = self._last_voice
+        if voice is None:
+            return False
+        try:
+            return voice.get_num_channels() > 0
+        except Exception:
+            return False
+
+    def prompt(self, cue: str) -> None:
+        """Speak a mission invitation unless another line is still playing."""
+
+        if not self.speaking():
+            self.say(cue)
+
+    def name(self, species_id: str) -> None:
+        """Say a touched creature's name, never over another line."""
+
+        if not self.speaking():
+            self.say(f"name.{species_id}")
 
     def _init_sounds(self) -> None:
         rate = 22050

@@ -3,8 +3,9 @@
 Speech uses only this package's recorded, owner-approved clips through the
 platform ``LocalizedResources`` fallback policy (selected language → base →
 English → silence): the comparison prompts, the measuring prompt and the
-short praise / try-again lines. Jobs without a recorded prompt (the balance)
-stay pictorial. Wooden clacks, counting chimes, the balance creak and the
+short praise / try-again lines, and the balance and block-laying lines
+("put both parcels on the scale", "which one is heavier / lighter?", "line up
+the blocks", "how many blocks long?"). Wooden clacks, counting chimes, the balance creak and the
 fanfare are generated once, after the first frame; every call fails soft without a mixer.
 """
 
@@ -38,6 +39,11 @@ PROMPT_CUES: Final[tuple[str, ...]] = (
     "prompt_compare_taller",
     "prompt_compare_shorter_h",
     "prompt_measure",
+    "put_parcels",
+    "which_heavier",
+    "which_lighter",
+    "line_up_blocks",
+    "how_many_long",
 )
 # Only the clips this game speaks are decoded (older recorded cues stay unused).
 USED_CUES: Final[frozenset[str]] = frozenset((*PRAISE_CUES, *RETRY_CUES, *PROMPT_CUES))

@@ -253,6 +253,9 @@ class _MockAudio:
     def say(self, cue: str) -> None:
         self.spoken.append(cue)
 
+    def say_if_quiet(self, cue: str) -> None:
+        self.spoken.append(cue)
+
     def praise(self) -> None:
         self.spoken.append("correct")
 
@@ -372,6 +375,7 @@ class AppIntegrationTests(unittest.TestCase):
             app.session._reset_for_current()
             app._start_round()
         self._advance(1.5)
+        self.assertIn("friends_coming", audio.spoken)  # guests appear: Dani invites them in
         self.assertFalse(app.controls.choices[0].visible)
         waiting = list(app.motion.waiting)
         self.assertEqual(app.controls.layer.focused_id, f"guest.{waiting[0]}")
@@ -389,12 +393,14 @@ class AppIntegrationTests(unittest.TestCase):
     def test_take_away_and_missing_part_are_acted_out(self) -> None:
         from ten_house_layout import CHOICE_RECTS
 
-        app, _, _ = self._build_app(level=4, seed=3)
+        app, _, audio = self._build_app(level=4, seed=3)
         challenge = app.session.current_challenge
         self.assertEqual(challenge.mode, OperationMode.TAKE_AWAY)
         self.assertFalse(self._tap(CHOICE_RECTS[0]), "no answer before the lights have left")
         self._advance(6.0)
         self.assertEqual(app.session.phase, Phase.ASKING)
+        # The departure line comes first, the question after the lights have left.
+        self.assertLess(audio.spoken.index("fireflies_home"), audio.spoken.index("prompt_take_away"))
         self.assertEqual(app.motion.sky, challenge.delta)
 
         app, _, audio = self._build_app(level=5, seed=8)
@@ -412,6 +418,8 @@ class AppIntegrationTests(unittest.TestCase):
         self._advance(9.0)
         self.assertEqual(app.session.lit, lit, "a wrong try leaves the house as it was")
         self.assertIn("retry", audio.spoken)
+        # The counting demonstration invites the child after the retry line.
+        self.assertLess(audio.spoken.index("retry"), audio.spoken.index("count_lights"))
         self.assertFalse(app.controls.choices[challenge.choice_values.index(wrong)].enabled)
         self.assertTrue(self._tap(CHOICE_RECTS[challenge.choice_values.index(challenge.answer)]))
         self._advance(3.0)

@@ -2,7 +2,7 @@
 
 Only existing recordings are played: this package's letter clips
 (``letter_<X>`` — "A as Apple" / "A come Ape" — and ``ask_<X>`` — "Where is the
-letter A?") through ``LocalizedResources.speech_paths`` (selected language →
+letter A?", plus the ``trace_letter`` invitation) through ``LocalizedResources.speech_paths`` (selected language →
 base → English → silence), and Leo's owner-accepted shared character clips
 (``shared_character_audio_path``). Nonverbal chimes are tiny tones built once,
 after the first frame. Nothing here generates speech.
@@ -36,6 +36,11 @@ LEO_CUES: Final[dict[str, str]] = {
     "leo.progress": "encourage.progress",
     "leo.celebrate": "celebrate.success",
 }
+
+# Owner-approved package line spoken when the first tracing step of a round
+# starts (``assets/audio/<locale>/trace_letter.wav``).
+TRACE_PROMPT_CUE: Final = "trace_letter"
+PROMPT_CUES: Final[frozenset[str]] = frozenset({TRACE_PROMPT_CUE})
 
 
 def letter_cue(char: str) -> str:
@@ -165,7 +170,7 @@ class AlfabetoAudio:
             folder = self._package_root / "assets" / "audio" / self._locale
             clips = {wav.stem: wav for wav in sorted(folder.glob("*.wav"))} if folder.is_dir() else {}
         for stem, path in clips.items():
-            if stem.startswith(("letter_", "ask_")):
+            if stem.startswith(("letter_", "ask_")) or stem in PROMPT_CUES:
                 self._load(stem, path)
 
     def _load_leo_clips(self) -> None:
@@ -227,4 +232,13 @@ class AlfabetoAudio:
         return pygame.mixer.Sound(buffer=samples.tobytes())
 
 
-__all__ = ["AlfabetoAudio", "LEO_CUES", "SpeechCue", "SpeechQueue", "ask_cue", "letter_cue"]
+__all__ = [
+    "AlfabetoAudio",
+    "LEO_CUES",
+    "PROMPT_CUES",
+    "SpeechCue",
+    "SpeechQueue",
+    "TRACE_PROMPT_CUE",
+    "ask_cue",
+    "letter_cue",
+]

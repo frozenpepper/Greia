@@ -61,7 +61,7 @@ from greia_platform.ui_core import SurfaceNavigator
 if __package__:
     from .cloud_art import CloudArt
     from .cloud_audio import LULLABY, CloudAudio
-    from .cloud_content import CLOUDS_PER_NIGHT, REFERENCE_HEIGHT, REFERENCE_WIDTH, plan_night
+    from .cloud_content import CLOUDS_PER_NIGHT, REFERENCE_HEIGHT, REFERENCE_WIDTH, Quilt, plan_night
     from .cloud_controls import CloudControls
     from .cloud_layout import (
         MOMO_HEIGHT,
@@ -87,7 +87,7 @@ if __package__:
 else:
     from cloud_art import CloudArt
     from cloud_audio import LULLABY, CloudAudio
-    from cloud_content import CLOUDS_PER_NIGHT, REFERENCE_HEIGHT, REFERENCE_WIDTH, plan_night
+    from cloud_content import CLOUDS_PER_NIGHT, REFERENCE_HEIGHT, REFERENCE_WIDTH, Quilt, plan_night
     from cloud_controls import CloudControls
     from cloud_layout import (
         MOMO_HEIGHT,
@@ -523,8 +523,21 @@ class CloudActivity:
         else:
             self.held = index
             self.audio.play("pick")
+            self._name_quilt(self.tiles[index].quilt)
         self._dirty = True
         return True
+
+    def _name_quilt(self, quilt: Quilt | None) -> None:
+        """Speak only what this night compares: the colour and/or the stars."""
+
+        night = self.night
+        if quilt is None or night is None:
+            return
+        level = night.rung
+        self.audio.name_quilt(
+            quilt.colour_id if level.colour_matters else None,
+            quilt.stars if level.uses_stars else 0,
+        )
 
     def _cloud_tapped(self, cloud: int) -> None:
         if self.state is not AppState.PLAYING:
@@ -610,6 +623,7 @@ class CloudActivity:
         self.dim_step = night.asleep_count
         self.motion.fade(previous, now)
         self.audio.play(f"sleep_{min(2, night.asleep_count - 1)}")
+        self.audio.whisper("goodnight_cloud")  # after Momo's praise, never over it
         self.controls.set_progress(night.asleep_count)
         if night.complete:
             self.timeline.after(SETTLE_SECONDS, self._finale)
@@ -681,6 +695,7 @@ class CloudActivity:
             self.timeline.after(0.45 * index, lambda i=index: self._show_dream(i))
         self.motion.glow_bubble(0, now + 0.5)
         self.audio.play("twinkle")
+        self.audio.whisper("shh_sleepy")  # "Shh, sleepy time"
         self._sync_controls()
         self.controls.focus_first_tile()
         self._note_activity()

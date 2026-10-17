@@ -62,10 +62,11 @@ CY = BlockKind.CYLINDER
 BUILDS: Final[Mapping[str, BuildPlan]] = {
     plan.build_id: plan
     for plan in (
-        BuildPlan("igloo", (place(HC, 0, 0, 0), place(AR, 0, 0, 1)), picture="prop.vocab.igloo"),
+        BuildPlan("igloo", (place(HC, 0, 0, 0), place(AR, 0, 0, 1)), noun="igloo", picture="prop.vocab.igloo"),
         BuildPlan(
             "table",
             (place(RE, 0, 0, 0), place(CY, 0, 0, 1), place(CY, 0, 1, 1)),
+            noun="table",
             picture="prop.vocab.table",
         ),
         BuildPlan(
@@ -77,16 +78,19 @@ BUILDS: Final[Mapping[str, BuildPlan]] = {
         BuildPlan(
             "lighthouse",
             (place(TR, 0, 0, 0), place(RE, 1, 0, 1), place(SQ, 0, 0, 3)),
+            noun="lighthouse",
             picture="prop.vocab.lighthouse",
         ),
         BuildPlan(
             "house",
             (place(TR, 0, 0, 0), place(TR, 0, 1, 0), place(RE, 0, 0, 1), place(RE, 0, 0, 2)),
+            noun="house",
             picture="prop.vocab.house",
         ),
         BuildPlan(
             "train",
             (place(CY, 0, 0, 0), place(SQ, 0, 2, 0), place(RE, 0, 0, 1), place(SQ, 0, 2, 1)),
+            noun="train",
             picture="prop.vocab.train",
         ),
         BuildPlan(
@@ -98,21 +102,25 @@ BUILDS: Final[Mapping[str, BuildPlan]] = {
         BuildPlan(
             "snail",
             (place(TR, 0, 0, 0), place(SQ, 0, 0, 1), place(HC, 0, 1, 0), place(RE, 0, 1, 1)),
+            noun="snail",
             picture="prop.vocab.snail",
         ),
         BuildPlan(
             "house_door",
             (place(TR, 0, 0, 0), place(TR, 0, 1, 0), place(RE, 0, 0, 1), place(AR, 0, 0, 2)),
+            noun="house",
             picture="prop.vocab.house",
         ),
         BuildPlan(
             "chair",
             (place(RE, 1, 0, 0), place(RE, 0, 0, 2), place(CY, 0, 0, 3), place(CY, 0, 1, 3)),
+            noun="chair",
             picture="prop.vocab.chair",
         ),
         BuildPlan(
             "crown",
             (place(TR, 0, 0, 0), place(TR, 0, 1, 0), place(TR, 0, 2, 0), place(RE, 0, 0, 1), place(SQ, 0, 2, 1)),
+            noun="crown",
             picture="prop.vocab.crown",
         ),
         BuildPlan(

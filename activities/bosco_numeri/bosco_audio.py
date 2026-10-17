@@ -29,7 +29,9 @@ MAX_QUEUE_LEN: Final = 24
 # A cue without a playable clip (silent build, missing file) still keeps its
 # picture glowing this long, so the pictorial sequence stays readable.
 SILENT_CUE_SECONDS: Final = 0.9
-PACKAGE_LINES: Final = ("intro", "well_done")
+# "Let's write number 0!" is spoken when the zero tracing step starts.
+WRITE_ZERO_CUE: Final = "write_zero"
+PACKAGE_LINES: Final = ("intro", "well_done", WRITE_ZERO_CUE)
 
 # Shared Tito clips (owner-accepted v0.2 character library).
 TITO_CUES: Final[dict[str, str]] = {
@@ -231,4 +233,13 @@ class BoscoAudio:
         return pygame.mixer.Sound(buffer=samples.tobytes())
 
 
-__all__ = ["BoscoAudio", "SpeechCue", "SpeechQueue", "TITO_CUES", "ask_cue", "count_cue"]
+__all__ = [
+    "BoscoAudio",
+    "PACKAGE_LINES",
+    "SpeechCue",
+    "SpeechQueue",
+    "TITO_CUES",
+    "WRITE_ZERO_CUE",
+    "ask_cue",
+    "count_cue",
+]

@@ -221,6 +221,7 @@ class DelfinoJourneyApp:
         self._effects: list[Effect] = []
         self._running = True
         self._welcomed = False
+        self._picker_greeted = False
         self._suggested = self._suggest()
         self._newly_unlocked: str | None = None
         now = clock()
@@ -336,7 +337,8 @@ class DelfinoJourneyApp:
         if not self._welcomed:
             # Tito's spoken goal once per launch, with the wordless how-to.
             self._welcomed = True
-            duration = self.audio.play_voice(WELCOME_CUE_ID)
+            # The device-free goal line; the older welcome stays the fallback.
+            duration = self.audio.line("swim_finish") or self.audio.play_voice(WELCOME_CUE_ID)
             self._talk(duration)
             self._steer_hint_until = now + max(WELCOME_HINT_SECONDS, duration)
         else:
@@ -442,8 +444,12 @@ class DelfinoJourneyApp:
         self.picker_cast.update(dt)
 
     def _advance_picker(self, now: float) -> None:
+        if not self._picker_greeted:
+            self._picker_greeted = True
+            self.audio.line("choose_journey")  # "Choose a journey!" once per launch
         if self._hints.poll(now):
             self.picker_cast.point(self._hints.animation_seconds(self.picker_cast.POINT_SECONDS))
+            self.audio.line("choose_journey", if_quiet=True)
 
     def _advance_swim(self, dt: float, now: float) -> None:
         run = self.run_state
@@ -575,6 +581,7 @@ class DelfinoJourneyApp:
             self._count_done_at = now
             if total:
                 self._add_fx("star_burst", self.hud.count.rect.center, 150, screen=True)
+                self.audio.number(total)  # the pearl total, spoken (0..25 are recorded)
         elif now - self._count_done_at >= COUNT_SETTLE_SECONDS:
             self._complete()
 

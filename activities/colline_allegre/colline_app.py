@@ -541,6 +541,7 @@ class CollineActivity:
             self._hinted_drop = upcoming
             self.motion.sign_hint = (upcoming, now + SIGN_HINT_SECONDS)
             self.driver.point(1.6)
+            self._say("slow_down", force=True)  # "Slow down!" with the glowing sign
 
     def _finish_course(self, now: float) -> None:
         run = self.ride
@@ -576,7 +577,7 @@ class CollineActivity:
             self._say("celebrate.success", force=True)
             self.timeline.after(NEXT_COURSE_SECONDS, self._finish_set)
         else:
-            self._say("praise.general", force=True)
+            self._say("made_it_picnic", force=True)  # "You made it to the picnic!"
             self.timeline.after(NEXT_COURSE_SECONDS, self._next_course)
 
     def _next_course(self) -> None:

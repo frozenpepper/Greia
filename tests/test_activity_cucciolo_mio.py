@@ -26,7 +26,7 @@ for entry in (PROJECT_ROOT, PROJECT_ROOT / "src"):
 
 import pygame
 
-from activities.cucciolo_mio.cucciolo_app import CuccioloApp
+from activities.cucciolo_mio.cucciolo_app import NEED_LINES, CuccioloApp
 from activities.cucciolo_mio.cucciolo_art import PRIVATE_FILES, CuccioloArt
 from activities.cucciolo_mio.cucciolo_audio import CuccioloAudio
 from activities.cucciolo_mio.cucciolo_content import (
@@ -470,6 +470,46 @@ class AppLoopTests(unittest.TestCase):
         self.assertIs(app.screen_id, Screen.DAY)
         self.assertEqual(app.day.level, 1)
         self.assertEqual(app.controls.progress.current, 0)
+
+    def test_pet_and_adoption_lines_are_spoken_at_their_moments(self) -> None:
+        app = self.make_app()
+        lines: list[str] = []
+        everything: list[str] = []
+        real = app.audio.then_line
+        app.audio.then_line = lambda cue: (lines.append(cue), everything.append(cue), real(cue))[2]
+        app.show_adopt()
+        self.assertEqual(lines, ["who_look_after"])
+        self.assertTrue(app.tap(app.controls.species_cards[0].rect.center))
+        self.assertTrue(app.tap(app.controls.confirm.rect.center))
+        self.assertEqual(lines, ["who_look_after", "choose_name"])
+        self.assertTrue(app.tap(app.controls.name_tags[1].rect.center))
+        self.assertTrue(app.tap(app.controls.confirm.rect.center))
+        day = app.day
+        need_lines = {"hungry", "muddy", "play", "ouch", "sleepy"}
+        first = True
+        while not day.done:
+            lines.clear()
+            self.wait_for_need()
+            need = day.current_need
+            self.assertEqual(lines, [NEED_LINES[need]])  # the pet says what it needs
+            self.assertIn(lines[0], need_lines)
+            right = CARE_FOR_NEED[need]
+            if first:
+                wrong = next(care for care in app.controls.visible_tray if care is not right)
+                app._on_care(wrong)  # first miss: Lilli's retry
+                self.advance(0.8)
+                app._on_care(wrong)  # second miss: the pet's own "not now"
+                self.assertEqual(lines[-1], "not_now")
+                self.advance(0.8)
+                first = False
+            self.assertTrue(app.tap(app.controls.tray_rect(right).center))
+            self.advance(1.4)
+            if right is Care.BED:
+                self.assertIn("time_for_bed", lines)
+            self.care_until_done()
+            self.advance(0.2)
+        # Settled needs get the pet's thank-you (Lilli's halfway cheer replaces one).
+        self.assertGreaterEqual(everything.count("thank_you"), len(self.events.cares) - 1)
 
     def test_returning_pet_starts_the_day_and_keyboard_plays_it(self) -> None:
         app = self.make_app(PetProfile(species="kitten", name="moon"), seed=3)

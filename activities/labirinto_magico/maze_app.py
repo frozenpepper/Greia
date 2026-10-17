@@ -419,6 +419,8 @@ class LabyrinthActivity:
         self.cast.wave()
         self.motion.tent_hop = now
         self.audio.say("start")
+        if self.visit.completed == 0:
+            self.audio.then("help_tito_tent")  # the visit's goal, after "ready, go"
         self.controls.sync(self.maze, self.visit.completed)
         self._note_activity()
 
@@ -521,6 +523,7 @@ class LabyrinthActivity:
             self.visit.progress.stars += 1
             self.cast.correct()
             self.audio.play("star")
+            self.audio.say_if_quiet("found_star")
             self.motion.add_fx("star_burst", center, now)
             self.events.star_collected(
                 self._visit_id, self.visit.completed + 1, self._stars_this_maze, self.visit.progress.stars
@@ -556,7 +559,10 @@ class LabyrinthActivity:
         self.cast.try_again()
         self.motion.door_rattle = now
         self.audio.play("locked")
-        self._retry_voice()
+        if self.maze.layout.key is not None and not self.maze.has_key:
+            self._retry_voice("find_key")  # "Find the key to open the door!"
+        else:
+            self._retry_voice()
         if self.maze.layout.key is not None and not self.maze.has_key:
             self.motion.pulse([self.maze.layout.key], now)
         self.timeline.after(DEMO_LEAD_SECONDS, lambda: self._send_firefly(HINT_CELLS))
@@ -569,15 +575,15 @@ class LabyrinthActivity:
         self.cast.try_again()
         self.motion.tent_hop = now
         self.audio.play("locked")
-        self._retry_voice()
+        self._retry_voice("find_all_stars")  # "Find all the stars first!"
         self.motion.pulse([*self.maze.missing_stars, self.maze.layout.goal], now)
         self.timeline.after(DEMO_LEAD_SECONDS, lambda: self._send_firefly(HINT_CELLS))
 
-    def _retry_voice(self) -> None:
+    def _retry_voice(self, cue: str = "retry") -> None:
         now = self.clock()
         if now - self._last_retry_voice >= RETRY_VOICE_GAP:
             self._last_retry_voice = now
-            self.audio.say("retry")
+            self.audio.say(cue)
 
     def _send_firefly(self, cells: int) -> None:
         """Fly the first ``cells`` maze cells of the way to the next thing to fetch."""

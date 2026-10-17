@@ -5,10 +5,14 @@ Speech uses only Tito's owner-accepted shared character takes
 ``shared_character_audio_path`` (selected language -> English -> silence):
 "ready, go" when a maze starts, praise when Tito reaches his tent, the big
 cheer at the end of a visit, "keep going" as the first idle nudge and "let's
-try again" when the tent or a door is still closed. Moments without an
-approved line (a star found, the key picked up) stay pictorial + chime.
-Sound effects are generated once, after the first frame; every call fails soft without
+try again" when the tent or a door is still closed. Sound effects are generated once, after the first frame; every call fails soft without
 a mixer.
+
+Tito's owner-approved maze lines (``assets/audio/<locale>/``) are wired too:
+"help Tito find the way to his tent!" after the visit's first "ready, go",
+"you found a star!" for a star (never over another line), "find all the stars
+first!" at a closed tent and "find the key to open the door!" at a locked
+door.
 """
 
 from __future__ import annotations
@@ -20,7 +24,11 @@ from typing import Final
 
 import pygame
 
-from greia_platform.localization import shared_character_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+)
 from greia_platform.pygame_audio import (
     DeferredSoundBank,
     chime_run_sound,
@@ -33,6 +41,14 @@ SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
 LAST_SFX_CHANNEL: Final = 5
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent
+# Owner-approved per-Activity lines (``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_CUES: Final[tuple[str, ...]] = (
+    "help_tito_tent",
+    "found_star",
+    "find_all_stars",
+    "find_key",
+)
 SPEAKER: Final = "tito"
 # Activity cue -> Tito's shared take family.
 SHARED_CUES: Final[dict[str, str]] = {
@@ -86,6 +102,40 @@ class LabyrinthAudio:
         except (pygame.error, RuntimeError):
             return
 
+    def speaking(self) -> bool:
+        if not self._available:
+            return False
+        try:
+            return bool(pygame.mixer.Channel(SPEECH_CHANNEL).get_busy())
+        except (pygame.error, RuntimeError):
+            return False
+
+    def say_if_quiet(self, cue: str) -> None:
+        """Speak a non-essential line only when no other line is playing."""
+
+        if not self.speaking():
+            self.say(cue)
+
+    def then(self, cue: str) -> None:
+        """Queue one line after the one playing (now when quiet), never stacked.
+
+        Uses the speech channel's own one-slot queue: no polling, and a newer
+        queued line replaces an older one.
+        """
+
+        self.last_speech = cue
+        sound = self._speech.get(cue)
+        if not self._available or sound is None:
+            return
+        try:
+            channel = pygame.mixer.Channel(SPEECH_CHANNEL)
+            if channel.get_busy():
+                channel.queue(sound)
+            else:
+                channel.play(sound)
+        except (pygame.error, RuntimeError):
+            return
+
     def play(self, name: str) -> None:
         self.last_sound = name
         if not self._available:
@@ -108,6 +158,18 @@ class LabyrinthAudio:
     def _load_speech(self) -> None:
         for cue, family in SHARED_CUES.items():
             path = shared_character_audio_path(self._project_root, SPEAKER, family, self.locale)
+            if path is None:
+                continue
+            try:
+                self._speech[cue] = pygame.mixer.Sound(str(path))
+            except (pygame.error, OSError):
+                continue
+        try:
+            resources = activity_resources(PACKAGE_ROOT, requested_locale=self.locale)
+        except LocalizationError:
+            return
+        for cue in PACKAGE_CUES:
+            path = resources.audio_path(cue)
             if path is None:
                 continue
             try:
@@ -147,4 +209,4 @@ def _thud(rate: int, channels: int) -> pygame.mixer.Sound:
 # Back-compat alias for older imports.
 MazeAudio = LabyrinthAudio
 
-__all__ = ["LabyrinthAudio", "MazeAudio", "SHARED_CUES"]
+__all__ = ["LabyrinthAudio", "MazeAudio", "PACKAGE_CUES", "SHARED_CUES"]

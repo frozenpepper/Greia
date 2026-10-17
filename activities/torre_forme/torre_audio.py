@@ -5,9 +5,12 @@ Speech uses only recorded, owner-approved clips (no generated audio):
 * Dani's shared character takes (``ready.go``, ``praise.general``,
   ``encourage.retry``, ``encourage.progress``, ``celebrate.success``)
   through ``shared_character_audio_path``;
-* the name of what is being built (``rocket``, ``boat``, ``car``, ``cat``,
-  ``fish``, ``turtle``) from the shared vocabulary bank through
-  ``shared_vocab_audio_path``.
+* the name of what is being built from the shared vocabulary bank through
+  ``shared_vocab_audio_path``, and a picked block's shape name
+  (``shape_<kind>``) when Dani is quiet;
+* Dani's three owner-approved package lines (``assets/audio/<locale>/``):
+  "fill the shape with blocks!" at a set's first build, "turn it!" for a block
+  that fits once turned, "it fits!" for a placed block.
 
 Both follow the platform speech fallback (selected language -> base ->
 English -> silence). Clips are decoded lazily into a tiny LRU (the Acer
@@ -27,7 +30,12 @@ from typing import Final
 
 import pygame
 
-from greia_platform.localization import shared_character_audio_path, shared_vocab_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+    shared_vocab_audio_path,
+)
 from greia_platform.pygame_audio import (
     DeferredSoundBank,
     bell_sound,
@@ -41,6 +49,9 @@ LAST_SFX_CHANNEL: Final = 4
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 HOST: Final = "dani"
 SHARED_CUES: Final = ("ready.go", "praise.general", "encourage.retry", "encourage.progress", "celebrate.success")
+PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent
+# Owner-approved per-Activity lines (``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_CUES: Final = ("fill_shape_blocks", "turn_it", "it_fits")
 CLIP_CACHE_LIMIT: Final = 6
 EFFECTS: Final = ("pick", "clack", "chime", "hum", "turn", "sparkle")
 
@@ -69,6 +80,14 @@ class TorreAudio:
                 path = shared_character_audio_path(project_root, HOST, cue, self.locale)
             except Exception:
                 path = None
+            if path is not None:
+                self._paths[cue] = path
+        try:
+            resources = activity_resources(PACKAGE_ROOT, requested_locale=self.locale)
+        except LocalizationError:
+            resources = None
+        for cue in PACKAGE_CUES if resources is not None else ():
+            path = resources.audio_path(cue)
             if path is not None:
                 self._paths[cue] = path
         try:
@@ -110,6 +129,41 @@ class TorreAudio:
                 return False
             self._paths[key] = path
         return self._speak(key, self._paths[key])
+
+    def block_name(self, kind: str) -> bool:
+        """Say a picked block's shape name, only when no other line is playing."""
+
+        if self._speaking():
+            return False
+        return self.noun(f"shape_{kind}")
+
+    def then(self, cue: str) -> bool:
+        """Queue one approved line after the line playing (now when quiet)."""
+
+        self.last_speech = cue
+        path = self._paths.get(cue)
+        if not self._available or path is None:
+            return False
+        sound = self._clip(cue, path)
+        if sound is None:
+            return False
+        try:
+            channel = pygame.mixer.Channel(SPEECH_CHANNEL)
+            if channel.get_busy():
+                channel.queue(sound)
+            else:
+                channel.play(sound)
+        except (pygame.error, RuntimeError):
+            return False
+        return True
+
+    def _speaking(self) -> bool:
+        if not self._available:
+            return False
+        try:
+            return bool(pygame.mixer.Channel(SPEECH_CHANNEL).get_busy())
+        except (pygame.error, RuntimeError):
+            return False
 
     def stop_speech(self) -> None:
         if not self._available:
@@ -206,4 +260,4 @@ def _hum(rate: int, channels: int) -> pygame.mixer.Sound:
     return pygame.mixer.Sound(buffer=mono_pcm16_bytes(samples, channels))
 
 
-__all__ = ["CLIP_CACHE_LIMIT", "EFFECTS", "HOST", "SHARED_CUES", "TorreAudio"]
+__all__ = ["CLIP_CACHE_LIMIT", "EFFECTS", "HOST", "PACKAGE_CUES", "SHARED_CUES", "TorreAudio"]

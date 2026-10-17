@@ -2,10 +2,9 @@
 
 Speech uses only recorded, approved clips: this package's cues
 (``prompt_compose_1..10``, ``prompt_add``, ``prompt_take_away``,
-``prompt_missing_part``, ``correct_1..3``, ``retry_1..2``) through
-``LocalizedResources`` and Dani's shared ``celebrate.success`` take for the
-end of a visit. Moments without an approved line (guests arriving, lights
-leaving) stay pictorial and silent. Chimes are generated once, after the first frame;
+``prompt_missing_part``, ``correct_1..3``, ``retry_1..2``, ``friends_coming``,
+``fireflies_home``, ``count_lights``) through ``LocalizedResources`` and Dani's
+shared ``celebrate.success`` take for the end of a visit. Chimes are generated once, after the first frame;
 every call fails soft without a mixer.
 """
 
@@ -95,6 +94,12 @@ class TenHouseAudio:
             pygame.mixer.Channel(SPEECH_CHANNEL).play(sound)
         except (pygame.error, RuntimeError):
             return
+
+    def say_if_quiet(self, cue: str) -> None:
+        """Speak a non-essential line only when no other line is playing."""
+
+        if not self.speech_busy():
+            self.say(cue)
 
     def praise(self) -> None:
         self.say(self._rng.choice(PRAISE_CUES))

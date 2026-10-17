@@ -527,8 +527,15 @@ class AquariumApp:
                 creature["vy"] = -2.0
         self.session.emit_effect("heart_pop", mx, my - 10, 0.8)
         self.session.show_name(creature, NAME_TAG_SECONDS)
-        if self._missions is not None:
-            self._on_mission_outcome(self._missions.creature_touched(creature), creature)
+        outcome = (
+            self._missions.creature_touched(creature)
+            if self._missions is not None
+            else MissionOutcome.NONE
+        )
+        if outcome is MissionOutcome.NONE:
+            # The name is a light touch reply; a finished mission's cheer wins.
+            self.audio.name(species_id)
+        self._on_mission_outcome(outcome, creature)
 
     def _handle_water_canvas_click(self, mx: int, my: int) -> None:
         tool = self.session.active_tool
@@ -586,6 +593,11 @@ class AquariumApp:
             self._hinted_uid = None
             if outcome is MissionOutcome.STARTED:
                 self.audio.play("bubble")
+                mission = self._missions.current if self._missions is not None else None
+                if mission is not None:
+                    # Only recorded invitations speak ("find_octopus",
+                    # "feed_turtle"); the others stay pictorial.
+                    self.audio.prompt(f"{mission.kind.value}_{mission.species_id}")
         elif outcome in (MissionOutcome.COMPLETED, MissionOutcome.PEARL):
             self._hinted_uid = None
             if creature is not None:

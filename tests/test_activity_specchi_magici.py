@@ -410,7 +410,7 @@ class PackageTests(unittest.TestCase):
         self.assertIsNone(cell_at((5, 5)))
 
     def test_audio_resolves_only_approved_recordings(self) -> None:
-        for locale in ("en", "it"):
+        for locale in ("en", "it", "es", "fr"):
             resources = activity_resources(ACTIVITY_ROOT, requested_locale=locale)
             audio = MirrorAudio(locale=locale, resources=resources)
             with self.subTest(locale=locale):
@@ -547,6 +547,49 @@ class AppLoopTests(unittest.TestCase):
         self.assertTrue(app.cast.pointing)
         self.assertNotIn(target.cell, app.session.placed, "she shows the spot; the child still places it")
         self.assertEqual(app.session.misses, 2)
+
+    def test_lilli_lines_for_the_mirror_a_turned_tile_and_the_shown_spot(self) -> None:
+        from unittest import mock
+
+        quiet: list[str] = []
+        real = MirrorAudio.say_if_quiet
+
+        def record(audio, cue):
+            quiet.append(cue)
+            return real(audio, cue)
+
+        with mock.patch.object(MirrorAudio, "say_if_quiet", record):
+            app = self.make(level=2)
+            self.assertIn("look_mirror_line", quiet)  # the visit's first mirror
+            puzzle = app.session.current_puzzle
+            target = app.session.next_unmatched()
+            wrong = _wrong_piece_for(puzzle, target)
+            for _ in range(2):
+                app.tap(app._tray_rects[self.tray_index(app, wrong)].center)
+                app.tap(cell_rect(*target.cell).center)
+                self.advance(app, 1.2)
+            self.assertEqual(quiet.count("try_this_spot"), 1)  # with the second-miss ghost
+        # A rung with turned tiles offers the unreflected copy: "Turn it around!".
+        for level in range(1, 6):
+            app = self.make(level=level)
+            puzzle = app.session.current_puzzle
+            pair = next(
+                (
+                    (placement, piece)
+                    for placement in puzzle.required
+                    for piece in puzzle.tray
+                    if piece != placement.piece
+                    and (piece.kind, piece.color_index) == (placement.piece.kind, placement.piece.color_index)
+                ),
+                None,
+            )
+            if pair is not None:
+                break
+        self.assertIsNotNone(pair, "some rung offers a turned copy")
+        placement, turned = pair
+        app.tap(app._tray_rects[self.tray_index(app, turned)].center)
+        app.tap(cell_rect(*placement.cell).center)
+        self.assertEqual(app.audio.last_speech, "turn_it")
 
     def test_keyboard_and_controller_play(self) -> None:
         from greia_platform.pygame_input import CONTROLLER_BUTTON_A

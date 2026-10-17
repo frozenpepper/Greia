@@ -90,6 +90,12 @@ class _Audio:
     def say(self, cue: str) -> None:
         self.spoken.append(cue)
 
+    def say_if_quiet(self, cue: str) -> None:
+        self.spoken.append(cue)
+
+    def then(self, cue: str) -> None:
+        self.spoken.append(cue)
+
     def play(self, name: str) -> None:
         self.sounds.append(name)
 
@@ -394,6 +400,18 @@ class AppLoopTests(unittest.TestCase):
             self.assertNotEqual(app._visit_id, first_visit)  # fresh idempotency scope
             self._solve_with_keys(app, now)
 
+    def test_visit_goal_and_locked_door_lines(self) -> None:
+        app, now, _ = self._app(level=1)
+        self.assertEqual(app.audio.spoken[:2], ["start", "help_tito_tent"])
+        for level in range(1, 9):
+            app, now, _ = self._app(level=level, seed=5)
+            if app.maze.layout.key is not None:
+                break
+        self.assertIsNotNone(app.maze.layout.key, "a key level exists")
+        app.audio.spoken.clear()
+        app._door_locked()  # noqa: SLF001 - pushing into the door without the key
+        self.assertEqual(app.audio.spoken, ["find_key"])
+
     def test_space_on_completion_replays_through_kit_focus(self) -> None:
         from maze_app import AppState
 
@@ -416,6 +434,7 @@ class AppLoopTests(unittest.TestCase):
             while app.walker.moving and not maze.collected:
                 self._advance(app, now, 1 / 30)
         self.assertIs(app.cast.feedback.pose, CastPose.CHEER)
+        self.assertIn("found_star", app.audio.spoken)
         self.assertEqual(app.controls._star_state, (1, len(maze.layout.stars)))
         self.assertEqual(len(app.events.stars), 1)
         self._walk_out(app, now)
@@ -430,7 +449,7 @@ class AppLoopTests(unittest.TestCase):
         self.assertIsNotNone(maze.tent_ahead())
         self.assertFalse(maze.solved)
         self.assertIs(app.cast.feedback.pose, CastPose.THINK)
-        self.assertIn("retry", app.audio.spoken)
+        self.assertIn("find_all_stars", app.audio.spoken)  # the reason, not just "try again"
         self.assertTrue(set(maze.missing_stars) <= set(app.motion.pulses))
         self._advance(app, now, 0.7)
         self.assertIsNotNone(app.motion.firefly)  # demonstration of the way

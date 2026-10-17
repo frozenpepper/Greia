@@ -400,6 +400,45 @@ class AppLoopTests(unittest.TestCase):
         self.assertIs(app.night.clouds[0].state, CloudState.ASLEEP)
         self.assertEqual(app.dim_step, 1)
 
+    def test_whispers_and_quilt_names_follow_the_night(self) -> None:
+        for level in (0, 2, 3):
+            app = self.make(level=level)
+            said: list[object] = []
+            real_whisper, real_name = app.audio.whisper, app.audio.name_quilt
+            app.audio.whisper = lambda cue: (said.append(cue), real_whisper(cue))[1]
+            app.audio.name_quilt = lambda colour, stars: (said.append((colour, stars)), real_name(colour, stars))[1]
+            app.start_night()
+            self.advance(app, 1.5)
+            self.assertEqual(said, ["shh_sleepy"])  # the night begins with a whisper
+            tile = self.tile_of(app, 0)
+            quilt = app.tiles[tile].quilt
+            app._pick(tile)  # noqa: SLF001 - pick up the right quilt
+            rung = app.night.rung
+            # Only what this rung compares is named: colour and/or stars.
+            self.assertEqual(
+                said[-1],
+                (quilt.colour_id if rung.colour_matters else None, quilt.stars if rung.uses_stars else 0),
+            )
+            app._give(tile, 0, origin=app.tiles[tile].rect.center)  # noqa: SLF001
+            self.advance(app, 2.4)
+            self.assertIs(app.night.clouds[0].state, CloudState.ASLEEP)
+            self.assertEqual(said[-1], "goodnight_cloud")
+
+    def test_quilt_words_resolve_in_every_released_language(self) -> None:
+        from greia_platform.localization import shared_number_audio_path, shared_vocab_audio_path
+        from activities.nanna_delle_nuvolette.cloud_audio import PACKAGE_CUES
+        from activities.nanna_delle_nuvolette.cloud_content import ALL_COLOURS, MAX_STARS
+
+        for locale in ("en", "it", "es", "fr"):
+            for colour in ALL_COLOURS:
+                path = shared_vocab_audio_path(PROJECT_ROOT, f"colour_{colour}", locale)
+                self.assertEqual((path.parent.name, path.stem), (locale, f"colour_{colour}"))
+            for stars in range(1, MAX_STARS + 1):
+                self.assertEqual(shared_number_audio_path(PROJECT_ROOT, stars, locale).parent.name, locale)
+            resources = activity_resources(ACTIVITY_DIR, requested_locale=locale)
+            for cue in PACKAGE_CUES:
+                self.assertEqual(resources.audio_path(cue).parent.name, locale)
+
     def test_drag_to_cloud_and_drag_into_empty_sky(self) -> None:
         app = self.make()
         tile = self.tile_of(app, 2)

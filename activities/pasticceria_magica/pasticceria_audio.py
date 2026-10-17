@@ -7,10 +7,12 @@ locale -> base language -> English -> silence fallback:
   ``encourage.retry``, ``encourage.progress``, ``ready.go``) for the
   customer at the counter and for Momo the baker;
 * topping names from the shared vocabulary bank (``shared_vocab_audio_path``)
-  and spoken numbers from the shared numbers bank when the platform offers
-  one (``shared_number_audio_path``, P7 F6). Neither bank has these words
-  yet, so orders and counting stay pictorial and silent today and become
-  spoken as soon as approved clips land - no Activity change needed.
+  and spoken numbers from the shared numbers bank
+  (``shared_number_audio_path``) for orders and counting;
+* three owner-approved package lines in Lilli's voice
+  (``assets/audio/<locale>/``): "finish the row!" and "thank you!" when
+  Lilli is the customer, and "let's count together" before a repeated
+  counting demonstration (the count waits for it).
 
 Effects (topping pop, take-off, "not that one" hum, serve bell, happy jingle,
 gentle "hmm", shop door chime, rising counting tones, swoosh) are synthesized
@@ -28,7 +30,12 @@ from typing import Final
 import pygame
 
 from greia_platform import localization
-from greia_platform.localization import shared_character_audio_path, shared_vocab_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+    shared_vocab_audio_path,
+)
 from greia_platform.pygame_audio import (
     DeferredSoundBank,
     current_pcm16_mixer_spec,
@@ -42,6 +49,10 @@ SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
 LAST_SFX_CHANNEL: Final = 4
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent
+# Owner-approved per-Activity lines (Lilli; ``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_SPEAKER: Final = "lilli"
+PACKAGE_CUES: Final = ("finish_pattern", "thank_you", "count_together")
 CAST_CUES: Final = ("ready.go", "celebrate.success", "praise.general", "encourage.retry", "encourage.progress")
 CAST_CACHE_LIMIT: Final = 2  # the customer at the counter and the next one (or Momo)
 WORD_CACHE_LIMIT: Final = 12
@@ -69,6 +80,7 @@ class BakeryAudio:
         self._cast: OrderedDict[str, dict[str, list[pygame.mixer.Sound]]] = OrderedDict()
         self._words: OrderedDict[str, pygame.mixer.Sound | None] = OrderedDict()
         self._queue: deque[pygame.mixer.Sound] = deque(maxlen=SPEECH_QUEUE_LIMIT)
+        self._line_paths: dict[str, Path] = {}
         self._available = False
         self.last_speech: str | None = None
         self.last_effect: str | None = None
@@ -79,6 +91,14 @@ class BakeryAudio:
                 self._available = True
         except (pygame.error, RuntimeError, OSError):
             self._available = False
+        try:
+            resources = activity_resources(PACKAGE_ROOT, requested_locale=self.locale)
+        except LocalizationError:
+            resources = None
+        for cue in PACKAGE_CUES if resources is not None else ():
+            path = resources.audio_path(cue)
+            if path is not None:
+                self._line_paths[cue] = path
 
     # -- cast ---------------------------------------------------------------------
 
@@ -133,6 +153,29 @@ class BakeryAudio:
         if queued:
             self.update()
         return queued
+
+    def line(self, cue: str, *, after: bool = False) -> bool:
+        """Speak one package line now, or after the line playing (``after``)."""
+
+        self.last_speech = f"line.{cue}"
+        sound = self._word(f"line.{cue}", lambda: self._line_paths.get(cue))
+        if sound is None:
+            return False
+        if after:
+            self._queue.append(sound)
+            self.update()
+            return True
+        self._queue.clear()
+        return self._speak(sound)
+
+    def line_seconds(self, cue: str) -> float:
+        """Length of a decoded package line (0.0 when it is not available)."""
+
+        sound = self._words.get(f"line.{cue}")
+        try:
+            return float(sound.get_length()) if sound is not None else 0.0
+        except pygame.error:
+            return 0.0
 
     def say_topping(self, topping_id: str) -> bool:
         sound = self._word(f"noun.{topping_id}", lambda: self._noun_path(topping_id))
@@ -240,16 +283,11 @@ class BakeryAudio:
             return None
 
     def _number_path(self, value: int) -> Path | None:
-        # The shared numbers bank (P7 F6) is pending owner voice approval; use
-        # it as soon as the platform publishes its resolver.
-        resolver = getattr(localization, "shared_number_audio_path", None)
-        if not callable(resolver):
-            return None
         try:
-            path = resolver(self._project_root, int(value), self.locale)
-        except Exception:
+            # Looked up on the module so tests can stand in an empty bank.
+            return localization.shared_number_audio_path(self._project_root, int(value), self.locale)
+        except (TypeError, ValueError):
             return None
-        return path if isinstance(path, Path) else None
 
     def _build_sounds(self) -> None:
         spec = current_pcm16_mixer_spec()

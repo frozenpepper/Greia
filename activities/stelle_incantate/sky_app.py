@@ -52,7 +52,7 @@ if __package__:
     from .sky_audio import SkyAudio
     from .sky_content import LEO_HEIGHT, NEXT_CENTER, REFERENCE_HEIGHT, REFERENCE_WIDTH, sky_point
     from .sky_controls import SkyControls, card_rects
-    from .sky_model import ChoiceResult, Night, Phase, SkyRound, TapResult
+    from .sky_model import ChoiceResult, Night, Phase, SkyRound, TapResult, TaskKind
     from .sky_renderer import LINE_SECONDS, Band, SceneMotion, SkyCast, SkyRenderer
     from .sky_services import EventPort, ProgressPort
 else:
@@ -60,7 +60,7 @@ else:
     from sky_audio import SkyAudio
     from sky_content import LEO_HEIGHT, NEXT_CENTER, REFERENCE_HEIGHT, REFERENCE_WIDTH, sky_point
     from sky_controls import SkyControls, card_rects
-    from sky_model import ChoiceResult, Night, Phase, SkyRound, TapResult
+    from sky_model import ChoiceResult, Night, Phase, SkyRound, TapResult, TaskKind
     from sky_renderer import LINE_SECONDS, Band, SceneMotion, SkyCast, SkyRenderer
     from sky_services import EventPort, ProgressPort
 
@@ -331,7 +331,17 @@ class SkyActivity:
             self.motion.pulses[0] = self.clock()
         for beat, number in enumerate(numbers):
             self.timeline.after(GOAL_BEAT_SECONDS * beat, lambda n=number: self.audio.chime(n))
-        if given:
+        # Leo's goal line, queued after a "ready, go" that may still be playing;
+        # the given star's number follows it.
+        task = round_.task
+        if task in (TaskKind.ORDER, TaskKind.MISSING):
+            self.audio.then("connect_in_order")
+        elif task is TaskKind.COUNT_BACK:
+            self.audio.then("count_back")
+            self.audio.say_number(numbers[0], after=True)
+        elif task is TaskKind.COUNT_ON and numbers[0] == 4:
+            self.audio.then("start_at_four")  # names the given 4 itself
+        elif given:
             self.audio.say_number(numbers[0])
         self._dirty = True
 
@@ -359,6 +369,7 @@ class SkyActivity:
             self.motion.pops[index] = now
             self.motion.trail = None
             self.audio.play("card")
+            self.audio.say("which_missing")  # the number cards open
             self.cast.point(1.4)
             self.controls.sync(round_, refocus=True)
         else:

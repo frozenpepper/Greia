@@ -333,6 +333,17 @@ class VoloAppLoopTests(unittest.TestCase):
         self.clock.t += STEP
         self.app.step(STEP)
 
+    def test_first_flight_names_the_goal_once(self) -> None:
+        app = self.app
+        self.assertTrue(app.press(pygame.K_SPACE))  # the first open course
+        self.assertEqual(app.audio.last_speech, "fly_rings")  # after "ready, go"
+        self.assertTrue(app.audio.has_speech("fly_rings"))
+        app.start_course(0)  # flying the course again
+        self.assertEqual(app.audio.last_speech, "ready.go")  # the goal is named once per visit
+        for locale in ("en", "it", "es", "fr"):
+            resources = activity_resources(ACTIVITY_DIR, requested_locale=locale)
+            self.assertEqual(resources.audio_path("fly_rings").parent.name, locale)
+
     def test_map_starts_only_unlocked_courses(self) -> None:
         app = self.app
         self.assertIs(app.state, AppState.MAP)

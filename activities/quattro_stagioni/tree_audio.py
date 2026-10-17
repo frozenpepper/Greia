@@ -3,12 +3,13 @@
 Speech uses only recorded, approved clips (no generated audio):
 
 * this package's own Tito lines (``welcome``, the four season lines, the four
-  weather lines, ``praise_1..3``), found through ``LocalizedResources``
-  (locale -> base -> English fallback);
+  weather lines, ``praise_1..3``, "yes, that belongs in this season!" queued
+  after a placed picture's name and "hmm, not in this season" for a miss),
+  found through ``LocalizedResources`` (locale -> base -> English fallback);
 * Tito's shared character takes (``ready.go``, ``celebrate.success``,
   ``encourage.retry``, ``praise.general``);
 * picture names from the platform's shared vocabulary bank where an approved
-  recording exists (``flower``, ``frog``, ``sun``); otherwise silence.
+  recording exists; otherwise silence.
 
 Clips are decoded lazily, at most ``CLIP_CACHE_LIMIT`` at a time. Effects
 (card pop, place chime, soft "not here" boing, whoosh, fanfare, rustle) are
@@ -97,6 +98,25 @@ class TreeAudio:
         if not self._available or cue not in self._clip_paths:
             return False
         return self._speak(self._clip(f"clip:{cue}", self._clip_paths[cue]))
+
+    def say_after(self, cue: str) -> bool:
+        """Queue one package clip after the line playing (now when quiet)."""
+
+        self.last_speech = cue
+        if not self._available or cue not in self._clip_paths:
+            return False
+        sound = self._clip(f"clip:{cue}", self._clip_paths[cue])
+        if sound is None:
+            return False
+        try:
+            channel = pygame.mixer.Channel(SPEECH_CHANNEL)
+            if channel.get_busy():
+                channel.queue(sound)
+            else:
+                channel.play(sound)
+        except (pygame.error, RuntimeError):
+            return False
+        return True
 
     def praise(self) -> bool:
         available = [cue for cue in PRAISE_CLIPS if cue in self._clip_paths]

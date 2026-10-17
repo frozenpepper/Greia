@@ -50,7 +50,7 @@ from greia_platform.typography import GreiaTypography
 from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 
 if __package__:
-    from .sillabe_audio import SFX_PREFIX, SillabeAudio, SpeechQueue
+    from .sillabe_audio import CLAP_PROMPT_CUE, SFX_PREFIX, SillabeAudio, SpeechQueue
     from .sillabe_content import (
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
@@ -81,7 +81,7 @@ if __package__:
     from .sillabe_renderer import Flight, SceneState, SillabeRenderer
     from .sillabe_services import EventPort, ProgressPort
 else:
-    from sillabe_audio import SFX_PREFIX, SillabeAudio, SpeechQueue
+    from sillabe_audio import CLAP_PROMPT_CUE, SFX_PREFIX, SillabeAudio, SpeechQueue
     from sillabe_content import (
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
@@ -553,6 +553,8 @@ class SillabeActivity:
         if opening and self.session.challenge_index == 0:
             queue.enqueue("leo.ready", gap=0.3)
         if phase is Phase.CLAP:
+            if self.session.challenge_index == 0 and not hint:
+                queue.enqueue(CLAP_PROMPT_CUE, gap=0.3)  # the drum's job, first word only
             queue.enqueue(challenge.word.audio_id, tag="sign", gap=0.4)
             if hint and challenge.clap_first:
                 # Model the beats once, in the word's own syllables.

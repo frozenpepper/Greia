@@ -524,8 +524,14 @@ class AppLoopTests(CollineBase):
         app = self.make_app()
         self.assertIs(app.state, AppState.READY)
         app.render()
+        spoken: list[str] = []
+        real_say = app.audio.say
+        app.audio.say = lambda cue: (spoken.append(cue), real_say(cue))[1]
         self.drive_smartly(app, 300.0)
         self.assertIs(app.state, AppState.TERMINAL)
+        # Each picnic but the last: "You made it to the picnic!"; the last: the big cheer.
+        self.assertEqual(spoken.count("made_it_picnic"), COURSES_PER_SET - 1)
+        self.assertIn("celebrate.success", spoken)
         courses = [entry for entry in self.events.log if entry[0] == "course"]
         sets = [entry for entry in self.events.log if entry[0] == "set"]
         self.assertEqual([entry[2]["course"] for entry in courses], [1, 2, 3, 4, 5])
@@ -559,6 +565,7 @@ class AppLoopTests(CollineBase):
         self.assertIs(app.state, AppState.DRIVING)
         self.assertEqual(app._hinted_drop, 0)
         self.assertIsNotNone(app.motion.sign_hint)
+        self.assertEqual(app.audio.last_speech, "slow_down")  # spoken with the glowing sign
         self.assertGreater(app._brake_hint(self.now[0]), 0.0)
         self.assertFalse(app.drive.go)  # the child presses GO again
 
@@ -677,6 +684,7 @@ class AudioTests(unittest.TestCase):
             audio.play(effect)
         audio.say("ready.go")
         audio.say("no.such.cue")
+        self.assertTrue({"slow_down", "made_it_picnic"} <= audio.cues)
         audio.stop_all()
 
 

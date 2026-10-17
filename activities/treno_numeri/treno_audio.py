@@ -2,9 +2,10 @@
 
 Speech uses only recorded, approved clips: Dani's shared reaction library
 (``encourage.retry``, ``praise.general``, ``celebrate.success``,
-``ready.go``, ``encourage.progress``) and, when they exist, this package's own
-cues through ``LocalizedResources`` (for example ``count_1``..``count_10``
-once spoken numbers are recorded). Missing cues stay silent; the game remains
+``ready.go``, ``encourage.progress``) and this package's own cues through
+``LocalizedResources``: ``count_1``..``count_10`` and Dani's train lines
+("toot toot!", "make this wagon the same!", "too many! take some out.", "not
+enough yet!", "let's count again.", "all aboard!"). Missing cues stay silent; the game remains
 fully pictorial. Whistle, chug, chimes and pops are generated once, after the first frame.
 """
 
@@ -97,6 +98,31 @@ class TrainAudio:
                 channel.play(follow)
         except (pygame.error, RuntimeError):
             return
+
+    def then(self, cue: str) -> None:
+        """Queue one cue after the line playing (now when quiet), never stacked."""
+
+        self.last_speech = cue
+        sound = self._speech.get(cue)
+        if not self._available or sound is None:
+            return
+        try:
+            channel = pygame.mixer.Channel(SPEECH_CHANNEL)
+            if channel.get_busy():
+                channel.queue(sound)
+            else:
+                channel.play(sound)
+        except (pygame.error, RuntimeError):
+            return
+
+    def length(self, cue: str) -> float:
+        """Seconds of one loaded cue (0.0 when it is not recorded)."""
+
+        sound = self._speech.get(cue)
+        try:
+            return float(sound.get_length()) if sound is not None else 0.0
+        except pygame.error:
+            return 0.0
 
     def say_number(self, number: int) -> None:
         """Speak a counting word when an approved clip exists (else silent)."""

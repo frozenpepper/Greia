@@ -46,7 +46,7 @@ from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 
 if __package__:
     from .alfabeto_art import TraceInk
-    from .alfabeto_audio import AlfabetoAudio, SpeechQueue, ask_cue, letter_cue
+    from .alfabeto_audio import TRACE_PROMPT_CUE, AlfabetoAudio, SpeechQueue, ask_cue, letter_cue
     from .alfabeto_controls import LEO_HEIGHT, GardenControls, choice_id
     from .alfabeto_model import (
         REFERENCE_HEIGHT,
@@ -64,7 +64,7 @@ if __package__:
     from .alfabeto_trace import TraceEvent, TraceTracker
 else:
     from alfabeto_art import TraceInk
-    from alfabeto_audio import AlfabetoAudio, SpeechQueue, ask_cue, letter_cue
+    from alfabeto_audio import TRACE_PROMPT_CUE, AlfabetoAudio, SpeechQueue, ask_cue, letter_cue
     from alfabeto_controls import LEO_HEIGHT, GardenControls, choice_id
     from alfabeto_model import (
         REFERENCE_HEIGHT,
@@ -592,6 +592,13 @@ class AlfabetoApp:
             self.state = AppState.PLAYING
             self._start_trace(keep_progress=False)
             queue.enqueue(letter_cue(step.letter.char), gap=0.3)
+            first_trace = all(
+                earlier.kind is not StepKind.TRACE
+                for earlier in self.round.steps[: self.round.step_index]
+            )
+            if first_trace:
+                # Owner-approved invitation, once per round (silent if absent).
+                queue.enqueue(TRACE_PROMPT_CUE, gap=0.3)
             self._start_demo(now, delay=0.4)
         self.state_started = now
         self._quiet_since = now

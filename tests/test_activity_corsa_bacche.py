@@ -118,6 +118,12 @@ class _Audio:
     def say(self, cue: str) -> None:
         self.spoken.append(cue)
 
+    def say_if_quiet(self, cue: str) -> None:
+        self.spoken.append(cue)
+
+    def then(self, cue: str) -> None:
+        self.spoken.append(cue)
+
     def play(self, name: str) -> None:
         self.sounds.append(name)
 
@@ -425,6 +431,25 @@ class AppLoopTests(unittest.TestCase):
             self._advance(app, now, 1 / 30)
         self.assertTrue(garden.cleared)
 
+    def test_garden_lines_follow_the_start_and_the_critters(self) -> None:
+        from corsa_content import CritterKind
+        from corsa_model import GardenEvent
+
+        app, now, _ = self._app(level=4)
+        # First garden: "ready, go" then the goal line, queued after it.
+        self.assertEqual(app.audio.spoken[:2], ["start", "find_all_berries"])
+        critters = app.garden.critters
+        ladybird = next(i for i, c in enumerate(critters) if c.kind is CritterKind.LADYBIRD)
+        hedgehog = next(i for i, c in enumerate(critters) if c.kind is CritterKind.HEDGEHOG)
+        app.audio.spoken.clear()
+        app._on_garden_event(GardenEvent(GardenEventKind.WAIT, critters[ladybird].position(), ladybird))
+        self.assertEqual(app.audio.spoken, ["ladybird_passing"])
+        now[0] += 10.0
+        app._on_garden_event(GardenEvent(GardenEventKind.NAP, critters[hedgehog].position(), hedgehog))
+        now[0] += 10.0
+        app._on_garden_event(GardenEvent(GardenEventKind.NAP, critters[hedgehog].position(), hedgehog))
+        self.assertEqual(app.audio.spoken, ["ladybird_passing", "hedgehog_sleeping"])  # first nap only
+
     def test_keyboard_plays_a_whole_visit_to_the_completion_scene_and_replays(self) -> None:
         from corsa_app import AppState
 
@@ -434,7 +459,7 @@ class AppLoopTests(unittest.TestCase):
             for index in range(GARDENS_PER_VISIT):
                 self.assertEqual(app.controls.progress.current, index)
                 self._clear_with_keys(app, now)
-                self.assertIn("cleared", app.audio.spoken)
+                self.assertIn("basket_full", app.audio.spoken)
                 app.render()
                 self._advance(app, now, 2.2)
             self.assertIs(app.state, AppState.TERMINAL)

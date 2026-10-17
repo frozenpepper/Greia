@@ -370,6 +370,8 @@ class TrenoApp:
         self.cast.reset()
         self._set_drive(Drive.ARRIVING)
         self.audio.play("whistle")
+        if self._first_station:
+            self.audio.say("toot")  # "Toot toot!" as the journey's train rolls in
         self._note_activity()
         self._dirty = True
 
@@ -389,6 +391,8 @@ class TrenoApp:
         station = self.station
         self._order_until = self.clock() + 0.25 + ORDER_BEAT_SECONDS * station.order
         self.cast.point(1.6 + ORDER_BEAT_SECONDS * station.order)
+        if station.task is TaskKind.SAME:
+            self.audio.then("make_same")  # "Make this wagon the same!" after "go"
         if station.task is TaskKind.COUNT_OUT:
             for beat in range(station.order):
                 self.timeline.after(0.25 + ORDER_BEAT_SECONDS * beat, lambda n=beat + 1: self._order_beat(n))
@@ -512,6 +516,7 @@ class TrenoApp:
 
     def _depart(self) -> None:
         self.audio.play("whistle")
+        self.audio.then("all_aboard")  # after the praise
         self._set_drive(Drive.DEPARTING)
         self._dirty = True
 
@@ -523,8 +528,14 @@ class TrenoApp:
         self.motion.wobble = (child_wagon, self.clock())
         self.cast.try_again()
         self.audio.play("creak")
-        self.audio.say("retry")
+        reason = "too_many" if result is GoResult.TOO_MANY else "not_enough"
         lead = RETRY_LEAD_SECONDS
+        if self.audio.has_speech(reason):
+            # The reason, then "let's count again"; the recount waits for both.
+            self.audio.say(reason, then="count_again")
+            lead = max(lead, self.audio.length(reason) + self.audio.length("count_again") + 0.15)
+        else:
+            self.audio.say("retry")
         if station.task is TaskKind.SAME:
             # One-to-one: each order cargo is matched with one of the child's.
             pairs = min(station.order, station.loaded)

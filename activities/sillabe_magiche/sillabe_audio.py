@@ -30,6 +30,9 @@ _SAMPLE_RATE: Final = 22_050
 MAX_QUEUE_LEN: Final = 10
 MAX_CLIPS: Final = 40
 SFX_PREFIX: Final = "sfx:"
+# Owner-approved package line spoken as the first word's clapping starts
+# (EN "Clap the beats!", IT "Batti le sillabe sul tamburo!").
+CLAP_PROMPT_CUE: Final = "clap_beats"
 # A cue without a playable clip (silent build, missing file) still keeps its
 # picture glowing this long, so the pictorial sequence stays readable.
 SILENT_CUE_SECONDS: Final = 0.6
@@ -305,4 +308,4 @@ class SillabeAudio:
         return cls._render(values, 0.22)
 
 
-__all__ = ["LEO_CUES", "SFX_PREFIX", "SillabeAudio", "SpeechCue", "SpeechQueue", "recorded_clip_checker"]
+__all__ = ["CLAP_PROMPT_CUE", "LEO_CUES", "SFX_PREFIX", "SillabeAudio", "SpeechCue", "SpeechQueue", "recorded_clip_checker"]

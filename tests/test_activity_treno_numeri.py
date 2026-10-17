@@ -299,6 +299,11 @@ class _Audio:
 
     def say(self, cue: str, then: str | None = None) -> None:
         self.spoken.append(cue)
+        if then is not None:
+            self.spoken.append(then)
+
+    def then(self, cue: str) -> None:
+        self.spoken.append(cue)
 
     def say_number(self, number: int) -> None:
         self.spoken.append(f"count_{number}")
@@ -306,11 +311,24 @@ class _Audio:
     def has_speech(self, cue: str) -> bool:
         return False
 
+    def length(self, cue: str) -> float:
+        return 0.0
+
     def play(self, name: str) -> None:
         self.played.append(name)
 
     def chime(self, number: int) -> None:
         self.played.append(f"chime_{number}")
+
+
+class _VoicedAudio(_Audio):
+    """Every package line "exists": the reason lines replace the retry line."""
+
+    def has_speech(self, cue: str) -> bool:
+        return True
+
+    def length(self, cue: str) -> float:
+        return 1.2
 
 
 class _Events:
@@ -391,6 +409,7 @@ class AppLoopTests(unittest.TestCase):
         self.assertEqual(len(app.events.stations), STATIONS_PER_JOURNEY)
         self.assertEqual(len(app.events.journeys), 1)
         self.assertEqual(app.audio.spoken[-1], "celebrate")
+        self.assertEqual(app.audio.spoken.count("all_aboard"), STATIONS_PER_JOURNEY)  # every departure
         saved = storage.values[STORAGE_KEY]
         self.assertEqual((saved["stations_completed"], saved["journeys_completed"]), (STATIONS_PER_JOURNEY, 1))
         app.render()
@@ -404,6 +423,31 @@ class AppLoopTests(unittest.TestCase):
         self._tap_logical(app, *GO_CENTER)
         self._advance(app, now, 4.5)
         self.assertNotEqual(app.events.stations[-1][0], first_journey)
+
+    def test_train_lines_name_the_journey_the_task_and_the_reason(self) -> None:
+        from greia_platform.localization import activity_resources
+
+        app, now, _ = self._app(stage=1)
+        self.assertEqual(app.audio.spoken[0], "toot")  # the first train rolls in
+        self._arrive(app, now)
+        station = app.station
+        app.audio = _VoicedAudio()
+        self._load_taps(app, now, station.order + 2)
+        app.audio.spoken.clear()
+        self.assertTrue(self._tap_logical(app, *GO_CENTER))
+        self.assertEqual(app.audio.spoken[:2], ["too_many", "count_again"])
+        # The voiced recount waits for both lines (2 x 1.2 s + 0.15 s).
+        self._advance(app, now, 2.4)
+        self.assertEqual(app.audio.spoken[2:], [])
+        self._advance(app, now, 0.6)
+        self.assertEqual(app.audio.spoken[2], "count_1")
+        app, now, _ = self._app(stage=4)  # SAME: "make this wagon the same!"
+        self._arrive(app, now)
+        self.assertIn("make_same", app.audio.spoken)
+        for locale in ("en", "it", "es", "fr"):
+            resources = activity_resources(ACTIVITY_ROOT, requested_locale=locale)
+            for cue in ("all_aboard", "count_again", "make_same", "too_many", "not_enough", "toot"):
+                self.assertEqual(resources.audio_path(cue).parent.name, locale)
 
     def test_too_many_gets_think_pose_recount_and_kind_retry(self) -> None:
         from greia_platform.activity_feedback import CastPose

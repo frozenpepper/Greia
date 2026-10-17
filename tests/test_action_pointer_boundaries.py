@@ -44,7 +44,9 @@ class CorsaPointerTests(unittest.TestCase):
             visit=Visit(CorsaProgress(), random.Random(1)),
             typography=GreiaTypography(),
             resources=None,
-            audio=SimpleNamespace(say=lambda *_: None, play=lambda *_: None),
+            audio=SimpleNamespace(
+                say=lambda *_: None, then=lambda *_: None, say_if_quiet=lambda *_: None, play=lambda *_: None
+            ),
             progress=GreiaCorsaProgress(storage),
             events=SimpleNamespace(garden_cleared=lambda *_: None, visit_completed=lambda *_: None),
             clock=lambda: 100.0,

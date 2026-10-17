@@ -352,6 +352,7 @@ class ClinicActivity:
     def _arrived(self) -> None:
         self.day.arrived()
         self.audio.name(self.day.case.species.vocab)
+        self.audio.then("where_hurt")  # after the name (or Momo's "ready")
         self.cast.point(1.8)
         self._end_busy()
 
@@ -379,8 +380,11 @@ class ClinicActivity:
             self.cast.correct()
             self._busy = True
             self._sync()
-            # Momo then points at the tray: time to care.
-            self.timeline.after(FOUND_SECONDS, lambda: (self.cast.point(1.6), self._end_busy()))
+            # Momo then points at the tray: time to care ("what do we do first?").
+            self.timeline.after(
+                FOUND_SECONDS,
+                lambda: (self.cast.point(1.6), self.audio.then("what_first"), self._end_busy()),
+            )
         else:
             self._try_again(None)
             self.timeline.after(DEMONSTRATE_AFTER, self._show_sore_place)
@@ -408,6 +412,7 @@ class ClinicActivity:
         self.motion.freeze_look(before, now + FLIGHT_SECONDS + WORK_SECONDS * 0.5)
         self.motion.tool_hop = None
         self.audio.play("whoosh")
+        self.audio.name(tool.value)  # the tool's name, never over another line
         fx, sound = _TOOL_EFFECTS[tool]
         self.motion.add_fx(fx, dest, now + FLIGHT_SECONDS)
         if tool is Tool.STETHOSCOPE:
@@ -426,6 +431,7 @@ class ClinicActivity:
     def _step_done(self) -> None:
         self.motion.hop_start = self.clock()
         self.cast.correct()
+        self.audio.then("whats_next")
         self._end_busy()
 
     def _healed(self, result: CareResult) -> None:
@@ -447,6 +453,7 @@ class ClinicActivity:
     def _send_home(self) -> None:
         self.motion.walk(PATIENT_HOME[0], PATIENT_OFFSTAGE_X, self.clock(), WALK_OUT_SECONDS)
         self.audio.play("hop")
+        self.audio.then("all_better")  # "All better! Bye bye!" after the praise
         self.timeline.after(WALK_OUT_SECONDS + 0.15, self._next_patient)
         self._dirty = True
 

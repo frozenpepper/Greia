@@ -126,22 +126,22 @@ SPECIES: Final[dict[str, Species]] = {
     "puppy": Species(
         "puppy", "creature.pet.puppy", True,
         ear_left=(56, 104), ear_right=(200, 104), tummy=(128, 168), mouth=(128, 130),
-        paw=(146, 212), paw_hurt=(166, 190), paw_happy=(146, 202), vocab="dog",
+        paw=(146, 212), paw_hurt=(166, 190), paw_happy=(146, 202), vocab="puppy",
     ),
     "kitten": Species(
         "kitten", "creature.pet.kitten", True,
         ear_left=(84, 58), ear_right=(176, 58), tummy=(128, 170), mouth=(128, 124),
-        paw=(146, 214), paw_hurt=(166, 190), paw_happy=(148, 210), vocab="cat",
+        paw=(146, 214), paw_hurt=(166, 190), paw_happy=(148, 210), vocab="kitten",
     ),
     "guinea_pig": Species(
         "guinea_pig", "creature.pet.guinea_pig", True,
         ear_left=(80, 114), ear_right=(178, 110), tummy=(118, 176), mouth=(128, 160),
-        paw=(150, 214), paw_hurt=(166, 196), paw_happy=(150, 204),
+        paw=(150, 214), paw_hurt=(166, 196), paw_happy=(150, 204), vocab="guinea_pig",
     ),
     "bear": Species(
         "bear", "creature.woodland.bear", False,
         ear_left=(60, 56), ear_right=(196, 56), tummy=(128, 172), mouth=(128, 140),
-        paw=(150, 214), paw_hurt=(150, 214), min_level=2,
+        paw=(150, 214), paw_hurt=(150, 214), vocab="bear", min_level=2,
     ),
     "mouse": Species(
         "mouse", "creature.woodland.mouse", False,
@@ -151,7 +151,7 @@ SPECIES: Final[dict[str, Species]] = {
     "squirrel": Species(
         "squirrel", "creature.woodland.squirrel", False,
         ear_left=(72, 50), ear_right=(184, 50), tummy=(128, 186), mouth=(128, 142),
-        paw=(150, 226), paw_hurt=(150, 226), min_level=2,
+        paw=(150, 226), paw_hurt=(150, 226), vocab="squirrel", min_level=2,
     ),
 }
 

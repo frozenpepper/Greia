@@ -425,6 +425,8 @@ class ContrariActivity:
         ask = self.session.current_ask
         if ask is None:
             return
+        if self.session.ask_index == 1:
+            self.audio.queue("now_the_opposite")  # Flash, before the second word of a pair
         self.audio.queue(ask.pole.value)
         self.cast.point(POINT_SECONDS)
         self._unlock(refocus=True)

@@ -84,6 +84,12 @@ class _Audio:
     def say(self, cue: str) -> None:
         self.spoken.append(cue)
 
+    def say_if_quiet(self, cue: str) -> None:
+        self.spoken.append(cue)
+
+    def then(self, cue: str) -> None:
+        self.spoken.append(cue)
+
     def play(self, name: str) -> None:
         self.sounds.append(name)
 
@@ -471,11 +477,15 @@ class AppLoopTests(unittest.TestCase):
         from serra_art import overlay_for, variant_for
 
         app, now, _ = self._app(level=2, seed=4)
+        self.assertEqual(app.audio.spoken[:2], ["start", "pick_seed"])
         self._tap(app, now, "seed.sunflower")
+        self.assertEqual(app.audio.spoken[-1], "name.sunflower")  # the chosen plant's name
         self._settle(app, now)
         seen = set()
+        lines = {Need.THIRSTY: "thirsty", Need.DARK: "needs_light", Need.SOGGY: "too_much_water", Need.RIPE: "ripe_pick"}
         while app.visit.phase is Phase.GROW:
             need = app.visit.cycle.need
+            self.assertEqual(app.audio.spoken[-1], lines[need])  # Tito says what the plant needs
             seen.add(need)
             tiles = [app.controls.cares[care] for care in app.visit.rung.cares]
             states = {(tile.role, tile.selected, tile.enabled, tile.visible) for tile in tiles}
@@ -489,6 +499,9 @@ class AppLoopTests(unittest.TestCase):
             self._settle(app, now)
         self.assertIn(Need.RIPE, seen)
         self.assertTrue({Need.THIRSTY, Need.DARK} <= seen)
+        self._settle(app, now)
+        self.assertIs(app.visit.phase, Phase.SEQUENCE)
+        self.assertEqual(app.audio.spoken[-1], "what_comes_first")
 
     def test_a_care_that_does_not_help_thinks_then_demonstrates_then_shows_the_tool(self) -> None:
         app, now, _ = self._app(level=1, seed=2)

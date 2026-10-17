@@ -3,8 +3,11 @@
 * Leo's shared takes (``ready.go``, ``celebrate.success``,
   ``encourage.retry``, ``encourage.progress``, ``praise.general``) from the
   shared character library with the usual locale -> base -> English
-  fallback. There are no story-specific lines yet: prompts stay pictorial
-  (see the rework report's "voice lines requested").
+  fallback.
+* Five owner-approved package lines (``assets/audio/<locale>/``; recorded in
+  Lilli's voice): "put the pictures in order!", "what happens first?", "now
+  tell me your story!", "tell me about this picture!" and "what a great
+  story!", spoken now, after the line playing, or only when quiet.
 * The child's recordings (WAV bytes from ``VoiceRecorder``) on their own
   channel, so the slideshow can follow real playback.
 * Effects (pop, whoosh, chime, gentle boop, countdown pip, record start/stop,
@@ -24,7 +27,11 @@ from typing import Final
 
 import pygame
 
-from greia_platform.localization import shared_character_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+)
 from greia_platform.pygame_audio import (
     DeferredSoundBank,
     chord_sound,
@@ -38,6 +45,9 @@ VOICE_CHANNEL: Final = 1
 FIRST_SFX_CHANNEL: Final = 2
 LAST_SFX_CHANNEL: Final = 4
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent
+# Owner-approved per-Activity lines (``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_CUES: Final = ("order_pictures", "what_first", "tell_story", "tell_picture", "great_story")
 HOST_CUES: Final = ("ready.go", "celebrate.success", "encourage.retry", "encourage.progress", "praise.general")
 
 
@@ -58,6 +68,7 @@ class StoryAudio:
         self._rng = rng if rng is not None else random.Random()
         self._sounds = DeferredSoundBank()
         self._host_takes: dict[str, list[pygame.mixer.Sound]] = {}
+        self._lines: dict[str, pygame.mixer.Sound] = {}
         self._voice: pygame.mixer.Sound | None = None
         self._available = False
         self.last_cue: str | None = None
@@ -67,6 +78,7 @@ class StoryAudio:
             pygame.mixer.set_num_channels(max(pygame.mixer.get_num_channels(), LAST_SFX_CHANNEL + 1))
             self._build_sounds()
             self._load_host()
+            self._load_lines()
             self._available = True
         except (pygame.error, RuntimeError, OSError):
             self._available = False
@@ -85,6 +97,24 @@ class StoryAudio:
         if not self._available or not takes:
             return False
         return self._play_on(SPEECH_CHANNEL, self._rng.choice(takes))
+
+    def line(self, cue: str, *, after: bool = False, if_quiet: bool = False) -> bool:
+        """Speak one package line: now, ``after`` the line playing, or ``if_quiet``."""
+
+        self.last_cue = cue
+        sound = self._lines.get(cue)
+        if not self._available or sound is None:
+            return False
+        busy = self._busy(SPEECH_CHANNEL) or self._busy(VOICE_CHANNEL)
+        if busy and if_quiet:
+            return False
+        if busy and after:
+            try:
+                pygame.mixer.Channel(SPEECH_CHANNEL).queue(sound)
+            except (pygame.error, RuntimeError):
+                return False
+            return True
+        return self._play_on(SPEECH_CHANNEL, sound)
 
     # -- the child's voice ----------------------------------------------------
 
@@ -171,6 +201,20 @@ class StoryAudio:
         except (pygame.error, RuntimeError):
             return
 
+    def _load_lines(self) -> None:
+        try:
+            resources = activity_resources(PACKAGE_ROOT, requested_locale=self.locale)
+        except LocalizationError:
+            return
+        for cue in PACKAGE_CUES:
+            path = resources.audio_path(cue)
+            if path is None:
+                continue
+            try:
+                self._lines[cue] = pygame.mixer.Sound(str(path))
+            except (pygame.error, OSError):
+                continue
+
     def _load_host(self) -> None:
         for cue in HOST_CUES:
             first = shared_character_audio_path(self._project_root, self._host, cue, self.locale)
@@ -205,4 +249,4 @@ class StoryAudio:
         self._sounds.define("fanfare", lambda: fanfare_sound(rate, channels))
 
 
-__all__ = ["HOST_CUES", "StoryAudio"]
+__all__ = ["HOST_CUES", "PACKAGE_CUES", "StoryAudio"]

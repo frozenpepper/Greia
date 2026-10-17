@@ -329,6 +329,7 @@ class MemoryApp:
         self.timeline.clear()
         self.motion.clear()
         self.audio.stop_speech()
+        self.audio.line("choose_album")  # "Choose an album!"
         self.board = None
         self.layout = None
         self.state = AppState.PICKER
@@ -350,6 +351,7 @@ class MemoryApp:
         self._activated = True
         self.album = album_by_id(album_id)
         self._start_board()
+        self.audio.then_line("find_two_same")  # after Lilli's "ready, go"
 
     # -- board flow ---------------------------------------------------------------
 

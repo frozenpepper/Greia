@@ -475,8 +475,22 @@ class AppLoopTests(unittest.TestCase):
             self._play_round(app, now, use_keyboard=False)
             for cue in queue.cues:
                 with self.subTest(level=level, cue=cue):
-                    self.assertTrue(cue.startswith(allowed_prefixes) or cue in words, cue)
+                    self.assertTrue(
+                        cue.startswith(allowed_prefixes) or cue in words or cue == "find_another_sound", cue
+                    )
                     self.assertNotIn(cue, {"letter_m", "m", "M"})
+
+    def test_build_word_asks_for_another_sound_after_the_first_slot(self) -> None:
+        app, now, _, _, queue = self._build_app(level=3, locale="en")
+        self._play_round(app, now, use_keyboard=False)
+        cues = list(queue.cues)
+        self.assertIn("find_another_sound", cues)
+        # Always followed by the whole word that re-anchors the later slot.
+        index = cues.index("find_another_sound")
+        self.assertIn(cues[index + 1], {w.word_id for unit in SOUND_UNITS_EN for w in unit.words})
+        app, now, _, _, queue = self._build_app(level=1, locale="en")
+        self._play_round(app, now, use_keyboard=False)
+        self.assertNotIn("find_another_sound", queue.cues)  # one-step stages never ask
 
     def test_first_sound_hides_the_letter_until_solved(self) -> None:
         app, now, _, _, _ = self._build_app(level=1)

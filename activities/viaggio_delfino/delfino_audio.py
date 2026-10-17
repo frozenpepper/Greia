@@ -7,7 +7,12 @@ reviewed OGG files resolved through ``LocalizedResources.audio_cue()`` so text
 and audio always share one semantic key per locale; his short reactions
 (ready/go, well done, try again) are the shared owner-approved character takes
 resolved through ``shared_character_audio_path`` (selected language, then
-English, then silence). Nothing is generated or recorded here. Voice playback
+English, then silence). Two owner-approved package lines
+(``assets/audio/<locale>/``: "swim to the finish and collect the pearls!",
+which replaces the older welcome as the spoken goal, and "choose a journey!")
+resolve through ``LocalizedResources.audio_path``, and the pearl total is
+spoken from the shared numbers bank (``shared_number_audio_path``, 0..25).
+Nothing is generated or recorded here. Voice playback
 owns one reserved channel and is fail-soft: missing hardware or assets never
 break gameplay.
 """
@@ -25,7 +30,11 @@ import pygame
 
 from pathlib import Path
 
-from greia_platform.localization import LocalizedResources, shared_character_audio_path
+from greia_platform.localization import (
+    LocalizedResources,
+    shared_character_audio_path,
+    shared_number_audio_path,
+)
 from greia_platform.pygame_audio import DeferredSoundBank
 
 try:
@@ -51,6 +60,9 @@ PACKAGE_ROOT = Path(__file__).resolve().parent
 #: Shared character takes this Activity uses (owner-approved library).
 VOICE_SPEAKER = "tito"
 SHARED_CUES = ("ready.go", "celebrate.success", "praise.general", "encourage.retry", "encourage.progress")
+# Owner-approved per-Activity lines (``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_CUES = ("swim_finish", "choose_journey")
+NUMBER_CACHE_LIMIT = 4
 #: Pentatonic steps for the pearl count-up (C D E G A, two octaves).
 COUNT_NOTES = (523.25, 587.33, 659.25, 783.99, 880.0, 1046.5, 1174.66, 1318.51, 1567.98, 1760.0)
 
@@ -63,6 +75,10 @@ class DelfinoAudio(Protocol):  # pragma: no cover - typing seam only
     def play_voice(self, fact_id: str) -> float: ...
 
     def say(self, cue: str) -> float: ...
+
+    def line(self, cue: str, *, if_quiet: bool = False) -> float: ...
+
+    def number(self, value: int) -> float: ...
 
     def stop_voice(self) -> None: ...
 
@@ -84,6 +100,12 @@ class SilentDelfinoAudio:
         return 0.0
 
     def say(self, cue: str) -> float:
+        return 0.0
+
+    def line(self, cue: str, *, if_quiet: bool = False) -> float:
+        return 0.0
+
+    def number(self, value: int) -> float:
         return 0.0
 
     def stop_voice(self) -> None:
@@ -358,6 +380,54 @@ class PygameDelfinoAudio:
                 sound = None
         self._shared_cache[cue] = sound
         return sound
+
+    def line(self, cue: str, *, if_quiet: bool = False) -> float:
+        """Play one package line (``assets/audio/<locale>/<cue>``); its duration or 0.0."""
+
+        if not self.enabled or self.resources is None or cue not in PACKAGE_CUES:
+            return 0.0
+        if if_quiet and self.voice_busy:
+            return 0.0
+        key = f"line:{cue}"
+        if key not in self._shared_cache:
+            try:
+                path = self.resources.audio_path(cue)
+                self._shared_cache[key] = pygame.mixer.Sound(str(path)) if path is not None else None
+            except Exception:
+                self._shared_cache[key] = None
+        return self._play_voice_sound(self._shared_cache[key])
+
+    def number(self, value: int) -> float:
+        """Speak one number 0..25 from the shared numbers bank (0.0 when silent)."""
+
+        if not self.enabled:
+            return 0.0
+        path = shared_number_audio_path(self._project_root, value, self._locale())
+        if path is None:
+            return 0.0
+        key = f"number:{path}"
+        if key not in self._shared_cache:
+            if len([k for k in self._shared_cache if k.startswith("number:")]) >= NUMBER_CACHE_LIMIT:
+                for old in [k for k in self._shared_cache if k.startswith("number:")]:
+                    del self._shared_cache[old]
+            try:
+                self._shared_cache[key] = pygame.mixer.Sound(str(path))
+            except Exception:
+                self._shared_cache[key] = None
+        return self._play_voice_sound(self._shared_cache[key])
+
+    def _play_voice_sound(self, sound: pygame.mixer.Sound | None) -> float:
+        if sound is None:
+            return 0.0
+        try:
+            if self._voice_channel is not None:
+                self._voice_channel.stop()
+                self._voice_channel.play(sound)
+            else:
+                sound.play()
+        except Exception:
+            return 0.0
+        return float(sound.get_length())
 
     def say(self, cue: str) -> float:
         """Play one shared Tito reaction; return its duration (0.0 if silent)."""

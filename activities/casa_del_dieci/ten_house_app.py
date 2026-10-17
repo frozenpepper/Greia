@@ -379,6 +379,8 @@ class TenHouseActivity:
                 self.motion.add_fx("sparkle", GUEST_SLOTS[slot], now + intro)
             self.timeline.after(intro, lambda: self._guest_cue())
         elif challenge.mode is OperationMode.TAKE_AWAY:
+            # "Some fireflies are flying home!" ends before the question.
+            self.timeline.after(intro, lambda: self.audio.say("fireflies_home"))
             for order in range(challenge.delta):
                 self.timeline.after(intro + LEAVE_LEAD + LEAVE_STAGGER * order, self._depart)
             self.timeline.after(intro + LEAVE_LEAD + LEAVE_STAGGER * challenge.delta + 0.2, self._begin_asking)
@@ -402,12 +404,15 @@ class TenHouseActivity:
         if challenge.mode is OperationMode.COMPOSE:
             return f"prompt_compose_{challenge.target}"
         if challenge.mode is OperationMode.ADD and self.session.phase is Phase.ARRIVING:
-            return None  # "friends are coming" has no approved line yet: pictorial
+            return "friends_coming"  # "Some friends are coming! Bring them in."
         return _PROMPTS.get(challenge.mode)
 
     def _guest_cue(self) -> None:
         self.cast.point(2.0)
         self.motion.guest_pulse = self.clock()
+        cue = self._prompt_cue()
+        if cue is not None:
+            self.audio.say(cue)
         self.audio.play("pop")
         self._dirty = True
 
@@ -584,6 +589,9 @@ class TenHouseActivity:
     def _demonstrate(self, mode: OperationMode) -> float:
         """Count with Dani on the house; returns the duration."""
 
+        # Once the try-again line is over, Dani invites the child to count
+        # along ("Count the lights with me!"); never spoken over another line.
+        self.timeline.after(THINK_SECONDS, lambda: self.audio.say_if_quiet("count_lights"))
         session = self.session
         challenge = session.current_challenge
         assert challenge is not None

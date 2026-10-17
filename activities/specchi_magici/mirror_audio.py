@@ -48,9 +48,11 @@ PACKAGE_CUES: Final = (
     "welcome", "prompt_place", "correct_1", "correct_2", "correct_3", "correct_4", "correct_5",
     "retry_1", "retry_2", "mosaic_complete",
     "shape_circle", "shape_square", "shape_triangle", "shape_semicircle",
+    "shape_rhombus", "shape_heart",
+    "look_mirror_line", "turn_it", "try_this_spot",
 )
-# Spoken shape names exist for these four tiles only (rhombus/heart stay silent).
-SPOKEN_SHAPES: Final = frozenset({ShapeKind.CIRCLE, ShapeKind.SQUARE, ShapeKind.TRIANGLE, ShapeKind.SEMICIRCLE})
+# Every tile kind has an approved spoken name (rhombus/heart since 2026-10-17).
+SPOKEN_SHAPES: Final = frozenset(ShapeKind)
 CLIP_CACHE_LIMIT: Final = 6
 EFFECTS: Final = ("pick", "place", "chime", "hum", "sparkle")
 
@@ -107,6 +109,17 @@ class MirrorAudio:
         except (pygame.error, RuntimeError):
             return False
         return True
+
+    def say_if_quiet(self, cue: str) -> bool:
+        """Speak a helper line only when no other line is playing."""
+
+        if self._available:
+            try:
+                if pygame.mixer.Channel(SPEECH_CHANNEL).get_busy():
+                    return False
+            except (pygame.error, RuntimeError):
+                return False
+        return self.say(cue)
 
     def praise(self) -> bool:
         return self.say(f"correct_{self._rng.randint(1, 5)}")

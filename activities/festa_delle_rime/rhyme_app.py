@@ -361,11 +361,14 @@ class RhymeActivity:
                 queue.enqueue(challenge.answer.item_id, tag=choice_id(challenge.correct_index), gap=0.3)
         else:
             assert challenge.target_item is not None
+            if demonstrate:
+                queue.enqueue("listen_end_of_word", gap=0.3)  # then the model pair
             queue.enqueue(challenge.target_item.item_id, tag="target", gap=0.35)
             if demonstrate:
                 queue.enqueue(challenge.answer.item_id, tag=choice_id(challenge.correct_index), gap=0.3)
             else:
                 queue.enqueue(challenge.choices[index].item_id, tag=choice_id(index), gap=0.3)
+                queue.enqueue("do_they_rhyme", gap=0.3)  # the child compares the pair
         self._hint_target = choice_id(challenge.correct_index) if demonstrate else None
 
     def _on_correct(self, challenge: RhymeChallenge, index: int, session_complete: bool) -> None:

@@ -225,6 +225,14 @@ class _Audio:
         self.spoken.append(cue)
         return True
 
+    def line(self, cue: str) -> bool:
+        self.spoken.append(cue)
+        return True
+
+    def then_line(self, cue: str) -> bool:
+        self.spoken.append(cue)
+        return True
+
     def prepare_names(self, subject_ids) -> None:
         pass
 
@@ -294,6 +302,7 @@ class AppLoopTests(unittest.TestCase):
 
         app = self._build()
         self.assertIs(app.state, AppState.PICKER)
+        self.assertEqual(self.audio.spoken, ["choose_album"])  # the shelf asks
         self.assertEqual(len(app.controls.albums), len(ALBUMS))
         self.assertTrue(all(button.caption == "" and button.icon is not None for button in app.controls.albums))
         app.render()
@@ -301,6 +310,7 @@ class AppLoopTests(unittest.TestCase):
         self.assertTrue(app.tap(food.rect.center))
         self.assertIs(app.state, AppState.PLAYING)
         self.assertEqual(app.album.album_id, "food")
+        self.assertEqual(self.audio.spoken[-2:], ["ready.go", "find_two_same"])
 
     def test_pointer_round_plays_to_completion_scene(self) -> None:
         from greia_platform.activity_feedback import CastPose

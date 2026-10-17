@@ -33,7 +33,7 @@ import pygame
 import hermetic_volume
 from activities.torre_forme.torre_app import DRAG_THRESHOLD_PX, AppState, TorreActivity
 from activities.torre_forme.torre_art import BLOCK_VARIANT, TorreArt
-from activities.torre_forme.torre_audio import SHARED_CUES, TorreAudio
+from activities.torre_forme.torre_audio import PACKAGE_CUES, SHARED_CUES, TorreAudio
 from activities.torre_forme.torre_content import BUILDS, RUNGS, TorreSetFactory, distractor_kinds
 from activities.torre_forme.torre_layout import (
     BENCH_TOP,
@@ -403,12 +403,18 @@ class PackageTests(unittest.TestCase):
             self.assertTrue(BOARD_RECT.contains(frame.rect), plan.build_id)
 
     def test_audio_resolves_only_approved_recordings(self) -> None:
-        for locale in ("en", "it"):
+        from greia_platform.localization import shared_vocab_audio_path
+
+        for locale in ("en", "it", "es", "fr"):
             audio = TorreAudio(locale=locale)
             with self.subTest(locale=locale):
-                self.assertEqual(set(SHARED_CUES), set(audio.cues))
+                self.assertEqual(set(SHARED_CUES) | set(PACKAGE_CUES), set(audio.cues))
                 for cue in SHARED_CUES:
                     self.assertIn(f"/dani/{locale}/", str(audio._paths[cue]))
+                for cue in PACKAGE_CUES:
+                    self.assertTrue(str(audio._paths[cue]).endswith(f"/{locale}/{cue}.wav"))
+                for kind in ("square", "rectangle", "triangle", "half_circle", "arch", "cylinder"):
+                    self.assertEqual(shared_vocab_audio_path(ROOT, f"shape_{kind}", locale).parent.name, locale)
 
     def test_modules_import_in_script_context(self) -> None:
         env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1", PYTHONPATH=str(ROOT / "src"))
@@ -572,6 +578,32 @@ class AppLoopTests(unittest.TestCase):
         self.assertTrue(app.cast.pointing)
         self.assertNotIn(step.placement, app.session.placed, "Dani shows; the child still places it")
         self.assertEqual(app.session.misses, 2)
+
+    def test_dani_lines_for_the_goal_a_turn_a_fit_and_block_names(self) -> None:
+        said: list[str] = []
+        real_say, real_then, real_name = TorreAudio.say, TorreAudio.then, TorreAudio.block_name
+        from unittest import mock
+
+        with mock.patch.object(TorreAudio, "say", lambda a, cue: (said.append(cue), real_say(a, cue))[1]), \
+                mock.patch.object(TorreAudio, "then", lambda a, cue: (said.append(cue), real_then(a, cue))[1]), \
+                mock.patch.object(TorreAudio, "block_name", lambda a, kind: (said.append(f"shape_{kind}"), real_name(a, kind))[1]):
+            app = self.make(level=2, seed=8)
+            self.assertIn("fill_shape_blocks", said)  # the set's first build
+            step = app.session.next_step()
+            app.tap(app._tray_rects[step.kit_index].center)
+            self.assertEqual(said[-1], f"shape_{step.placement.block.kind.value}")
+            self.turn_to(app, step.kit_index, step.placement.block)
+            app.tap(app.board_point(step.placement))
+            self.assertIn("it_fits", said)  # the first placed block
+            # A block that only fits once turned: "Turn it!" instead of "try again".
+            from types import SimpleNamespace
+
+            from activities.torre_forme.torre_model import PlaceOutcome
+
+            said.clear()
+            block = app.session.kit_block(0)
+            app._declined(0, block, (0, 0), SimpleNamespace(outcome=PlaceOutcome.NEEDS_TURN))  # noqa: SLF001
+            self.assertEqual(said, ["turn_it"])
 
     def test_keyboard_and_controller_play(self) -> None:
         from greia_platform.pygame_input import CONTROLLER_BUTTON_A

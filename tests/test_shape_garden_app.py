@@ -73,6 +73,12 @@ class SilentSounds:
     def say(self, cue):
         self.spoken.append(cue)
 
+    def then(self, cue):
+        self.spoken.append(cue)
+
+    def name(self, kind):
+        self.spoken.append(f"shape.{kind}")
+
 
 class Clock:
     def __init__(self):
@@ -124,12 +130,32 @@ class GardenAppTests(unittest.TestCase):
         clock.now += 1.5
         app._step_frame()
         self.assertEqual(app.cast.pose, "point")
-        self.assertEqual(app.sounds.spoken, ["ready.go"])
+        self.assertEqual(app.sounds.spoken, ["ready.go", "drag_shape"])
         self.assertAlmostEqual(app._tray_hint_start, clock.now)
         app._draw()  # tray wave + drag hand render without error
         clock.now += 7
         app._step_frame()
-        self.assertEqual(app.sounds.spoken, ["ready.go"])  # spoken once, then pictorial
+        self.assertEqual(app.sounds.spoken, ["ready.go", "drag_shape"])  # spoken once, then pictorial
+
+    def test_planted_shapes_are_named_and_a_growing_garden_is_praised(self):
+        from activities.shape_garden.garden_audio import PACKAGE_CUES, package_line_paths
+        from activities.shape_garden.garden_content import SHAPE_KINDS
+        from greia_platform.localization import shared_vocab_audio_path
+
+        app, _storage, _clock = make_app()
+        for index in range(len(SHAPE_KINDS)):
+            app._tray_activate(index)
+        named = [cue for cue in app.sounds.spoken if cue.startswith("shape.")]
+        self.assertEqual(named, [f"shape.{kind}" for kind in SHAPE_KINDS])
+        self.assertEqual(app.sounds.spoken.count("beautiful_garden"), 1)  # once, as the garden grows
+        from pathlib import Path
+
+        root = Path(__file__).resolve().parents[1]
+        for locale in ("en", "it", "es", "fr"):
+            self.assertEqual(set(package_line_paths(locale)), set(PACKAGE_CUES))
+            self.assertTrue(all(path.parent.name == locale for path in package_line_paths(locale).values()))
+            for kind in SHAPE_KINDS:
+                self.assertEqual(shared_vocab_audio_path(root, f"shape_{kind}", locale).parent.name, locale)
 
     def test_drag_from_tray_plants_where_dropped_and_tap_plants_in_a_free_spot(self):
         app, _storage, _clock = make_app()

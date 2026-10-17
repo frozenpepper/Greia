@@ -245,6 +245,7 @@ class OrchestraApp:
         self.attempt: list[tuple[int, float]] = []
         self._judging = False
         self._played: set[str] = set()
+        self._xylophone_named = False
         self._concerts_heard = 0
         self._running = True
         self._ready_published = False
@@ -439,6 +440,8 @@ class OrchestraApp:
         if musician.instrument not in self._played:
             self._played.add(musician.instrument)
             self.events.instrument_played(self.session_id, musician.instrument)
+            if self.phase is Phase.FREE:
+                self.audio.name(musician.instrument)  # first play: its name, if quiet
         self.playalong.note_played()
         if self.phase is Phase.ECHO:
             self._record(index, now)
@@ -453,6 +456,9 @@ class OrchestraApp:
         self._activated = True
         now = self.clock()
         self.audio.play_note(index)
+        if not self._xylophone_named and self.phase is Phase.FREE:
+            self._xylophone_named = True
+            self.audio.name("xylophone")
         self.motion.light_bar(index, now)
         rect = BAR_RECTS[index]
         self.motion.burst(self._note_fx(), (rect.centerx, rect.top - 18), now, duration=0.55, rise=50.0)
@@ -477,6 +483,7 @@ class OrchestraApp:
         self._activated = True
         self.dynamics = dynamics
         self.audio.set_dynamics(dynamics)
+        self.audio.line(dynamics.value)  # "Loud!" / "Soft!"
         if self.phase is Phase.FREE:
             now = self.clock()
             for index in (0, 5):
@@ -490,6 +497,7 @@ class OrchestraApp:
 
         self._activated = True
         self.tempo = tempo
+        self.audio.line(tempo.value)  # "Fast!" / "Slow!"
         if self.phase is Phase.FREE:
             for beat in range(3):
                 self.timeline.after(beat * tempo.beat_seconds, lambda: self._band_beat(0))
@@ -544,6 +552,7 @@ class OrchestraApp:
         self.motion.spotlight = lead
         self.motion.borrow(lead, "pose_wave", now + INVITE_LEAD)
         self.controls.focus_musician(lead)
+        self.audio.line("listen")  # "Listen..." before the call
         self._play_call(invitation.pattern, INVITE_LEAD)
 
     def _play_call(self, pattern: EchoPattern, lead_in: float, *, rings: bool = False) -> None:
@@ -591,7 +600,7 @@ class OrchestraApp:
         self._hint_replay = False
         self.motion.bubble = Bubble(invitation.lead, "echo", invitation.pattern.span)
         self.motion.borrow(invitation.lead, "pose_point", now + 1.4)
-        self.audio.say(BAND[invitation.lead].character, "ready.go")
+        self.audio.line("your_turn")  # "Your turn!" replaces the generic "ready, go"
         self._sync()
         self._dirty = True
 

@@ -6,7 +6,7 @@ import unittest
 
 import pygame
 
-from teatrino_doubles import ROOT, FakeMic, ManualClock, MemoryStorage, advance, make_app, record_show
+from teatrino_doubles import ROOT, FakeMic, ManualClock, MemoryStorage, SilentHost, advance, make_app, record_show
 
 from greia_platform.activity_api import get_shared_visual_path
 from greia_platform.activity_controls import ControlLayout, KitPointer, PointerPhase
@@ -232,6 +232,41 @@ class LayoutTests(unittest.TestCase):
 
 
 class AppLoopTests(unittest.TestCase):
+    def test_countdown_line_ends_before_the_microphone_opens_and_full_stage_speaks(self) -> None:
+        from greia_platform.localization import activity_resources
+
+        class TimedHost(SilentHost):
+            def say(self, cue: str) -> float:
+                super().say(cue)
+                return 3.9 if cue == "three_two_one" else 0.0  # the longest (Italian) take
+
+        app = make_app()
+        app.host = TimedHost()
+        opened: list[float] = []
+        real_open = app._open_for_recording
+        app._open_for_recording = lambda: (opened.append(app.clock()), real_open())[1]
+        start = app.clock()
+        self.assertTrue(app._start_recording())
+        self.assertEqual(app.host.said, ["three_two_one"])
+        advance(app, 6.0)
+        self.assertTrue(opened)
+        self.assertGreaterEqual(opened[0] - start, 3.9)  # "action!" is over first
+        from activities.teatrino_fiabe.teatrino_content import PUPPETS_BY_ID
+
+        app = make_app()
+        ids = list(PUPPETS_BY_ID)
+        for puppet_id in ids:
+            if app.stage.full:
+                break
+            app._tray_card(puppet_id)  # noqa: SLF001 - the tray card's activation
+        self.assertTrue(app.stage.full)
+        app._tray_card(next(pid for pid in ids if pid not in app.stage.ids()))  # noqa: SLF001
+        self.assertEqual(app.host.said[-1], "stage_full")  # "The stage is full!"
+        for locale in ("en", "it", "es", "fr"):
+            resources = activity_resources(ROOT / "activities" / "teatrino_fiabe", requested_locale=locale)
+            for cue in ("three_two_one", "stage_full"):
+                self.assertEqual(resources.audio_path(cue).parent.name, locale)
+
     def test_a_whole_show_from_staging_to_watching_it_again(self) -> None:
         events: list = []
         storage = MemoryStorage()
@@ -248,7 +283,8 @@ class AppLoopTests(unittest.TestCase):
         saved = app.show_repo.list_shows()
         self.assertEqual(len(saved), 1)
         self.assertEqual({item["id"] for item in saved[0]["poster"]}, set(app.stage.ids()))
-        self.assertEqual(app.host.said[:2], ["ready.go", "celebrate.success"])
+        # A silent countdown line falls back to "ready, go" (real takes: see below).
+        self.assertEqual(app.host.said[:3], ["three_two_one", "ready.go", "celebrate.success"])
         app.render()
         line_up = app.stage.snapshot()
 

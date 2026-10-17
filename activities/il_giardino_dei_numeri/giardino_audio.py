@@ -1,10 +1,9 @@
 """Approved speech plus small synthesized chimes for Il Giardino dei Numeri.
 
 Speech uses only recorded, approved clips: this package's cues (intro, prompt,
-count_1..count_5, praise, basket_full) through ``LocalizedResources`` and Dani's
-shared reaction library (``encourage.retry``). Missing cues (for example
-``count_6``..``count_10`` until they are recorded) stay silent; the game
-remains fully pictorial. Chimes are generated once, after the first frame.
+count_1..count_10, how_many, praise, basket_full) through ``LocalizedResources``
+and Dani's shared reaction library (``encourage.retry``). A missing cue stays
+silent; the game remains fully pictorial. Chimes are generated once, after the first frame.
 """
 
 from __future__ import annotations

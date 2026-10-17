@@ -693,6 +693,7 @@ class GardenApp:
             return False
         shape = self.editor.selected_shape
         self.sounds.pop(kind)
+        self.sounds.name(kind)  # the new shape's name, never over Dani
         if shape is not None:
             centre = self.renderer.to_screen((shape.x, shape.y))
             if result is not True:
@@ -785,7 +786,8 @@ class GardenApp:
         if not self._praised and len(self.editor.shapes) >= PRAISE_AT and self.editor.ghost is None:
             self._praised = True
             self.cast.correct()
-            self.sounds.say("encourage.progress")
+            if not self.sounds.say("beautiful_garden"):  # "What a beautiful garden!"
+                self.sounds.say("encourage.progress")
 
     # -- toolbar actions ---------------------------------------------------------------------
 
@@ -1170,6 +1172,7 @@ class GardenApp:
             self.cast.point(self._hints.animation_seconds(2.6))
             if not self._intro_done:
                 self.sounds.say("ready.go")
+                self.sounds.then("drag_shape")  # "Drag a shape into the garden!"
         elif self.editor.next_free_slot() is not None:
             self._slot_hint_start = now
             self.cast.point(self._hints.animation_seconds(2.4))

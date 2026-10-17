@@ -153,6 +153,7 @@ class DragonFlightActivity:
         self.audio = audio
         self.rng = rng
         self.session_id = session_id
+        self._rings_told = False
         self.clock = clock
         # Play Collection -> ocean accent (ADR 0037 / SVG rules tile hue).
         self.kit = kit if kit is not None else ControlKit(typography, ControlTheme.for_accent("ocean"))
@@ -524,6 +525,9 @@ class DragonFlightActivity:
         self.motion.hint_since = now
         self.cast.hide()
         self.audio.say("ready.go")
+        if not self._rings_told:
+            self._rings_told = True  # once per visit: the goal of every course
+            self.audio.then("fly_rings")
 
     def _on_flight_event(self, event: FlightEvent, now: float) -> None:
         assert self.run is not None

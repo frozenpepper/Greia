@@ -72,6 +72,7 @@ from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 if __package__:
     from .corsa_art import MOMO_SHARE, Biome, CorsaArt, biome_for_garden, fruit_for
     from .corsa_audio import CorsaAudio
+    from .corsa_content import CritterKind
     from .corsa_controls import KEY_HINT_SMALLEST, CorsaControls
     from .corsa_layout import REFERENCE_HEIGHT, REFERENCE_WIDTH, GardenGeometry
     from .corsa_model import DOWN, LEFT, RIGHT, UP, Direction, Garden, GardenEvent, GardenEventKind, GardenLayout, StepResult, Visit
@@ -80,6 +81,7 @@ if __package__:
 else:
     from corsa_art import MOMO_SHARE, Biome, CorsaArt, biome_for_garden, fruit_for
     from corsa_audio import CorsaAudio
+    from corsa_content import CritterKind
     from corsa_controls import KEY_HINT_SMALLEST, CorsaControls
     from corsa_layout import REFERENCE_HEIGHT, REFERENCE_WIDTH, GardenGeometry
     from corsa_model import DOWN, LEFT, RIGHT, UP, Direction, Garden, GardenEvent, GardenEventKind, GardenLayout, StepResult, Visit
@@ -206,6 +208,8 @@ class CorsaActivity:
         self._last_activity = clock()
         self._hints = IdleHintScheduler(now=self._last_activity)
         self._last_retry_voice = -100.0
+        self._last_critter_voice = -100.0
+        self._napped_told = False
         self._start_garden()
 
     @property
@@ -496,6 +500,9 @@ class CorsaActivity:
         self.cast.wave()
         self.motion.intro = now
         self.audio.say("start")
+        self._napped_told = False
+        if self.visit.completed == 0:
+            self.audio.then("find_all_berries")  # the visit's goal, after "ready, go"
         if self._held_key is not None or self._stick_dir is not None:
             self.garden.hold(self._held_key or self._stick_dir)
         self._sync_hud()
@@ -566,13 +573,25 @@ class CorsaActivity:
             self.motion.bubble = now
             self.motion.pulse_critter(event.critter, now)
             self.audio.play("wait")
+            if self.garden.critters[event.critter].kind is CritterKind.LADYBIRD:
+                self._critter_line("ladybird_passing", now)
         elif kind is GardenEventKind.BOOP:
             self.audio.play("boop")
             self.motion.pulse_critter(event.critter, now)
         elif kind is GardenEventKind.NAP:
             self.audio.play("yawn")
+            if not self._napped_told and self.garden.critters[event.critter].kind is CritterKind.HEDGEHOG:
+                self._napped_told = True  # once per garden: naps repeat
+                self._critter_line("hedgehog_sleeping", now)
         elif kind is GardenEventKind.WAKE:
             self.motion.pulse_critter(event.critter, now)
+
+    def _critter_line(self, cue: str, now: float) -> None:
+        """A critter tip, rate limited and never spoken over another line."""
+
+        if now - self._last_critter_voice >= RETRY_VOICE_GAP:
+            self._last_critter_voice = now
+            self.audio.say_if_quiet(cue)
 
     def _bumped(self, event: GardenEvent) -> None:
         now = self.clock()
@@ -629,7 +648,7 @@ class CorsaActivity:
         self.motion.trail = None
         self.cast.correct()
         self.audio.play("basket")
-        self.audio.say("cleared")
+        self.audio.say("basket_full")  # "Basket full!"
         momo = self.geometry.center(*self.garden.momo.position())
         self.motion.add_fx("confetti", (momo[0], momo[1] - self.geometry.cell * 0.5), now)
         self.motion.add_fx("star_burst", momo, now)

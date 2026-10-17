@@ -359,8 +359,11 @@ class _Audio:
     def say(self, cue: str) -> None:
         self.spoken.append(cue)
 
-    def say_number(self, number: int) -> None:
+    def say_number(self, number: int, *, after: bool = False) -> None:
         self.spoken.append(f"count_{number}")
+
+    def then(self, cue: str) -> None:
+        self.spoken.append(cue)
 
     def has_speech(self, cue: str) -> bool:
         return False
@@ -570,6 +573,7 @@ class AppLoopTests(unittest.TestCase):
             self.assertTrue(self._tap_star(app, index))
         self.assertFalse(any(card.visible for card in app.controls.cards))
         self.assertTrue(self._tap_star(app, blank))
+        self.assertEqual(app.audio.spoken[-1], "which_missing")  # the cards open with Leo's question
         self.assertTrue(all(card.visible for card in app.controls.cards))
         self.assertTrue(app.controls.layer.focused_id.startswith("card."))
         wrong = next(i for i, value in enumerate(round_.choices) if value != round_.numbers[blank])
@@ -582,6 +586,30 @@ class AppLoopTests(unittest.TestCase):
         self.assertIs(app.cast.feedback.pose, CastPose.CHEER)
         self.assertTrue(round_.is_lit(blank))
         self.assertFalse(any(card.visible for card in app.controls.cards))
+
+    def test_goal_lines_name_where_counting_starts_and_which_way(self) -> None:
+        from greia_platform.localization import activity_resources
+
+        app, now, _ = self._app(stage=1)
+        self._advance(app, now, 2.0)
+        self.assertIn("connect_in_order", app.audio.spoken)  # count up from one
+        app, now, _ = self._app(stage=4)
+        self._advance(app, now, 2.0)
+        spoken = app.audio.spoken
+        start = app.round.numbers[0]
+        self.assertEqual(spoken[spoken.index("count_back") + 1], f"count_{start}")  # then the given star
+        for seed in range(40):  # a count-on figure that starts at four
+            app, now, _ = self._app(stage=3, seed=seed)
+            if app.round.numbers[0] == 4:
+                break
+        self.assertEqual(app.round.numbers[0], 4)
+        self._advance(app, now, 2.0)
+        self.assertIn("start_at_four", app.audio.spoken)
+        self.assertNotIn("count_4", app.audio.spoken)  # the line itself names four
+        for locale in ("en", "it", "es", "fr"):
+            resources = activity_resources(PACKAGE, requested_locale=locale)
+            for cue in ("connect_in_order", "start_at_four", "count_back", "which_missing"):
+                self.assertEqual(resources.audio_path(cue).parent.name, locale)
 
     def test_fact_is_voiced_for_real_constellations_only(self) -> None:
         app, now, _ = self._app(stage=1, seed=2)

@@ -4,7 +4,8 @@ Speech uses only the package's existing recordings (resolved through the
 shared ``LocalizedResources.speech_paths`` with English fallback):
 ``welcome`` ("look closely at how many fireflies glow ..."),
 ``prompt_choose`` ("how many fireflies did you see?"), ``count_1..5``
-("three fireflies!"), ``correct_1..5`` (praise), ``retry_1..2`` ("almost! look
+("three fireflies!"), ``count_6..10`` ("six!"), ``watch_closely``,
+``count_together``, ``correct_1..5`` (praise), ``retry_1..2`` ("almost! look
 again ...") and ``garden_complete``. Sound effects are short synthesized tones
 generated once, after the first frame (a bounded set); nothing is decoded per frame.
 Everything fails soft to silence when the mixer is unavailable.
@@ -25,7 +26,7 @@ from greia_platform.pygame_audio import DeferredSoundBank
 
 
 _SAMPLE_RATE: Final = 22_050
-SPOKEN_COUNTS: Final = 5
+SPOKEN_COUNTS: Final = 10  # count_1..5 "N fireflies!", count_6..10 the bare number
 _CHIME_BASE: Final = 523.25  # C5; counting chimes climb a major scale
 _SCALE: Final = (0, 2, 4, 5, 7, 9, 11, 12, 14, 16)
 
@@ -159,7 +160,7 @@ class FireflyAudio:
         self.play_speech("prompt_choose")
 
     def play_count(self, quantity: int) -> bool:
-        """Say "N fireflies" when an approved clip exists (1..5); True if spoken."""
+        """Say the count when an approved clip exists (1..10); True if spoken."""
 
         cue = f"count_{quantity}"
         if quantity > SPOKEN_COUNTS or cue not in self._speech_clips:

@@ -208,31 +208,31 @@ ITEMS: Final[dict[str, Item]] = {
         ),
         # The meadow.
         _shared("flowers", Slot.GROUND, _s(SP, SU), _s(WI), "prop.nature.flower", vocab="flower"),
-        _shared("strawberries", Slot.GROUND, _s(SU), _s(WI), "prop.food.strawberry"),
-        _shared("watermelon", Slot.GROUND, _s(SU), _s(SP, AU, WI), "prop.vocab.watermelon"),
-        _shared("pumpkin", Slot.GROUND, _s(AU), _s(SP, SU), "prop.vocab.pumpkin"),
-        _shared("mushrooms", Slot.GROUND, _s(AU), _s(WI), "prop.nature.mushroom"),
-        _private("snowman", Slot.GROUND, _s(WI), _s(SP, SU, AU), "snowman.png"),
+        _shared("strawberries", Slot.GROUND, _s(SU), _s(WI), "prop.food.strawberry", vocab="strawberries"),
+        _shared("watermelon", Slot.GROUND, _s(SU), _s(SP, AU, WI), "prop.vocab.watermelon", vocab="watermelon"),
+        _shared("pumpkin", Slot.GROUND, _s(AU), _s(SP, SU), "prop.vocab.pumpkin", vocab="pumpkin"),
+        _shared("mushrooms", Slot.GROUND, _s(AU), _s(WI), "prop.nature.mushroom", vocab="mushrooms"),
+        _private("snowman", Slot.GROUND, _s(WI), _s(SP, SU, AU), "snowman.png", vocab="snowman"),
         # A woodland friend: awake in the warm seasons, asleep all winter.
-        _shared("butterfly", Slot.ANIMAL, _s(SP, SU), _s(WI), "creature.woodland.butterfly"),
+        _shared("butterfly", Slot.ANIMAL, _s(SP, SU), _s(WI), "creature.woodland.butterfly", vocab="butterfly"),
         _shared("frog", Slot.ANIMAL, _s(SP, SU), _s(WI), "creature.woodland.frog", vocab="frog"),
-        _shared("hedgehog_asleep", Slot.ANIMAL, _s(WI), _s(SP, SU), "creature.woodland.hedgehog", "asleep"),
-        _shared("bear_asleep", Slot.ANIMAL, _s(WI), _s(SP, SU), "creature.woodland.bear", "asleep"),
+        _shared("hedgehog_asleep", Slot.ANIMAL, _s(WI), _s(SP, SU), "creature.woodland.hedgehog", "asleep", vocab="hedgehog"),
+        _shared("bear_asleep", Slot.ANIMAL, _s(WI), _s(SP, SU), "creature.woodland.bear", "asleep", vocab="bear"),
         # Tito's clothes (worn as separate layers on the canonical character).
         Item(
             "winter_hat", Slot.CLOTHES, _s(WI), _s(SU),
             (CardLayer(ArtRef.private("tito_wear_winter_hat.png")),),
-            scene=ArtRef.private("tito_wear_winter_hat.png"), crop=True,
+            scene=ArtRef.private("tito_wear_winter_hat.png"), crop=True, vocab="winter_hat",
         ),
         Item(
             "scarf", Slot.CLOTHES, _s(WI), _s(SU),
             (CardLayer(ArtRef.private("tito_wear_scarf.png")),),
-            scene=ArtRef.private("tito_wear_scarf.png"), crop=True,
+            scene=ArtRef.private("tito_wear_scarf.png"), crop=True, vocab="scarf",
         ),
         Item(
             "sunhat", Slot.CLOTHES, _s(SU), _s(WI),
             (CardLayer(ArtRef.private("tito_wear_sunhat.png")),),
-            scene=ArtRef.private("tito_wear_sunhat.png"), crop=True,
+            scene=ArtRef.private("tito_wear_sunhat.png"), crop=True, vocab="sunhat",
         ),
     )
 }

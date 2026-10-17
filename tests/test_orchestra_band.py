@@ -229,8 +229,27 @@ class OrchestraAppLoopTests(unittest.TestCase):
         self.assertEqual(played, ["drum", "keyboard"])
         self.app.press(pygame.K_1)
         self.assertEqual(len([c for c in self.events.calls if c[0] == "instrument.played"]), 2)
+        named: list[str] = []
+        real_name = self.app.audio.name
+        self.app.audio.name = lambda noun: (named.append(noun), real_name(noun))[1]
+        self.assertTrue(self.app.press(pygame.K_2))  # first maracas: named once
+        self.assertTrue(self.app.press(pygame.K_2))
+        self.assertTrue(self.app.press(pygame.K_s))
+        self.assertEqual(named, ["maracas"])  # the xylophone was named on its first bar
         self.app.render()
         self.app.canvas.present()
+
+    def test_band_words_resolve_in_every_released_language(self) -> None:
+        from greia_platform.localization import activity_resources, shared_vocab_audio_path
+        from activities.orchestra_animali.orchestra_audio import INSTRUMENT_NOUNS, PACKAGE_CUES
+
+        root = Path(__file__).resolve().parents[1]
+        for locale in ("en", "it", "es", "fr"):
+            resources = activity_resources(root / "activities" / "orchestra_animali", requested_locale=locale)
+            for cue in PACKAGE_CUES:
+                self.assertEqual(resources.audio_path(cue).parent.name, locale, (cue, locale))
+            for noun in INSTRUMENT_NOUNS:
+                self.assertEqual(shared_vocab_audio_path(root, noun, locale).parent.name, locale, (noun, locale))
 
     def test_arrow_focus_and_space_play_the_band(self) -> None:
         self.wait_for(Phase.FREE)
@@ -250,14 +269,18 @@ class OrchestraAppLoopTests(unittest.TestCase):
         self.assertTrue(self.app.tap(soft.rect.center))
         self.assertIs(self.app.dynamics, Dynamics.SOFT)
         self.assertIs(self.app.audio.dynamics, Dynamics.SOFT)
+        self.assertEqual(self.app.audio.last_speech, ("momo", "soft"))  # "Soft!"
         fast = self.app.controls.tempo.controls[1]
         self.assertTrue(self.app.tap(fast.rect.center))
         self.assertIs(self.app.tempo, Tempo.FAST)
+        self.assertEqual(self.app.audio.last_speech, ("momo", "fast"))  # "Fast!"
 
     def test_listen_locks_the_stage_and_wrong_echo_demonstrates_again(self) -> None:
         self.wait_for(Phase.LISTEN)
+        self.assertEqual(self.app.audio.last_speech, ("momo", "listen"))  # "Listen..."
         self.assertFalse(self.app.press(pygame.K_1))
         self.wait_for(Phase.ECHO)
+        self.assertEqual(self.app.audio.last_speech, ("momo", "your_turn"))  # "Your turn!"
         invitation = self.app.session.current
         wrong = (invitation.pattern.beats[0].voice + 1) % len(BAND)
         self.app.press(pygame.K_1 + wrong)

@@ -2,7 +2,12 @@
 
 Speech uses only owner-approved recordings:
 
-* this package's ``activity.title`` clip ("My Greia") as the welcome;
+* this package's ``activity.title`` clip ("My Greia") as the welcome,
+  followed by Leo's owner-approved "this is your Greia!";
+* Leo's other package lines (``assets/audio/<locale>/``): "pick your
+  friend!" on the friends tab, "bigger!" / "smaller!" for the size, "what a
+  nice picture!" for a new picture, and a chosen colour's name from the
+  shared vocabulary bank (``colour_<name>``, ``shared_vocab_audio_path``);
 * the shared canonical-cast introductions (``_intros/<lang>/<id>.ogg``) when
   the child picks a cast friend as their avatar for the first time;
 * the friend's shared ``celebrate.success`` take as the reaction to a change,
@@ -22,7 +27,12 @@ from typing import Callable, Final
 
 import pygame
 
-from greia_platform.localization import LocalizedResources, LocaleTag, shared_character_audio_path
+from greia_platform.localization import (
+    LocalizedResources,
+    LocaleTag,
+    shared_character_audio_path,
+    shared_vocab_audio_path,
+)
 from greia_platform.pygame_audio import (
     DeferredSoundBank,
     current_pcm16_mixer_spec,
@@ -43,6 +53,26 @@ FIRST_SFX_CHANNEL: Final = 2
 LAST_SFX_CHANNEL: Final = 3
 PROJECT_ROOT: Final = Path(__file__).resolve().parents[2]
 _MAX_SPEECH_CACHE: Final = 8
+# Owner-approved per-Activity lines (Leo; ``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_CUES: Final = ("this_is_your_greia", "pick_your_friend", "bigger", "smaller", "nice_picture")
+# Theme swatch id -> the shared vocabulary bank's colour word (the nearest
+# child word for the pastel rooms). Turquoise and aqua have none and stay silent.
+SWATCH_COLOURS: Final[dict[str, str]] = {
+    "sunshine": "colour_yellow",
+    "coral": "colour_red",
+    "leaf": "colour_green",
+    "ocean": "colour_blue",
+    "grape": "colour_purple",
+    "raspberry": "colour_pink",
+    "orange": "colour_orange",
+    "sky": "colour_blue",
+    "mint": "colour_green",
+    "lavender": "colour_purple",
+    "peach": "colour_orange",
+    "rose": "colour_pink",
+    "cream": "colour_white",
+    "sand": "colour_brown",
+}
 
 
 class MyGreiaAudio:
@@ -87,7 +117,42 @@ class MyGreiaAudio:
                 path = self._resources.audio_path("activity.title")
             except Exception:
                 path = None
-        self._say("welcome", path)
+        if self._say("welcome", path):
+            self._queue_line("this_is_your_greia")
+        else:
+            self.line("this_is_your_greia")
+
+    def line(self, cue: str) -> bool:
+        """Speak one of Leo's package lines now (False when silent)."""
+
+        return self._say(cue, self._line_path(cue))
+
+    def colour(self, swatch_id: str) -> bool:
+        """Say a chosen colour's name from the shared vocabulary bank."""
+
+        noun = SWATCH_COLOURS.get(swatch_id)
+        if noun is None:
+            return False
+        return self._say(noun, shared_vocab_audio_path(self._project_root, noun, self.language))
+
+    def _line_path(self, cue: str) -> Path | None:
+        if self._resources is None or cue not in PACKAGE_CUES:
+            return None
+        try:
+            return self._resources.audio_path(cue)
+        except Exception:
+            return None
+
+    def _queue_line(self, cue: str) -> None:
+        path = self._line_path(cue)
+        if path is None or not self._available:
+            return
+        try:
+            sound = self._speech.get(path) or pygame.mixer.Sound(str(path))
+            pygame.mixer.Channel(SPEECH_CHANNEL).queue(sound)
+            self.last_speech = cue
+        except (pygame.error, RuntimeError, OSError):
+            return
 
     def react(self, character: str, *, avatar_changed: bool) -> None:
         """Friend reaction to a change: intro the first time, else a cheer."""

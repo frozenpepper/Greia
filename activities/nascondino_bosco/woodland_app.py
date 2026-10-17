@@ -365,7 +365,7 @@ class WoodlandApp:
 
     def _say_target(self) -> None:
         if self.round is not None and self.round.target is not None:
-            self.audio.say_name(self.round.target)
+            self.audio.ask_where(self.round.target)  # "Where is the...?" + name
 
     def _end_busy(self) -> None:
         self._busy = False
@@ -406,6 +406,7 @@ class WoodlandApp:
         self.audio.play("pop")
         if not self.audio.say_name(friend):
             self.audio.lilli("praise.general")
+        self.audio.say_place(geom.anchor.kind.kind_id)  # "Behind the bush!" after the name
         self.cast.correct()
         self.controls.tell(self.art.full(friend, ICON_SIZE), self._text(geom.anchor.kind.place_key, ""))
         self.controls.set_progress(len(round_.found))

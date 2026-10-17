@@ -111,6 +111,12 @@ class Silent:
     def say(self, cue):
         self.spoken.append(cue)
 
+    def then(self, cue):
+        self.spoken.append(cue)
+
+    def name(self, kind):
+        self.spoken.append(kind)
+
 
 def png_bytes(size=(320, 200), colour=(30, 160, 90)):
     buffer = io.BytesIO()

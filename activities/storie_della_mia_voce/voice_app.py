@@ -520,6 +520,7 @@ class StoryApp:
         self._show_guide(now)
         self.audio.play("whoosh")
         self.audio.host("ready.go")
+        self.audio.line("order_pictures", after=True)  # "Put the pictures in order!"
         self.cast.point(1.6)
         self._note_activity()
         self._dirty = True
@@ -726,6 +727,8 @@ class StoryApp:
             until = self.clock() + HALO_SECONDS
             self.motion.halos[f"slot.{slot}"] = until
             self.motion.halos[f"card.{card}"] = until
+            if slot == 0:
+                self.audio.line("what_first", if_quiet=True)  # "What happens first?"
         self.cast.point(HALO_SECONDS)
         self._note_activity()
         self._sync_order()
@@ -765,6 +768,7 @@ class StoryApp:
         self.controls.show_tell(self._tell_layout, len(self.template.cards), picker_icon=self._picker_icon())
         self.motion.slide_started = self.clock()
         self.cast.point(1.4)
+        self.audio.line("tell_story", after=True)  # "Now tell me your story!"
         self._note_activity()
         self._sync_tell()
         self._dirty = True
@@ -1101,7 +1105,8 @@ class StoryApp:
         self._surfaces.push_overlay(CompletionOverlay(self.completion, on_primary=self.open_picker, on_secondary=self._watch_again))
         self.state = Screen.DONE
         self.audio.play("fanfare")
-        self.timeline.after(0.5, lambda: self.audio.host("praise.general"))
+        # "What a great story!" (Leo's generic praise when the line is missing).
+        self.timeline.after(0.5, lambda: self.audio.line("great_story") or self.audio.host("praise.general"))
         self._dirty = True
 
     def _watch_again(self) -> None:
@@ -1296,8 +1301,13 @@ class StoryApp:
                 self.motion.halos[f"slot.{slot}"] = until
                 if step == 1:
                     self._show_guide(now)
+                    if slot == 0:
+                        self.audio.line("what_first", if_quiet=True)
                 if step >= 2:
                     self.motion.halos[f"card.{card}"] = until
+        elif self.state is Screen.TELL and self.telling is not None and not self.telling.has():
+            # An untold picture: "Tell me about this picture!" (never mid-recording).
+            self.audio.line("tell_picture", if_quiet=True)
         self._dirty = True
 
     def _show_guide(self, now: float) -> None:

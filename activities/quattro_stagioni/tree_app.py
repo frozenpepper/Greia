@@ -509,7 +509,9 @@ class TreeActivity:
             spoken = self.audio.say(item.speech)
         if not spoken and item.vocab is not None:
             spoken = self.audio.say_name(item.vocab)
-        if not spoken:
+        # "Yes, that belongs in this season!" after the name (or instead of
+        # the generic praise when nothing was named).
+        if not self.audio.say_after("belongs_here") and not spoken:
             self.audio.praise()
         self.cast.correct()
         self.controls.tell(self._text(item.name_key, ""), self.art.card_icon(item, BANNER_ICON))
@@ -535,6 +537,8 @@ class TreeActivity:
         self.cast.try_again()
         if misses % 2 == 0:
             self.audio.tito("encourage.retry")
+        else:
+            self.audio.say("not_this_season")  # "Hmm, not in this season."
         self._dirty = True
 
     def _demonstrate(self, misses: int) -> None:

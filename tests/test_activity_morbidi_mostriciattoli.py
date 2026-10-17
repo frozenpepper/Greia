@@ -459,6 +459,20 @@ class AppLoopTests(unittest.TestCase):
         app.render()
         app.canvas.present()
 
+    def test_surprise_dice_says_surprise_and_package_lines_resolve(self) -> None:
+        from monster_audio import PACKAGE_LINES, host_clip_path
+
+        app, now, _, _ = _app()
+        self.frame(app, now, 1.0)
+        app.audio.stop()  # Momo's opening line is over
+        app._on_surprise()  # noqa: SLF001 - the dice in the studio
+        self.assertIn("voice.surprise", app.audio.played[-2:])
+        for locale in ("en", "it", "es", "fr"):
+            for line in PACKAGE_LINES:
+                path = host_clip_path(line, locale)
+                self.assertIsNotNone(path, (line, locale))
+                self.assertEqual(path.parent.name, locale)
+
     def test_build_name_save_celebrate_and_share_a_friend(self) -> None:
         from monster_app import Screen
 
@@ -487,6 +501,8 @@ class AppLoopTests(unittest.TestCase):
         saved = app.gallery.recipes[0]
         self.assertEqual((saved.body_color, saved.arms, saved.name), ("peach_orange", "noodle", "BUBU"))
         self.assertIn("voice.saved", app.audio.played)
+        played = app.audio.played
+        self.assertLess(played.index("voice.saved"), played.index("voice.new_friend"))
         self.assertIsNone(backend.kv.get(DRAFT_KEY))
         self.assertTrue(app.editor.is_blank)  # a fresh friend waits in the studio
         for _ in range(10):

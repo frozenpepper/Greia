@@ -3,8 +3,9 @@
 Speech uses only owner-approved shared character takes (Flash:
 ``ready.go``, ``praise.general``, ``encourage.retry``, ``encourage.progress``,
 ``celebrate.success``) resolved per locale with the platform's English
-fallback. No new lines are generated; moments without an approved line stay
-pictorial. Effects are short tones synthesized once, after the first frame (no files).
+fallback, plus Flash's owner-approved package line "fly through the rainbow
+rings!" (``assets/audio/<locale>/fly_rings.wav``), queued after the first
+"ready, go" of a visit. No new lines are generated. Effects are short tones synthesized once, after the first frame (no files).
 Everything fails soft without a mixer.
 """
 
@@ -20,7 +21,7 @@ import wave
 
 import pygame
 
-from greia_platform.localization import shared_character_audio_path
+from greia_platform.localization import LocalizationError, activity_resources, shared_character_audio_path
 from greia_platform.pygame_audio import DeferredSoundBank
 
 PROJECT_ROOT: Final = Path(__file__).resolve().parents[2]
@@ -30,6 +31,9 @@ FIRST_SFX_CHANNEL: Final = 2
 LAST_SFX_CHANNEL: Final = 5
 RATE: Final = 22050
 VOICE_CUES: Final = ("ready.go", "praise.general", "encourage.retry", "encourage.progress", "celebrate.success")
+# Owner-approved per-Activity lines (``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_CUES: Final = ("fly_rings",)
+PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent
 MAX_TAKES: Final = 3
 
 
@@ -121,6 +125,34 @@ class DragonAudio:
                     continue
             if takes:
                 self._speech[cue] = takes
+        try:
+            resources = activity_resources(PACKAGE_ROOT, requested_locale=self.locale)
+        except LocalizationError:
+            return
+        for cue in PACKAGE_CUES:
+            path = resources.audio_path(cue)
+            if path is None:
+                continue
+            try:
+                self._speech[cue] = [pygame.mixer.Sound(str(path))]
+            except (pygame.error, OSError):
+                continue
+
+    def then(self, cue: str) -> None:
+        """Queue one approved cue after the line playing (now when quiet)."""
+
+        self.last_speech = cue
+        takes = self._speech.get(cue)
+        if not self._available or not takes:
+            return
+        try:
+            channel = pygame.mixer.Channel(SPEECH_CHANNEL)
+            if channel.get_busy():
+                channel.queue(takes[0])
+            else:
+                channel.play(takes[0])
+        except (pygame.error, RuntimeError):
+            return
 
     def has_speech(self, cue: str) -> bool:
         return cue in self._speech

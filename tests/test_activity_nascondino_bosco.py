@@ -378,6 +378,27 @@ class AppLoopTests(unittest.TestCase):
         self.assertEqual(app.round.season.season_id, SEASONS[1].season_id)
         self.assertEqual(app.controls.progress.current, 0)
 
+    def test_where_is_then_name_and_the_found_place_is_spoken(self) -> None:
+        from activities.nascondino_bosco.woodland_audio import PACKAGE_CUES, PLACE_CUES
+
+        app = self.app
+        asked: list[str] = []
+        placed: list[str] = []
+        real_ask, real_place = app.audio.ask_where, app.audio.say_place
+        app.audio.ask_where = lambda friend: (asked.append(friend), real_ask(friend))[1]
+        app.audio.say_place = lambda kind: (placed.append(kind), real_place(kind))[1]
+        self.advance(2.0)
+        self.assertEqual(asked, [app.round.target])  # "Where is the...?" + the wanted friend
+        spot = app.round.target_spot
+        kind = app.geometry[spot].anchor.kind.kind_id
+        self.assertTrue(app.tap(self.target_point()))
+        self.assertEqual(placed, [kind])
+        self.assertIn(kind, PLACE_CUES)
+        for locale in ("en", "it", "es", "fr"):
+            resources = activity_resources(ACTIVITY_DIR, requested_locale=locale)
+            for cue in PACKAGE_CUES:
+                self.assertEqual(resources.audio_path(cue).parent.name, locale, (cue, locale))
+
     def test_keyboard_only_round(self) -> None:
         app = self.app
         self.advance(1.0)

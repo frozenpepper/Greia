@@ -8,7 +8,10 @@ Speech uses only recorded, approved clips:
   silent;
 * Lilli's shared takes (``ready.go``, ``celebrate.success``,
   ``encourage.retry``, ``encourage.progress``) from the shared character
-  library.
+  library;
+* two owner-approved package lines (``assets/audio/<locale>/``): "choose an
+  album!" on the shelf and "find two the same!" queued after "ready, go"
+  when a chosen album's board starts.
 
 Effects (flip, match chime, gentle miss, sticker pop, whoosh, fanfare) are
 synthesized once, after the first frame. Every call fails soft without a mixer, and
@@ -25,7 +28,9 @@ from typing import Final, Iterable
 import pygame
 
 from greia_platform.localization import (
+    LocalizationError,
     LocalizedResources,
+    activity_resources,
     shared_character_audio_path,
     shared_vocab_audio_path,
 )
@@ -44,6 +49,9 @@ PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 HOST: Final = "lilli"
 LILLI_CUES: Final = ("ready.go", "celebrate.success", "encourage.retry", "encourage.progress", "praise.general")
 NAME_CACHE_LIMIT: Final = 12
+PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent
+# Owner-approved per-Activity lines (``assets/audio/<locale>/<cue>.wav``).
+PACKAGE_CUES: Final = ("choose_album", "find_two_same")
 
 
 class MemoryAudio:
@@ -64,6 +72,7 @@ class MemoryAudio:
         self._sounds = DeferredSoundBank()
         self._lilli: dict[str, list[pygame.mixer.Sound]] = {}
         self._names: OrderedDict[str, pygame.mixer.Sound | None] = OrderedDict()
+        self._lines: dict[str, pygame.mixer.Sound] = {}
         self._available = False
         self.last_speech: str | None = None
         try:
@@ -71,6 +80,7 @@ class MemoryAudio:
                 pygame.mixer.set_num_channels(max(pygame.mixer.get_num_channels(), LAST_SFX_CHANNEL + 1))
                 self._build_sounds()
                 self._load_lilli()
+                self._load_lines()
                 self._available = True
         except (pygame.error, RuntimeError, OSError):
             self._available = False
@@ -111,6 +121,31 @@ class MemoryAudio:
         if not self._available or not takes:
             return False
         return self._speak(self._rng.choice(takes))
+
+    def line(self, cue: str) -> bool:
+        """Speak one approved package line now (silent when it is missing)."""
+
+        self.last_speech = cue
+        if not self._available:
+            return False
+        return self._speak(self._lines.get(cue))
+
+    def then_line(self, cue: str) -> bool:
+        """Queue one package line after the one playing (now when quiet)."""
+
+        self.last_speech = cue
+        sound = self._lines.get(cue)
+        if not self._available or sound is None:
+            return False
+        try:
+            channel = pygame.mixer.Channel(SPEECH_CHANNEL)
+            if channel.get_busy():
+                channel.queue(sound)
+            else:
+                channel.play(sound)
+        except (pygame.error, RuntimeError):
+            return False
+        return True
 
     def speech_busy(self) -> bool:
         if not self._available:
@@ -168,6 +203,22 @@ class MemoryAudio:
             return pygame.mixer.Sound(str(path))
         except (pygame.error, OSError):
             return None
+
+    def _load_lines(self) -> None:
+        resources = self._resources
+        if resources is None:
+            try:
+                resources = activity_resources(PACKAGE_ROOT, requested_locale=self.locale)
+            except LocalizationError:
+                return
+        for cue in PACKAGE_CUES:
+            path = resources.audio_path(cue)
+            if path is None:
+                continue
+            try:
+                self._lines[cue] = pygame.mixer.Sound(str(path))
+            except (pygame.error, OSError):
+                continue
 
     def _load_lilli(self) -> None:
         for cue in LILLI_CUES:

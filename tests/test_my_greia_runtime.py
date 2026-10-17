@@ -110,8 +110,18 @@ class SilentAudio:
     def react(self, character, *, avatar_changed):
         self.events.append(f"react:{character}:{avatar_changed}")
 
+    def line(self, cue):
+        self.events.append(f"line:{cue}")
+        return self.voiced
+
+    def colour(self, swatch_id):
+        self.events.append(f"colour:{swatch_id}")
+        return self.voiced
+
     def stop_speech(self):
         self.events.append("stop")
+
+    voiced = False  # True: Leo's lines exist, so they replace the friend's cheer
 
 
 class Clock:
@@ -235,6 +245,40 @@ class MyGreiaAppTests(unittest.TestCase):
         self.app.tap_control(controls_mod.UNDO_ID)
         self.assertEqual(self.app.model.look, Look("unicorn", "cream", "sunshine"))
         self.assertEqual(self.services.look, self.app.model.look)
+
+    def test_leo_names_the_friend_tab_size_picture_and_colours(self) -> None:
+        from activities.workshop_settings.workshop_audio import PACKAGE_CUES, SWATCH_COLOURS
+        from greia_platform.localization import shared_vocab_audio_path
+
+        self.audio.voiced = True
+        self.app._on_tab(Tab.COLOURS)
+        self.app._on_tab(Tab.ME)
+        self.assertEqual(self.audio.events[-1], "line:pick_your_friend")
+        self.app._on_tab(Tab.COLOURS)
+        self.app.tap_control("accent.grape")
+        self.assertEqual(self.audio.events[-1], "colour:grape")  # instead of the cheer
+        self.app._on_tab(Tab.SIZE)
+        self.app.tap_control("size.large")
+        self.assertEqual(self.audio.events[-1], "line:bigger")
+        self.app.tap_control("size.compact")
+        self.assertEqual(self.audio.events[-1], "line:smaller")
+        self.app._on_tab(Tab.PICTURES)
+        tile = next(t for t in self.app.controls.tiles if self.app.controls.tile_value(t.control_id)[1] != self.app.model.look.wallpaper)
+        self.app.tap_control(tile.control_id)
+        self.assertEqual(self.audio.events[-1], "line:nice_picture")
+        from activities.workshop_settings.workshop_audio import MyGreiaAudio
+
+        audio = MyGreiaAudio(activity_resources(ACTIVITY, requested_locale="it"))
+        audio.welcome()
+        if pygame.mixer.get_init():
+            self.assertEqual(audio.last_speech, "this_is_your_greia")  # queued after "My Greia"
+        root = Path(__file__).resolve().parents[1]
+        for locale in ("en", "it", "es", "fr"):
+            resources = activity_resources(ACTIVITY, requested_locale=locale)
+            for cue in PACKAGE_CUES:
+                self.assertEqual(resources.audio_path(cue).parent.name, locale)
+            for noun in set(SWATCH_COLOURS.values()):
+                self.assertEqual(shared_vocab_audio_path(root, noun, locale).parent.name, locale)
 
     def test_sparkle_colour_retints_the_controls_live(self) -> None:
         self.app._on_tab(Tab.COLOURS)

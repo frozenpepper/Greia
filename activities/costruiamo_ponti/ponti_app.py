@@ -197,6 +197,7 @@ class BridgeActivity:
         self._hints = IdleHintScheduler(now=self._last_activity)
         self._last_retry_voice = -100.0
         self._said_go = False
+        self._just_right_said = False
         self._keys_changed = False
         self._start_crossing()
 
@@ -523,6 +524,11 @@ class BridgeActivity:
         self.renderer = BridgeRenderer(self.art, self.cast, CAST_HEIGHT)
         self.audio.use_speaker(friend)
         self.cast.wave()
+        if crossing.spots:
+            self.audio.then("pillar_on_rock")  # "Put a pillar on the rock!"
+        elif not crossing.islands and not crossing.heavy:
+            self.audio.then("long_enough")  # one gap: "Is it long enough?"
+        self._just_right_said = False
         self._sync(refocus=True)
         self._note_activity()
 
@@ -642,6 +648,7 @@ class BridgeActivity:
         if not self._said_go:
             self._said_go = True
             self.audio.say("go")
+            self.audio.then("lets_picnic")  # "Let's go to the picnic!"
         self.events.test_started(self._visit_id, bridge.crossing.crossing_id, bridge.summary.tests)
         self._sync()
 
@@ -655,6 +662,9 @@ class BridgeActivity:
             if plank is not None and plank.fit is Fit.JUST_RIGHT:
                 self.motion.add_fx("sparkle", ((plank.seat_x + plank.tip_x) // 2, plank.top - 26), 110, now)
                 self.audio.play("sparkle")
+                if not self._just_right_said:
+                    self._just_right_said = True  # once per crossing
+                    self.audio.say_if_quiet("just_right")
         elif moment == "bend":
             self.audio.play("bend")
         elif moment == "arrive":
@@ -700,7 +710,11 @@ class BridgeActivity:
             self.motion.missing = (reach, failed.span.end)
         elif failure is Failure.EMPTY:
             self.motion.missing = (failed.span.start, failed.span.end)
-        if now - self._last_retry_voice >= RETRY_VOICE_GAP:
+        if failure is Failure.SHORT:
+            self.audio.say("too_short")  # the reason, every time
+        elif failure is Failure.BEND:
+            self.audio.say("too_heavy")  # "Too heavy - try a stone plank!"
+        elif now - self._last_retry_voice >= RETRY_VOICE_GAP:
             self._last_retry_voice = now
             self.audio.say("retry")
         self.events.crossing_missed(self._visit_id, bridge.crossing.crossing_id, bridge.summary.tests, failure.value)

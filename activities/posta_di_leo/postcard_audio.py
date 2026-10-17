@@ -7,7 +7,9 @@ Cues are synthesized once, after the first frame to match the active PCM16 mixer
 
 Friend reactions use only owner-approved shared character clips
 (``shared_character_audio_path``: selected language -> English -> silence);
-no speech is generated here. Audio is fail-soft: without a mixer the bank is
+Leo's three owner-approved package lines (``assets/audio/<locale>/``: "who
+is it for?", "pick a picture!", "off it goes!") play on the same voice
+channel, never over a friend's reaction. No speech is generated here. Audio is fail-soft: without a mixer the bank is
 silent and never raises.
 """
 
@@ -21,7 +23,11 @@ from typing import Callable
 
 import pygame
 
-from greia_platform.localization import shared_character_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+)
 from greia_platform.pygame_audio import DeferredSoundBank, current_pcm16_mixer_spec, mono_pcm16_bytes
 
 if __package__:
@@ -30,6 +36,9 @@ else:
     from postcard_content import FRIEND_REACTION_CUE, FRIEND_REACTION_VARIANTS
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PACKAGE_ROOT = Path(__file__).resolve().parent
+# Leo's owner-approved per-Activity lines (``assets/audio/<locale>/<cue>.wav``).
+LEO_LINES = ("who_is_it_for", "pick_picture", "off_it_goes")
 MAX_VOICES = 6
 
 
@@ -74,6 +83,7 @@ class PostcardAudio:
     def __init__(self, *, locale: str = "en", project_root: Path = PROJECT_ROOT) -> None:
         self._sounds = DeferredSoundBank()
         self._voices: dict[str, pygame.mixer.Sound | None] = {}
+        self._lines: dict[str, pygame.mixer.Sound | None] = {}
         self._voice_channel: pygame.mixer.Channel | None = None
         self._locale = locale
         self._root = project_root
@@ -137,6 +147,35 @@ class PostcardAudio:
         if self._voice_channel is None:
             return False
         sound = self._voice(friend_id)
+        if sound is None:
+            return False
+        try:
+            self._voice_channel.play(sound)
+        except pygame.error:
+            return False
+        return True
+
+    def leo_says(self, cue: str) -> bool:
+        """Play one of Leo's package lines unless a voice is still playing."""
+
+        self.played.append(f"line.{cue}")
+        del self.played[:-16]
+        if self._voice_channel is None or cue not in LEO_LINES:
+            return False
+        try:
+            if self._voice_channel.get_busy():
+                return False
+        except pygame.error:
+            return False
+        if cue not in self._lines:
+            sound: pygame.mixer.Sound | None = None
+            try:
+                path = activity_resources(PACKAGE_ROOT, requested_locale=self._locale).audio_path(cue)
+                sound = pygame.mixer.Sound(str(path)) if path is not None else None
+            except (LocalizationError, pygame.error, OSError):
+                sound = None
+            self._lines[cue] = sound  # bounded: three package lines at most
+        sound = self._lines[cue]
         if sound is None:
             return False
         try:

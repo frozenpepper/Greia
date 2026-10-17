@@ -4,9 +4,13 @@ The Activity ships no packaged instrument audio. ``BandAudio`` synthesizes
 the six band instruments (one short strike each, so echo beats stay
 countable), the rainbow-xylophone octave and two feedback cues once, after
 the first frame; playback never re-decodes or re-synthesizes. Speech uses only
-approved shared character takes (``ready.go``, ``praise.general``,
+approved shared character takes (``praise.general``,
 ``encourage.retry``, ``celebrate.success``), one take per musician loaded up
-front. Loud/soft is a volume set once per toggle. Without a mixer (headless
+front, plus Momo's owner-approved package lines (``assets/audio/<locale>/``:
+"listen..." before a call, "your turn!" when the echo opens, "loud!",
+"soft!", "fast!", "slow!" for the toggles) and each instrument's name from
+the shared vocabulary bank the first time it is played (never over another
+line). Loud/soft is a volume set once per toggle. Without a mixer (headless
 runs) everything is a silent no-op.
 """
 
@@ -24,7 +28,12 @@ from typing import Final
 import pygame
 
 from greia_platform.creation_media import CreationMediaError, WavCodec
-from greia_platform.localization import LocalizationError, shared_character_audio_path
+from greia_platform.localization import (
+    LocalizationError,
+    activity_resources,
+    shared_character_audio_path,
+    shared_vocab_audio_path,
+)
 from greia_platform.pygame_audio import DeferredSoundBank
 
 if __package__:
@@ -37,7 +46,7 @@ SYNTH_RATE: Final = 22050
 SPEECH_CHANNEL: Final = 1
 MIXER_CHANNELS: Final = 16
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
-SPEECH_FAMILIES: Final = ("ready.go", "praise.general", "encourage.retry")
+SPEECH_FAMILIES: Final = ("praise.general", "encourage.retry")
 
 
 def _synth_wav(samples: array, rate: int = SYNTH_RATE) -> bytes:
@@ -186,6 +195,14 @@ class BackingTrackPlayer:
         self._paused = False
 
 
+PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent
+# Owner-approved per-Activity lines in Momo's voice (``assets/audio/<locale>/``).
+PACKAGE_SPEAKER: Final = "momo"
+PACKAGE_CUES: Final[tuple[str, ...]] = ("listen", "your_turn", "loud", "soft", "fast", "slow")
+# Shared vocabulary-bank names: the six band instruments plus the xylophone.
+INSTRUMENT_NOUNS: Final[tuple[str, ...]] = (*(m.instrument for m in BAND), "xylophone")
+
+
 class BandAudio:
     """Prepared band sound bank plus approved cast speech (one per Activity run)."""
 
@@ -201,6 +218,7 @@ class BandAudio:
         # synthesized after the first frame (see DeferredSoundBank).
         self._bank = DeferredSoundBank()
         self._speech: dict[tuple[str, str], pygame.mixer.Sound] = {}
+        self._lines: dict[str, pygame.mixer.Sound] = {}
         self.dynamics = Dynamics.LOUD
         self.last_speech: tuple[str, str] | None = None
         self._enabled = False
@@ -210,6 +228,7 @@ class BandAudio:
             pygame.mixer.set_num_channels(max(pygame.mixer.get_num_channels(), MIXER_CHANNELS))
             self._build()
             self._load_speech(project_root, locale)
+            self._load_lines(project_root, locale)
             self._enabled = True
         except (pygame.error, RuntimeError, OSError, ValueError):
             self._enabled = False
@@ -232,6 +251,36 @@ class BandAudio:
 
         self.last_speech = (character, family)
         sound = self._speech.get((character, family))
+        if not self._enabled or sound is None:
+            return
+        try:
+            pygame.mixer.Channel(SPEECH_CHANNEL).play(sound)
+        except (pygame.error, RuntimeError):
+            return
+
+    def line(self, cue: str) -> None:
+        """Speak one of Momo's package lines now (silent when missing)."""
+
+        self.last_speech = (PACKAGE_SPEAKER, cue)
+        self._speak(self._lines.get(cue))
+
+    def name(self, noun: str) -> None:
+        """Say an instrument's name, only when no other line is playing."""
+
+        if self._speaking():
+            return
+        self.last_speech = (PACKAGE_SPEAKER, f"vocab.{noun}")
+        self._speak(self._lines.get(f"vocab.{noun}"))
+
+    def _speaking(self) -> bool:
+        if not self._enabled:
+            return False
+        try:
+            return bool(pygame.mixer.Channel(SPEECH_CHANNEL).get_busy())
+        except (pygame.error, RuntimeError):
+            return False
+
+    def _speak(self, sound: pygame.mixer.Sound | None) -> None:
         if not self._enabled or sound is None:
             return
         try:
@@ -272,6 +321,27 @@ class BandAudio:
                 continue
             try:
                 self._speech[(character, family)] = pygame.mixer.Sound(str(path))
+            except (pygame.error, OSError):
+                continue
+
+    def _load_lines(self, project_root: Path, locale: str) -> None:
+        wanted: dict[str, Path | None] = {}
+        try:
+            resources = activity_resources(PACKAGE_ROOT, requested_locale=locale)
+        except LocalizationError:
+            resources = None
+        for cue in PACKAGE_CUES if resources is not None else ():
+            wanted[cue] = resources.audio_path(cue)
+        for noun in INSTRUMENT_NOUNS:
+            try:
+                wanted[f"vocab.{noun}"] = shared_vocab_audio_path(project_root, noun, locale)
+            except LocalizationError:
+                continue
+        for key, path in wanted.items():
+            if path is None:
+                continue
+            try:
+                self._lines[key] = pygame.mixer.Sound(str(path))
             except (pygame.error, OSError):
                 continue
 

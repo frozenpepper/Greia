@@ -120,10 +120,23 @@ _PROMPTS = {
 
 
 def prompt_cue(task: Task) -> str | None:
-    """The recorded instruction for the job's current step (None = pictorial)."""
+    """The recorded instruction for the job's current step (None = pictorial).
 
-    if task.kind.lays_blocks and task.resume_phase in {Phase.ARRIVING, Phase.LAYING, Phase.COUNTING}:
-        return "prompt_measure"
+    Balance: "put both parcels on the scale", then "which one is heavier /
+    lighter?". Measuring: "measure the parcel" until a block is laid, then
+    "line up the blocks... no gaps!", and "how many blocks long?" to count.
+    """
+
+    phase = task.resume_phase
+    if task.kind is TaskKind.WEIGH:
+        if phase in {Phase.ARRIVING, Phase.LOADING}:
+            return "put_parcels"
+        return "which_heavier" if task.goal is Goal.MORE else "which_lighter"
+    if task.kind.lays_blocks:
+        if phase is Phase.COUNTING:
+            return "how_many_long"
+        if phase in {Phase.ARRIVING, Phase.LAYING}:
+            return "line_up_blocks" if any(task.rows) else "prompt_measure"
     return _PROMPTS.get((task.kind, task.goal))
 
 
@@ -414,6 +427,7 @@ class BottegaActivity:
         if task.all_on_pans:
             self.motion.sign_hop = now
             self.cast.point(1.2)
+            self.audio.say(prompt_cue(task))  # "Which one is heavier / lighter?"
         self._note_activity()
 
     # -- laying blocks ----------------------------------------------------------------

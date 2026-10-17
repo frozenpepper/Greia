@@ -48,7 +48,7 @@ from greia_platform.ui_core import SurfaceNavigator, UiEventResult
 
 if __package__:
     from .bosco_art import SEASONS, TraceInk
-    from .bosco_audio import BoscoAudio, SpeechQueue, ask_cue, count_cue
+    from .bosco_audio import WRITE_ZERO_CUE, BoscoAudio, SpeechQueue, ask_cue, count_cue
     from .bosco_controls import TITO_HEIGHT, ForestControls, choice_id
     from .bosco_model import (
         REFERENCE_HEIGHT,
@@ -64,7 +64,7 @@ if __package__:
     from .bosco_trace import TraceEvent, TraceTracker
 else:
     from bosco_art import SEASONS, TraceInk
-    from bosco_audio import BoscoAudio, SpeechQueue, ask_cue, count_cue
+    from bosco_audio import WRITE_ZERO_CUE, BoscoAudio, SpeechQueue, ask_cue, count_cue
     from bosco_controls import TITO_HEIGHT, ForestControls, choice_id
     from bosco_model import (
         REFERENCE_HEIGHT,
@@ -643,6 +643,9 @@ class BoscoApp:
             self.state = AppState.PLAYING
             self._start_trace(keep_progress=False)
             queue.enqueue(count_cue(value), gap=0.3)
+            if value == 0:
+                # Owner-approved "Let's write number 0!" (silent if absent).
+                queue.enqueue(WRITE_ZERO_CUE, gap=0.3)
             self._start_demo(now, delay=0.4)
         else:
             self.state = AppState.PLAYING

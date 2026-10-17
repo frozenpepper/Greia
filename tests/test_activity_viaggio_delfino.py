@@ -525,6 +525,35 @@ class AppLoopTests(unittest.TestCase):
         self.assertTrue(app.picker.cards["reef"].enabled)
         self.assertEqual(app._suggested, "reef")
 
+    def test_tito_lines_choose_goal_and_the_spoken_pearl_total(self) -> None:
+        from greia_platform.localization import activity_resources, shared_number_audio_path
+
+        from activities.viaggio_delfino.delfino_audio import PACKAGE_CUES
+
+        said: list[object] = []
+        audio = self.app.audio
+        audio.line = lambda cue, if_quiet=False: (said.append(cue), 0.0)[1]
+        audio.number = lambda value: (said.append(value), 0.0)[1]
+        audio.play_voice = lambda fact_id: (said.append(fact_id), 0.0)[1]
+        self._step()
+        self.assertEqual(said, ["choose_journey"])  # the map, once per launch
+        self._key(pygame.K_SPACE)
+        self.assertEqual(said[1:3], ["swim_finish", "presenter.welcome"])  # silent goal line -> old welcome
+        self._swim_with_keys()
+        collected = self.app.run_state.collected
+        for _ in range(30 * 20):
+            if self.app.phase is self.Phase.DONE:
+                break
+            self._step()
+        self.assertIn(collected, said)  # the total after the count-up
+        root = Path(__file__).resolve().parents[1]
+        for locale in ("en", "it", "es", "fr"):
+            resources = activity_resources(root / "activities" / "viaggio_delfino", requested_locale=locale)
+            for cue in PACKAGE_CUES:
+                self.assertEqual(resources.audio_path(cue).parent.name, locale)
+            for value in range(26):
+                self.assertEqual(shared_number_audio_path(root, value, locale).parent.name, locale)
+
     def test_count_up_can_be_skipped_and_replay_restarts_the_same_journey(self) -> None:
         app = self.app
         app.start_journey("bay")

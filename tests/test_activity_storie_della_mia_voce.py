@@ -383,6 +383,33 @@ class StoryCardsAppLoopTests(unittest.TestCase):
         app.tap(app.completion.primary_rect.center)
         self.assertIs(app.state, voice_app.Screen.PICKER)
 
+    def test_story_lines_follow_order_tell_and_completion(self) -> None:
+        app, clock, _ = make_app()
+        lines: list[str] = []
+        real = app.audio.line
+        app.audio.line = lambda cue, **kw: (lines.append(cue), real(cue, **kw))[1]
+        app._on_story(0)
+        self.assertEqual(lines, ["order_pictures"])  # after Leo's "ready, go"
+        board = app.board
+        self.assertEqual(board.hint()[0], 0)
+        app._demonstrate()  # noqa: SLF001 - Leo shows the first place
+        self.assertEqual(lines[-1], "what_first")  # "What happens first?"
+        solve_order(app, clock)
+        advance(app, clock, 3.2)
+        self.assertIs(app.state, voice_app.Screen.TELL)
+        self.assertEqual(lines[-1], "tell_story")
+        lines.clear()
+        advance(app, clock, 7.0)  # idle on an untold picture
+        self.assertIn("tell_picture", lines)
+        tell_all(app, clock)
+        advance(app, clock, 15.0)
+        self.assertIs(app.state, voice_app.Screen.DONE)
+        self.assertEqual(lines[-1], "great_story")
+        for locale in ("en", "it", "es", "fr"):
+            resources = activity_resources(ACTIVITY_ROOT, requested_locale=locale)
+            for cue in ("order_pictures", "what_first", "tell_story", "tell_picture", "great_story"):
+                self.assertEqual(resources.audio_path(cue).parent.name, locale)
+
     def test_keyboard_only_round_reaches_the_telling_step(self) -> None:
         app, clock, _ = make_app()
         app.press(pygame.K_SPACE)  # focused suggested story

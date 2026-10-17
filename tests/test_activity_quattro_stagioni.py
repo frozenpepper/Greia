@@ -514,6 +514,29 @@ class AppLoopTests(unittest.TestCase):
         self.assertEqual(app.state, AppState.PICK)
         self.assertEqual(app.controls.layer.focused_id, "season.spring")
 
+    def test_right_and_wrong_season_lines(self) -> None:
+        app = self.app
+        said: list[str] = []
+        real_after, real_say = app.audio.say_after, app.audio.say
+        app.audio.say_after = lambda cue: (said.append(cue), real_after(cue))[1]
+        app.audio.say = lambda cue: (said.append(cue), real_say(cue))[1]
+        self.pick_season(WI)
+        self.assertTrue(app.tap(self.card_point(self.wrong())))
+        self.advance(0.5)
+        self.assertEqual(said[-1], "not_this_season")  # first miss: Tito's own words
+        for _ in range(60):
+            if not app._busy:
+                break
+            self.advance(0.1)
+        mission = app.round.mission
+        self.assertTrue(app.tap(self.card_point(mission.answer)))
+        self.advance(0.7)  # the card flies into the scene
+        self.assertEqual(said[-1], "belongs_here")  # after the picture's name
+        for locale in ("en", "it", "es", "fr"):
+            resources = activity_resources(ACTIVITY_DIR, requested_locale=locale)
+            for cue in ("belongs_here", "not_this_season"):
+                self.assertEqual(resources.audio_path(cue).parent.name, locale)
+
     def test_keyboard_only_round(self) -> None:
         app = self.app
         self.advance(0.5)

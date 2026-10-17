@@ -115,6 +115,12 @@ class _Audio:
     def say(self, cue: str) -> None:
         self.spoken.append(cue)
 
+    def say_if_quiet(self, cue: str) -> None:
+        self.spoken.append(cue)
+
+    def then(self, cue: str) -> None:
+        self.spoken.append(cue)
+
     def play(self, name: str) -> None:
         self.sounds.append(name)
 
@@ -491,7 +497,7 @@ class AppLoopTests(unittest.TestCase):
                 self.assertEqual(app.controls.progress.current, index)
                 self._solve_with_keys(app, now)
                 self.assertIs(app.state, AppState.CELEBRATE)
-                self.assertIn("basket", app.audio.spoken)
+                self.assertIn("into_basket", app.audio.spoken)
                 self._advance(app, now, 2.2)
             self.assertIs(app.state, AppState.TERMINAL)
             self.assertEqual(len(app.events.hits), BOARDS_PER_SET)
@@ -583,9 +589,23 @@ class AppLoopTests(unittest.TestCase):
             if miss < SNAP_AFTER_MISSES:
                 self._advance(app, now, 1.5)
                 self.assertIs(state.facings[0], Facing.RIGHT)  # demonstrated, not done
-        self.assertIn("retry", app.audio.spoken)
+        outcomes = {miss[-1] for miss in app.events.misses}
+        # A stopped marble gets its own line; a lost one the shared "try again".
+        self.assertEqual("stopped" in outcomes, "oops_stopped" in app.audio.spoken)
+        self.assertEqual("lost" in outcomes, "retry" in app.audio.spoken)
         self._advance(app, now, 1.5)
         self.assertIs(state.facings[0], Facing.LEFT)  # third miss: Tito turns it
+
+    def test_board_goal_and_first_ramp_lines(self) -> None:
+        app, now, _ = self._app()
+        self.assertEqual(app.audio.spoken, ["pieces_in_spots"])  # first board of the visit
+        state = app.board_state
+        ramp = next(i for i in range(len(state.slot_of)) if state.kind(i) is PieceKind.RAMP)
+        state.selected = ramp
+        app._on_slot(0)
+        self.assertEqual(app.audio.spoken.count("tap_ramp_turn"), 1)
+        app._on_slot(0)  # turning it is not another placement
+        self.assertEqual(app.audio.spoken.count("tap_ramp_turn"), 1)
 
     def test_idle_hints_are_graduated(self) -> None:
         app, now, _ = self._app()

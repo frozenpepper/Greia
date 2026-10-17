@@ -5,7 +5,10 @@ Speech is never generated here: Tito's six orca facts are the Activity's
 owner-approved recordings (``assets/audio/<lang>/tito_fact_*.wav``, resolved by
 ``LocalizedResources.audio_path``), and his short praise lines are the shared
 character takes resolved through ``shared_character_audio_path`` (selected
-language, then English, then silence).
+language, then English, then silence). Nine owner-approved mission
+invitations (``find_<orca>``, ``feed_<orca>``, ``jump_<orca>``) are spoken
+through ``LocalizedResources.audio_path`` when that mission starts, never over
+a fact that is still playing.
 """
 
 from __future__ import annotations
@@ -44,6 +47,10 @@ AUDIO_DIR = PACKAGE_ROOT / "assets" / "audio"
 # Shared character takes this Activity uses (owner-approved v0.2 library).
 VOICE_SPEAKER = "tito"
 VOICE_CUES = ("celebrate.success", "praise.general")
+# Owner-approved per-Activity mission invitations ("<kind>_<orca id>").
+MISSION_CUES = tuple(
+    f"{kind}_{orca}" for kind in ("find", "feed", "jump") for orca in ("kiko", "luna", "oskar")
+)
 
 
 class OrcaAudio(Protocol):
@@ -59,6 +66,9 @@ class OrcaAudio(Protocol):
         ...
 
     def say(self, cue: str) -> None:
+        ...
+
+    def prompt(self, cue: str) -> None:
         ...
 
 
@@ -274,6 +284,36 @@ class PygameOrcaAudio:
                 self._voice_channel.stop()
             except Exception:
                 pass
+
+    def prompt(self, cue: str) -> None:
+        """Speak one mission invitation unless Tito is still talking."""
+
+        if not self._enabled or cue not in MISSION_CUES or self._resources is None:
+            return
+        try:
+            if self._voice_channel is not None and self._voice_channel.get_busy():
+                return
+        except Exception:
+            return
+        loc = self._resources.context.selected.value
+        cache_key = (cue, loc)
+        snd = self._voice_cache.get(cache_key)
+        if snd is None:
+            path = self._resources.audio_path(cue)
+            if path is None:
+                return
+            try:
+                snd = pygame.mixer.Sound(str(path))
+            except (pygame.error, OSError):
+                return
+            self._voice_cache[cache_key] = snd
+        try:
+            if self._voice_channel is not None:
+                self._voice_channel.play(snd)
+            else:
+                snd.play()
+        except Exception:
+            pass
 
     def say(self, cue: str) -> None:
         """Play one approved shared Tito take (silent when unavailable)."""

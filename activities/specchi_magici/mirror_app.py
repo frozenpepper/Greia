@@ -621,7 +621,15 @@ class MirrorActivity:
         self._busy_until = now + WOBBLE_SECONDS * 0.6
         self.audio.play("hum")
         self.cast.try_again()
-        if session.misses % 2 == 1:
+        expected = result.focus.piece if result.focus is not None else None
+        if (
+            expected is not None
+            and result.outcome is PlaceOutcome.WRONG_PIECE
+            and (piece.kind, piece.color_index) == (expected.kind, expected.color_index)
+        ):
+            # The unreflected copy: the right tile, facing the wrong way.
+            self.audio.say("turn_it")  # "Turn it around!"
+        elif session.misses % 2 == 1:
             self.audio.say("retry_1" if result.outcome is PlaceOutcome.WRONG_CELL else "retry_2")
         focus = result.focus
         misses = session.misses
@@ -644,6 +652,7 @@ class MirrorActivity:
             self.motion.glow_source(source.cell, now + self._hints.animation_seconds(GLOW_SECONDS))
         if misses >= 2:
             self.cast.point(1.8)
+            self.audio.say_if_quiet("try_this_spot")  # Lilli shows the spot
             self.motion.ghost = (focus.cell, focus.piece, now + GLOW_SECONDS)
             if focus.piece in puzzle.tray:
                 self.motion.tray_hops[puzzle.tray.index(focus.piece)] = now
@@ -697,6 +706,8 @@ class MirrorActivity:
         if self._last_axis is not None and puzzle.axis is not self._last_axis:
             self.audio.say("prompt_place")  # a new kind of mirror: say the goal again
             self._prompted = True
+        elif self._last_axis is None:
+            self.audio.say_if_quiet("look_mirror_line")  # the first mirror of the visit
         self._last_axis = puzzle.axis
         self._sync_controls()
         if self.controls.layer.focus_visible:

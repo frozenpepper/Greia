@@ -244,6 +244,9 @@ class _Audio:
         if noun:
             self.spoken.append(f"vocab.{noun}")
 
+    def then(self, cue: str) -> None:
+        self.spoken.append(cue)
+
     def play(self, name: str) -> None:
         self.played.append(name)
 
@@ -377,6 +380,31 @@ class AppIntegrationTests(unittest.TestCase):
         layer.focus(tool_id(app.day.expected_tool), visible=True)
         app.press(pygame.K_SPACE)
         self.assertEqual(app.day.steps_done, 1)
+
+    def test_clinic_lines_are_spoken_in_order_at_each_care_moment(self) -> None:
+        app = self._build(level=1, seed=7)
+        self._advance(1.3)
+        noun = app.day.case.species.vocab
+        spoken = self._audio.spoken
+        # Arrival: the patient's name, then Momo's "where does it hurt?".
+        self.assertEqual(spoken[-1], "where_hurt")
+        if noun:
+            self.assertEqual(spoken[-2], f"vocab.{noun}")
+        self.assertTrue(self._tap_logical(app.controls.parts[self._sore_target()].rect.center))
+        self._advance(1.2)
+        self.assertEqual(spoken[-1], "what_first")
+        steps = len(app.day.case.ailment.steps)
+        tools = []
+        while app.day.phase is Phase.CARE:
+            tools.append(app.day.expected_tool)
+            self.assertTrue(self._tap_logical(app.controls.tiles[app.day.expected_tool].rect.center))
+            self._advance(1.3)
+        for tool in tools:
+            self.assertIn(f"vocab.{tool.value}", spoken)  # the tool's shared-bank name
+        self.assertEqual(spoken.count("whats_next"), steps - 1)
+        self._advance(2.5)
+        self.assertEqual(spoken[-1], "all_better")  # on the way home, after the praise
+        self.assertLess(spoken.index("praise.general"), spoken.index("all_better"))
 
     def test_whole_day_is_playable_with_arrow_keys_only(self) -> None:
         from clinic_controls import tool_id
