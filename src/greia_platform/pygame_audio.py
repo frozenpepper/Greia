@@ -3,21 +3,27 @@
 Greia Activities may synthesize tiny feedback cues, but raw PCM must match the
 mixer that Pygame actually opened. These helpers deliberately cover only that
 format boundary plus :class:`DeferredSoundBank`, which keeps that synthesis off
-the launch path; prerecorded speech and broader audio policy remain owned by
+the launch path (and, through :class:`SynthesisPacer`, from starving the
+Activity loop after it); prerecorded speech and broader audio policy remain owned by
 their existing services.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator, Mapping
+from array import array
+from collections.abc import Callable, Iterable, Iterator, Mapping
+from contextlib import contextmanager
 import struct
+import sys
 import threading
+import time
 
 import pygame
 
 from .first_frame_work import after_first_frame
 
 _PCM16_LE = struct.Struct("<h")
+_pack_pcm16 = _PCM16_LE.pack
 
 
 def current_pcm16_mixer_spec() -> tuple[int, int] | None:
@@ -35,10 +41,193 @@ def current_pcm16_mixer_spec() -> tuple[int, int] | None:
 def append_mono_pcm16(raw: bytearray, sample: int, channel_count: int) -> None:
     """Append one signed 16-bit mono sample in the mixer's channel layout."""
 
+    # Called once per sample by Activity synthesis loops: written for the
+    # Atom N270 (5.1 us/sample here against 7.5 us with max/min/range checks).
+    value = int(sample)
+    if value > 32767:
+        value = 32767
+    elif value < -32768:
+        value = -32768
+    if channel_count == 1:
+        raw += _pack_pcm16(value)
+    elif 1 < channel_count <= 8:
+        raw += _pack_pcm16(value) * channel_count
+    else:
+        raise ValueError("Pygame PCM channel count must be between 1 and 8")
+    # Cooperative yield point for the background warm-up worker (see
+    # SynthesisPacer): Activity factories call this once per sample, so it is
+    # the one place every synthesis loop passes through. A countdown keeps the
+    # per-sample cost to one global decrement; the pacer itself checks the
+    # thread and the clock only every PACE_CHECK_SAMPLES samples.
+    global _pace_countdown
+    _pace_countdown -= 1
+    if _pace_countdown <= 0:
+        _pace_countdown = PACE_CHECK_SAMPLES
+        pacer = getattr(_worker_local, "pacer", None)
+        if pacer is not None:
+            pacer.checkpoint()
+
+
+def mono_pcm16_bytes(samples: Iterable[float], channel_count: int, *, scale: float = 1.0) -> bytes:
+    """Pack mono samples (``value * scale``, clamped) into mixer-layout PCM16.
+
+    The faster alternative to calling :func:`append_mono_pcm16` per sample:
+    compute the samples into a list (a comprehension is cheapest), then pack
+    them in one call. Packing 22,050 samples for a stereo mixer takes ~70 ms
+    on the Atom N270 against ~150 ms through per-sample appends; the bytes are
+    identical. Channel duplication is done with C-level array slicing.
+    """
+
     if not 1 <= channel_count <= 8:
         raise ValueError("Pygame PCM channel count must be between 1 and 8")
-    clamped = max(-32768, min(32767, int(sample)))
-    raw += _PCM16_LE.pack(clamped) * channel_count
+    if scale == 1.0:
+        values = [int(value) for value in samples]
+    else:
+        values = [int(value * scale) for value in samples]
+    mono = array("h", [32767 if v > 32767 else -32768 if v < -32768 else v for v in values])
+    if channel_count == 1:
+        packed = mono
+    else:
+        packed = array("h", bytes(2 * len(mono) * channel_count))
+        for channel in range(channel_count):
+            packed[channel::channel_count] = mono
+    if sys.byteorder != "little":
+        packed.byteswap()
+    return packed.tobytes()
+
+
+#: Samples between two pacing checks inside ``append_mono_pcm16`` (~5-10 ms of
+#: pure-Python synthesis on the Atom N270, well under 1 ms on a desktop).
+PACE_CHECK_SAMPLES = 128
+_pace_countdown = PACE_CHECK_SAMPLES
+_worker_local = threading.local()
+
+
+class SynthesisPacer:
+    """Duty-cycle a background synthesis thread so the Activity loop keeps running.
+
+    Pure-Python PCM synthesis holds the GIL. Measured on the reference Atom
+    N270 (Acer, 2026-10-17, colline_allegre steered with arrow keys during the
+    first 6 s after READY, 7 cues taking ~10 s to synthesize): with no warm-up
+    at all the game presented 129 frames with 2 loop gaps over 100 ms; with
+    the unpaced worker 91-95 frames and 20-23 such gaps (max ~250 ms), because
+    every GIL-releasing call in the loop (each ``sleep``, ``flip`` and many
+    blits) waited for the worker's next forced switch (5 ms by default);
+    paced (4 ms work / 4 ms rest, 1 ms switch interval; six runs of the
+    tuned variants) 109-125 frames and 3-6 gaps, while the warm-up takes
+    ~17 s instead of ~10 s.
+
+    The pacer is installed on the warm-up worker thread only. It lets the
+    worker compute for ``work_seconds`` and then sleep ``rest_seconds``
+    (releasing the GIL completely) at every checkpoint, and lowers the
+    interpreter's switch interval to ``switch_interval`` while the worker
+    runs, so a GIL hand-back to the Activity loop costs at most that long.
+    Synthesis output is unchanged. A cue the Activity requests before the
+    worker reaches it is built on the requesting thread at full speed (never
+    paced); one the worker is building at that moment is finished without
+    rests (:meth:`hurry`).
+    """
+
+    def __init__(
+        self,
+        *,
+        work_seconds: float = 0.004,
+        rest_seconds: float = 0.004,
+        switch_interval: float | None = 0.001,
+        clock: Callable[[], float] = time.monotonic,
+        sleep: Callable[[float], None] = time.sleep,
+    ) -> None:
+        if work_seconds <= 0 or rest_seconds < 0:
+            raise ValueError("pacer durations must be positive")
+        if switch_interval is not None and switch_interval <= 0:
+            raise ValueError("switch_interval must be positive")
+        self.work_seconds = float(work_seconds)
+        self.rest_seconds = float(rest_seconds)
+        self.switch_interval = switch_interval
+        self._clock = clock
+        self._sleep = sleep
+        self._slice_start = clock()
+        self._hurry = False
+        self.rests = 0
+
+    def hurry(self) -> None:
+        """Stop resting until the next cue boundary (someone awaits this cue)."""
+
+        self._hurry = True
+
+    def checkpoint(self) -> None:
+        """Rest when the current work slice is used up (called by the worker)."""
+
+        if self._hurry:
+            return
+        now = self._clock()
+        if now - self._slice_start >= self.work_seconds:
+            self.rest()
+
+    def rest(self) -> None:
+        """Release the GIL for ``rest_seconds`` and start a new work slice."""
+
+        if self.rest_seconds > 0 and not self._hurry:
+            self._sleep(self.rest_seconds)
+            self.rests += 1
+        self._slice_start = self._clock()
+
+    def cue_finished(self) -> None:
+        """A cue boundary: drop any hurry and yield once."""
+
+        self._hurry = False
+        self.rest()
+
+    @contextmanager
+    def installed(self) -> Iterator["SynthesisPacer"]:
+        """Pace the calling thread (the worker) for the duration of the block."""
+
+        _SWITCH_INTERVAL.acquire(self.switch_interval)
+        _worker_local.pacer = self
+        self._slice_start = self._clock()
+        try:
+            yield self
+        finally:
+            _worker_local.pacer = None
+            _SWITCH_INTERVAL.release()
+
+
+class _SwitchIntervalLease:
+    """Process-wide, reference-counted lowering of ``sys.setswitchinterval``.
+
+    Several banks (sound effects, speech) may warm at once; the interval is
+    lowered while any paced worker runs and restored when the last one ends,
+    unless someone else changed it meanwhile.
+    """
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._users = 0
+        self._saved: float | None = None
+        self._applied: float | None = None
+
+    def acquire(self, interval: float | None) -> None:
+        with self._lock:
+            self._users += 1
+            current = sys.getswitchinterval()
+            if interval is not None and interval < current:
+                if self._saved is None:
+                    self._saved = current
+                sys.setswitchinterval(interval)
+                self._applied = interval
+
+    def release(self) -> None:
+        with self._lock:
+            self._users = max(0, self._users - 1)
+            if self._users or self._saved is None:
+                return
+            if sys.getswitchinterval() == self._applied:
+                sys.setswitchinterval(self._saved)
+            self._saved = None
+            self._applied = None
+
+
+_SWITCH_INTERVAL = _SwitchIntervalLease()
 
 
 SoundFactory = Callable[[], "pygame.mixer.Sound | None"]
@@ -60,11 +249,20 @@ class DeferredSoundBank(Mapping[str, pygame.mixer.Sound]):
     ``len(bank)`` and iteration see every defined cue. It is bounded by the
     cues defined (each built at most once) and owns its single worker, which
     stops after the last cue, when the mixer closes, or on :meth:`close`.
+    The worker is paced by a :class:`SynthesisPacer` (pass
+    ``pacer_factory=None`` to disable) so it never starves the Activity loop.
     Audio stays fail-soft: a factory that raises leaves that cue silent
     (``get`` returns ``None``) instead of breaking the Activity.
     """
 
-    def __init__(self, *, defer_until_first_frame: bool = True) -> None:
+    def __init__(
+        self,
+        *,
+        defer_until_first_frame: bool = True,
+        pacer_factory: Callable[[], SynthesisPacer | None] | None = SynthesisPacer,
+    ) -> None:
+        self._pacer_factory = pacer_factory
+        self._pacer: SynthesisPacer | None = None
         self._factories: dict[str, SoundFactory] = {}
         self._sounds: dict[str, pygame.mixer.Sound] = {}
         self._building: set[str] = set()
@@ -165,6 +363,18 @@ class DeferredSoundBank(Mapping[str, pygame.mixer.Sound]):
         ]
 
     def _warm_worker(self) -> None:
+        pacer = self._pacer_factory() if self._pacer_factory is not None else None
+        if pacer is None:
+            self._warm_pending(None)
+            return
+        self._pacer = pacer
+        try:
+            with pacer.installed():
+                self._warm_pending(pacer)
+        finally:
+            self._pacer = None
+
+    def _warm_pending(self, pacer: SynthesisPacer | None) -> None:
         while True:
             with self._condition:
                 pending = self._pending_names()
@@ -173,6 +383,8 @@ class DeferredSoundBank(Mapping[str, pygame.mixer.Sound]):
             if pygame.mixer.get_init() is None:
                 return
             self._resolve(pending[0])
+            if pacer is not None:
+                pacer.cue_finished()  # a cue boundary is always a yield point
 
     def _resolve(self, name: str) -> pygame.mixer.Sound | None:
         with self._condition:
@@ -186,6 +398,9 @@ class DeferredSoundBank(Mapping[str, pygame.mixer.Sound]):
                 if name not in self._building:
                     self._building.add(name)
                     break
+                pacer = self._pacer
+                if pacer is not None:
+                    pacer.hurry()  # the paced worker builds it: let it run flat out
                 self._condition.wait()
         try:
             sound = factory()

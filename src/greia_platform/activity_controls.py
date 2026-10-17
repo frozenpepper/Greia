@@ -516,6 +516,8 @@ class ControlArt:
         self._resolver = resolver if resolver is not None else _default_visual_resolver
         self._images: BoundedCache[tuple[str, str, int, int], pygame.Surface | None] = BoundedCache(max_entries)
         self._sources: BoundedCache[tuple[str, str], pygame.Surface | None] = BoundedCache(16)
+        # RLE copies of images blitted onto opaque targets (see presentable).
+        self._presentable = PreparedSurfaces(max_entries=max_entries, max_pixels=1024 * 600 * 2)
 
     def image(
         self,
@@ -569,9 +571,23 @@ class ControlArt:
         self._sources[key] = surface
         return surface
 
+    def presentable(self, surface: pygame.Surface, target: pygame.Surface) -> pygame.Surface:
+        """``surface`` (an image from this loader) ready to blit onto ``target``.
+
+        For per-frame blits of loader art, e.g. a cast pose an Activity draws
+        itself: ``target.blit(art.presentable(pose, target), pos)``. Opaque
+        targets get a cached RLE copy (an un-encoded 200 px cast pose costs
+        ~5 ms per blit on the Atom reference floor), per-pixel-alpha targets
+        get ``surface`` itself (``pygame_blit`` module notes). Bounded LRU,
+        keyed by the image, i.e. by asset, variant and size.
+        """
+
+        return self._presentable.for_target(surface, target)
+
     def clear(self) -> None:
         self._images.clear()
         self._sources.clear()
+        self._presentable.clear()
 
 
 # --------------------------------------------------------------------------

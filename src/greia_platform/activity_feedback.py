@@ -7,7 +7,10 @@ the Activity through optional hooks; this module only owns the presentation.
 
 Poses are shared catalogue art (``character.<id>`` variants), scaled once at
 construction. Motion is a tiny hop/sway computed from the clock and applied as
-a blit offset, so drawing never scales, rotates or renders text.
+a blit offset, so drawing never scales, rotates or renders text. Onto an opaque
+target each pose is blitted from an RLE-prepared copy made on first use
+(``pygame_blit``): an un-encoded 200 px pose cost ~5 ms per frame on the Atom
+reference floor.
 """
 
 from __future__ import annotations
@@ -21,6 +24,7 @@ import pygame
 
 from .activity_controls import ControlArt
 from .frame_governor import FramePolicy
+from .pygame_blit import PreparedSurfaces
 
 CANONICAL_CAST = ("lilli", "leo", "flash", "dani", "tito", "momo")
 
@@ -79,6 +83,9 @@ class CastFeedback:
             CastPose.CHEER: art.image(asset_id, int(height), variant=_POSE_VARIANTS[CastPose.CHEER]),
             CastPose.THINK: art.image(asset_id, int(height), variant=_POSE_VARIANTS[CastPose.THINK]),
         }
+        # One RLE copy per pose (keyed by the pose surface, i.e. by pose,
+        # variant and scale), made at the first blit onto an opaque target.
+        self._prepared = PreparedSurfaces(max_entries=len(self._surfaces), max_pixels=1024 * 600)
         self._height = int(height)
         self._pose = CastPose.IDLE
         self._since = clock()
@@ -133,7 +140,7 @@ class CastFeedback:
             return
         dx, dy = self._offset()
         rect = surface.get_rect(midbottom=(midbottom[0] + dx, midbottom[1] + dy))
-        target.blit(surface, rect)
+        target.blit(self._prepared.for_target(surface, target), rect)
 
     def _set(self, pose: CastPose) -> None:
         self._pose = pose

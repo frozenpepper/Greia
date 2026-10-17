@@ -415,6 +415,55 @@ class CastFeedbackTests(_KitTestCase):
         cast.try_again()
         self.assertEqual((cast.pose, sounds[-1]), (CastPose.THINK, "hmm"))
 
+    def test_opaque_targets_get_an_rle_pose_with_identical_pixels(self) -> None:
+        from greia_platform.pygame_blit import is_rle
+
+        art = ControlArt(_repo_resolver)
+        cast = CastFeedback("tito", height=96, art=art)
+        pose = art.image("character.tito", 96, variant="happy")
+        reference = pygame.Surface((200, 200))
+        reference.fill((90, 160, 220))
+        reference.blit(pose, pose.get_rect(midbottom=(100, 190)))
+        target = pygame.Surface((200, 200))
+        target.fill((90, 160, 220))
+        blitted: list[pygame.Surface] = []
+
+        class _Spy(pygame.Surface):
+            def blit(self, source, *args, **kwargs):  # type: ignore[override]
+                blitted.append(source)
+                return super().blit(source, *args, **kwargs)
+
+        spy = _Spy((200, 200))
+        spy.fill((90, 160, 220))
+        cast.draw(spy, (100, 190))
+        cast.draw(target, (100, 190))
+        self.assertTrue(is_rle(blitted[0]))
+        self.assertIsNot(blitted[0], pose)
+        self.assertFalse(is_rle(pose), "the shared loader image is never modified")
+        for x in range(0, 200, 7):
+            for y in range(0, 200, 7):
+                a, b = reference.get_at((x, y)), target.get_at((x, y))
+                self.assertLessEqual(max(abs(a[i] - b[i]) for i in range(3)), 1, (x, y))
+        # Per-pixel-alpha targets keep the plain pose (RLE would turn edges opaque).
+        alpha_spy = _Spy((200, 200), pygame.SRCALPHA)
+        blitted.clear()
+        cast.draw(alpha_spy, (100, 190))
+        self.assertIs(blitted[0], pose)
+
+    def test_control_art_presentable_is_bounded_and_target_aware(self) -> None:
+        from greia_platform.pygame_blit import is_rle
+
+        art = ControlArt(_repo_resolver, max_entries=2)
+        poses = [art.image("character.leo", 40 + i, variant="pose_point") for i in range(3)]
+        opaque = pygame.Surface((64, 64))
+        prepared = [art.presentable(pose, opaque) for pose in poses]
+        self.assertTrue(all(is_rle(p) for p in prepared))
+        self.assertIs(art.presentable(poses[2], opaque), prepared[2])
+        self.assertLessEqual(len(art._presentable), 2)
+        self.assertIs(art.presentable(poses[0], pygame.Surface((8, 8), pygame.SRCALPHA)), poses[0])
+        art.clear()
+        self.assertEqual(len(art._presentable), 0)
+
     def test_every_cast_member_has_think_and_cheer_art(self) -> None:
         art = ControlArt(_repo_resolver)
         for name in ("lilli", "leo", "flash", "dani", "tito", "momo"):
