@@ -69,6 +69,7 @@ class LilliCast:
         self.feedback = feedback
         self._clock = clock
         self._point = art.lilli("pose_point", LILLI_HEIGHT)
+        self._loader = art.loader
         self._point_until = 0.0
 
     @property
@@ -109,7 +110,7 @@ class LilliCast:
     def draw(self, surface: pygame.Surface) -> None:
         if self.pointing and self._point is not None:
             bob = int(math.sin((self._point_until - self._clock()) * 6.0) * 3)
-            surface.blit(self._point, self._point.get_rect(midbottom=(LILLI_MIDBOTTOM[0] + bob, LILLI_MIDBOTTOM[1])))
+            surface.blit(self._loader.presentable(self._point, surface), self._point.get_rect(midbottom=(LILLI_MIDBOTTOM[0] + bob, LILLI_MIDBOTTOM[1])))
             return
         self.feedback.draw(surface, LILLI_MIDBOTTOM)
 

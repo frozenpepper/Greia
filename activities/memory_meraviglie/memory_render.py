@@ -128,6 +128,7 @@ class LilliCast:
         self._clock = clock
         self._point = art.cast_pose("pose_point", LILLI_HEIGHT)
         self._wave = art.cast_pose("pose_wave", LILLI_HEIGHT)
+        self._loader = art.loader
         self._point_until = 0.0
         self.waving = False
 
@@ -168,11 +169,11 @@ class LilliCast:
 
     def draw(self, surface: pygame.Surface) -> None:
         if self.waving and self._wave is not None and self.feedback.pose is CastPose.IDLE:
-            surface.blit(self._wave, self._wave.get_rect(midbottom=LILLI_MIDBOTTOM))
+            surface.blit(self._loader.presentable(self._wave, surface), self._wave.get_rect(midbottom=LILLI_MIDBOTTOM))
             return
         if self.pointing and self._point is not None:
             bob = int(math.sin((self._point_until - self._clock()) * 7.0) * 3)
-            surface.blit(self._point, self._point.get_rect(midbottom=(LILLI_MIDBOTTOM[0], LILLI_MIDBOTTOM[1] + bob)))
+            surface.blit(self._loader.presentable(self._point, surface), self._point.get_rect(midbottom=(LILLI_MIDBOTTOM[0], LILLI_MIDBOTTOM[1] + bob)))
             return
         self.feedback.draw(surface, LILLI_MIDBOTTOM)
 

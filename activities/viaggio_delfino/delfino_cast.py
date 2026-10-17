@@ -35,6 +35,7 @@ class DelfinoCast:
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._clock = clock
+        self._art = art
         self._height = int(height)
         # The app owns speech (approved recordings); the cast owns presentation.
         self.feedback = CastFeedback(self.CHARACTER, height=height, art=art, clock=clock)
@@ -139,7 +140,7 @@ class DelfinoCast:
         elif now < self._wave_until:
             pose = self._wave
         if pose is not None:
-            surface.blit(pose, pose.get_rect(midbottom=anchor))
+            surface.blit(self._art.presentable(pose, surface), pose.get_rect(midbottom=anchor))
             return
         if self.talking:
             anchor = (anchor[0], anchor[1] - int(abs(math.sin(now * 7.0)) * 4))

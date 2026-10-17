@@ -16,7 +16,9 @@ There is deliberately no engine drone. Every call fails soft without a mixer.
 from __future__ import annotations
 
 from collections import OrderedDict
+from itertools import accumulate, repeat
 import math
+from operator import add, mul
 from pathlib import Path
 import random
 from typing import Final
@@ -24,7 +26,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, current_pcm16_mixer_spec, mono_pcm16_bytes
 
 SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
@@ -150,62 +152,101 @@ class CollineAudio:
         self._sounds.define("thump", lambda: _thump(rate, channels))
 
 
+def _decaying_sine(
+    rate: int,
+    count: int,
+    frequency: float,
+    decay: float,
+    *,
+    start: float = 0.0,
+    attack: float = 0.0,
+) -> list[float]:
+    """``sin(2*pi*f*local) * exp(-decay*local) * min(1, local/attack)`` for one partial.
+
+    ``local`` is the time since ``start`` seconds; the list covers sample indices
+    ``0..count-1`` (zeros before ``start``). Instead of a ``sin`` and an ``exp``
+    call per sample (the dominant start-up cost on the Atom), the partial is a
+    complex phasor multiplied by one constant per sample, accumulated in C by
+    ``itertools.accumulate``: the same curve to ~1e-11, a few times cheaper.
+    """
+
+    first = int(start * rate)
+    while first / rate < start:
+        first += 1
+    while first > 0 and (first - 1) / rate >= start:
+        first -= 1
+    if first >= count:
+        return [0.0] * count
+    omega = 2.0 * math.pi * frequency
+    offset = first / rate - start
+    fade = math.exp(-decay / rate)
+    start_amplitude = math.exp(-decay * offset)
+    phasors = accumulate(
+        repeat(complex(fade * math.cos(omega / rate), fade * math.sin(omega / rate)), count - first - 1),
+        mul,
+        initial=complex(start_amplitude * math.cos(omega * offset), start_amplitude * math.sin(omega * offset)),
+    )
+    values = [z.imag for z in phasors]
+    if attack > 0.0:
+        for index in range(min(len(values), int(attack * rate) + 2)):
+            values[index] *= min(1.0, (offset + index / rate) / attack)
+    return [0.0] * first + values if first else values
+
+
+def _mix(parts: list[list[float]]) -> list[float]:
+    total = parts[0]
+    for part in parts[1:]:
+        total = list(map(add, total, part))
+    return total
+
+
 def _bell(rate: int, channels: int, notes: tuple[float, ...], duration: float, volume: int) -> pygame.mixer.Sound:
     """Soft celesta notes, one after another (a quick rising run for >1 note)."""
 
-    buffer = bytearray()
+    count = int(rate * duration)
     step = duration / (len(notes) + 1)
-    for index in range(int(rate * duration)):
-        t = index / rate
-        value = 0.0
-        for order, frequency in enumerate(notes):
-            local = t - order * step
-            if local < 0:
-                continue
-            envelope = min(1.0, local / 0.006) * math.exp(-5.0 * local / duration)
-            value += math.sin(2 * math.pi * frequency * local) * envelope
-        append_mono_pcm16(buffer, int(value * volume), channels)
-    return pygame.mixer.Sound(buffer=bytes(buffer))
+    parts = [
+        _decaying_sine(rate, count, frequency, 5.0 / duration, start=order * step, attack=0.006)
+        for order, frequency in enumerate(notes)
+    ]
+    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(_mix(parts), channels, scale=volume))
 
 
 def _boing(rate: int, channels: int) -> pygame.mixer.Sound:
     """A gentle cartoon spring (rising wobble), never a failure buzzer."""
 
-    buffer = bytearray()
     duration = 0.45
-    phase = 0.0
-    for index in range(int(rate * duration)):
-        t = index / rate
-        frequency = 180.0 + 360.0 * (t / duration) + math.sin(2 * math.pi * 14.0 * t) * 30.0
-        phase += 2 * math.pi * frequency / rate
-        envelope = min(1.0, t / 0.01) * (1.0 - t / duration)
-        append_mono_pcm16(buffer, int(math.sin(phase) * envelope * 5200), channels)
-    return pygame.mixer.Sound(buffer=bytes(buffer))
+    count = int(rate * duration)
+    times = [index / rate for index in range(count)]
+    wobble = 2 * math.pi * 14.0
+    per_sample = 2 * math.pi / rate
+    phases = accumulate([(180.0 + 360.0 * (t / duration) + math.sin(wobble * t) * 30.0) * per_sample for t in times])
+    envelope = [min(1.0, t / 0.01) * (1.0 - t / duration) for t in times]
+    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(map(mul, map(math.sin, phases), envelope), channels, scale=5200))
 
 
 def _whoosh(rate: int, channels: int, rng: random.Random) -> pygame.mixer.Sound:
-    buffer = bytearray()
     duration = 0.3
-    phase = 0.0
-    for index in range(int(rate * duration)):
-        t = index / rate
-        frequency = 300.0 + 500.0 * (t / duration)
-        phase += 2 * math.pi * frequency / rate
-        envelope = math.sin(math.pi * t / duration)
-        value = math.sin(phase) * 0.6 + (rng.random() * 2.0 - 1.0) * 0.25
-        append_mono_pcm16(buffer, int(value * envelope * 4200), channels)
-    return pygame.mixer.Sound(buffer=bytes(buffer))
+    count = int(rate * duration)
+    times = [index / rate for index in range(count)]
+    per_sample = 2 * math.pi / rate
+    phases = accumulate([(300.0 + 500.0 * (t / duration)) * per_sample for t in times])
+    # One rng.random() per sample, in sample order: the shared game sequence is unchanged.
+    noise = [rng.random() for _ in times]
+    tone = map(math.sin, phases)
+    samples = [
+        (tone_value * 0.6 + (draw * 2.0 - 1.0) * 0.25) * math.sin(math.pi * t / duration)
+        for tone_value, draw, t in zip(tone, noise, times)
+    ]
+    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(samples, channels, scale=4200))
 
 
 def _thump(rate: int, channels: int) -> pygame.mixer.Sound:
-    buffer = bytearray()
-    duration = 0.16
-    for index in range(int(rate * duration)):
-        t = index / rate
-        envelope = math.exp(-26.0 * t)
-        value = 0.8 * math.sin(2 * math.pi * 120.0 * t) + 0.2 * math.sin(2 * math.pi * 260.0 * t)
-        append_mono_pcm16(buffer, int(value * envelope * 7000), channels)
-    return pygame.mixer.Sound(buffer=bytes(buffer))
+    count = int(rate * 0.16)
+    low = _decaying_sine(rate, count, 120.0, 26.0)
+    high = _decaying_sine(rate, count, 260.0, 26.0)
+    samples = [0.8 * a + 0.2 * b for a, b in zip(low, high)]
+    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(samples, channels, scale=7000))
 
 
 __all__ = ["CLIP_CACHE_LIMIT", "CollineAudio", "EFFECTS", "HOST", "SHARED_CUES"]

@@ -20,6 +20,7 @@ import time
 import pygame
 
 from greia_platform.activity_feedback import CastFeedback, CastPose
+from greia_platform.pygame_blit import PreparedSurfaces
 
 if __package__:
     from .measure_art import BOW_HEIGHT, MeasureArt
@@ -140,6 +141,7 @@ class MeasureCast:
     def __init__(self, feedback: CastFeedback, point: pygame.Surface | None, clock: Callable[[], float]) -> None:
         self.feedback = feedback
         self._point = point
+        self._fast = PreparedSurfaces(max_entries=2)  # RLE copy of the pose (opaque targets only)
         self._clock = clock
         self._point_until = 0.0
 
@@ -176,7 +178,7 @@ class MeasureCast:
 
     def draw(self, target: pygame.Surface, midbottom: tuple[int, int]) -> None:
         if self.pointing and self.feedback.pose is CastPose.IDLE:
-            target.blit(self._point, self._point.get_rect(midbottom=midbottom))  # type: ignore[union-attr]
+            target.blit(self._fast.for_target(self._point, target), self._point.get_rect(midbottom=midbottom))  # type: ignore[union-attr]
             return
         self.feedback.draw(target, midbottom)
 

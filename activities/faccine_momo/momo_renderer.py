@@ -16,6 +16,7 @@ import math
 import pygame
 
 from greia_platform.activity_feedback import CastFeedback, CastPose
+from greia_platform.pygame_blit import PreparedSurfaces
 
 if __package__:
     from .momo_art import MomoArt
@@ -227,6 +228,7 @@ class GuideCast:
     def __init__(self, feedback: CastFeedback, point: pygame.Surface | None, clock: Callable[[], float]) -> None:
         self.feedback = feedback
         self._point = point
+        self._fast = PreparedSurfaces(max_entries=2)  # RLE copy of the pose (opaque targets only)
         self._clock = clock
         self._point_until = 0.0
 
@@ -268,7 +270,7 @@ class GuideCast:
     def draw(self, surface: pygame.Surface) -> None:
         if self.pointing and self._point is not None:
             bob = int(math.sin((self._point_until - self._clock()) * 7.0) * 3)
-            surface.blit(self._point, self._point.get_rect(midbottom=(GUIDE_MIDBOTTOM[0], GUIDE_MIDBOTTOM[1] + bob)))
+            surface.blit(self._fast.for_target(self._point, surface), self._point.get_rect(midbottom=(GUIDE_MIDBOTTOM[0], GUIDE_MIDBOTTOM[1] + bob)))
             return
         self.feedback.draw(surface, GUIDE_MIDBOTTOM)
 

@@ -20,7 +20,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, current_pcm16_mixer_spec, mono_pcm16_bytes
 
 VOICE_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 1
@@ -139,59 +139,59 @@ class QuattroAudio:
         self._sounds.define("fanfare", lambda: _fanfare(rate, channels))
 
 
-def _sound(raw: bytearray) -> pygame.mixer.Sound:
-    return pygame.mixer.Sound(buffer=bytes(raw))
+def _sound(samples: list[float], channels: int) -> pygame.mixer.Sound:
+    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(samples, channels))
 
 
 def _sweep(rate: int, channels: int, seconds: float, start: float, end: float, amplitude: int) -> pygame.mixer.Sound:
-    raw = bytearray()
+    samples: list[float] = []
     count = int(rate * seconds)
     phase = 0.0
     for i in range(count):
         t = i / count
         phase += 2.0 * math.pi * (start + (end - start) * t) / rate
         envelope = math.sin(math.pi * t) ** 1.2
-        append_mono_pcm16(raw, int(math.sin(phase) * envelope * amplitude), channels)
-    return _sound(raw)
+        samples.append(int(math.sin(phase) * envelope * amplitude))
+    return _sound(samples, channels)
 
 
 def _clack(rate: int, channels: int) -> pygame.mixer.Sound:
     """Wood-on-wood impact with a tiny bounce."""
 
-    raw = bytearray()
+    samples: list[float] = []
     for i in range(int(rate * 0.12)):
         t = i / rate
         value = (math.sin(2 * math.pi * 220.0 * t) * 0.7 + math.sin(2 * math.pi * 540.0 * t) * 0.3) * math.exp(-32.0 * t)
         if t > 0.045:
             t2 = t - 0.045
             value += math.sin(2 * math.pi * 280.0 * t2) * math.exp(-40.0 * t2) * 0.35
-        append_mono_pcm16(raw, int(value * 15000), channels)
-    return _sound(raw)
+        samples.append(int(value * 15000))
+    return _sound(samples, channels)
 
 
 def _tap(rate: int, channels: int, frequency: float) -> pygame.mixer.Sound:
-    raw = bytearray()
+    samples: list[float] = []
     for i in range(int(rate * 0.05)):
         t = i / rate
-        append_mono_pcm16(raw, int(math.sin(2 * math.pi * frequency * t) * math.exp(-45.0 * t) * 9000), channels)
-    return _sound(raw)
+        samples.append(int(math.sin(2 * math.pi * frequency * t) * math.exp(-45.0 * t) * 9000))
+    return _sound(samples, channels)
 
 
 def _chime(rate: int, channels: int, frequency: float) -> pygame.mixer.Sound:
-    raw = bytearray()
+    samples: list[float] = []
     count = int(rate * 0.3)
     for i in range(count):
         t = i / rate
         value = math.sin(2 * math.pi * frequency * t) * 0.75 + math.sin(4 * math.pi * frequency * t) * 0.25
-        append_mono_pcm16(raw, int(value * math.exp(-9.0 * t) * 10000), channels)
-    return _sound(raw)
+        samples.append(int(value * math.exp(-9.0 * t) * 10000))
+    return _sound(samples, channels)
 
 
 def _fanfare(rate: int, channels: int) -> pygame.mixer.Sound:
     """Warm rising C-E-G-C chime."""
 
     notes = ((0.0, 523.25), (0.09, 659.25), (0.18, 783.99), (0.27, 1046.5))
-    raw = bytearray()
+    samples: list[float] = []
     for i in range(int(rate * 0.7)):
         t = i / rate
         value = 0.0
@@ -199,8 +199,8 @@ def _fanfare(rate: int, channels: int) -> pygame.mixer.Sound:
             if t >= start:
                 local = t - start
                 value += math.sin(2 * math.pi * frequency * local) * math.exp(-5.0 * local) * 0.4
-        append_mono_pcm16(raw, int(value * 11000), channels)
-    return _sound(raw)
+        samples.append(int(value * 11000))
+    return _sound(samples, channels)
 
 
 __all__ = ["QuattroAudio", "SPEAKERS"]

@@ -33,6 +33,7 @@ class AquariumCast:
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._clock = clock
+        self._art = art
         self._height = int(height)
         # The app owns speech (approved Tito takes); the cast owns presentation.
         self.feedback = CastFeedback(self.CHARACTER, height=height, art=art, clock=clock)
@@ -79,7 +80,7 @@ class AquariumCast:
         drop = int((1.0 - self._shown) ** 2 * (self._height + 8))
         anchor = (midbottom[0], midbottom[1] + drop)
         if self._point is not None and self._clock() < self._point_until and not self.feedback.animating:
-            surface.blit(self._point, self._point.get_rect(midbottom=anchor))
+            surface.blit(self._art.presentable(self._point, surface), self._point.get_rect(midbottom=anchor))
             return
         self.feedback.draw(surface, anchor)
 

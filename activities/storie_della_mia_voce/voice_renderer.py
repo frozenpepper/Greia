@@ -151,6 +151,7 @@ class HostCast:
         self._clock = clock
         self._point = art.host("pose_point", HOST_HEIGHT)
         self._wave = art.host("pose_wave", HOST_HEIGHT)
+        self._loader = art.loader
         self._point_until = 0.0
         self.waving = False
 
@@ -187,10 +188,10 @@ class HostCast:
 
     def draw(self, target: pygame.Surface, midbottom: tuple[int, int] = HOST_MIDBOTTOM) -> None:
         if self.pointing and self._point is not None:
-            target.blit(self._point, self._point.get_rect(midbottom=midbottom))
+            target.blit(self._loader.presentable(self._point, target), self._point.get_rect(midbottom=midbottom))
             return
         if self.waving and not self.feedback.animating and self._wave is not None:
-            target.blit(self._wave, self._wave.get_rect(midbottom=midbottom))
+            target.blit(self._loader.presentable(self._wave, target), self._wave.get_rect(midbottom=midbottom))
             return
         self.feedback.draw(target, midbottom)
 

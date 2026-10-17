@@ -12,7 +12,9 @@ after the first frame; every call fails soft without a mixer. No generated speec
 
 from __future__ import annotations
 
+from itertools import accumulate, repeat
 import math
+from operator import add, mul
 from pathlib import Path
 import random
 from typing import Final
@@ -20,7 +22,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, current_pcm16_mixer_spec, mono_pcm16_bytes
 
 SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
@@ -126,6 +128,65 @@ class CorsaAudio:
         self._sounds.define("yawn", lambda: _sweep(rate, channels, 0.45, 420.0, 260.0, 3000))
 
 
+def _decaying_sine(
+    rate: int,
+    count: int,
+    frequency: float,
+    decay: float,
+    *,
+    start: float = 0.0,
+    stop: float | None = None,
+    attack: float = 0.0,
+    gain: float = 1.0,
+) -> list[float]:
+    """``gain * sin(2*pi*f*local) * exp(-decay*local) * min(1, local/attack)`` for one partial.
+
+    ``local`` is the time since ``start`` seconds; the list covers sample indices
+    ``0..count-1`` and is zero before ``start`` and from ``stop`` on. Instead of a
+    ``sin`` and an ``exp`` call per sample (the dominant start-up cost on the
+    Atom), the partial is a complex phasor multiplied by one constant per
+    sample and accumulated in C by ``itertools.accumulate``: the same curve to
+    ~1e-11 (identical 16-bit samples), about three times cheaper.
+    """
+
+    first = int(start * rate)
+    while first / rate < start:
+        first += 1
+    while first > 0 and (first - 1) / rate >= start:
+        first -= 1
+    last = count
+    if stop is not None:
+        last = min(count, int(stop * rate))
+        while last / rate < stop:
+            last += 1
+        last = min(count, last)
+    if first >= last:
+        return [0.0] * count
+    omega = 2.0 * math.pi * frequency
+    offset = first / rate - start
+    fade = math.exp(-decay / rate)  # |r| per sample; r = fade * exp(i*omega/rate), z0 = gain * exp((-decay + i*omega) * offset)
+    start_amplitude = gain * math.exp(-decay * offset)
+    phasors = accumulate(
+        repeat(complex(fade * math.cos(omega / rate), fade * math.sin(omega / rate)), last - first - 1),
+        mul,
+        initial=complex(start_amplitude * math.cos(omega * offset), start_amplitude * math.sin(omega * offset)),
+    )
+    values = [z.imag for z in phasors]
+    if attack > 0.0:
+        for index in range(min(len(values), int(attack * rate) + 2)):
+            values[index] *= min(1.0, (offset + index / rate) / attack)
+    return [0.0] * first + values + [0.0] * (count - last)
+
+
+def _mix(parts: list[list[float]]) -> list[float]:
+    """Sum equally long sample lists."""
+
+    total = parts[0]
+    for part in parts[1:]:
+        total = list(map(add, total, part))
+    return total
+
+
 def _chime(
     rate: int,
     channels: int,
@@ -136,24 +197,19 @@ def _chime(
 ) -> pygame.mixer.Sound:
     tail = 0.35
     duration = step * len(notes) + tail
-    buffer = bytearray()
-    for index in range(int(rate * duration)):
-        t = index / rate
-        value = 0.0
-        for number, frequency in enumerate(notes):
-            start = number * step
-            if t >= start:
-                local = t - start
-                angle = 2.0 * math.pi * frequency * local
-                value += (math.sin(angle) + 0.3 * math.sin(2 * angle)) * math.exp(-7.0 * local)
-        append_mono_pcm16(buffer, int(max(-1.6, min(1.6, value)) * volume), channels)
-    return pygame.mixer.Sound(buffer=bytes(buffer))
+    count = int(rate * duration)
+    parts = []
+    for number, frequency in enumerate(notes):
+        parts.append(_decaying_sine(rate, count, frequency, 7.0, start=number * step))
+        parts.append(_decaying_sine(rate, count, 2.0 * frequency, 7.0, start=number * step, gain=0.3))
+    mixed = [max(-1.6, min(1.6, value)) for value in _mix(parts)]
+    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(mixed, channels, scale=volume))
 
 
 def _pop(rate: int, channels: int) -> pygame.mixer.Sound:
     """A juicy little pop as a berry goes into the basket."""
 
-    buffer = bytearray()
+    samples: list[float] = []
     duration = 0.12
     phase = 0.0
     for index in range(int(rate * duration)):
@@ -161,14 +217,14 @@ def _pop(rate: int, channels: int) -> pygame.mixer.Sound:
         frequency = 480.0 + (1.0 - t / duration) * 360.0
         phase += 2.0 * math.pi * frequency / rate
         envelope = math.sin(math.pi * t / duration) ** 0.8
-        append_mono_pcm16(buffer, int(math.sin(phase) * envelope * 9000), channels)
-    return pygame.mixer.Sound(buffer=bytes(buffer))
+        samples.append(int(math.sin(phase) * envelope * 9000))
+    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(samples, channels))
 
 
 def _boing(rate: int, channels: int) -> pygame.mixer.Sound:
     """A soft springy "boing" for a gentle bump (never a buzzer)."""
 
-    buffer = bytearray()
+    samples: list[float] = []
     duration = 0.32
     phase = 0.0
     for index in range(int(rate * duration)):
@@ -176,33 +232,30 @@ def _boing(rate: int, channels: int) -> pygame.mixer.Sound:
         frequency = 260.0 + 90.0 * math.sin(t * 38.0) * math.exp(-6.0 * t)
         phase += 2.0 * math.pi * frequency / rate
         envelope = math.exp(-6.5 * t)
-        append_mono_pcm16(buffer, int(math.sin(phase) * envelope * 8000), channels)
-    return pygame.mixer.Sound(buffer=bytes(buffer))
+        samples.append(int(math.sin(phase) * envelope * 8000))
+    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(samples, channels))
 
 
 def _sweep(rate: int, channels: int, duration: float, start: float, end: float, volume: int) -> pygame.mixer.Sound:
-    buffer = bytearray()
-    phase = 0.0
-    for index in range(int(rate * duration)):
-        t = index / rate
-        frequency = start + (end - start) * (t / duration)
-        phase += 2.0 * math.pi * frequency / rate
-        envelope = math.sin(math.pi * t / duration)
-        append_mono_pcm16(buffer, int(math.sin(phase) * envelope * volume), channels)
-    return pygame.mixer.Sound(buffer=bytes(buffer))
+    count = int(rate * duration)
+    times = [index / rate for index in range(count)]
+    per_sample = 2.0 * math.pi / rate
+    phases = accumulate([(start + (end - start) * (t / duration)) * per_sample for t in times])
+    envelope = [math.sin(math.pi * t / duration) for t in times]
+    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(map(mul, map(math.sin, phases), envelope), channels, scale=volume))
 
 
 def _thud(rate: int, channels: int) -> pygame.mixer.Sound:
     """Soft leafy bump into a hedge: low sine plus a little rustle."""
 
     noise = random.Random(7)
-    buffer = bytearray()
+    samples: list[float] = []
     for index in range(int(rate * 0.14)):
         t = index / rate
         envelope = math.exp(-28.0 * t)
         value = 0.75 * math.sin(2.0 * math.pi * 150.0 * t) + 0.25 * noise.uniform(-1.0, 1.0)
-        append_mono_pcm16(buffer, int(value * envelope * 7000), channels)
-    return pygame.mixer.Sound(buffer=bytes(buffer))
+        samples.append(int(value * envelope * 7000))
+    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(samples, channels))
 
 
 __all__ = ["CorsaAudio", "EFFECTS", "SHARED_CUES", "SPEAKER"]

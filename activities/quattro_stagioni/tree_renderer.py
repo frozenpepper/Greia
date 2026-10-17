@@ -26,6 +26,7 @@ from typing import Protocol
 import pygame
 
 from greia_platform.activity_feedback import CastFeedback, CastPose
+from greia_platform.pygame_blit import PreparedSurfaces
 
 if __package__:
     from .tree_art import SeasonsArt
@@ -261,6 +262,7 @@ class TitoCast:
         self._clock = clock
         self._point = art.cast_pose("pose_point")
         self._wave = art.cast_pose("pose_wave")
+        self._fast = PreparedSurfaces(max_entries=4)  # RLE copies of the two poses (opaque targets only)
         self._point_until = 0.0
         self._wave_until = 0.0
         self.waving = False  # held wave (season picker)
@@ -343,7 +345,7 @@ class TitoCast:
         variant, own, (dx, dy) = self._variant_and_offset()
         midbottom = (TITO_MIDBOTTOM[0] + dx, TITO_MIDBOTTOM[1] + dy)
         if own is not None:
-            surface.blit(own, own.get_rect(midbottom=midbottom))
+            surface.blit(self._fast.for_target(own, surface), own.get_rect(midbottom=midbottom))
         else:
             self.feedback.draw(surface, TITO_MIDBOTTOM)
         if worn is None:

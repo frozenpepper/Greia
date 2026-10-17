@@ -17,6 +17,7 @@ import math
 import pygame
 
 from greia_platform.activity_feedback import CastFeedback, CastPose
+from greia_platform.pygame_blit import PreparedSurfaces
 
 if __package__:
     from .serra_art import SerraArt
@@ -186,6 +187,7 @@ class TitoCast:
     def __init__(self, feedback: CastFeedback, point: pygame.Surface | None, clock: Callable[[], float]) -> None:
         self.feedback = feedback
         self._point = point
+        self._fast = PreparedSurfaces(max_entries=2)  # RLE copy of the pose (opaque targets only)
         self._clock = clock
         self._point_until = 0.0
 
@@ -220,7 +222,7 @@ class TitoCast:
 
     def draw(self, target: pygame.Surface, midbottom: tuple[int, int]) -> None:
         if self.feedback.pose is CastPose.IDLE and self.pointing and self._point is not None:
-            target.blit(self._point, self._point.get_rect(midbottom=midbottom))
+            target.blit(self._fast.for_target(self._point, target), self._point.get_rect(midbottom=midbottom))
             return
         self.feedback.draw(target, midbottom)
 

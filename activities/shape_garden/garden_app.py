@@ -33,6 +33,7 @@ from greia_platform.activity_api import (
     mark_activity_ready,
 )
 from greia_platform.activity_controls import (
+    ControlArt,
     ControlKit,
     ControlLayout,
     ControlTheme,
@@ -140,9 +141,10 @@ class GardenCast:
     wordless "try the tray!" cue), drawn only while the friend is idle.
     """
 
-    def __init__(self, feedback: CastFeedback | None, point: pygame.Surface | None, clock) -> None:
+    def __init__(self, feedback: CastFeedback | None, point: pygame.Surface | None, clock, art: ControlArt | None = None) -> None:
         self.feedback = feedback
         self._point = point
+        self._art = art
         self._clock = clock
         self._point_until = 0.0
 
@@ -175,7 +177,10 @@ class GardenCast:
 
     def draw(self, target: pygame.Surface, midbottom: tuple[int, int]) -> None:
         if self.pointing and (self.feedback is None or self.feedback.pose is CastPose.IDLE):
-            target.blit(self._point, self._point.get_rect(midbottom=midbottom))  # type: ignore[union-attr]
+            point = self._point
+            if self._art is not None:
+                point = self._art.presentable(point, target)  # type: ignore[arg-type]
+            target.blit(point, self._point.get_rect(midbottom=midbottom))  # type: ignore[union-attr]
         elif self.feedback is not None:
             self.feedback.draw(target, midbottom)
 
@@ -243,7 +248,7 @@ class GardenApp:
             feedback: CastFeedback | None = CastFeedback("dani", height=DANI_HEIGHT, art=self.kit.art, clock=clock)
         except ValueError:
             feedback = None
-        self.cast = GardenCast(feedback, self.kit.art.image("character.dani", DANI_HEIGHT, variant="pose_point"), clock)
+        self.cast = GardenCast(feedback, self.kit.art.image("character.dani", DANI_HEIGHT, variant="pose_point"), clock, self.kit.art)
 
         self.editor = GardenEditor()
         self.colour = DEFAULT_COLOUR

@@ -65,6 +65,7 @@ class CastActor:
         self._clock = clock
         point = art.cast(character, "pose_point", height)
         self._point = pygame.transform.flip(point, True, False) if (point is not None and point_left) else point
+        self._loader = art.loader
         self._point_until = 0.0
 
     def point(self, seconds: float) -> None:
@@ -100,7 +101,7 @@ class CastActor:
 
     def draw(self, target: pygame.Surface, midbottom: tuple[int, int]) -> None:
         if self.pointing and self._point is not None:
-            target.blit(self._point, self._point.get_rect(midbottom=midbottom))
+            target.blit(self._loader.presentable(self._point, target), self._point.get_rect(midbottom=midbottom))
             return
         self.feedback.draw(target, midbottom)
 

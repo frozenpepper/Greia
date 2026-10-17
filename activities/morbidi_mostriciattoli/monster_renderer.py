@@ -143,6 +143,7 @@ class CastActor:
         self.height = height
         self.feedback = CastFeedback(character, height=height, art=art, clock=clock, hold_seconds=1.6)
         self._clock = clock
+        self._art = art
         self._point = art.image(f"character.{character}", height, variant="pose_point")
         self._point_until = 0.0
 
@@ -175,7 +176,7 @@ class CastActor:
 
     def draw(self, target: pygame.Surface, midbottom: tuple[int, int]) -> None:
         if self.pointing and self._point is not None:
-            target.blit(self._point, self._point.get_rect(midbottom=midbottom))
+            target.blit(self._art.presentable(self._point, target), self._point.get_rect(midbottom=midbottom))
             return
         self.feedback.draw(target, midbottom)
 

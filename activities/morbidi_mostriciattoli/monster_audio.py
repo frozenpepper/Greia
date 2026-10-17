@@ -24,7 +24,7 @@ import wave
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, current_pcm16_mixer_spec, mono_pcm16_bytes
 
 if __package__:
     from .monster_content import SYLLABLES
@@ -44,15 +44,13 @@ MAX_VOICES: Final = 4
 
 
 def _wav(samples: list[float], rate: int, channels: int) -> bytes:
-    raw = bytearray()
-    for value in samples:
-        append_mono_pcm16(raw, int(max(-32000, min(32000, value))), channels)
+    raw = mono_pcm16_bytes([int(max(-32000, min(32000, value))) for value in samples], channels)
     buffer = io.BytesIO()
     with wave.open(buffer, "wb") as handle:
         handle.setnchannels(channels)
         handle.setsampwidth(2)
         handle.setframerate(rate)
-        handle.writeframes(bytes(raw))
+        handle.writeframes(raw)
     return buffer.getvalue()
 
 

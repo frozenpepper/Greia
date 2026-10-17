@@ -305,7 +305,7 @@ class CounterCast:
         midbottom = (CUSTOMER_MIDBOTTOM[0] + dx, CUSTOMER_MIDBOTTOM[1])
         if self.posing and self._pose is not None:
             bob = int(math.sin((self._pose_until - self._clock()) * 7.0) * 3)
-            surface.blit(self._pose, self._pose.get_rect(midbottom=(midbottom[0], midbottom[1] + bob)))
+            surface.blit(self._art.loader.presentable(self._pose, surface), self._pose.get_rect(midbottom=(midbottom[0], midbottom[1] + bob)))
             return
         if self.feedback is not None:
             self.feedback.draw(surface, midbottom)

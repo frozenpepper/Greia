@@ -16,19 +16,17 @@ from typing import Callable
 
 import pygame
 
-from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, current_pcm16_mixer_spec, mono_pcm16_bytes
 
 
 def _wav(samples: list[float], rate: int, channels: int) -> bytes:
-    raw = bytearray()
-    for value in samples:
-        append_mono_pcm16(raw, int(value), channels)
+    raw = mono_pcm16_bytes(samples, channels)
     buffer = io.BytesIO()
     with wave.open(buffer, "wb") as handle:
         handle.setnchannels(channels)
         handle.setsampwidth(2)
         handle.setframerate(rate)
-        handle.writeframes(bytes(raw))
+        handle.writeframes(raw)
     return buffer.getvalue()
 
 

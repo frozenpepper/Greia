@@ -16,7 +16,9 @@ soft without a mixer.
 from __future__ import annotations
 
 from collections import OrderedDict
+from itertools import accumulate, repeat
 import math
+from operator import add, mul
 from pathlib import Path
 import random
 from typing import Final
@@ -24,7 +26,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import shared_character_audio_path
-from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, current_pcm16_mixer_spec, mono_pcm16_bytes
 
 SPEECH_CHANNEL: Final = 0
 FIRST_SFX_CHANNEL: Final = 2
@@ -162,37 +164,96 @@ class CloudAudio:
             self._sounds.define(f"sleep_{index}", lambda note=note: _bell(rate, channels, note, 0.9, 3200))
 
 
+def _decaying_sine(
+    rate: int,
+    count: int,
+    frequency: float,
+    decay: float,
+    *,
+    start: float = 0.0,
+    stop: float | None = None,
+    attack: float = 0.0,
+    gain: float = 1.0,
+) -> list[float]:
+    """``gain * sin(2*pi*f*local) * exp(-decay*local) * min(1, local/attack)`` for one partial.
+
+    ``local`` is the time since ``start`` seconds; the list covers sample indices
+    ``0..count-1`` and is zero before ``start`` and from ``stop`` on. Instead of a
+    ``sin`` and an ``exp`` call per sample (the dominant start-up cost on the
+    Atom), the partial is a complex phasor multiplied by one constant per
+    sample and accumulated in C by ``itertools.accumulate``: the same curve to
+    ~1e-11 (identical 16-bit samples), about three times cheaper.
+    """
+
+    first = int(start * rate)
+    while first / rate < start:
+        first += 1
+    while first > 0 and (first - 1) / rate >= start:
+        first -= 1
+    last = count
+    if stop is not None:
+        last = min(count, int(stop * rate))
+        while last / rate < stop:
+            last += 1
+        last = min(count, last)
+    if first >= last:
+        return [0.0] * count
+    omega = 2.0 * math.pi * frequency
+    offset = first / rate - start
+    fade = math.exp(-decay / rate)  # |r| per sample; r = fade * exp(i*omega/rate), z0 = gain * exp((-decay + i*omega) * offset)
+    start_amplitude = gain * math.exp(-decay * offset)
+    phasors = accumulate(
+        repeat(complex(fade * math.cos(omega / rate), fade * math.sin(omega / rate)), last - first - 1),
+        mul,
+        initial=complex(start_amplitude * math.cos(omega * offset), start_amplitude * math.sin(omega * offset)),
+    )
+    values = [z.imag for z in phasors]
+    if attack > 0.0:
+        for index in range(min(len(values), int(attack * rate) + 2)):
+            values[index] *= min(1.0, (offset + index / rate) / attack)
+    return [0.0] * first + values + [0.0] * (count - last)
+
+
+def _mix(parts: list[list[float]]) -> list[float]:
+    """Sum equally long sample lists."""
+
+    total = parts[0]
+    for part in parts[1:]:
+        total = list(map(add, total, part))
+    return total
+
+
 def _bell(rate: int, channels: int, frequency: float, duration: float, volume: int) -> pygame.mixer.Sound:
     """A soft music-box/celesta note: quick attack, long gentle decay."""
 
-    buffer = bytearray()
-    for index in range(int(rate * duration)):
-        t = index / rate
-        envelope = min(1.0, t / 0.008) * math.exp(-4.5 * t / duration)
-        value = math.sin(2 * math.pi * frequency * t) + 0.3 * math.sin(2 * math.pi * frequency * 2 * t) * math.exp(-8 * t)
-        append_mono_pcm16(buffer, int(value * envelope * volume), channels)
-    return pygame.mixer.Sound(buffer=bytes(buffer))
+    count = int(rate * duration)
+    decay = 4.5 / duration
+    parts = [
+        _decaying_sine(rate, count, frequency, decay, attack=0.008),
+        _decaying_sine(rate, count, 2.0 * frequency, decay + 8.0, attack=0.008, gain=0.3),
+    ]
+    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(_mix(parts), channels, scale=volume))
 
 
 def _rustle(rate: int, channels: int) -> pygame.mixer.Sound:
     """A soft cotton swish (smoothed noise, slow swell)."""
 
     noise = random.Random(11)
-    buffer = bytearray()
+    samples: list[float] = []
     smooth = 0.0
     duration = 0.5
     for index in range(int(rate * duration)):
         t = index / rate
         swell = math.sin(math.pi * t / duration) ** 2
         smooth += (noise.uniform(-1.0, 1.0) - smooth) * 0.18
-        append_mono_pcm16(buffer, int(smooth * swell * 5200), channels)
-    return pygame.mixer.Sound(buffer=bytes(buffer))
+        samples.append(int(smooth * swell * 5200))
+    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(samples, channels))
 
 
 def _yawn(rate: int, channels: int) -> pygame.mixer.Sound:
     """A gentle descending sigh with a soft vowel-like overtone."""
 
-    buffer = bytearray()
+    samples: list[float] = []
     phase = 0.0
     duration = 0.95
     for index in range(int(rate * duration)):
@@ -201,14 +262,14 @@ def _yawn(rate: int, channels: int) -> pygame.mixer.Sound:
         phase += 2 * math.pi * frequency / rate
         envelope = math.sin(math.pi * t / duration) ** 1.5
         value = math.sin(phase) + 0.25 * math.sin(2 * phase)
-        append_mono_pcm16(buffer, int(value * envelope * 3600), channels)
-    return pygame.mixer.Sound(buffer=bytes(buffer))
+        samples.append(int(value * envelope * 3600))
+    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(samples, channels))
 
 
 def _hush(rate: int, channels: int) -> pygame.mixer.Sound:
     """A soft two-note "hm-hm" for a declined quilt (never a buzzer)."""
 
-    buffer = bytearray()
+    samples: list[float] = []
     notes = ((0.0, 392.0), (0.22, 349.23))
     duration = 0.55
     for index in range(int(rate * duration)):
@@ -218,8 +279,8 @@ def _hush(rate: int, channels: int) -> pygame.mixer.Sound:
             local = t - start
             if 0.0 <= local < 0.3:
                 value += math.sin(2 * math.pi * frequency * local) * math.sin(math.pi * local / 0.3)
-        append_mono_pcm16(buffer, int(value * 3000), channels)
-    return pygame.mixer.Sound(buffer=bytes(buffer))
+        samples.append(int(value * 3000))
+    return pygame.mixer.Sound(buffer=mono_pcm16_bytes(samples, channels))
 
 
 __all__ = ["CLIP_CACHE_LIMIT", "CloudAudio", "EFFECTS", "HOST", "LULLABY", "MOMO_CUES"]

@@ -20,7 +20,7 @@ from typing import Callable, Optional
 
 import pygame
 
-from greia_platform.pygame_audio import DeferredSoundBank, append_mono_pcm16, current_pcm16_mixer_spec
+from greia_platform.pygame_audio import DeferredSoundBank, current_pcm16_mixer_spec, mono_pcm16_bytes
 
 
 def _synth_wav(samples: list[int], rate: int = 22050, channels: int = 1) -> bytes:
@@ -29,9 +29,7 @@ def _synth_wav(samples: list[int], rate: int = 22050, channels: int = 1) -> byte
         w.setnchannels(channels)
         w.setsampwidth(2)
         w.setframerate(rate)
-        raw = bytearray()
-        for s in samples:
-            append_mono_pcm16(raw, s, channels)
+        raw = mono_pcm16_bytes([s for s in samples], channels)
         w.writeframes(raw)
     return buf.getvalue()
 

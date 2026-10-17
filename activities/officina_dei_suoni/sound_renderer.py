@@ -217,7 +217,7 @@ class SoundWorkshopRenderer:
     def _draw_dani(self, target: pygame.Surface, state: SceneState) -> None:
         cast = self.cast
         if state.dani_pointing and self._point is not None and (cast is None or not cast.animating):
-            target.blit(self._point, self._point.get_rect(midbottom=DANI_MIDBOTTOM))
+            target.blit(self._art.art.presentable(self._point, target), self._point.get_rect(midbottom=DANI_MIDBOTTOM))
             return
         if cast is not None:
             cast.draw(target, DANI_MIDBOTTOM)

@@ -295,7 +295,7 @@ class AlfabetoRenderer:
     def _draw_leo(self, target: pygame.Surface, state: SceneState) -> None:
         cast = self.cast
         if state.leo_pointing and self._point is not None and (cast is None or not cast.animating):
-            target.blit(self._point, self._point.get_rect(midbottom=LEO_MIDBOTTOM))
+            target.blit(self._art.art.presentable(self._point, target), self._point.get_rect(midbottom=LEO_MIDBOTTOM))
             return
         if cast is not None:
             cast.draw(target, LEO_MIDBOTTOM)
