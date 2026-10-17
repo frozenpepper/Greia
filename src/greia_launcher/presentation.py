@@ -25,6 +25,7 @@ from greia_platform.pygame_effects import (
     transformed_rect,
 )
 from greia_platform.pygame_visual_assets import VisualSurfaceCacheError
+from greia_platform.system_language import CachedDeviceLocale, resolve_child_locale
 from greia_platform.trust import ActivitySource, PackageTrust
 from greia_platform.ui_core import BoundedCache
 from greia_platform.ui_motion import HoverMotion, InteractionVisualState, LaunchMotion
@@ -482,6 +483,10 @@ class GreiaLauncherPresentation(LauncherApplication):
         last_display_size = screen.get_size()
 
         _needs_redraw = True
+        # Controllers open at interactive readiness (after the non-interactive
+        # handoff, never in the pre-frame init) so the Shell receives their
+        # input and the supervisor's reserved-Guide poll has devices to read.
+        self._shell_input.start()
         try:
             while running:
                 frame_start = time.monotonic()
@@ -559,6 +564,17 @@ class GreiaLauncherPresentation(LauncherApplication):
                         if request is not None:
                             screen = pygame.display.set_mode(*request)
                             _needs_redraw = True
+                    else:
+                        # Controller events (and topology changes) reach every
+                        # Shell surface through this one translation; keyboard,
+                        # pointer and touch were consumed by the branches above,
+                        # so nothing is dispatched twice.
+                        controller_action = self._shell_input.translate_event(event)
+                        if controller_action is not None:
+                            running = self._handle_semantic_action(
+                                controller_action, pygame
+                            )
+                            _needs_redraw = True
 
                 if _motion_seen and _pending_motion_pos is not None:
                     if self._apply_coalesced_motion(_pending_motion_pos):
@@ -599,6 +615,12 @@ class GreiaLauncherPresentation(LauncherApplication):
                         pygame.event.clear(pygame.TEXTINPUT)
                     if self._parent_panel.drain():
                         _needs_redraw = True
+                if running:
+                    # Left stick: platform dead zone and bounded key-like repeat.
+                    stick_action = self._shell_input.poll_analog(time.monotonic())
+                    if stick_action is not None:
+                        running = self._handle_semantic_action(stick_action, pygame)
+                        _needs_redraw = True
                 if self._rescan_if_due():
                     _needs_redraw = True
                 try:
@@ -630,6 +652,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                         sleep_for = min(sleep_for, ambient_wait)
                     time.sleep(sleep_for)
         finally:
+            self._shell_input.close()
             if self.session is not None:
                 self.session.clear()
             pygame.key.stop_text_input()
@@ -689,6 +712,30 @@ class GreiaLauncherPresentation(LauncherApplication):
     def _scroll_model(self, pygame: Any) -> ScrollModel:
         page_capacity = self._page_capacity(pygame)
         return ScrollModel(capacity=page_capacity, step=page_capacity)
+
+    def _controller_section(self, direction: int, pygame: Any) -> None:
+        """Shoulder buttons page an open Collection exactly like PageUp/PageDown."""
+
+        if self._mode == "activities" and self._category_id != ALL_ACTIVITIES_ID:
+            self._handle_key(
+                pygame.K_PAGEUP if direction < 0 else pygame.K_PAGEDOWN, pygame
+            )
+            return
+        super()._controller_section(direction, pygame)
+
+    def _controller_go_home(self, pygame: Any) -> None:
+        """Guide leaves an open Collection for Home; on Home it does nothing."""
+
+        if self._mode == "activities" and self._category_id != ALL_ACTIVITIES_ID:
+            self._last_result = None
+            self._catalogue_error = False
+            self._set_category(ALL_ACTIVITIES_ID)
+            try:
+                self._stop_spoken_labels()  # type: ignore[attr-defined]
+            except Exception:
+                pass
+            return
+        super()._controller_go_home(pygame)
 
     def _handle_key(self, key: int, pygame: Any) -> bool:
         if self._mode != "activities":
@@ -1609,9 +1656,17 @@ class GreiaLauncherPresentation(LauncherApplication):
 
     @property
     def _active_locale(self) -> str:
+        # Profile override, then the persisted device language (the installer's
+        # choice until a parent changes it) - never a hard-coded Italian default.
         if self._active_profile is not None and getattr(self._active_profile.profile, "locale", None):
             return self._active_profile.profile.locale
-        return os.environ.get("GREIA_PROFILE_LOCALE") or os.environ.get("GREIA_DEVICE_LOCALE") or "it"
+        explicit = os.environ.get("GREIA_PROFILE_LOCALE")
+        if explicit:
+            return resolve_child_locale(explicit)
+        cache = getattr(self, "_device_locale_cache", None)
+        if cache is None:
+            cache = self._device_locale_cache = CachedDeviceLocale()
+        return cache.get()
 
     def _draw_category_bar(self, screen: Any, theme: Any, pygame: Any) -> None:
         if not self._catalogue.category_ids:

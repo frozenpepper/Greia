@@ -722,9 +722,7 @@ class ParentSettingsOverlay:
                 if self._text_field in fields and self._text_field != fields[-1]:
                     self._move_text_field(1)
                     return True
-                order = [ParentPanelTab(value) for _, value in text.TABS]
-                idx = (order.index(self.active_tab) + 1) % len(order)
-                self._select_tab(order[idx])
+                self.step_section(1)
                 return True
 
             if self.active_tab == ParentPanelTab.LANGUAGE:
@@ -772,6 +770,28 @@ class ParentSettingsOverlay:
             return True
 
         return False
+
+    @property
+    def accepts_typed_text_only(self) -> bool:
+        """True while the password prompt is up: text entry stays keyboard-owned."""
+
+        return self.state == ParentPanelState.AUTH
+
+    def step_section(self, delta: int) -> bool:
+        """Move to the previous (``-1``) or next (``+1``) section, wrapping.
+
+        One implementation for Tab and for the controller shoulder buttons, so
+        the two can never disagree about section order. Only meaningful once
+        the panel is unlocked; returns whether a section change was made.
+        """
+
+        if self.state != ParentPanelState.PANEL or delta == 0:
+            return False
+        self._keyboard_focus_visible = True
+        order = [ParentPanelTab(value) for _, value in text.TABS]
+        idx = (order.index(self.active_tab) + (1 if delta > 0 else -1)) % len(order)
+        self._select_tab(order[idx])
+        return True
 
     # Text fields of each form, in keyboard order.
     _FORM_FIELDS = {

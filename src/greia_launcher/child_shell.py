@@ -286,6 +286,29 @@ class GreiaChildShell(
             self._close_creations()
         return True
 
+    def _controller_section(self, direction: int, pygame: Any) -> None:
+        """Shoulders page the creations list; an open item has no pages."""
+
+        if self._mode != "creations":
+            super()._controller_section(direction, pygame)
+            return
+        viewer = getattr(self, "_creations_screen", None)
+        controller = getattr(viewer, "controller", None)
+        if controller is None or controller.page.pending_delete_id is not None:
+            return
+        if controller.page.detail_id:
+            return
+        try:
+            controller.previous_page() if direction < 0 else controller.next_page()
+        except Exception:  # noqa: BLE001 - a library hiccup must not end the Shell
+            return
+
+    def _controller_go_home(self, pygame: Any) -> None:
+        if self._mode != "creations":
+            super()._controller_go_home(pygame)
+            return
+        self._close_creations()
+
     def _handle_click(self, position: tuple[int, int], pygame: Any) -> None:
         if self._mode != "creations":
             super()._handle_click(position, pygame)

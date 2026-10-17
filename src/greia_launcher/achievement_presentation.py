@@ -942,6 +942,10 @@ class AchievementLibraryMixin:
             self._close_achievement_library()
         elif entries and key in {pygame.K_RETURN, pygame.K_SPACE}:
             self._tap_achievement_badge(self._achievement_selected, pygame)
+        elif entries and key == pygame.K_PAGEUP:
+            self._turn_achievement_page(-1)
+        elif entries and key == pygame.K_PAGEDOWN:
+            self._turn_achievement_page(1)
         elif entries and key in {pygame.K_LEFT, pygame.K_UP}:
             delta = -1 if key == pygame.K_LEFT else -columns
             self._select_achievement(self._achievement_selected + delta, entries)
@@ -949,6 +953,41 @@ class AchievementLibraryMixin:
             delta = 1 if key in {pygame.K_RIGHT, pygame.K_TAB} else columns
             self._select_achievement(self._achievement_selected + delta, entries)
         return True
+
+    def _turn_achievement_page(self, direction: int) -> None:
+        """Move the shelf one page back/forward (click arrows, PageUp/Down, shoulders)."""
+
+        if direction < 0:
+            self._achievement_selected = max(
+                0,
+                (self._achievement_selected // self._ACHIEVEMENTS_PER_PAGE - 1)
+                * self._ACHIEVEMENTS_PER_PAGE,
+            )
+        else:
+            entries = self._achievement_visible_entries()
+            self._achievement_selected = min(
+                max(0, len(entries) - 1),
+                (self._achievement_selected // self._ACHIEVEMENTS_PER_PAGE + 1)
+                * self._ACHIEVEMENTS_PER_PAGE,
+            )
+        self._achievement_hop = None
+
+    def _controller_section(self, direction: int, pygame: Any) -> None:
+        if self._achievement_celebration is not None:
+            return
+        if self._mode == "achievements":
+            self._turn_achievement_page(direction)
+            return
+        super()._controller_section(direction, pygame)
+
+    def _controller_go_home(self, pygame: Any) -> None:
+        if self._achievement_celebration is not None:
+            self._dismiss_achievement_celebration(pygame)
+            return
+        if self._mode == "achievements":
+            self._close_achievement_library()
+            return
+        super()._controller_go_home(pygame)
 
     def _select_achievement(self, index: int, entries: tuple[AchievementEntry, ...]) -> None:
         self._achievement_selected = min(max(0, index), len(entries) - 1)
@@ -970,21 +1009,10 @@ class AchievementLibraryMixin:
                     self._tap_achievement_badge(int(target.value), pygame)
                     return
                 if target.action == "achievement_page_prev":
-                    self._achievement_selected = max(
-                        0,
-                        (self._achievement_selected // self._ACHIEVEMENTS_PER_PAGE - 1)
-                        * self._ACHIEVEMENTS_PER_PAGE,
-                    )
-                    self._achievement_hop = None
+                    self._turn_achievement_page(-1)
                     return
                 if target.action == "achievement_page_next":
-                    entries = self._achievement_visible_entries()
-                    self._achievement_selected = min(
-                        max(0, len(entries) - 1),
-                        (self._achievement_selected // self._ACHIEVEMENTS_PER_PAGE + 1)
-                        * self._ACHIEVEMENTS_PER_PAGE,
-                    )
-                    self._achievement_hop = None
+                    self._turn_achievement_page(1)
                     return
             return
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 from math import inf, nextafter
 
 from greia_platform.input_core import (
@@ -8,12 +9,38 @@ from greia_platform.input_core import (
     InputEdge,
     InputSource,
     InteractionProfile,
+    PhysicalControl,
     SemanticAction,
     StandardInputPolicy,
     navigation_direction,
     normalize_stick,
 )
 from greia_platform.pygame_input import PygameControllerSet, PygameInputTranslator
+
+
+class ShellControllerCommand(StrEnum):
+    """Trusted-Shell-only controller intents beyond the NAV/ACTIVATE/CANCEL set.
+
+    These are never part of the Activity vocabulary (``SemanticAction``): the
+    standard mapper withholds the Guide control and defines no shoulder meaning
+    for Activities, so only the trusted Shell consumes them. ``SECTION_*`` is
+    "previous/next section or page" of whichever Shell surface is active (Parent
+    panel section, Collection page, badge shelf page); ``HOME`` is the reserved
+    Greia Home control.
+    """
+
+    SECTION_PREVIOUS = "section_previous"
+    SECTION_NEXT = "section_next"
+    HOME = "home"
+
+
+ShellInputAction = SemanticAction | ShellControllerCommand
+
+_SHELL_COMMAND_CONTROLS = {
+    PhysicalControl.CONTROLLER_LEFT_SHOULDER: ShellControllerCommand.SECTION_PREVIOUS,
+    PhysicalControl.CONTROLLER_RIGHT_SHOULDER: ShellControllerCommand.SECTION_NEXT,
+    PhysicalControl.CONTROLLER_GUIDE: ShellControllerCommand.HOME,
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,6 +128,27 @@ class ShellInputController:
         }:
             return translated.action
         return None
+
+    def translate_event(self, event: object) -> ShellInputAction | None:
+        """Return the one Shell action a controller event means, if any.
+
+        Superset of :meth:`handle_event`: the standard NAV/ACTIVATE/CANCEL
+        actions plus the trusted-Shell-only shoulder and Guide commands.
+        Topology events are consumed exactly once (by ``handle_event``), and
+        keyboard events are never translated here, so a surface can feed every
+        non-keyboard event through this single call without double dispatch.
+        """
+
+        action = self.handle_event(event)
+        if action is not None:
+            return action
+        physical = self._translator.physical_digital(event)  # type: ignore[arg-type]
+        if physical is None:
+            return None
+        control, edge, source = physical
+        if source is not InputSource.CONTROLLER or edge is not InputEdge.PRESSED:
+            return None
+        return _SHELL_COMMAND_CONTROLS.get(control)
 
     def poll_analog(self, now: float) -> SemanticAction | None:
         """Emit deterministic left-stick navigation with bounded key-like repeat."""

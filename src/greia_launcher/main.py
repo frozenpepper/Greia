@@ -75,7 +75,7 @@ from .key_chord import KeyChordTracker
 from .lifecycle import ActivityExitReason, ActivityResult, ActivitySessionState
 from .parent_credential_client import ParentCredentialClient
 from .parent_panel import ParentSettingsOverlay
-from .shell_input import ShellInputController
+from .shell_input import ShellControllerCommand, ShellInputAction, ShellInputController
 from .runtime_adapter import RuntimeAdapterError
 from .supervisor import ActivityLifecycleError, ActivitySupervisor
 from .theme import LauncherThemeController
@@ -879,7 +879,7 @@ class LauncherApplication:
                     elif event.type == pygame.VIDEORESIZE and self.windowed:
                         screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
                     else:
-                        action = self._shell_input.handle_event(event)
+                        action = self._shell_input.translate_event(event)
                         if action is not None:
                             running = self._handle_semantic_action(action, pygame)
 
@@ -903,7 +903,7 @@ class LauncherApplication:
                         # Drain chord auto-repeat while the keys are down.
                         pygame.event.clear(pygame.TEXTINPUT)
                     self._parent_panel.drain()
-                if running and self._mode != "parent_panel":
+                if running:
                     stick_action = self._shell_input.poll_analog(time.monotonic())
                     if stick_action is not None:
                         running = self._handle_semantic_action(stick_action, pygame)
@@ -921,19 +921,67 @@ class LauncherApplication:
             pygame.quit()
         return 0
 
-    def _handle_semantic_action(self, action: SemanticAction, pygame: Any) -> bool:
-        key_map = {
-            SemanticAction.NAV_LEFT: pygame.K_LEFT,
-            SemanticAction.NAV_RIGHT: pygame.K_RIGHT,
-            SemanticAction.NAV_UP: pygame.K_UP,
-            SemanticAction.NAV_DOWN: pygame.K_DOWN,
-            SemanticAction.ACTIVATE: pygame.K_RETURN,
-            SemanticAction.CANCEL: pygame.K_ESCAPE,
-        }
-        key = key_map.get(action)
-        if key is not None:
-            return self._handle_key(key, pygame)
-        return True
+    _CONTROLLER_KEY_NAMES = {
+        SemanticAction.NAV_LEFT: "K_LEFT",
+        SemanticAction.NAV_RIGHT: "K_RIGHT",
+        SemanticAction.NAV_UP: "K_UP",
+        SemanticAction.NAV_DOWN: "K_DOWN",
+        SemanticAction.ACTIVATE: "K_RETURN",
+        SemanticAction.CANCEL: "K_ESCAPE",
+    }
+
+    def _handle_semantic_action(self, action: ShellInputAction, pygame: Any) -> bool:
+        """Deliver one normalized controller action to the active Shell surface.
+
+        Controller input joins the keyboard path at the single ``_handle_key``
+        seam (every Shell surface already interprets arrows/Return/Escape
+        there), so Home, Collections, the first-boot wizard, the badge shelf,
+        the gallery and the Parent panel need no controller-specific code and
+        keyboard behavior cannot diverge from it. Section/page and Home are the
+        only controller-specific intents; each surface answers them through the
+        ``_controller_section`` / ``_controller_go_home`` hooks. Returns the
+        loop's ``running`` flag.
+        """
+
+        if isinstance(action, ShellControllerCommand):
+            if self._controller_text_owned():
+                return True
+            if action is ShellControllerCommand.HOME:
+                self._controller_go_home(pygame)
+            else:
+                self._controller_section(
+                    -1 if action is ShellControllerCommand.SECTION_PREVIOUS else 1,
+                    pygame,
+                )
+            return True
+        key_name = self._CONTROLLER_KEY_NAMES.get(action)
+        if key_name is None:
+            return True
+        # A typed secret (profile secret, Parent password) is keyboard-owned: a
+        # stray button must not submit an empty one. Cancel still backs out.
+        if self._controller_text_owned() and action is not SemanticAction.CANCEL:
+            return True
+        return self._handle_key(getattr(pygame, key_name), pygame)
+
+    def _controller_text_owned(self) -> bool:
+        """True while a surface is collecting a secret from the physical keyboard."""
+
+        if self._mode == "secret":
+            return True
+        return self._mode == "parent_panel" and self._parent_panel.accepts_typed_text_only
+
+    def _controller_section(self, direction: int, pygame: Any) -> None:
+        """Previous (``-1``) / next (``+1``) section or page of the active surface."""
+
+        if self._mode == "parent_panel":
+            self._parent_panel.step_section(direction)
+
+    def _controller_go_home(self, pygame: Any) -> None:
+        """Reserved Greia Home control: return toward Home, never log out.
+
+        The base Shell has no surface deeper than Home, so this is a no-op;
+        richer presentations override it for Collections, galleries and shelves.
+        """
 
     def _handle_key(self, key: int, pygame: Any) -> bool:
         if self._mode == "parent_panel":
