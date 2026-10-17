@@ -61,7 +61,9 @@ DANGER: Rgb = mix(CORAL, INK, 0.3)
 DANGER_PRESSED: Rgb = mix(CORAL, INK, 0.55)
 #: Soft inset field (rows, list items) on the cream card.
 FIELD: Rgb = mix(SURFACE, CREAM, 0.7)
-HINT: Rgb = mix(COCOA, SURFACE, 0.38)
+#: Helper-text ink: muted, but dark enough to read on the cream card at the
+#: hint size (was 0.38, too faint for small helper lines on the Acer panel).
+HINT: Rgb = mix(COCOA, SURFACE, 0.26)
 WARNING_FIELD: Rgb = mix(CORAL, WHITE, 0.82)
 
 #: The parent's journey, as shown by the step dots. Page names, not enums, so
@@ -84,6 +86,46 @@ def step_for_page(page_name: str) -> int | None:
     """1-based step shown for an installer page, or ``None`` (no dots)."""
 
     return _STEP_BY_PAGE.get(page_name)
+
+
+@dataclass(frozen=True, slots=True)
+class TextScale:
+    """Installer text sizes (px) for one viewport height.
+
+    ``control`` is button/row/main copy, ``body`` is paragraph and status
+    copy, ``hint`` is the smallest helper text (badges, step labels). The
+    installer is read by a parent who may not be technical, on a small
+    1024x600 or 800x480 panel, so every size has a floor (see
+    :func:`text_floors`) and nothing is ever shrunk below ``hint``.
+    """
+
+    title: int
+    control: int
+    body: int
+    hint: int
+
+
+def text_floors(height: int) -> tuple[int, int]:
+    """(body, hint) readability floors in px for a viewport ``height``.
+
+    20/16 px at the 600 px reference panel and above, scaled down with the
+    height but never below 17/15 px (the 800x480 panel).
+    """
+
+    ratio = min(1.0, height / 600)
+    return max(17, round(20 * ratio)), max(15, round(16 * ratio))
+
+
+def text_scale(height: int) -> TextScale:
+    """Text sizes for ``height``; always at or above :func:`text_floors`."""
+
+    body_floor, hint_floor = text_floors(height)
+    return TextScale(
+        title=max(26, min(38, height // 16)),
+        control=max(20, min(26, height // 24)),
+        body=max(body_floor, min(22, height // 27)),
+        hint=max(hint_floor, min(18, height // 36)),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -292,6 +334,10 @@ class InstallerLook:
         self.art = InstallerArt(root)
         self.painter = ControlPainter(typography, ControlTheme(), max_surfaces=96, max_labels=96)
         self._layers: BoundedCache[tuple, Any] = BoundedCache(self.LAYER_CACHE)
+        #: Smallest size any label may shrink to (the page's hint size; the
+        #: installer sets it per viewport). Text that still does not fit is
+        #: a layout fault to fix, not a reason to render unreadably small.
+        self.min_text_px = 15
 
     def clear(self) -> None:
         self._layers.clear()
@@ -315,7 +361,7 @@ class InstallerLook:
     ) -> int:
         """Blit the cached static layer; return the y below the title."""
 
-        key = (frame.size, title, title_size, title_color, step, pose, poster)
+        key = (frame.size, title, title_size, title_color, step, pose, poster, self.min_text_px)
         layer = self._layers.get(key)
         if layer is None:
             layer = self._compose_base(pygame, frame, title, title_size, title_color, step, pose, poster)
@@ -364,7 +410,7 @@ class InstallerLook:
         count = len(STEP_LABELS)
         dot = max(20, min(30, header.height - 14))
         gap = max(14, min(30, dot))
-        label = self.label(STEP_LABELS[current - 1], max(14, dot - 8), COCOA, role=FontRole.CONTROL)
+        label = self.label(STEP_LABELS[current - 1], max(self.min_text_px, dot - 6), COCOA, role=FontRole.CONTROL)
         row_w = count * dot + (count - 1) * gap
         total = row_w + 12 + label.get_width()
         left = header.centerx - total // 2
@@ -375,14 +421,14 @@ class InstallerLook:
             x = left + index * (dot + gap)
             done, now = number < current, number == current
             fill = SUNSHINE if (done or now) else SURFACE
-            size = dot if now else dot - 6
+            size = dot if now else dot - 4
             body = self.painter.body(BodyShape.ROUND, (size, size), fill, contour_width=2 if not now else 3)
             rect = body.get_rect(center=(x + dot // 2, cy))
             surface.blit(body, rect)
             if done:
                 _check_mark(pygame, surface, rect.inflate(-size // 3, -size // 3), INK)
             else:
-                digit = self.label(str(number), max(11, size - 10), COCOA if now else HINT, role=FontRole.CONTROL)
+                digit = self.label(str(number), max(self.min_text_px, size - 8), COCOA if now else HINT, role=FontRole.CONTROL)
                 surface.blit(digit, digit.get_rect(center=rect.center))
         surface.blit(label, label.get_rect(midleft=(left + row_w + 12, cy)))
 
@@ -399,7 +445,9 @@ class InstallerLook:
     ) -> Any:
         """Cached, translated single line that shrinks (never clips) to fit."""
 
-        return self.painter.label(text, size, color, max_width=max_width, role=role, min_size=12)
+        return self.painter.label(
+            text, size, color, max_width=max_width, role=role, min_size=self.min_text_px
+        )
 
     def pill(
         self,

@@ -156,6 +156,9 @@ SPANISH: dict[str, str] = {
     "The selected disk changed; choose the internal disk again": "El disco seleccionado ha cambiado; vuelve a elegir el disco interno",
     "the selected disk changed; confirmation invalidated": "El disco seleccionado ha cambiado; confirmación anulada",
     "This screen is not fully supported — installation to the internal disk is paused. Ask a grown-up to try a supported screen.": "Esta pantalla no es totalmente compatible: la instalación en el disco interno está en pausa. Prueba con una pantalla compatible.",
+    # 2026-10-17 installer follow-ups: streamed progress phases.
+    "Setting up the system": "Configurando el sistema",
+    "Still working on this step": "Este paso sigue en curso",
 }
 
 FRENCH: dict[str, str] = {
@@ -306,5 +309,8 @@ FRENCH: dict[str, str] = {
     "The selected disk changed; choose the internal disk again": "Le disque sélectionné a changé ; choisissez à nouveau le disque interne",
     "the selected disk changed; confirmation invalidated": "Le disque sélectionné a changé ; confirmation annulée",
     "This screen is not fully supported — installation to the internal disk is paused. Ask a grown-up to try a supported screen.": "Cet écran n’est pas entièrement pris en charge — l’installation sur le disque interne est en pause. Essayez un écran pris en charge.",
+    # 2026-10-17 installer follow-ups: streamed progress phases.
+    "Setting up the system": "Configuration du système",
+    "Still working on this step": "Cette étape est toujours en cours",
 }
 

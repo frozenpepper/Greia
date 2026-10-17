@@ -16,7 +16,10 @@ What the UI may do here:
   discard it fail-closed whenever a fresh read-only inventory shows the
   target disappeared, turned ineligible, changed display facts, or the
   parent changed settings;
-- ``EXECUTE`` with only ``nonce`` + ``digest``.
+- ``EXECUTE`` with only ``nonce`` + ``digest``, reading the service's
+  display-only ``PROGRESS`` frames (phase, fraction, byte counts; see
+  :mod:`greia_installer.install_progress`) that precede its final answer
+  on the same connection.
 
 What the UI can never do through this module (proven by negative tests):
 
@@ -54,6 +57,13 @@ from greia_platform.privileged_channel import (
     require_transaction_id,
 )
 
+from .install_progress import (
+    MAX_PROGRESS_FRAMES,
+    PROGRESS_OP,
+    ProgressFrame,
+    ProgressFrameError,
+    parse_progress_payload,
+)
 from .install_transaction import canonical_plan_bytes
 
 
@@ -110,9 +120,18 @@ def socket_transport(
     The path itself is UI configuration, never request authority: it selects
     the platform-owned socket, while target selection still travels only as
     an identity digest inside the framed semantic request.
+
+    With ``on_line`` the transport is line-aware: every complete framed
+    line is offered to ``on_line`` as it arrives, and lines it consumes
+    (``True``) are dropped — that is how EXECUTE's progress frames reach
+    the UI live. Each line, the pending partial line and the unconsumed
+    remainder each stay within ``MAX_MESSAGE_BYTES``. Without ``on_line``
+    the whole answer is bounded by ``MAX_MESSAGE_BYTES`` as before.
     """
 
-    def send_receive(raw: bytes) -> bytes:
+    def send_receive(
+        raw: bytes, on_line: Callable[[bytes], bool] | None = None
+    ) -> bytes:
         if len(raw) > MAX_MESSAGE_BYTES:
             raise TransactionClientError("transaction request exceeds Greia bound")
         try:
@@ -124,24 +143,57 @@ def socket_transport(
                     client.shutdown(socket.SHUT_WR)
                 except OSError:
                     pass
-                chunks: list[bytes] = []
-                received = 0
+                kept: list[bytes] = []
+                kept_bytes = 0
+                pending = b""
                 while True:
                     chunk = client.recv(4096)
                     if not chunk:
                         break
-                    received += len(chunk)
-                    if received > MAX_MESSAGE_BYTES:
+                    if on_line is None:
+                        kept_bytes += len(chunk)
+                        if kept_bytes > MAX_MESSAGE_BYTES:
+                            raise TransactionClientError(
+                                "transaction response exceeds Greia bound"
+                            )
+                        kept.append(chunk)
+                        continue
+                    pending += chunk
+                    while b"\n" in pending:
+                        line, pending = pending.split(b"\n", 1)
+                        line += b"\n"
+                        if len(line) > MAX_MESSAGE_BYTES:
+                            raise TransactionClientError(
+                                "transaction response exceeds Greia bound"
+                            )
+                        if on_line(line):
+                            continue
+                        kept_bytes += len(line)
+                        if kept_bytes > MAX_MESSAGE_BYTES:
+                            raise TransactionClientError(
+                                "transaction response exceeds Greia bound"
+                            )
+                        kept.append(line)
+                    if len(pending) > MAX_MESSAGE_BYTES:
                         raise TransactionClientError(
                             "transaction response exceeds Greia bound"
                         )
-                    chunks.append(chunk)
+                if pending:
+                    kept_bytes += len(pending)
+                    if kept_bytes > MAX_MESSAGE_BYTES:
+                        raise TransactionClientError(
+                            "transaction response exceeds Greia bound"
+                        )
+                    kept.append(pending)
         except (OSError, TimeoutError) as exc:
             raise TransactionClientError(
                 "install transaction service is unreachable"
             ) from exc
-        return b"".join(chunks)
+        return b"".join(kept)
 
+    # Read by InstallTransactionClient: this transport can deliver framed
+    # lines live (EXECUTE progress) instead of only the final answer.
+    send_receive.streams_lines = True  # type: ignore[attr-defined]
     return send_receive
 
 
@@ -189,13 +241,25 @@ class InstallTransactionClient:
         op: str,
         params: Mapping[str, object],
         transport: Callable[[bytes], bytes] | None = None,
+        *,
+        on_progress: Callable[[ProgressFrame], None] | None = None,
+        accept_progress: bool = False,
     ) -> dict[str, object]:
         try:
             raw = encode_request(op, params)
         except PrivilegedChannelError as exc:
             raise TransactionClientError(str(exc)) from exc
+        chosen = transport or self._transport
+        relay = _ProgressRelay(on_progress) if accept_progress else None
         try:
-            response = (transport or self._transport)(raw)
+            if relay is not None and getattr(chosen, "streams_lines", False):
+                response = chosen(raw, on_line=relay.offer)  # type: ignore[call-arg]
+            else:
+                response = chosen(raw)
+            if relay is not None:
+                # In-process/buffered transports hand back every frame at
+                # once; relay the progress lines and keep the final answer.
+                response = relay.final_of(response)
         except TransactionClientError:
             raise
         except Exception as exc:
@@ -259,17 +323,28 @@ class InstallTransactionClient:
             transaction_nonce=nonce, plan=plan_dict, plan_digest=digest
         )
 
-    def execute(self, *, transaction_nonce: str, plan_digest: str) -> ExecuteReceipt:
+    def execute(
+        self,
+        *,
+        transaction_nonce: str,
+        plan_digest: str,
+        on_progress: Callable[[ProgressFrame], None] | None = None,
+    ) -> ExecuteReceipt:
         """Run ``EXECUTE`` with nonce + digest only.
 
         The root service revalidates the prepared plan and runs the
         authorized install synchronously before answering ``INSTALLED``;
         the UI never performs, observes, or steers any destructive step.
+        ``on_progress`` receives each validated display-only progress frame
+        the service streams meanwhile (malformed frames are dropped, never
+        fatal: progress is not an install fact).
         """
         payload = self._round_trip(
             "EXECUTE",
             {"transaction_nonce": transaction_nonce, "plan_digest": plan_digest},
             self._execute_transport,
+            on_progress=on_progress,
+            accept_progress=True,
         )
         if payload.get("status") != "INSTALLED":
             raise TransactionClientError("execute was refused by the install service")
@@ -283,6 +358,55 @@ class InstallTransactionClient:
         ):
             raise TransactionClientError("execute receipt does not match the plan")
         return receipt
+
+
+class _ProgressRelay:
+    """Separates EXECUTE's progress frames from its single final answer.
+
+    A line whose framing decodes with op ``PROGRESS`` is consumed: its
+    payload is validated by :func:`parse_progress_payload` and handed to
+    the callback (at most :data:`MAX_PROGRESS_FRAMES`; malformed or excess
+    frames are dropped). Anything else is the final answer, which the
+    normal response checks then verify exactly as before. A callback
+    exception is contained so the UI keeps waiting for the real outcome.
+    """
+
+    def __init__(self, callback: Callable[[ProgressFrame], None] | None) -> None:
+        self._callback = callback
+        self.delivered = 0
+        self.dropped = 0
+
+    def offer(self, line: bytes) -> bool:
+        try:
+            _transaction_id, op, payload = decode_response(line)
+        except PrivilegedChannelError:
+            return False
+        if op != PROGRESS_OP:
+            return False
+        try:
+            frame = parse_progress_payload(payload)
+        except ProgressFrameError:
+            self.dropped += 1
+            return True
+        if self._callback is None or self.delivered >= MAX_PROGRESS_FRAMES:
+            self.dropped += 1
+            return True
+        self.delivered += 1
+        try:
+            self._callback(frame)
+        except Exception:  # noqa: BLE001 - a display callback never ends EXECUTE
+            self.dropped += 1
+        return True
+
+    def final_of(self, response: bytes) -> bytes:
+        if not isinstance(response, (bytes, bytearray)) or response.count(b"\n") <= 1:
+            return response
+        remaining = [
+            line + b"\n"
+            for line in bytes(response).split(b"\n")
+            if line.strip() and not self.offer(line + b"\n")
+        ]
+        return b"".join(remaining)
 
 
 @dataclass(frozen=True, slots=True)

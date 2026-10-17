@@ -77,6 +77,7 @@ from .disk import (
     policy_for_profile_id,
 )
 from .engine import InstallRequest, InstallResult, InstallationEngine, InstallationError
+from .install_progress import PROGRESS_OP, ProgressReporter
 from .install_transaction import (
     INSTALL_TRANSACTION_ALLOWED_UIDS,
     InstallPlanAuthority,
@@ -657,6 +658,11 @@ class InstallTransactionService:
     #: legacy engine, nor a recovery profile by the A/B executor.
     install_mode: str = "legacy-single"
 
+    #: Capability flag read by :func:`handle_connection`: this service
+    #: accepts a ``progress`` writer and streams ``PROGRESS`` frames on the
+    #: EXECUTE connection before its final answer (display data only).
+    streams_progress = True
+
     def _new_engine(self) -> InstallationEngine:
         if self.engine_factory is not None:
             return self.engine_factory()
@@ -695,7 +701,12 @@ class InstallTransactionService:
         return prepared
 
     def handle_request(
-        self, raw: bytes, *, peer: PeerCredential, boot_state: str
+        self,
+        raw: bytes,
+        *,
+        peer: PeerCredential,
+        boot_state: str,
+        progress: Callable[[bytes], None] | None = None,
     ) -> bytes:
         """Answer one framed socket request: PREPARE returns a plan.
 
@@ -703,6 +714,13 @@ class InstallTransactionService:
         install synchronously in this root process before answering
         ``INSTALLED``: the destructive backend is reachable only through a
         live, revalidated nonce, never as a standalone command surface.
+
+        ``progress``, when given, receives already-framed ``PROGRESS``
+        responses (same transaction id as the final answer) while EXECUTE
+        runs. It is an output channel only: nothing the UI sends can reach
+        it, the frames carry phase/fraction/byte counts and nothing else,
+        and :class:`ProgressReporter` rate-limits them and swallows any
+        writer failure so a stalled or vanished UI never stops an install.
         """
         from greia_platform.privileged_channel import authorize_peer, require_interactive_boot
 
@@ -736,15 +754,25 @@ class InstallTransactionService:
             if set(params) != {"transaction_nonce", "plan_digest"}:
                 raise InstallTransactionError("EXECUTE params carry unknown fields")
             reject_raw_authority(params)
+            reporter: ProgressReporter | None = None
+            if progress is not None:
+                writer = progress
+
+                def emit(payload: Mapping[str, object]) -> None:
+                    writer(encode_response(transaction_id, PROGRESS_OP, payload))
+
+                reporter = ProgressReporter(emit)
             if self.ab_executor is not None:
                 result = self.execute_ab_install(
                     transaction_nonce=params.get("transaction_nonce"),
                     plan_digest=params.get("plan_digest"),
+                    progress=reporter,
                 )
             else:
                 result = self.execute_and_install(
                     transaction_nonce=params.get("transaction_nonce"),
                     plan_digest=params.get("plan_digest"),
+                    on_progress=reporter.engine_progress if reporter is not None else None,
                 )
             _ = format_log_record(transaction_id, op, "INSTALLED")
             _greia_log_event("installed", target=self._last_installed_identity)
@@ -847,6 +875,7 @@ class InstallTransactionService:
         *,
         transaction_nonce: object,
         plan_digest: object,
+        progress: ProgressReporter | None = None,
     ) -> InstallResult:
         """Consume a prepared nonce, revalidate everything, then A/B install.
 
@@ -858,6 +887,11 @@ class InstallTransactionService:
         :mod:`greia_installer.fresh_ab_install`) — instead of the legacy
         single-partition engine. Requires :attr:`ab_executor`; without one
         this entry refuses with no destructive command.
+
+        ``progress`` is handed to the executor only when the executor
+        declares ``accepts_progress`` (the production
+        :func:`greia_installer.fresh_ab_install.build_ab_executor` does);
+        the authorization prelude above is identical either way.
         """
         authorization, settings, locale, target = self._consume_authorized_plan(
             transaction_nonce=transaction_nonce, plan_digest=plan_digest
@@ -876,6 +910,8 @@ class InstallTransactionService:
                 "fresh A/B install is not configured on this service"
             )
         try:
+            if progress is not None and getattr(executor, "accepts_progress", False):
+                return executor(authorization, settings, locale, target, progress=progress)  # type: ignore[call-arg]
             return executor(authorization, settings, locale, target)
         except TransactionServiceError:
             raise
@@ -977,8 +1013,18 @@ def handle_connection(
         raw = b"".join(chunks)
         _s04_diag_faulthandler()
         _s04_diag_boundary("handle_request entered")
+        progress_writer = (
+            _ConnectionProgressWriter(connection)
+            if getattr(service, "streams_progress", False)
+            else None
+        )
         try:
-            response = service.handle_request(raw, peer=peer, boot_state="installer_ready")
+            if progress_writer is not None:
+                response = service.handle_request(
+                    raw, peer=peer, boot_state="installer_ready", progress=progress_writer
+                )
+            else:
+                response = service.handle_request(raw, peer=peer, boot_state="installer_ready")
         except (InstallTransactionError, TransactionServiceError, PrivilegedChannelError) as exc:
             _s04_diag_boundary("expected exception caught", detail=_s04_diag_detail(exc))
             _greia_log_event("refused", reason=str(exc)[:256])
@@ -1027,6 +1073,29 @@ def handle_connection(
             connection.close()
         except OSError:
             pass
+
+
+class _ConnectionProgressWriter:
+    """Writes framed PROGRESS lines to the requesting connection, best effort.
+
+    A UI that stopped reading or hung up must not stall or kill the root
+    install: the first failed write (including the connection's bounded
+    send timeout) disables the writer for the rest of the request, and the
+    final answer is still attempted by :func:`handle_connection`.
+    """
+
+    def __init__(self, connection: socket.socket) -> None:
+        self._connection = connection
+        self._dead = False
+
+    def __call__(self, frame: bytes) -> None:
+        if self._dead:
+            return
+        try:
+            self._connection.sendall(frame)
+        except (OSError, TimeoutError):
+            self._dead = True
+            _greia_log_event("progress_reader_gone")
 
 
 def build_live_service(

@@ -53,6 +53,7 @@ from .engine import (
     InstallRequest,
     InstallResult,
 )
+from .install_progress import ProgressFrame, overall_fraction, phase_label
 from .power import PowerSupplyProbe
 from .presentation import (
     BURGUNDY,
@@ -72,6 +73,7 @@ from .presentation import (
     mix,
     page_frame,
     step_for_page,
+    text_scale,
 )
 from .transaction_client import (
     InstallTransactionClient,
@@ -117,21 +119,38 @@ class InstallerState:
 
 
 class DemoInstallationEngine:
+    """Zero-disk simulation emitting the same phase frames as the service."""
+
+    #: (phase, measured steps, seconds per step). Copy and verify report a
+    #: measured fraction, like the root service's byte counts.
+    SCRIPT: tuple[tuple[str, int, float], ...] = (
+        ("check", 1, 0.4),
+        ("partition", 1, 0.4),
+        ("copy", 8, 0.25),
+        ("verify", 4, 0.2),
+        ("setup", 1, 0.4),
+        ("bootloader", 1, 0.4),
+        ("complete", 1, 0.1),
+    )
+
     def install(self, request: InstallRequest, on_progress: Any = None) -> InstallResult:
         callback = on_progress or (lambda _: None)
-        stages = (
-            (0.10, "prepare", "Checking the selected disk"),
-            (0.22, "erase", "Preparing the internal disk"),
-            (0.38, "format", "Creating the Greia OS filesystem"),
-            (0.68, "copy", "Copying the system"),
-            (0.82, "configure", "Applying parent choices"),
-            (0.94, "bootloader", "Making the disk bootable"),
-            (1.0, "complete", "Installation complete"),
-        )
-        for fraction, stage, detail in stages:
-            callback(InstallProgress(fraction, stage, detail))
-            time.sleep(0.45)
+        for phase, steps, pause in self.SCRIPT:
+            for step in range(1, steps + 1):
+                measured = step / steps if steps > 1 else None
+                callback(_progress_from_frame(ProgressFrame(
+                    phase, overall_fraction(phase, measured), measured
+                )))
+                time.sleep(pause)
         return InstallResult()
+
+
+def _progress_from_frame(frame: ProgressFrame) -> InstallProgress:
+    """UI progress state for one validated service (or demo) frame."""
+
+    return InstallProgress(
+        frame.fraction, frame.phase, phase_label(frame.phase), frame.phase_fraction
+    )
 
 
 # Sentinel meaning "no frame has been composed yet". It is deliberately not
@@ -261,10 +280,29 @@ class InstallerApplication:
         # Presentation-only state (never part of install logic).
         self._look_cache: InstallerLook | None = None
         self._installing_since: float | None = None
+        # When the current phase began and when any progress last arrived
+        # (monotonic). A phase that reports nothing for STALL_SECONDS shows
+        # its own elapsed time so a long silent step never looks frozen.
+        self._phase_since: float | None = None
+        self._last_progress_at: float | None = None
+        # Erase-confirmation keyboard model: which control has focus on the
+        # confirm page ("back" by default; the erase control only after a
+        # deliberate Tab/arrow), the source of the current hold, and the
+        # keys physically down (a KEYDOWN for a key already down is a
+        # repeat and never starts a hold).
+        self._confirm_focus = "back"
+        # Focus ring is shown only once the parent used the keyboard here, so
+        # pointer users never see Back looking "recommended".
+        self._confirm_keyboard = False
+        self._hold_source = "pointer"
+        self._hold_key: int | None = None
+        self._keys_down: set[int] = set()
+        self._confirm_visit_page: InstallerPage | None = None
         self._wifi_next_page_index = 0
-        self._title_px = 36
-        self._control_px = 24
-        self._body_px = 19
+        self._title_px = 37
+        self._control_px = 25
+        self._body_px = 22
+        self._hint_px = 16
         self._exit_requested = False
         self._boot_released = False
         self._next_boot_handoff_attempt = 0.0
@@ -833,8 +871,13 @@ class InstallerApplication:
                 elif event.type == pygame.TEXTINPUT:
                     self._handle_text_input(event.text)
                 elif event.type == pygame.KEYDOWN:
+                    fresh = self._note_key_down(event)
                     self._handle_keydown(event, pygame)
+                    if self._handle_confirm_key(event.key, pygame, fresh=fresh):
+                        continue
                     running = self._handle_key(event.key, pygame)
+                elif event.type == pygame.KEYUP:
+                    self._note_key_up(event.key)
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self._handle_mouse_down(event.pos)
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
@@ -1105,15 +1148,94 @@ class InstallerApplication:
         if self.state.page == InstallerPage.CONFIRM and self._inside(
             "install", position
         ):
+            self._hold_source = "pointer"
+            self._hold_key = None
             self._hold_started = time.monotonic()
+
+    # -- erase confirmation: keyboard equivalent of the pointer hold ----------
+    #
+    # Same 2-second hold, same fill, same revalidation (the hold only ever
+    # calls _start_installation, which re-probes power, display and the
+    # selected disk). Extra keyboard safety: focus must be on the erase
+    # control (never the default), the Enter/Space press must be a fresh
+    # press on this page (a key already down — auto-repeat, or a key still
+    # held from the previous page — never starts a hold), and releasing the
+    # key, any other key, or leaving the page cancels.
+
+    HOLD_KEYS_NAMES = ("K_RETURN", "K_KP_ENTER", "K_SPACE")
+    FOCUS_KEYS_NAMES = ("K_TAB", "K_LEFT", "K_RIGHT", "K_UP", "K_DOWN")
+
+    def _note_key_down(self, event: Any) -> bool:
+        """Track physical key state; True only for a fresh (non-repeat) press."""
+
+        key = int(getattr(event, "key", -1))
+        fresh = key not in self._keys_down and not getattr(event, "repeat", False)
+        self._keys_down.add(key)
+        if len(self._keys_down) > 32:
+            # A lost KEYUP (focus change) must not grow this without bound.
+            self._keys_down = {key}
+        return fresh
+
+    def _note_key_up(self, key: int) -> None:
+        self._keys_down.discard(int(key))
+        if self._hold_source == "key" and self._hold_key == int(key):
+            self._cancel_hold()
+
+    def _cancel_hold(self) -> None:
+        self._hold_started = None
+        self._hold_source = "pointer"
+        self._hold_key = None
+
+    def _sync_confirm_visit(self) -> None:
+        """Reset confirm-page focus and any hold when the page is (re)entered."""
+
+        page = self.state.page
+        if page == self._confirm_visit_page:
+            return
+        self._confirm_visit_page = page
+        self._confirm_focus = "back"
+        self._confirm_keyboard = False
+        if self._hold_source == "key":
+            self._cancel_hold()
+
+    def _handle_confirm_key(self, key: int, pygame: Any, *, fresh: bool) -> bool:
+        """Confirm-page keys; True when consumed (generic handling skipped)."""
+
+        self._sync_confirm_visit()
+        if self.state.page != InstallerPage.CONFIRM:
+            return False
+        hold_keys = {getattr(pygame, name) for name in self.HOLD_KEYS_NAMES if hasattr(pygame, name)}
+        focus_keys = {getattr(pygame, name) for name in self.FOCUS_KEYS_NAMES if hasattr(pygame, name)}
+        if self._hold_source == "key" and key != self._hold_key:
+            # Any other key during a keyboard hold cancels it.
+            self._cancel_hold()
+        if key in focus_keys:
+            if fresh:
+                self._confirm_focus = "install" if self._confirm_focus == "back" else "back"
+                self._confirm_keyboard = True
+            return True
+        if key in hold_keys:
+            if not fresh:
+                return True
+            if self._confirm_focus == "install":
+                self._hold_source = "key"
+                self._hold_key = key
+                self._hold_started = time.monotonic()
+            elif not self._confirm_keyboard:
+                # First Enter/Space only reveals where focus is (Back).
+                self._confirm_keyboard = True
+            else:
+                self._back()
+            return True
+        return False
 
     def _handle_mouse_up(self, position: tuple[int, int]) -> None:
         if self._inside("back", position):
-            self._hold_started = None
+            self._cancel_hold()
             self._back()
             return
         if self.state.page == InstallerPage.CONFIRM:
-            self._hold_started = None
+            self._cancel_hold()
             return
         if self.state.page == InstallerPage.LAYOUT:
             if self._inside("primary", position):
@@ -1157,21 +1279,48 @@ class InstallerApplication:
             self._handle_settings_click(position)
 
     def _update_install_hold(self, pygame: Any) -> None:
-        """Require one uninterrupted pointer hold inside the erase button."""
+        """Require one uninterrupted hold (pointer inside, or key on focus)."""
 
+        self._sync_confirm_visit()
         if self._hold_started is None:
             return
         if self.state.page != InstallerPage.CONFIRM:
-            self._hold_started = None
+            self._cancel_hold()
             return
-        pressed = pygame.mouse.get_pressed(num_buttons=3)
-        position = pygame.mouse.get_pos()
-        if not pressed[0] or not self._inside("install", position):
-            self._hold_started = None
-            return
+        if self._hold_source == "key":
+            if (
+                self._confirm_focus != "install"
+                or self._hold_key is None
+                or self._hold_key not in self._keys_down
+                or not self._key_still_pressed(pygame, self._hold_key)
+            ):
+                self._cancel_hold()
+                return
+        else:
+            pressed = pygame.mouse.get_pressed(num_buttons=3)
+            position = pygame.mouse.get_pos()
+            if not pressed[0] or not self._inside("install", position):
+                self._cancel_hold()
+                return
         if time.monotonic() - self._hold_started >= self.HOLD_SECONDS:
-            self._hold_started = None
+            self._cancel_hold()
             self._start_installation()
+
+    @staticmethod
+    def _key_still_pressed(pygame: Any, key: int) -> bool:
+        """Cross-check our KEYUP tracking against SDL's live keyboard state.
+
+        A KEYUP can be lost (window focus change); SDL's state cannot lie
+        about a released key. Unknown/unavailable state defers to tracking.
+        """
+
+        getter = getattr(getattr(pygame, "key", None), "get_pressed", None)
+        if getter is None:
+            return True
+        try:
+            return bool(getter()[key])
+        except Exception:  # noqa: BLE001 - no keyboard state on this backend
+            return True
 
     def _cycle_resolution(self) -> None:
         if not self.available_resolutions:
@@ -1327,7 +1476,7 @@ class InstallerApplication:
         def worker() -> None:
             try:
                 self._events.put(
-                    InstallProgress(0.05, "prepare", "Confirming the selected disk")
+                    InstallProgress(0.02, "prepare", "Confirming the selected disk")
                 )
                 prepared = client.prepare(
                     expected_target_identity=identity,
@@ -1348,11 +1497,13 @@ class InstallerApplication:
                         "the selected disk changed; confirmation invalidated"
                     )
                 self._events.put(
-                    InstallProgress(0.10, "install", "Installing Greia OS")
+                    InstallProgress(0.04, "prepare", "Confirming the selected disk")
                 )
                 client.execute(
                     transaction_nonce=prepared.transaction_nonce,
                     plan_digest=prepared.plan_digest,
+                    # Validated display-only frames from the root service.
+                    on_progress=lambda frame: self._events.put(_progress_from_frame(frame)),
                 )
                 self._events.put(InstallResult())
             except Exception as exc:
@@ -1370,7 +1521,7 @@ class InstallerApplication:
             except queue.Empty:
                 return
             if isinstance(event, InstallProgress):
-                self.state.progress = event
+                self._apply_progress(event)
             elif isinstance(event, InstallResult):
                 self.state.result = event
                 self.state.page = InstallerPage.COMPLETE
@@ -1379,6 +1530,33 @@ class InstallerApplication:
                 self.state.error = str(event) or event.__class__.__name__
                 self.state.page = InstallerPage.ERROR
                 self._worker = None
+
+    #: Seconds without any progress frame before the installing page shows
+    #: the current step's own elapsed time ("still working").
+    STALL_SECONDS = 20.0
+
+    def _apply_progress(self, event: InstallProgress) -> None:
+        """Adopt one progress observation; the bar never moves backwards."""
+
+        now = time.monotonic()
+        previous = self.state.progress
+        if previous is None or event.stage != previous.stage or self._phase_since is None:
+            self._phase_since = now
+        self._last_progress_at = now
+        fraction = event.fraction
+        if previous is not None and self.state.page == InstallerPage.INSTALLING:
+            fraction = max(fraction, previous.fraction)
+        self.state.progress = replace(event, fraction=max(0.0, min(1.0, fraction)))
+
+    def _stalled_phase_seconds(self, now: float | None = None) -> int | None:
+        """Elapsed seconds of the current phase once it went quiet, else None."""
+
+        if self._last_progress_at is None or self._phase_since is None:
+            return None
+        now = time.monotonic() if now is None else now
+        if now - self._last_progress_at < self.STALL_SECONDS:
+            return None
+        return max(0, int(now - self._phase_since))
 
     # --- Presentation ---------------------------------------------------------
     # Everything below draws state; none of it changes what a page does. The
@@ -1408,11 +1586,19 @@ class InstallerApplication:
         return self._look_cache
 
     def _fonts(self, height: int) -> tuple[Any, Any, Any]:
-        """(control, title, body) fonts sized for the viewport height."""
+        """(control, title, body) fonts sized for the viewport height.
 
-        self._title_px = max(26, min(38, height // 16))
-        self._control_px = max(18, min(25, height // 25))
-        self._body_px = max(16, min(20, height // 31))
+        Sizes come from :func:`presentation.text_scale`, which never goes
+        below the readability floors (20/16 px body/hint at 600 px, 17/15 px
+        at 480 px); labels are never shrunk below the hint size either.
+        """
+
+        scale = text_scale(height)
+        self._title_px = scale.title
+        self._control_px = scale.control
+        self._body_px = scale.body
+        self._hint_px = scale.hint
+        self._look().min_text_px = scale.hint
         return (
             self._typography.font(FontRole.CONTROL, self._control_px),
             self._typography.font(FontRole.TITLE, self._title_px),
@@ -1616,7 +1802,7 @@ class InstallerApplication:
             self._buttons[f"layout-{item}"] = rect
             label_max = rect.width - 28
             if layout_id == inferred_id:
-                tag = look.label(badge, max(12, self._body_px - 3), COCOA, role=FontRole.CONTROL)
+                tag = look.label(badge, self._hint_px, COCOA, role=FontRole.CONTROL)
                 tag_rect = pygame.Rect(0, 0, tag.get_width() + 18, tag.get_height() + 6)
                 tag_rect.midright = (rect.right - 10, rect.centery)
                 look.panel(screen, tag_rect, mix(SUNSHINE, WHITE, 0.45), width=2)
@@ -2014,7 +2200,7 @@ class InstallerApplication:
         target = self.state.target
         nav_center = self._bottom_row_y(main)
         hold_h = self.BUTTON_HEIGHT + 8
-        hint_y = nav_center - hold_h // 2 - small_font.get_linesize() - 4
+        hint_y = nav_center - hold_h // 2 - small_font.get_linesize() - 8
         # The disk that will be erased: big, unambiguous, with its size and
         # device path, framed as the destructive object it is.
         card_h = max(70, min(108, (hint_y - y) // 2))
@@ -2073,13 +2259,22 @@ class InstallerApplication:
         image = look.label(label, self._control_px, WHITE, max_width=rect.width - 32)
         screen.blit(image, image.get_rect(center=(rect.centerx, rect.centery - 2)))
         self._buttons["install"] = rect
-        hint = self._fit_text(
-            small_font, f"Keep the button pressed for {int(self.HOLD_SECONDS)} seconds.", HINT, hold_w
-        )
-        screen.blit(hint, hint.get_rect(midbottom=(rect.centerx, rect.top - 4)))
+        # Keyboard focus (Tab/arrows) is drawn like every other page's focus;
+        # it starts on Back so Enter alone can never reach the erase hold.
+        if self._confirm_focus == "install":
+            look.focus(screen, rect, shape=BodyShape.PILL)
+            hint_copy = f"Hold Enter or Space for {int(self.HOLD_SECONDS)} seconds."
+        else:
+            if self._confirm_keyboard:
+                look.focus(screen, back, shape=BodyShape.PILL)
+            hint_copy = f"Keep the button pressed for {int(self.HOLD_SECONDS)} seconds."
+        hint = self._fit_text(small_font, hint_copy, HINT, main.width - back.width - 16)
+        screen.blit(hint, hint.get_rect(bottomright=(main.right, rect.top - 6)))
 
     def _draw_installing(self, screen: Any, pygame: Any, main: Any, y: int, font: Any, small_font: Any) -> None:
         look = self._look()
+        progress = self.state.progress
+        now = time.monotonic()
         y = self._paragraph(
             screen,
             "This can take several minutes.",
@@ -2087,19 +2282,31 @@ class InstallerApplication:
             HINT,
             pygame.Rect(main.left, y, main.width, main.height),
             center=True,
-        ) + 14
+        ) + 10
         bar = pygame.Rect(main.left, y, main.width, max(30, self._control_px + 10))
-        tick = int(time.monotonic() * 4)
-        look.progress(screen, pygame, bar, self.state.progress.fraction, busy_tick=tick)
-        y = bar.bottom + 12
-        self._center_fitted_text(
-            screen, self.state.progress.detail, font, COCOA, y + font.get_linesize() // 2, main.width, main
-        )
+        tick = int(now * 4)
+        look.progress(screen, pygame, bar, progress.fraction, busy_tick=tick)
+        y = bar.bottom + 10
+        # Phase name, plus the measured share of it when the service can
+        # measure (bytes copied / read back). Numbers are drawn verbatim.
+        detail = self._tr(progress.detail)
+        if progress.phase_fraction is not None:
+            detail = f"{detail} · {int(progress.phase_fraction * 100)}%"
+        image = self._fit_line(font, detail, COCOA, main.width)
+        screen.blit(image, image.get_rect(midtop=(main.centerx, y)))
         y += font.get_linesize() + 2
         if self._installing_since is not None:
-            elapsed = max(0, int(time.monotonic() - self._installing_since))
+            elapsed = max(0, int(now - self._installing_since))
             clock = f"{self._tr('Time elapsed')} {elapsed // 60}:{elapsed % 60:02d}"
             image = self._line(small_font, clock, HINT)
+            screen.blit(image, image.get_rect(midtop=(main.centerx, y)))
+            y += small_font.get_linesize()
+        stalled = self._stalled_phase_seconds(now)
+        if stalled is not None:
+            # A long step that reports nothing (e.g. checking the release
+            # files) still shows that it is alive and for how long.
+            note = f"{self._tr('Still working on this step')} {stalled // 60}:{stalled % 60:02d}"
+            image = self._fit_line(small_font, note, HINT, main.width)
             screen.blit(image, image.get_rect(midtop=(main.centerx, y)))
         box_h = small_font.get_linesize() * 2 + 26
         box = pygame.Rect(main.left, main.bottom - box_h - 8, main.width, box_h)
@@ -2123,21 +2330,29 @@ class InstallerApplication:
         self._center_line(screen, "Greia is installed and ready.", font, COCOA, main, y)
         y += font.get_linesize() + 10
         nav_top = self._bottom_row_y(main) - self.BUTTON_HEIGHT // 2 - 10
-        box_h = small_font.get_linesize() * 2 + title_font.get_linesize() + 24
+        change = self._tr("You can change it in Greia Parents after first boot.")
+        change_lines = min(2, len(_wrap(change, getattr(small_font, "base", small_font), main.width - 32)))
+        box_h = small_font.get_linesize() * (1 + change_lines) + title_font.get_linesize() + 24
         box = pygame.Rect(main.left, y, main.width, box_h)
         look.panel(screen, box, FIELD)
         self._center_line(screen, "Parent login", small_font, HINT, box, box.top + 8)
         # The development credential itself is fixed data, never translated.
         credential = self._line(title_font, "greia  /  greia", COCOA)
         screen.blit(credential, credential.get_rect(midtop=(box.centerx, box.top + 8 + small_font.get_linesize())))
-        self._center_fitted_text(
+        self._paragraph(
             screen,
-            "You can change it in Greia Parents after first boot.",
+            change,
             small_font,
             COCOA,
-            box.bottom - 8 - small_font.get_linesize() // 2,
-            box.width - 24,
-            box,
+            pygame.Rect(
+                box.left + 16,
+                box.bottom - 10 - change_lines * small_font.get_linesize(),
+                box.width - 32,
+                change_lines * small_font.get_linesize(),
+            ),
+            center=True,
+            translate=False,
+            max_lines=2,
         )
         y = box.bottom + 12
         self._paragraph(
@@ -2638,10 +2853,15 @@ class InstallerApplication:
             return self._text(font, text_value, color)
         if self._typography.surface_width(font, text_value) <= max_width:
             return self._text(font, text_value, color)
-        trimmed = text_value
-        while trimmed and self._typography.surface_width(font, trimmed + "…") > max_width:
+        # Trim the *translated* copy with the untranslated font: trimming the
+        # English source produced a string with no translation, so a long
+        # French line used to come out as truncated English.
+        translated = self._tr(text_value)
+        raw = getattr(font, "base", font)
+        trimmed = translated
+        while trimmed and self._typography.surface_width(raw, trimmed + "…") > max_width:
             trimmed = trimmed[:-1]
-        return self._text(font, (trimmed + "…").rstrip(), color)
+        return self._line(font, (trimmed + "…").rstrip(), color)
 
     def _render_signature(self, screen: Any) -> tuple[object, ...] | None:
         """Cheap fingerprint of everything the current frame would draw.

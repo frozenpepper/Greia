@@ -37,6 +37,8 @@ class InstallerScreenshotToolTests(unittest.TestCase):
             "05-keyboard-list",
             "12-wifi-password",
             "23-confirm-wifi-holding",
+            "23k-confirm-keyboard-hold",
+            "24s-installing-stalled",
             "25-installing",
             "27-error",
         )
@@ -49,6 +51,13 @@ class InstallerScreenshotToolTests(unittest.TestCase):
                 self.assertTrue(report.path.is_file(), report.path)
                 self.assertEqual(report.overlaps, (), report.path.name)
                 self.assertEqual(report.offscreen, (), report.path.name)
+                # Readability floor (15 px helper text at 480 px high) and no
+                # kit label spilling out of its box at that floor.
+                self.assertIsNotNone(report.min_text_px, report.path.name)
+                self.assertGreaterEqual(report.min_text_px, 15, report.path.name)
+                self.assertFalse(report.text_too_small, report.path.name)
+                self.assertEqual(report.overflowing, (), report.path.name)
+                self.assertEqual(report.truncated, (), report.path.name)
             sheet = tool.write_contact_sheet(reports, Path(tmp) / "sheet.png", columns=3, thumb_width=160)
             self.assertTrue(sheet.is_file())
 

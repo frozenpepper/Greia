@@ -102,6 +102,7 @@ from greia_platform.system_updates import (
 )
 
 from .disk import DeviceObservation
+from .install_progress import InstallProgressSink
 from .layout import (
     LayoutError,
     LayoutPlan,
@@ -525,6 +526,7 @@ def execute_fresh_ab_install(
     seams: FreshAbInstallSeams,
     *,
     now_unix: int | None = None,
+    progress: InstallProgressSink | None = None,
 ) -> FreshAbInstallResult:
     """Verify, partition, stream/finalize A, init PERSIST, install GRUB, journal.
 
@@ -533,7 +535,13 @@ def execute_fresh_ab_install(
     compatibility/support binding and layout-fit proof all run **before**
     the first destructive partition command, and ``SYSTEM_B`` storage is
     never addressed.
+
+    ``progress`` (optional, display only) receives the parent-visible phase
+    at each milestone, and measured byte counts while ``SYSTEM_A`` is
+    streamed and read back (see :class:`_ProgressSlotStorage`). It observes
+    the transaction; it never changes an order, a check or a bound.
     """
+    report = _phase_reporter(progress)
     if not isinstance(request, FreshAbInstallRequest):
         raise FreshAbInstallError("fresh install requires a typed install request")
     if not isinstance(seams, FreshAbInstallSeams):
@@ -552,6 +560,7 @@ def execute_fresh_ab_install(
         raise FreshAbInstallError("fresh install requires a whole-disk target")
 
     # -- 1. Verified deterministic v3 release only ---------------------
+    report("check")
     try:
         inspected = inspect_update_bundle(request.bundle_path)
     except (UpdateBundleError, SystemUpdateError) as exc:
@@ -660,6 +669,7 @@ def execute_fresh_ab_install(
         raise FreshAbInstallError(f"install policy facts are not authoritative: {exc}") from exc
 
     # -- 3. First destructive commands: MBR A/B/PERSIST --------------------
+    report("partition")
     try:
         adapter = adapter_for(request.sizing.layout_adapter_id)
     except LayoutError as exc:
@@ -713,6 +723,11 @@ def execute_fresh_ab_install(
         raise FreshAbInstallError(f"SYSTEM_A slot store is not authoritative: {exc}") from exc
     except Exception as exc:
         raise FreshAbInstallError(f"SYSTEM_A slot store is not authoritative: {exc}") from exc
+    if progress is not None:
+        report("copy")
+        storage = _ProgressSlotStorage(
+            storage, progress, total_bytes=member.payload_uncompressed_bytes
+        )
     writer = SlotWriter()
     stream_factory = seams.payload_stream_factory or (
         lambda: open_bundle_payload_stream(
@@ -760,6 +775,7 @@ def execute_fresh_ab_install(
     except Exception as exc:
         raise FreshAbInstallError(f"SYSTEM_A streaming failed: {exc}") from exc
     _s04_diag_stage("streamed")
+    report("setup")
     try:
         filesystem = seams.slot_filesystem_factory()
         package_installer = seams.package_installer_factory()
@@ -824,6 +840,7 @@ def execute_fresh_ab_install(
     _s04_diag_stage("persist-done")
 
     # -- 7. Stable GRUB backend (fixed entries + grubenv default A) --------
+    report("bootloader")
     try:
         grub_text = render_grub_ab_config_from_record(
             record=record,
@@ -853,6 +870,7 @@ def execute_fresh_ab_install(
     if journal.state is not BootTransactionState.FIRST_INSTALL_PENDING:
         raise FreshAbInstallError("first-install journal is not pending acceptance")
     _s04_diag_stage("journal-done")
+    report("complete")
 
     return FreshAbInstallResult(
         release_id=member.release_id,
@@ -1009,7 +1027,13 @@ def build_ab_executor(
     if identities_factory is not None and not callable(identities_factory):
         raise FreshAbInstallError("A/B executor requires an observed-identity factory")
 
-    def _execute(authorization: object, settings: object, locale: object, target: DeviceObservation):  # type: ignore[no-untyped-def]
+    def _execute(  # type: ignore[no-untyped-def]
+        authorization: object,
+        settings: object,
+        locale: object,
+        target: DeviceObservation,
+        progress: InstallProgressSink | None = None,
+    ):
         identity = getattr(authorization, "target_identity", "")
         _require_hex64(identity, field_name="install target identity")
         if not isinstance(target, DeviceObservation):
@@ -1039,11 +1063,14 @@ def build_ab_executor(
             password_hash=facts.password_hash,
             developer=facts.developer,
         )
-        result = execute_fresh_ab_install(request, seams)
+        result = execute_fresh_ab_install(request, seams, progress=progress)
         return _InstallResultShim(
             release_id=result.release_id,
         )
 
+    # Read by InstallTransactionService.execute_ab_install: this executor
+    # takes the optional display-only progress sink.
+    _execute.accepts_progress = True  # type: ignore[attr-defined]
     return _execute
 
 
@@ -1102,6 +1129,63 @@ def _support_set_from_seams(seams: FreshAbInstallSeams):  # -> ReleaseSupportSet
         provided_microcode=provided_microcode,
         packages=tuple(sorted(records, key=lambda item: item.name)),
     )
+
+
+def _phase_reporter(progress: InstallProgressSink | None) -> Callable[[str], None]:
+    """Milestone reporter that can never raise into the transaction."""
+
+    def report(phase_id: str) -> None:
+        if progress is None:
+            return
+        try:
+            progress.phase(phase_id)
+        except Exception:  # noqa: BLE001 - display data never stops an install
+            pass
+
+    return report
+
+
+class _ProgressSlotStorage:
+    """Byte-counting view of the ``SYSTEM_A`` slot store (display only).
+
+    Forwards the :class:`SlotStorage` protocol unchanged to the real store
+    and reports measured progress: bytes written are the ``copy`` phase,
+    bytes read back by :class:`SlotWriter`'s integrity readback are the
+    ``verify`` phase, both against the manifest's uncompressed size. The
+    reporter rate-limits; this object only counts. A reporting failure is
+    swallowed so it can never turn into a write or readback failure.
+    """
+
+    def __init__(self, inner: SlotStorage, progress: InstallProgressSink, *, total_bytes: int) -> None:
+        self._inner = inner
+        self._progress = progress
+        self._total = max(1, int(total_bytes))
+        self._written = 0
+        self._read = 0
+
+    @property
+    def capacity_bytes(self) -> int:
+        return self._inner.capacity_bytes
+
+    def write_at(self, offset: int, data: bytes) -> None:
+        self._inner.write_at(offset, data)
+        self._written = min(self._total, self._written + len(data))
+        self._report("copy", self._written)
+
+    def read_at(self, offset: int, length: int) -> bytes:
+        data = self._inner.read_at(offset, length)
+        self._read = min(self._total, self._read + len(data))
+        self._report("verify", self._read)
+        return data
+
+    def flush(self) -> None:
+        self._inner.flush()
+
+    def _report(self, phase_id: str, done: int) -> None:
+        try:
+            self._progress.phase(phase_id, done_bytes=done, total_bytes=self._total)
+        except Exception:  # noqa: BLE001 - display data never stops an install
+            pass
 
 
 def _bind_post_layout_identities(

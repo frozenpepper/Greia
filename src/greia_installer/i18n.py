@@ -162,6 +162,9 @@ _ITALIAN: dict[str, str] = {
     "The selected disk changed; choose the internal disk again": "Il disco selezionato è cambiato; scegli di nuovo il disco interno",
     "the selected disk changed; confirmation invalidated": "Il disco selezionato è cambiato; conferma annullata",
     "This screen is not fully supported — installation to the internal disk is paused. Ask a grown-up to try a supported screen.": "Questo schermo non è pienamente supportato — l'installazione sul disco interno è in pausa. Prova con uno schermo supportato.",
+    # 2026-10-17 installer follow-ups: streamed progress phases.
+    "Setting up the system": "Configurazione del sistema",
+    "Still working on this step": "Questo passaggio è ancora in corso",
 }
 
 
@@ -188,6 +191,7 @@ _DYNAMIC_MESSAGES: dict[str, dict[str, str]] = {
         "resolution": "Risoluzione: {value}",
         "pointer_unavailable": "Anteprima del puntatore non disponibile{value}",
         "hold_seconds": "Tieni premuto il pulsante per {value} secondi.",
+        "hold_keys_seconds": "Tieni premuto Invio o Spazio per {value} secondi.",
         "not_adjustable": "Non regolabile su questo touchpad: {value}",
     },
     "es": {
@@ -204,6 +208,7 @@ _DYNAMIC_MESSAGES: dict[str, dict[str, str]] = {
         "resolution": "Resolución: {value}",
         "pointer_unavailable": "Vista previa del puntero no disponible{value}",
         "hold_seconds": "Mantén pulsado el botón {value} segundos.",
+        "hold_keys_seconds": "Mantén pulsado Intro o Espacio {value} segundos.",
         "not_adjustable": "No se puede ajustar en este panel táctil: {value}",
     },
     "fr": {
@@ -220,6 +225,7 @@ _DYNAMIC_MESSAGES: dict[str, dict[str, str]] = {
         "resolution": "Résolution : {value}",
         "pointer_unavailable": "Aperçu du pointeur indisponible{value}",
         "hold_seconds": "Maintenez le bouton enfoncé {value} secondes.",
+        "hold_keys_seconds": "Maintenez Entrée ou Espace enfoncée {value} secondes.",
         "not_adjustable": "Non réglable sur ce pavé tactile : {value}",
     },
 }
@@ -265,6 +271,10 @@ def _dynamic_text(value: str, language: str) -> str:
         count = value[len("Keep the button pressed for "):-len(" seconds.")]
         if count.isdigit():
             return msg["hold_seconds"].format(value=count)
+    if value.startswith("Hold Enter or Space for ") and value.endswith(" seconds."):
+        count = value[len("Hold Enter or Space for "):-len(" seconds.")]
+        if count.isdigit():
+            return msg["hold_keys_seconds"].format(value=count)
     if value.startswith("Not adjustable on this touchpad: "):
         # Each listed control is installer copy; translate item by item.
         table = _TRANSLATIONS[language]

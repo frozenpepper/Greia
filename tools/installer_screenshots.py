@@ -10,9 +10,12 @@ code, in the selectable languages, at the reference 1024x600 panel and a
 cramped 800x480 panel, and writes one PNG per state plus an optional contact
 sheet.
 
-It also reports two silent layout faults per state: registered hit targets
-that overlap each other, and hit targets that leave the screen. Both are
-invisible in code review because the offending size comes from runtime copy.
+It also reports silent layout faults per state: registered hit targets that
+overlap each other or leave the screen, text drawn below the installer's
+readability floor (``presentation.text_floors``: 16 px helper text at 600 px
+high, 15 px at 480), kit labels still too wide for their box at that floor,
+and translated copy cut with an ellipsis. All are invisible in code review
+because the offending size comes from runtime copy.
 
 Run directly (headless, touches no disk, network or audio):
 
@@ -48,6 +51,7 @@ import pygame  # noqa: E402 - needs the SDL driver chosen above
 from greia_installer.entrypoint import LanguageFirstInstallerApplication  # noqa: E402
 from greia_installer.main import InstallerPage  # noqa: E402
 from greia_installer.engine import InstallProgress  # noqa: E402
+from greia_installer.presentation import text_floors  # noqa: E402
 from greia_platform.hardware import DisplayMode  # noqa: E402
 from greia_platform.hardware_session import (  # noqa: E402
     ApplyResult,
@@ -189,12 +193,18 @@ def _wifi_state(wifi: _ScriptedWifi) -> Setup:
     return setup
 
 
-def _confirm(*, holding: bool = False, wifi_ssid: str | None = None) -> Setup:
+def _confirm(*, holding: bool = False, wifi_ssid: str | None = None,
+             keyboard: bool = False) -> Setup:
     def setup(app: Any) -> None:
         app.state.page = InstallerPage.CONFIRM
         if wifi_ssid is not None:
             app.wifi = _wifi(WifiSetupPhase.CONNECTED, connected=wifi_ssid,
                              profile=_ProfileStub(wifi_ssid))
+        if keyboard:
+            # Tab moved focus to the erase control (Enter alone never does).
+            app._confirm_visit_page = InstallerPage.CONFIRM
+            app._confirm_focus = "install"
+            app._confirm_keyboard = True
         if holding:
             # Half way through the two-second hold.
             app._hold_started = time.monotonic() - app.HOLD_SECONDS / 2
@@ -202,10 +212,15 @@ def _confirm(*, holding: bool = False, wifi_ssid: str | None = None) -> Setup:
     return setup
 
 
-def _installing(fraction: float, stage: str, detail: str) -> Setup:
+def _installing(fraction: float, stage: str, detail: str, *,
+                phase_fraction: float | None = None, stalled_for: float = 0.0) -> Setup:
     def setup(app: Any) -> None:
         app.state.page = InstallerPage.INSTALLING
-        app.state.progress = InstallProgress(fraction, stage, detail)
+        app.state.progress = InstallProgress(fraction, stage, detail, phase_fraction)
+        now = time.monotonic()
+        app._installing_since = now - 200.0
+        app._phase_since = now - max(5.0, stalled_for)
+        app._last_progress_at = now - stalled_for
 
     return setup
 
@@ -246,8 +261,13 @@ SCENARIOS: tuple[tuple[str, Setup], ...] = (
     ("21-wifi-unavailable", _wifi_state(_wifi(WifiSetupPhase.UNAVAILABLE, networks=()))),
     ("22-confirm", _confirm()),
     ("23-confirm-wifi-holding", _confirm(holding=True, wifi_ssid="Casa Rossi")),
-    ("24-installing-start", _installing(0.05, "prepare", "Confirming the selected disk")),
-    ("25-installing", _installing(0.42, "copy", "Copying the system")),
+    ("23k-confirm-keyboard-hold", _confirm(holding=True, keyboard=True)),
+    ("24-installing-start", _installing(0.02, "prepare", "Confirming the selected disk")),
+    ("24s-installing-stalled", _installing(
+        0.04, "check", "Checking the installation files", stalled_for=95.0)),
+    ("25-installing", _installing(0.42, "copy", "Copying the system", phase_fraction=0.42)),
+    ("25v-installing-verify", _installing(
+        0.80, "verify", "Checking the installed system", phase_fraction=0.67)),
     ("26-complete", _page(InstallerPage.COMPLETE)),
     ("27-error", _error("selected disk identity changed; installation stopped")),
     ("28-error-power", _error(
@@ -257,11 +277,110 @@ SCENARIOS: tuple[tuple[str, Setup], ...] = (
 
 @dataclass(frozen=True, slots=True)
 class ShotReport:
-    """Where one state was written and which layout faults it showed."""
+    """Where one state was written and which layout faults it showed.
+
+    ``min_text_px`` is the smallest font size any non-empty text was drawn
+    at; ``text_floor_px`` is the readability floor for that viewport. A
+    state whose ``min_text_px`` is below the floor is a fault.
+    """
 
     path: Path
     overlaps: tuple[tuple[str, str], ...]
     offscreen: tuple[str, ...]
+    min_text_px: int | None = None
+    text_floor_px: int = 0
+    overflowing: tuple[str, ...] = ()
+    truncated: tuple[str, ...] = ()
+
+    @property
+    def text_too_small(self) -> bool:
+        return self.min_text_px is not None and self.min_text_px < self.text_floor_px
+
+    @property
+    def faulty(self) -> bool:
+        return bool(
+            self.overlaps or self.offscreen or self.text_too_small or self.overflowing or self.truncated
+        )
+
+
+def _watch_copy_truncation(app: Any) -> list[str]:
+    """Record installer copy that ``_fit_text`` had to cut with an ellipsis.
+
+    ``_fit_text`` is the path for translated copy (machine data such as SSIDs
+    and disk models goes through ``_fit_line``); cut copy means the layout
+    did not leave room for that language at that size.
+    """
+
+    cut: list[str] = []
+    original = app._fit_text
+
+    def fit_text(font: Any, text_value: str, color: Any, max_width: int) -> Any:
+        if max_width > 0 and app._typography.surface_width(font, text_value) > max_width:
+            cut.append(text_value)
+        return original(font, text_value, color, max_width)
+
+    app._fit_text = fit_text
+    return cut
+
+
+
+def _watch_label_overflow(look: Any) -> list[str]:
+    """Record kit labels still wider than their box at the minimum size.
+
+    ``InstallerLook.label`` shrinks a label only down to the hint size; copy
+    that still does not fit would spill out of its button or tile.
+    """
+
+    spilled: list[str] = []
+    original = look.label
+
+    def label(text: str, size: int, color: Any, *, max_width: int | None = None, **kwargs: Any) -> Any:
+        image = original(text, size, color, max_width=max_width, **kwargs)
+        if max_width is not None and image.get_width() > max_width:
+            spilled.append(text)
+        return image
+
+    look.label = label
+    return spilled
+
+
+class _TextSizeRecorder:
+    """Typography proxy recording the px size of every non-empty line drawn.
+
+    Wraps the installer's (localized) typography: ``render`` carries its size,
+    and ``surface`` is mapped back to the size its font was built at.
+    """
+
+    def __init__(self, inner: Any) -> None:
+        self._inner = inner
+        self._font_sizes: dict[int, int] = {}
+        self.sizes: list[int] = []
+
+    def font(self, role: Any, size: int) -> Any:
+        font = self._inner.font(role, size)
+        self._font_sizes[id(font)] = int(size)
+        base = getattr(font, "base", None)
+        if base is not None:
+            self._font_sizes[id(base)] = int(size)
+        return font
+
+    def render(self, text: str, role: Any, size: int, color: Any) -> Any:
+        if str(text).strip():
+            self.sizes.append(int(size))
+        return self._inner.render(text, role, size, color)
+
+    def surface(self, font: Any, text: str, color: Any) -> Any:
+        size = self._font_sizes.get(id(font))
+        if size is not None and isinstance(text, str) and text.strip():
+            self.sizes.append(size)
+        return self._inner.surface(font, text, color)
+
+    @property
+    def minimum(self) -> int | None:
+        return min(self.sizes) if self.sizes else None
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._inner, name)
 
 
 def _layout_faults(
@@ -301,13 +420,16 @@ def render_language_screen(size: tuple[int, int], out: Path) -> ShotReport | Non
     chooser_type = getattr(entrypoint, "LanguageChooser", None)
     if chooser_type is None:
         return None
+    from greia_platform.typography import GreiaTypography
+
     surface = pygame.Surface(size).convert()
-    chooser = chooser_type(root=REPO_ROOT)
+    recorder = _TextSizeRecorder(GreiaTypography(REPO_ROOT / "assets" / "fonts" / "nunito-sans"))
+    chooser = chooser_type(root=REPO_ROOT, typography=recorder)
     chooser.draw(surface, pygame, pointer_position=(-100, -100))
     out.parent.mkdir(parents=True, exist_ok=True)
     pygame.image.save(surface, str(out))
     overlaps, offscreen = _layout_faults(chooser.hit_targets(), size)
-    return ShotReport(out, overlaps, offscreen)
+    return ShotReport(out, overlaps, offscreen, recorder.minimum, text_floors(size[1])[1])
 
 
 def render_matrix(
@@ -339,6 +461,11 @@ def render_matrix(
                 if wanted is not None and state_id not in wanted:
                     continue
                 app = _make_app(locale)
+                recorder = _TextSizeRecorder(app._typography)
+                app._typography = recorder
+                app._look_cache = None
+                spilled = _watch_label_overflow(app._look())
+                cut = _watch_copy_truncation(app)
                 setup(app)
                 surface = pygame.Surface((width, height)).convert()
                 app._buttons.clear()
@@ -347,7 +474,11 @@ def render_matrix(
                 path.parent.mkdir(parents=True, exist_ok=True)
                 pygame.image.save(surface, str(path))
                 overlaps, offscreen = _layout_faults(dict(app._buttons), (width, height))
-                reports.append(ShotReport(path, overlaps, offscreen))
+                reports.append(ShotReport(
+                    path, overlaps, offscreen, recorder.minimum, text_floors(height)[1],
+                    tuple(dict.fromkeys(spilled)),
+                    tuple(dict.fromkeys(cut)),
+                ))
                 app._typography.clear()
     return reports
 
@@ -406,10 +537,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     faults = 0
     for report in reports:
-        if report.overlaps or report.offscreen:
+        if report.faulty:
             faults += 1
-            print(f"{report.path}: overlaps={list(report.overlaps)} offscreen={list(report.offscreen)}")
-    print(f"rendered {len(reports)} states; {faults} with hit-target faults")
+            print(
+                f"{report.path}: overlaps={list(report.overlaps)} offscreen={list(report.offscreen)}"
+                f" min_text_px={report.min_text_px} floor={report.text_floor_px}"
+                f" overflowing={list(report.overflowing)} truncated={list(report.truncated)}"
+            )
+    print(f"rendered {len(reports)} states; {faults} with layout faults")
     if args.sheet is not None:
         print(f"contact sheet: {write_contact_sheet(reports, args.sheet.expanduser())}")
     pygame.quit()

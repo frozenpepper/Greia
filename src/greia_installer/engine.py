@@ -86,9 +86,16 @@ class InstallRequest:
 
 @dataclass(frozen=True, slots=True)
 class InstallProgress:
+    """One progress observation: overall fraction, phase id, label.
+
+    ``phase_fraction`` is the measured share of the current phase when the
+    reporter could measure it (bytes copied/read back), else ``None``.
+    """
+
     fraction: float
     stage: str
     detail: str
+    phase_fraction: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
