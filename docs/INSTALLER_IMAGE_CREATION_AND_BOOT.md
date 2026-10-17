@@ -151,9 +151,11 @@ The console is a profile fact, `boot.console_policy`, independent of the develop
 | Policy | Profiles | Kernel line | Hidden fallback |
 | --- | --- | --- | --- |
 | `diagnostic` | `*-dev` | `console=tty1 panic=0 loglevel=4 systemd.show_status=true rd.systemd.show_status=true vt.global_cursor_default=1` | not needed |
-| `quiet` | release profiles, `legacy-x86-i686-rc` | `quiet splash loglevel=0 console=null panic=0 systemd.show_status=false rd.systemd.show_status=false udev.log_priority=3 vt.global_cursor_default=0` | RC only: Syslinux `LABEL verbose`, GRUB `greia-os-diagnostics` |
+| `quiet` | release profiles, `legacy-x86-i686-rc` | `quiet splash loglevel=0 console=tty1 panic=0 systemd.show_status=false rd.systemd.show_status=false udev.log_priority=3 vt.global_cursor_default=0` | RC only: Syslinux `LABEL verbose`, GRUB `greia-os-diagnostics` |
 
 Every policy keeps `panic=0`: a fatal kernel/initramfs error is never turned into a timed reboot loop.
+
+Both policies keep the real `console=tty1`; `quiet` silences it. **Never `console=null`** (or an empty `console=`): the Debian 686 kernel has no `ttynull` driver (`CONFIG_NULL_TTY` unset), so the system boots with no console, PID 1 has no stdio, live-boot's `exec 6>&1` (and initramfs-tools' final `exec run-init ... <dev/console`) fail, and the kernel panics before anything is drawn. That froze the 2026-10-17 RC stick on the Syslinux banner; `boot_contract.FATAL_CONSOLE_ARGUMENTS` and `tools/verify-live-usb.sh` now reject it.
 
 Where it is enforced (change all of them together):
 

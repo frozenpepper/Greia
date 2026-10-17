@@ -181,7 +181,8 @@ class ConfigGenerationTests(unittest.TestCase):
     def test_developer_mode_keeps_boot_observable(self) -> None:
         release = _config()
         developer = _config(developer=True)
-        self.assertIn("console=null", release)
+        self.assertIn("console=tty1", release)
+        self.assertNotIn("console=null", release)
         self.assertIn("console=tty1", developer)
         self.assertNotIn("console=null", developer)
         validate_grub_ab_text(release)

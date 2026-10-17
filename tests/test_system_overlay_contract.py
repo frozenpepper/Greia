@@ -265,7 +265,8 @@ class SystemOverlayContractTests(unittest.TestCase):
             PROJECT_ROOT / "build/overlay/usr/local/sbin/greia-enable-ssh"
         ).read_text()
         for text in (installed_grub, installer_grub, installer_builder):
-            self.assertIn("console=null", text)
+            self.assertIn("console=tty1", text)
+            self.assertNotIn("console=null", text)
             self.assertEqual(text.count("console="), 1)
             self.assertIn("systemd.crash_shell=no", text)
             self.assertIn("systemd.crash_chvt=0", text)

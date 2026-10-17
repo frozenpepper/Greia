@@ -12,7 +12,7 @@ esac
 # * /etc/greia-os/boot-console-policy - "quiet" or "diagnostic", written by
 #   the composer from the profile's boot.console_policy.
 #
-# Release images are always quiet and consoleless. Developer images default to
+# Release images are always quiet (silenced tty1). Developer images default to
 # the diagnostic console (tty1 status, visible cursor); the release-candidate
 # profile keeps SSH but declares "quiet". Every policy keeps panic=0: the
 # accepted installed-OS postmortem established that a timed reboot plus a
@@ -37,11 +37,15 @@ fi
 
 quiet_args="quiet splash loglevel=0 systemd.show_status=false rd.systemd.show_status=false udev.log_priority=3 vt.global_cursor_default=0"
 diagnostic_args="loglevel=4 systemd.show_status=true rd.systemd.show_status=true udev.log_priority=4 vt.global_cursor_default=1"
-console_arg="console=null"
+# Both policies keep a real console (tty1); quiet silences it with the
+# arguments above. Never console=null: the Debian 686 kernel has no ttynull
+# driver, so the system would have no /dev/console, initramfs-tools' final
+# `exec run-init ... <dev/console` (and live-boot's `exec 6>&1`) would fail and
+# PID 1 would exit -> kernel panic before anything is drawn (2026-10-17 RC).
+console_arg="console=tty1"
 panic_arg="panic=0"
 visibility_args="$quiet_args"
 if [ "$policy" = diagnostic ]; then
-  console_arg="console=tty1"
   panic_arg="panic=0"
   visibility_args="$diagnostic_args"
 fi

@@ -15,7 +15,7 @@ from greia_platform.grub_security import GRUB_USER
 
 GOOD_RELEASE_LINE = (
     "linux /vmlinuz root=UUID=12345678-1234-5678-9abc-def012345678 ro "
-    "quiet splash loglevel=0 console=null panic=0 "
+    "quiet splash loglevel=0 console=tty1 panic=0 "
     "systemd.show_status=false rd.systemd.show_status=false "
     "systemd.crash_shell=no systemd.crash_chvt=0 "
     "udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0"
@@ -96,7 +96,7 @@ class BootContractTests(unittest.TestCase):
         )
         script = script_path.read_text(encoding="utf-8")
         self.assertIn("developer-remote", script)
-        self.assertIn('console_arg="console=null"', script)
+        self.assertNotIn('console_arg="console=null"', script)
         self.assertIn('panic_arg="panic=0"', script)
         self.assertIn('console_arg="console=tty1"', script)
         self.assertIn('panic_arg="panic=0"', script)
@@ -121,7 +121,7 @@ class BootContractTests(unittest.TestCase):
         self.assertNotIn("pip-recovery", script)
 
     def test_rejects_an_extra_console(self) -> None:
-        with self.assertRaisesRegex(GrubContractError, "console=null"):
+        with self.assertRaisesRegex(GrubContractError, "console=tty1"):
             validate_grub_text(config(GOOD_LINE + " console=tty0"))
 
     def test_rejects_missing_auth_or_locked_normal_entry(self) -> None:

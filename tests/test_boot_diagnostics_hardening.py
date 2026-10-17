@@ -148,7 +148,7 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         grub = (
             ROOT / "build/overlay/etc/grub.d/10_greia_appliance"
         ).read_text(encoding="utf-8")
-        self.assertIn('console_arg="console=null"', grub)
+        self.assertNotIn('console_arg="console=null"', grub)
         self.assertIn('panic_arg="panic=0"', grub)
         self.assertIn('console_arg="console=tty1"', grub)
         self.assertIn('diagnostic_args="loglevel=4 systemd.show_status=true', grub)

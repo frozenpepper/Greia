@@ -2744,19 +2744,22 @@ def record_slot_injection_mutation(
     }
 
 
-#: Clone-only serial-console substitution. The shipped release kernel
-#: command line is consoleless (``console=null``, child-appliance
-#: contract), but a consoleless live/installed boot stalls under the
-#: QEMU harness path: measured twice on the capable host, GRUB reads
-#: exactly 54,846,464 bytes (kernel+initrd) and the guest then spins
-#: at 100% CPU with zero disk I/O forever, while the same bytes boot
-#: to login in ~4 min once a serial console exists. Prepending
-#: ``console=ttyS0,115200`` keeps ``console=null`` preferred (last),
-#: so ``/dev/console`` semantics are unchanged while the kernel gains
-#: a real console device and the harness gains serial diagnostics.
-#: Applied to disposable clones only; the source/shipped images and
-#: their contract validation are never touched.
-SERIAL_CONSOLE_PREFIX = "console=ttyS0,115200 console=null"
+#: Clone-only serial-console substitution. The shipped quiet kernel
+#: command line silences the real ``console=tty1`` (child-appliance
+#: contract). Historic note: it used to say ``console=null``, and a
+#: consoleless boot "stalled" under this harness (GRUB read kernel+initrd,
+#: then 100% CPU, zero disk I/O forever) until a serial console was
+#: prepended. That stall was a kernel panic, not a harness quirk: the
+#: Debian 686 kernel has no ttynull driver, so ``console=null`` meant no
+#: console at all and PID 1 died on its first stdio redirection (proved
+#: 2026-10-17 on the RC stick; see boot_contract.FATAL_CONSOLE_ARGUMENTS).
+#: Prepending ``console=ttyS0,115200`` keeps the shipped ``console=tty1``
+#: preferred (last), so ``/dev/console`` semantics are unchanged while the
+#: kernel also logs to serial for the harness. Applied to disposable
+#: clones only; the source/shipped images and their contract validation
+#: are never touched.
+SHIPPED_QUIET_CONSOLE = "console=tty1"
+SERIAL_CONSOLE_PREFIX = "console=ttyS0,115200 " + SHIPPED_QUIET_CONSOLE
 
 
 def record_grub_console_mutation(
@@ -2852,15 +2855,15 @@ def _ensure_clone_serial_console(
 ) -> dict[str, object]:
     """Enable the clone-only serial console on a mounted clone tree.
 
-    Replaces every bare ``console=null`` with
-    ``console=ttyS0,115200 console=null`` in ``grub_relpath`` under
+    Replaces every bare ``console=tty1`` with
+    ``console=ttyS0,115200 console=tty1`` in ``grub_relpath`` under
     ``mountpoint``. Fail-closed: the file must be a regular file with
     exactly ``expected_consoles`` bare occurrences and no already-patched
     ones (fresh clone), or zero bare plus exactly ``expected_consoles``
     already-patched ones (idempotent re-entry, e.g. slot-B injection
     after slot-A on the same clone) recorded with substitutions 0.
-    Anything else (missing file, developer ``console=tty1`` shape,
-    partial edit) raises. Pure file work: the caller owns attach/mount.
+    Anything else (missing file, an old fatal ``console=null`` shape, a
+    count mismatch such as extra diagnostic entries, partial edit) raises. Pure file work: the caller owns attach/mount.
     """
     import re as _re
 
@@ -2872,10 +2875,17 @@ def _ensure_clone_serial_console(
         )
     hash_file = sha_fn or sha256_file
     text = cfg.read_text(encoding="utf-8")
-    bare = len(_re.findall(r"(?<!console=ttyS0,115200 )console=null", text))
+    bare = len(
+        _re.findall(
+            r"(?<!console=ttyS0,115200 )" + _re.escape(SHIPPED_QUIET_CONSOLE) + r"(?!\S)",
+            text,
+        )
+    )
     dual = text.count(SERIAL_CONSOLE_PREFIX)
     if bare == int(expected_consoles) and dual == 0:
-        patched = text.replace("console=null", SERIAL_CONSOLE_PREFIX)
+        patched = _re.sub(
+            _re.escape(SHIPPED_QUIET_CONSOLE) + r"(?!\S)", SERIAL_CONSOLE_PREFIX, text
+        )
         if patched.count(SERIAL_CONSOLE_PREFIX) != int(expected_consoles):
             raise LifecycleHarnessError(
                 "clone serial-console refused: substitution did not land "
@@ -2892,7 +2902,7 @@ def _ensure_clone_serial_console(
     else:
         raise LifecycleHarnessError(
             "clone serial-console refused: expected "
-            f"{expected_consoles} console=null entries in {grub_relpath}, "
+            f"{expected_consoles} {SHIPPED_QUIET_CONSOLE} entries in {grub_relpath}, "
             f"found {bare} bare + {dual} already-patched"
         )
     return {

@@ -325,13 +325,13 @@ class SlotInjectionTests(unittest.TestCase):
             seed = base / "seed-slot"
             (seed / "etc/systemd/system").mkdir(parents=True)
             # Boot-control grub.cfg rides the same fake mount; two slot
-            # entries each carry console=null (resolved at the p1 root).
+            # entries each carry console=tty1 (resolved at the p1 root).
             (seed / "grub.cfg").write_text(
                 "menuentry 'Greia Slot A' --unrestricted {\n"
-                "  linux /boot/vmlinuz ro console=null quiet splash\n"
+                "  linux /boot/vmlinuz ro console=tty1 quiet splash\n"
                 "}\n"
                 "menuentry 'Greia Slot B' --unrestricted {\n"
-                "  linux /boot/vmlinuz ro console=null quiet splash\n"
+                "  linux /boot/vmlinuz ro console=tty1 quiet splash\n"
                 "}\n",
                 encoding="utf-8",
             )
@@ -369,10 +369,10 @@ class SlotInjectionTests(unittest.TestCase):
             (seed / "etc/systemd/system").mkdir(parents=True)
             (seed / "grub.cfg").write_text(
                 "menuentry 'Greia Slot A' --unrestricted {\n"
-                "  linux /boot/vmlinuz ro console=ttyS0,115200 console=null quiet splash\n"
+                "  linux /boot/vmlinuz ro console=ttyS0,115200 console=tty1 quiet splash\n"
                 "}\n"
                 "menuentry 'Greia Slot B' --unrestricted {\n"
-                "  linux /boot/vmlinuz ro console=ttyS0,115200 console=null quiet splash\n"
+                "  linux /boot/vmlinuz ro console=ttyS0,115200 console=tty1 quiet splash\n"
                 "}\n",
                 encoding="utf-8",
             )
@@ -396,7 +396,7 @@ class CloneSerialConsoleTests(unittest.TestCase):
         cfg.write_text(
             "".join(
                 f"menuentry 'Slot {i}' {{\n"
-                "  linux /boot/vmlinuz ro console=null quiet splash\n"
+                "  linux /boot/vmlinuz ro console=tty1 quiet splash\n"
                 "}\n"
                 for i in range(entries)
             ),
@@ -414,11 +414,11 @@ class CloneSerialConsoleTests(unittest.TestCase):
             self.assertEqual(proof["substitutions"], 2)
             self.assertFalse(proof["source_image_mutated"])
             text = (mount / "grub.cfg").read_text(encoding="utf-8")
-            self.assertEqual(text.count("console=ttyS0,115200 console=null"), 2)
-            # Preferred console stays null (last in the pair), so
+            self.assertEqual(text.count("console=ttyS0,115200 console=tty1"), 2)
+            # Preferred console stays tty1 (last in the pair), so
             # /dev/console semantics are unchanged; no bare entry remains.
             self.assertEqual(
-                len(_re.findall(r"(?<!console=ttyS0,115200 )console=null", text)),
+                len(_re.findall(r"(?<!console=ttyS0,115200 )console=tty1", text)),
                 0,
             )
 
@@ -430,11 +430,11 @@ class CloneSerialConsoleTests(unittest.TestCase):
                 )
 
     def test_wrong_shape_refused(self) -> None:
-        # Developer console=tty1 shape: zero bare nulls, zero duals.
+        # Old fatal console=null shape: zero bare tty1, zero duals.
         with tempfile.TemporaryDirectory() as tmp:
             mount = Path(tmp)
             (mount / "grub.cfg").write_text(
-                "menuentry 'Slot' {\n  linux /boot/vmlinuz ro console=tty1\n}\n",
+                "menuentry 'Slot' {\n  linux /boot/vmlinuz ro console=null\n}\n",
                 encoding="utf-8",
             )
             with self.assertRaises(LifecycleHarnessError):
@@ -445,8 +445,8 @@ class CloneSerialConsoleTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             mount = Path(tmp)
             (mount / "grub.cfg").write_text(
-                "linux /boot/vmlinuz ro console=null\n"
-                "linux /boot/vmlinuz ro console=ttyS0,115200 console=null\n",
+                "linux /boot/vmlinuz ro console=tty1\n"
+                "linux /boot/vmlinuz ro console=ttyS0,115200 console=tty1\n",
                 encoding="utf-8",
             )
             with self.assertRaises(LifecycleHarnessError):

@@ -184,6 +184,13 @@ require_diagnostic_append() {
     exit 1
   fi
 }
+# console=null is fatal on the Debian 686 kernel (no ttynull driver): PID 1
+# gets no /dev/console, live-boot dies on `exec 6>&1` and the kernel panics
+# silently on the Syslinux banner (2026-10-17 RC). No entry may carry it.
+if grep -Eq '^[[:space:]]*APPEND.*[[:space:]]console=(null)?([[:space:]]|$)' "$EXPECTED_CFG"; then
+  echo "Refusing: a Syslinux entry uses console=null (no ttynull driver; silent panic)." >&2
+  exit 1
+fi
 case "$LIVE_CONSOLE_POLICY" in
   diagnostic)
     # The developer recovery USB must expose tty1 and must not suppress the
@@ -197,7 +204,7 @@ case "$LIVE_CONSOLE_POLICY" in
     # LABEL verbose (Shift/Alt at boot, PROMPT 0 semantics) keeps today's full
     # diagnostic arguments reachable.
     default_append="$(label_append live)"
-    for required in quiet splash loglevel=0 console=null panic=0 vt.global_cursor_default=0 systemd.show_status=false; do
+    for required in quiet splash loglevel=0 console=tty1 panic=0 vt.global_cursor_default=0 systemd.show_status=false; do
       [[ " $default_append " == *" $required "* ]] || {
         echo "Refusing: quiet Syslinux default entry lacks $required." >&2
         exit 1

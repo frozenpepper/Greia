@@ -971,7 +971,7 @@ class SquashfsRebuildTests(unittest.TestCase):
         grub.write_text(
             "set timeout=0\n"
             "menuentry 'Install Greia OS' --unrestricted {\n"
-            "  linux /live/vmlinuz boot=live console=null quiet splash\n"
+            "  linux /live/vmlinuz boot=live console=tty1 quiet splash\n"
             "  initrd /live/initrd.img\n"
             "}\n",
             encoding="utf-8",

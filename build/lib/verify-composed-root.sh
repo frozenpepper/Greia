@@ -153,10 +153,15 @@ for asset_id in ("bg.meadow_day.home", "character.leo"):
   # by build-image.sh with the build root UUID) must pass the boot contract in
   # exactly the declared policy.
   local generator="$root/etc/grub.d/10_greia_appliance"
-  for required in 'boot-console-policy' 'console_arg="console=tty1"' 'console_arg="console=null"' \
+  for required in 'boot-console-policy' 'console_arg="console=tty1"' \
     'panic_arg="panic=0"' 'greia-os-diagnostics' 'keystatus --shift'; do
     grep -Fq -- "$required" "$generator" || _greia_root_fail "$label" "GRUB generator lacks: $required"
   done
+  # console=null means "no console" on the Debian 686 kernel (no ttynull):
+  # PID 1 then cannot open /dev/console and the boot panics silently.
+  if grep -Fq 'console_arg="console=null"' "$generator"; then
+    _greia_root_fail "$label" "GRUB generator uses console=null (fatal: no ttynull in this kernel)"
+  fi
   if grep -Eq 'panic=[1-9]' "$generator"; then
     _greia_root_fail "$label" "GRUB generator reintroduces a timed panic reboot"
   fi

@@ -123,7 +123,7 @@ This wrapper deliberately separates writing from verification:
 6. the verifier checks the FAT filesystem **read-only**;
 7. it mounts the actual USB key read-only and byte-compares kernel, initrd, live squashfs, target payload, Syslinux config and live-media identifier with the verified source image;
 8. it verifies `ldlinux.sys`, the active partition flag and the first 440 bytes of the Syslinux MBR bootstrap;
-9. it refuses a Syslinux template that reintroduces `console=null`, timed panic reboot, `quiet`/`splash`/`loglevel=0`, or the rejected `DISPLAY ... clear.msg` experiment on the current Acer recovery path;
+9. it refuses any Syslinux entry with `console=null` (fatal on the Debian 686 kernel: no `ttynull`, PID 1 has no console and panics), and a recovery template that reintroduces timed panic reboot, `quiet`/`splash`/`loglevel=0`, or the rejected `DISPLAY ... clear.msg` experiment on the current Acer recovery path;
 10. reports success only after the final removable media itself passes read-back.
 
 The reason for keeping verification separate is architectural, not cosmetic: `tools/build-live-usb.sh` is the firmware-sensitive recipe established by `INSTALLATION_USB_BOOT_POSTMORTEM.md`. Safety checks should surround that recipe rather than continuously modifying it.

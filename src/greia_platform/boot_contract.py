@@ -43,11 +43,20 @@ COMMON_REQUIRED_ARGUMENTS = {
     "systemd.crash_chvt=0",
     "consoleblank=0",
 }
+#: Console arguments that leave the system with *no* console. The kernel maps
+#: ``console=null`` (and an empty ``console=``) to the ``ttynull`` driver, which
+#: the Debian 686 kernel does not build (``CONFIG_NULL_TTY`` unset). PID 1 then
+#: has no stdin/stdout/stderr, live-boot's ``exec 6>&1`` and initramfs-tools'
+#: ``exec run-init ... <dev/console`` fail, and the kernel panics before any
+#: pixel is drawn (2026-10-17 RC stick froze on the Syslinux banner). Quiet
+#: boots silence a real console instead (``console=tty1`` + quiet arguments).
+FATAL_CONSOLE_ARGUMENTS = frozenset({"console=null", "console="})
+
 RELEASE_REQUIRED_ARGUMENTS = {
     "quiet",
     "splash",
     "loglevel=0",
-    "console=null",
+    "console=tty1",
     "panic=0",
     "systemd.show_status=false",
     "rd.systemd.show_status=false",
@@ -75,7 +84,7 @@ LIVE_REQUIRED_ARGUMENTS = {
 }
 
 RELEASE_FORBIDDEN_ARGUMENTS = {
-    "console=tty1",
+    "console=null",
     "panic=30",
     "panic=5",
     "loglevel=4",
@@ -382,8 +391,8 @@ def _line_errors(
 
     # The diagnostic policy keeps the boot observable: status on tty1, and a
     # kernel panic stays on screen (panic=0) so failure state remains
-    # observable. The quiet policy (release, and the developer RC) is silent
-    # and consoleless but also never reboots on panic.
+    # observable. The quiet policy (release, and the developer RC) silences
+    # the same tty1 console and also never reboots on panic.
     # See docs/INSTALLED_OS_BOOT_POSTMORTEM.md §16.
     if console_policy is None:
         policy = BootConsolePolicy.DIAGNOSTIC if developer else BootConsolePolicy.QUIET
@@ -413,7 +422,13 @@ def _line_errors(
             errors.append(f"line {line.line_number}: missing required argument {required}")
 
     for argument in args:
-        if argument in profile_forbidden:
+        if argument in FATAL_CONSOLE_ARGUMENTS:
+            errors.append(
+                f"line {line.line_number}: {argument} leaves the kernel without a "
+                "console (no ttynull driver); PID 1 cannot open /dev/console and "
+                "the boot panics silently. Use console=tty1 with the quiet arguments"
+            )
+        elif argument in profile_forbidden:
             mode_name = policy.value
             errors.append(
                 f"line {line.line_number}: forbidden {mode_name} argument {argument}"

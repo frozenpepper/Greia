@@ -42,7 +42,7 @@ UUID = "12345678-1234-5678-9abc-def012345678"
 QUIET = (
     f"linux /vmlinuz root=UUID={UUID} ro quiet splash loglevel=0 "
     "systemd.show_status=false rd.systemd.show_status=false udev.log_priority=3 "
-    "vt.global_cursor_default=0 console=null panic=0 systemd.crash_shell=no "
+    "vt.global_cursor_default=0 console=tty1 panic=0 systemd.crash_shell=no "
     "systemd.crash_chvt=0 consoleblank=0"
 )
 DIAGNOSTIC = (
@@ -69,7 +69,7 @@ class ConsolePolicyContractTests(unittest.TestCase):
         )
         lines = validate_grub_text(text, developer=True)
         self.assertEqual(len(lines), 1)
-        self.assertIn("console=null", lines[0].arguments)
+        self.assertIn("console=tty1", lines[0].arguments)
         validate_grub_text(text, developer=True, console_policy="quiet")
 
     def test_developer_default_stays_diagnostic(self) -> None:
@@ -165,7 +165,7 @@ class InstalledGrubGeneratorTests(unittest.TestCase):
         result = self.render(developer=True, policy="quiet")
         self.assertEqual(result.returncode, 0, result.stderr)
         lines = validate_grub_text(AUTH + result.stdout, developer=True, console_policy="quiet")
-        self.assertIn("console=null", lines[0].arguments)
+        self.assertIn("console=tty1", lines[0].arguments)
         self.assertIn("keystatus --shift", result.stdout)
         self.assertIn("--id greia-os-diagnostics", result.stdout)
         self.assertNotRegex(result.stdout, r"panic=[1-9]")
@@ -212,6 +212,63 @@ class LiveSyslinuxTemplateTests(unittest.TestCase):
             self.assertIn("build/lib/live-syslinux.sh", text)
             self.assertIn("greia_live_console_policy", text)
             self.assertIn("$SYSLINUX_TEMPLATE", text)
+
+
+class NoNullConsoleRegressionTests(unittest.TestCase):
+    """2026-10-17 RC stick froze on the Syslinux banner (QEMU-reproduced).
+
+    ``console=null`` selects the ``ttynull`` driver, which the Debian 686
+    kernel does not build (``CONFIG_NULL_TTY`` unset). The system then has no
+    console, PID 1 starts without stdio, live-boot's ``exec 6>&1`` fails with
+    "Bad file descriptor", /init exits and the kernel panics (panic=0 keeps it
+    frozen) before anything is drawn. Quiet boots must silence a real tty1.
+    """
+
+    BOOT_SOURCES = (
+        "build/live-syslinux/syslinux-quiet.cfg.in",
+        "build/live-syslinux/syslinux.cfg.in",
+        "build/build-installer-image.sh",
+        "build/overlay/etc/grub.d/10_greia_appliance",
+        "build/overlay/etc/default/grub.d/10-greia-quiet.cfg",
+        "build/installer-overlay/etc/default/grub.d/10-greia-quiet.cfg",
+        "tools/prepare-antix-sd-boot.sh",
+    )
+
+    def test_no_boot_source_passes_a_null_console_to_the_kernel(self) -> None:
+        import re
+
+        for rel in self.BOOT_SOURCES:
+            with self.subTest(source=rel):
+                text = (ROOT / rel).read_text(encoding="utf-8")
+                kernel_lines = [
+                    line for line in text.splitlines()
+                    if not line.lstrip().startswith("#") and "console=" in line
+                ]
+                self.assertTrue(kernel_lines, f"no kernel command line found in {rel}")
+                for line in kernel_lines:
+                    self.assertNotRegex(line, r"console=(null)?([\s\"']|$)")
+                    self.assertIn("console=tty1", line)
+
+    def test_contract_rejects_null_console_in_every_policy(self) -> None:
+        quiet_ok = QUIET.split()[2:]
+        for console in ("console=null", "console="):
+            args = tuple(a if not a.startswith("console=") else console for a in quiet_ok)
+            line = KernelCommandLine(1, "linux", "/vmlinuz", args)
+            for developer in (False, True):
+                with self.subTest(console=console, developer=developer):
+                    with self.assertRaisesRegex(GrubContractError, "without a console"):
+                        validate_kernel_command_line(
+                            line, developer=developer, console_policy="quiet"
+                        )
+
+    def test_quiet_syslinux_default_has_exactly_one_real_console(self) -> None:
+        quiet = LiveSyslinuxTemplateTests.appends(
+            ROOT / "build/live-syslinux/syslinux-quiet.cfg.in"
+        )
+        for label, append in quiet.items():
+            with self.subTest(label=label):
+                consoles = [a for a in append.split() if a.startswith("console=")]
+                self.assertEqual(consoles, ["console=tty1"])
 
 
 class RcProfileTests(unittest.TestCase):
