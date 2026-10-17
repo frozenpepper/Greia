@@ -912,3 +912,64 @@ Remaining: the first one or two drops of a session still have one 90–145 ms in
   - quattro_amici, colline and painting play;
   - **8 test `quattro.token_dropped` facts** (idempotency keys `rtt-…`) from the broker round-trip measurement;
   - standalone quattro runs (fake progress store; their events reached the live session's broker).
+
+---
+
+## Short check at 3f3cff7b (show_all policy)
+
+**Evidence class:** PHYSICAL DEVICE + remote input injection (`xdotool` as `greiakid`).
+**Deployed:** `3f3cff7b…`. The coordinator had set GRETA's `visibility_mode` to `show_all` (backup at `/var/lib/greia/deploy/activity-discovery.json.bak`) and restarted the launcher. `NRestarts` 0, no OOM, no launcher journal errors during the check.
+
+### S.1 The 9 previously hidden Activities are visible and launch through the Shell
+
+| Activity | Collection page(s) | Tap → READY | Home → ended |
+|---|---|---|---|
+| il_giardino_dei_numeri | Gioca p5, Impara p5 | 6.87 s | graceful |
+| mondo_contrari | Gioca p5, Impara p5 | 9.75 s | 1.73 s |
+| quattro_stagioni ("Il grande albero delle…") | Impara p5 | 6.74 s | 0.77 s |
+| nascondino_bosco | Gioca p5 | 7.90 s | 1.16 s |
+| treno_numeri | Gioca p5, Impara p5 | 8.41 s | 1.06 s |
+| alfabeto_leo | Gioca p4, Impara p4 | 7.30 s | 0.76 s |
+| cucciolo_mio | Gioca p4 | 5.90 s | 0.67 s |
+| faccine_momo | Gioca p4, Impara p4 | 7.05 s | 0.75 s |
+| festa_delle_rime | Gioca p4, Impara p4 | 6.07 s | 0.91 s |
+
+Gioca now has 5 pages and Impara 5. All 9 rendered correctly, with no crash and a graceful stop. These were their first Shell launches after the launcher restart.
+
+### S.2 treno_numeri: real train run
+
+- **How to play:** the station sign asks for N (3 in this round). Tap crates to load them onto the orange wagon, then tap the green arrow (GO) at bottom right. The train departs, a new cargo set (ducks) arrives, and the counter advances.
+- Crate tap → visible change: **2 ms** (persistent-connection probe).
+- Train run: **23–25 fps for about 2 s**, then static.
+- Activity CPU 20% during the 10 s window; RSS 70–71 MB.
+- Idle 60 s after input: **5.7%**, mixer `closed`.
+- No keycap hint is shown; it is a pointer-style screen.
+- Home → ended in 1.06 s.
+
+### S.3 quattro_amici: tap → first falling-token frame (via Shell)
+
+Four column taps were made, at x = 335, 511, 687 and 423, each measured with two probe boxes:
+
+| Event | Time after tap |
+|---|---|
+| Preview token leaves the slot above the board | **1–4 ms** |
+| Token visibly inside the top hole of the column | **91–148 ms** |
+
+Before this build it was 95–618 ms; the slow tail is gone.
+
+### S.4 Home, then a quick tap on the top-left corner — **PASS (as specified)**
+
+Sequence:
+1. Inside il_giardino_dei_numeri, tap Home at (38, 38). The session ended `graceful_stop`.
+2. **0.8 s later**, tap the same spot again.
+3. 1.5 s after that second tap, the screen showed the Collection page.
+4. 1 s later, a tap at the avatar (55, 50) showed the **profile picker** (GRETA).
+
+The second tap within 1.5 s did **not** open the picker. The avatar tap at about 3.3 s after Home opened it as the normal avatar action ("normal after 2 s"). The 1.5–2 s window was not probed precisely. If the owner wants a longer cool-down for children who double-tap slowly, that is a product decision.
+
+### S.5 State left
+
+- Shell on Home with GRETA (re-entered after the picker), `show_all` kept.
+- `/tmp/gs` and helpers deleted.
+- The `.bak` is **kept**: the owner's standing rule is never to delete files without asking, so its removal is left to the owner even though the check passed.
+- New data: about 13 history sessions and treno_numeri progress (round 1 → 2).
