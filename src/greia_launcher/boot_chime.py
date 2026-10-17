@@ -4,14 +4,19 @@ The chime is optional presentation polish. It must never be on the boot
 critical path: it starts only after the launcher has presented its first real
 graphical frame, plays asynchronously, fails silently when audio is
 unavailable, and plays once per machine boot (not per launcher restart).
+
+The player itself is shared with the live installer through
+:mod:`greia_platform.boot_chime`; this module owns the launcher marker
+(``/run/greia-os/boot-chime-played``) and asset location.
 """
 
 from __future__ import annotations
 
 import os
 import threading
-import wave
 from pathlib import Path
+
+from greia_platform import boot_chime
 
 
 _ONE_SHOT_MARKER = Path("/run/greia-os/boot-chime-played")
@@ -39,32 +44,12 @@ def _mark_played() -> None:
 
 
 def _play_with_alsa(path: Path) -> bool:
-    """Try aplay for the smallest footprint; returns False when unavailable."""
-    import subprocess
-
-    try:
-        completed = subprocess.run(
-            ["aplay", "-q", str(path)],
-            check=False,
-            shell=False,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        return completed.returncode == 0
-    except (OSError, subprocess.SubprocessError):
-        return False
+    """Shared ``aplay`` player (no volume changes); False when unavailable."""
+    return boot_chime.play_with_alsa(path)
 
 
 def _valid_chime(path: Path) -> bool:
-    try:
-        with wave.open(str(path), "rb") as handle:
-            channels = handle.getnchannels()
-            rate = handle.getframerate()
-            duration = handle.getnframes() / max(1, rate)
-            return 1 <= channels <= 2 and 0.1 <= duration <= 1.2
-    except (OSError, wave.Error):
-        return False
+    return boot_chime.valid_chime(path)
 
 
 def play_boot_chime() -> None:

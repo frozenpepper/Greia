@@ -201,6 +201,23 @@ Requirements:
 
 The earlier 0.75–0.95-second/≤1.0-second prose and the brief 2.2/2.5-second recovery-session implementation were both incorrect for the intended design and are superseded by this explicit 5+2-second contract.
 
+### Stage D (installer) — live-installer start-up animation
+
+The live installer plays the same Greia logo animation before its language-first screen (added 2026-10-17; SOURCE + headless/desktop review only, no physical evidence yet):
+
+```text
+static boot canvas (first flip, continues the fb splash) → boot cover released
+  → 5 s animation → 2 s hold on frame_0051 → chime (if audio works)
+  → language-first screen
+```
+
+- Frame discovery, viewport fitting and duration-based frame selection are shared with the launcher in `src/greia_platform/boot_animation.py`; the launcher keeps its own markers/KPIs/systemd readiness in `boot_intro.py` and its behaviour is unchanged. The `aplay` chime player is shared through `src/greia_platform/boot_chime.py`.
+- Owner: `src/greia_installer/boot_intro.py` (`InstallerIntro`), started from `entrypoint.choose_language` on the same display.
+- Unlike the Shell intro it is **skippable by any key, mouse button, touch or controller button**; the skipping input is consumed and never chooses a language (the chooser also needs its own press before a release counts).
+- Once per boot through `/run/greia-installer/intro-played`; chime marker `/run/greia-installer/boot-chime-played`. `GREIA_SKIP_BOOT_INTRO=1` / `GREIA_SKIP_BOOT_CHIME=1` remain development escape hatches.
+- Frames are scaled to the viewport height and converted to the display format once at load; the loop only blits and flips when the frame index changes.
+- Fail-soft: the animation needs `assets/boot/frames/` and the chime needs `assets/audio/system/greia-boot-chime.wav` **inside the live root**. `compose_install_live_content` (build owner) currently stages only core icons and fonts, so until the live allowlist adds them the installer shows the static canvas and goes straight to the language screen. The unprivileged installer user also needs audio-device access for the chime; without it the chime is silently skipped.
+
 ## 6. Console, diagnostics and owner recovery
 
 Console suppression is independent from splash implementation.

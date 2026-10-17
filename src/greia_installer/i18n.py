@@ -123,6 +123,45 @@ _ITALIAN: dict[str, str] = {
     "Good": "Buono",
     "Fair": "Discreto",
     "Weak": "Debole",
+    # 2026-10-17 installer redesign copy.
+    "Install Greia": "Installa Greia",
+    "Greia will be installed on this computer's internal disk.": "Greia verrà installato sul disco interno di questo computer.",
+    "First you choose the keyboard, the disk, the pointer, the screen and Wi-Fi.": "Prima scegli tastiera, disco, puntatore, schermo e Wi-Fi.",
+    "Nothing is erased until you confirm at the last step.": "Non viene cancellato nulla finché non confermi all'ultimo passo.",
+    "Keep the power adapter connected.": "Tieni collegato l'alimentatore.",
+    "Suggested": "Consigliata",
+    "Greia will be installed on the disk you choose. Only internal disks that are safe to use are shown.": "Greia verrà installato sul disco che scegli. Sono mostrati solo i dischi interni sicuri da usare.",
+    "Automatic": "Automatica",
+    "More networks": "Altre reti",
+    "Wi-Fi could not be checked": "Impossibile controllare il Wi-Fi",
+    "This cannot be undone.": "Non si può annullare.",
+    "Keyboard": "Tastiera",
+    "Disk": "Disco",
+    "Pointer": "Puntatore",
+    "Screen": "Schermo",
+    "Install": "Installa",
+    "Set up later": "Più tardi",
+    "This can take several minutes.": "Può richiedere diversi minuti.",
+    "Time elapsed": "Tempo trascorso",
+    "Do not turn off the computer.": "Non spegnere il computer.",
+    "Parent login": "Accesso genitore",
+    "After the computer turns off, remove the USB key, then turn the computer on again.": "Quando il computer si è spento, togli la chiavetta USB e poi riaccendilo.",
+    "very slow": "molto lenta",
+    "slow": "lenta",
+    "medium": "media",
+    "fast": "veloce",
+    "very fast": "molto veloce",
+    "tap to click": "tocco per fare clic",
+    "disable while typing": "disattiva durante la digitazione",
+    "Wi-Fi password must be at least 8 characters.": "La password Wi-Fi deve avere almeno 8 caratteri.",
+    "Enterprise Wi-Fi is not supported yet.": "Il Wi-Fi Enterprise non è ancora supportato.",
+    "Confirming the selected disk": "Conferma del disco selezionato",
+    "Installing Greia OS": "Installazione di Greia OS",
+    "The install service is unavailable; installation stopped": "Il servizio di installazione non è disponibile; installazione interrotta",
+    "No disk is selected; installation stopped": "Nessun disco selezionato; installazione interrotta",
+    "The selected disk changed; choose the internal disk again": "Il disco selezionato è cambiato; scegli di nuovo il disco interno",
+    "the selected disk changed; confirmation invalidated": "Il disco selezionato è cambiato; conferma annullata",
+    "This screen is not fully supported — installation to the internal disk is paused. Ask a grown-up to try a supported screen.": "Questo schermo non è pienamente supportato — l'installazione sul disco interno è in pausa. Prova con uno schermo supportato.",
 }
 
 
@@ -148,6 +187,8 @@ _DYNAMIC_MESSAGES: dict[str, dict[str, str]] = {
         "greia_screens": "Schermi Greia: {value}",
         "resolution": "Risoluzione: {value}",
         "pointer_unavailable": "Anteprima del puntatore non disponibile{value}",
+        "hold_seconds": "Tieni premuto il pulsante per {value} secondi.",
+        "not_adjustable": "Non regolabile su questo touchpad: {value}",
     },
     "es": {
         "press_key": "Pulsa la tecla que escribe “{value}”",
@@ -162,6 +203,8 @@ _DYNAMIC_MESSAGES: dict[str, dict[str, str]] = {
         "greia_screens": "Pantallas Greia: {value}",
         "resolution": "Resolución: {value}",
         "pointer_unavailable": "Vista previa del puntero no disponible{value}",
+        "hold_seconds": "Mantén pulsado el botón {value} segundos.",
+        "not_adjustable": "No se puede ajustar en este panel táctil: {value}",
     },
     "fr": {
         "press_key": "Appuyez sur la touche qui écrit « {value} »",
@@ -176,6 +219,8 @@ _DYNAMIC_MESSAGES: dict[str, dict[str, str]] = {
         "greia_screens": "Écrans Greia : {value}",
         "resolution": "Résolution : {value}",
         "pointer_unavailable": "Aperçu du pointeur indisponible{value}",
+        "hold_seconds": "Maintenez le bouton enfoncé {value} secondes.",
+        "not_adjustable": "Non réglable sur ce pavé tactile : {value}",
     },
 }
 
@@ -216,6 +261,17 @@ def _dynamic_text(value: str, language: str) -> str:
         return msg["greia_screens"].format(value=value[len("Greia screens: "):])
     if value.startswith("Resolution: ") and value != "Resolution: Automatic":
         return msg["resolution"].format(value=value[len("Resolution: "):])
+    if value.startswith("Keep the button pressed for ") and value.endswith(" seconds."):
+        count = value[len("Keep the button pressed for "):-len(" seconds.")]
+        if count.isdigit():
+            return msg["hold_seconds"].format(value=count)
+    if value.startswith("Not adjustable on this touchpad: "):
+        # Each listed control is installer copy; translate item by item.
+        table = _TRANSLATIONS[language]
+        items = value[len("Not adjustable on this touchpad: "):].split(" · ")
+        return msg["not_adjustable"].format(
+            value=" · ".join(table.get(item, item) for item in items)
+        )
     if value.startswith("Pointer preview unavailable"):
         return msg["pointer_unavailable"].format(value=value[len("Pointer preview unavailable"):])
     return value
@@ -257,7 +313,14 @@ class InstallerTranslator:
 
 
 class LocalizedFont:
-    """Pygame Font proxy translating only the text passed to render()."""
+    """Pygame Font proxy translating the text passed to render() and size().
+
+    ``size()`` must translate too: layout code measures copy before drawing
+    it, and measuring the English source while rendering the (longer) Italian
+    copy is exactly how translated labels overflowed their buttons.
+    ``base`` exposes the untranslated font for text that is already final
+    (translated-then-wrapped lines, SSIDs, disk models).
+    """
 
     __slots__ = ("_font", "_translator")
 
@@ -265,24 +328,46 @@ class LocalizedFont:
         self._font = font
         self._translator = translator
 
+    @property
+    def base(self) -> Any:
+        return self._font
+
     def render(self, text: str, *args: Any, **kwargs: Any) -> Any:
         return self._font.render(self._translator.text(str(text)), *args, **kwargs)
+
+    def size(self, text: str) -> Any:
+        return self._font.size(self._translator.text(str(text)))
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._font, name)
 
 
 class LocalizedTypography:
-    """GreiaTypography proxy preserving metrics/cache behavior with localized copy."""
+    """GreiaTypography proxy preserving metrics/cache behavior with localized copy.
 
-    __slots__ = ("_typography", "translator")
+    Font proxies are memoised per (role, size): the shared text-surface cache
+    is keyed by font identity, so a fresh proxy per call would miss it on
+    every frame and silently restore per-frame rasterization on the Atom.
+    """
+
+    __slots__ = ("_typography", "translator", "_fonts")
+
+    _MAX_FONTS = 32
 
     def __init__(self, typography: Any, locale: str) -> None:
         self._typography = typography
         self.translator = InstallerTranslator(locale)
+        self._fonts: dict[tuple[Any, int], LocalizedFont] = {}
 
     def font(self, role: Any, size: int) -> LocalizedFont:
-        return LocalizedFont(self._typography.font(role, size), self.translator)
+        key = (role, int(size))
+        cached = self._fonts.get(key)
+        if cached is None:
+            if len(self._fonts) >= self._MAX_FONTS:
+                self._fonts.clear()
+            cached = LocalizedFont(self._typography.font(role, size), self.translator)
+            self._fonts[key] = cached
+        return cached
 
     def render(self, text: str, *args: Any, **kwargs: Any) -> Any:
         return self._typography.render(self.translator.text(str(text)), *args, **kwargs)
@@ -296,6 +381,7 @@ class LocalizedTypography:
         )
 
     def clear(self) -> None:
+        self._fonts.clear()
         self._typography.clear()
 
     def __getattr__(self, name: str) -> Any:

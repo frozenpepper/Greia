@@ -88,6 +88,7 @@ from .install_transaction import (
     PreparedInstallPlan,
 )
 from .layout import LayoutError, adapter_for
+from .wifi_carryover import WIFI_SNAPSHOT_KEYS, WifiCarryoverChoice, WifiCarryoverError
 
 
 class TransactionServiceError(RuntimeError):
@@ -484,7 +485,17 @@ def _strong_or_unknown_digest(
 _BOOL_SETTINGS_KEYS = frozenset({"touchpad_tap", "natural_scrolling", "disable_while_typing"})
 _FLOAT_SETTINGS_KEYS = frozenset({"touchpad_speed", "mouse_speed", "mic_gain"})
 _TEXT_SETTINGS_KEYS = frozenset({"resolution", "keyboard_layout"})
-_SETTINGS_ALLOWLIST = _BOOL_SETTINGS_KEYS | _FLOAT_SETTINGS_KEYS | _TEXT_SETTINGS_KEYS | frozenset({"locale"})
+#: ``wifi_ssid_hex`` + ``wifi_security`` name the one network the parent joined
+#: on the installer's Wi-Fi page (non-secret; see
+#: :mod:`greia_installer.wifi_carryover`). Being in the snapshot makes the
+#: choice part of the digest-bound plan the parent confirms.
+_SETTINGS_ALLOWLIST = (
+    _BOOL_SETTINGS_KEYS
+    | _FLOAT_SETTINGS_KEYS
+    | _TEXT_SETTINGS_KEYS
+    | frozenset({"locale"})
+    | WIFI_SNAPSHOT_KEYS
+)
 
 
 def _coerce_service_bool(value: object, *, key: str) -> bool:
@@ -533,7 +544,15 @@ def checked_service_settings(snapshot: Mapping[str, object]) -> dict[str, object
             "settings_snapshot carries unknown preferences: " + ", ".join(unknown)
         )
     checked: dict[str, object] = {}
+    try:
+        wifi_choice = WifiCarryoverChoice.from_snapshot(snapshot)
+    except WifiCarryoverError as exc:
+        raise TransactionServiceError(f"setting 'wifi' is invalid: {exc}") from exc
+    if wifi_choice is not None:
+        checked.update(wifi_choice.snapshot_fields())
     for key, value in snapshot.items():
+        if key in WIFI_SNAPSHOT_KEYS:
+            continue
         if key in _BOOL_SETTINGS_KEYS:
             checked[key] = _coerce_service_bool(value, key=key)
         elif key in _FLOAT_SETTINGS_KEYS:
@@ -550,6 +569,16 @@ def checked_service_settings(snapshot: Mapping[str, object]) -> dict[str, object
             except Exception as exc:
                 raise TransactionServiceError("setting 'locale' is not supported") from exc
     return checked
+
+
+def wifi_carryover_from_snapshot(
+    snapshot: Mapping[str, object],
+) -> WifiCarryoverChoice | None:
+    """Rematerialize the confirmed Wi-Fi carry-over choice (or ``None``)."""
+    try:
+        return WifiCarryoverChoice.from_snapshot(checked_service_settings(snapshot))
+    except WifiCarryoverError as exc:
+        raise TransactionServiceError(f"setting 'wifi' is invalid: {exc}") from exc
 
 
 def hardware_settings_from_snapshot(
@@ -603,6 +632,9 @@ class InstallTransactionService:
     endpoint: InstallTransactionEndpoint = field(init=False)
     _plan_settings: dict[str, dict[str, object]] = field(default_factory=dict)
     _last_installed_identity: str = field(default="")
+    #: Wi-Fi carry-over choice of the plan currently executing (set by
+    #: :meth:`_consume_authorized_plan`, consumed by the executing path).
+    _authorized_wifi_carryover: WifiCarryoverChoice | None = field(default=None)
     #: Production is ``None`` (real :class:`InstallationEngine`). Tests
     #: inject a recording fake so gating is proven with zero disk contact.
     engine_factory: Callable[[], InstallationEngine] | None = None
@@ -803,6 +835,7 @@ class InstallTransactionService:
                     locale=locale,
                     hardware_support_pool=self.state.hardware_support_pool,
                     target_profile=self.state.target_profile,
+                    wifi_carryover=self._authorized_wifi_carryover,
                 ),
                 on_progress,  # type: ignore[arg-type]
             )
@@ -830,6 +863,13 @@ class InstallTransactionService:
             transaction_nonce=transaction_nonce, plan_digest=plan_digest
         )
         _s04_diag_faulthandler()
+        if self._authorized_wifi_carryover is not None:
+            # The A/B path persists durable state on PERSIST, whose
+            # network-state namespace is not bind-mounted at boot yet, so a
+            # copy there would be invisible. Say so instead of pretending.
+            _greia_log_event(
+                "wifi_carryover", outcome="skipped", reason="unsupported-ab-layout"
+            )
         executor = self.ab_executor
         if executor is None:
             raise TransactionServiceError(
@@ -871,6 +911,11 @@ class InstallTransactionService:
             raise TransactionServiceError("prepared plan settings are unknown or expired")
         settings, locale = hardware_settings_from_snapshot(
             plan_settings, project_root=self.state.project_root
+        )
+        # The confirmed network choice comes from the service-held plan, never
+        # from EXECUTE bytes (which carry nonce + digest only).
+        object.__setattr__(
+            self, "_authorized_wifi_carryover", wifi_carryover_from_snapshot(plan_settings)
         )
         target = self.rematerialize_target(authorization.target_identity)
         self._prove_layout_fit(target)

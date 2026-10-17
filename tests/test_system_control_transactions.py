@@ -256,9 +256,11 @@ class SingleAudioOwnerTests(unittest.TestCase):
         presentation = (ROOT / "src/greia_launcher/presentation.py").read_text(
             encoding="utf-8"
         )
+        # The launcher owns the marker; the aplay player is shared with the
+        # live installer in greia_platform.boot_chime. Both must stay mixer-free.
         chime = (ROOT / "src/greia_launcher/boot_chime.py").read_text(
             encoding="utf-8"
-        )
+        ) + (ROOT / "src/greia_platform/boot_chime.py").read_text(encoding="utf-8")
         # Phase 4 order: display is created, then the intro (whose first
         # draw/flip lives in boot_intro.run_intro) runs with the post-frame
         # worker submitted from its first-frame callback, then the chime.

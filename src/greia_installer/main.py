@@ -13,7 +13,6 @@ from enum import Enum, auto
 from pathlib import Path
 from typing import Any
 
-from greia_platform.boot_logo import canonical_boot_logo as _canonical_boot_logo
 from greia_platform.display_metrics import (
     DisplayPolicy,
     DisplaySuitability,
@@ -38,6 +37,7 @@ from greia_platform.keyboard_layout import (
     layout_by_id,
     layout_candidates,
 )
+from greia_platform.activity_controls import BodyShape
 from greia_platform.typography import FontRole, GreiaTypography
 
 from .composition import provisional_installer_hardware_controller
@@ -54,6 +54,25 @@ from .engine import (
     InstallResult,
 )
 from .power import PowerSupplyProbe
+from .presentation import (
+    BURGUNDY,
+    COCOA,
+    DANGER,
+    DANGER_PRESSED,
+    FIELD,
+    FOREST,
+    HINT,
+    MUTED,
+    SUNSHINE,
+    SURFACE,
+    WARNING_FIELD,
+    WHITE,
+    InstallerLook,
+    keycap,
+    mix,
+    page_frame,
+    step_for_page,
+)
 from .transaction_client import (
     InstallTransactionClient,
     PreparedConfirmation,
@@ -63,6 +82,7 @@ from .transaction_client import (
 )
 from .wifi import IwdWifiBackend, WifiSecurity
 from .wifi_setup import DemoWifiBackend, WifiSetupController, WifiSetupPhase
+from .wifi_carryover import carryover_snapshot_fields
 
 
 class InstallerPage(Enum):
@@ -132,8 +152,7 @@ class InstallerApplication:
     # delay each time. A helper that keeps failing must not become a busy loop.
     BOOT_HANDOFF_MAX_ATTEMPTS = 4
     BOOT_HANDOFF_RETRY_SECONDS = 0.5
-    WIFI_ROWS_PER_PAGE = 3
-    BUTTON_HEIGHT = 46
+    BUTTON_HEIGHT = 50
 
     def __init__(
         self,
@@ -239,7 +258,13 @@ class InstallerApplication:
         self._worker: threading.Thread | None = None
         self._hold_started: float | None = None
         self._buttons: dict[str, Any] = {}
-        self._icon_cache: dict[tuple[str, int], Any] = {}
+        # Presentation-only state (never part of install logic).
+        self._look_cache: InstallerLook | None = None
+        self._installing_since: float | None = None
+        self._wifi_next_page_index = 0
+        self._title_px = 36
+        self._control_px = 24
+        self._body_px = 19
         self._exit_requested = False
         self._boot_released = False
         self._next_boot_handoff_attempt = 0.0
@@ -743,6 +768,10 @@ class InstallerApplication:
                 "true" if settings.disable_while_typing else "false"
             ),
             "locale": self._snapshot_locale(),
+            # The network joined on the Wi-Fi page (SSID hex + security only,
+            # never the passphrase): the root service copies that one iwd
+            # profile into the installed system.
+            **carryover_snapshot_fields(self.wifi.profile),
         }
 
     def read_live_confirmation_facts(self) -> dict[str, dict[str, object]]:
@@ -1004,6 +1033,8 @@ class InstallerApplication:
         elif self.state.page == InstallerPage.LAYOUT:
             self._confirm_layout()
         elif self.state.page == InstallerPage.TARGET and self.state.target:
+            # A "disk changed" notice belongs to the selection it rejected.
+            self.state.error = ""
             self.state.page = InstallerPage.POINTER
             self._pointer_focus = 0
             self._pointer_test_feedback = ""
@@ -1100,6 +1131,11 @@ class InstallerApplication:
             if self._inside("wifi-skip", position):
                 self.wifi.skip()
                 self.state.page = InstallerPage.CONFIRM
+                return
+            if self._inside("wifi-more", position):
+                # Presentation paging only: select the first network of the
+                # next page so a pointer-only parent can reach every network.
+                self.wifi.select(self._wifi_next_page_index)
                 return
             for index in range(len(self.wifi.snapshot.networks)):
                 if self._inside(f"wifi-{index}", position):
@@ -1344,338 +1380,1079 @@ class InstallerApplication:
                 self.state.page = InstallerPage.ERROR
                 self._worker = None
 
+    # --- Presentation ---------------------------------------------------------
+    # Everything below draws state; none of it changes what a page does. The
+    # look (meadow, Leo, kit controls, prepared layers) is owned by
+    # ``presentation.InstallerLook``; hit-target keys are unchanged so the
+    # input handlers above keep their exact behaviour.
+
+    _PAGE_CHROME: dict[str, tuple[str, str | None]] = {
+        "WELCOME": ("Install Greia", None),
+        "LAYOUT": ("Your keyboard", "pose_think"),
+        "TARGET": ("Choose the internal disk", "pose_point"),
+        "POINTER": ("Pointer setup", "happy"),
+        "DISPLAY": ("Display", "default"),
+        "SETTINGS": ("Input and screen", "default"),
+        "WIFI": ("Wi-Fi (optional)", "pose_wave"),
+        "CONFIRM": ("Ready to install", "pose_point"),
+        "INSTALLING": ("Installing", "happy"),
+        "COMPLETE": ("All done!", "pose_cheer"),
+        "ERROR": ("Installation stopped", "sad"),
+    }
+
+    def _look(self) -> InstallerLook:
+        """The page renderer, built lazily so the localized typography is used."""
+
+        if self._look_cache is None:
+            self._look_cache = InstallerLook(self.root, self._typography)
+        return self._look_cache
+
+    def _fonts(self, height: int) -> tuple[Any, Any, Any]:
+        """(control, title, body) fonts sized for the viewport height."""
+
+        self._title_px = max(26, min(38, height // 16))
+        self._control_px = max(18, min(25, height // 25))
+        self._body_px = max(16, min(20, height // 31))
+        return (
+            self._typography.font(FontRole.CONTROL, self._control_px),
+            self._typography.font(FontRole.TITLE, self._title_px),
+            self._typography.font(FontRole.BODY, self._body_px),
+        )
+
     def _draw(self, screen: Any, pygame: Any) -> None:
         width, height = screen.get_size()
-        background = (247, 235, 203)
-        panel = (255, 250, 240)
-        text = (61, 44, 31)
-        accent = (255, 194, 52)
-        danger = (181, 46, 46)
-        success = (51, 128, 76)
-        screen.fill(background)
         self._buttons.clear()
-        font = self._typography.font(FontRole.CONTROL, max(27, height // 22))
-        title_font = self._typography.font(FontRole.TITLE, max(42, height // 12))
-        small_font = self._typography.font(FontRole.BODY, max(22, height // 28))
-
+        look = self._look()
+        font, title_font, small_font = self._fonts(height)
         page = self.state.page
+        if page != InstallerPage.INSTALLING:
+            self._installing_since = None
+        elif self._installing_since is None:
+            self._installing_since = time.monotonic()
+        step = step_for_page(page.name)
+        frame = page_frame(pygame, (width, height), steps=step is not None)
+        title, pose = self._PAGE_CHROME[page.name]
+        y = look.page_base(
+            screen,
+            pygame,
+            frame,
+            title=title,
+            title_size=self._title_px,
+            title_color=BURGUNDY if page == InstallerPage.ERROR else COCOA,
+            step=step,
+            pose=pose,
+            poster=page == InstallerPage.WELCOME,
+        )
+        main = frame.main
+        y += max(6, height // 80)
         if page == InstallerPage.WELCOME:
-            self._hero_logo(
+            self._draw_welcome(screen, pygame, main, y, font, small_font)
+        elif page == InstallerPage.LAYOUT:
+            self._draw_layout(screen, pygame, main, y, font, title_font, small_font)
+        elif page == InstallerPage.TARGET:
+            self._draw_target(screen, pygame, main, y, font, small_font)
+        elif page == InstallerPage.POINTER:
+            self._draw_pointer_page(screen, pygame, main, y, font, small_font)
+        elif page == InstallerPage.DISPLAY:
+            self._draw_display_page(screen, pygame, main, y, font, small_font)
+        elif page == InstallerPage.SETTINGS:
+            self._draw_legacy_settings(screen, pygame, main, y, font)
+        elif page == InstallerPage.WIFI:
+            self._draw_wifi(screen, pygame, main, y, font, small_font)
+        elif page == InstallerPage.CONFIRM:
+            self._draw_confirm(screen, pygame, main, y, font, title_font, small_font)
+        elif page == InstallerPage.INSTALLING:
+            self._draw_installing(screen, pygame, main, y, font, small_font)
+        elif page == InstallerPage.COMPLETE:
+            self._draw_complete(screen, pygame, main, y, font, title_font, small_font)
+        elif page == InstallerPage.ERROR:
+            self._draw_error(screen, pygame, main, y, font, small_font)
+
+    # -- pages ----------------------------------------------------------------
+
+    def _draw_welcome(self, screen: Any, pygame: Any, main: Any, y: int, font: Any, small_font: Any) -> None:
+        look = self._look()
+        nav_top = self._bottom_row_y(main) - self.BUTTON_HEIGHT // 2 - 8
+        y += max(4, self._body_px // 2)
+        y = self._paragraph(
+            screen,
+            "Greia will be installed on this computer's internal disk.",
+            font,
+            COCOA,
+            pygame.Rect(main.left, y, main.width, nav_top - y),
+        )
+        y += max(10, self._body_px)
+        bullets = (
+            "First you choose the keyboard, the disk, the pointer, the screen and Wi-Fi.",
+            "Nothing is erased until you confirm at the last step.",
+            "Keep the power adapter connected.",
+        )
+        dot = max(14, self._control_px - 6)
+        line_h = font.get_linesize()
+        for bullet in bullets:
+            if y >= nav_top - line_h:
+                break
+            body = look.painter.body(BodyShape.ROUND, (dot, dot), SUNSHINE, contour_width=2)
+            screen.blit(look.painter.presentable(body, screen), (main.left, y + (line_h - dot) // 2))
+            y = self._paragraph(
                 screen,
-                pygame,
-                width,
-                height,
-            )
-            self._button(
-                screen,
-                pygame,
-                "primary",
-                "Start",
-                accent,
-                text,
+                bullet,
                 font,
-                (width - 180, height - 60),
-                220,
+                COCOA,
+                pygame.Rect(main.left + dot + 14, y, main.width - dot - 14, nav_top - y),
             )
+            y += max(8, self._body_px * 2 // 3)
+        primary = self._primary_button(screen, pygame, main, "Start")
+        # Leo greets the parent in the free lower corner (cached rendition).
+        size = min(150, primary.top - y - 8)
+        if size >= 90:
+            leo = look.art.character(pygame, "pose_wave", size)
+            if leo is not None:
+                screen.blit(leo, leo.get_rect(bottomleft=(main.left, primary.bottom)))
+
+    def _draw_layout(
+        self,
+        screen: Any,
+        pygame: Any,
+        main: Any,
+        y: int,
+        font: Any,
+        title_font: Any,
+        small_font: Any,
+    ) -> None:
+        look = self._look()
+        remaining = [
+            probe for probe in PROBES if probe.character not in self._layout_probe_results
+        ]
+        # The 'z' probe (5th) separates QWERTZ from QWERTY, which is what
+        # distinguishes German from Italian/Spanish/Portuguese. Requiring it
+        # avoids presenting a wrong guess. The final '@' probe is optional
+        # (AltGr-only on many layouts) and is handled by the selector.
+        done_count = len(self._layout_probe_results)
+        if done_count >= 5 or self._layout_selector_forced:
+            remaining = []
+        nav_top = self._bottom_row_y(main) - self.BUTTON_HEIGHT // 2 - 6
+        if remaining:
+            probe = remaining[0]
+            image = self._fit_text(font, probe.instruction, COCOA, main.width)
+            screen.blit(image, image.get_rect(midtop=(main.centerx, y)))
+            y += image.get_height() + 10
+            key_size = max(56, min(112, (nav_top - y) // 2))
+            key_rect = pygame.Rect(0, 0, key_size, key_size)
+            key_rect.midtop = (main.centerx, y)
+            keycap(look, screen, key_rect, probe.character, int(key_size * 0.55))
+            y = key_rect.bottom + 10
+            self._center_line(screen, "I'm listening — press that key now.", small_font, HINT, main, y)
+            y += small_font.get_linesize() + 8
+            dot = max(14, self._body_px)
+            gap = dot // 2
+            total = len(PROBES) * dot + (len(PROBES) - 1) * gap
+            left = main.centerx - total // 2
+            for index in range(len(PROBES)):
+                fill = SUNSHINE if index < done_count else SURFACE
+                body = look.painter.body(BodyShape.ROUND, (dot, dot), fill, contour_width=2)
+                screen.blit(look.painter.presentable(body, screen), (left + index * (dot + gap), y))
+            y += dot + 6
+            self._center_line(screen, f"{done_count} of {len(PROBES)} pressed", small_font, COCOA, main, y)
+            y += small_font.get_linesize() + 4
+            if y + small_font.get_linesize() <= nav_top:
+                self._center_line(
+                    screen,
+                    f"After {5 - done_count} more key{'s' if 5 - done_count != 1 else ''} I'll show a list to confirm.",
+                    small_font,
+                    HINT,
+                    main,
+                    y,
+                )
+                y += small_font.get_linesize()
+            if done_count >= 3 and y + small_font.get_linesize() <= nav_top:
+                self._center_line(screen, "Or press Enter to see the list now.", small_font, HINT, main, y)
+        else:
+            self._draw_layout_selector(screen, pygame, main, y, font, small_font, nav_top)
+        self._back_button(screen, pygame, main)
+        if not remaining:
+            self._primary_button(screen, pygame, main, "Confirm")
+
+    def _draw_layout_selector(
+        self,
+        screen: Any,
+        pygame: Any,
+        main: Any,
+        y: int,
+        font: Any,
+        small_font: Any,
+        nav_top: int,
+    ) -> None:
+        look = self._look()
+        self._center_line(
+            screen, "Use Up/Down or click to choose, then Enter to confirm", small_font, HINT, main, y
+        )
+        y += small_font.get_linesize() + 10
+        inferred_id = infer_layout(self._layout_probe_results)
+        all_ids = self._all_layout_ids
+        columns = 2 if main.width >= 460 else 1
+        row_h = max(40, min(52, font.get_height() + 18))
+        gap = 8
+        rows = max(1, (nav_top - y + gap) // (row_h + gap))
+        capacity = rows * columns
+        index = min(self._layout_alternative_index, max(0, len(all_ids) - 1))
+        start = self._layout_scroll - self._layout_scroll % columns
+        if index < start:
+            start = index - index % columns
+        elif index >= start + capacity:
+            start = (index // columns - rows + 1) * columns
+        self._layout_scroll = max(0, start)
+        cell_w = (main.width - gap * (columns - 1)) // columns
+        badge = self._tr("Suggested")
+        for offset in range(capacity):
+            item = self._layout_scroll + offset
+            if item >= len(all_ids):
+                break
+            layout_id = all_ids[item]
+            row, column = divmod(offset, columns)
+            rect = pygame.Rect(main.left + column * (cell_w + gap), y + row * (row_h + gap), cell_w, row_h)
+            selected = item == self._layout_alternative_index
+            look.panel(screen, rect, SUNSHINE if selected else FIELD, width=3 if selected else 2)
+            self._buttons[f"layout-{item}"] = rect
+            label_max = rect.width - 28
+            if layout_id == inferred_id:
+                tag = look.label(badge, max(12, self._body_px - 3), COCOA, role=FontRole.CONTROL)
+                tag_rect = pygame.Rect(0, 0, tag.get_width() + 18, tag.get_height() + 6)
+                tag_rect.midright = (rect.right - 10, rect.centery)
+                look.panel(screen, tag_rect, mix(SUNSHINE, WHITE, 0.45), width=2)
+                screen.blit(tag, tag.get_rect(center=tag_rect.center))
+                label_max = tag_rect.left - rect.left - 24
+            image = self._fit_text(font, layout_by_id(layout_id).label, COCOA, label_max)
+            screen.blit(image, image.get_rect(midleft=(rect.left + 14, rect.centery)))
+            if selected:
+                look.focus(screen, rect)
+
+    def _draw_target(self, screen: Any, pygame: Any, main: Any, y: int, font: Any, small_font: Any) -> None:
+        look = self._look()
+        y = self._paragraph(
+            screen,
+            "Greia will be installed on the disk you choose. Only internal disks that are safe to use are shown.",
+            small_font,
+            HINT,
+            pygame.Rect(main.left, y, main.width, main.height),
+            center=True,
+        )
+        y += 10
+        if self.state.error:
+            y = self._banner(screen, pygame, main, y, self.state.error, small_font) + 10
+        nav_top = self._bottom_row_y(main) - self.BUTTON_HEIGHT // 2 - 10
+        if not self.state.targets:
+            box = pygame.Rect(main.left, y, main.width, max(60, min(110, nav_top - y)))
+            look.panel(screen, box, WARNING_FIELD, contour=BURGUNDY)
+            self._paragraph(
+                screen,
+                "No safe internal disk was found.",
+                font,
+                BURGUNDY,
+                box.inflate(-28, -20).move(0, max(0, box.height // 2 - font.get_linesize())),
+                center=True,
+            )
+        row_h = max(60, min(84, (nav_top - y) // max(1, min(3, len(self.state.targets) or 1)) - 10))
+        for index, target in enumerate(self.state.targets[:4]):
+            rect = pygame.Rect(main.left, y, main.width, row_h)
+            if rect.bottom > nav_top:
+                break
+            selected = index == self.state.selected_target
+            look.panel(screen, rect, SUNSHINE if selected else FIELD, width=3 if selected else 2)
+            glyph = pygame.Rect(rect.left + 10, rect.top + 8, rect.height - 16, rect.height - 16)
+            look.disk_glyph(screen, pygame, glyph)
+            text_left = glyph.right + 14
+            model = target.model.strip() or target.name
+            name = self._fit_line(font, model, COCOA, rect.right - text_left - 14)
+            facts = self._fit_line(
+                small_font, f"{target.human_size} · {target.path}", COCOA, rect.right - text_left - 14
+            )
+            block = name.get_height() + facts.get_height()
+            top = rect.centery - block // 2
+            screen.blit(name, (text_left, top))
+            screen.blit(facts, (text_left, top + name.get_height()))
+            self._buttons[f"target-{index}"] = rect
+            if selected:
+                look.focus(screen, rect)
+            y = rect.bottom + 10
+        self._back_button(screen, pygame, main)
+        self._primary_button(screen, pygame, main, "Continue", enabled=self.state.target is not None)
+
+    def _draw_pointer_page(
+        self,
+        screen: Any,
+        pygame: Any,
+        main: Any,
+        y: int,
+        font: Any,
+        small_font: Any,
+    ) -> None:
+        """Deliberate Pointer Setup page: presets, gated toggles, test area."""
+        look = self._look()
+        self._clamp_pointer_focus()
+        rows = self.pointer_rows()
+        focused = self.focused_pointer_row()
+        # Measure the header from the fonts actually in use. The reference Acer
+        # renders taller metrics than the development host, so the old fixed
+        # +52 title gap drew the subtitle on top of the title and the fixed
+        # 96 px header start pushed the first row up into it.
+        subtitle_y = y
+        subtitle_h = small_font.get_height()
+        header_height = (subtitle_y + subtitle_h + self.POINTER_HEADER_PAD) - main.top
+        self._center_line(screen, "Pointer feel", small_font, HINT, main, subtitle_y)
+
+        # Measure the vertical budget instead of assuming it (see
+        # _pointer_vertical_budget): row height, gaps and the test target are
+        # derived from the card that is actually available.
+        setting_count = sum(
+            1
+            for name in rows
+            if name
+            in {
+                "tap",
+                "disable-while-typing",
+                "natural",
+                "touchpad-preset",
+                "mouse-preset",
+                "mouse-preset-labeled",
+            }
+        )
+        strip_label_h = max(1, small_font.get_linesize())
+        status_h = strip_label_h
+        strip_tail = 14 + status_h + 6 + 40
+        row_h, step, target_size = self._pointer_vertical_budget(
+            main.height,
+            setting_count,
+            header_height,
+            font.get_height() + 2 * self.POINTER_ROW_PAD,
+            strip_label_h,
+            strip_tail,
+        )
+        y = main.top + header_height
+        settings = self.state.settings
+        if "tap" in rows:
+            self._toggle_row(screen, pygame, main, "tap", "Tap touchpad to click",
+                             settings.touchpad_tap, font, y, row_h, focused == "tap")
+            y += step
+        if "disable-while-typing" in rows:
+            self._toggle_row(screen, pygame, main, "disable-while-typing", "Disable while typing",
+                             settings.disable_while_typing, font, y, row_h,
+                             focused == "disable-while-typing")
+            y += step
+        if "natural" in rows:
+            self._toggle_row(screen, pygame, main, "natural", "Natural scrolling",
+                             settings.natural_scrolling, font, y, row_h, focused == "natural")
+            y += step
+        if "touchpad-preset" in rows:
+            self._preset_row(screen, pygame, main, "touch", "Touchpad feel",
+                             speed_to_preset(settings.touchpad_speed), font, y, row_h,
+                             focused == "touchpad-preset")
+            y += step
+        if "mouse-preset" in rows:
+            self._preset_row(screen, pygame, main, "mouse", "Mouse feel",
+                             speed_to_preset(settings.mouse_speed), font, y, row_h,
+                             focused == "mouse-preset")
+            y += step
+        elif "mouse-preset-labeled" in rows:
+            self._preset_row(screen, pygame, main, "mouse", "Mouse feel (when a mouse is attached)",
+                             speed_to_preset(settings.mouse_speed), font, y, row_h,
+                             focused == "mouse-preset-labeled")
+            y += step
+        self._back_button(screen, pygame, main)
+        self._primary_button(screen, pygame, main, "Continue", focused=focused == "continue")
+        # Test strip: three large dispersed targets with click feedback. The
+        # budget drops the strip entirely (target_size 0) on a card too short
+        # to hold it and the legible rows, rather than overlapping the
+        # navigation row. The 1 2 3 keys still run the same test.
+        if target_size <= 0:
+            return
+        target_mid = y + strip_label_h + 12 + target_size // 2
+        centers = tuple(
+            (main.left + int(main.width * fraction), target_mid) for fraction in (0.2, 0.5, 0.8)
+        )
+        note = self._pointer_unavailable_note()
+        self._center_fitted_text(
+            screen, note or "Try it here", small_font, HINT, y + strip_label_h // 2, main.width, main
+        )
+        for index, center in enumerate(centers):
+            key = f"test-{index + 1}"
+            rect = pygame.Rect(0, 0, target_size, target_size)
+            rect.center = center
+            is_focused = focused == key
+            look.tile(screen, rect, SUNSHINE if is_focused else SURFACE, width=3 if is_focused else 2)
+            label = self._text(font, str(index + 1), COCOA)
+            screen.blit(label, label.get_rect(center=rect.center))
+            if is_focused:
+                look.focus(screen, rect, shape=BodyShape.TILE)
+            self._buttons[key] = rect
+        feedback = self._pointer_test_feedback or "Click a circle, or press 1 2 3"
+        status = feedback
+        if self._pointer_preview_error:
+            status = f"{self._tr(feedback)} · {self._tr(self._pointer_preview_error)}"
+        self._center_fitted_text(
+            screen, status, small_font, COCOA, target_mid + target_size // 2 + 14, main.width, main
+        )
+        reset_width = min(main.width, max(200, self._typography.surface_width(small_font, "Reset pointer feel") + 48))
+        reset_rect = pygame.Rect(0, 0, reset_width, 40)
+        reset_rect.midtop = (main.centerx, target_mid + target_size // 2 + 14 + status_h // 2 + 6)
+        look.pill(screen, reset_rect, "Reset pointer feel", size=self._body_px)
+        if focused == "reset":
+            look.focus(screen, reset_rect, shape=BodyShape.PILL)
+        self._buttons["pointer-reset"] = reset_rect
+
+    def _draw_display_page(self, screen: Any, pygame: Any, main: Any, y: int, font: Any, small_font: Any) -> None:
+        """Display page: resolution choice, suitability, supported modes."""
+        look = self._look()
+        facts = self.display_facts()
+        y += 8
+        value = "Automatic" if self.state.settings.resolution == "auto" else self.state.settings.resolution
+        self._value_row(screen, pygame, main, "resolution", "Screen resolution", value, font, y, 58)
+        y += 58 + 16
+        box = pygame.Rect(main.left, y, main.width, max(64, small_font.get_linesize() * 2 + font.get_linesize() + 24))
+        look.panel(screen, box, FIELD)
+        inner = box.inflate(-28, -18)
+        bottom = self._paragraph(screen, self.display_status_copy(), font, COCOA, inner)
+        supported = facts["supported_mode_ids"]
+        modes = f"Greia screens: {', '.join(supported[:4])}" if supported else "Greia screens: Automatic"
+        self._paragraph(screen, modes, small_font, HINT, pygame.Rect(inner.left, bottom + 4, inner.width, inner.height))
+        y = box.bottom + 12
+        if self.display_install_block_reason() is not None:
+            self._banner(screen, pygame, main, y, "This screen is not fully supported — install is paused.", small_font)
+        self._back_button(screen, pygame, main)
+        self._primary_button(screen, pygame, main, "Continue")
+
+    def _draw_legacy_settings(self, screen: Any, pygame: Any, main: Any, y: int, font: Any) -> None:
+        # Legacy combined page (superseded by POINTER + DISPLAY).
+        settings = self.state.settings
+        row_h = max(40, min(52, (self._bottom_row_y(main) - 40 - y) // 5 - 6))
+        step = row_h + 6
+        self._toggle_row(screen, pygame, main, "tap", "Tap touchpad to click", settings.touchpad_tap, font, y, row_h)
+        self._toggle_row(screen, pygame, main, "natural", "Natural scrolling", settings.natural_scrolling, font, y + step, row_h)
+        self._preset_row(screen, pygame, main, "mouse", "Mouse feel", speed_to_preset(settings.mouse_speed), font, y + 2 * step, row_h)
+        self._preset_row(screen, pygame, main, "touch", "Touchpad feel", speed_to_preset(settings.touchpad_speed), font, y + 3 * step, row_h)
+        self._value_row(screen, pygame, main, "resolution", "Screen resolution", settings.resolution, font, y + 4 * step, row_h)
+        self._back_button(screen, pygame, main)
+        self._primary_button(screen, pygame, main, "Continue")
+
+    def _draw_wifi(self, screen: Any, pygame: Any, main: Any, y: int, font: Any, small_font: Any) -> None:
+        look = self._look()
+        snapshot = self.wifi.snapshot
+        y = self._paragraph(
+            screen,
+            "Connect now, or set it up later in Greia Parents.",
+            small_font,
+            HINT,
+            pygame.Rect(main.left, y, main.width, main.height),
+            center=True,
+        ) + 8
+        nav_top = self._bottom_row_y(main) - self.BUTTON_HEIGHT // 2 - 8
+        error_h = small_font.get_linesize() + 6 if snapshot.error else 0
+        area = pygame.Rect(main.left, y, main.width, max(40, nav_top - error_h - y))
+        phase = snapshot.phase
+        tick = int(time.monotonic() * 3)
+        if phase is WifiSetupPhase.SCANNING:
+            self._status_card(screen, pygame, area, "Looking for Wi-Fi networks…", font, COCOA, busy=tick)
+        elif phase is WifiSetupPhase.CONNECTING:
+            selected = snapshot.selected_network
+            name = selected.ssid if selected is not None else "Wi-Fi"
+            self._status_card(screen, pygame, area, f"Connecting to {name}…", font, COCOA, busy=tick)
+        elif phase is WifiSetupPhase.UNAVAILABLE:
+            self._status_card(
+                screen, pygame, area, "No wireless adapter is available. You can continue offline.", font, COCOA
+            )
+            self._primary_button(screen, pygame, main, "Continue offline")
+        elif phase is WifiSetupPhase.CONNECTED:
+            self._status_card(
+                screen,
+                pygame,
+                area,
+                f"Connected to {snapshot.connected_ssid}",
+                font,
+                FOREST,
+                detail="This network will be ready after the first boot.",
+                detail_font=small_font,
+                check=True,
+            )
+            self._primary_button(screen, pygame, main, "Continue")
+        else:
+            self._draw_wifi_networks(screen, pygame, area, font, small_font)
+
+        if snapshot.error and phase is not WifiSetupPhase.UNAVAILABLE and snapshot.networks:
+            self._center_fitted_text(
+                screen, snapshot.error, small_font, BURGUNDY, nav_top - error_h // 2, main.width, main
+            )
+
+        self._back_button(screen, pygame, main)
+        if phase not in {
+            WifiSetupPhase.CONNECTED,
+            WifiSetupPhase.UNAVAILABLE,
+            WifiSetupPhase.CONNECTING,
+        }:
+            back = self._buttons["back"]
+            skip_w = max(150, min(230, main.width // 3))
+            skip = pygame.Rect(main.right - skip_w, back.top, skip_w, back.height)
+            look.pill(screen, skip, "Skip for now", size=self._body_px + 1)
+            self._buttons["wifi-skip"] = skip
+            refresh_w = max(120, min(190, skip.left - back.right - 24))
+            refresh = pygame.Rect(0, back.top, refresh_w, back.height)
+            refresh.centerx = (back.right + skip.left) // 2
+            look.pill(screen, refresh, "Refresh", size=self._body_px + 1)
+            self._buttons["wifi-refresh"] = refresh
+
+    def _draw_wifi_networks(self, screen: Any, pygame: Any, area: Any, font: Any, small_font: Any) -> None:
+        look = self._look()
+        snapshot = self.wifi.snapshot
+        if not snapshot.networks:
+            # An empty list is not the same thing as a failed scan. Showing
+            # "No networks found" for both hid the real reason the scan failed
+            # on the reference Acer, so an actual error is surfaced instead.
+            if snapshot.phase is WifiSetupPhase.ERROR and snapshot.error:
+                self._status_card(
+                    screen, pygame, area, "Wi-Fi could not be checked", font, BURGUNDY,
+                    detail=snapshot.error, detail_font=small_font,
+                )
+            else:
+                self._status_card(
+                    screen, pygame, area, "No networks found. Refresh, or continue offline.", font, COCOA
+                )
             return
 
-        main = pygame.Rect(
-            max(24, width * 0.06),
-            max(20, height * 0.06),
-            width * 0.88,
-            height * 0.88,
+        network = snapshot.selected_network
+        controls_h = (self.BUTTON_HEIGHT + 12) if network is not None else 0
+        row_h = max(44, min(56, font.get_height() + 22))
+        gap = 8
+        list_h = area.height - controls_h
+        total = len(snapshot.networks)
+        per_page = max(1, (list_h + gap) // (row_h + gap))
+        if total > per_page:
+            # One slot becomes the "More networks" row so a pointer-only parent
+            # can reach every network (arrow keys page through them as well).
+            per_page = max(1, per_page - 1)
+        page_start = (snapshot.selected_index // per_page) * per_page
+        visible = snapshot.networks[page_start : page_start + per_page]
+        y = area.top
+        for offset, item in enumerate(visible):
+            index = page_start + offset
+            rect = pygame.Rect(area.left, y, area.width, row_h)
+            selected = index == snapshot.selected_index
+            supported = item.installer_supported
+            fill = SUNSHINE if selected else (FIELD if supported else mix(MUTED, SURFACE, 0.4))
+            look.panel(screen, rect, fill, width=3 if selected else 2)
+            self._buttons[f"wifi-{index}"] = rect
+            bars = pygame.Rect(0, 0, 26, rect.height - 22)
+            bars.midright = (rect.right - 14, rect.centery)
+            look.signal(screen, pygame, bars, _signal_level(item.signal_dbm))
+            if item.security is WifiSecurity.OPEN:
+                security = "Open"
+            elif item.security is WifiSecurity.PERSONAL:
+                security = "Password"
+            else:
+                security = "Enterprise — later"
+            detail = self._text(small_font, security, COCOA)
+            screen.blit(detail, detail.get_rect(midright=(bars.left - 12, rect.centery)))
+            name = self._fit_line(font, item.ssid, COCOA, bars.left - 24 - detail.get_width() - rect.left - 16)
+            screen.blit(name, name.get_rect(midleft=(rect.left + 16, rect.centery)))
+            if selected:
+                look.focus(screen, rect)
+            y = rect.bottom + gap
+        if total > per_page:
+            more = pygame.Rect(area.left, y, area.width, max(34, row_h - 14))
+            pages = (total + per_page - 1) // per_page
+            label = f"{self._tr('More networks')}  {page_start // per_page + 1}/{pages}"
+            look.pill(screen, more, label, size=self._body_px)
+            self._buttons["wifi-more"] = more
+            self._wifi_next_page_index = (page_start + per_page) % total
+
+        if network is None:
+            return
+        controls = pygame.Rect(area.left, area.bottom - self.BUTTON_HEIGHT, area.width, self.BUTTON_HEIGHT)
+        connect_w = max(140, min(220, area.width // 3))
+        connect = pygame.Rect(controls.right - connect_w, controls.top, connect_w, controls.height)
+        if network.security is WifiSecurity.PERSONAL:
+            field = pygame.Rect(controls.left, controls.top, connect.left - controls.left - 14, controls.height - 4)
+            look.panel(screen, field, WHITE, width=2)
+            passphrase = snapshot.passphrase
+            if passphrase:
+                revealed = False
+                if self._last_password_character is not None:
+                    _character, typed_at = self._last_password_character
+                    revealed = time.monotonic() - typed_at < 1.0
+                masked = ("*" * (len(passphrase) - 1) + passphrase[-1]) if revealed else "*" * len(passphrase)
+                text_render = self._fit_line(small_font, masked, COCOA, field.width - 36)
+            else:
+                text_render = self._text(small_font, "Wi-Fi password", HINT)
+            text_rect = text_render.get_rect(midleft=(field.left + 16, field.centery))
+            screen.blit(text_render, text_rect)
+            if int(time.monotonic() * 2) % 2 == 0:
+                pygame.draw.rect(
+                    screen, COCOA, (text_rect.right + 3, text_rect.top + 2, 2, max(8, text_rect.height - 4))
+                )
+            self._buttons["wifi-password"] = field
+        if network.installer_supported:
+            self._kit_button(screen, pygame, "primary", connect, "Connect", fill=SUNSHINE)
+        else:
+            self._paragraph(
+                screen,
+                "Enterprise Wi-Fi can be configured later in Greia Parents.",
+                small_font,
+                BURGUNDY,
+                pygame.Rect(controls.left, controls.top + 4, controls.width, controls.height),
+                center=True,
+            )
+
+    def _draw_confirm(
+        self,
+        screen: Any,
+        pygame: Any,
+        main: Any,
+        y: int,
+        font: Any,
+        title_font: Any,
+        small_font: Any,
+    ) -> None:
+        look = self._look()
+        target = self.state.target
+        nav_center = self._bottom_row_y(main)
+        hold_h = self.BUTTON_HEIGHT + 8
+        hint_y = nav_center - hold_h // 2 - small_font.get_linesize() - 4
+        # The disk that will be erased: big, unambiguous, with its size and
+        # device path, framed as the destructive object it is.
+        card_h = max(70, min(108, (hint_y - y) // 2))
+        card = pygame.Rect(main.left, y, main.width, card_h)
+        look.panel(screen, card, WARNING_FIELD, contour=BURGUNDY, width=3)
+        glyph = pygame.Rect(card.left + 12, card.top + 10, card.height - 20, card.height - 20)
+        look.disk_glyph(screen, pygame, glyph, danger=True)
+        text_left = glyph.right + 16
+        if target is not None:
+            model = target.model.strip() or target.name
+            name = self._fit_line(title_font, model, COCOA, card.right - text_left - 14)
+            facts = self._fit_line(font, f"{target.human_size} · {target.path}", COCOA, card.right - text_left - 14)
+        else:
+            name = self._fit_text(title_font, "Unknown disk", COCOA, card.right - text_left - 14)
+            facts = self._text(font, "", COCOA)
+        block = name.get_height() + facts.get_height()
+        top = card.centery - block // 2
+        screen.blit(name, (text_left, top))
+        screen.blit(facts, (text_left, top + name.get_height()))
+        y = card.bottom + 10
+        warning = f"{self._tr('Everything currently on this disk will be erased.')} {self._tr('This cannot be undone.')}"
+        y = self._paragraph(
+            screen, warning, font, BURGUNDY, pygame.Rect(main.left, y, main.width, hint_y - y), translate=False
+        ) + 6
+        layout = layout_by_id(self.state.settings.keyboard_layout)
+        wifi_value = self.wifi.profile.ssid if self.wifi.profile is not None else self._tr("Set up later")
+        summary = (
+            f"{self._tr('Keyboard')}: {self._tr(layout.label) if layout else self.state.settings.keyboard_layout}"
+            f"    Wi-Fi: {wifi_value}"
         )
-        pygame.draw.rect(screen, panel, main, border_radius=28)
-        if page == InstallerPage.LAYOUT:
-            self._draw_layout(screen, pygame, main, font, title_font, small_font, text, accent, background)
-        elif page == InstallerPage.TARGET:
-            self._center_title(
+        if y + small_font.get_linesize() <= hint_y:
+            image = self._fit_line(small_font, summary, COCOA, main.width)
+            screen.blit(image, (main.left, y))
+            y += small_font.get_linesize() + 4
+        if self.display_install_block_reason() is not None and y + small_font.get_linesize() <= hint_y:
+            self._paragraph(
                 screen,
-                "Choose the internal disk",
-                title_font,
-                text,
-                main.top + 32,
-            )
-            if not self.state.targets:
-                self._center_text(
-                    screen,
-                    "No safe internal disk was found.",
-                    font,
-                    danger,
-                    height // 2,
-                )
-            for index, target in enumerate(self.state.targets[:4]):
-                rect = pygame.Rect(
-                    main.left + 60,
-                    main.top + 120 + index * 86,
-                    main.width - 120,
-                    68,
-                )
-                selected = index == self.state.selected_target
-                pygame.draw.rect(
-                    screen, accent if selected else background, rect, border_radius=18
-                )
-                pygame.draw.rect(
-                    screen,
-                    text,
-                    rect,
-                    width=3 if selected else 1,
-                    border_radius=18,
-                )
-                self._buttons[f"target-{index}"] = rect
-                label = self._text(font, target.display_name, text)
-                screen.blit(label, label.get_rect(midleft=(rect.left + 24, rect.centery)))
-            self._navigation(
-                screen,
-                pygame,
-                main,
-                font,
-                accent,
-                text,
-                enabled=self.state.target is not None,
-            )
-        elif page == InstallerPage.POINTER:
-            self._draw_pointer_page(
-                screen, pygame, main, font, title_font, small_font, text, accent
-            )
-        elif page == InstallerPage.DISPLAY:
-            self._draw_display_page(
-                screen, pygame, main, font, title_font, small_font, text, accent, danger
-            )
-        elif page == InstallerPage.SETTINGS:
-            # Legacy combined page (superseded by POINTER + DISPLAY).
-            self._center_title(
-                screen, "Input and screen", title_font, text, main.top + 26
-            )
-            self._toggle_row(
-                screen,
-                pygame,
-                "tap",
-                "Tap touchpad to click",
-                self.state.settings.touchpad_tap,
-                font,
-                text,
-                accent,
-                main.top + 110,
-            )
-            self._toggle_row(
-                screen,
-                pygame,
-                "natural",
-                "Natural scrolling",
-                self.state.settings.natural_scrolling,
-                font,
-                text,
-                accent,
-                main.top + 178,
-            )
-            self._preset_row(
-                screen,
-                pygame,
-                "mouse",
-                "Mouse feel",
-                speed_to_preset(self.state.settings.mouse_speed),
-                font,
-                text,
-                accent,
-                main.top + 246,
-            )
-            self._preset_row(
-                screen,
-                pygame,
-                "touch",
-                "Touchpad feel",
-                speed_to_preset(self.state.settings.touchpad_speed),
-                font,
-                text,
-                accent,
-                main.top + 314,
-            )
-            self._value_row(
-                screen,
-                pygame,
-                "resolution",
-                "Screen resolution",
-                self.state.settings.resolution,
-                font,
-                text,
-                accent,
-                main.top + 382,
-            )
-            self._navigation(screen, pygame, main, font, accent, text, enabled=True)
-        elif page == InstallerPage.WIFI:
-            self._draw_wifi(
-                screen,
-                pygame,
-                main,
-                font,
-                title_font,
+                "This screen is not fully supported — install is paused.",
                 small_font,
-                background,
-                text,
-                accent,
-                danger,
-                success,
+                BURGUNDY,
+                pygame.Rect(main.left, y, main.width, hint_y - y),
             )
-        elif page == InstallerPage.CONFIRM:
-            self._center_title(
-                screen, "Ready to install", title_font, text, main.top + 34
+        back = self._back_button(screen, pygame, main)
+        hold_w = max(220, min(440, main.right - back.right - 20))
+        rect = pygame.Rect(main.right - hold_w, nav_center - hold_h // 2, hold_w, hold_h)
+        body = look.painter.body(BodyShape.PILL, rect.size, DANGER, lip=4)
+        screen.blit(look.painter.presentable(body, screen), rect.topleft)
+        label = "Hold to erase and install"
+        if self._hold_started is not None:
+            fraction = min(1.0, (time.monotonic() - self._hold_started) / self.HOLD_SECONDS)
+            # The darker fill grows over the same body; the label is redrawn
+            # on top so no earlier label bleeds through the progress fill.
+            pressed = look.painter.body(BodyShape.PILL, rect.size, DANGER_PRESSED, lip=4)
+            screen.blit(pressed, rect.topleft, area=pygame.Rect(0, 0, int(rect.width * fraction), rect.height))
+            label = "Keep holding…"
+        image = look.label(label, self._control_px, WHITE, max_width=rect.width - 32)
+        screen.blit(image, image.get_rect(center=(rect.centerx, rect.centery - 2)))
+        self._buttons["install"] = rect
+        hint = self._fit_text(
+            small_font, f"Keep the button pressed for {int(self.HOLD_SECONDS)} seconds.", HINT, hold_w
+        )
+        screen.blit(hint, hint.get_rect(midbottom=(rect.centerx, rect.top - 4)))
+
+    def _draw_installing(self, screen: Any, pygame: Any, main: Any, y: int, font: Any, small_font: Any) -> None:
+        look = self._look()
+        y = self._paragraph(
+            screen,
+            "This can take several minutes.",
+            small_font,
+            HINT,
+            pygame.Rect(main.left, y, main.width, main.height),
+            center=True,
+        ) + 14
+        bar = pygame.Rect(main.left, y, main.width, max(30, self._control_px + 10))
+        tick = int(time.monotonic() * 4)
+        look.progress(screen, pygame, bar, self.state.progress.fraction, busy_tick=tick)
+        y = bar.bottom + 12
+        self._center_fitted_text(
+            screen, self.state.progress.detail, font, COCOA, y + font.get_linesize() // 2, main.width, main
+        )
+        y += font.get_linesize() + 2
+        if self._installing_since is not None:
+            elapsed = max(0, int(time.monotonic() - self._installing_since))
+            clock = f"{self._tr('Time elapsed')} {elapsed // 60}:{elapsed % 60:02d}"
+            image = self._line(small_font, clock, HINT)
+            screen.blit(image, image.get_rect(midtop=(main.centerx, y)))
+        box_h = small_font.get_linesize() * 2 + 26
+        box = pygame.Rect(main.left, main.bottom - box_h - 8, main.width, box_h)
+        look.panel(screen, box, WARNING_FIELD, contour=BURGUNDY)
+        self._center_line(screen, "Do not remove the USB key.", small_font, BURGUNDY, box, box.top + 12)
+        self._center_line(
+            screen, "Do not turn off the computer.", small_font, BURGUNDY, box, box.top + 12 + small_font.get_linesize()
+        )
+
+    def _draw_complete(
+        self,
+        screen: Any,
+        pygame: Any,
+        main: Any,
+        y: int,
+        font: Any,
+        title_font: Any,
+        small_font: Any,
+    ) -> None:
+        look = self._look()
+        self._center_line(screen, "Greia is installed and ready.", font, COCOA, main, y)
+        y += font.get_linesize() + 10
+        nav_top = self._bottom_row_y(main) - self.BUTTON_HEIGHT // 2 - 10
+        box_h = small_font.get_linesize() * 2 + title_font.get_linesize() + 24
+        box = pygame.Rect(main.left, y, main.width, box_h)
+        look.panel(screen, box, FIELD)
+        self._center_line(screen, "Parent login", small_font, HINT, box, box.top + 8)
+        # The development credential itself is fixed data, never translated.
+        credential = self._line(title_font, "greia  /  greia", COCOA)
+        screen.blit(credential, credential.get_rect(midtop=(box.centerx, box.top + 8 + small_font.get_linesize())))
+        self._center_fitted_text(
+            screen,
+            "You can change it in Greia Parents after first boot.",
+            small_font,
+            COCOA,
+            box.bottom - 8 - small_font.get_linesize() // 2,
+            box.width - 24,
+            box,
+        )
+        y = box.bottom + 12
+        self._paragraph(
+            screen,
+            "After the computer turns off, remove the USB key, then turn the computer on again.",
+            small_font,
+            COCOA,
+            pygame.Rect(main.left, y, main.width, nav_top - y),
+            center=True,
+        )
+        message = "Close the demo" if self.demo else "I'm ready — turn off"
+        width = max(240, min(420, main.width // 2 + 40))
+        rect = pygame.Rect(0, 0, width, self.BUTTON_HEIGHT)
+        rect.center = (main.centerx, self._bottom_row_y(main))
+        self._kit_button(screen, pygame, "primary", rect, message, fill=SUNSHINE)
+
+    def _draw_error(self, screen: Any, pygame: Any, main: Any, y: int, font: Any, small_font: Any) -> None:
+        look = self._look()
+        nav_top = self._bottom_row_y(main) - self.BUTTON_HEIGHT // 2 - 10
+        message = _sentence(self._tr(self.state.error or "Installation stopped"))
+        note = _sentence(self._tr(" The selected disk may be incomplete if installation had already begun."))
+        width = main.width - 32
+        message_lines = min(4, len(_wrap(message, getattr(font, "base", font), width)))
+        note_lines = min(3, len(_wrap(note, getattr(small_font, "base", small_font), width)))
+        height = message_lines * font.get_linesize() + note_lines * small_font.get_linesize() + 40
+        box = pygame.Rect(main.left, y + 6, main.width, min(max(80, nav_top - y - 12), height))
+        look.panel(screen, box, WARNING_FIELD, contour=BURGUNDY)
+        inner = box.inflate(-32, -28)
+        bottom = self._paragraph(screen, message, font, BURGUNDY, inner, translate=False, max_lines=4)
+        self._paragraph(
+            screen,
+            note,
+            small_font,
+            COCOA,
+            pygame.Rect(inner.left, bottom + 10, inner.width, inner.bottom - bottom - 10),
+            translate=False,
+            max_lines=3,
+        )
+        self._back_button(screen, pygame, main)
+
+    # -- shared building blocks -------------------------------------------------
+
+    def _bottom_row_y(self, main: Any) -> int:
+        return main.bottom - 40
+
+    def _kit_button(
+        self,
+        screen: Any,
+        pygame: Any,
+        key: str,
+        rect: Any,
+        label: str,
+        *,
+        fill: tuple[int, int, int] = SURFACE,
+        enabled: bool = True,
+        focused: bool = False,
+    ) -> Any:
+        look = self._look()
+        look.pill(screen, rect, label, fill=fill, size=self._control_px, enabled=enabled)
+        if focused:
+            look.focus(screen, rect, shape=BodyShape.PILL)
+        self._buttons[key] = rect
+        return rect
+
+    def _back_button(self, screen: Any, pygame: Any, main: Any) -> Any:
+        width = max(120, min(180, int(main.width * 0.24)))
+        rect = pygame.Rect(0, 0, width, self.BUTTON_HEIGHT)
+        rect.midleft = (main.left, self._bottom_row_y(main))
+        return self._kit_button(screen, pygame, "back", rect, "Back")
+
+    def _primary_button(
+        self,
+        screen: Any,
+        pygame: Any,
+        main: Any,
+        label: str,
+        *,
+        enabled: bool = True,
+        focused: bool = False,
+    ) -> Any:
+        width = max(160, min(260, int(main.width * 0.36)))
+        rect = pygame.Rect(0, 0, width, self.BUTTON_HEIGHT)
+        rect.midright = (main.right, self._bottom_row_y(main))
+        return self._kit_button(
+            screen, pygame, "primary", rect, label, fill=SUNSHINE, enabled=enabled, focused=focused
+        )
+
+    def _setting_row(self, screen: Any, main: Any, y: int, height: int, focused: bool) -> Any:
+        import pygame
+
+        rect = pygame.Rect(main.left, y, main.width, height)
+        self._look().panel(screen, rect, FIELD)
+        if focused:
+            self._look().focus(screen, rect)
+        return rect
+
+    def _toggle_row(
+        self,
+        screen: Any,
+        pygame: Any,
+        main: Any,
+        key: str,
+        label: str,
+        value: bool,
+        font: Any,
+        y: int,
+        height: int = 54,
+        focused: bool = False,
+    ) -> None:
+        rect = self._setting_row(screen, main, y, height, focused)
+        state_h = min(34, max(22, height - 14))
+        state_rect = pygame.Rect(0, 0, int(state_h * 1.9), state_h)
+        state_rect.midright = (rect.right - 16, rect.centery)
+        label_surface = self._fit_text(font, label, COCOA, state_rect.left - rect.left - 36)
+        screen.blit(label_surface, label_surface.get_rect(midleft=(rect.left + 18, rect.centery)))
+        self._look().toggle(screen, state_rect, value)
+        self._buttons[key] = rect
+
+    def _preset_row(
+        self,
+        screen: Any,
+        pygame: Any,
+        main: Any,
+        key: str,
+        label: str,
+        preset_name: str,
+        font: Any,
+        y: int,
+        height: int = 54,
+        focused: bool = False,
+    ) -> None:
+        look = self._look()
+        rect = self._setting_row(screen, main, y, height, focused)
+        btn = min(40, max(24, height - 12))
+        value_w = max(
+            self._typography.surface_width(font, name) for name in speed_preset_names()
+        ) + 16
+        plus = pygame.Rect(0, 0, btn + 8, btn)
+        plus.midright = (rect.right - 12, rect.centery)
+        minus = pygame.Rect(0, 0, btn + 8, btn)
+        minus.midright = (plus.left - value_w - 8, rect.centery)
+        for button_rect, glyph in ((minus, "−"), (plus, "+")):
+            body = look.painter.body(BodyShape.PILL, button_rect.size, SUNSHINE, contour_width=2)
+            screen.blit(look.painter.presentable(body, screen), button_rect.topleft)
+            glyph_image = self._line(font, glyph, COCOA)
+            screen.blit(glyph_image, glyph_image.get_rect(center=button_rect.center))
+        value_image = self._fit_text(font, preset_name, COCOA, value_w)
+        screen.blit(value_image, value_image.get_rect(center=((minus.right + plus.left) // 2, rect.centery)))
+        label_surface = self._fit_text(font, label, COCOA, minus.left - rect.left - 30)
+        screen.blit(label_surface, label_surface.get_rect(midleft=(rect.left + 18, rect.centery)))
+        self._buttons[f"{key}-minus"] = minus
+        self._buttons[f"{key}-plus"] = plus
+
+    def _value_row(
+        self,
+        screen: Any,
+        pygame: Any,
+        main: Any,
+        key: str,
+        label: str,
+        value: str,
+        font: Any,
+        y: int,
+        height: int = 54,
+    ) -> None:
+        rect = self._setting_row(screen, main, y, height, False)
+        value_h = min(42, max(26, height - 14))
+        value_rect = pygame.Rect(0, 0, max(150, min(220, rect.width // 3)), value_h)
+        value_rect.midright = (rect.right - 12, rect.centery)
+        label_surface = self._fit_text(font, label, COCOA, value_rect.left - rect.left - 36)
+        screen.blit(label_surface, label_surface.get_rect(midleft=(rect.left + 18, rect.centery)))
+        self._look().pill(screen, value_rect, value, fill=SUNSHINE, size=self._control_px)
+        self._buttons[key] = rect
+
+    def _banner(self, screen: Any, pygame: Any, main: Any, y: int, message: str, font: Any) -> int:
+        """Burgundy-on-rose warning strip; returns its bottom."""
+
+        text = _sentence(self._tr(message))
+        raw = getattr(font, "base", font)
+        lines = _wrap(text, raw, main.width - 40)[:3]
+        box = pygame.Rect(main.left, y, main.width, len(lines) * raw.get_linesize() + 18)
+        self._look().panel(screen, box, WARNING_FIELD, contour=BURGUNDY)
+        self._paragraph(screen, text, font, BURGUNDY, box.inflate(-40, -18), translate=False, max_lines=3)
+        return box.bottom
+
+    def _status_card(
+        self,
+        screen: Any,
+        pygame: Any,
+        area: Any,
+        message: str,
+        font: Any,
+        color: tuple[int, int, int],
+        *,
+        detail: str = "",
+        detail_font: Any = None,
+        busy: int | None = None,
+        check: bool = False,
+    ) -> None:
+        """Centred message card for waiting/empty/finished states."""
+
+        look = self._look()
+        raw = getattr(font, "base", font)
+        text = self._tr(message)
+        lines = _wrap(text, raw, area.width - 56)[:3]
+        detail_lines: list[str] = []
+        if detail and detail_font is not None:
+            detail_lines = _wrap(_sentence(self._tr(detail)), getattr(detail_font, "base", detail_font), area.width - 56)[:2]
+        extra = 34 if (busy is not None or check) else 0
+        height = (
+            len(lines) * raw.get_linesize()
+            + (len(detail_lines) * detail_font.get_linesize() + 6 if detail_lines else 0)
+            + extra
+            + 32
+        )
+        box = pygame.Rect(area.left, 0, area.width, min(area.height, height))
+        box.centery = area.top + min(area.height // 2, max(height // 2, area.height // 3))
+        look.panel(screen, box, FIELD)
+        y = box.top + 16
+        if check:
+            mark = pygame.Rect(0, 0, 26, 22)
+            mark.midtop = (box.centerx, y)
+            look.check_mark(screen, pygame, mark, FOREST)
+            y += extra
+        y = self._paragraph(screen, text, font, color, pygame.Rect(box.left + 28, y, box.width - 56, box.height), center=True, translate=False, max_lines=3)
+        if detail_lines:
+            y = self._paragraph(
+                screen, "\n".join(detail_lines), detail_font, COCOA,
+                pygame.Rect(box.left + 28, y + 6, box.width - 56, box.height), center=True, translate=False,
             )
-            target = self.state.target
-            target_text = target.display_name if target else "Unknown disk"
-            self._center_text(screen, target_text, font, text, main.top + 125)
-            wifi_text = (
-                f"Wi-Fi: {self.wifi.profile.ssid}"
-                if self.wifi.profile is not None
-                else "Wi-Fi: set up later"
-            )
-            self._center_text(screen, wifi_text, small_font, text, main.top + 170)
-            self._center_text(
-                screen,
-                "Everything currently on this disk will be erased.",
-                font,
-                danger,
-                main.top + 220,
-            )
-            self._center_text(
-                screen,
-                "Tap-to-click starts disabled and can be changed later.",
-                small_font,
-                text,
-                main.top + 265,
-            )
-            if self.display_install_block_reason() is not None:
-                self._center_text(
-                    screen,
-                    "This screen is not fully supported — install is paused.",
-                    small_font,
-                    danger,
-                    main.top + 300,
-                )
-            rect = self._button(
-                screen,
-                pygame,
-                "install",
-                "Hold to erase and install",
-                danger,
-                (255, 255, 255),
-                font,
-                (width // 2, main.bottom - 120),
-                340,
-            )
-            if self._hold_started is not None:
-                fraction = min(
-                    1.0,
-                    (time.monotonic() - self._hold_started) / self.HOLD_SECONDS,
-                )
-                # Redraw the whole button surface so no prior label bleeds
-                # through the progress fill.
-                pygame.draw.rect(screen, danger, rect, border_radius=18)
-                fill = rect.copy()
-                fill.width = int(rect.width * fraction)
-                pygame.draw.rect(screen, (120, 24, 24), fill, border_radius=18)
-                label = self._text(font, "Keep holding…", (255, 255, 255))
-                screen.blit(label, label.get_rect(center=rect.center))
-            self._back_button(screen, pygame, font, accent, text, main)
-        elif page == InstallerPage.INSTALLING:
-            self._center_title(
-                screen, "Installing", title_font, text, main.top + 50
-            )
-            self._icon(
-                screen,
-                pygame,
-                "robot",
-                min(180, int(height * 0.3)),
-                (width // 2, main.top + 220),
-            )
-            track = pygame.Rect(
-                main.left + 100, main.bottom - 170, main.width - 200, 28
-            )
-            pygame.draw.rect(screen, background, track, border_radius=14)
-            fill = track.copy()
-            fill.width = int(track.width * self.state.progress.fraction)
-            pygame.draw.rect(screen, accent, fill, border_radius=14)
-            self._center_text(
-                screen, self.state.progress.detail, font, text, main.bottom - 105
-            )
-            self._center_text(
-                screen,
-                "Do not remove the USB key.",
-                small_font,
-                danger,
-                main.bottom - 65,
-            )
-        elif page == InstallerPage.COMPLETE:
-            self._center_title(
-                screen, "All done!", title_font, text, main.top + 28
-            )
-            self._icon(
-                screen,
-                pygame,
-                "check",
-                min(125, int(height * 0.22)),
-                (width // 2, main.top + 150),
-            )
-            self._center_text(
-                screen,
-                "Greia is installed and ready.",
-                font,
-                text,
-                main.top + 245,
-            )
-            self._center_text(
-                screen,
-                "Your Parent login is:  greia  /  greia",
-                font,
-                accent,
-                main.top + 305,
-            )
-            self._center_text(
-                screen,
-                "You can change it in Greia Parents after first boot.",
-                small_font,
-                text,
-                main.top + 350,
-            )
-            message = "Close the demo" if self.demo else "I'm ready — turn off"
-            self._button(
-                screen,
-                pygame,
-                "primary",
-                message,
-                accent,
-                text,
-                font,
-                (width // 2, main.bottom - 40),
-                420,
-            )
-        elif page == InstallerPage.ERROR:
-            self._center_title(
-                screen,
-                "Installation stopped",
-                title_font,
-                danger,
-                main.top + 45,
-            )
-            self._icon(
-                screen,
-                pygame,
-                "close_button",
-                min(160, int(height * 0.28)),
-                (width // 2, main.top + 210),
-            )
-            message = (
-                self.state.error
-                + " The selected disk may be incomplete if installation had already begun."
-            )
-            self._wrapped_text(
-                screen,
-                message,
-                small_font,
-                text,
-                pygame.Rect(main.left + 100, main.top + 300, main.width - 200, 150),
-            )
-            self._back_button(screen, pygame, font, accent, text, main)
+        if busy is not None:
+            dot = 12
+            for index in range(3):
+                fill = SUNSHINE if index == busy % 3 else SURFACE
+                body = look.painter.body(BodyShape.ROUND, (dot, dot), fill, contour_width=2)
+                screen.blit(look.painter.presentable(body, screen), (box.centerx - 30 + index * 24, y + 10))
+
+    def _tr(self, text: str) -> str:
+        """Installer copy in the selected language (identity without one)."""
+
+        translator = getattr(self._typography, "translator", None)
+        return translator.text(text) if translator is not None else text
+
+    def _line(self, font: Any, text_value: str, color: tuple[int, int, int]) -> Any:
+        """Render final text verbatim (data, or copy that is already translated)."""
+
+        return self._typography.surface(getattr(font, "base", font), text_value, color)
+
+    def _fit_line(self, font: Any, text_value: str, color: tuple[int, int, int], max_width: int) -> Any:
+        """``_line`` ellipsized to ``max_width`` (SSIDs, disk models)."""
+
+        raw = getattr(font, "base", font)
+        if max_width <= 0 or raw.size(text_value)[0] <= max_width:
+            return self._line(font, text_value, color)
+        trimmed = text_value
+        while trimmed and raw.size(trimmed + "…")[0] > max_width:
+            trimmed = trimmed[:-1]
+        return self._line(font, (trimmed + "…").rstrip(), color)
+
+    def _center_line(self, screen: Any, text_value: str, font: Any, color: tuple[int, int, int], box: Any, y: int) -> None:
+        image = self._fit_text(font, text_value, color, box.width)
+        screen.blit(image, image.get_rect(midtop=(box.centerx, y)))
+
+    def _center_fitted_text(
+        self,
+        screen: Any,
+        text_value: str,
+        font: Any,
+        color: tuple[int, int, int],
+        y: int,
+        max_width: int,
+        box: Any = None,
+    ) -> None:
+        """Centre one line that must first be constrained to ``max_width``.
+
+        ``_fit_text`` returns an already-rendered surface, so it must be
+        blitted rather than rendered again from a string.
+        """
+
+        image = self._fit_text(font, text_value, color, max_width)
+        center_x = box.centerx if box is not None else screen.get_width() // 2
+        screen.blit(image, image.get_rect(center=(center_x, y)))
+
+    def _paragraph(
+        self,
+        screen: Any,
+        text_value: str,
+        font: Any,
+        color: tuple[int, int, int],
+        rect: Any,
+        *,
+        center: bool = False,
+        translate: bool = True,
+        max_lines: int | None = None,
+    ) -> int:
+        """Wrap copy into ``rect``; return the y below the last line.
+
+        Copy is translated *before* wrapping and lines are drawn verbatim:
+        wrapping the English source and translating each fragment produced
+        untranslatable half sentences.
+        """
+
+        text = self._tr(text_value) if translate else text_value
+        raw = getattr(font, "base", font)
+        lines = _wrap(text, raw, rect.width)
+        if max_lines is not None and len(lines) > max_lines:
+            lines = lines[:max_lines]
+            lines[-1] = lines[-1].rstrip(" .") + "…"
+        y = rect.top
+        for line in lines:
+            image = self._fit_line(font, line, color, rect.width)
+            x = rect.centerx - image.get_width() // 2 if center else rect.left
+            screen.blit(image, (x, y))
+            y += raw.get_linesize()
+        return y
 
     POINTER_HEADER_H = 96
     # Vertical padding under the page subtitle before the first setting row.
@@ -1800,939 +2577,6 @@ class InstallerApplication:
                 step = row + self.POINTER_ROW_GAP
         return row, step, target_size
 
-    def _draw_pointer_page(
-        self,
-        screen: Any,
-        pygame: Any,
-        main: Any,
-        font: Any,
-        title_font: Any,
-        small_font: Any,
-        text: tuple[int, int, int],
-        accent: tuple[int, int, int],
-    ) -> None:
-        """Deliberate Pointer Setup page: presets, gated toggles, test area."""
-        self._clamp_pointer_focus()
-        rows = self.pointer_rows()
-        # Measure the header from the fonts actually in use. The reference Acer
-        # renders taller metrics than the development host, so the old fixed
-        # +52 title gap drew the subtitle on top of the title and the fixed
-        # 96 px header start pushed the first row up into it.
-        title_y = main.top + 18
-        title_h = title_font.get_height()
-        subtitle_y = title_y + title_h + 6
-        subtitle_h = small_font.get_height()
-        header_height = (subtitle_y + subtitle_h + self.POINTER_HEADER_PAD) - main.top
-        self._center_title(screen, "Pointer setup", title_font, text, title_y)
-        self._center_text(screen, "Pointer feel", small_font, text, subtitle_y)
-
-        # Measure the vertical budget instead of assuming it. This page used
-        # to use a hard-coded 56 px step and a hard-coded 64 px test target, and
-        # its content is simply taller than the 600 px reference display: the
-        # reset control fell outside the panel and rows overlapped. The row
-        # height, the gaps and the test target are now derived from the panel
-        # that is actually available, each floored so a child's touch target
-        # never collapses below the physical minimum.
-        setting_count = sum(
-            1
-            for name in rows
-            if name
-            in {
-                "tap",
-                "disable-while-typing",
-                "natural",
-                "touchpad-preset",
-                "mouse-preset",
-                "mouse-preset-labeled",
-            }
-        )
-        # The status line and the reset control below the test targets are
-        # measured too. The reset button used to sit at a fixed +32 px under
-        # the targets, which put it on top of the status line whenever that
-        # font was taller than the development host's.
-        strip_label_h = max(1, small_font.get_linesize())
-        status_h = strip_label_h
-        strip_tail = 14 + status_h + 6 + 40
-        row_h, step, target_size = self._pointer_vertical_budget(
-            main.height,
-            setting_count,
-            header_height,
-            font.get_height() + 2 * self.POINTER_ROW_PAD,
-            strip_label_h,
-            strip_tail,
-        )
-        y = main.top + header_height
-        if "tap" in rows:
-            self._toggle_row(
-                screen, pygame, "tap", "Tap touchpad to click",
-                self.state.settings.touchpad_tap, font, text, accent, y, row_h,
-            )
-            y += step
-        if "disable-while-typing" in rows:
-            self._toggle_row(
-                screen, pygame, "disable-while-typing", "Disable while typing",
-                self.state.settings.disable_while_typing, font, text, accent, y, row_h,
-            )
-            y += step
-        if "natural" in rows:
-            self._toggle_row(
-                screen, pygame, "natural", "Natural scrolling",
-                self.state.settings.natural_scrolling, font, text, accent, y, row_h,
-            )
-            y += step
-        if "touchpad-preset" in rows:
-            self._preset_row(
-                screen, pygame, "touch", "Touchpad feel",
-                speed_to_preset(self.state.settings.touchpad_speed),
-                font, text, accent, y, row_h,
-            )
-            y += step
-        if "mouse-preset" in rows:
-            self._preset_row(
-                screen, pygame, "mouse", "Mouse feel",
-                speed_to_preset(self.state.settings.mouse_speed),
-                font, text, accent, y, row_h,
-            )
-            y += step
-        elif "mouse-preset-labeled" in rows:
-            self._preset_row(
-                screen, pygame, "mouse", "Mouse feel (when a mouse is attached)",
-                speed_to_preset(self.state.settings.mouse_speed),
-                font, text, accent, y, row_h,
-            )
-            y += step
-        # Test strip: three large dispersed targets with click feedback. The
-        # budget drops the strip entirely (target_size 0) on a panel too short
-        # to hold it and five legible rows, rather than overlapping the
-        # navigation row. The 1 2 3 keys still run the same test.
-        width = screen.get_size()[0]
-        if target_size <= 0:
-            # The strip was dropped to keep the rows legible and clear of the
-            # navigation row. The system navigation is platform-owned chrome
-            # and must still be drawn, or the child would be stranded here.
-            self._navigation(screen, pygame, main, font, accent, text, enabled=True)
-            return
-        target_mid = y + strip_label_h + 12 + target_size // 2
-        centers = (
-            (int(width * 0.24), target_mid),
-            (int(width * 0.50), target_mid),
-            (int(width * 0.76), target_mid),
-        )
-        # The label used to be centred at y+2, which is exactly where the
-        # target boxes begin, so it overlapped them. Put it clear of the row.
-        self._center_text(
-            screen, "Try it here", small_font, text, y + strip_label_h // 2
-        )
-        for index, center in enumerate(centers):
-            key = f"test-{index + 1}"
-            rect = pygame.Rect(0, 0, target_size, target_size)
-            rect.center = center
-            focused = self.focused_pointer_row() == key
-            pygame.draw.rect(
-                screen, accent if focused else (247, 235, 203), rect, border_radius=16
-            )
-            pygame.draw.rect(
-                screen, text, rect, width=3 if focused else 1, border_radius=16
-            )
-            label = self._text(font, str(index + 1), text)
-            screen.blit(label, label.get_rect(center=rect.center))
-            self._buttons[key] = rect
-        note = self._pointer_unavailable_note()
-        if note:
-            self._center_fitted_text(
-                screen,
-                note,
-                small_font,
-                text,
-                y + strip_label_h // 2,
-                int(screen.get_width() * 0.86),
-            )
-        feedback = self._pointer_test_feedback or "Click a circle, or press 1 2 3"
-        status = feedback
-        if self._pointer_preview_error:
-            status = f"{feedback} · {self._pointer_preview_error}"
-        self._center_fitted_text(
-            screen,
-            status,
-            small_font,
-            text,
-            target_mid + target_size // 2 + 14,
-            int(screen.get_width() * 0.86),
-        )
-        reset_label = self._text(small_font, "Reset pointer feel", text)
-        reset_width = min(
-            screen.get_width() - 80, max(200, reset_label.get_width() + 40)
-        )
-        reset_rect = pygame.Rect(0, 0, reset_width, 40)
-        reset_rect.midtop = (
-            screen.get_size()[0] // 2,
-            target_mid + target_size // 2 + 14 + status_h + 6,
-        )
-        pygame.draw.rect(screen, accent, reset_rect, border_radius=14)
-        reset_label = self._fit_text(
-            small_font, "Reset pointer feel", text, reset_rect.width - 24
-        )
-        screen.blit(reset_label, reset_label.get_rect(center=reset_rect.center))
-        self._buttons["pointer-reset"] = reset_rect
-        self._navigation(screen, pygame, main, font, accent, text, enabled=True)
-
-    def _draw_display_page(
-        self,
-        screen: Any,
-        pygame: Any,
-        main: Any,
-        font: Any,
-        title_font: Any,
-        small_font: Any,
-        text: tuple[int, int, int],
-        accent: tuple[int, int, int],
-        danger: tuple[int, int, int],
-    ) -> None:
-        """Display page: supported modes, physical facts, suitability copy."""
-        facts = self.display_facts()
-        self._center_title(screen, "Display", title_font, text, main.top + 22)
-        if self.state.settings.resolution == "auto":
-            resolution_line = "Resolution: Automatic"
-        else:
-            resolution_line = f"Resolution: {self.state.settings.resolution}"
-        self._center_text(screen, resolution_line, font, text, main.top + 110)
-        supported = facts["supported_mode_ids"]
-        if supported:
-            shown = ", ".join(supported[:4])
-            self._center_text(
-                screen, f"Greia screens: {shown}", small_font, text, main.top + 155
-            )
-        else:
-            self._center_text(
-                screen, "Greia screens: Automatic", small_font, text, main.top + 155
-            )
-        metrics = facts["metrics"]
-        if metrics is not None and bool(
-            getattr(metrics, "physical_size_known", False)
-        ):
-            self._center_text(
-                screen,
-                "Screen size detected automatically",
-                small_font,
-                text,
-                main.top + 190,
-            )
-        else:
-            self._center_text(
-                screen,
-                "Safe display: installer uses safe pixels (1024x600)",
-                small_font,
-                text,
-                main.top + 190,
-            )
-        self._center_text(
-            screen, self.display_status_copy()[:90], font, text, main.top + 235
-        )
-        if self.display_install_block_reason() is not None:
-            self._center_text(
-                screen,
-                "This screen is not fully supported — install is paused.",
-                small_font,
-                danger,
-                main.top + 275,
-            )
-        self._value_row(
-            screen, pygame, "resolution", "Screen resolution",
-            self.state.settings.resolution, font, text, accent, main.top + 310,
-        )
-        self._navigation(screen, pygame, main, font, accent, text, enabled=True)
-
-    def _draw_layout(
-        self,
-        screen: Any,
-        pygame: Any,
-        main: Any,
-        font: Any,
-        title_font: Any,
-        small_font: Any,
-        text: tuple[int, int, int],
-        accent: tuple[int, int, int],
-        background: tuple[int, int, int],
-    ) -> None:
-        self._center_title(
-            screen, "Your keyboard", title_font, text, main.top + 26
-        )
-        remaining = [
-            probe for probe in PROBES if probe.character not in self._layout_probe_results
-        ]
-        # The 'z' probe (5th) separates QWERTZ from QWERTY, which is what
-        # distinguishes German from Italian/Spanish/Portuguese. Requiring it
-        # avoids presenting a wrong guess. The final '@' probe is optional
-        # (AltGr-only on many layouts) and is handled by the selector.
-        done_count = len(self._layout_probe_results)
-        if done_count >= 5 or self._layout_selector_forced:
-            remaining = []
-        if remaining:
-            probe = remaining[0]
-            self._center_text(
-                screen,
-                probe.instruction,
-                title_font,
-                accent,
-                main.top + 110,
-            )
-            self._center_text(
-                screen,
-                "I'm listening — press that key now.",
-                font,
-                text,
-                main.top + 180,
-            )
-            done = len(self._layout_probe_results)
-            self._center_text(
-                screen,
-                f"{done} of {len(PROBES)} pressed",
-                small_font,
-                accent,
-                main.top + 250,
-            )
-            self._center_text(
-                screen,
-                f"After {5 - done_count} more key{'s' if 5 - done_count != 1 else ''} I'll show a list to confirm.",
-                small_font,
-                text,
-                main.top + 300,
-            )
-            if done_count >= 3:
-                self._center_text(
-                    screen,
-                    "Or press Enter to see the list now.",
-                    small_font,
-                    text,
-                    main.top + 330,
-                )
-        else:
-            self._draw_layout_selector(
-                screen,
-                pygame,
-                main,
-                font,
-                small_font,
-                text,
-                accent,
-                background,
-            )
-        self._back_button(screen, pygame, font, accent, text, main)
-        if not remaining:
-            self._button(
-                screen,
-                pygame,
-                "primary",
-                "Confirm",
-                accent,
-                text,
-                font,
-                (screen.get_width() // 2, self._bottom_row_y(main)),
-                220,
-            )
-
-    def _draw_layout_selector(
-        self,
-        screen: Any,
-        pygame: Any,
-        main: Any,
-        font: Any,
-        small_font: Any,
-        text: tuple[int, int, int],
-        accent: tuple[int, int, int],
-        background: tuple[int, int, int],
-    ) -> None:
-        inferred_id = infer_layout(self._layout_probe_results)
-        all_ids = self._all_layout_ids
-        rows_visible = min(6, len(all_ids))
-        self._layout_scroll_to(self._layout_alternative_index, rows_visible)
-        top = main.top + 90
-        row_height = 50
-        for offset in range(rows_visible):
-            index = self._layout_scroll + offset
-            if index >= len(all_ids):
-                break
-            layout_id = all_ids[index]
-            layout = layout_by_id(layout_id)
-            rect = pygame.Rect(
-                main.left + 90, top + offset * row_height, main.width - 180, 44
-            )
-            selected = index == self._layout_alternative_index
-            inferred = layout_id == inferred_id
-            if selected:
-                fill = accent
-            elif inferred:
-                fill = (240, 225, 180)
-            else:
-                fill = background
-            pygame.draw.rect(screen, fill, rect, border_radius=14)
-            pygame.draw.rect(
-                screen,
-                text,
-                rect,
-                width=3 if selected else 1,
-                border_radius=14,
-            )
-            self._buttons[f"layout-{index}"] = rect
-            label = layout.label
-            if inferred:
-                label = "> " + label
-            image = self._text(font, label, text)
-            screen.blit(image, (rect.left + 16, rect.top + 8))
-        self._center_text(
-            screen,
-            "Use Up/Down or click to choose, then Enter to confirm",
-            small_font,
-            text,
-            top + rows_visible * row_height + 18,
-        )
-
-    def _draw_wifi(
-        self,
-        screen: Any,
-        pygame: Any,
-        main: Any,
-        font: Any,
-        title_font: Any,
-        small_font: Any,
-        background: tuple[int, int, int],
-        text: tuple[int, int, int],
-        accent: tuple[int, int, int],
-        danger: tuple[int, int, int],
-        success: tuple[int, int, int],
-    ) -> None:
-        snapshot = self.wifi.snapshot
-        self._center_title(
-            screen, "Wi-Fi (optional)", title_font, text, main.top + 20
-        )
-        self._center_text(
-            screen,
-            "Connect now, or set it up later in Greia Parents.",
-            small_font,
-            text,
-            main.top + 40 + title_font.get_height(),
-        )
-
-        if snapshot.phase is WifiSetupPhase.SCANNING:
-            self._center_text(
-                screen, "Looking for Wi-Fi networks…", font, text, main.centery
-            )
-        elif snapshot.phase is WifiSetupPhase.CONNECTING:
-            selected = snapshot.selected_network
-            name = selected.ssid if selected is not None else "Wi-Fi"
-            self._center_text(
-                screen,
-                f"Connecting to {name}…",
-                font,
-                text,
-                main.centery,
-            )
-        elif snapshot.phase is WifiSetupPhase.UNAVAILABLE:
-            self._center_text(
-                screen,
-                "No wireless adapter is available. You can continue offline.",
-                font,
-                text,
-                main.centery - 15,
-            )
-            self._button(
-                screen,
-                pygame,
-                "primary",
-                "Continue offline",
-                accent,
-                text,
-                font,
-                (screen.get_width() - 190, self._bottom_row_y(main)),
-                230,
-            )
-        elif snapshot.phase is WifiSetupPhase.CONNECTED:
-            self._center_text(
-                screen,
-                f"Connected to {snapshot.connected_ssid}",
-                font,
-                success,
-                main.centery - 20,
-            )
-            self._center_text(
-                screen,
-                "This network will be ready after the first boot.",
-                small_font,
-                text,
-                main.centery + 25,
-            )
-            self._button(
-                screen,
-                pygame,
-                "primary",
-                "Continue",
-                accent,
-                text,
-                font,
-                (screen.get_width() - 185, self._bottom_row_y(main)),
-                220,
-            )
-        else:
-            self._draw_wifi_networks(
-                screen,
-                pygame,
-                main,
-                font,
-                title_font,
-                small_font,
-                background,
-                text,
-                accent,
-                danger,
-            )
-
-        if snapshot.error and snapshot.phase is not WifiSetupPhase.UNAVAILABLE:
-            self._center_text(
-                screen,
-                snapshot.error[:90],
-                small_font,
-                danger,
-                main.bottom - 93,
-            )
-
-        self._back_button(screen, pygame, font, accent, text, main)
-        if snapshot.phase not in {
-            WifiSetupPhase.CONNECTED,
-            WifiSetupPhase.UNAVAILABLE,
-            WifiSetupPhase.CONNECTING,
-        }:
-            self._button(
-                screen,
-                pygame,
-                "wifi-refresh",
-                "Refresh",
-                background,
-                text,
-                small_font,
-                (screen.get_width() // 2, self._bottom_row_y(main)),
-                170,
-            )
-            self._button(
-                screen,
-                pygame,
-                "wifi-skip",
-                "Skip for now",
-                accent,
-                text,
-                small_font,
-                (screen.get_width() - 170, self._bottom_row_y(main)),
-                200,
-            )
-
-    def _draw_wifi_networks(
-        self,
-        screen: Any,
-        pygame: Any,
-        main: Any,
-        font: Any,
-        title_font: Any,
-        small_font: Any,
-        background: tuple[int, int, int],
-        text: tuple[int, int, int],
-        accent: tuple[int, int, int],
-        danger: tuple[int, int, int],
-    ) -> None:
-        snapshot = self.wifi.snapshot
-        if not snapshot.networks:
-            # An empty list is not the same thing as a failed scan. Showing
-            # "No networks found" for both hid the real reason the scan failed
-            # on the reference Acer, so an actual error is now surfaced
-            # instead of being reported as an absence of nearby networks.
-            if snapshot.phase is WifiSetupPhase.ERROR and snapshot.error:
-                self._center_fitted_text(
-                    screen,
-                    f"Wi-Fi could not be checked: {snapshot.error}",
-                    font,
-                    danger,
-                    main.centery,
-                    int(screen.get_width() * 0.82),
-                )
-            else:
-                self._center_text(
-                    screen,
-                    "No networks found. Refresh, or continue offline.",
-                    font,
-                    text,
-                    main.centery,
-                )
-            return
-
-        rows_top = main.top + 40 + title_font.get_height() + small_font.get_height() + 8
-        page_start = (
-            snapshot.selected_index // self.WIFI_ROWS_PER_PAGE
-        ) * self.WIFI_ROWS_PER_PAGE
-        visible = snapshot.networks[page_start : page_start + self.WIFI_ROWS_PER_PAGE]
-        for offset, network in enumerate(visible):
-            index = page_start + offset
-            rect = pygame.Rect(
-                main.left + 70,
-                rows_top + offset * 62,
-                main.width - 140,
-                52,
-            )
-            selected = index == snapshot.selected_index
-            supported = network.installer_supported
-            fill = accent if selected else background
-            if not supported:
-                fill = (232, 228, 217)
-            pygame.draw.rect(screen, fill, rect, border_radius=15)
-            pygame.draw.rect(
-                screen,
-                text,
-                rect,
-                width=3 if selected else 1,
-                border_radius=15,
-            )
-            self._buttons[f"wifi-{index}"] = rect
-            label = self._text(font, network.ssid, text)
-            screen.blit(label, (rect.left + 16, rect.top + 10))
-            if network.security is WifiSecurity.OPEN:
-                security = "Open"
-            elif network.security is WifiSecurity.PERSONAL:
-                security = "Password"
-            else:
-                security = "Enterprise — later"
-            strength = _signal_label(network.signal_dbm)
-            detail = self._text(small_font, f"{security} · {strength}", text)
-            screen.blit(detail, detail.get_rect(midright=(rect.right - 16, rect.centery)))
-
-        network = snapshot.selected_network
-        if network is None:
-            return
-        controls_y = rows_top + self.WIFI_ROWS_PER_PAGE * 62 + 16
-        if network.security is WifiSecurity.PERSONAL:
-            password_rect = pygame.Rect(
-                main.left + 90, controls_y, main.width - 340, 48
-            )
-            pygame.draw.rect(screen, background, password_rect, border_radius=14)
-            pygame.draw.rect(screen, text, password_rect, width=1, border_radius=14)
-            passphrase = snapshot.passphrase
-            if passphrase:
-                revealed_index = None
-                if self._last_password_character is not None:
-                    character, typed_at = self._last_password_character
-                    if time.monotonic() - typed_at < 1.0:
-                        revealed_index = len(passphrase) - 1
-                # Render masked with the last char briefly revealed
-                segments = []
-                if revealed_index is not None and passphrase:
-                    segments.append("*" * (len(passphrase) - 1))
-                    segments.append(passphrase[-1])
-                else:
-                    segments.append("*" * len(passphrase))
-                text_render = self._text(small_font, "".join(segments), text)
-            else:
-                text_render = self._text(small_font, "Wi-Fi password", (160, 150, 135))
-            screen.blit(
-                text_render,
-                (password_rect.left + 16, password_rect.top + 12),
-            )
-            # Blinking caret after the text
-            caret_on = int(time.monotonic() * 2) % 2 == 0
-            caret_x = password_rect.left + 16 + text_render.get_width() + 4
-            if caret_on:
-                pygame.draw.rect(
-                    screen,
-                    accent,
-                    (caret_x, password_rect.top + 12, 2, text_render.get_height()),
-                )
-            self._buttons["wifi-password"] = password_rect
-        if network.installer_supported:
-            self._button(
-                screen,
-                pygame,
-                "primary",
-                "Connect",
-                accent,
-                text,
-                font,
-                (main.right - 165, controls_y + 24),
-                220,
-            )
-        else:
-            note = self._text(small_font, "Enterprise Wi-Fi can be configured later in Greia Parents.", danger)
-            screen.blit(note, note.get_rect(center=(main.centerx, controls_y + 24)))
-
-    def _bottom_row_y(self, main: Any) -> int:
-        return main.bottom - 40
-
-    def _navigation(
-        self,
-        screen: Any,
-        pygame: Any,
-        main: Any,
-        font: Any,
-        accent: tuple[int, int, int],
-        text: tuple[int, int, int],
-        *,
-        enabled: bool,
-    ) -> None:
-        self._back_button(screen, pygame, font, accent, text, main)
-        color = accent if enabled else (200, 195, 180)
-        self._button(
-            screen,
-            pygame,
-            "primary",
-            "Continue",
-            color,
-            text,
-            font,
-            (main.right - 145, self._bottom_row_y(main)),
-            220,
-        )
-
-    def _back_button(
-        self,
-        screen: Any,
-        pygame: Any,
-        font: Any,
-        accent: tuple[int, int, int],
-        text: tuple[int, int, int],
-        main: Any,
-    ) -> None:
-        self._button(
-            screen,
-            pygame,
-            "back",
-            "Back",
-            accent,
-            text,
-            font,
-            (main.left + 120, self._bottom_row_y(main)),
-            170,
-        )
-
-    def _toggle_row(
-        self,
-        screen: Any,
-        pygame: Any,
-        key: str,
-        label: str,
-        value: bool,
-        font: Any,
-        text: tuple[int, int, int],
-        accent: tuple[int, int, int],
-        y: int,
-        height: int = 54,
-    ) -> None:
-        rect = pygame.Rect(
-            screen.get_width() * 0.16, y, screen.get_width() * 0.68, height
-        )
-        pygame.draw.rect(screen, (247, 235, 203), rect, border_radius=16)
-        state_h = min(40, max(28, height - 14))
-        state_rect = pygame.Rect(
-            rect.right - 116, rect.centery - state_h // 2, 98, state_h
-        )
-        label_surface = self._fit_text(
-            font, label, text, state_rect.left - rect.left - 36
-        )
-        screen.blit(
-            label_surface,
-            (rect.left + 18, rect.centery - label_surface.get_height() // 2),
-        )
-        pygame.draw.rect(
-            screen, accent if value else (180, 175, 165), state_rect, border_radius=20
-        )
-        knob_x = state_rect.right - 20 if value else state_rect.left + 20
-        pygame.draw.circle(
-            screen,
-            (255, 255, 255),
-            (knob_x, state_rect.centery),
-            max(9, state_h // 2 - 5),
-        )
-        self._buttons[key] = rect
-
-    def _preset_row(
-        self,
-        screen: Any,
-        pygame: Any,
-        key: str,
-        label: str,
-        preset_name: str,
-        font: Any,
-        text: tuple[int, int, int],
-        accent: tuple[int, int, int],
-        y: int,
-        height: int = 54,
-    ) -> None:
-        rect = pygame.Rect(
-            screen.get_width() * 0.16, y, screen.get_width() * 0.68, height
-        )
-        pygame.draw.rect(screen, (247, 235, 203), rect, border_radius=16)
-        screen.blit(self._text(font, label, text), (rect.left + 18, rect.top + 13))
-        btn = min(42, max(26, height - 12))
-        minus = pygame.Rect(rect.right - 268, rect.centery - btn // 2, 46, btn)
-        plus = pygame.Rect(rect.right - 58, rect.centery - btn // 2, 46, btn)
-        for button_rect, glyph in ((minus, "−"), (plus, "+")):
-            pygame.draw.rect(screen, accent, button_rect, border_radius=14)
-            glyph_image = self._text(font, glyph, text)
-            screen.blit(glyph_image, glyph_image.get_rect(center=button_rect.center))
-        value_image = self._text(font, preset_name, text)
-        screen.blit(
-            value_image, value_image.get_rect(center=(rect.right - 140, rect.centery))
-        )
-        self._buttons[f"{key}-minus"] = minus
-        self._buttons[f"{key}-plus"] = plus
-
-    def _value_row(
-        self,
-        screen: Any,
-        pygame: Any,
-        key: str,
-        label: str,
-        value: str,
-        font: Any,
-        text: tuple[int, int, int],
-        accent: tuple[int, int, int],
-        y: int,
-        height: int = 54,
-    ) -> None:
-        rect = pygame.Rect(
-            screen.get_width() * 0.16, y, screen.get_width() * 0.68, height
-        )
-        pygame.draw.rect(screen, (247, 235, 203), rect, border_radius=16)
-        value_h = min(42, max(26, height - 12))
-        value_rect = pygame.Rect(
-            rect.right - 190, rect.centery - value_h // 2, 172, value_h
-        )
-        label_surface = self._fit_text(
-            font, label, text, value_rect.left - rect.left - 36
-        )
-        screen.blit(
-            label_surface,
-            (rect.left + 18, rect.centery - label_surface.get_height() // 2),
-        )
-        pygame.draw.rect(screen, accent, value_rect, border_radius=14)
-        value_image = self._fit_text(font, value, text, value_rect.width - 16)
-        screen.blit(value_image, value_image.get_rect(center=value_rect.center))
-        self._buttons[key] = rect
-
-    def _button(
-        self,
-        screen: Any,
-        pygame: Any,
-        key: str,
-        label: str,
-        background: tuple[int, int, int],
-        foreground: tuple[int, int, int],
-        font: Any,
-        center: tuple[int, int],
-        width: int,
-    ) -> Any:
-        rect = pygame.Rect(0, 0, width, self.BUTTON_HEIGHT)
-        rect.center = center
-        pygame.draw.rect(screen, background, rect, border_radius=18)
-        image = self._fit_text(font, label, foreground, width - 24)
-        screen.blit(image, image.get_rect(center=rect.center))
-        self._buttons[key] = rect
-        return rect
-
-    def _icon(
-        self,
-        screen: Any,
-        pygame: Any,
-        icon_id: str,
-        size: int,
-        center: tuple[int, int],
-    ) -> None:
-        key = (icon_id, size)
-        image = self._icon_cache.get(key)
-        if image is None:
-            path = (
-                self.root
-                / "assets"
-                / "icons"
-                / "core"
-                / "v1"
-                / "256"
-                / f"{icon_id}.png"
-            )
-            image = pygame.image.load(str(path)).convert_alpha()
-            image = pygame.transform.smoothscale(image, (size, size))
-            self._icon_cache[key] = image
-        screen.blit(image, image.get_rect(center=center))
-
-    def _boot_logo(
-        self,
-        screen: Any,
-        pygame: Any,
-        center: tuple[int, int],
-        max_height: int,
-    ) -> None:
-        key = ("boot-logo", max_height)
-        image = self._icon_cache.get(key)
-        if image is None:
-            frame_path = _canonical_boot_logo(self.root)
-            source = frame_path if frame_path is not None else None
-            if source is None:
-                source = (
-                    self.root
-                    / "assets"
-                    / "icons"
-                    / "core"
-                    / "v1"
-                    / "256"
-                    / "robot.png"
-                )
-            loaded = pygame.image.load(str(source))
-            if loaded.get_width() > loaded.get_height():
-                width = max_height
-                height = int(loaded.get_height() * width / loaded.get_width())
-            else:
-                height = max_height
-                width = int(loaded.get_width() * height / loaded.get_height())
-            image = pygame.transform.smoothscale(loaded, (width, height)).convert_alpha()
-            self._icon_cache[key] = image
-        screen.blit(image, image.get_rect(center=center))
-
-    def _hero_logo(
-        self,
-        screen: Any,
-        pygame: Any,
-        width: int,
-        height: int,
-    ) -> None:
-        """Render the boot-frame logo full-bleed, centered vertically.
-
-        On screens taller than the artwork's natural height the logo keeps its
-        aspect ratio and is centered; on short screens it fills the full height.
-        There is no panel behind it.
-        """
-        key = ("hero-logo-full",)
-        image = self._icon_cache.get(key)
-        if image is None:
-            frame_path = _canonical_boot_logo(self.root)
-            source = frame_path if frame_path is not None else (
-                self.root
-                / "assets"
-                / "icons"
-                / "core"
-                / "v1"
-                / "256"
-                / "robot.png"
-            )
-            loaded = pygame.image.load(str(source))
-            if loaded.get_width() <= 0 or loaded.get_height() <= 0:
-                loaded = pygame.image.load(
-                    str(self.root / "assets" / "icons" / "core" / "v1" / "256" / "robot.png")
-                )
-            image = loaded.convert_alpha()
-            self._icon_cache[key] = image
-        natural = image.get_size()
-        # Cap at the screen height; never upscale beyond natural size.
-        scale = min(1.0, height / natural[1])
-        display_height = int(natural[1] * scale)
-        display_width = int(natural[0] * scale)
-        rect = image.get_rect()
-        rect.w, rect.h = display_width, display_height
-        rect.center = (width // 2, height // 2)
-        screen.blit(image, rect)
-
     def _draw_pointer(self, screen: Any, pygame: Any) -> None:
         """Draw the Greia pointer.
 
@@ -2750,7 +2594,9 @@ class InstallerApplication:
         self._pointer_seen = True
         size = max(34, min(54, screen.get_height() // 12))
         x, y = position
-        self._icon(screen, pygame, "yellow_star", size, (x, y))
+        star = self._look().art.icon(pygame, "yellow_star", size)
+        if star is not None:
+            screen.blit(star, star.get_rect(center=(x, y)))
 
     def _text(
         self,
@@ -2768,70 +2614,6 @@ class InstallerApplication:
         """
 
         return self._typography.surface(font, text_value, color)
-
-    def _center_title(
-        self,
-        screen: Any,
-        text_value: str,
-        font: Any,
-        color: tuple[int, int, int],
-        y: int,
-    ) -> None:
-        image = self._text(font, text_value, color)
-        screen.blit(image, image.get_rect(midtop=(screen.get_width() // 2, y)))
-
-    def _center_fitted_text(
-        self,
-        screen: Any,
-        text_value: str,
-        font: Any,
-        color: tuple[int, int, int],
-        y: int,
-        max_width: int,
-    ) -> None:
-        """Centre one line that must first be constrained to ``max_width``.
-
-        ``_fit_text`` returns an already-rendered surface, so it must be
-        blitted rather than handed back to ``_center_text``, which renders a
-        string. Keeping the two apart is what stops a status line from being
-        passed a Surface as if it were text.
-        """
-
-        image = self._fit_text(font, text_value, color, max_width)
-        screen.blit(image, image.get_rect(center=(screen.get_width() // 2, y)))
-
-    def _center_text(
-        self,
-        screen: Any,
-        text_value: str,
-        font: Any,
-        color: tuple[int, int, int],
-        y: int,
-    ) -> None:
-        image = self._text(font, text_value, color)
-        screen.blit(image, image.get_rect(center=(screen.get_width() // 2, y)))
-
-    def _wrapped_text(
-        self,
-        screen: Any,
-        text_value: str,
-        font: Any,
-        color: tuple[int, int, int],
-        rect: Any,
-    ) -> None:
-        words = text_value.split()
-        line = ""
-        y = rect.top
-        for word in words:
-            candidate = f"{line} {word}".strip()
-            if font.size(candidate)[0] > rect.width and line:
-                screen.blit(self._text(font, line, color), (rect.left, y))
-                y += font.get_linesize()
-                line = word
-            else:
-                line = candidate
-        if line:
-            screen.blit(self._text(font, line, color), (rect.left, y))
 
     def _inside(self, key: str, position: tuple[int, int]) -> bool:
         rect = self._buttons.get(key)
@@ -2981,9 +2763,35 @@ class InstallerApplication:
                 ),
                 len(self._pointer_infos_cache or ()),
                 tuple(self.state.targets),
+                self._live_tick(),
             )
         except Exception:
             return None
+
+    def _live_tick(self) -> int:
+        """Time bucket for the few states whose pixels change without input.
+
+        The signature skips repaints of unchanged frames, but a held erase
+        button, the install progress/elapsed time, a Wi-Fi scan or connect
+        and the password caret all move on their own. Each gets a coarse
+        bucket (at most 20 Hz while holding, 2-4 Hz otherwise) so those
+        states repaint at that rate and every other page stays idle.
+        """
+
+        page = self.state.page
+        now = time.monotonic()
+        if page == InstallerPage.INSTALLING:
+            return int(now * 4)
+        if page == InstallerPage.CONFIRM and self._hold_started is not None:
+            return int(now * 20)
+        if page == InstallerPage.WIFI:
+            snapshot = self.wifi.snapshot
+            if snapshot.phase in {WifiSetupPhase.SCANNING, WifiSetupPhase.CONNECTING}:
+                return int(now * 3)
+            network = snapshot.selected_network
+            if network is not None and network.security is WifiSecurity.PERSONAL:
+                return int(now * 2)
+        return 0
 
     def _write_status_record(self) -> None:
         """Mirror the current screen state to a small readable file.
@@ -3070,6 +2878,39 @@ class InstallerApplication:
                 stdin=subprocess.DEVNULL,
             )
             self._boot_released = completed.returncode == 0
+
+
+def _signal_level(signal_dbm: float) -> int:
+    """Signal bars (1-4) for the Wi-Fi list, same thresholds as the labels."""
+    if signal_dbm >= -50:
+        return 4
+    if signal_dbm >= -67:
+        return 3
+    if signal_dbm >= -78:
+        return 2
+    return 1
+
+
+def _sentence(text: str) -> str:
+    """Machine error text shown as a sentence (capitalised first letter)."""
+    text = " ".join(str(text).split())
+    return text[:1].upper() + text[1:] if text else text
+
+
+def _wrap(text: str, font: Any, width: int) -> list[str]:
+    """Greedy word wrap measured with ``font`` (already-final text)."""
+    lines: list[str] = []
+    line = ""
+    for word in str(text).split():
+        candidate = f"{line} {word}".strip()
+        if line and font.size(candidate)[0] > width:
+            lines.append(line)
+            line = word
+        else:
+            line = candidate
+    if line:
+        lines.append(line)
+    return lines
 
 
 def _signal_label(signal_dbm: float) -> str:

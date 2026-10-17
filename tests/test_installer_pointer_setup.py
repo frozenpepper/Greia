@@ -559,7 +559,8 @@ class InstallerPointerSetupTests(unittest.TestCase):
 
         import pygame
 
-        pygame.init()
+        pygame.display.init()
+        pygame.font.init()
         if pygame.display.get_surface() is None:
             pygame.display.set_mode((1024, 600), pygame.HIDDEN)
         screen = pygame.display.set_mode((1024, 600))
@@ -718,7 +719,8 @@ class RenderSignatureTests(unittest.TestCase):
     def screen(self):
         import pygame
 
-        pygame.init()
+        pygame.display.init()
+        pygame.font.init()
         pygame.font.init()
         return pygame.display.set_mode((1024, 600), pygame.RESIZABLE)
 

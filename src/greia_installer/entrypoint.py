@@ -5,16 +5,28 @@ import os
 import subprocess
 import time
 from pathlib import Path
+from typing import Any
 
 from greia_platform.system_language import (
     DEFAULT_SYSTEM_LOCALE,
     SUPPORTED_SYSTEM_LANGUAGES,
     system_language,
 )
-from greia_platform.typography import FontRole, GreiaTypography
+from greia_platform.typography import GreiaTypography
 
+from .boot_intro import InstallerIntro
 from .composition import provisional_installer_hardware_controller
-from .i18n import LocalizedTypography
+from .i18n import InstallerTranslator, LocalizedTypography
+from .presentation import (
+    COCOA,
+    FIELD,
+    INK,
+    SUNSHINE,
+    SURFACE,
+    InstallerLook,
+    mix,
+    page_frame,
+)
 from .main import (
     InstallerApplication,
     parse_args,
@@ -38,8 +50,175 @@ class LanguageFirstInstallerApplication(InstallerApplication):
         return self.locale
 
 
+class LanguageChooser:
+    """The installer's mandatory first screen: one big tile per language.
+
+    Drawn with the installer look (meadow, Leo, kit tiles) and laid out as a
+    2-column grid so all selectable languages stay child/parent-sized at
+    800x480 and 1024x600. Flags are drawn shapes rather than emoji glyphs:
+    the bundled fonts have no flag glyphs, which left an empty gap. The
+    Continue label follows the highlighted language so a parent who cannot
+    read English still recognises it.
+
+    Selection needs a press *and* release on the same screen: the press that
+    skipped the start-up animation is consumed there, and its release must
+    not pick a language.
+    """
+
+    def __init__(
+        self,
+        *,
+        root: Path,
+        typography: GreiaTypography | None = None,
+        languages: tuple = SUPPORTED_SYSTEM_LANGUAGES,
+    ) -> None:
+        self.root = Path(root)
+        self.languages = tuple(languages)
+        self.typography = typography or GreiaTypography(self.root / "assets" / "fonts" / "nunito-sans")
+        self.look = InstallerLook(self.root, self.typography)
+        self.selected_index = next(
+            (
+                index
+                for index, item in enumerate(self.languages)
+                if item.locale == DEFAULT_SYSTEM_LOCALE
+            ),
+            0,
+        )
+        self.columns = 2
+        self._targets: dict[str, Any] = {}
+        self._pressed = False
+
+    def hit_targets(self) -> dict[str, Any]:
+        return dict(self._targets)
+
+    @property
+    def locale(self) -> str:
+        return self.languages[self.selected_index].locale
+
+    def draw(self, screen: Any, pygame: Any, *, pointer_position: tuple[int, int]) -> None:
+        width, height = screen.get_size()
+        frame = page_frame(pygame, (width, height), steps=False)
+        main = frame.main
+        title_px = max(26, min(38, height // 16))
+        y = self.look.page_base(
+            screen,
+            pygame,
+            frame,
+            title="Language  •  Lingua  •  Idioma  •  Langue",
+            title_size=title_px,
+            pose="pose_wave",
+        )
+        self._targets = {}
+        count = len(self.languages)
+        columns = self.columns if count > 1 else 1
+        rows = (count + columns - 1) // columns
+        gap = max(10, min(18, width // 60))
+        nav_center = main.bottom - 40
+        top = y + max(14, height // 30)
+        avail = nav_center - 25 - 16 - top
+        tile_h = max(54, min(96, (avail - gap * (rows - 1)) // max(1, rows)))
+        grid_h = rows * tile_h + (rows - 1) * gap
+        top += max(0, (avail - grid_h) // 2)
+        cell_w = (main.width - gap * (columns - 1)) // columns
+        label_px = max(18, min(28, tile_h // 3))
+        for index, language in enumerate(self.languages):
+            row, column = divmod(index, columns)
+            cell = pygame.Rect(main.left + column * (cell_w + gap), top + row * (tile_h + gap), cell_w, tile_h)
+            selected = index == self.selected_index
+            hovered = cell.collidepoint(pointer_position)
+            fill = SUNSHINE if selected else (mix(SURFACE, SUNSHINE, 0.2) if hovered else FIELD)
+            self.look.panel(screen, cell, fill, width=3 if selected else 2)
+            flag_h = max(24, min(48, tile_h - 30))
+            flag = pygame.Rect(0, 0, int(flag_h * 1.5), flag_h)
+            flag.midleft = (cell.left + 16, cell.centery)
+            _draw_flag(screen, pygame, language.locale, flag)
+            label = self.look.label(
+                language.native_name,
+                label_px,
+                COCOA,
+                max_width=cell.right - flag.right - 26,
+            )
+            screen.blit(label, label.get_rect(midleft=(flag.right + 14, cell.centery)))
+            if selected:
+                self.look.focus(screen, cell)
+            self._targets[f"language-{index}"] = cell
+        continue_label = InstallerTranslator(self.locale).text("Continue")
+        button = pygame.Rect(0, 0, max(170, min(260, int(main.width * 0.36))), 50)
+        button.midright = (main.right, nav_center)
+        self.look.pill(screen, button, continue_label, fill=SUNSHINE, size=max(18, min(25, height // 25)))
+        self._targets["continue"] = button
+
+    def handle_event(self, event: Any, pygame: Any) -> str | None:
+        """Apply one event; return the chosen locale when the parent confirms."""
+
+        count = len(self.languages)
+        if event.type == pygame.MOUSEBUTTONDOWN and getattr(event, "button", 0) == 1:
+            self._pressed = True
+        elif event.type == pygame.MOUSEBUTTONUP and getattr(event, "button", 0) == 1:
+            if not self._pressed:
+                return None
+            self._pressed = False
+            for key, rect in self._targets.items():
+                if key.startswith("language-") and rect.collidepoint(event.pos):
+                    self.selected_index = int(key.split("-", 1)[1])
+                    return None
+            target = self._targets.get("continue")
+            if target is not None and target.collidepoint(event.pos):
+                return self.locale
+        elif event.type == pygame.KEYDOWN:
+            if event.key in {pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE}:
+                return self.locale
+            if event.key in {pygame.K_RIGHT, pygame.K_TAB}:
+                self.selected_index = (self.selected_index + 1) % count
+            elif event.key == pygame.K_LEFT:
+                self.selected_index = (self.selected_index - 1) % count
+            elif event.key == pygame.K_DOWN:
+                self.selected_index = min(count - 1, self.selected_index + self.columns)
+            elif event.key == pygame.K_UP:
+                self.selected_index = max(0, self.selected_index - self.columns)
+        return None
+
+
+def _draw_flag(screen: Any, pygame: Any, locale: str, rect: Any) -> None:
+    """Simple drawn flag for a language tile (shapes, not emoji glyphs)."""
+
+    white = (255, 255, 255)
+    if locale == "it":
+        bands = ((0, 146, 70), white, (206, 43, 55))
+    elif locale == "fr":
+        bands = ((0, 85, 164), white, (239, 65, 53))
+    else:
+        bands = ()
+    if bands:
+        third = rect.width / 3
+        for index, color in enumerate(bands):
+            pygame.draw.rect(
+                screen, color, (rect.left + round(index * third), rect.top, round(third) + 1, rect.height)
+            )
+    elif locale == "es":
+        red, yellow = (198, 11, 30), (255, 196, 0)
+        pygame.draw.rect(screen, red, rect)
+        pygame.draw.rect(screen, yellow, (rect.left, rect.top + rect.height // 4, rect.width, rect.height // 2))
+    elif locale == "en":
+        blue, red = (1, 33, 105), (200, 16, 46)
+        pygame.draw.rect(screen, blue, rect)
+        thick = max(3, rect.height // 5)
+        pygame.draw.line(screen, white, rect.topleft, rect.bottomright, thick)
+        pygame.draw.line(screen, white, rect.bottomleft, rect.topright, thick)
+        pygame.draw.line(screen, red, rect.topleft, rect.bottomright, max(1, thick // 3))
+        pygame.draw.line(screen, red, rect.bottomleft, rect.topright, max(1, thick // 3))
+        pygame.draw.rect(screen, white, (rect.centerx - thick, rect.top, 2 * thick, rect.height))
+        pygame.draw.rect(screen, white, (rect.left, rect.centery - thick, rect.width, 2 * thick))
+        inner = max(2, thick * 2 // 3)
+        pygame.draw.rect(screen, red, (rect.centerx - inner // 2 - 1, rect.top, inner + 1, rect.height))
+        pygame.draw.rect(screen, red, (rect.left, rect.centery - inner // 2 - 1, rect.width, inner + 1))
+    else:
+        pygame.draw.rect(screen, SURFACE, rect)
+    pygame.draw.rect(screen, INK, rect, width=2, border_radius=3)
+
+
 def choose_language(*, root: Path, windowed: bool, demo: bool) -> str:
-    """Run the installer's mandatory first flag-first language screen."""
+    """Play the start-up animation, then run the flag-first language screen."""
 
     import pygame
 
@@ -55,157 +234,57 @@ def choose_language(*, root: Path, windowed: bool, demo: bool) -> str:
     # Match the normal installer: hide it and draw Greia's own pointer after
     # every frame while continuing to use SDL's authoritative mouse position.
     pygame.mouse.set_visible(False)
-    typography = GreiaTypography(root / "assets" / "fonts" / "nunito-sans")
     pointer = _load_pointer(root, pygame)
-    selected_index = next(
-        (
-            index
-            for index, item in enumerate(SUPPORTED_SYSTEM_LANGUAGES)
-            if item.locale == DEFAULT_SYSTEM_LOCALE
-        ),
-        0,
-    )
-    clock = pygame.time.Clock()
-    first_frame = True
+
+    # The Greia logo animation the installed OS plays at boot, shared through
+    # greia_platform.boot_animation. Its first flip continues the early-boot
+    # splash, so that is where the boot cover is released.
+    _write_boot_status("intro")
+    released = {"cover": False}
+
+    def _first_frame() -> None:
+        released["cover"] = True
+        _release_boot_cover()
 
     try:
+        InstallerIntro.for_root(root).run(screen, pygame, on_first_frame=_first_frame)
+    except Exception:  # noqa: BLE001 - presentation never blocks installation
+        pass
+    _write_boot_status("language")
+
+    chooser = LanguageChooser(root=root)
+    clock = pygame.time.Clock()
+    first_frame = True
+    dirty = True
+    try:
         while True:
-            width, height = screen.get_size()
-            screen.fill((247, 235, 203))
-            panel = pygame.Rect(
-                max(18, int(width * 0.045)),
-                max(16, int(height * 0.045)),
-                int(width * 0.91),
-                int(height * 0.91),
-            )
-            pygame.draw.rect(screen, (255, 250, 240), panel, border_radius=28)
-            title = typography.render(
-                "Choose a language",
-                FontRole.TITLE,
-                max(30, min(44, height // 13)),
-                (61, 44, 31),
-            )
-            screen.blit(title, title.get_rect(center=(panel.centerx, panel.top + 42)))
-            hint = typography.render(
-                "Language  •  Lingua",
-                FontRole.BODY,
-                max(17, min(22, height // 28)),
-                (118, 104, 93),
-            )
-            screen.blit(hint, hint.get_rect(center=(panel.centerx, panel.top + 78)))
-
-            count = len(SUPPORTED_SYSTEM_LANGUAGES)
-            # The previous 12-language 3x4 table left two very wide, tiny
-            # buttons stranded at the top once only EN/IT became selectable.
-            # Keep the product choice group centered and child/parent-sized.
-            columns = min(count, 2 if width >= 540 else 1)
-            rows = (count + columns - 1) // columns
-            gap = max(8, min(14, width // 80))
-            grid_available = panel.width - 2 * max(18, width // 28)
-            grid_width = min(grid_available, 620 if columns == 2 else 380)
-            grid_left = panel.centerx - grid_width // 2
-            grid_right = grid_left + grid_width
-            button_h = max(44, min(66, height // 7))
-            continue_h = max(44, min(54, height // 10))
-            row_h = button_h + gap
-            group_h = rows * row_h - gap + continue_h + 36
-            grid_top = max(panel.top + 98, panel.centery - group_h // 2)
-            # At unusually short resolutions the button must remain inside
-            # the actual viewport rather than moving behind Continue.
-            grid_top = min(grid_top, panel.bottom - group_h - 14)
-            cell_w = (grid_right - grid_left - gap * (columns - 1)) // columns
-            hit_targets: list[tuple[int, Any]] = []
             pointer_position = pygame.mouse.get_pos()
-
-            for index, language in enumerate(SUPPORTED_SYSTEM_LANGUAGES):
-                row, column = divmod(index, columns)
-                cell = pygame.Rect(
-                    grid_left + column * (cell_w + gap),
-                    grid_top + row * row_h,
-                    cell_w,
-                    button_h,
-                )
-                selected = index == selected_index
-                hovered = cell.collidepoint(pointer_position)
-                pygame.draw.rect(
-                    screen,
-                    (255, 194, 52)
-                    if selected
-                    else ((252, 241, 211) if hovered else (247, 235, 203)),
-                    cell,
-                    border_radius=16,
-                )
-                pygame.draw.rect(
-                    screen,
-                    (61, 44, 31),
-                    cell,
-                    width=3 if selected else (2 if hovered else 1),
-                    border_radius=16,
-                )
-                flag = typography.render(
-                    language.flag,
-                    FontRole.DISPLAY,
-                    max(24, min(34, button_h - 14)),
-                    (61, 44, 31),
-                )
-                screen.blit(flag, flag.get_rect(midleft=(cell.left + 14, cell.centery)))
-                label = typography.render(
-                    language.native_name,
-                    FontRole.CONTROL,
-                    max(16, min(21, height // 30)),
-                    (61, 44, 31),
-                )
-                screen.blit(
-                    label,
-                    label.get_rect(midleft=(cell.left + 62, cell.centery)),
-                )
-                hit_targets.append((index, cell))
-
-            continue_rect = pygame.Rect(0, 0, min(240, panel.width // 3), continue_h)
-            continue_rect.midtop = (panel.centerx, grid_top + rows * row_h + 26)
-            pygame.draw.rect(screen, (255, 194, 52), continue_rect, border_radius=18)
-            continue_label = typography.render(
-                "Continue",
-                FontRole.CONTROL,
-                max(19, min(24, height // 25)),
-                (61, 44, 31),
-            )
-            screen.blit(continue_label, continue_label.get_rect(center=continue_rect.center))
-            _draw_pointer(screen, pygame, pointer)
-
-            pygame.display.flip()
+            if dirty:
+                chooser.draw(screen, pygame, pointer_position=pointer_position)
+                _draw_pointer(screen, pygame, pointer)
+                pygame.display.flip()
+                dirty = False
             if first_frame:
                 first_frame = False
-                _release_boot_cover()
+                if not released["cover"]:
+                    _release_boot_cover()
 
             for event in pygame.event.get():
+                dirty = True
                 if event.type == pygame.QUIT:
                     if demo:
-                        return SUPPORTED_SYSTEM_LANGUAGES[selected_index].locale
+                        return chooser.locale
                     continue
                 if event.type == pygame.VIDEORESIZE and (windowed or demo):
                     screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
-                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    for index, rect in hit_targets:
-                        if rect.collidepoint(event.pos):
-                            selected_index = index
-                            break
-                    if continue_rect.collidepoint(event.pos):
-                        return SUPPORTED_SYSTEM_LANGUAGES[selected_index].locale
-                elif event.type == pygame.KEYDOWN:
-                    if event.key in {pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE}:
-                        return SUPPORTED_SYSTEM_LANGUAGES[selected_index].locale
-                    if event.key in {pygame.K_RIGHT, pygame.K_TAB}:
-                        selected_index = (selected_index + 1) % count
-                    elif event.key == pygame.K_LEFT:
-                        selected_index = (selected_index - 1) % count
-                    elif event.key == pygame.K_DOWN:
-                        selected_index = min(count - 1, selected_index + columns)
-                    elif event.key == pygame.K_UP:
-                        selected_index = max(0, selected_index - columns)
+                    continue
+                chosen = chooser.handle_event(event, pygame)
+                if chosen is not None:
+                    return chosen
             clock.tick(60)
     finally:
-        typography.clear()
+        chooser.look.clear()
+        chooser.typography.clear()
         pygame.display.quit()
         pygame.quit()
 

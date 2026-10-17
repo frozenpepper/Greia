@@ -85,11 +85,25 @@ The install record may record only a non-secret fact such as `wifi_configured: t
 
 ## Persistence into the installed system
 
-The live installer tests the selected connection before treating it as configured.
+Carrying the joined network over is the reason the Wi-Fi page exists: the installed Greia must come up on the network the parent joined, without re-entering it in Greia Parents.
 
-When installation later copies/configures the target, Greia persists the exact successfully tested iwd network profile into the installed system's `/var/lib/iwd` state directory with private permissions. The target then uses its normal platform networking architecture to reconnect after first boot.
+The live installer tests the selected connection before treating it as configured. iwd itself writes the known-network file into the live system's root-only `/var/lib/iwd` when the join succeeds through the passphrase agent; the unprivileged UI never writes it.
+
+Hand-off across the installer privilege split (implementation owner: `src/greia_installer/wifi_carryover.py`):
+
+1. **Consent.** The network shown on the confirm page ("Wi-Fi: <network>") is the one carried over. A parent who skipped Wi-Fi, or whose machine had no adapter, carries nothing.
+2. **UI → root service.** The UI adds only two non-secret scalars to the `PREPARE_PLAN` settings snapshot: `wifi_ssid_hex` (the SSID as lowercase UTF-8 hex) and `wifi_security` (`open` or `psk`). They are part of the canonical, digest-bound plan. The passphrase never crosses the socket. Both keys or neither; anything malformed is refused at prepare.
+3. **Root copy.** `EXECUTE` takes the choice from the service-held plan, never from request bytes. After the payload is unpacked into the target and before the bootloader is installed, the engine copies **exactly that one network's** iwd file from live `/var/lib/iwd` to the target's `/var/lib/iwd` as `0600 root:root` inside a `0700` directory. The file name is derived from the validated SSID with iwd's own naming rule (`=<hex>` for anything other than letters, digits, space, `_`, `-`), so an SSID can never address a path. No other live network state is read or copied.
+4. **Refusals.** The source must be a regular, root-owned, single-link file of at most 8 KiB that is not group/world-writable, read without following symlinks; a PSK file must contain a `[Security]` passphrase or pre-shared key. The target directory is reached without following symlinks. An open network with no live file gets the equivalent secret-free profile (`AutoConnect=true`).
+5. **Failure is non-fatal.** Any refusal or I/O error leaves the installed system without Wi-Fi (re-join from Greia Parents) and the install still succeeds. One `greia-install-tx: wifi_carryover outcome=… reason=… security=…` line goes to the service journal, with no SSID and no secret. `install-record.json` records only `wifi_configured: true/false`, now meaning "a profile landed on the target".
+
+On the target, `iwd.service` is enabled by image composition, iwd's main configuration keeps `EnableNetworkConfiguration=false`, and `systemd-networkd` runs DHCP on `wl*` links. iwd auto-connects known networks, so the copied profile joins on first boot without any first-boot import step.
 
 The live installer may use a different bounded networking implementation from the installed system when doing so keeps the installer simpler. In the current Phase-0 implementation, live iwd owns temporary DHCP/DNS configuration, while the installed target retains iwd authentication plus systemd-networkd address configuration.
+
+**Scope limit (A/B layouts).** The single-root (`bios-single-ext4`) install engine performs the copy. The fresh A/B installer does not yet: its durable network state belongs on PERSIST (`network-state` namespace, bound to `/var/lib/iwd`), and that bind is not mounted at boot yet, so a copy there would be invisible. The A/B path logs `reason=unsupported-ab-layout` instead.
+
+Evidence: SOURCE only (`tests/test_installer_wifi_carryover.py`). Acceptance criterion 7 below still needs a physical install.
 
 ## Hardware/profile rule
 

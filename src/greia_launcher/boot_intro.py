@@ -14,6 +14,12 @@ Key design invariants:
   display regardless of resolution or aspect ratio;
 - plays only when a one-shot boot marker is absent under ``/run/greia-os``;
 - fail-soft: any asset/decode problem is ignored and boot proceeds.
+
+Frame discovery, viewport fitting and duration-based frame selection are
+shared with the live installer through :mod:`greia_platform.boot_animation`;
+this module keeps the launcher-owned one-shot marker, boot KPIs and systemd
+readiness. The timing literals below must equal the shared ones (pinned by
+``tests/test_installer_boot_intro.py``).
 """
 
 from __future__ import annotations
@@ -24,6 +30,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from greia_platform import boot_animation
 from greia_platform.boot_markers import emit_boot_marker
 
 
@@ -35,7 +42,7 @@ _RENDER_INTERVAL_SECONDS = 1.0 / 60.0
 
 _ONE_SHOT_MARKER = Path("/run/greia-os/boot-intro-played")
 _DEFAULT_LOGO = Path("/opt/greia-os/assets/boot/static/greia-boot-logo.png")
-_DEFAULT_FRAMES_DIR = Path("/opt/greia-os/assets/boot/frames")
+_DEFAULT_FRAMES_DIR = boot_animation.DEFAULT_FRAMES_DIR
 
 
 def _boot_marker() -> Path:
@@ -72,34 +79,12 @@ def skip_intro() -> bool:
 
 
 def _candidate_frames_dirs() -> list[Path]:
-    candidates: list[Path] = []
-    override = os.environ.get("GREIA_BOOT_FRAMES_DIR")
-    if override:
-        candidates.append(Path(override))
-    candidates.append(_DEFAULT_FRAMES_DIR)
-    root = Path(__file__).resolve().parents[2]
-    candidates.append(root / "assets" / "boot" / "frames")
-    return candidates
+    return boot_animation.candidate_frame_directories()
 
 
 def load_animation_frames(pygame: Any) -> list[Any]:
     """Load the sequential animation frames, or an empty list on failure."""
-    for directory in _candidate_frames_dirs():
-        if directory.is_dir():
-            files = sorted(
-                directory.glob("frame_*.png"),
-                key=lambda p: p.name,
-            )
-            if files:
-                loaded = []
-                try:
-                    for f in files:
-                        loaded.append(pygame.image.load(str(f)))
-                    if loaded:
-                        return loaded
-                except Exception:  # noqa: BLE001
-                    pass
-    return []
+    return boot_animation.load_frames(pygame, _candidate_frames_dirs())
 
 
 def load_logo() -> Any | None:
@@ -128,7 +113,7 @@ def _background_rgb(logo: Any) -> tuple[int, int, int]:
     coded, independent of any image content.
     """
 
-    return (255, 255, 255)
+    return boot_animation.BACKGROUND_RGB
 
 
 def _draw_canvas(
@@ -138,20 +123,9 @@ def _draw_canvas(
     *,
     scale: float = 1.0,
 ) -> None:
-    width, height = screen.get_size()
-    screen.fill(_background_rgb(logo))
-    base_scale = min(width / max(1, logo.get_width()), height / max(1, logo.get_height()))
-    target_scale = max(0.01, base_scale * scale)
-    logo_w = max(1, int(round(logo.get_width() * target_scale)))
-    logo_h = max(1, int(round(logo.get_height() * target_scale)))
-    try:
-        if logo_w == logo.get_width() and logo_h == logo.get_height():
-            scaled = logo
-        else:
-            scaled = pygame.transform.smoothscale(logo, (logo_w, logo_h))
-    except Exception:  # noqa: BLE001
-        scaled = logo
-    screen.blit(scaled, scaled.get_rect(center=(width // 2, height // 2)))
+    boot_animation.draw_canvas(
+        screen, pygame, logo, scale=scale, background=_background_rgb(logo)
+    )
 
 
 def _draw_frame(
@@ -160,21 +134,7 @@ def _draw_frame(
     frame: Any,
 ) -> None:
     """Draw one animation frame centered on screen at full height."""
-    width, height = screen.get_size()
-    screen.fill(_background_rgb(frame))
-    frame_w = frame.get_width()
-    frame_h = frame.get_height()
-    if frame_h != height:
-        scale = height / max(1, frame_h)
-        target_w = max(1, int(round(frame_w * scale)))
-        try:
-            scaled = pygame.transform.smoothscale(frame, (target_w, height))
-        except Exception:  # noqa: BLE001
-            scaled = frame
-    else:
-        scaled = frame
-    rect = scaled.get_rect(center=(width // 2, height // 2))
-    screen.blit(scaled, rect)
+    boot_animation.draw_frame(screen, pygame, frame, background=_background_rgb(frame))
 
 
 def _draw_progress_bar(screen: Any, pygame: Any, progress: int) -> None:
@@ -401,8 +361,9 @@ def _run_intro_guarded(
             elapsed = time.monotonic() - animation_start
             if elapsed >= ANIMATION_SECONDS:
                 break
-            ratio = max(0.0, min(1.0, elapsed / ANIMATION_SECONDS))
-            frame_idx = min(total_frames - 1, int(ratio * total_frames))
+            frame_idx = boot_animation.frame_index(
+                elapsed, total_frames, ANIMATION_SECONDS
+            )
             _draw_frame(screen, pygame, frames[frame_idx])
             pygame.display.flip()
             _pump_display(pygame)

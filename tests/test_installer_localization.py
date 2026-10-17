@@ -64,8 +64,10 @@ class InstallerLocalizationTests(unittest.TestCase):
         # An SSID-bearing status line is intentionally not semantically parsed.
         self.assertEqual(translator.text("Wi-Fi: Casa"), "Wi-Fi: Casa")
 
-    def test_unselectable_staged_translations_are_available_for_review(self) -> None:
-        self.assertEqual([item.locale for item in SUPPORTED_SYSTEM_LANGUAGES], ["en", "it"])
+    def test_released_four_language_translations_are_selectable(self) -> None:
+        self.assertEqual(
+            [item.locale for item in SUPPORTED_SYSTEM_LANGUAGES], ["en", "it", "es", "fr"]
+        )
         self.assertEqual(InstallerTranslator("es").text("Continue"), "Continuar")
         self.assertEqual(InstallerTranslator("fr").text("Continue"), "Continuer")
         self.assertEqual(InstallerTranslator("es-ES").text("Start"), "Empezar")

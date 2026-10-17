@@ -6,6 +6,7 @@ import json
 import os
 import string
 import subprocess
+import sys
 import tempfile
 import time
 import uuid
@@ -46,6 +47,7 @@ from .hardware_support_install import (
 )
 from .power import PowerSupplyProbe
 from .wifi import IwdNetworkProfile
+from .wifi_carryover import IwdProfileCarryover, WifiCarryoverChoice
 
 
 class InstallationError(RuntimeError):
@@ -65,6 +67,11 @@ class InstallRequest:
     locale: str = "en"
     payload_digest: Path | None = None
     wifi_profile: IwdNetworkProfile | None = None
+    #: Non-secret choice of the network joined on the installer's Wi-Fi page.
+    #: The root service fills it from the confirmed plan; the engine copies
+    #: that one network's iwd profile from live iwd state into the target
+    #: (best-effort, see :mod:`greia_installer.wifi_carryover`).
+    wifi_carryover: WifiCarryoverChoice | None = None
     hardware_support_pool: Path | None = field(
         default_factory=lambda: _optional_path_from_environment(
             "GREIA_HARDWARE_SUPPORT_POOL"
@@ -146,8 +153,10 @@ class InstallationEngine:
         power_probe: InstallationPowerProbe | None = None,
         target_policy: InstallTargetPolicy | None = None,
         live_resolver: LiveMediaResolver | None = None,
+        wifi_carryover: IwdProfileCarryover | None = None,
     ):
         self.project_root = project_root.resolve()
+        self.wifi_carryover = wifi_carryover or IwdProfileCarryover()
         self.runner = runner or SubprocessRunner()
         self.probe = probe or LsblkDiskProbe()
         self.grub_password_hasher = grub_password_hasher
@@ -617,6 +626,31 @@ class InstallationEngine:
             hasher=self.grub_password_hasher,
         )
 
+    def _carry_over_wifi(self, target_root: Path, request: InstallRequest) -> bool:
+        """Persist the installer-joined network into the target; never fatal.
+
+        Wi-Fi is never a prerequisite for a finished install, so a failed copy
+        leaves an installed system without Wi-Fi (re-join from Greia Parents)
+        instead of failing the install. Returns whether a profile landed.
+        """
+        if request.wifi_carryover is not None:
+            outcome = self.wifi_carryover.carry_over(request.wifi_carryover, target_root)
+            return outcome.copied
+        if request.wifi_profile is not None:
+            # In-process callers (demo/tests) that already hold the tested
+            # profile; the production root service uses ``wifi_carryover``.
+            try:
+                request.wifi_profile.write_to(target_root)
+            except OSError:
+                print(
+                    "greia-install-tx: wifi_carryover outcome=skipped reason=write-failed",
+                    file=sys.stderr,
+                    flush=True,
+                )
+                return False
+            return True
+        return False
+
     def _write_initial_configuration(
         self,
         target_root: Path,
@@ -627,11 +661,7 @@ class InstallationEngine:
         state_dir = target_root / "var/lib/greia-system-settings"
         store = HardwareSettingsStore.load(defaults, state_dir)
         store.replace(request.hardware_settings)
-        if request.wifi_profile is not None:
-            try:
-                request.wifi_profile.write_to(target_root)
-            except OSError as exc:
-                raise InstallationError("could not save the selected Wi-Fi network") from exc
+        wifi_configured = self._carry_over_wifi(target_root, request)
         record_dir = target_root / "etc/greia-os"
         record_dir.mkdir(parents=True, exist_ok=True)
         record = {
@@ -642,7 +672,7 @@ class InstallationEngine:
             "hardware_settings": request.hardware_settings.as_json_dict(),
             # Never put SSIDs, profile contents or Wi-Fi credentials into the
             # ordinary installation record. This boolean is enough for support.
-            "wifi_configured": request.wifi_profile is not None,
+            "wifi_configured": wifi_configured,
             # Package names are support-state metadata, not raw hardware
             # inventory. Do not persist modaliases, sysfs paths or driver/device
             # serial information in the ordinary installation record.
