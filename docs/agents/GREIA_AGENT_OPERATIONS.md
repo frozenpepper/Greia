@@ -453,6 +453,13 @@ Binding rules:
   unexpected squashfs-superblock failure after a clean `mksquashfs`), check
   `sudo dmesg | grep -i 'I/O error'` before touching source; treat it as a
   disk fault until proven otherwise.
+- Run the front door in a private mount namespace on a desktop build host:
+  `sudo -n unshare --mount --propagation private -- bash tools/build-and-flash-development-usb.sh <profile> /dev/sdX <out> ...`.
+  Without it (2026-10-17, orbiter), the chroot rootfs mount was copied into the
+  private mount namespaces of ~10 system services (logind, NetworkManager…), so
+  the host-side unmount could not release the loop and a reboot was needed.
+  Desktop hosts also auto-mount the stick's `sdX1`; unmount it with
+  `udisksctl unmount` before the front door (it refuses a mounted target).
 - Loop audit after every build/run (success, failure, interrupt):
   `sudo losetup -a | grep greia` must be empty. Any shell path that creates a
   `losetup --partscan` loop must use `build/lib/safe-cleanup.sh` and
