@@ -271,6 +271,59 @@ class NoNullConsoleRegressionTests(unittest.TestCase):
                 self.assertEqual(consoles, ["console=tty1"])
 
 
+class LiveInstallerQuietScreenTests(unittest.TestCase):
+    """2026-10-17 QEMU findings after the console fix: no text may reach VT1."""
+
+    LIVE_ENTRIES = (
+        "build/live-syslinux/syslinux-quiet.cfg.in",
+        "build/live-syslinux/syslinux.cfg.in",
+        "build/build-installer-image.sh",
+        "tools/prepare-antix-sd-boot.sh",
+    )
+
+    def test_every_live_entry_disables_live_boot_ifupdown_preconfiguration(self) -> None:
+        # Without it live-boot's Netbase() printed "/init: line 29: can't
+        # create /root/etc/network/interfaces" (the live root uses networkd).
+        for rel in self.LIVE_ENTRIES:
+            with self.subTest(source=rel):
+                text = (ROOT / rel).read_text(encoding="utf-8")
+                lines = [
+                    line for line in text.splitlines()
+                    if "boot=live" in line and not line.lstrip().startswith("#")
+                ]
+                self.assertTrue(lines)
+                for line in lines:
+                    self.assertIn(" nonetworking ", f" {line} ")
+        from greia_platform.boot_contract import LIVE_REQUIRED_ARGUMENTS
+
+        self.assertIn("nonetworking", LIVE_REQUIRED_ARGUMENTS)
+
+    def test_installer_restarts_after_a_crash_behind_the_cover(self) -> None:
+        unit = (
+            ROOT / "build/installer-overlay/etc/systemd/system/greia-installer.service"
+        ).read_text(encoding="utf-8")
+        directives = [line.strip() for line in unit.splitlines() if not line.startswith("#")]
+        # xinit is the main process and exits 0 after a client traceback, so
+        # on-failure never fired.
+        self.assertIn("ExecStart=/usr/bin/xinit", unit)
+        self.assertIn("Restart=always", directives)
+        self.assertNotIn("Restart=on-failure", directives)
+        interval = next(d for d in directives if d.startswith("StartLimitIntervalSec="))
+        burst = next(d for d in directives if d.startswith("StartLimitBurst="))
+        self.assertGreaterEqual(int(interval.split("=")[1]), 300)
+        self.assertLessEqual(int(burst.split("=")[1]), 6)
+        self.assertIn(
+            "ExecStopPost=+/usr/local/lib/greia-os/installer-exit-cover", directives
+        )
+        helper = ROOT / "build/installer-overlay/usr/local/lib/greia-os/installer-exit-cover"
+        self.assertTrue(os.access(helper, os.X_OK))
+        script = helper.read_text(encoding="utf-8")
+        self.assertIn("/usr/lib/greia-boot/greia-fb-splash", script)
+        self.assertIn("exit 0", script)
+        verifier = (ROOT / "build/lib/verify-composed-root.sh").read_text(encoding="utf-8")
+        self.assertIn("installer-exit-cover", verifier)
+
+
 class RcProfileTests(unittest.TestCase):
     def test_rc_profile_is_base_composition_plus_developer_remote_and_quiet(self) -> None:
         base = BuildProfile.load(ROOT / "build/profiles/legacy-x86-i686.toml")
@@ -561,6 +614,9 @@ class SharedArtifactVerifierTests(unittest.TestCase):
         put("usr/lib/greia/pycache/opt/greia-os/src/greia_platform/boot_contract.cpython-311.pyc")
         put("usr/bin/aplay", "#!/bin/sh\n")
         os.chmod(root / "usr/bin/aplay", 0o755)
+        put("usr/local/lib/greia-os/installer-exit-cover",
+            (ROOT / "build/installer-overlay/usr/local/lib/greia-os/installer-exit-cover").read_text())
+        os.chmod(root / "usr/local/lib/greia-os/installer-exit-cover", 0o755)
         assets = root / "opt/greia-os/assets"
         for rel in ("boot/frames/frame_0000.png", "boot/frames/frame_0051.png",
                     "audio/system/greia-boot-chime.wav", "catalog/shared_visuals_v1.toml"):
@@ -583,6 +639,12 @@ class SharedArtifactVerifierTests(unittest.TestCase):
             root = self.make_live_root(raw)
             result = self.verify_live(root)
             self.assertEqual(result.returncode, 0, result.stderr)
+            # A crash-restart regression (back to on-failure) is refused.
+            unit = root / "etc/systemd/system/greia-installer.service"
+            original = unit.read_text(encoding="utf-8")
+            unit.write_text(original.replace("Restart=always", "Restart=on-failure"), encoding="utf-8")
+            self.assertIn("does not restart after a crash", self.verify_live(root).stderr)
+            unit.write_text(original, encoding="utf-8")
             (root / "opt/greia-os/assets/visual/runtime/v1/characters/leo_happy.png").unlink()
             result = self.verify_live(root)
             self.assertNotEqual(result.returncode, 0)

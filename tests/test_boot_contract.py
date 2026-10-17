@@ -186,7 +186,7 @@ class BootContractTests(unittest.TestCase):
         live_args = (
             GOOD_LINE
             + " boot=live components live-media-path=/live"
-            + " live-media-timeout=15 nopersistence noeject silent overlay-size=128M"
+            + " live-media-timeout=15 nopersistence noeject nonetworking silent overlay-size=128M"
             + f" greia.live_media_id={media_id}"
         )
         validate_grub_text(config(live_args), live_installer=True)
@@ -212,7 +212,7 @@ class BootContractTests(unittest.TestCase):
         base = (
             GOOD_LINE
             + " boot=live components live-media-path=/live live-media-timeout=15"
-            + " nopersistence noeject silent overlay-size=128M"
+            + " nopersistence noeject nonetworking silent overlay-size=128M"
         )
         for bad in (
             "greia.live_media_id=not-a-uuid",
@@ -230,7 +230,7 @@ class BootContractTests(unittest.TestCase):
         live_args = (
             GOOD_LINE
             + " boot=live components live-media-path=/live live-media-timeout=15"
-            + " nopersistence noeject silent overlay-size=128M"
+            + " nopersistence noeject nonetworking silent overlay-size=128M"
             + f" greia.live_media_id={media_id}"
         )
         for duplicate in (

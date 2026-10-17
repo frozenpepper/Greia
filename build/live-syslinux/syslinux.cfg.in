@@ -18,4 +18,4 @@ TIMEOUT 0
 LABEL live
     LINUX /vmlinuz
     INITRD /initrd.img
-    APPEND boot=live components live-media-path=/ live-media-timeout=30 nopersistence noeject overlay-size=128M greia.live_media_id=LIVE_MEDIA_ID console=tty1 panic=0 loglevel=4 systemd.show_status=true rd.systemd.show_status=true systemd.crash_shell=no udev.log_priority=4 vt.global_cursor_default=1 consoleblank=0
+    APPEND boot=live components live-media-path=/ live-media-timeout=30 nopersistence noeject nonetworking overlay-size=128M greia.live_media_id=LIVE_MEDIA_ID console=tty1 panic=0 loglevel=4 systemd.show_status=true rd.systemd.show_status=true systemd.crash_shell=no udev.log_priority=4 vt.global_cursor_default=1 consoleblank=0

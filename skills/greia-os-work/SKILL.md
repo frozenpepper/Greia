@@ -126,6 +126,14 @@ docs/design/GREIA_BOOT_PROGRESS.md
 
 Do not modify physical boot/recovery state from memory.
 
+Live installer recovery source (2026-10-17): live entries require
+`nonetworking` (disables live-boot ifupdown setup, not userspace iwd/networkd).
+`greia-installer.service` owns bounded `Restart=always` retries and invokes
+`installer-exit-cover` after stopping; xinit's successful exit cannot be used
+to infer that the installer client succeeded. Exact limits and paths belong
+to the unit/helper and `build/lib/verify-composed-root.sh`. Rebuilt-image and
+physical quiet-screen/recovery evidence remain separate from source tests.
+
 ## Installer, image composition or build pipeline
 
 Read:

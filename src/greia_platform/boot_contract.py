@@ -79,6 +79,12 @@ LIVE_REQUIRED_ARGUMENTS = {
     "live-media-timeout=15",
     "nopersistence",
     "noeject",
+    # live-boot's Netbase() otherwise writes an ifupdown file into
+    # /root/etc/network/interfaces. The Greia live root uses systemd-networkd
+    # and has no /etc/network, so it printed "/init: line 29: can't create
+    # /root/etc/network/interfaces" on the quiet screen and ran a pointless
+    # initramfs `udevadm trigger; udevadm settle`.
+    "nonetworking",
     "silent",
     "overlay-size=128M",
 }

@@ -16,6 +16,10 @@
 # ("Bad file descriptor") and the kernel panics before any pixel is drawn.
 # That froze the 2026-10-17 RC stick on the Syslinux banner (QEMU-reproduced).
 #
+# nonetworking: the live root uses systemd-networkd and has no /etc/network;
+# without it live-boot's Netbase() prints "/init: line 29: can't create
+# /root/etc/network/interfaces" on screen (and runs a useless udev settle).
+#
 # Verbose recovery path (owner only, no menu is ever shown to a child): hold
 # Shift or Alt (or switch Caps Lock / Scroll Lock on) while the stick boots.
 # Syslinux then shows its "boot:" prompt; type   verbose   and press Enter.
@@ -33,9 +37,9 @@ TIMEOUT 0
 LABEL live
     LINUX /vmlinuz
     INITRD /initrd.img
-    APPEND boot=live components live-media-path=/ live-media-timeout=30 nopersistence noeject overlay-size=128M greia.live_media_id=LIVE_MEDIA_ID silent quiet splash loglevel=0 console=tty1 panic=0 systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0
+    APPEND boot=live components live-media-path=/ live-media-timeout=30 nopersistence noeject nonetworking overlay-size=128M greia.live_media_id=LIVE_MEDIA_ID silent quiet splash loglevel=0 console=tty1 panic=0 systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0
 
 LABEL verbose
     LINUX /vmlinuz
     INITRD /initrd.img
-    APPEND boot=live components live-media-path=/ live-media-timeout=30 nopersistence noeject overlay-size=128M greia.live_media_id=LIVE_MEDIA_ID console=tty1 panic=0 loglevel=4 systemd.show_status=true rd.systemd.show_status=true systemd.crash_shell=no udev.log_priority=4 vt.global_cursor_default=1 consoleblank=0
+    APPEND boot=live components live-media-path=/ live-media-timeout=30 nopersistence noeject nonetworking overlay-size=128M greia.live_media_id=LIVE_MEDIA_ID console=tty1 panic=0 loglevel=4 systemd.show_status=true rd.systemd.show_status=true systemd.crash_shell=no udev.log_priority=4 vt.global_cursor_default=1 consoleblank=0

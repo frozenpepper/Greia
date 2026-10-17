@@ -362,6 +362,18 @@ For the reference Acer, do not substitute the generic raw GRUB/MBR installer for
 
 Developer-image convenience must not leak into normal/release profiles.
 
+### Live installer quiet-screen recovery (source contract, 2026-10-17)
+
+Live boot entries include `nonetworking` to prevent live-boot's ifupdown
+preconfiguration from writing console errors; userspace iwd/networkd still
+owns connectivity. `greia-installer.service` uses `Restart=always` because
+xinit can return zero after its client crashes. Its retry budget is five
+starts per 300 seconds; `installer-exit-cover` attempts to repaint the existing
+framebuffer cover on stop. Inspect the unit's journal and failed state when
+retries are exhausted. These source mechanisms require rebuilt-image and
+physical visual/recovery acceptance; a successful contract test does not prove
+a text-free transition or available Wi-Fi/SSH on a particular image.
+
 ### Capable build-host process rules (2026-09-15 — `POSTR1-P5-GATE-CLOSURE-V12E`, R01-03)
 
 - Pass the A/B release bundle as an explicit builder input:

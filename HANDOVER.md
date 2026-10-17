@@ -63,6 +63,31 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-17 — Installer quiet-boot and crash-recovery source publication
+
+**Evidence class: SOURCE.** `make verify` passed on the installer changes
+over parent `672ae9101`: 5,395 fast-lane tests, 8 skipped, project/Activity
+validation, shell syntax and source footprint checks. Log:
+`/tmp/greia-installer-commit-verify.log` (local transient evidence).
+The installer changes preserved from the working tree add `nonetworking` to
+live GRUB/Syslinux/SD entries and the live boot contract. This disables
+live-boot's ifupdown preconfiguration; userspace iwd/networkd ownership is
+unchanged. The installer unit uses `Restart=always` because xinit can exit
+successfully after its client crashes, with five starts per 300 seconds and
+an `ExecStopPost` helper that attempts to repaint the existing framebuffer
+cover. The composed-root verifier requires the restart policy and executable
+helper; regression tests cover these contracts.
+
+**Scope:** source publication only. Comments in the inherited changes report
+QEMU observations, but this turn has not rerun QEMU, built/flashed an image,
+installed a device or established physical visual acceptance. Video work is
+excluded from this commit.
+
+**Next exact step:** validate the rebuilt RC image through the existing
+lifecycle/runbook route, including Wi-Fi availability, installer crash/retry
+exhaustion, quiet-screen handoff and owner recovery. Earlier release and
+hardware blockers remain open.
+
 ## 2026-10-17 — Release-candidate preparation (SOURCE; image not yet built)
 
 **Evidence class: SOURCE** (`make test` 5,353 OK at d253e6c2) **+ PHYSICAL** for the Acer parity audit and mic measurements. Nothing below has run in a built image yet.

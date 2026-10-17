@@ -13,8 +13,13 @@ Wants=iwd.service systemd-resolved.service systemd-networkd.service avahi-daemon
 Wants=greia-install-transaction.socket
 After=local-fs.target systemd-logind.service iwd.service systemd-resolved.service systemd-networkd.service greia-install-transaction.socket
 Conflicts=getty@tty1.service
-StartLimitIntervalSec=30
-StartLimitBurst=4
+# Bounded retry budget for Restart=always below: at most 5 starts per 5 min.
+# The window must be much longer than one crash cycle (Python import + Xorg
+# start takes several seconds on the Acer), otherwise a crash loop never
+# reaches the limit and restarts forever. Once exhausted the unit stays failed
+# behind the Greia cover painted by ExecStopPost; SSH remains for diagnosis.
+StartLimitIntervalSec=300
+StartLimitBurst=5
 
 [Service]
 Type=simple
@@ -67,8 +72,18 @@ ExecStartPre=+/usr/local/lib/greia-os/prepare-installer-vt
 # detached. This replaces the old StandardInput=null workaround, which denied
 # the X server its VT and made the graphical installer impossible.
 ExecStart=/usr/bin/xinit /usr/local/lib/greia-os/greia-installer-client -- :0 vt1 -logfile /run/greia-installer/Xorg.0.log -keeptty -novtswitch -background none -quiet -nolisten tcp -noreset
-Restart=on-failure
+# Restart=always, not on-failure: the service's main process is xinit, and
+# xinit exits 0 whenever its client ends, even when the installer Python died
+# with a traceback (exit 1). With on-failure a crash therefore left the text
+# console on screen and never restarted (QEMU 2026-10-17: "greia-installer.service:
+# Deactivated successfully" right after a traceback). In production the UI never
+# exits on purpose: completion calls `systemctl poweroff`, and systemd does not
+# restart units during shutdown.
+Restart=always
 RestartSec=2
+# Repaint the Greia cover after every stop so VT1 never shows text between a
+# crash and the restart, nor after the retry budget is exhausted.
+ExecStopPost=+/usr/local/lib/greia-os/installer-exit-cover
 # The X server must own the controlling terminal. TTYPath alone does not make
 # the service the controlling process of that TTY; StandardInput=tty-fail does.
 # `tty-fail` rather than `tty-force` is deliberate: if something genuinely owns

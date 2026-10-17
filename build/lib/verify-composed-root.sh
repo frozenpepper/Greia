@@ -99,6 +99,13 @@ greia_verify_composed_root() {
       _greia_root_fail "$label" "installer unit does not use the bytecode prefix"
     grep -Eq '^SupplementaryGroups=(.*[[:space:]])?audio([[:space:]]|$)' "$unit" || \
       _greia_root_fail "$label" "installer UI cannot open ALSA for the boot chime (no audio group)"
+    # xinit exits 0 even when the installer Python crashes, so only
+    # Restart=always restarts it; ExecStopPost keeps VT1 on the Greia cover.
+    grep -Fqx 'Restart=always' "$unit" || \
+      _greia_root_fail "$label" "installer unit does not restart after a crash (xinit exits 0)"
+    grep -Fqx 'ExecStopPost=+/usr/local/lib/greia-os/installer-exit-cover' "$unit" && \
+      [[ -x "$root/usr/local/lib/greia-os/installer-exit-cover" ]] || \
+      _greia_root_fail "$label" "installer unit does not repaint the cover after it stops"
     # Installer look + boot intro assets (src/greia_installer/presentation.py,
     # boot_intro.py). The catalogue must load strictly or the UI silently
     # falls back to procedural art.

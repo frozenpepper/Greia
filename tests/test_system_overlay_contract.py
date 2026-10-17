@@ -391,6 +391,7 @@ class SystemOverlayContractTests(unittest.TestCase):
             "live-media-timeout=15",
             "nopersistence",
             "noeject",
+            "nonetworking",
             "silent",
             "overlay-size=128M",
             "consoleblank=0",

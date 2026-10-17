@@ -92,7 +92,7 @@ menuentry 'Greia installer from SD' {
     insmod part_msdos
     insmod ext2
     search --no-floppy --fs-uuid --set=root $SD_UUID
-    linux /live/vmlinuz boot=live components live-media-path=/live live-media-timeout=30 nopersistence noeject silent overlay-size=128M greia.live_media_id=$MEDIA_ID quiet splash loglevel=0 console=tty1 panic=5 systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0
+    linux /live/vmlinuz boot=live components live-media-path=/live live-media-timeout=30 nopersistence noeject nonetworking silent overlay-size=128M greia.live_media_id=$MEDIA_ID quiet splash loglevel=0 console=tty1 panic=5 systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0
     initrd /live/initrd.img
 }
 EOF

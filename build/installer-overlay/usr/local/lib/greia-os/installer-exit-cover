@@ -1,0 +1,18 @@
+#!/bin/sh
+# ExecStopPost of greia-installer.service (runs as root via the '+' prefix).
+#
+# When the graphical installer stops for any reason (a Python crash, an Xorg
+# start failure, or the final poweroff), Xorg has already handed VT1 back to
+# the text console, which would show the Syslinux banner and any early boot
+# lines. Repaint the Greia cover so the screen never falls back to text while
+# systemd restarts the installer, and so that it stays Greia-owned if the
+# restart budget (StartLimitBurst) is exhausted.
+#
+# Fail-soft by design: no framebuffer or renderer means nothing to paint, and
+# this helper must never turn a stop into a unit failure.
+renderer=/usr/lib/greia-boot/greia-fb-splash
+chvt 1 >/dev/null 2>&1 || true
+if [ -c /dev/fb0 ] && [ -x "$renderer" ]; then
+  "$renderer" >/dev/null 2>&1 || true
+fi
+exit 0

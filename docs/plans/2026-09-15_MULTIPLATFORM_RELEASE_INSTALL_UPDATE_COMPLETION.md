@@ -2610,3 +2610,24 @@ USB flash, first-boot, QEMU, rollback, release packaging or
 C0 footprint acceptance was executed. Prior lifecycle blockers
 and install/update/release scope remain unchanged; the new
 four-language plan does not replace this plan.
+
+
+### 2026-10-17 — Installer quiet-screen/restart source publication
+
+Owner requested publication of existing installer work, excluding video files.
+Live GRUB/Syslinux/SD kernel arguments and `LIVE_REQUIRED_ARGUMENTS` now include
+`nonetworking` to suppress live-boot ifupdown preconfiguration on the networkd
+live root. The installer service restarts even when xinit exits zero after a
+client crash (`Restart=always`), with a five-start/300-second retry budget.
+The new root-owned `installer-exit-cover` stop helper attempts a fail-soft
+repaint through the existing framebuffer renderer; the composed-root verifier
+requires the helper and restart policy. Existing regression tests were extended.
+
+`make verify` passed on these installer changes over parent `672ae9101`:
+5,395 fast-lane tests, 8 skipped, project/Activity validation, shell syntax
+and source footprint checks (local log `/tmp/greia-installer-commit-verify.log`).
+Evidence scope is SOURCE only:
+no image build/flash, QEMU rerun, physical install, boot, Wi-Fi or recovery
+acceptance is claimed here. This preserves the current lifecycle phase and
+its open gates. Next: validate the rebuilt RC through the existing image and
+physical acceptance route, including retry exhaustion and quiet-screen recovery.
