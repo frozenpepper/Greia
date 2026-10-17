@@ -26,7 +26,7 @@ Every running child-facing Activity must have a Greia-owned **Home** control tha
 - cannot have its input intercepted or vetoed by Activity code;
 - still returns to Greia when an Activity hangs or refuses graceful shutdown, using the platform's bounded forced-return path.
 
-Home ends the current Activity and returns to the child's root Greia Shell/home surface.
+Home ends the current Activity and returns to the Greia Shell surface it was launched from: the Collection page (e.g. a theme folder such as the Sea folder) when it was launched from one, otherwise the child's Home surface. (Owner decision 2026-10-17: keep the launch Collection, so a child can pick a related Activity straight away.)
 
 An Activity may provide its own in-content exit or navigation controls, but those never replace the Greia Home control.
 
@@ -104,7 +104,7 @@ For each supported runtime/backend combination, verify that:
 2. The Activity cannot cover or restyle Home.
 3. Pointer/touch inside Home is consumed by Greia and not delivered to the Activity.
 4. A reserved controller Guide/system input, when supported by the hardware/backend, is consumed by Greia and not delivered to Activity content.
-5. Home requests graceful stop and returns to Shell.
+5. Home requests graceful stop and returns to the Shell surface it was launched from (Collection or Home).
 6. An uncooperative/frozen Activity is forcibly returned after the platform deadline.
 7. Back appears only when Greia has a distinct launch origin and returns there.
 8. Web content cannot intercept the system controls or turn Back into browser history.
