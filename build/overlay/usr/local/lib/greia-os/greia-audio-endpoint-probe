@@ -8,19 +8,38 @@
 #
 # /run is tmpfs, so markers are cleared by every boot and can never become
 # stale persistent state under /var.
+#
+# Every outcome is written to stderr (the journal under systemd): a missing
+# marker used to leave "-- No entries --" behind, which hid that the plugin
+# module itself was absent from the image. The capture is bounded by
+# `timeout` because the oneshot unit has no start timeout of its own, and a
+# capture that stalls (the documented failure of a rate conversion below the
+# denoise ExtPlug) must not hold boot forever.
 set -u
 
-RUN_DIR=/run/greia-audio
+RUN_DIR="${GREIA_AUDIO_RUN_DIR:-/run/greia-audio}"
+PROBE_SECONDS="${GREIA_AUDIO_PROBE_TIMEOUT:-10}"
 mkdir -p "$RUN_DIR"
+
+log() {
+	echo "greia-audio-endpoint-probe: $*" >&2
+}
 
 probe() {
 	endpoint="$1"
 	marker="$2"
-	if arecord -D "$endpoint" -f S16_LE -r 16000 -c 1 -d 1 \
-		--dump-hw-params >/dev/null 2>&1 </dev/null; then
+	if output="$(timeout "$PROBE_SECONDS" arecord -q -D "$endpoint" \
+		-f S16_LE -r 16000 -c 1 -d 1 -t raw /dev/null 2>&1 </dev/null)"; then
 		: >"$marker"
+		log "$endpoint ready"
 	else
+		status=$?
 		rm -f "$marker"
+		reason="$(printf '%s\n' "$output" | tail -n 2 | tr '\n' ' ')"
+		if [ "$status" -eq 124 ]; then
+			reason="capture did not finish within ${PROBE_SECONDS}s"
+		fi
+		log "$endpoint unavailable (exit $status): ${reason:-no output}"
 	fi
 }
 

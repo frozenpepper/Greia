@@ -24,7 +24,8 @@
  * Measured stationary-noise suppression at 48 kHz was far weaker than the
  * same preprocessor in its specified range.
  *
- * ALSA composition (see runtime/alsa/greia-activity-overrides.conf):
+ * ALSA composition (build/overlay/etc/asound.conf; routed Activities reach it
+ * through runtime/alsa/greia-activity-overrides.conf):
  *   plug (app-rate/format/channels conversion, pins 48 kHz mono S16)
  *     -> greia_denoise ExtPlug (FIR decimate -> SpeexDSP -> FIR interpolate)
  *     -> plughw capture slave
@@ -354,6 +355,7 @@ SND_PCM_PLUGIN_DEFINE_FUNC(greia_denoise)
 	err = snd_pcm_extplug_create(&mic->ext, name, root, slave, stream,
 				     mode);
 	if (err < 0) {
+		free(mic->out_fifo);
 		free(mic);
 		return err;
 	}
