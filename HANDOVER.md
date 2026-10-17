@@ -63,6 +63,18 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-17 — Release-candidate preparation (SOURCE; image not yet built)
+
+**Evidence class: SOURCE** (`make test` 5,353 OK at d253e6c2) **+ PHYSICAL** for the Acer parity audit and mic measurements. Nothing below has run in a built image yet.
+
+**Owner decisions:** next image is a release candidate (`build/profiles/legacy-x86-i686-rc.toml`): quiet boot/login, SSH on, one build; four languages released (en/it/es/fr, selectors offer exactly these); missing voice lines approved; image ceiling 1,300 MiB; Wi-Fi joined in the installer must carry over; first-boot profile wizard; build only on the owner's Debian Mac mini (192.168.68.113, no Docker), flash only the 8 GB LaCie — key auth + passwordless sudo to be set up by the owner (agents never type passwords).
+
+**Landed:** parity audit (`docs/reviews/acer/2026-10-17_ACER_REPO_PARITY_AUDIT.md`), pre-mortem (`docs/reviews/2026-10-17_RC_IMAGE_PREMORTEM.md`), RC build source (3a4455d1: console policy, operator public key, bounded `greia-devctl source-deploy`, netdev, loud mic plugin build + `power_save=0`, live installer assets, persistent dev journal; runbook `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` §13), mic filter config/probe fixes (20e35480; review `docs/reviews/acer/2026-10-17_ACER_MIC_NOISE_FILTER.md` — image-built plugin was missing on the Acer), Parent panel polish (8232b7c3), installer redesign + boot animation + Wi-Fi carry-over (d79b0b38, 3b391572), first-boot wizard (c822d2d8), Shell controller routing (e6f6f523), four-language release + 1,557 voice lines + device-locale fix (d253e6c2; ledger `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/VOICE_RECORDING_LEDGER_2026-10-17.csv`).
+
+**Open:** wiring of ~34 MiB recorded-but-unplayed Activity lines (in progress); 53 short new clips flagged for a human listen; the current Acer needs `tools/dev_source_deploy.py --legacy-generic-sudo` until reimaged; quiet-boot recovery paths unproven on the Acer; A/B installs don't carry Wi-Fi.
+
+**Next exact step:** owner provides the Mac mini account (key + NOPASSWD sudo) → freeze a commit, run the pre-build gates (premortem G1–G11), build `legacy-x86-i686-rc` with `--operator-key`, verify, flash the identified LaCie, install on the Acer through the graphical installer, then run the first-boot checklist (premortem F1–F19).
+
 ## 2026-10-17 — Acer: playable games, mouse-first controls, launch hand-off, faster launches
 
 **Evidence class: PHYSICAL (developer Acer, remote `xdotool` input — not physical-input evidence) + SOURCE.** Details and tables: `docs/reviews/acer/2026-10-16_ACER_ACTIVITY_SWEEP.md` (sections from "Game verification at fce322b9" to "Final child-path sweep at 4d6e9c5e"); `make test` green at each commit (last 5,157 tests).
