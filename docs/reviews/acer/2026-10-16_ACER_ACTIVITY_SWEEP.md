@@ -755,3 +755,83 @@ The "completely unusable" state the owner reported is not reproduced on this bui
   - about 17 history sessions;
   - Activity events and progress from real play (colline level finished with 3 stars, ponti and biglia rounds 1–2, labirinto maze 1, delfino, quattro_amici moves);
   - standalone treno_numeri ran with a throwaway data dir under `/tmp`, now removed.
+
+---
+
+## Final child-path sweep at 4d6e9c5e
+
+**Evidence class:** PHYSICAL DEVICE + remote input injection (`xdotool` as `greiakid` on `:0`). Every visible Activity was launched from its Home → Collection (or Mare folder) tile.
+**Deployed:** `/opt/greia-os/.deployed-sha` = `4d6e9c5e…`. The Shell had been running about 1 minute when the sweep began, so first launches include the once-per-session validation.
+
+**Launch filming.** A persistent Xlib prober issues the tap itself, then samples six 1024×2 screen strips (y = 20/120/240/360/480/580) at about 80–95 Hz. It saves a full frame at every change. A sample counts as **black** when a strip's mean luminance is below 25.
+
+**The filmer costs launch time.** Matched pairs:
+
+| Activity | Repeat launch, filmed | Repeat launch, unfilmed |
+|---|---|---|
+| workshop_settings | 7.95 s | 6.00 s |
+| painting | 8.42 s | 5.90 s |
+| sottomarino_giramondo | 6.71 s | 4.29 s |
+| colline_allegre | 7.65 s | 5.22 s |
+
+The filmer adds roughly 0.3–2.5 s, so **filmed times are pessimistic**. Unfilmed repeats are the clean numbers.
+
+### F.1 Launch path (36 visible Activities)
+
+| Metric | Earlier | 4d6e9c5e |
+|---|---|---|
+| Tap → Shell launch card visible | – (no card; Collection showed "AVVIO…" and the screen went black) | **453–960 ms, median 849 ms** (the press feedback "AVVIO…" shows first at about 50–400 ms) |
+| Tap → first Activity frame, **first launch** after Shell start (filmed) | 15212f44: READY median 7.4 s (unfilmed) | median **7.85 s** (6.4–13.8 s). Above 10 s: enciclopedia 13.8, shape_garden 13.2, workshop 12.6, storie 12.5, sottomarino 11.1, morbidi 10.6, biglia 10.6 |
+| Tap → READY, **repeat launch, unfilmed** | – | **4.3–8.2 s**: sottomarino 4.29, colline 5.22, enciclopedia 5.27 (from 13.97 on first launch), painting 5.90, workshop 6.00, writing 6.08, shape_garden 6.41, delfino 8.15 |
+| Black frames between Home and the Activity | first sweeps: long black gap (not measured) | **exactly 1 per launch in all 44 filmed launches**, lasting **51–83 ms (median 65 ms)**. Full-screen (6 of 6 strips) in 31 launches, partial in 13. It occurs about 1.1–5.6 s before the first Activity frame. A captured full frame is solid black (`film_colline_R_08`). Sequence: Shell card → **black ≤83 ms** → card again (now painted by the Activity) → first Activity frame |
+| Home chrome on the first Activity frame | – | **absent on the first frame(s)**: appears about 0.2 s later (colline) and up to 2.3 s later (painting, under filmer load) |
+| Home → session ended | 0.48–2.05 s | 0.50–1.85 s, except nanna_delle_nuvolette **2.9 s `forced_stop`** |
+
+Launch sequence frames: `~/.cache/greia-acer-test/launch_4d6e9c5e.png` (colline repeat: Collection → press feedback → card → black frame → Activity-painted card → first Activity frame → frame with Home chrome).
+
+### F.2 Games while playing, and rest after the last input (60 s, pointer parked)
+
+| Game | fps while active, fce322b9 → 4d6e9c5e | Activity CPU playing | CPU 60 s after the last input, fce322b9 → 4d6e9c5e | Mixer after rest |
+|---|---|---|---|---|
+| colline_allegre (mouse GO/BRAKE) | 23–24 → **24** (21.2 mean incl. braking) | 53% | 51% → **20.7%** | closed |
+| volo_draghetto | ~12 (thin strip at y=250) → 12 on the same strip; **24.0 steady on a 40-px band through the stars while flying** | 36–37% (was 77–84%) | 90% → **11.0%** | closed |
+| quattro_amici (token drop, board box) | 6–7 → **10–16 changes/s** | 39% (was 88%) | 14% → 8.7% | closed |
+| acquario_magico | 9–23 → **19–25** (20.2 mean) | 42% (was 85%) | 19% → 14.3% | closed |
+| viaggio_delfino | 23–25 → **24 steady** | 51% | 28% → 20.7% | closed |
+| sottomarino_giramondo | 23–25 → 14–24, with a 3 s static stretch after surfacing | 50% | 11% → 14.2% | **still `RUNNING` after 60 s** |
+| baia_delle_orche (event-driven) | bursts 18–24 → bursts 14–22 | 51% | 13% → 13.6% | closed |
+| costruiamo_ponti (VIA! run) | 18–24 → **19–20** during the run | 22% | 10% → 9.3% | closed. The keycap hint is now shown (top left) |
+
+Notes:
+- The volo comparison shows that the fce322b9 "12 fps" verdict was partly an artifact of where the probe strip sat. On the same thin strip it is still 12, but motion across the playfield is 24 fps.
+- "Rest" is not 0% for scenes left mid-level (colline and delfino at about 20%); they settle without the mixer.
+
+### F.3 colline_allegre: the first 6 s after READY
+
+Right was held from the moment READY was seen (about 0.2–0.5 s after the first frame). The prober counted presented frames in the hills strip:
+- 133 frames in 6 s (about 22 fps);
+- **2 stalls longer than 100 ms**: 160 ms at +0.54 s and 112 ms at +2.88 s.
+
+### F.4 Shell and health
+
+| Metric | a8be76d7 / fce322b9 | 4d6e9c5e |
+|---|---|---|
+| Home idle over 60 s | 2.4–2.7% | **2.7%**, PCM closed |
+| Shell RSS after visiting every Collection page and launching all 36 visible Activities | 96–105 MB (a8be76d7) | **107 MB** peak (start 66 MB) |
+| `NRestarts` / OOM / launcher journal errors since the 02:01 deploy | 0 / 0 / none | **0 / 0 / none** |
+| MemAvailable at the end | – | 615 MB |
+
+### F.5 Remaining issues, ranked
+
+1. **One black frame per launch (51–83 ms, full-screen in 70% of launches).** It falls between the Shell card and the Activity-painted card, most likely the moment the Activity's X window maps before its first paint at `set_mode`. It is short but visible. Painting the card into the window before mapping, or giving the window an X background or back-pixmap, should remove it.
+2. **First launch after Shell start costs 5–8 s more for some Activities.** enciclopedia 13.97 → 5.27 s on repeat; workshop 12.75 → 6.00; shape_garden 13.41 → 6.41. This is the per-session validation, as designed, but a child's first tap after boot is the slow one. Consider warming the validation cache in the background after Home appears.
+3. **Home chrome is missing on the Activity's first frame(s)** for 0.2–2.3 s. This needs a check against ADR 0019's "always present" rule.
+4. **nanna_delle_nuvolette needed `forced_stop` on Home (2.9 s).** All others stopped gracefully in ≤2.0 s.
+5. **sottomarino_giramondo keeps the mixer `RUNNING` after 60 s with no input.** The other 7 games closed it.
+6. **colline_allegre has 2 stalls longer than 100 ms in its first 6 s** (160 ms and 112 ms).
+
+### F.6 Device state left
+
+- Shell on Home (star count 2), same PID throughout, `NRestarts` 0.
+- `/tmp/gs` and `/tmp/gsweep.py` deleted; no settings changed.
+- New data: about 60 history sessions from launches, game progress from scripted play, and a second star earned during play.
