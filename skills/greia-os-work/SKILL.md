@@ -659,6 +659,8 @@ provider-free suite and display acceptance still pending.
 
 Home during the launch (ADR 0019 *Launch phase*): `TrustedChromeActivitySupervisor.start` prepares **and shows** the trusted chrome (`SystemChromeCoordinator.launch_started`) as soon as the session exists; `activity_ready` only restacks it. Before that, the Shell draws the backend's Home *picture* on its launch screen (`supervisor.paint_launch_home` → `SystemChromeCoordinator.paint_launch_picture` → optional backend `paint_launch_picture`; Legacy-X palette in `system_chrome_legacy_x.py`, pure-Pygame painter in `system_chrome_picture.py`), so the card carries it too. Home before READY (trusted chrome, a tap queued on the Shell's launch screen, or the controller guide button) calls `cancel_launch`: an immediate bounded `force_stop(FORCED_STOP)` of a process that has presented nothing; after READY Home stays the graceful stop. When the card is consumed (Activity window mapped) the Shell calls `ensure_system_chrome_visible` to raise Home again. A new chrome backend must keep: show at launch, restack at READY, optional picture. Tests: `tests/test_activity_launch_cover.py`, `tests/test_trusted_chrome_supervisor.py` (`LaunchPhaseHomeTests`), `tests/test_system_chrome.py`, `tests/test_system_chrome_legacy_x.py`. ADR 0037 §6a *Launch cover*.
 
+Return tap guard: after any launch ends, the Shell ignores taps in the top-left Home/Back corner for 1.5 s (`greia_launcher.return_tap_guard`, wired in `main.py`/`presentation.py`), because a child's repeated Home tap otherwise lands on the Shell's profile button under the same spot and logs the profile out. Taps elsewhere act immediately. Test: `tests/test_launcher_return_tap_guard.py`.
+
 
 ### Launch-time package validation cost (2026-10-17)
 

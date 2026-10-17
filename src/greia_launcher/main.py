@@ -69,6 +69,7 @@ from .composition import (
 from .display_session import DisplaySessionError
 from .launch_feedback import launch_feedback
 from .foreground_cadence import ActivityForegroundCadence
+from .return_tap_guard import ReturnTapGuard
 from .launch_timing import ready_timeout_for
 from .key_chord import KeyChordTracker
 from .lifecycle import ActivityExitReason, ActivityResult, ActivitySessionState
@@ -873,7 +874,8 @@ class LauncherApplication:
                         if hasattr(event, "pos"):
                             pygame.mouse.set_pos(event.pos)
                     elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                        self._handle_click(event.pos, pygame)
+                        if not self._return_tap_swallowed(event.pos):
+                            self._handle_click(event.pos, pygame)
                     elif event.type == pygame.VIDEORESIZE and self.windowed:
                         screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
                     else:
@@ -1132,6 +1134,7 @@ class LauncherApplication:
         finally:
             if launch_card_dir is not None:
                 self._launch_card_publisher.discard(launch_card_dir)
+            self._arm_return_tap_guard(pygame)
 
     def _publish_launch_card(self, manifest: ActivityManifest, pygame: Any) -> Path | None:
         """Publish the presented launch screen as this launch's card.
@@ -1422,6 +1425,31 @@ class LauncherApplication:
         self._launch_home_box = (
             paint(screen, pygame) if callable(paint) and screen is not None else None
         )
+
+    def _arm_return_tap_guard(self, pygame: Any) -> None:
+        """The Shell is back in front: ignore a stray Home/Back tap for a moment.
+
+        See :mod:`greia_launcher.return_tap_guard`: a repeated Activity Home
+        tap must not land on the active-profile switcher drawn underneath it.
+        """
+
+        screen = pygame.display.get_surface()
+        if screen is None:
+            self._return_tap_guard = ReturnTapGuard()
+            return
+        width, height = screen.get_size()
+        self._return_tap_guard = ReturnTapGuard.after_activity(
+            width,
+            height,
+            time.monotonic(),
+            home_box=getattr(self, "_launch_home_box", None),
+        )
+
+    def _return_tap_swallowed(self, position: tuple[int, int]) -> bool:
+        """Whether a primary release is a stray tap aimed at an ended Activity's chrome."""
+
+        guard = getattr(self, "_return_tap_guard", None)
+        return guard is not None and guard.swallows(position, time.monotonic())
 
     def _launch_home_tapped(self, pygame: Any, events: tuple[Any, ...]) -> bool:
         """Whether a primary release landed on the launch screen's Home."""

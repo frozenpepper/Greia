@@ -547,7 +547,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                         if self._mode == "parent_panel":
                             if not self._parent_panel.handle_click(event.pos):
                                 self._exit_parent_panel(pygame)
-                        else:
+                        elif not self._return_tap_swallowed(event.pos):
                             self._handle_click(event.pos, pygame)
                     elif event.type == pygame.MOUSEWHEEL and self._mode == "activities":
                         self._scroll_activity_rows(-event.y, pygame)

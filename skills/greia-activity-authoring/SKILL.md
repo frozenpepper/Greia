@@ -52,6 +52,7 @@ Follow every line to get a decent Activity before any live test. Numbers are Ace
 - Speech: shared cast lines and the vocab bank, locale → base → English → silence; fully playable in silence; no new voice lines without owner acceptance (§7A, §8).
 
 **Data and language**
+- Never emit facts (or write storage) on the frame thread in a tap's path: an emit is a synchronous broker round trip (Acer: 61–86 ms, outliers 0.5–1.6 s), so quattro_amici froze the falling disc 95–618 ms after every child tap; a bounded one-worker FIFO (`GreiaQuattroEvents`, `GreiaDelfinoEvents`) brought release → first falling frame to 31–58 ms.
 - Event/idempotency keys ≤64 bytes (`runtime/history-policy.toml`); declare a bound for every new interpolated value in `tests/test_activity_event_key_bounds.py` (§10).
 - Text only via `resources.text(key, variables)` (`$name` placeholders), resolved once; no fixed-language fallback sentences; manifests advertise only released locales (en, it) (§7A).
 

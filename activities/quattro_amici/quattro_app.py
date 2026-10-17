@@ -297,6 +297,9 @@ class QuattroApp:
                 frames.wait(polling=self._input.repeating)
         finally:
             self.typography.clear()
+            close = getattr(self.events, "close", None)
+            if callable(close):
+                close()  # hand queued facts to Greia (bounded) before exit
         return 0
 
     def step(self, dt: float | None = None) -> bool:

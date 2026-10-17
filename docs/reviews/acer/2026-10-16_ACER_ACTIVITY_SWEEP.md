@@ -835,3 +835,80 @@ Right was held from the moment READY was seen (about 0.2–0.5 s after the first
 - Shell on Home (star count 2), same PID throughout, `NRestarts` 0.
 - `/tmp/gs` and `/tmp/gsweep.py` deleted; no settings changed.
 - New data: about 60 history sessions from launches, game progress from scripted play, and a second star earned during play.
+
+---
+
+## Launch hand-off verification at df4454c6
+
+**Evidence class:** PHYSICAL DEVICE + remote input injection (XTest taps as `greiakid` on `:0`, not physical touchpad). **Deployed:** `/opt/greia-os/.deployed-sha` = `df4454c6…`; the Shell had restarted at 04:25 (deploy), so "first" below is the first launch in that Shell session. All launches went through the real Home → Collection (or Mare folder) tile.
+
+**Method.** One persistent Xlib connection issues the tap itself (XTest) and then samples six 1024×2 strips (y = 20/120/240/360/480/580) plus the 64×64 Home box at 60–107 Hz, saving a half-scale full frame at every change. *Black* = any strip with mean luminance < 25. Frames are classified against a reference launch card (centre and mascot masked) and a reference Home picture. Filmed times are pessimistic (the filmer costs the Atom 0.3–2.5 s per launch, see §F).
+
+### H.1 Thirteen launches
+
+| Launch | Tap → card (Home visible) | Tap → trusted chrome shown | Tap → first Activity frame | Black frames |
+|---|---|---|---|---|
+| colline_allegre first / repeat / repeat | 0.93 / 0.79 / 1.02 | 4.51 / 3.23 / 1.68 | 10.39 / 9.09 / 7.54 | 0 / 0 / 0 |
+| viaggio_delfino first / repeat | 0.75 / 0.78 | 3.89 / 6.25 | 13.17 / 15.50 | 0 / 0 |
+| enciclopedia_greia first / repeat | 0.81 / 0.79 | 9.00 / 2.34 | 14.56 / 7.96 | 0 / 0 |
+| workshop_settings first / repeat | 1.00 / 0.78 | 3.03 / 2.13 | 9.84 / 8.89 | 0 / 0 |
+| nanna_delle_nuvolette first / repeat | 0.82 / 0.78 | 3.25 / 1.83 | 9.93 / 8.03 | 0 / 0 |
+| painting first / repeat | 1.06 / 0.80 | 2.74 / 2.01 | 9.32 / 8.44 | 0 / 0 |
+
+- **Black frames: 0 in 13 launches (and 0 in the 2 cancels)**, against exactly one 51–83 ms black frame per launch at 4d6e9c5e.
+- **Home is visible from the launch card**, 0.75–1.06 s after the tap (median 0.80 s), as the Shell's picture; the trusted chrome takes over at 1.7–9.0 s and is on every first Activity frame (it was missing for 0.2–2.3 s at 4d6e9c5e).
+- Sequence: Collection → card with Home picture → card with trusted Home → (Activity window maps over the card) → first Activity frame.
+- **New small glitch:** in 4 of 13 launches the trusted Home showed as an **empty white capsule for 112–139 ms** when it was raised again at window map (glyph not yet painted). In enciclopedia's repeat the Activity window briefly covered the trusted chrome (picture visible underneath) for ~160 ms before the restack.
+- viaggio_delfino's repeat (15.5 s) was slower than its first launch (13.2 s): the trusted chrome, shown when `supervisor.start` returns, came only at 6.25 s, so start-up work before the session existed took ~5.5 s on a repeat. Not investigated further.
+
+### H.2 Home tapped during loading (cancel)
+
+| Case | Home tapped | Shell (Collection) back | Profile kept |
+|---|---|---|---|
+| sottomarino_giramondo, tap on the launch card's Home picture | 2.01 s after the tile tap | 4.28 s (**2.27 s after Home**) | yes |
+| viaggio_delfino repeat, tap on the trusted chrome (window mapped, no Activity frame yet) | 8.01 s | 8.76 s (**0.75 s after Home**) | yes |
+
+The picture tap is only read once `supervisor.start` returns (the Shell is busy validating/starting): here the trusted chrome appeared at 4.03 s and the cancel completed 0.25 s later. The 0.21–0.24 s in df4454c6's commit is the cancel itself, not tap → Shell.
+
+### H.3 Two Home taps logged the child out: reproduced and fixed in source
+
+Reproduced at df4454c6: colline_allegre running from the GIOCA page, Home at +10.06 s, Home again at +11.00 s → Collection page at 11.13 s → **profile picker at 11.26 s**. Cause: the protected Activity Home (hit box 8,8,60×60) overlaps the Shell's active-profile switcher (14,10,85×85, `switch_profile` → `_logout`) drawn at the same corner on Home and on every Collection page. The second tap arrives after the Activity window is gone and lands on the switcher.
+
+Documented rule: Home "ends the current Activity and returns to the child's root Greia Shell/home surface" (`docs/product/ACTIVITY_SYSTEM_NAVIGATION.md`; ADR 0019 §1). Switching child is a separate Shell action (ADR 0012 state diagram: `Workshop --> ProfilePicker: switch child`). A logout from a repeated Home tap is therefore a bug.
+
+Fix (SOURCE, not yet on the device): `src/greia_launcher/return_tap_guard.py`. When the Shell regains the foreground after any launch (normal return, cancel, crash, failed start), it ignores primary releases inside the protected Home+Back footprint for 1.5 s; taps elsewhere work at once. Test: `tests/test_launcher_return_tap_guard.py`.
+
+Also found: Activity Home actually returns to the **launch-origin Collection page**, not to root Home as the product document says (and Back is offered only for enciclopedia). This is not changed here; it needs an owner decision on which document is right.
+
+### H.4 quattro_amici token drop
+
+| Measurement | Result |
+|---|---|
+| In-situ (Shell, df4454c6): frame intervals inside each drop (5 column strips in the board at ~200 Hz, 2 × 30 s) | **median 40–46 ms (22–25 fps)**, at the 24 fps floor cap; per-drop mean 18–24 fps including one 80–146 ms stall in about half the drops |
+| Same data counted in 1 s buckets (the method behind "10–16 fps") | 5–17 changes/s, because a drop lasts only 0.3–0.85 s. **The earlier figure was a counting artifact**, not the frame rate |
+| Render cost (standalone, df4454c6 code, real X window) | render 9.4 ms + present 2.2 ms + flip 5.4 ms = **17 ms/frame median** (57 fps potential). Board, discs and plate already blit as RLE; nothing is scaled, alpha-set or text-rendered per frame |
+| Real event-broker round trip for `quattro.token_dropped` (8 emits against the live session) | **61–86 ms**, outliers 516 ms and 1,644 ms |
+
+The stall was the synchronous `emit_activity_event` in `_execute_drop`: every child drop waited for the broker before its first falling frame. Leo's drops, which emit nothing, had no start stall.
+
+Fix: `GreiaQuattroEvents` now hands facts to one bounded daemon worker (FIFO of 16, order kept, overflow dropped and counted, fail-soft). The app closes it with a 1 s bound when its loop ends. Visuals are unchanged.
+
+Before/after, STANDALONE copy against the live session's real broker (45 s each, real loop and audio, taps via XTest):
+
+| | df4454c6 | fixed |
+|---|---|---|
+| Child tap release → first falling-disc frame | **95–618 ms** (one 4.2 s outlier) | **31–58 ms** (first drop 132 ms) |
+| Per-drop mean fps (12 child drops) | 20.4–24.1 | 21.5–24.5 |
+| Drop frame interval median | 41.8 ms | 41.7 ms |
+
+Remaining: the first one or two drops of a session still have one 90–145 ms interval (first-use cue synthesis and kit/score-plate painting). In-situ Shell measurement of the fix needs a deploy.
+
+### H.5 Device state left
+
+- Shell on Home, profile GRETA, `NRestarts` 0, launcher and parent services active, MemAvailable 613 MB.
+- `/tmp/r5` and `/tmp/r5.png` removed. No settings changed. No Activity was deployed or modified on the device.
+- New data:
+  - about 17 history sessions;
+  - quattro_amici, colline and painting play;
+  - **8 test `quattro.token_dropped` facts** (idempotency keys `rtt-…`) from the broker round-trip measurement;
+  - standalone quattro runs (fake progress store; their events reached the live session's broker).

@@ -45,6 +45,7 @@ from activities.quattro_amici.quattro_model import (  # noqa: E402
 )
 from activities.quattro_amici.quattro_services import (  # noqa: E402
     STORAGE_KEY,
+    GreiaQuattroEvents,
     GreiaQuattroProgress,
     QuattroProgress,
 )
@@ -252,6 +253,53 @@ class QuattroProgressTests(unittest.TestCase):
         GreiaQuattroProgress(_Storage(refuse=True)).save(QuattroProgress(Ladder(2, 0)))
 
 
+class QuattroEventsTests(unittest.TestCase):
+    """Facts leave the frame thread: a slow broker never stalls a falling disc."""
+
+    def test_emit_returns_at_once_and_keeps_order_with_a_slow_broker(self) -> None:
+        delivered: list[tuple[str, str, dict]] = []
+
+        def slow_emitter(event_id, *, idempotency_key, payload):
+            time.sleep(0.15)  # the Acer broker commit held the loop 120-145 ms
+            delivered.append((event_id, idempotency_key, payload))
+
+        events = GreiaQuattroEvents(emitter=slow_emitter)
+        start = time.monotonic()
+        events.emit("quattro.token_dropped", "k1", {"column": 1})
+        events.emit("quattro.game_won", "k2", {"stage": 1})
+        self.assertLess(time.monotonic() - start, 0.05)
+        self.assertTrue(events.flush(timeout=2.0))
+        self.assertEqual([item[:2] for item in delivered], [("quattro.token_dropped", "k1"), ("quattro.game_won", "k2")])
+        self.assertEqual(delivered[0][2], {"column": 1})
+        events.close()
+
+    def test_a_stalled_broker_drops_and_counts_instead_of_growing(self) -> None:
+        import threading
+
+        gate = threading.Event()
+        events = GreiaQuattroEvents(queue_depth=4, emitter=lambda *a, **k: gate.wait(2.0))
+        for index in range(12):
+            events.emit("quattro.token_dropped", f"k{index}", {})
+        self.assertGreater(events.dropped_count, 0)
+        self.assertLessEqual(12 - events.dropped_count, 5)  # 4 queued + 1 in flight
+        gate.set()
+        self.assertTrue(events.flush(timeout=2.0))
+        events.close()
+
+    def test_failing_broker_is_fail_soft_and_close_drains(self) -> None:
+        calls: list[str] = []
+
+        def failing(event_id, **_):
+            calls.append(event_id)
+            raise OSError("broker gone")
+
+        events = GreiaQuattroEvents(emitter=failing)
+        events.emit("quattro.game_started", "a", {})
+        events.emit("quattro.match_completed", "b", {})
+        events.close(timeout=1.0)
+        self.assertEqual(calls, ["quattro.game_started", "quattro.match_completed"])
+
+
 class QuattroPackageTests(unittest.TestCase):
     def test_manifest_matches_the_real_game(self) -> None:
         from greia_platform.activities import ActivityRegistry, RuntimeCatalogue
@@ -398,6 +446,14 @@ class QuattroAppLoopTests(unittest.TestCase):
         for _ in range(int(seconds * 30)):
             self.now[0] += 1 / 30
             app.step()
+
+    def test_leaving_the_loop_hands_queued_facts_to_greia(self) -> None:
+        app, _, events, _ = self._app()
+        closed: list[int] = []
+        events.close = lambda: closed.append(1)  # type: ignore[attr-defined]
+        app.running = False
+        self.assertEqual(app.run(), 0)
+        self.assertEqual(closed, [1])
 
     def test_falling_disc_frames_blit_rle_copies_of_the_board_and_discs(self) -> None:
         from greia_platform.pygame_blit import is_rle
