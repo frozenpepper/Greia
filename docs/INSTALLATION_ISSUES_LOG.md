@@ -1703,3 +1703,29 @@ rule then kept the banner. Owner decision 2026-10-18 separates the two:
   (banner cleared at configuration time, `TIMEOUT 0`); QEMU verification of the
   rebuilt media and physical Acer re-acceptance remain the closure evidence
   (premortem F2).
+
+## 35. 2026-10-17 — Quiet RC froze on the Syslinux banner (`console=null`, no ttynull driver)
+
+First physical run of the redesigned RC installer: the key booted, showed the
+stock Syslinux banner, and then nothing. Root cause: the quiet live entries
+passed `console=null`. The Debian 686 kernel is built without `CONFIG_NULL_TTY`,
+so `console=null` leaves the system with no console at all; PID 1 starts
+without stdin/stdout/stderr, live-boot's `/init` dies at its first
+`exec 6>&1` ("Bad file descriptor"), PID 1 exits, and `panic=0` halts the
+kernel with the banner as the last framebuffer content. QEMU reproduced
+"unable to open an initial console" / "Attempted to kill init" from the current
+flashed image.
+
+Fix (`672ae910`, published with `ee7a40d1`): quiet keeps a real
+`console=tty1` and silences it with `quiet loglevel=0 show_status=false` plus
+cursor off; `boot_contract.py` gained `FATAL_CONSOLE_ARGUMENTS` and every
+template/verifier/test now rejects `console=null` or an empty `console=`.
+QEMU then reached the installer language screen.
+
+Verification pitfall found while reproducing: `-cpu pentium3` lacks SSE2, so
+Debian's i386 NumPy refuses to import, the installer client dies, and
+`Restart=always` plus `installer-exit-cover` repaint the Greia splash over the
+dead service — indistinguishable from a stalled image. Use `-cpu n270` or
+`build/verify-image-qemu.sh`. Root cause and fix are also recorded in
+`docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` §7 and in the 2026-10-18 QEMU
+evidence directories under `docs/reviews/acer/`.

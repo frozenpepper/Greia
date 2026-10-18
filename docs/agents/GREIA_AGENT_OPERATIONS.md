@@ -472,6 +472,13 @@ Binding rules:
   the host-side unmount could not release the loop and a reboot was needed.
   Desktop hosts also auto-mount the stick's `sdX1`; unmount it with
   `udisksctl unmount` before the front door (it refuses a mounted target).
+- QEMU verification of i386 media must use the reference-class CPU model:
+  `-cpu n270` (or let `build/verify-image-qemu.sh` pick it; it already prefers
+  `n270`). `-cpu pentium3` has no SSE2; Debian's i386 NumPy refuses to import,
+  the installer client dies, and the bounded `Restart=always` plus
+  `installer-exit-cover` repaint a clean Greia splash over the dead service — a
+  CPU-model artifact indistinguishable from a stalled image (2026-10-18).
+  Evidence: `docs/INSTALLATION_ISSUES_LOG.md` §35.
 - Loop audit after every build/run (success, failure, interrupt):
   `sudo losetup -a | grep greia` must be empty. Any shell path that creates a
   `losetup --partscan` loop must use `build/lib/safe-cleanup.sh` and

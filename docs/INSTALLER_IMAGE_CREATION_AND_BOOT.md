@@ -355,11 +355,15 @@ The front door refuses non-removable or mounted devices, but only the size/model
 
 ```bash
 mkdir -p ./out
-setsid nohup sudo -n bash tools/build-and-flash-development-usb.sh \
+setsid nohup sudo -n unshare --mount --propagation private -- \
+  bash tools/build-and-flash-development-usb.sh \
   legacy-x86-i686-rc /dev/sdX ./out \
   --operator-key ~/greia-operator.pub \
   > ./out/rc-build.log 2>&1 < /dev/null &
-# (setsid before sudo: see docs/agents/GREIA_AGENT_OPERATIONS.md, detached build+flash)
+# (setsid before sudo, and the private mount namespace: see
+# docs/agents/GREIA_AGENT_OPERATIONS.md §"Build-host disk health and
+# loop-device hygiene" — without unshare a desktop build leaks the chroot
+# rootfs mount into system-service namespaces and the loop cannot detach)
 tail -f ./out/rc-build.log
 ```
 
@@ -382,6 +386,10 @@ loop_hygiene_verification=PASS
 
 Also record from `out/greia-os-installer-legacy-x86-i686-rc-report.txt`: `sha256`, `boot_console_policy`, `boot_artwork_*`, `live_security_support_state`; and from the payload footprint report `accounted_mib` and `security_support_state`. Afterwards `losetup -a | grep greia` must be empty.
 
+For any QEMU check of i386 media use `build/verify-image-qemu.sh` or, manually, `-cpu n270` (the reference Atom class). `-cpu pentium3` has no SSE2; Debian's i386 NumPy refuses to load, the installer client dies, and the bounded `Restart=always` plus `installer-exit-cover` repaint a clean Greia splash over the dead service — a CPU-model artifact that looks exactly like a stalled image. See `docs/INSTALLATION_ISSUES_LOG.md` §35.
+
 ### 13.5 First boot
 
-Follow the Acer acceptance checklist in `docs/reviews/2026-10-17_RC_IMAGE_PREMORTEM.md` §5. Remote checks: `ssh -i <private key> greia@greia-rc.local` (installed) or `greia@greia-installer.local` (installer), `sudo -n /usr/local/sbin/greia-devctl status`, `journalctl -b -1` after any reboot. Check the hidden verbose paths once (F2). Wi-Fi joined in the installer is expected to carry over to the installed system once the installer hand-off lands (credentials in `/var/lib/iwd`, root-only); until then re-join from the Parent panel.
+Follow the Acer acceptance checklist in `docs/reviews/2026-10-17_RC_IMAGE_PREMORTEM.md` §5. Remote checks: `ssh -i <private key> greia@greia-rc.local` (installed) or `greia@greia-installer.local` (installer), `sudo -n /usr/local/sbin/greia-devctl status` (installed target; the live installer root ships SSH but not `greia-devctl`), `journalctl -b -1` after any reboot. Check the hidden verbose paths once (F2). Wi-Fi joined in the installer is expected to carry over to the installed system once the installer hand-off lands (credentials in `/var/lib/iwd`, root-only); until then re-join from the Parent panel.
+
+After the installer's completion power-off, remove the USB key before powering the machine on (the installer's completion screen says so). If the key stays inserted, the firmware boots the stick again; since 2026-10-18 the quiet media clears the stock Syslinux banner, so that re-boot shows only Greia artwork, but the installed system is on the internal disk.

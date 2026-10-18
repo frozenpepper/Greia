@@ -134,6 +134,16 @@ to infer that the installer client succeeded. Exact limits and paths belong
 to the unit/helper and `build/lib/verify-composed-root.sh`. Rebuilt-image and
 physical quiet-screen/recovery evidence remain separate from source tests.
 
+Quiet media presentation (owner decision 2026-10-18): the quiet Syslinux
+template clears the stock version/copyright banner with the one-byte
+`build/live-syslinux/clear.msg` (`DISPLAY /boot/syslinux/clear.msg`); the writer
+places the byte on quiet media only and the read-only verifier requires and
+byte-compares it, refusing any `DISPLAY` on the diagnostic/recovery template.
+`console=tty1` + `panic=0` stay (a panic still prints), and the hidden
+`verbose` label remains the recovery path. This separated the clear file from
+the fatal `console=null` rollback of 2026-08-20. See
+`docs/INSTALLATION_ISSUES_LOG.md` §34–§35.
+
 ## Installer, image composition or build pipeline
 
 Read:
