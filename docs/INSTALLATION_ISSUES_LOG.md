@@ -1763,3 +1763,13 @@ QEMU powers off cleanly through both `systemctl poweroff` and the ACPI power
 key, so it is hardware-specific). Next: reproduce with the hidden `verbose`
 boot (or a diagnostic-profile build) and capture the last visible shutdown
 stage before proposing a fix.
+
+Verification of the repair (2026-10-18, rebuilt media
+`369bb29b472708c3115f5125940baa83110765e63f6915a07d60e94a92ede5cd`,
+live media `7de4bafd-a7fc-4706-9833-96690929eaf8`): QEMU boot of the flashed
+stick showed `greia-installer-finish.path` active; creating the marker as the
+installer's own unprivileged identity
+(`sudo -u nobody touch /run/greia-installer/finish-request`) activated the
+root service and the VM performed a clean ACPI power-off (QEMU exited).
+Artifact and USB read-back verification both PASS; payload 1,203 MiB.
+Physical Acer retest remains the closure evidence for F18.

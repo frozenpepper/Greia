@@ -2709,6 +2709,13 @@ pressed, so the quiet child-facing boot is unchanged; on a failed or hung
 shutdown the parent sees the last stop job or kernel message instead of a mute
 black screen.
 
+Rebuilt and reflashed at `1284f6a1` (image
+`369bb29b472708c3115f5125940baa83110765e63f6915a07d60e94a92ede5cd`, live media
+`7de4bafd-a7fc-4706-9833-96690929eaf8`, payload 1,203 MiB; artifact, USB
+read-back and loop hygiene PASS). QEMU verified the new path: the finish path
+unit was active and an unprivileged `nobody` marker creation triggered the
+root service and a clean ACPI power-off.
+
 Still open for lifecycle closure: the physical/logind shutdown hang on the
 reference Acer (black screen, no power-off; QEMU powers off cleanly, so it is
 hardware-specific) and premortem F18's clean power-off acceptance. Next:
