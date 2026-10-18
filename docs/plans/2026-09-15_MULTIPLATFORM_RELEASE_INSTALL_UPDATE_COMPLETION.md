@@ -2631,3 +2631,32 @@ no image build/flash, QEMU rerun, physical install, boot, Wi-Fi or recovery
 acceptance is claimed here. This preserves the current lifecycle phase and
 its open gates. Next: validate the rebuilt RC through the existing image and
 physical acceptance route, including retry exhaustion and quiet-screen recovery.
+
+
+### 2026-10-18 — RC installer rebuilt/flashed; quiet boot QEMU-verified; physical acceptance next
+
+The 2026-10-17 RC physical freeze was root-caused on the actual stick: its
+`boot/syslinux/syslinux.cfg` used `console=null`, fatal on the Debian 686
+kernel (no ttynull; live-boot `init` dies, `panic=0` halts on the banner). The
+source fix is the published `672ae910` + `ee7a40d1` pair.
+
+`legacy-x86-i686-rc` was rebuilt at `ee7a40d1` and written to the 8 GB LaCie
+(`/dev/sdc`, iamaKey `eca3505216d7d3`) through the front-door components run in
+a private mount namespace (desktop-host rule in `GREIA_AGENT_OPERATIONS.md`).
+Artifact verification PASS, USB read-back verification PASS; image SHA-256
+`07240e27416b9801d8b981e43c383d79425697e545402e61d6964a18127b12ac`; live media
+id `22857a5a-9fdb-4d9c-923d-ab659eed38ff`; payload 1,203 MiB (<1,300 gate).
+
+The flashed media was QEMU-booted (snapshot; `-cpu n270`): the quiet Syslinux
+entry reaches the Greia boot splash and then the installer language screen with
+`greia-installer.service` active and no shell text. Evidence:
+`docs/reviews/acer/2026-10-18_RC_INSTALLER_QEMU_BOOT_VERIFICATION/`.
+Negative control: a `-cpu pentium3` run lacks SSE2, NumPy import fails, and the
+restart limit + exit cover make it look like a stalled splash; not an image
+defect.
+
+Open lifecycle gates: physical Acer install/first-boot, hidden verbose recovery
+path, installer crash/retry exhaustion on hardware, and the live-installer
+`greia-devctl` source/docs mismatch (§13.5 of the image-creation document).
+Host note: one kernel-pinned loop device remains from a non-namespaced attempt
+and clears on reboot.

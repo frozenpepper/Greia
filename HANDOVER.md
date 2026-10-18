@@ -63,6 +63,46 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-18 — RC installer rebuilt, flashed to the LaCie, QEMU-verified quiet boot
+
+**Evidence class: SOURCE build/flash gates + SIMULATOR VISUAL REVIEW (QEMU). No physical Acer install in this turn.**
+
+- **Root cause confirmed on the failing media:** the 2026-10-17 stick's
+  `boot/syslinux/syslinux.cfg` carried `console=null`. The Debian 686 kernel
+  has no `ttynull` driver, so PID 1 had no console and live-boot died before
+  anything rendered; `panic=0` left the Syslinux banner frozen on screen. The
+  source fix was already committed (`672ae910`: quiet = `console=tty1`;
+  `ee7a40d1`: restart + exit-cover recovery).
+- **Rebuilt and flashed:** `legacy-x86-i686-rc` at `ee7a40d1` with the operator
+  public key, written to `/dev/sdc` (LaCie iamaKey `eca3505216d7d3`).
+  `Developer installer artifact verification: PASS`,
+  `Greia live USB read-only verification: PASS`. Image SHA-256
+  `07240e27416b9801d8b981e43c383d79425697e545402e61d6964a18127b12ac`,
+  live media id `22857a5a-9fdb-4d9c-923d-ab659eed38ff`, target payload
+  1,203 MiB (below the 1,300 MiB owner gate).
+- **QEMU boot of the flashed media** (snapshot mode; stick unmodified):
+  Syslinux quiet entry → Greia boot splash (no kernel/systemd/login/cursor
+  text) → installer language screen, `greia-installer.service` active, Xorg on
+  `vt1`, no shell visible. Evidence and exact commands:
+  `docs/reviews/acer/2026-10-18_RC_INSTALLER_QEMU_BOOT_VERIFICATION/`.
+- **Host/build lessons:** run the front door inside
+  `unshare --mount --propagation private` on this desktop host. A plain run
+  leaked the chroot rootfs mount into ~18 system-service mount namespaces; loop
+  teardown then failed EBUSY. The leaked namespaces were cleaned manually, but
+  one kernel-pinned `/dev/loop37` remains and will clear on the next reboot.
+  QEMU i386 must use `-cpu n270` (or `build/verify-image-qemu.sh`, which picks
+  it): `pentium3` lacks SSE2, NumPy import fails, and the installer restart
+  budget trips `start-limit-hit` behind the Greia cover — a misleading
+  "stalled splash" with no image defect.
+- **Open:** physical Acer install/first-boot from this stick; hidden Syslinux
+  `verbose` recovery path once; the live installer root has SSH but no
+  `greia-devctl`/sudoers while `INSTALLER_IMAGE_CREATION_AND_BOOT.md` §13.5
+  lists a live `greia-devctl status` remote check (source/docs mismatch; the
+  installed target ships it).
+- **Next exact step:** install from this LaCie on the reference Acer through
+  the graphical installer, then run the premortem §5 F1–F19 first-boot
+  checklist.
+
 ## 2026-10-17 — Installer quiet-boot and crash-recovery source publication
 
 **Evidence class: SOURCE.** `make verify` passed on the installer changes
