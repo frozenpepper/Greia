@@ -26,10 +26,21 @@
 # That entry carries exactly the diagnostic arguments of syslinux.cfg.in
 # (console=tty1, status output, visible cursor).
 #
-# Not hidden by this file: the two short Syslinux lines (version banner and
-# "Loading ...") printed before the kernel starts. Hiding them needs the
-# clear-screen display-file trick that the 2026-08-20 regression review banned; it
-# requires an explicit owner decision and a physical Acer test first.
+# Stock SYSLINUX prints its version/copyright banner before it can parse this
+# file, and that text would otherwise persist through the quiet kernel and
+# initramfs until the Greia framebuffer cover paints (it even survives the
+# fbcon takeover, which redraws the console buffer). Owner decision
+# 2026-10-18: the quiet release-candidate path consumes the one-byte
+# form-feed DISPLAY file, which clears the banner at configuration time, so
+# the child never sees bootloader branding (only the short "Loading ..."
+# lines remain until the kernel starts). This is
+# presentation-only; a kernel/initramfs panic still prints its emergency
+# message on tty1 (panic=0), the diagnostic template stays fully observable,
+# and the verbose recovery entry below is unchanged. A physical Acer
+# re-acceptance of this path remains required before it is release evidence
+# (2026-08-20 review history: the clear file was rolled back together with a
+# fatal console=null argument; with console=tty1 it cannot hide a dead init).
+DISPLAY /boot/syslinux/clear.msg
 DEFAULT live
 PROMPT 0
 TIMEOUT 0

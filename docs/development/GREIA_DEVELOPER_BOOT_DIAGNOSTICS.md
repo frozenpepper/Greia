@@ -123,7 +123,7 @@ This wrapper deliberately separates writing from verification:
 6. the verifier checks the FAT filesystem **read-only**;
 7. it mounts the actual USB key read-only and byte-compares kernel, initrd, live squashfs, target payload, Syslinux config and live-media identifier with the verified source image;
 8. it verifies `ldlinux.sys`, the active partition flag and the first 440 bytes of the Syslinux MBR bootstrap;
-9. it refuses any Syslinux entry with `console=null` (fatal on the Debian 686 kernel: no `ttynull`, PID 1 has no console and panics), and a recovery template that reintroduces timed panic reboot, `quiet`/`splash`/`loglevel=0`, or the rejected `DISPLAY ... clear.msg` experiment on the current Acer recovery path;
+9. it refuses any Syslinux entry with `console=null` (fatal on the Debian 686 kernel: no `ttynull`, PID 1 has no console and panics), and a recovery template that reintroduces timed panic reboot, `quiet`/`splash`/`loglevel=0`, or any `DISPLAY` line (the recovery/diagnostic path must stay observable). Since the owner decision 2026-10-18 it additionally requires the quiet template and quiet media to carry the approved one-byte `clear.msg` display file, byte-compared at read-back;
 10. reports success only after the final removable media itself passes read-back.
 
 The reason for keeping verification separate is architectural, not cosmetic: `tools/build-live-usb.sh` is the firmware-sensitive recipe established by `INSTALLATION_USB_BOOT_POSTMORTEM.md`. Safety checks should surround that recipe rather than continuously modifying it.
@@ -153,7 +153,7 @@ systemd.show_status=true
 rd.systemd.show_status=true
 ```
 
-The recovery Syslinux line intentionally omits `quiet`, `splash` and `loglevel=0`. `panic=0` means a fatal kernel/initramfs/live-boot failure remains on screen instead of rebooting after a timeout. Do not clear Syslinux output and do not replace the console with `console=null`.
+The recovery Syslinux line intentionally omits `quiet`, `splash` and `loglevel=0`. `panic=0` means a fatal kernel/initramfs/live-boot failure remains on screen instead of rebooting after a timeout. On the recovery/diagnostic media never clear Syslinux output and never replace the console with `console=null`. The separate quiet release-candidate path may clear the stock banner with the owner-approved `clear.msg` display file (2026-10-18) because it keeps `console=tty1` and `panic=0`, so emergency output is still printed; its media and verifier enforce the exact byte.
 
 This is a development/recovery contract, not the final child-facing presentation design. The installer USB postmortem established that observable Syslinux/kernel/live-boot output is what distinguishes a bootloader failure from kernel/initramfs/live-media failure. Child-visible console suppression remains a later release UX goal and must be reintroduced only as a separately accepted boot-critical change.
 

@@ -158,10 +158,18 @@ sed "s/LIVE_MEDIA_ID/$LIVE_MEDIA_ID/" \
   "$SYSLINUX_TEMPLATE" > "$EXPECTED_CFG"
 
 # Guard the accepted Acer recovery diagnostics contract from the postmortems.
-# Every template must never auto-reboot a panic (panic=0 everywhere) and must
-# never use the banned Syslinux display-clearing trick.
-if grep -Eq 'DISPLAY .*clear\.msg|panic=[1-9][0-9]*' "$EXPECTED_CFG"; then
-  echo "Refusing: Syslinux template clears the display or auto-reboots on panic." >&2
+# Every template must never auto-reboot a panic (panic=0 everywhere).
+if grep -Eq 'panic=[1-9][0-9]*' "$EXPECTED_CFG"; then
+  echo "Refusing: Syslinux template auto-reboots on panic." >&2
+  exit 1
+fi
+# The quiet release-candidate path clears the stock SYSLINUX banner with the
+# owner-approved one-byte form-feed display file (2026-10-18 decision). It is
+# presentation-only and must never appear on the diagnostic template, whose
+# whole purpose is observable early output.
+clear_display_lines="$(grep -c '^DISPLAY /boot/syslinux/clear\.msg$' "$EXPECTED_CFG" || true)"
+if grep -q '^DISPLAY ' "$EXPECTED_CFG" && [[ "$clear_display_lines" != "1" ]]; then
+  echo "Refusing: Syslinux template uses a display file other than the approved clear.msg." >&2
   exit 1
 fi
 # Kernel APPEND line of one LABEL block.
@@ -198,11 +206,16 @@ case "$LIVE_CONSOLE_POLICY" in
     # failures.
     require_diagnostic_append "$(label_append live)" "diagnostic Syslinux template"
     grep -q 'console=tty1' "$EXPECTED_CFG" || exit 1
+    if grep -q '^DISPLAY ' "$EXPECTED_CFG"; then
+      echo "Refusing: diagnostic Syslinux template must keep its boot output observable." >&2
+      exit 1
+    fi
     ;;
   quiet)
     # Release-candidate media: the default entry is silent, and the hidden
     # LABEL verbose (Shift/Alt at boot, PROMPT 0 semantics) keeps today's full
-    # diagnostic arguments reachable.
+    # diagnostic arguments reachable. The stock SYSLINUX banner is cleared by
+    # the approved display file; the payload must carry its exact one byte.
     default_append="$(label_append live)"
     for required in quiet splash loglevel=0 console=tty1 panic=0 vt.global_cursor_default=0 systemd.show_status=false; do
       [[ " $default_append " == *" $required "* ]] || {
@@ -212,6 +225,19 @@ case "$LIVE_CONSOLE_POLICY" in
     done
     grep -qx 'PROMPT 0' "$EXPECTED_CFG" || { echo "Refusing: quiet template must keep PROMPT 0." >&2; exit 1; }
     require_diagnostic_append "$(label_append verbose)" "quiet template's verbose recovery entry"
+    [[ "$clear_display_lines" == "1" ]] || {
+      echo "Refusing: quiet template must reference the approved clear.msg display file." >&2
+      exit 1
+    }
+    [[ -s "$USB_MOUNT/boot/syslinux/clear.msg" ]] || {
+      echo "Refusing: quiet media is missing boot/syslinux/clear.msg." >&2
+      exit 1
+    }
+    cmp -s "$PROJECT_ROOT/build/live-syslinux/clear.msg" \
+      "$USB_MOUNT/boot/syslinux/clear.msg" || {
+      echo "USB read-back mismatch: boot/syslinux/clear.msg" >&2
+      exit 1
+    }
     ;;
 esac
 

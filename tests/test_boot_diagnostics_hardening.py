@@ -270,7 +270,11 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         self.assertIn("mkfs.vfat -F 32", writer)
         self.assertIn("live-uuid", writer)
         self.assertIn("LIVE_MEDIA_ID", writer)
-        self.assertNotIn("clear.msg", writer)
+        # The writer copies the owner-approved quiet-path display file only
+        # when the selected template references it; the file is never
+        # generated at write time.
+        self.assertIn("build/live-syslinux/clear.msg", writer)
+        self.assertIn("DISPLAY /boot/syslinux/clear", writer)
         self.assertNotIn("usb_flash_verification=PASS", writer)
 
         verifier = (ROOT / "tools/verify-live-usb.sh").read_text(encoding="utf-8")
@@ -283,7 +287,8 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         self.assertIn("panic=0", verifier)
         self.assertIn("panic=[1-9]", verifier)
         self.assertIn("console=null", verifier)  # explicit rejection check
-        self.assertIn("DISPLAY .*clear", verifier)
+        self.assertIn("clear.msg", verifier)
+        self.assertIn("DISPLAY ", verifier)
 
     def test_one_command_dev_workflow_builds_writes_then_verifies(self) -> None:
         workflow = (

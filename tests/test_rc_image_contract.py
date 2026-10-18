@@ -198,10 +198,22 @@ class LiveSyslinuxTemplateTests(unittest.TestCase):
         self.assertIn("console=tty1", verbose.arguments)
         self.assertIn("panic=0", verbose.arguments)
         text = (ROOT / "build/live-syslinux/syslinux-quiet.cfg.in").read_text(encoding="utf-8")
-        for required in ("DEFAULT live", "PROMPT 0", "TIMEOUT 0"):
+        # Owner decision 2026-10-18: the quiet path clears the stock SYSLINUX
+        # banner with the one-byte form-feed display file. The diagnostic
+        # template must stay observable (asserted separately in
+        # test_boot_diagnostics_hardening).
+        for required in (
+            "DISPLAY /boot/syslinux/clear.msg",
+            "DEFAULT live",
+            "PROMPT 0",
+            "TIMEOUT 0",
+        ):
             self.assertIn(required, text)
-        for banned in ("DISPLAY ", "clear.msg", "UI ", "panic=30", "NOESCAPE"):
+        for banned in ("UI ", "panic=30", "NOESCAPE"):
             self.assertNotIn(banned, text)
+        diagnostic = (ROOT / "build/live-syslinux/syslinux.cfg.in").read_text(encoding="utf-8")
+        self.assertNotIn("DISPLAY ", diagnostic)
+        self.assertNotIn("clear.msg", diagnostic)
 
     def test_writer_and_verifier_share_the_manifest_driven_selection(self) -> None:
         lib = (ROOT / "build/lib/live-syslinux.sh").read_text(encoding="utf-8")

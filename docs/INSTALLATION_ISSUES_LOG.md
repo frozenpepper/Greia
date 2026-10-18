@@ -1675,3 +1675,31 @@ The fresh-failure capture also saw `sh: 1: pkexec: not found` once per launcher
 cycle. Device forensics found no Greia source/config reference and proved normal
 session progression continued beyond it. It is not part of the first-boot loop
 root cause and is intentionally left open until a reproducible owner is found.
+
+## 34. 2026-10-18 — Quiet RC showed the stock Syslinux banner for the whole early boot
+
+The owner's acceptance run of the rebuilt RC reported the visible
+`SYSLINUX 6.04 EDD … Copyright (C) 1994-2015 H. Peter Anvin et al` line staying
+on screen for the long quiet kernel/initramfs phase, including after an
+install when the machine reboots with the key still inserted. This is the same
+presentation gap documented in `docs/design/GREIA_BOOT_EXPERIENCE.md`: stock
+SYSLINUX prints the banner before it parses any configuration, and because
+`quiet` prints nothing new, the text survives even the fbcon takeover (which
+redraws the console buffer) until the Greia framebuffer cover paints.
+
+The 2026-08-20 regression review had rolled back a form-feed `DISPLAY` clear
+file together with the fatal `console=null` argument; the observable-output
+rule then kept the banner. Owner decision 2026-10-18 separates the two:
+
+- `build/live-syslinux/clear.msg` (one `0x0c` byte) is consumed only by the
+  quiet template via `DISPLAY /boot/syslinux/clear.msg`;
+- `tools/build-live-usb.sh` places the byte on quiet media only; the
+  read-only verifier requires the line and byte-compares the file;
+- the diagnostic/recovery template and media keep fully observable output and
+  the verifier refuses any `DISPLAY` there;
+- `console=tty1` + `panic=0` stay, so a fatal panic still prints its emergency
+  message; the `verbose` recovery label is unchanged;
+- The mechanism was reproduced on a scratch Syslinux image in QEMU
+  (banner cleared at configuration time, `TIMEOUT 0`); QEMU verification of the
+  rebuilt media and physical Acer re-acceptance remain the closure evidence
+  (premortem F2).

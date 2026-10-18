@@ -314,4 +314,9 @@ into a *working Greia installer*.
    hybrid ISO layouts on old BIOS firmware.**
 5. **Keep bootloader output observable.** A first-stage loader that prints
    nothing is indistinguishable from one that never ran; choose bootloaders
-   that print their progress (syslinux does).
+   that print their progress (syslinux does). Owner decision 2026-10-18: the
+   quiet release-candidate media clears only the stock SYSLINUX copyright
+   banner (`clear.msg`) for child-facing presentation; the diagnostic/dev
+   template and media keep this rule unchanged, `console=tty1` + `panic=0`
+   still print fatal errors, and the `verbose` recovery label is the
+   observable path on quiet media.

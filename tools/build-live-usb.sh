@@ -130,6 +130,19 @@ sed "s/LIVE_MEDIA_ID/$LIVE_MEDIA_ID/" \
   "$SYSLINUX_TEMPLATE" \
   > "$USB_MOUNT/boot/syslinux/syslinux.cfg"
 chmod 0644 "$USB_MOUNT/boot/syslinux/syslinux.cfg"
+# The quiet template consumes the owner-approved one-byte form-feed display
+# file so the stock SYSLINUX banner cannot stay on screen through the quiet
+# kernel/initramfs phase. The diagnostic template must not reference it; its
+# media simply does not carry the file. Keep the writer template-driven so the
+# presentation decision stays in the config, not here.
+if grep -q '^DISPLAY /boot/syslinux/clear\.msg$' "$USB_MOUNT/boot/syslinux/syslinux.cfg"; then
+  [[ -s "$PROJECT_ROOT/build/live-syslinux/clear.msg" ]] || {
+    echo "Syslinux clear display file missing: $PROJECT_ROOT/build/live-syslinux/clear.msg" >&2
+    exit 1
+  }
+  install -m 0644 "$PROJECT_ROOT/build/live-syslinux/clear.msg" \
+    "$USB_MOUNT/boot/syslinux/clear.msg"
+fi
 syslinux --install --directory /boot/syslinux "$USB_PART"
 
 sync
