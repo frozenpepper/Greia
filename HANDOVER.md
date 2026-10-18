@@ -63,6 +63,17 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-18 — Installer completion button repaired (root finish-marker path); live shutdown hang still open on the Acer
+
+**Evidence class: SOURCE + QEMU reproduction of the denial. Physical retest pending.**
+
+- **Owner report:** the final "I'm ready — turn off" button did nothing; pressing the laptop's physical power button produced a black, powered-on screen that never switched the machine off (forced reset needed). On the previous image the same screen showed the Syslinux banner.
+- **Confirmed defect:** the button's `systemctl poweroff` ran as the installer's unprivileged `nobody` identity with no logind session; logind/polkit answered `Call to PowerOff failed: Access denied` (QEMU-reproduced against the live image). The black screen came from the physical button's root logind shutdown, not from the button.
+- **Fix:** the UI now writes `/run/greia-installer/finish-request` in the RuntimeDirectory it already owns (same pattern as `release-boot-cover`); a root `greia-installer-finish.path` unit watches exactly that file and activates the one-shot `greia-installer-finish.service`, whose helper raises shutdown visibility (`SetShowStatus yes`, kernel console loglevel 8) and then performs the single `systemctl poweroff`. Composer enables the path unit; `verify-composed-root.sh` requires the pair, the helper and the enable symlink; the completion page shows a manual fallback (EN/IT/ES/FR) if the marker write fails. No new package, daemon or polkit rule.
+- **Tests:** `test_installer_state` (marker + fallback), `test_rc_image_contract` (unit/compose/verifier/UI contracts), `test_system_overlay_contract` (UI writes the marker, no direct unprivileged poweroff), localization set-equality; focused runs green.
+- **Still open:** the Acer's physical/logind shutdown hangs after systemd begins stopping (black, never powers off, no Greia cover). QEMU powers off cleanly through both `systemctl poweroff` and the ACPI power key, so it is hardware-specific. Next diagnostic: boot the rebuilt media via the hidden `verbose` entry (hold Shift/Alt → `verbose`) or a diagnostic-profile build, reproduce the shutdown, and capture the last visible stage (premortem F2/F18).
+- **Next exact step:** rebuild + reflash the RC with this fix, retest the on-screen button, and capture the hung shutdown stage from the `verbose` boot if it persists.
+
 ## 2026-10-18 — Quiet RC: stock Syslinux banner cleared, rebuilt, reflashed, QEMU-verified
 
 **Evidence class: SOURCE + SIMULATOR VISUAL REVIEW (QEMU) + build/media read-back gates. Physical Acer re-acceptance pending.**

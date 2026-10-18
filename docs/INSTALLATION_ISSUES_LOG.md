@@ -1729,3 +1729,37 @@ dead service — indistinguishable from a stalled image. Use `-cpu n270` or
 `build/verify-image-qemu.sh`. Root cause and fix are also recorded in
 `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` §7 and in the 2026-10-18 QEMU
 evidence directories under `docs/reviews/acer/`.
+
+## 36. 2026-10-18 — Installer completion button was dead; live shutdown still hangs on the Acer (OPEN)
+
+Owner report: the final "I'm ready — turn off" button appeared to do nothing,
+and pressing the laptop's physical power button produced a black (powered-on)
+screen that never switched the machine off; the only way out was a forced
+reset. The same attempt on the previous image showed the Syslinux banner on
+that screen, because the quiet console buffer had not been cleared yet.
+
+Confirmed defect: the button's `systemctl poweroff` ran as the installer's
+unprivileged `nobody` identity with no logind session. logind/polkit answered
+"Call to PowerOff failed: Access denied" (QEMU-reproduced from the live
+image). The black screen came from the physical button's root logind shutdown,
+not from the button, which never had an effect.
+
+Fix (`src/greia_installer/main.py`, installer overlay): the UI writes
+`/run/greia-installer/finish-request` in the RuntimeDirectory it already owns
+(same pattern as `release-boot-cover`); a new root
+`greia-installer-finish.path` watches exactly that file and activates the
+one-shot `greia-installer-finish.service`, whose root helper
+(`/usr/local/lib/greia-os/greia-installer-finish`) raises shutdown visibility
+(`SetShowStatus yes` plus kernel console loglevel 8) and then performs the
+single `systemctl poweroff`. The composer enables the path unit, the
+composed-root verifier requires the pair, the helper and the enable symlink,
+and the completion page shows a manual fallback (four languages) if the marker
+cannot be written. No new package, daemon or polkit rule; the privileged
+surface is one fixed power-off plus making that power-off observable.
+
+OPEN: the physical/logind shutdown path still hangs on the reference Acer
+after systemd begins stopping (black screen, never powers off, no Greia cover;
+QEMU powers off cleanly through both `systemctl poweroff` and the ACPI power
+key, so it is hardware-specific). Next: reproduce with the hidden `verbose`
+boot (or a diagnostic-profile build) and capture the last visible shutdown
+stage before proposing a fix.

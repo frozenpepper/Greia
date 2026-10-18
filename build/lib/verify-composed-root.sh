@@ -106,6 +106,23 @@ greia_verify_composed_root() {
     grep -Fqx 'ExecStopPost=+/usr/local/lib/greia-os/installer-exit-cover' "$unit" && \
       [[ -x "$root/usr/local/lib/greia-os/installer-exit-cover" ]] || \
       _greia_root_fail "$label" "installer unit does not repaint the cover after it stops"
+    # Completion power-off: the unprivileged UI writes the marker it owns and
+    # the root path unit performs the single systemctl poweroff (2026-10-18;
+    # the UI's own unprivileged poweroff call is denied by logind/polkit).
+    grep -Fqx 'PathExists=/run/greia-installer/finish-request' \
+      "$root/etc/systemd/system/greia-installer-finish.path" || \
+      _greia_root_fail "$label" "installer finish path unit is missing or wrong"
+    grep -Fqx 'ExecStart=/usr/local/lib/greia-os/greia-installer-finish' \
+      "$root/etc/systemd/system/greia-installer-finish.service" || \
+      _greia_root_fail "$label" "installer finish service is missing or wrong"
+    [[ -x "$root/usr/local/lib/greia-os/greia-installer-finish" ]] || \
+      _greia_root_fail "$label" "installer finish helper is missing"
+    grep -Fq 'SetShowStatus s yes' "$root/usr/local/lib/greia-os/greia-installer-finish" || \
+      _greia_root_fail "$label" "installer finish helper does not raise shutdown visibility"
+    grep -Fq '/usr/bin/systemctl poweroff' "$root/usr/local/lib/greia-os/greia-installer-finish" || \
+      _greia_root_fail "$label" "installer finish helper does not power off"
+    [[ -L "$root/etc/systemd/system/multi-user.target.wants/greia-installer-finish.path" ]] || \
+      _greia_root_fail "$label" "installer finish path unit is not enabled"
     # Installer look + boot intro assets (src/greia_installer/presentation.py,
     # boot_intro.py). The catalogue must load strictly or the UI silently
     # falls back to procedural art.

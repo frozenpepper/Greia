@@ -629,6 +629,16 @@ class SharedArtifactVerifierTests(unittest.TestCase):
         put("usr/local/lib/greia-os/installer-exit-cover",
             (ROOT / "build/installer-overlay/usr/local/lib/greia-os/installer-exit-cover").read_text())
         os.chmod(root / "usr/local/lib/greia-os/installer-exit-cover", 0o755)
+        put("usr/local/lib/greia-os/greia-installer-finish",
+            (ROOT / "build/installer-overlay/usr/local/lib/greia-os/greia-installer-finish").read_text())
+        os.chmod(root / "usr/local/lib/greia-os/greia-installer-finish", 0o755)
+        put("etc/systemd/system/greia-installer-finish.path",
+            (ROOT / "build/installer-overlay/etc/systemd/system/greia-installer-finish.path").read_text())
+        put("etc/systemd/system/greia-installer-finish.service",
+            (ROOT / "build/installer-overlay/etc/systemd/system/greia-installer-finish.service").read_text())
+        wants = root / "etc/systemd/system/multi-user.target.wants/greia-installer-finish.path"
+        wants.parent.mkdir(parents=True, exist_ok=True)
+        wants.symlink_to("../../greia-installer-finish.path")
         assets = root / "opt/greia-os/assets"
         for rel in ("boot/frames/frame_0000.png", "boot/frames/frame_0051.png",
                     "audio/system/greia-boot-chime.wav", "catalog/shared_visuals_v1.toml"):
@@ -679,6 +689,63 @@ class SharedArtifactVerifierTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             root = self.make_root(raw, policy="diagnostic")
             self.assertNotEqual(self.verify(root).returncode, 0)
+
+
+class InstallerCompletionPoweroffContractTests(unittest.TestCase):
+    """2026-10-18: the completion button must actually switch the machine off.
+
+    The installer UI runs as ``nobody`` with NoNewPrivileges and no logind
+    session, so its direct ``systemctl poweroff`` is denied by logind/polkit
+    and the button silently did nothing. The repair is a root-owned systemd
+    path/service pair triggered by the marker file the UI owns.
+    """
+
+    def test_finish_path_unit_watches_the_ui_owned_marker(self) -> None:
+        unit = (
+            ROOT / "build/installer-overlay/etc/systemd/system/greia-installer-finish.path"
+        ).read_text(encoding="utf-8")
+        self.assertIn("PathExists=/run/greia-installer/finish-request", unit)
+        self.assertIn("Unit=greia-installer-finish.service", unit)
+        self.assertIn("WantedBy=multi-user.target", unit)
+
+    def test_finish_service_is_one_root_poweroff_only(self) -> None:
+        unit = (
+            ROOT / "build/installer-overlay/etc/systemd/system/greia-installer-finish.service"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Type=oneshot", unit)
+        self.assertIn("ExecStart=/usr/local/lib/greia-os/greia-installer-finish", unit)
+        self.assertNotIn("reboot", unit)
+
+    def test_finish_helper_powers_off_and_raises_shutdown_visibility(self) -> None:
+        helper = (
+            ROOT / "build/installer-overlay/usr/local/lib/greia-os/greia-installer-finish"
+        )
+        text = helper.read_text(encoding="utf-8")
+        # Exactly one privileged action plus making its outcome observable.
+        self.assertIn("SetShowStatus s yes", text)
+        self.assertIn("/usr/bin/systemctl poweroff", text)
+        self.assertNotIn("reboot", text)
+        self.assertTrue(helper.stat().st_mode & 0o111)
+
+    def test_composer_enables_the_finish_path_with_the_installer(self) -> None:
+        compose = (ROOT / "build/lib/compose.sh").read_text(encoding="utf-8")
+        self.assertIn(
+            "systemctl --root=\"$rootfs\" enable greia-installer.service greia-installer-finish.path",
+            compose,
+        )
+
+    def test_composed_root_verifier_requires_the_finish_contract(self) -> None:
+        verifier = (ROOT / "build/lib/verify-composed-root.sh").read_text(encoding="utf-8")
+        self.assertIn("PathExists=/run/greia-installer/finish-request", verifier)
+        self.assertIn("ExecStart=/usr/local/lib/greia-os/greia-installer-finish", verifier)
+        self.assertIn("SetShowStatus s yes", verifier)
+        self.assertIn("multi-user.target.wants/greia-installer-finish.path", verifier)
+
+    def test_installer_ui_writes_the_marker_instead_of_calling_logind(self) -> None:
+        installer = (ROOT / "src/greia_installer/main.py").read_text(encoding="utf-8")
+        self.assertIn("POWEROFF_REQUEST_PATH", installer)
+        self.assertIn('"poweroff\\n"', installer)
+        self.assertNotIn('["systemctl", "poweroff"]', installer)
 
 
 if __name__ == "__main__":

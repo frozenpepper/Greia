@@ -1,0 +1,21 @@
+#!/bin/sh
+# Root half of the installer completion action (owner decision 2026-10-18).
+#
+# Activated only by greia-installer-finish.path after the unprivileged
+# installer UI has created /run/greia-installer/finish-request in its own
+# RuntimeDirectory. This script's entire authority is one machine power-off;
+# it takes no arguments and exposes no other operation.
+set -eu
+
+# The quiet profile sets console loglevel 0 and systemd status off, so a
+# shutdown that fails or hangs would leave the parent on a mute black screen
+# (owner report 2026-10-18). This code runs only after the completion button
+# was deliberately pressed, so raising shutdown visibility here does not
+# change the child-facing boot or installer presentation.
+busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 \
+  org.freedesktop.systemd1.Manager SetShowStatus s yes >/dev/null 2>&1 || true
+# Keep kernel-level shutdown failures visible as well: ACPI power-off errors
+# and driver hangs print at emergency/warning levels that loglevel=0 hides.
+echo 8 > /proc/sys/kernel/printk 2>/dev/null || true
+
+exec /usr/bin/systemctl poweroff

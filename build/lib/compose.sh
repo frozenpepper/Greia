@@ -856,7 +856,7 @@ compose_configure_systemd() {
       getty@tty4.service getty@tty5.service getty@tty6.service
     systemctl --root="$rootfs" set-default graphical.target
   else
-    systemctl --root="$rootfs" enable greia-installer.service
+    systemctl --root="$rootfs" enable greia-installer.service greia-installer-finish.path
     systemctl --root="$rootfs" mask getty@.service autovt@.service console-getty.service debug-shell.service emergency.service rescue.service console-shell.service kbrequest.target getty@tty1.service getty@tty2.service getty@tty3.service getty@tty4.service getty@tty5.service getty@tty6.service
     systemctl --root="$rootfs" set-default graphical.target
   fi

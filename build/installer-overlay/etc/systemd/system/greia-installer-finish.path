@@ -1,0 +1,20 @@
+# Owner decision 2026-10-18: the completion button must actually switch the
+# machine off.
+#
+# The installer UI runs as `nobody` with NoNewPrivileges and no logind session,
+# so its direct `systemctl poweroff` is denied by logind/polkit and the button
+# silently did nothing. The UI owns /run/greia-installer (RuntimeDirectory) and
+# creates the finish-request marker there after a successful installation; this
+# path unit watches exactly that file and activates the one-shot root
+# greia-installer-finish.service, which performs the single power-off.
+#
+# Live-installer overlay only: the installed target ships neither unit.
+[Unit]
+Description=Watch for the Greia installer completion request
+
+[Path]
+PathExists=/run/greia-installer/finish-request
+Unit=greia-installer-finish.service
+
+[Install]
+WantedBy=multi-user.target

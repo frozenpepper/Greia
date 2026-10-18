@@ -164,6 +164,13 @@ _NEVER_RENDERED = object()
 _SIGNATURE_MAX_DEPTH = 2
 _SIGNATURE_MAX_ITEMS = 4
 
+#: Marker file the unprivileged installer UI creates after a successful
+#: installation. The root ``greia-installer-finish.path`` unit watches exactly
+#: this file and activates one ``systemctl poweroff``. The UI cannot call
+#: logind itself (``nobody``, no session, NoNewPrivileges): the direct call was
+#: denied and the completion button did nothing (2026-10-18).
+POWEROFF_REQUEST_PATH = Path("/run/greia-installer/finish-request")
+
 
 class InstallerApplication:
     HOLD_SECONDS = 2.0
@@ -304,6 +311,7 @@ class InstallerApplication:
         self._body_px = 22
         self._hint_px = 16
         self._exit_requested = False
+        self._poweroff_failed = False
         self._boot_released = False
         self._next_boot_handoff_attempt = 0.0
         self._boot_handoff_attempts = 0
@@ -1105,14 +1113,26 @@ class InstallerApplication:
             if self.demo:
                 self._exit_requested = True
             else:
-                import subprocess
+                self._request_poweroff()
 
-                subprocess.run(
-                    ["systemctl", "poweroff"],
-                    check=False,
-                    shell=False,
-                    stdin=subprocess.DEVNULL,
-                )
+    def _request_poweroff(self) -> None:
+        """Ask the machine to power off through the root finish-marker path.
+
+        The installer UI is unprivileged and has no logind session, so a
+        direct ``systemctl poweroff`` is denied by logind/polkit. The UI owns
+        its runtime directory, so it drops the marker file that the root
+        ``greia-installer-finish.path`` unit watches; that unit runs exactly
+        one ``systemctl poweroff`` as root. If the marker cannot be written,
+        the completion page shows the manual fallback instead of a dead
+        button.
+        """
+
+        try:
+            POWEROFF_REQUEST_PATH.write_text("poweroff\n", encoding="ascii")
+        except OSError:
+            self._poweroff_failed = True
+        else:
+            self._poweroff_failed = False
 
     def _back(self) -> None:
         page = self.state.page
@@ -2355,11 +2375,18 @@ class InstallerApplication:
             max_lines=2,
         )
         y = box.bottom + 12
+        # If the finish marker could not be delivered, a dead button must not
+        # look like a shut-down request in flight: show the manual fallback.
+        instruction = (
+            "The power-off request could not be sent. Press the computer's power button to switch it off."
+            if self._poweroff_failed
+            else "After the computer turns off, remove the USB key, then turn the computer on again."
+        )
         self._paragraph(
             screen,
-            "After the computer turns off, remove the USB key, then turn the computer on again.",
+            instruction,
             small_font,
-            COCOA,
+            BURGUNDY if self._poweroff_failed else COCOA,
             pygame.Rect(main.left, y, main.width, nav_top - y),
             center=True,
         )

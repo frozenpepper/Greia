@@ -1,0 +1,13 @@
+# Root half of the installer completion action (owner decision 2026-10-18).
+#
+# Activated only by greia-installer-finish.path after the unprivileged UI has
+# created the finish-request marker. The helper's entire authority is one
+# machine power-off (plus making that power-off observable); it takes no
+# parameters and exposes no other operation. See greia-installer-finish.path
+# for the trust boundary.
+[Unit]
+Description=Greia OS installer completion power-off (root)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/greia-os/greia-installer-finish

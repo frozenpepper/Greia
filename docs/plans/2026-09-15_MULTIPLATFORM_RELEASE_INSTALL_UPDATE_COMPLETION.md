@@ -2686,3 +2686,31 @@ or 1.5 s; installer language screen at 190 s with no shell. Evidence:
 
 Closure still requires physical Acer re-acceptance, including the hidden
 `verbose` recovery path (premortem F2).
+
+
+### 2026-10-18 — Installer completion power-off: unprivileged button repaired via a root finish-marker path
+
+Owner report: the completion button did nothing, and the physical power button
+left the machine black and never shut down. QEMU reproduced the definite part:
+the UI's `systemctl poweroff` as `nobody` (NoNewPrivileges, no logind session)
+is denied ("Call to PowerOff failed: Access denied").
+
+Repair: the UI writes `/run/greia-installer/finish-request` in its own
+RuntimeDirectory; a new root `greia-installer-finish.path` unit watches that
+exact file and runs the one-shot `greia-installer-finish.service`, whose helper
+raises shutdown visibility (`SetShowStatus yes`, kernel console loglevel 8) and
+then performs the single `systemctl poweroff`. The composer enables the path
+unit and the composed root verifier requires the pair, the helper and the
+enable symlink. The completion page now shows a manual fallback if the marker
+write fails. No new package, daemon or polkit grant.
+
+The visibility raise runs only after the completion button was deliberately
+pressed, so the quiet child-facing boot is unchanged; on a failed or hung
+shutdown the parent sees the last stop job or kernel message instead of a mute
+black screen.
+
+Still open for lifecycle closure: the physical/logind shutdown hang on the
+reference Acer (black screen, no power-off; QEMU powers off cleanly, so it is
+hardware-specific) and premortem F18's clean power-off acceptance. Next:
+rebuild/reflash, retest the button, and capture the hung shutdown stage on the
+new media.

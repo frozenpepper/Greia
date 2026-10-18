@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import tempfile
 import threading
 import unittest
 from pathlib import Path
@@ -100,6 +101,38 @@ class InstallerStateTests(unittest.TestCase):
         self.assertEqual(app.state.page, InstallerPage.COMPLETE)
         self.assertEqual(app.state.result, result)
         self.assertIsNone(app._worker)
+
+    def make_live_app(self) -> InstallerApplication:
+        return InstallerApplication(
+            root=PROJECT_ROOT,
+            payload=Path("/tmp/not-used.squashfs"),
+            payload_digest=None,
+            windowed=True,
+            demo=False,
+        )
+
+    def test_completion_button_writes_the_root_poweroff_marker(self) -> None:
+        # The UI runs as nobody with no logind session: a direct
+        # `systemctl poweroff` is denied. It must instead create the marker
+        # the root greia-installer-finish.path unit watches.
+        app = self.make_live_app()
+        with tempfile.TemporaryDirectory(prefix="greia-finish-") as temporary:
+            marker = Path(temporary) / "finish-request"
+            with mock.patch("greia_installer.main.POWEROFF_REQUEST_PATH", marker):
+                app.state.page = InstallerPage.COMPLETE
+                app._activate_primary()
+            self.assertEqual(marker.read_text(encoding="ascii"), "poweroff\n")
+            self.assertFalse(app._poweroff_failed)
+
+    def test_completion_marker_failure_shows_the_manual_fallback(self) -> None:
+        app = self.make_live_app()
+        with mock.patch(
+            "greia_installer.main.POWEROFF_REQUEST_PATH",
+            Path("/proc/greia-no-such-directory/finish-request"),
+        ):
+            app.state.page = InstallerPage.COMPLETE
+            app._activate_primary()
+        self.assertTrue(app._poweroff_failed)
 
     def test_uninterrupted_hold_starts_installation_without_waiting_for_release(self) -> None:
         app = self.make_app()

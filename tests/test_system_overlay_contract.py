@@ -625,7 +625,12 @@ class SystemOverlayContractTests(unittest.TestCase):
 
     def test_installer_powers_off_before_parent_removes_live_usb(self) -> None:
         installer = (PROJECT_ROOT / "src/greia_installer/main.py").read_text()
-        self.assertIn('["systemctl", "poweroff"]', installer)
+        # 2026-10-18: the unprivileged UI cannot call logind itself (denied),
+        # so it writes the finish marker its own RuntimeDirectory owns and the
+        # root greia-installer-finish.path unit performs the power-off.
+        self.assertIn('POWEROFF_REQUEST_PATH', installer)
+        self.assertIn('finish-request', installer)
+        self.assertNotIn('["systemctl", "poweroff"]', installer)
         self.assertNotIn('["systemctl", "reboot"]', installer)
         self.assertIn("I'm ready", installer)
 

@@ -146,6 +146,7 @@ _ITALIAN: dict[str, str] = {
     "Do not turn off the computer.": "Non spegnere il computer.",
     "Parent login": "Accesso genitore",
     "After the computer turns off, remove the USB key, then turn the computer on again.": "Quando il computer si è spento, togli la chiavetta USB e poi riaccendilo.",
+    "The power-off request could not be sent. Press the computer's power button to switch it off.": "La richiesta di spegnimento non è stata inviata. Premi il pulsante di accensione del computer per spegnerlo.",
     "very slow": "molto lenta",
     "slow": "lenta",
     "medium": "media",
