@@ -2660,3 +2660,29 @@ path, installer crash/retry exhaustion on hardware, and the live-installer
 `greia-devctl` source/docs mismatch (§13.5 of the image-creation document).
 Host note: one kernel-pinned loop device remains from a non-namespaced attempt
 and clears on reboot.
+
+
+### 2026-10-18 — Quiet media clears the stock Syslinux banner (owner decision); rebuilt/reflashed/QEMU-verified
+
+Owner report from the first acceptance run: the stock `SYSLINUX 6.04 … H. Peter
+Anvin` banner stayed on screen through the quiet phase, including after a
+shutdown that re-booted the inserted key. Owner decision: cut it on the quiet
+release-candidate path.
+
+Source `529accef`: `build/live-syslinux/clear.msg` (one form-feed byte) and
+`DISPLAY /boot/syslinux/clear.msg` in the quiet template only; writer copies
+the byte on quiet media; the read-only verifier requires the directive,
+byte-compares the file, and refuses any `DISPLAY` on the diagnostic template.
+`console=tty1` + `panic=0`, the hidden `verbose` recovery label and the
+diagnostic media stay unchanged.
+
+Rebuilt and reflashed through the front door in a private mount namespace:
+artifact verification PASS, USB read-back PASS, loop hygiene PASS. Image
+SHA-256 `b92cfd58f2967fa581d88a5c675f6926bbf979869318bb302570b5a416aff2f2`,
+live media id `d60ca3a7-372a-4b48-92fb-55c75077daa9`, payload 1,203 MiB.
+QEMU of the flashed stick (snapshot, `-cpu n270`): no Syslinux text at 0.8 s
+or 1.5 s; installer language screen at 190 s with no shell. Evidence:
+`docs/reviews/acer/2026-10-18_QUIET_BANNER_CLEAR_QEMU_VERIFICATION/`.
+
+Closure still requires physical Acer re-acceptance, including the hidden
+`verbose` recovery path (premortem F2).

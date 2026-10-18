@@ -63,6 +63,18 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-18 — Quiet RC: stock Syslinux banner cleared, rebuilt, reflashed, QEMU-verified
+
+**Evidence class: SOURCE + SIMULATOR VISUAL REVIEW (QEMU) + build/media read-back gates. Physical Acer re-acceptance pending.**
+
+- **Owner report:** the stock `SYSLINUX 6.04 EDD … Copyright (C) 1994-2015 H. Peter Anvin et al` banner stayed visible for the whole quiet kernel/initramfs phase (and again when the machine re-booted the stick after a shutdown), making the boot look like Syslinux's. Owner decision 2026-10-18: cut it on the quiet path. The 2026-08-20 rollback had bundled the form-feed `DISPLAY` file with the fatal `console=null` change; the two are now separated.
+- **Implemented (`529accef`):** `build/live-syslinux/clear.msg` (one `0x0c` byte) consumed only by the quiet template via `DISPLAY /boot/syslinux/clear.msg`; `tools/build-live-usb.sh` places the byte on quiet media only; `tools/verify-live-usb.sh` requires the directive and byte-compares the file on read-back, and refuses any `DISPLAY` on diagnostic media. `console=tty1` + `panic=0` are unchanged, a panic still prints on tty1, the diagnostic template stays fully observable, and the hidden `verbose` recovery label is untouched.
+- **Gates:** focused RC/boot/diagnostics tests green; `make verify` fast lane ran 5,395 tests with the same single pre-existing `morbidi_mostriciattoli` startup-budget flake (0.278s vs 0.25s on this host; unrelated, first seen before this tranche); `validate`, `shell-check`, `footprint` PASS.
+- **Rebuilt, flashed, verified** through the front door inside `unshare --mount --propagation private`: artifact PASS, USB read-back PASS, loop hygiene PASS. Image SHA-256 `b92cfd58f2967fa581d88a5c675f6926bbf979869318bb302570b5a416aff2f2`, live media id `d60ca3a7-372a-4b48-92fb-55c75077daa9`, payload 1,203 MiB (<1,300 gate). On-media `clear.msg` is the exact form-feed byte.
+- **QEMU of the flashed stick** (snapshot; `-cpu n270`): black with no Syslinux text at 0.8 s and 1.5 s; Greia installer language screen at 190 s with `greia-installer.service` active, Xorg on `vt1`, no shell. Evidence: `docs/reviews/acer/2026-10-18_QUIET_BANNER_CLEAR_QEMU_VERIFICATION/`.
+- **Shutdown clarification:** the installer completion page already instructs "After the computer turns off, remove the USB key, then turn the computer on again." With the key still inserted, the firmware re-boots the stick — now without the lingering Syslinux banner. A hang *during shutdown with the key removed* would be a separate installed-system issue and needs the on-device journal.
+- **Next exact step:** physical Acer re-acceptance from this LaCie: graphical install, premortem §5 F1–F19, and the hidden `verbose` recovery check (F2) once.
+
 ## 2026-10-18 — RC installer rebuilt, flashed to the LaCie, QEMU-verified quiet boot
 
 **Evidence class: SOURCE build/flash gates + SIMULATOR VISUAL REVIEW (QEMU). No physical Acer install in this turn.**
