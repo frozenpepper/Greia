@@ -93,6 +93,21 @@ Those mechanics belong behind `VoiceEngine` and provider interfaces. Historical 
 
 ## 4. Canonical character identities — v0.2 active
 
+**Performance direction and corpus follow-up (2026-10-19):** each VoxStage
+recording now has acting direction from
+`tools/greia_voice_core/character_delivery.json`, or a semantic
+`delivery_prompt` override (CLI `--delivery-prompt`, batch and warm service).
+Direction controls tone/mood/rhythm separately from spoken text; the reference
+establishes identity. Receipts retain the actual effective direction.
+
+After selecting the masters, the owner explicitly requested existing
+Activity/system speech replacement, except deterministic isolated letters and
+syllables. Use `tools/regenerate_voice_corpus.py` under
+`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`. This scoped operation revoices
+whole words/numbers too, retains original backups and installs fresh takes as
+human-review pending. It supersedes older no-overwrite/add-only instructions for
+this operation only. The preparation session has not launched the full corpus.
+
 Owner decision 2026-10-19: replace the active masters with the six selected local
 VoxStage voice designs and make VoxCPM2 the default character provider. The owner
 accepted the selected-master comparison in English, Italian, French and Spanish.

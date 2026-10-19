@@ -140,6 +140,14 @@ Do not infer physical readability/performance from desktop rendering alone.
 
 ## 7. Voice Production Engine / authoring Voice Studio
 
+For the explicit owner-requested 2026-10-19 corpus regeneration/replacement,
+use `tools/regenerate_voice_corpus.py` with
+`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`. It reuses this installed stack,
+keeps external originals/candidates, preserves deterministic isolated letters
+and syllables, and reports progress/recovery. Character acting defaults are in
+`tools/greia_voice_core/character_delivery.json`, with a `delivery_prompt`
+semantic override per recording. New takes remain listening-pending.
+
 Canonical entry point:
 
 ```text

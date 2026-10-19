@@ -29,7 +29,16 @@ scoped implementation plan for reducing misleading language choices,
 completing EN/IT gaps, and extending real installer/OS/Parent/Activity
 text and voice support to ES/FR. Its standing local-agent speech design and cue-source authority is
 `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`.
-**Current executable voice-production work order:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md`
+**Current existing-corpus replacement work order (owner instruction 2026-10-19):**
+`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`, executed with
+`tools/regenerate_voice_corpus.py`. It explicitly permits fresh replacement
+with new masters and per-recording acting prompts, preserving deterministic
+isolated letters/syllables and backups. New takes are listening-pending.
+Full production has not been launched; the prepared inventory is 4,543 READY,
+167 metadata-blocked, 598 preserved. Source bug fixes needed to operate this tool
+are authorized by this work order; ordinary queue-only restrictions do not
+block that requested task.
+**Earlier add-only voice-production work order:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md`
 (owner instruction 2026-10-14; archived full-run instruction). The owner approved
 every **currently authored** EN/IT/ES/FR text translation, and personally
 reviewed and approved **all committed recordings**. New missing files from
@@ -62,6 +71,18 @@ audit programme. Do not invent a second language registry or silently
 promote unvoiced locales.
 
 ## Recent entries
+
+## 2026-10-19 — Corpus regeneration tool and per-recording performance direction
+
+**Owner scope:** prepare a Python tool for the next agent to replace existing Activity/system speech with the new masters/model, preserving deterministic isolated letters/syllables, showing progress, and supplying a launch/monitor/repair Markdown handoff. The owner then required tone/mood prompts for every recording. This explicitly permits the scoped replacement; it does not mean future takes have been listened to.
+
+**Implemented:** `tools/regenerate_voice_corpus.py` (`plan`, `resolve`, `run`, `status`, `retry`, `restore`), with focused collaborators in `tools/greia_voice_corpus/`. It inventories existing files using receipts and source catalogues/full Encyclopedia scripts, freezes semantic requests and acting prompts, uses one warm serial VoiceEngine with VoxStage forced, displays progress/15-second heartbeat, stages candidates, backs up originals and journals recoverable audio/receipt/catalogue replacement. It preserves uncertain provider failures for operator inspection and never silently resubmits them. Restore walks transactions in reverse and refuses later-edit conflicts. Shared manifest/review rows and Activity audio checksums update with replacements; new receipts remain human-review PENDING. `VoiceRequest.delivery_prompt`, CLI `--delivery-prompt`, batch and warm service now carry performance direction. Six editable defaults in `tools/greia_voice_core/character_delivery.json` apply to normal VoxStage production as well. Chatterbox/native reject an explicit unsupported prompt. The implementation remains modular; no child-runtime or second model producer was added.
+
+**Prepared inventory:** `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/` contains plan, SQLite state, initial `blocked.csv` and override template: **5,308 files, 4,543 READY, 167 BLOCKED_METADATA, 598 PRESERVED** (441 isolated letter/syllable files, 150 historical shared clips, six masters and one boot chime). The 167 older files need exact script/identity recovery; do not invent text or hide them as successful skips. `resolve` can repair only these blocked rows without rerecording DONE work. All READY cues have explicit prompts. Ordinary runtime recordings and selected masters remain unchanged in this preparation turn; the full corpus production run was NOT launched.
+
+**Evidence:** **52 focused voice tests PASS**. One real external Lilli/English/custom-direction OGG smoke completed in VoxStage job `20261019-100927-df5c3cf4`; the persisted worker request and recording direction match the prompt and the receipt identifies the selected v0.2 master with human review PENDING. This proves transport/production, not audible acting acceptance. The shared model was unloaded afterward. Final `make -k verify` on the completed code ran **5,468 tests: 1 failure, 4 errors, 8 skips**, the same inherited ARM64 profile, CLI executable mode, two macOS `lsblk` installer and stale MBR-message cases as the preceding migration review. Project validation still fails at the inherited ARM64 builder assumption; shell/footprint ran. Full aggregate gate is NOT GREEN. Evidence: `docs/reviews/2026-10-19_VOICE_CORPUS_TOOL.md` and external `2026-10-19-corpus-inventory-v3/{voice-tests.log,make-verify-final.log,delivery-smoke*}`. No release-image/Simulator/physical listening proof or remediation-phase closure.
+
+**Next exact step:** the local agent follows `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`: recover the 167 missing legacy scripts where possible, inspect/pilot the character performance defaults, launch/resume the production run, monitor status/jobs, fix owning modules if necessary, and retain backups plus new listening-pending receipts. The runbook is the current executable replacement order within the existing four-language workstream. Relevant source manuals/skills, earlier work-order overrides and the one local-agent queue were updated; ignored installed skill copies were refreshed. Unrelated untracked `final.mp4`/`launch-video/` remain preserved.
 
 ## 2026-10-19 — Owner-selected v0.2 masters and VoxStage/VoxCPM2 default
 

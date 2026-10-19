@@ -23,6 +23,7 @@ def request_from_mapping(payload: dict) -> VoiceRequest:
         output=Path(output) if output else None,
         verification=VerificationMode(str(payload.get("verification", "auto"))),
         max_attempts=int(payload.get("max_attempts", 2)),
+        delivery_prompt=payload.get("delivery_prompt", ""),
     )
 
 

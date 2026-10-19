@@ -43,6 +43,7 @@ class VoiceRequest:
     output: Path | None = None
     verification: VerificationMode = VerificationMode.AUTO
     max_attempts: int = 2
+    delivery_prompt: str = ""
 
     def __post_init__(self) -> None:
         speaker = self.speaker.strip().lower()
@@ -59,6 +60,9 @@ class VoiceRequest:
         object.__setattr__(self, "speaker", speaker)
         object.__setattr__(self, "locale", locale)
         object.__setattr__(self, "text", text)
+        if not isinstance(self.delivery_prompt, str) or len(self.delivery_prompt) > 2000:
+            raise ValueError("delivery_prompt must be a string of at most 2000 characters")
+        object.__setattr__(self, "delivery_prompt", self.delivery_prompt.strip())
 
     @property
     def language(self) -> str:

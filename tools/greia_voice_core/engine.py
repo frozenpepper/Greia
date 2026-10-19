@@ -109,6 +109,8 @@ class VoiceEngine:
             self.registry.verify_anchor(profile)
         for provider in self.providers:
             if provider.supports(request, profile):
+                if request.delivery_prompt and not provider.supports_delivery_prompt:
+                    raise VoiceRoutingError(f"{provider.provider_id} does not support delivery_prompt")
                 return provider, profile
         raise VoiceRoutingError(
             f"no provider registered for kind={request.kind.value}, speaker={request.speaker}"

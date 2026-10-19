@@ -41,6 +41,15 @@ user-profile access or Acer/installer operations.
 
 That router follows `HANDOVER.md`. Do not select a dated procedure merely because its filename looks newer or familiar.
 
+**Corpus replacement follow-up (2026-10-19):** the owner authorized the existing
+Activity/system corpus regeneration, except deterministic isolated letters and
+syllables, with per-recording tone/mood prompts. Its executable work order is
+`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md` and tool is
+`tools/regenerate_voice_corpus.py`. This scope authorizes source bug fixes and
+replacement with recoverable originals; new output stays listening-pending.
+It supersedes earlier add-only/preservation instructions for this operation,
+without changing the no-paid-spend or child-runtime boundaries.
+
 **2026-10-12 language/voice authoring route:** for the owner-authorized
 four-language rollout, read
 `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`

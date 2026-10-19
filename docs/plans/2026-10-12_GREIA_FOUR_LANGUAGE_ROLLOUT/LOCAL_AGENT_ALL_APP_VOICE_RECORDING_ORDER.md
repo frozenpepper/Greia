@@ -1,5 +1,14 @@
 # Greia — Local Agent: Record All Missing Voices in Every App (EN / IT / ES / FR)
 
+**Subsequent replacement request (2026-10-19):** execute
+`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md` with
+`tools/regenerate_voice_corpus.py` for the newly authorized existing-corpus
+replacement, per-recording performance prompts and deterministic isolated
+letter/syllable preservation. Older add-only/no-overwrite instructions below
+describe the previous missing-voice programme and do not prevent this explicitly
+requested replacement. New takes remain pending listening; the full replacement
+run has not been launched by the tool-preparation session.
+
 **Current routing override — owner decision 2026-10-19:** new character production uses the six accepted v0.2 masters through shared local VoxStage/VoxCPM2 by default, including Dani. Chatterbox is explicitly selectable; pedagogical pronunciation retains its native route. Any older provider/reference descriptions below describe the earlier recording programme and do not select the current backend. Use `tools/greia_voice.py` and current `SETUP.md` §7; existing accepted audio remains unchanged.
 
 **Owner instruction:** 2026-10-14. The owner has approved all *currently authored text translations* in English, Italian, Spanish and French for voice-production use. **Do the work, app by app; do not stop after an inventory.** Missing spoken scripts, pronunciation distinctions, and as-yet-untranslated inline runtime text are *not* magically filled by this approval.

@@ -171,6 +171,23 @@ class VoxStageProviderTests(unittest.TestCase):
         self.assertEqual(self.client.submitted["voice"], self.profile.voxstage_voice_id)
         self.assertEqual(self.client.submitted["takes"], 1)
         self.assertEqual(self.client.submitted["segments"][0]["text"], self.request.text)
+        self.assertIn("Speak naturally in French.", self.client.submitted["segments"][0]["delivery"])
+        self.assertTrue(take.generation_parameters["delivery_prompt"])
+
+    def test_explicit_performance_reaches_worker_and_receipt_parameters(self):
+        request = VoiceRequest("leo", SpeechKind.CHARACTER_DIALOGUE, "it", "Ciao!", delivery_prompt="Quiet, curious and reassuring.")
+        take = self.provider.generate(request, self.profile)
+        try:
+            self.assertEqual(self.client.submitted["segments"][0]["delivery"], "Speak naturally in Italian. Quiet, curious and reassuring.")
+            self.assertEqual(take.generation_parameters["delivery_prompt"], request.delivery_prompt)
+        finally:
+            take.temporary_wav.unlink()
+
+    def test_chatterbox_rejects_explicit_unsupported_acting_direction(self):
+        with build_engine(character_provider="chatterbox") as engine:
+            result = engine.generate(VoiceRequest("leo", SpeechKind.CHARACTER_DIALOGUE, "it", "Ciao!", delivery_prompt="Playful."))
+        self.assertEqual(result.disposition, GenerationDisposition.REJECTED)
+        self.assertIn("does not support delivery_prompt", result.detail)
 
     def test_conflicting_voice_is_not_replaced_or_submitted(self):
         self.client.saved["reference_sha256"] = "wrong-reference"

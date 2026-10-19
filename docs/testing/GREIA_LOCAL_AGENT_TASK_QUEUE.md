@@ -8,6 +8,17 @@
 **Project authority:** `AGENTS.md`, `SETUP.md`, `HANDOVER.md`
 **Queue scope:** checks that need the local machine, Simulator, screenshots, hearing or human observation. Do not use this as a second implementation plan.
 
+**Scoped GLA-014 follow-up — owner instruction 2026-10-19:** the current
+existing-corpus replacement work order is
+`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`, using
+`tools/regenerate_voice_corpus.py`. The owner explicitly requested tool execution,
+monitoring and necessary bug fixes; this scope supersedes the queue's ordinary
+source-repair/no-overwrite restrictions for that operation. Preserve deterministic
+isolated letters/syllables, originals and unrelated dirty work. Full replacement
+is not yet run; 4,543 ready and 167 metadata-blocked files were inventoried.
+Fresh output remains listening-pending. Follow that work order for progress,
+recovery, source fixes and evidence; do not start another competing voice queue.
+
 This file is **the one practical backlog for the local agent** while the GitHub
 development session continues independently. Read the actual current source
 and `git log` before assuming a command or a task is still relevant. The
@@ -577,6 +588,12 @@ test commands and expected observable behavior.
   only, not present evidence on GitHub main.
 
 ### GLA-014 — Four-language registry, staged installer text and voice inventory
+
+**2026-10-19 replacement follow-up:** PREPARED, full run UNEXECUTED.
+Use `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`; its explicit owner scope
+permits regeneration/replacement and necessary source fixes through the new
+tool, superseding older add-only/source-frozen restrictions below for this
+operation. The earlier PASS refers to the previous recording/integration batch.
 
 - **Status:** PASS (all audio produced, owner-approved and integrated)
 - **Priority:** P1; **minimum source SHA:**

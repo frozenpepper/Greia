@@ -16,6 +16,15 @@ on 2026-10-19. The default provider is now **VoxCPM2 through the existing shared
 local VoxStage worker**, including Dani. Chatterbox is retained explicitly.
 Pedagogical pronunciation remains the independent native/system route.
 
+**Corpus replacement follow-up:** the owner subsequently requested regeneration
+of existing Activity/system speech except deterministic isolated letters and
+syllables. The tool/agent work order is
+`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`; it uses the installed worker,
+external backups and the same VoiceEngine. Acting defaults live in
+`tools/greia_voice_core/character_delivery.json`; `--delivery-prompt` or the
+batch/service `delivery_prompt` field overrides one recording. Exact direction
+is retained in receipts. Fresh corpus output remains pending human listening.
+
 Start the installed shared service, then probe Greia:
 
 ```bash

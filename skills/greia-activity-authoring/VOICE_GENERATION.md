@@ -193,10 +193,20 @@ the active child profile/device locale. The localization resolver
 does not decode audio or create a Pygame mixer; the Activity sound
 owner handles only cache/channels/playback and procedural effects.
 
-All previously committed recordings are **personally owner-approved**.
-Do not recertify, re-record or alter them. New recordings continue to
+Previously committed recordings are **personally owner-approved**. Preserve
+them during ordinary Activity work. The explicit 2026-10-19 corpus replacement
+request is a scoped exception: use `tools/regenerate_voice_corpus.py` and
+`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`, preserving deterministic
+isolated letters/syllables and marking fresh output pending listening. New recordings continue to
 require owner listening approval. No source/signature tamper checking
 is required: users are allowed to modify installed media.
+
+VoxStage character acting defaults are editable in
+`tools/greia_voice_core/character_delivery.json`. Use the semantic
+`delivery_prompt` field (CLI `--delivery-prompt`) for a cue-specific tone/mood
+override, separate from spoken text. Batch/service preserve the same field;
+receipts include actual effective direction. Chatterbox/native do not support
+explicit acting prompts and reject them.
 
 
 ## 6. Semantic cue IDs and localization

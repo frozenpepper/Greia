@@ -107,6 +107,25 @@ The old v0.1 set is historical. The owner's acceptance of these masters and the
 24 EN/IT/FR/ES comparison samples does not accept future generations or authorize
 regeneration of previously accepted runtime recordings.
 
+**Subsequent scoped owner authorization (2026-10-19):** the owner explicitly
+requested replacement of existing Activity/system recordings using these new
+masters, except deterministic isolated letters/syllables, and a tone/mood prompt
+for every recording. Execute `tools/regenerate_voice_corpus.py` under
+`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`. This is the authorized exception
+to older preservation instructions for this corpus operation. It uses the same
+VoiceEngine, serial production, frozen requests, explicit metadata blockers,
+backups/recovery and pending-review receipts. Do not use the add-only approved
+asset importer for new unlistened takes. Full production has not been launched
+by the tool-preparation session.
+
+Character performance defaults live in
+`tools/greia_voice_core/character_delivery.json`; VoxStage applies them to normal
+generation too. `VoiceRequest.delivery_prompt`, CLI `--delivery-prompt`, and the
+batch/service field override the default for one cue. Acting instructions stay
+separate from the exact spoken text. Receipts retain the supplied prompt and
+the provider's actual effective language/delivery direction. Chatterbox/native
+reject explicit unsupported direction instead of silently ignoring it.
+
 `dani_system_speech` remains compatible and now clones Dani's selected master;
 Dani can also use `character_dialogue`. Pedagogical pronunciation retains the
 independent native/system route. VoxCPM2 language direction is probabilistic;

@@ -11,6 +11,9 @@ enters through `tools/greia_voice.py` or the same `VoiceEngine` core. “Voice S
 is this authoring workflow, not another content-facing synthesis API.
 
 Callers supply speaker, speech kind, BCP-47 locale, exact text, cue ID and output.
+They may supply a separate `delivery_prompt` for acting tone/mood; it is never
+concatenated into spoken text. VoxStage supports it; unsupported providers reject
+an explicit prompt. The saved reference remains the speaker identity.
 They never operate model imports, reference files, native voice names, trimming,
 Whisper or FFmpeg directly. Provider choice is an operator configuration below
 semantic content requests.
@@ -51,6 +54,11 @@ Exact owners:
 - `engine.py`: semantic routing, availability, bounded ASR retries, packaging,
   pending-review receipts and temporary-file cleanup.
 - `service.py`: localhost semantic service and client transport.
+- `direction.py` / `character_delivery.json`: editable six-character performance
+  defaults; VoxStage stores the effective prompt in generation parameters.
+- `tools/greia_voice_corpus/`: inventory, serial runner, replacement/restore
+  journal and derived catalogue updates for the owner-authorized corpus migration;
+  `tools/regenerate_voice_corpus.py` is its thin command entry point.
 
 These are authoring modules under `tools/greia_voice_core/`, not platform runtime
 services. Content scripts do not acquire a second provider architecture.
@@ -166,6 +174,17 @@ Human listening verifies exact words and locale, character identity, pronunciati
 clipping/tails, delivery and small-speaker intelligibility. Only the owning workflow
 promotes accepted output into runtime assets. Already accepted audio is not
 regenerated just because the default provider or registry changes.
+
+The owner's subsequent 2026-10-19 request explicitly authorizes the existing
+corpus replacement described in `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`.
+The runner submits semantic requests to this engine with the selected v0.2
+masters, explicit character performance prompts and preserved deterministic
+isolated letters/syllables. Former native whole words/numbers are deliberately
+assigned to character voices for this operation only; ordinary pedagogical
+routing remains unchanged. The inventory never invents missing transcripts.
+Existing files are backed up outside Git, then replaced through a recoverable
+audio/receipt/catalogue transaction, with receipts and shared rows still PENDING.
+This authoring operation is separate from human acceptance and image release.
 
 ## 8. Warm service, readiness and extension
 

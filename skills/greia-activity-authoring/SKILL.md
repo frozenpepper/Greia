@@ -5,6 +5,16 @@ description: Design and build one or more Greia Activities from a parent's reque
 
 # Greia Activity Authoring
 
+## Current corpus voice operation (2026-10-19)
+
+The owner authorized existing Activity/system speech replacement through
+`tools/regenerate_voice_corpus.py`; follow
+`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md` for planning, metadata repair,
+serial production, progress, restore and pending listening. Deterministic
+isolated letters/syllables stay unchanged. Normal authoring still uses
+VoiceEngine. Its `delivery_prompt` field now supports per-cue tone/mood direction
+through VoxStage; six editable character defaults apply when omitted.
+
 **Status:** living Activity-authoring contract  
 **Reviewed:** 2026-10-17
 

@@ -566,6 +566,14 @@ Preserve the platform-owned on-demand route, Parent-owned settings, honest raw f
 
 ## Prerecorded voice/speech production
 
+For the owner-authorized 2026-10-19 existing-corpus replacement, use
+`tools/regenerate_voice_corpus.py` and
+`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`. This scoped exception permits
+replacing accepted runtime speech with new pending-review takes while retaining
+isolated deterministic letters/syllables and originals for recovery. Per-character
+tone/mood defaults and per-cue `delivery_prompt` use the existing VoiceEngine;
+no child-runtime synthesis or second production backend is introduced.
+
 Read:
 
 ```text

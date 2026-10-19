@@ -38,6 +38,20 @@ pronunciation and identity still need listening review.
 
 ## Speech routing
 
+VoxStage uses editable acting defaults from `character_delivery.json` for all six
+characters. Override a cue with `--delivery-prompt 'Quiet, curious and reassuring.'`
+or the JSON `delivery_prompt` field in batch/service requests. The provider sends
+language and acting as direction, separately from exact spoken words, and records
+the actual prompt in receipt generation parameters. Explicit acting prompts are
+unsupported by the retained Chatterbox/native adapters and are rejected.
+
+For the owner-authorized existing-corpus replacement (2026-10-19), use
+`tools/regenerate_voice_corpus.py` and
+`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`: inventory, resolve scripts,
+run/resume with progress, inspect status, recover/retry and restore originals.
+This operation preserves deterministic isolated letters/syllables and installs
+new recordings as listening-pending; it does not grant audio acceptance.
+
 | Kind | Current route |
 |---|---|
 | `character_dialogue` | selected cloned character, all six speakers |

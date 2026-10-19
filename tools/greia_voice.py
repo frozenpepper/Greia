@@ -52,6 +52,7 @@ def _request_from_args(args: argparse.Namespace) -> VoiceRequest:
         output=Path(args.output) if args.output else None,
         verification=VerificationMode(args.verification),
         max_attempts=args.max_attempts,
+        delivery_prompt=args.delivery_prompt,
     )
 
 
@@ -165,6 +166,7 @@ def add_request_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--locale", required=True, help="BCP-47 locale, e.g. it or en")
     parser.add_argument("--text", required=True, help="exact reviewed text to synthesize")
     parser.add_argument("--cue-id")
+    parser.add_argument("--delivery-prompt", default="", help="acting direction, separate from spoken words; VoxStage only")
     parser.add_argument("--output", help="optional absolute or repository-relative .wav/.ogg path")
     parser.add_argument(
         "--verification",

@@ -12,6 +12,7 @@ import uuid
 
 from .models import GeneratedTake, ProviderStatus, SpeechKind, VoiceProfile, VoiceRequest
 from .providers import VoiceProvider, VoiceProviderError
+from .direction import character_delivery
 from .voxstage_client import VoxStageClient, VoxStageServiceError
 
 
@@ -25,6 +26,7 @@ class VoxStageProvider(VoiceProvider):
     """
 
     provider_id = "voxstage-voxcpm2"
+    supports_delivery_prompt = True
     character_kinds = frozenset({
         SpeechKind.CHARACTER_DIALOGUE,
         SpeechKind.SHARED_CHARACTER_UTTERANCE,
@@ -81,6 +83,8 @@ class VoxStageProvider(VoiceProvider):
         if language is None:
             raise VoiceProviderError(f"VoxStage language direction is not configured for {request.language}")
         voice_id = self._ensure_voice(profile)
+        delivery_prompt = request.delivery_prompt or character_delivery()[profile.character]
+        delivery = f"Speak naturally in {language}. {delivery_prompt}"
         payload = {
             "title": f"Greia {profile.character} {request.language}",
             "voice": voice_id,
@@ -88,7 +92,7 @@ class VoxStageProvider(VoiceProvider):
             "takes": 1,
             "max_chars": 240,
             "settings": {"steps": 10, "cfg": 2.0, "max_tokens": 300},
-            "segments": [{"id": "speech", "text": request.text, "delivery": f"Speak naturally in {language}", "pause_after_ms": 0}],
+            "segments": [{"id": "speech", "text": request.text, "delivery": delivery, "pause_after_ms": 0}],
         }
         key = f"greia-{uuid.uuid4().hex}"
         try:
@@ -131,6 +135,8 @@ class VoxStageProvider(VoiceProvider):
                 "settings": payload["settings"],
                 "script_seed": payload["seed"],
                 "language_direction": language,
+                "delivery_prompt": delivery_prompt,
+                "effective_delivery": delivery,
                 "mode": "reference",
                 "recordings": [{"file": r["file"], "seed": r["spec"]["seed"], "sha256": r["sha256"], "generation": r.get("generation", {})} for r in recordings],
             })

@@ -1,5 +1,13 @@
 # Greia — Local Agent: Four-Language Audio Production and Gap Closure
 
+**Current existing-corpus replacement order (2026-10-19):**
+`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md` and
+`tools/regenerate_voice_corpus.py` implement the owner's subsequent request to
+replace existing speech using v0.2 masters and explicit acting prompts, except
+deterministic isolated letters/syllables. This scoped permission supersedes
+older preservation/add-only instructions below for that operation. Missing
+scripts stay blocked, originals are backed up and fresh takes require listening.
+
 **Current routing override — owner decision 2026-10-19:** new character production uses the six accepted v0.2 masters through shared local VoxStage/VoxCPM2 by default, including Dani. Chatterbox is explicitly selectable; pedagogical pronunciation retains its native route. Any older provider/reference descriptions below describe the earlier recording programme and do not select the current backend. Use `tools/greia_voice.py` and current `SETUP.md` §7; existing accepted audio remains unchanged.
 
 **Owner request:** record *all* missing spoken content across Greia OS,
