@@ -6,6 +6,25 @@
 **Evidence status:** The 2026-10-19 corpus replacement is locally running with pending-review receipts; no full checkout test, GUI or physical-install evidence was produced in this session.
 
 
+## 2026-10-19 — Corpus replacement checkpoint: 700 complete
+
+Current status is **700 DONE, 1 GENERATING, 3,842 READY, 167
+BLOCKED_METADATA, and 598 PRESERVED**. The active item is Encyclopedia Greia
+EN `activities/enciclopedia_greia/assets/audio/en/body/senses_hearing.ogg`;
+the serial run is shell session `85073`, external work/log/journal directory
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/`, with
+VoxStage PID `19719`. English animal and body narration has begun; longer clips
+are taking approximately 15–60 seconds each. Progress is healthy with no new
+failures since the explicit idle-confirmed retry recorded above.
+
+Every new receipt remains `human_review=PENDING`. Whisper verification is off;
+no ASR or human listening acceptance is claimed. The 167 metadata gaps remain
+unresolved and are skipped while independent READY cues proceed. Retain the
+external journal, candidate outputs and original backups; preserve unrelated
+untracked `final.mp4` and `launch-video/`. Continue monitoring the same run and
+inspect any uncertain provider job before an explicit retry.
+
+
 ## 2026-10-19 — Corpus replacement checkpoint: 602 complete
 
 Current full-pass status: **602 DONE, 1 GENERATING, 3,940 READY, 167 BLOCKED_METADATA, 598 PRESERVED**; active Costruiamo Ponti IT `too_heavy.wav`. Run session `85073`, external directory/log/journal `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/`, VoxStage PID `19719`.

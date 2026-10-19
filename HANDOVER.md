@@ -72,6 +72,26 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-19 — Corpus replacement checkpoint: 700 complete
+
+The resumed owner-authorized full READY pass remains active in shell session
+`85073`. Current status: **700 DONE, 1 GENERATING, 3,842 READY,
+167 BLOCKED_METADATA, 598 PRESERVED**; current cue is Encyclopedia Greia EN
+`activities/enciclopedia_greia/assets/audio/en/body/senses_hearing.ogg`.
+VoxStage PID `19719` is the sole loaded worker. The pass has advanced through
+English animal and body facts; long narration cues take roughly 15–60 seconds
+each. No additional failures or recovery transactions have appeared since the
+explicit idle-confirmed retry of Bottega ES `prompt_order_length.wav` (job
+`20261019-201240-59474c63`).
+
+All replacement receipts remain `human_review=PENDING`. Whisper verification is
+off on this host; no ASR or human listening acceptance is claimed. The 167
+metadata gaps remain excluded while independent READY work proceeds. Logs,
+journal, candidates and recoverable originals remain in
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/`.
+Unrelated untracked `final.mp4` and `launch-video/` remain preserved. Continue
+monitoring the same run and inspect any uncertain VoxStage job before retrying.
+
 ## 2026-10-19 — Corpus replacement checkpoint: 602 complete
 
 The resumed full READY pass is active in shell session `85073`. Latest status:
