@@ -117,10 +117,14 @@ greia_verify_composed_root() {
       _greia_root_fail "$label" "installer finish service is missing or wrong"
     [[ -x "$root/usr/local/lib/greia-os/greia-installer-finish" ]] || \
       _greia_root_fail "$label" "installer finish helper is missing"
-    grep -Fq 'SetShowStatus s yes' "$root/usr/local/lib/greia-os/greia-installer-finish" || \
-      _greia_root_fail "$label" "installer finish helper does not raise shutdown visibility"
     grep -Fq '/usr/bin/systemctl poweroff' "$root/usr/local/lib/greia-os/greia-installer-finish" || \
       _greia_root_fail "$label" "installer finish helper does not power off"
+    # Shutdown stays silent: raising show-status/loglevel here printed terminal
+    # text over the Greia cover (owner report 2026-10-18).
+    if grep -Eq 'SetShowStatus|/proc/sys/kernel/printk' \
+      "$root/usr/local/lib/greia-os/greia-installer-finish"; then
+      _greia_root_fail "$label" "installer finish helper reintroduces shutdown console text"
+    fi
     [[ -L "$root/etc/systemd/system/multi-user.target.wants/greia-installer-finish.path" ]] || \
       _greia_root_fail "$label" "installer finish path unit is not enabled"
     # Installer look + boot intro assets (src/greia_installer/presentation.py,

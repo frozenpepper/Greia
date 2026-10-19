@@ -716,15 +716,17 @@ class InstallerCompletionPoweroffContractTests(unittest.TestCase):
         self.assertIn("ExecStart=/usr/local/lib/greia-os/greia-installer-finish", unit)
         self.assertNotIn("reboot", unit)
 
-    def test_finish_helper_powers_off_and_raises_shutdown_visibility(self) -> None:
+    def test_finish_helper_powers_off_without_printing_over_the_cover(self) -> None:
         helper = (
             ROOT / "build/installer-overlay/usr/local/lib/greia-os/greia-installer-finish"
         )
         text = helper.read_text(encoding="utf-8")
-        # Exactly one privileged action plus making its outcome observable.
-        self.assertIn("SetShowStatus s yes", text)
         self.assertIn("/usr/bin/systemctl poweroff", text)
         self.assertNotIn("reboot", text)
+        # The 2026-10-18 diagnostic raise printed systemd/kernel text over the
+        # branded cover; shutdown must stay silent now that power-off works.
+        self.assertNotIn("SetShowStatus", text)
+        self.assertNotIn("/proc/sys/kernel/printk", text)
         self.assertTrue(helper.stat().st_mode & 0o111)
 
     def test_composer_enables_the_finish_path_with_the_installer(self) -> None:
@@ -738,7 +740,8 @@ class InstallerCompletionPoweroffContractTests(unittest.TestCase):
         verifier = (ROOT / "build/lib/verify-composed-root.sh").read_text(encoding="utf-8")
         self.assertIn("PathExists=/run/greia-installer/finish-request", verifier)
         self.assertIn("ExecStart=/usr/local/lib/greia-os/greia-installer-finish", verifier)
-        self.assertIn("SetShowStatus s yes", verifier)
+        self.assertIn("installer finish helper does not power off", verifier)
+        self.assertIn("reintroduces shutdown console text", verifier)
         self.assertIn("multi-user.target.wants/greia-installer-finish.path", verifier)
 
     def test_installer_ui_writes_the_marker_instead_of_calling_logind(self) -> None:

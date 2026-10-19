@@ -2716,8 +2716,10 @@ read-back and loop hygiene PASS). QEMU verified the new path: the finish path
 unit was active and an unprivileged `nobody` marker creation triggered the
 root service and a clean ACPI power-off.
 
-Still open for lifecycle closure: the physical/logind shutdown hang on the
-reference Acer (black screen, no power-off; QEMU powers off cleanly, so it is
-hardware-specific) and premortem F18's clean power-off acceptance. Next:
-rebuild/reflash, retest the button, and capture the hung shutdown stage on the
-new media.
+Physical retest: the on-screen completion button now powers the Acer off.
+The first successful shutdown showed the diagnostic systemd/kernel transcript
+over the Greia cover, so the visibility raise was removed after power-off was
+proven; the finish helper now performs only `systemctl poweroff` and
+`installer-exit-cover` is the last frame drawn. The composed-root verifier
+rejects reintroducing show-status/printk output there. Physical F18 closure
+remains after the presentation-refined media is built and retested.

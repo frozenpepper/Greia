@@ -1773,3 +1773,13 @@ installer's own unprivileged identity
 root service and the VM performed a clean ACPI power-off (QEMU exited).
 Artifact and USB read-back verification both PASS; payload 1,203 MiB.
 Physical Acer retest remains the closure evidence for F18.
+
+Presentation follow-up (owner report, same day): while the diagnostic
+visibility raise was active, the successful shutdown showed a terminal
+transcript, then the Greia cover, then more systemd text drawn over the cover
+with a glitchy look (fbcon and the direct framebuffer paint sharing VT1). Since
+the on-screen path now powers off correctly, the raise was removed: the finish
+helper performs only `systemctl poweroff`, and the existing
+`installer-exit-cover` repaint is the last thing drawn before power-off. The
+composed-root verifier rejects reintroducing show-status/printk changes in that
+helper. The quiet shutdown keeps the Greia artwork on screen through power-off.

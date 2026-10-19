@@ -5,17 +5,13 @@
 # installer UI has created /run/greia-installer/finish-request in its own
 # RuntimeDirectory. This script's entire authority is one machine power-off;
 # it takes no arguments and exposes no other operation.
+#
+# Presentation: shutdown stays silent. The quiet boot policy also governs
+# shutdown, and greia-installer.service's ExecStopPost repaints the Greia
+# framebuffer cover when X releases VT1, so the parent sees the Greia artwork
+# through power-off instead of systemd status text. Do not raise
+# systemd.show_status or the kernel console log level here: doing so prints
+# terminal text over the branded cover (owner report 2026-10-18).
 set -eu
-
-# The quiet profile sets console loglevel 0 and systemd status off, so a
-# shutdown that fails or hangs would leave the parent on a mute black screen
-# (owner report 2026-10-18). This code runs only after the completion button
-# was deliberately pressed, so raising shutdown visibility here does not
-# change the child-facing boot or installer presentation.
-busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1 \
-  org.freedesktop.systemd1.Manager SetShowStatus s yes >/dev/null 2>&1 || true
-# Keep kernel-level shutdown failures visible as well: ACPI power-off errors
-# and driver hangs print at emergency/warning levels that loglevel=0 hides.
-echo 8 > /proc/sys/kernel/printk 2>/dev/null || true
 
 exec /usr/bin/systemctl poweroff
