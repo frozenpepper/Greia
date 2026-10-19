@@ -72,6 +72,24 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-19 — Corpus replacement checkpoint: 101 complete
+
+The full READY run remains active in shell session `45485`; the external log and
+journal are under `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/`.
+Latest exact status: **101 DONE, 1 GENERATING, 4,441 READY, 167 BLOCKED_METADATA,
+598 PRESERVED**. The current cue is Alfabeto Leo ES `guess_prompt.wav`. VoxStage
+PID `19719` remains loaded with one job, and the runner is emitting completed
+transaction heartbeats. No failures or recovery states have appeared. All new
+receipts remain `human_review=PENDING`; no listening or ASR acceptance is claimed.
+
+Source/history review has not yielded enough exact-script evidence to resolve any
+of the 167 blockers, so READY work continues independently. Preserve the four-cue
+pilot and all subsequent originals/journal outside Git. Next: continue monitoring
+the serial run and investigate exact blocked scripts; do not resubmit an uncertain
+provider request or alter DONE rows. This checkpoint supersedes the earlier
+in-progress count below without changing its historical record.
+
+
 ## 2026-10-19 — Full voice corpus replacement running (SOURCE / LOCAL RECORDING, in progress)
 
 The owner-authorized replacement is now using the prepared external run at

@@ -6,6 +6,12 @@
 **Evidence status:** The 2026-10-19 corpus replacement is locally running with pending-review receipts; no full checkout test, GUI or physical-install evidence was produced in this session.
 
 
+## 2026-10-19 — Corpus replacement checkpoint: 101 completed cues
+
+Updated checkpoint for the running owner-authorized pass: **101 DONE, 1 GENERATING, 4,441 READY, 167 BLOCKED_METADATA, 598 PRESERVED**. Alfabeto Leo ES `guess_prompt.wav` is in progress. The run remains shell session `45485`, production log/journal `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/production.log`, and shared VoxStage PID `19719`. The worker is loaded with a single active job; progress heartbeat and completed transactions continue.
+
+No FAILED/NEEDS_RECOVERY cue or source bug is present. Completed takes retain explicit acting prompts and `human_review=PENDING`. Whisper remains unavailable and verification is off; no audio has been human-reviewed in this operation. The 167 unresolved legacy rows remain blocked while READY production continues; exact script recovery has not yet established an override. This checkpoint updates the current count while preserving the earlier launch entry as history.
+
 ## 2026-10-19 — Owner-authorized existing-corpus replacement launched (LOCAL RECORDING, in progress)
 
 Started the current executable work order, `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`, using the prepared external inventory at `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/`. The frozen plan's v0.2 registry-manifest SHA matches the current source; all six per-character delivery prompts are present. A bounded 4-cue pilot completed, then the full serial READY pass started and is resumable in shell session `45485`; production log is in the external work directory. The VoxStage shared worker PID is `19719`.
