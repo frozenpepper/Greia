@@ -63,6 +63,14 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-19 — Pi 400/500 installer gap verified; Pi DOS A/B layout implemented on feature branch (NOT an installable Pi image)
+
+**Status: SOURCE-ONLY / UNPROVEN, complete Raspberry Pi installer NOT READY.**
+Owner reported another agent found no implemented Raspberry Pi installer. Audit confirms source-only schema/abstract Pi models had been mistaken for a usable installer: `tools/build_profile.py.check_phase0_builder_support` rejects ARM64, `build/build-installer-image.sh` builds x86 BIOS media, and `execute_fresh_ab_install` assumes GRUB. The repository has no Pi arm64 live-root+firmware staging and no universal Setup image yet. Never describe Pi installation as complete on the strength of the schema or mock tryboot tests.
+
+This feature branch implements the **Pi native MBR A/B partition layout** with 256 MiB P1/P2/P3 FAT filesystems, P4 extended container, P5/P6/P7 ext4 logical system-A/system-B/PERSIST, 3 MiB EBR reserves included in sizing and profile capacity floor, observed DOS partition identities, and recording-runner tests. The full fresh install explicitly **refuses Pi before partitioning** until native firmware staging, ARM payload/media and tryboot activation are integrated. No physical card or QEMU build was tested in this chat (GitHub source edit only; remote execution unauthorized). See `docs/plans/2026-10-19_RASPBERRY_PI_INSTALLER_EXECUTION.md` for exact remaining wiring/tests and stop conditions.
+
+
 ## 2026-10-18 — Installer completion button repaired (root finish-marker path); live shutdown hang still open on the Acer
 
 **Evidence class: SOURCE + QEMU reproduction of the denial. Physical retest pending.**

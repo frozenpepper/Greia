@@ -9,8 +9,9 @@ platform-specific partition command runs.
 Adapter identities are the canonical source-owned ``storage.layout_adapter``
 ids (``tools/build_profile.py``, mirrored by
 ``greia_platform.persistent_layout``): ``legacy-bios-ab-v1`` (executable
-here), ``modern-gpt-ab-v1`` and ``pi-mbr-tryboot-ab-v1`` (registered
-role-model skeletons; full execution deferred to Phases 8C/8D). The brief's
+here), ``modern-gpt-ab-v1`` (execution still deferred) and
+``pi-mbr-tryboot-ab-v1`` (executable DOS partition commands; the boot/media
+pipeline remains separately gated). The brief's
 ``modern-uefi-ab-v1`` / ``pi-tryboot-ab-v1`` shorthands denote these same
 canonical adapters. No parallel vocabulary is introduced.
 
@@ -695,8 +696,8 @@ class PiMbrTrybootAbAdapter(_DeferredExecutionAdapter):
 
     Native firmware A/B semantics: FAT boot-control plus staged BOOT_A/BOOT_B
     beside ext4 system slots and the PERSIST remainder. Number 4 is reserved
-    for the extended container (emitted with the execution path in Phase
-    8D); logical roles 5-7 validate sequentially against it.
+    for the extended container; logical roles 5-7 validate sequentially
+    against it with one EBR-alignment MiB per logical partition.
     """
 
     deferred_phase = "Phase 8D"
@@ -1186,9 +1187,8 @@ def observe_partition_identities(
 ) -> dict[str, dict[str, str]]:
     """Semantic observation interface behind every layout adapter id.
 
-    The legacy MBR adapter observes today; GPT (Phase 8C) and Pi MBR
-    (Phase 8D) adapters implement their own parsers/observation rules
-    behind this same interface when their execution paths land. Routing
+    Both DOS adapters (legacy BIOS and Pi) reuse the proven observed-MBR
+    signature/PARTUUID path. GPT's observer remains deferred. Routing
     by adapter id keeps MBR parsing out of the GPT/Pi paths.
     """
     if plan.adapter_id == LEGACY_BIOS_AB_ADAPTER_ID:
@@ -1476,7 +1476,7 @@ _MINIMUM_PROBE_DEVICE_BYTES = 1 << 40
 def minimum_device_bytes_for_profile(sizing: ProfileSizing) -> int:
     """Return the canonical installed-target minimum for profile sizing.
 
-    Single layout-owned formula: ``LABEL_RESERVED_BYTES + sum(fixed
+    Single layout-owned formula: ``layout-specific reservation + sum(fixed
     partition sizes) + persist_minimum_bytes``, where the fixed sizes come
     from the real registered adapter's own :meth:`LayoutAdapter.plan`
     (proven at a probe capacity), never from a per-layout overhead table.
