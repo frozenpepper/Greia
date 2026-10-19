@@ -72,6 +72,19 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-19 — Corpus replacement checkpoint: 198 complete
+
+The active full READY pass (shell session `45485`) has **198 DONE, 1 GENERATING,
+4,344 READY, 167 BLOCKED_METADATA, and 598 PRESERVED**. Current cue: Alfabeto Leo
+IT `ask_G.wav`. VoxStage is the same single worker (PID `19719`), and the external
+production log/journal remain at `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/`.
+The stream is progressing with heartbeats; there are no FAILED or NEEDS_RECOVERY
+rows. Completed receipts remain listening-pending. No exact-source recovery has
+yet substantiated an override for the 167 blocked rows, which continue to be
+skipped while READY work runs. This newer checkpoint supersedes the count in the
+prior in-progress entries below.
+
+
 ## 2026-10-19 — Corpus replacement checkpoint: 101 complete
 
 The full READY run remains active in shell session `45485`; the external log and

@@ -6,6 +6,12 @@
 **Evidence status:** The 2026-10-19 corpus replacement is locally running with pending-review receipts; no full checkout test, GUI or physical-install evidence was produced in this session.
 
 
+## 2026-10-19 — Corpus replacement checkpoint: 198 complete
+
+Latest status for the active owner-authorized full pass: **198 DONE, 1 GENERATING, 4,344 READY, 167 BLOCKED_METADATA, 598 PRESERVED**. Alfabeto Leo IT `ask_G.wav` is active. Shell session `45485`, log and journal `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/`, VoxStage PID `19719`. Heartbeats and completed transactions continue; no failures or recovery work. New receipts remain `human_review=PENDING`; no ASR or human listening acceptance is claimed.
+
+Exact-script research has not validated an override yet. Keep blocked rows excluded while READY rows proceed; continue the serial run and recover only substantiated scripts without revisiting DONE cues. This checkpoint supersedes the earlier count above while preserving that launch history.
+
 ## 2026-10-19 — Corpus replacement checkpoint: 101 completed cues
 
 Updated checkpoint for the running owner-authorized pass: **101 DONE, 1 GENERATING, 4,441 READY, 167 BLOCKED_METADATA, 598 PRESERVED**. Alfabeto Leo ES `guess_prompt.wav` is in progress. The run remains shell session `45485`, production log/journal `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/production.log`, and shared VoxStage PID `19719`. The worker is loaded with a single active job; progress heartbeat and completed transactions continue.
