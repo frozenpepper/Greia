@@ -2717,9 +2717,12 @@ unit was active and an unprivileged `nobody` marker creation triggered the
 root service and a clean ACPI power-off.
 
 Physical retest: the on-screen completion button now powers the Acer off.
-The first successful shutdown showed the diagnostic systemd/kernel transcript
-over the Greia cover, so the visibility raise was removed after power-off was
-proven; the finish helper now performs only `systemctl poweroff` and
-`installer-exit-cover` is the last frame drawn. The composed-root verifier
-rejects reintroducing show-status/printk output there. Physical F18 closure
+The first successful shutdown showed the diagnostic transcript and then
+systemd-shutdown teardown warnings over the Greia cover. The finish helper no
+longer raises visibility; because PID1 forwards its log level to
+systemd-shutdown, the helper lowers the manager `LogLevel` to `emerg` just
+before `systemctl poweroff`, so the branded cover is the last visible frame
+(QEMU frame capture confirms a clean splash with no terminal text).
+`installer-exit-cover` supplies that frame; the composed-root verifier
+enforces the silence and rejects status/printk raising. Physical F18 closure
 remains after the presentation-refined media is built and retested.

@@ -1783,3 +1783,15 @@ helper performs only `systemctl poweroff`, and the existing
 `installer-exit-cover` repaint is the last thing drawn before power-off. The
 composed-root verifier rejects reintroducing show-status/printk changes in that
 helper. The quiet shutdown keeps the Greia artwork on screen through power-off.
+
+Second presentation follow-up (same day): removing the diagnostic raise stopped
+the systemd stop-job transcript, but `systemd-shutdown` still printed its final
+live-medium/loop teardown errors over the Greia cover ("Failed to unmount
+/run/live/medium", "Could not detach loopback /dev/loop0", "Failed to finalize
+file systems, loop devices, ignoring"). PID1 passes its current log level to
+`systemd-shutdown`, and the Manager `LogLevel` property is writable, so the
+root finish helper now lowers PID1's log level to `emerg` immediately before
+`systemctl poweroff`. This is runtime-only: normal boot logging and the journal
+are unaffected, kernel emergencies still print, and the branded cover remains
+the last frame. QEMU frame capture of the shutdown (marker created as
+`nobody`) ends on the clean Greia splash with no terminal text.

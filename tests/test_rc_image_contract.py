@@ -723,6 +723,9 @@ class InstallerCompletionPoweroffContractTests(unittest.TestCase):
         text = helper.read_text(encoding="utf-8")
         self.assertIn("/usr/bin/systemctl poweroff", text)
         self.assertNotIn("reboot", text)
+        # systemd-shutdown inherits PID1's log level; lowering it to emergency
+        # for the final power-off keeps the Greia cover as the last frame.
+        self.assertIn("LogLevel s emerg", text)
         # The 2026-10-18 diagnostic raise printed systemd/kernel text over the
         # branded cover; shutdown must stay silent now that power-off works.
         self.assertNotIn("SetShowStatus", text)
@@ -741,6 +744,7 @@ class InstallerCompletionPoweroffContractTests(unittest.TestCase):
         self.assertIn("PathExists=/run/greia-installer/finish-request", verifier)
         self.assertIn("ExecStart=/usr/local/lib/greia-os/greia-installer-finish", verifier)
         self.assertIn("installer finish helper does not power off", verifier)
+        self.assertIn("does not silence the shutdown phase", verifier)
         self.assertIn("reintroduces shutdown console text", verifier)
         self.assertIn("multi-user.target.wants/greia-installer-finish.path", verifier)
 

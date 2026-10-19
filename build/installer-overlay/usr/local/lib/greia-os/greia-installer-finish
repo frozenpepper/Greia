@@ -5,13 +5,16 @@
 # installer UI has created /run/greia-installer/finish-request in its own
 # RuntimeDirectory. This script's entire authority is one machine power-off;
 # it takes no arguments and exposes no other operation.
-#
-# Presentation: shutdown stays silent. The quiet boot policy also governs
-# shutdown, and greia-installer.service's ExecStopPost repaints the Greia
-# framebuffer cover when X releases VT1, so the parent sees the Greia artwork
-# through power-off instead of systemd status text. Do not raise
-# systemd.show_status or the kernel console log level here: doing so prints
-# terminal text over the branded cover (owner report 2026-10-18).
 set -eu
+
+# systemd-shutdown inherits PID1's log level and prints live-medium/loop
+# teardown warnings over the Greia framebuffer cover at the very end of a
+# shutdown (owner report 2026-10-18: text drawn over the splash). Lowering the
+# manager log level to emergency only for this final power-off keeps the
+# branded cover as the last visible frame. This is runtime-only: boot logging
+# and the journal during normal operation are unaffected, and kernel panics
+# still print at emergency level.
+busctl set-property org.freedesktop.systemd1 /org/freedesktop/systemd1 \
+  org.freedesktop.systemd1.Manager LogLevel s emerg >/dev/null 2>&1 || true
 
 exec /usr/bin/systemctl poweroff

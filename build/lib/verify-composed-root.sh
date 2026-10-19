@@ -119,8 +119,11 @@ greia_verify_composed_root() {
       _greia_root_fail "$label" "installer finish helper is missing"
     grep -Fq '/usr/bin/systemctl poweroff' "$root/usr/local/lib/greia-os/greia-installer-finish" || \
       _greia_root_fail "$label" "installer finish helper does not power off"
-    # Shutdown stays silent: raising show-status/loglevel here printed terminal
-    # text over the Greia cover (owner report 2026-10-18).
+    # Shutdown stays silent: raising show-status/kernel loglevel here printed
+    # terminal text over the Greia cover. Instead the helper lowers PID1's log
+    # level to emergency for the final power-off (2026-10-18).
+    grep -Fq 'LogLevel s emerg' "$root/usr/local/lib/greia-os/greia-installer-finish" || \
+      _greia_root_fail "$label" "installer finish helper does not silence the shutdown phase"
     if grep -Eq 'SetShowStatus|/proc/sys/kernel/printk' \
       "$root/usr/local/lib/greia-os/greia-installer-finish"; then
       _greia_root_fail "$label" "installer finish helper reintroduces shutdown console text"
