@@ -2724,5 +2724,10 @@ systemd-shutdown, the helper lowers the manager `LogLevel` to `emerg` just
 before `systemctl poweroff`, so the branded cover is the last visible frame
 (QEMU frame capture confirms a clean splash with no terminal text).
 `installer-exit-cover` supplies that frame; the composed-root verifier
-enforces the silence and rejects status/printk raising. Physical F18 closure
-remains after the presentation-refined media is built and retested.
+enforces the silence and rejects status/printk raising. Rebuilt and reflashed
+at `6f3c809c` (image
+`47ab4ec639175f8b21aa69aec0f3aa1d172eab7d8a4ce24fdc775f92031fb6a0`, live media
+`a1d8e713-5090-4570-be68-83db7cfda8c6`, payload 1,203 MiB; artifact, USB
+read-back and loop hygiene PASS). QEMU capture of the marker-triggered
+shutdown ends on the clean Greia splash with no terminal text. Physical F18
+closure remains after the Acer retest.

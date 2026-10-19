@@ -1795,3 +1795,11 @@ root finish helper now lowers PID1's log level to `emerg` immediately before
 are unaffected, kernel emergencies still print, and the branded cover remains
 the last frame. QEMU frame capture of the shutdown (marker created as
 `nobody`) ends on the clean Greia splash with no terminal text.
+
+Final media verification (2026-10-18): rebuilt/flashed at `6f3c809c`
+(image `47ab4ec639175f8b21aa69aec0f3aa1d172eab7d8a4ce24fdc775f92031fb6a0`,
+live media `a1d8e713-5090-4570-be68-83db7cfda8c6`, payload 1,203 MiB; artifact,
+USB read-back and loop hygiene PASS). QEMU captured the shutdown triggered by
+an unprivileged `nobody` marker: the final frame is the Greia splash with no
+terminal text, followed by a clean power-off. Evidence:
+`docs/reviews/acer/2026-10-18_QUIET_SHUTDOWN_QEMU_VERIFICATION/`.
