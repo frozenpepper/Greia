@@ -63,6 +63,15 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-19 — Research-led Pi 400/500 verification (read-only boot evidence; installer still blocked)
+
+**Baseline:** main 43045003e39c4d020647309760d19a41182b98f3. Independently checked Raspberry Pi's official autoboot/tryboot/config.txt and kernel documentation, firmware release notes, reported A/B GPT/partition-walk failures (rpi-eeprom #818, corrupted autoboot forums), and Raspberry Pi rpi-image-gen's boot-device-backed slot and persistent-state design. Findings and source references: `docs/reviews/2026-10-19_RASPBERRY_PI_RESEARCH_LED_VERIFICATION.md`.
+
+**Changes:** strengthened built-in Pi MMC policy to require 32-hex-digit CID rather than arbitrary nonempty text; updated fake SD test identity and added negative invalid-CID assertion. New **read-only** `greia_platform.pi_boot_observation` decodes firmware's big-endian 4-byte selected-partition and tryboot properties, compares them with canonical `autoboot.txt`, slot-root P5/P6 PARTUUIDs and the Linux root= parameter; rejects contradictory facts. Eight focused tests added, including negative boot-state cases. It never arms trial boot or commits accepted slot.
+
+**Verification:** Python 3.13 local syntax compile and isolated new-module harness 8/8 PASS, with temporary stand-ins for two other Greia module APIs; NOT full-repo tests. No `make verify`, image build, loopback geometry, QEMU, real EFI/firmware or Pi hardware evidence. **Pi installer continues to refuse before erase; not bootable/not released**. Exact next steps: run full-repo focused tests and make verify, physical **read-only** Pi EEPROM/model/MMC diagnostics, loopback DOS partition validation, implement native ARM media + firmware boot + recovery/update transaction, then owner-approved physical destructive acceptance. No Github Actions or paid cloud runners without opt-in.
+
+
 ## 2026-10-19 — Pi verification pass 2: slotted-dataclass policy failure and malformed FDT assets
 
 **Baseline reviewed:** main `e37aa437a3cdcc87c65fc26bd36a43ca25b7751a`. Source inspection reconfirmed executable Pi adapter, MBR sizing and early non-destructive full-installer refusal. An independent Python reproduction confirmed that zero-argument `super()` in `@dataclass(frozen=True, slots=True)` can throw `TypeError`; the Pi removable-card policy did exactly that when built-in CID proof was absent. Replaced with explicit parent-method delegation. Added `lsblk` JSON → sysfs Pi 500 MMC CID → policy target-selection integration test (including a USB installer competitor) and negative no-exception cases. Boot-asset stager now rejects non-FDT/truncated DTB and overlay containers, with corresponding tests. Read `docs/reviews/2026-10-19_RASPBERRY_PI_INSTALLER_SOURCE_REVIEW.md` § follow-up verification pass 2 for full findings and first-run test commands.

@@ -145,6 +145,9 @@ class PiMmcSysfsTests(unittest.TestCase):
         self.assertFalse(policy.evaluate(
             DeviceObservation(**{**common, "mmc_cid": ""})
         ).eligible)
+        self.assertFalse(policy.evaluate(
+            DeviceObservation(**{**common, "mmc_cid": "TEST-CID"})
+        ).eligible)
 
 
 if __name__ == "__main__":

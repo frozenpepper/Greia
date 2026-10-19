@@ -458,8 +458,8 @@ class PiBuiltInMicroSdTargetPolicy(InstallTargetPolicy):
     def _host_storage_eligible(
         self, observation: DeviceObservation, identity: DeviceIdentity
     ) -> str | None:
-        if not observation.mmc_host_built_in or not observation.mmc_cid:
-            return "not a positively identified built-in microSD host with CID"
+        if not observation.mmc_host_built_in or re.fullmatch(r"[0-9a-fA-F]{32}", observation.mmc_cid) is None:
+            return "not a positively identified built-in microSD host with valid CID"
         if _clean(observation.transport).lower() not in {"", "mmc"}:
             return "built-in Pi microSD must have MMC (not external) transport"
         return None

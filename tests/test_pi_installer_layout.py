@@ -26,7 +26,7 @@ def fake_microsd(*, size: int = 8 * 1024**3) -> DeviceObservation:
         name="mmcblk0", path=Path("/dev/mmcblk0"), size_bytes=size,
         device_type="disk", model="test MMC", serial="TEST", transport="mmc",
         removable=True, read_only=False, mountpoints=(),
-        mmc_cid="TEST-CID", mmc_host_built_in=True,
+        mmc_cid="1234567890abcdef1234567890abcdef", mmc_host_built_in=True,
     )
 
 
