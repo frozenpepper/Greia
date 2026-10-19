@@ -72,6 +72,34 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-19 — Full voice corpus replacement running (SOURCE / LOCAL RECORDING, in progress)
+
+The owner-authorized replacement is now using the prepared external run at
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/`.
+`plan.json` matches the current v0.2 registry manifest SHA
+`0f96de93a42b9f11f16f16a9aeaf479615509fbc9b5fb93812cadbdae694c64e` and
+freezes all six acting prompts. The 4-cue technical pilot completed; its outputs
+and all later replacements have journaled originals, receipts, and derived
+catalogue updates outside Git. Receipts remain `human_review=PENDING`.
+
+Full serial production is active in shell session `45485`; log:
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/production.log`.
+Latest status at this entry: **25 DONE, 1 GENERATING, 4,517 READY,
+167 BLOCKED_METADATA, 598 PRESERVED**. The active cue is
+`activities/alfabeto_leo/assets/audio/en/ask_J.wav`. Shared VoxStage worker PID
+`19719` is loaded with one running job; heartbeats and completed transactions
+are advancing. Optional Whisper is unavailable due the host NumPy/Numba mismatch;
+verification is explicitly off. No human listening or ASR acceptance is claimed.
+
+The 167 blocked rows remain unresolved pending exact source/history scripts;
+independent READY rows continue. No production failure or source bug has occurred.
+Preserve `final.mp4` and `launch-video/`. Next: keep monitoring the full run,
+continue exact-script recovery and `resolve` only substantiated gaps, then report
+final counts/retries, update this handover and the rollout progress ledger, and
+commit/push the clearly reviewable PENDING replacements with backups/journal
+retained externally. Human acceptance and release publication remain separate.
+
+
 ## 2026-10-19 — Corpus regeneration tool and per-recording performance direction
 
 **Owner scope:** prepare a Python tool for the next agent to replace existing Activity/system speech with the new masters/model, preserving deterministic isolated letters/syllables, showing progress, and supplying a launch/monitor/repair Markdown handoff. The owner then required tone/mood prompts for every recording. This explicitly permits the scoped replacement; it does not mean future takes have been listened to.

@@ -3,7 +3,17 @@
 **Product authority:** [PLAN.md](./PLAN.md)  
 **Local voice execution:** [LOCAL_AGENT_VOICE_PRODUCTION.md](./LOCAL_AGENT_VOICE_PRODUCTION.md)  
 **Single local task queue:** `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`  
-**Evidence status:** GitHub source commits, no newly executed full checkout tests / GUI / recording / physical install in this session.
+**Evidence status:** The 2026-10-19 corpus replacement is locally running with pending-review receipts; no full checkout test, GUI or physical-install evidence was produced in this session.
+
+
+## 2026-10-19 — Owner-authorized existing-corpus replacement launched (LOCAL RECORDING, in progress)
+
+Started the current executable work order, `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`, using the prepared external inventory at `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/`. The frozen plan's v0.2 registry-manifest SHA matches the current source; all six per-character delivery prompts are present. A bounded 4-cue pilot completed, then the full serial READY pass started and is resumable in shell session `45485`; production log is in the external work directory. The VoxStage shared worker PID is `19719`.
+
+Latest checkpoint: **25 DONE, 1 GENERATING, 4,517 READY, 167 BLOCKED_METADATA, 598 PRESERVED**. The currently active cue is Alfabeto Leo EN `ask_J.wav`. Every completed cue has a replacement receipt whose `human_review` remains `PENDING`; the external journal shows completed transactions. Verification is off because optional Whisper is unavailable on this host (NumPy/Numba import mismatch). No ASR or human listening acceptance is claimed. Existing master/reference files remain outside generation scope and deterministic isolated letters/syllables remain preserved.
+
+The 167 metadata blockers remain excluded while READY work proceeds. Exact source/history recovery is ongoing; no overrides were applied without sufficient script authority. No provider failure or source bug has occurred. Continue monitoring progress and VoxStage job status; resolve only exact recovered scripts without touching DONE cues. On completion, reconcile final counts/retries, report unresolved source gaps, retain the external backups/journal/candidates, update HANDOVER and the active architecture-plan ledger, and commit/push the reviewable PENDING replacements to `main`. Human acceptance and release publication remain separate. Unrelated untracked `final.mp4` and `launch-video/` remain preserved.
+
 
 ## 2026-10-15 — Continuation: shared locale composition across Activities, regional fallback
 
