@@ -668,6 +668,18 @@ def execute_fresh_ab_install(
     except (SlotWriteError, SlotFinalizeError) as exc:
         raise FreshAbInstallError(f"install policy facts are not authoritative: {exc}") from exc
 
+    # ARM boot media and tryboot finalization must be executable *before*
+    # formatting the child's card. Pi layout commands are source-ready, but
+    # live ARM boot/payload and firmware/tryboot staging are not yet wired
+    # into this transaction. Until those dependencies are present this check
+    # is deliberately before the first destructive effect. NEVER let a Pi
+    # request fall through to the x86 GRUB implementation below.
+    if request.sizing.boot_backend != "grub-ab-v1":
+        raise FreshAbInstallError(
+            "Pi installation unavailable: native firmware boot staging and "
+            "ARM setup media are not implemented; refusing to erase the card"
+        )
+
     # -- 3. First destructive commands: MBR A/B/PERSIST --------------------
     report("partition")
     try:

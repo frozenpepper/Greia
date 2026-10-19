@@ -63,6 +63,13 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-19 — Pi 400/500 WIP source consolidated on main after adversarial review (UNVERIFIED)
+
+Owner asked for Pi installer implementation and review. The earlier draft PR #10 at `9f209139` had a serious source/claim regression: the final committed `PiMbrTrybootAbAdapter` was STILL deferred/64 MiB despite an intermediate blob being executable/256 MiB. This review discovered it by fetching the committed file. The new `main` changes reconstruct the executable Pi DOS P1/P2/P3 256 MiB FAT, P4 extended, P5-P7 ext4 A/B/PERSIST adapter, account for logical EBR alignment in exact minimum capacity, reuse observed MBR PARTUUIDs, and check the Pi built-in microSD target policy before emitting destructive commands. Source also adds Pi 400/500 ARM64 experimental profiles and package maps (builder correctly refuses ARM64 still), offline board-specific boot-file staging with uncompressed AArch64 Image-header preflight, and sysfs Pi MMC-host/card-CID observation while preserving USB/removable safety. Full Pi install transaction still **refuses prior to wipe** until the ARM media and native firmware installer are complete.
+
+**Evidence scope:** source review and changed test sources only; `make verify`, full Python tests, actual partition commands, ARM64 build, QEMU and physical Pi tests were NOT executed here. The correct binding review, risks, test order and further work are in `docs/reviews/2026-10-19_RASPBERRY_PI_INSTALLER_SOURCE_REVIEW.md`. Raspberry Pi installation is **NOT COMPLETE**, not yet installed or safe to try on user media. Continue from the active 2026-09-15 lifecycle plan (not a competing Pi plan). Do not mark Pi released from these source changes.
+
+
 ## 2026-10-18 — Installer completion button repaired (root finish-marker path); live shutdown hang still open on the Acer
 
 **Evidence class: SOURCE + QEMU reproduction of the denial. Physical retest pending.**

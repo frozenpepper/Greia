@@ -2731,3 +2731,8 @@ at `6f3c809c` (image
 read-back and loop hygiene PASS). QEMU capture of the marker-triggered
 shutdown ends on the clean Greia splash with no terminal text. Physical F18
 closure remains after the Acer retest.
+
+
+### 2026-10-19 — Raspberry Pi 400/500 source foundation recovered after committed-file review
+
+Owner requested Pi implementation and further review. Review found the earlier PR #10 committed the **deferred 64 MiB Pi layout**, despite a prior staged executable blob. This is a provenance/engineering continuity error, not a claim that hardware evidence is missing. Refined source now includes executable Pi 256 MiB FAT/P4 extended/P5-P7 ext4 commands with EBR capacity overhead and positive built-in microSD eligibility, shared observed-MBR identities, strict board-specific ARM64 profile definitions, offline native Pi boot asset staging and ARM64 Image-header checks, sysfs built-in MMC/CID evidence, and negative source tests. The full installed-Pi transaction **continues to refuse before erase** because live ARM boot, real kernel/module/firmware pairing, P1 recovery and production tryboot are unfinished. The default builder intentionally rejects ARM64 until bootable composition is implemented. **Evidence SOURCE ONLY / UNPROVEN; tests not run this turn.** Follow `docs/reviews/2026-10-19_RASPBERRY_PI_INSTALLER_SOURCE_REVIEW.md` for the exact code defects, acceptance matrix and next action. The universal Setup image and Pi 400/500 support are NOT COMPLETE.

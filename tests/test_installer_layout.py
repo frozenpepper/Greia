@@ -88,10 +88,7 @@ class LayoutAdapterRegistryTests(unittest.TestCase):
             self.assertIsNone(plan.by_role("persist").size_bytes)
 
     def test_skeleton_execution_deferred_with_zero_commands(self) -> None:
-        cases = (
-            ("modern-gpt-ab-v1", "8C"),
-            ("pi-mbr-tryboot-ab-v1", "8D"),
-        )
+        cases = (("modern-gpt-ab-v1", "8C"),)
         for adapter_id, phase in cases:
             adapter = adapter_for(adapter_id)
             plan = adapter.plan(

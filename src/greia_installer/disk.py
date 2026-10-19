@@ -64,6 +64,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import subprocess
 import uuid
 from abc import ABC, abstractmethod
@@ -338,6 +339,11 @@ class InstallTargetPolicy(ABC):
             allow_legacy_ata_fallback=self.permit_legacy_ata_fallback,
         )
 
+    def _removable_rejection(self, observation: DeviceObservation) -> str | None:
+        if observation.removable or observation.hotplug:
+            return "removable/external media is never an install target"
+        return None
+
     def _transport_rejection(self, transport: str) -> str | None:
         if transport in EXTERNAL_TRANSPORTS:
             return (
@@ -353,10 +359,9 @@ class InstallTargetPolicy(ABC):
             return PolicyDecision(pid, False, "device is read-only")
         if int(observation.size_bytes) < int(self.minimum_bytes):
             return PolicyDecision(pid, False, "device is below the minimum size")
-        if observation.removable or observation.hotplug:
-            return PolicyDecision(
-                pid, False, "removable/external media is never an install target"
-            )
+        removable_reason = self._removable_rejection(observation)
+        if removable_reason is not None:
+            return PolicyDecision(pid, False, removable_reason)
         transport = _clean(observation.transport).lower()
         transport_reason = self._transport_rejection(transport)
         if transport_reason is not None:
@@ -432,6 +437,14 @@ class PiBuiltInMicroSdTargetPolicy(InstallTargetPolicy):
     def policy_id(self) -> str:
         return PI_BUILTIN_MICROSD_POLICY_ID
 
+    def _removable_rejection(self, observation: DeviceObservation) -> str | None:
+        # Some built-in MMC hosts report their child SD card as removable or
+        # hot-pluggable. This is expected on the Pi, but USB/removable drives
+        # remain excluded by the transport+host-topology checks below.
+        if observation.mmc_host_built_in and observation.mmc_cid:
+            return None
+        return super()._removable_rejection(observation)
+
     def _transport_rejection(self, transport: str) -> str | None:
         if transport in EXTERNAL_TRANSPORTS or transport == "usb":
             return (
@@ -443,8 +456,10 @@ class PiBuiltInMicroSdTargetPolicy(InstallTargetPolicy):
     def _host_storage_eligible(
         self, observation: DeviceObservation, identity: DeviceIdentity
     ) -> str | None:
-        if not observation.mmc_host_built_in:
-            return "not the positively identified built-in microSD host"
+        if not observation.mmc_host_built_in or not observation.mmc_cid:
+            return "not a positively identified built-in microSD host with CID"
+        if _clean(observation.transport).lower() not in {"", "mmc"}:
+            return "built-in Pi microSD must have MMC (not external) transport"
         return None
 
 
@@ -836,6 +851,52 @@ class SubprocessRunner:
         )
 
 
+
+@dataclass(frozen=True, slots=True)
+class PiMmcHostObserver:
+    """Positive Pi 400/500 MMC host + card-CID evidence from Linux sysfs.
+
+    The normal lsblk JSON has no MMC CID column in older util-linux and no
+    built-in-host property at all. Resolve block ancestry through sysfs and
+    require an explicit recognized board model, a platform-owned MMC host
+    and the actual card's CID. No device path/number guess authorizes a wipe.
+    All filesystem roots are injected so tests never inspect host hardware.
+    """
+
+    board_model_path: Path = Path("/proc/device-tree/model")
+    class_block_root: Path = Path("/sys/class/block")
+    platform_root: Path = Path("/sys/devices/platform")
+
+    def observe(self, name: str) -> tuple[str, bool]:
+        if not isinstance(name, str) or re.fullmatch(r"mmcblk[0-9]+", name) is None:
+            return "", False
+        try:
+            model = self.board_model_path.read_bytes().rstrip(bytes((0,))).decode("ascii")
+            if not (
+                model.startswith("Raspberry Pi 400 Rev ")
+                or model.startswith("Raspberry Pi 500 Rev ")
+            ):
+                return "", False
+            platform = self.platform_root.resolve(strict=True)
+            node = (self.class_block_root / name).resolve(strict=True)
+            parts = node.relative_to(platform).parts
+            # Platform MMC controller -> mmc_host -> card -> block device.
+            if "mmc_host" not in parts or "block" not in parts:
+                return "", False
+            if any(part.startswith(("usb", "pci")) for part in parts):
+                return "", False
+            if parts[-1] != name:
+                return "", False
+            card_cid = (self.class_block_root / name / "device" / "cid").read_text(
+                encoding="ascii"
+            ).strip().lower()
+            if re.fullmatch(r"[0-9a-f]{32}", card_cid) is None:
+                return "", False
+            return card_cid, True
+        except (OSError, ValueError, UnicodeDecodeError):
+            return "", False
+
+
 class LsblkDiskProbe:
     """lsblk adapter producing :class:`DiskInventory` generations.
 
@@ -847,8 +908,13 @@ class LsblkDiskProbe:
 
     FIELDS = "NAME,PATH,SIZE,TYPE,RM,HOTPLUG,RO,MOUNTPOINTS,MODEL,SERIAL,WWN,MAJ:MIN,TRAN"
 
-    def __init__(self, runner: CommandRunner | None = None):
+    def __init__(
+        self, runner: CommandRunner | None = None,
+        *,
+        mmc_host_observer: PiMmcHostObserver | None = None,
+    ):
         self.runner = runner or SubprocessRunner()
+        self.mmc_host_observer = mmc_host_observer or PiMmcHostObserver()
         self._generation = 0
 
     def probe(self) -> DiskInventory:
@@ -890,8 +956,10 @@ class LsblkDiskProbe:
         elif isinstance(raw.get("mountpoint"), str) and raw.get("mountpoint"):
             mountpoints.append(Path(str(raw["mountpoint"])))
         try:
+            name = str(raw.get("name", ""))
+            observed_cid, builtin = self.mmc_host_observer.observe(name)
             return DeviceObservation(
-                name=str(raw.get("name", "")),
+                name=name,
                 path=Path(str(raw["path"])),
                 size_bytes=int(raw.get("size", 0)),
                 device_type=str(raw.get("type", "")),
@@ -907,7 +975,8 @@ class LsblkDiskProbe:
                 hotplug=bool(int(raw.get("hotplug", 0))),
                 nguid=str(raw.get("nguid") or ""),
                 eui=str(raw.get("eui") or ""),
-                mmc_cid=str(raw.get("cid") or raw.get("mmc_cid") or ""),
+                mmc_cid=observed_cid if builtin else str(raw.get("cid") or raw.get("mmc_cid") or ""),
+                mmc_host_built_in=builtin,
             )
         except (KeyError, TypeError, ValueError) as exc:
             raise DiskProbeError(f"invalid lsblk device record: {exc}") from exc

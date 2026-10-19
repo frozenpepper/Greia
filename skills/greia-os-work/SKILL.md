@@ -39,7 +39,7 @@ For current evidence/test routing use:
 docs/testing/LOCAL_AGENT_START_HERE.md
 ```
 
-## Current blocking route: post-R1 product-composition closure + multiplatform lifecycle plan
+## Pi 400/500 source-only adapter (owner-authorized, 2026-10-19)\n\nPi support is **not implemented as a bootable installer**. Experimental ARM64 profiles and native Pi A/B partition and boot-asset source now exist. The full installer deliberately refuses Pi before erasure, and the Phase 0 image composer refuses ARM64. For hard findings, precise tests and remaining required boot/update/hardware work, consult `docs/reviews/2026-10-19_RASPBERRY_PI_INSTALLER_SOURCE_REVIEW.md` and the authoritative 2026-09-15 lifecycle plan. Validate the **committed file**, not merely staged Git blobs or a review claim. No hosted Actions runs without owner opt-in.\n\n## Current blocking route: post-R1 product-composition closure + multiplatform lifecycle plan
 
 Install/update/release/multiplatform lifecycle work routes to
 `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`

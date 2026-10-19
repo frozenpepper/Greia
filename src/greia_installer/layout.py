@@ -9,8 +9,9 @@ platform-specific partition command runs.
 Adapter identities are the canonical source-owned ``storage.layout_adapter``
 ids (``tools/build_profile.py``, mirrored by
 ``greia_platform.persistent_layout``): ``legacy-bios-ab-v1`` (executable
-here), ``modern-gpt-ab-v1`` and ``pi-mbr-tryboot-ab-v1`` (registered
-role-model skeletons; full execution deferred to Phases 8C/8D). The brief's
+here), ``modern-gpt-ab-v1`` (GPT execution deferred) and
+``pi-mbr-tryboot-ab-v1`` (executable DOS partition command generation;
+installed native Pi boot finalization separately gated). The brief's
 ``modern-uefi-ab-v1`` / ``pi-tryboot-ab-v1`` shorthands denote these same
 canonical adapters. No parallel vocabulary is introduced.
 
@@ -91,7 +92,7 @@ from greia_platform.slot_writer import (
     SLOT_METADATA_RESERVE_BYTES,
 )
 
-from .disk import DeviceObservation, DiskProbeError, partition_number_path
+from .disk import (DeviceObservation, DiskProbeError, PiBuiltInMicroSdTargetPolicy, partition_number_path)
 
 
 class LayoutError(RuntimeError):
@@ -107,6 +108,17 @@ PARTITION_ALIGNMENT_BYTES = MIB
 #: >=1 MiB GRUB embedding space required by the legacy installed-disk format
 #: (setup-media architecture sect. 9); GPT headers fit the same reservation.
 LABEL_RESERVED_BYTES = MIB
+
+# Pi DOS P4 contains three logical partitions, each requiring 1 MiB of
+# EBR/alignment headroom beyond the space occupied by its filesystem.
+PI_LOGICAL_EBR_RESERVE_BYTES = 3 * MIB
+
+
+def _layout_overhead_bytes(adapter_id: str) -> int:
+    return LABEL_RESERVED_BYTES + (
+        PI_LOGICAL_EBR_RESERVE_BYTES
+        if adapter_id == PI_MBR_TRYBOOT_AB_ADAPTER_ID else 0
+    )
 
 #: Highest partition number an adapter may declare (GPT bound; msdos paths
 #: stay far below it).
@@ -250,7 +262,7 @@ class LayoutPlan:
         )
 
     def remainder_bytes(self) -> int:
-        return int(self.device_size_bytes) - LABEL_RESERVED_BYTES - self.fixed_bytes()
+        return int(self.device_size_bytes) - _layout_overhead_bytes(self.adapter_id) - self.fixed_bytes()
 
 
 def validate_layout_plan(plan: LayoutPlan) -> None:
@@ -319,7 +331,7 @@ def validate_layout_plan(plan: LayoutPlan) -> None:
         for partition in plan.partitions
         if partition.size_bytes is not None
     )
-    if LABEL_RESERVED_BYTES + fixed + int(plan.persist_minimum_bytes) > int(
+    if _layout_overhead_bytes(plan.adapter_id) + fixed + int(plan.persist_minimum_bytes) > int(
         plan.device_size_bytes
     ):
         raise LayoutError(
@@ -690,18 +702,16 @@ class ModernGptAbAdapter(_DeferredExecutionAdapter):
         )
 
 
-class PiMbrTrybootAbAdapter(_DeferredExecutionAdapter):
+class PiMbrTrybootAbAdapter(LayoutAdapter):
     """Pi MBR/tryboot A/B role model (setup-media architecture sect. 11).
 
-    Native firmware A/B semantics: FAT boot-control plus staged BOOT_A/BOOT_B
-    beside ext4 system slots and the PERSIST remainder. Number 4 is reserved
-    for the extended container (emitted with the execution path in Phase
-    8D); logical roles 5-7 validate sequentially against it.
+    Native firmware A/B semantics: 256 MiB FAT boot-control plus BOOT_A/BOOT_B
+    beside ext4 system slots and the PERSIST remainder. P4 is reserved
+    for the extended container and P5-7 are aligned logical partitions.
+    These commands alone cannot boot a Pi; the full installer stays gated.
     """
 
-    deferred_phase = "Phase 8D"
-
-    BOOT_BYTES = 64 * MIB
+    BOOT_BYTES = 256 * MIB
 
     @property
     def adapter_id(self) -> str:
@@ -787,6 +797,81 @@ class PiMbrTrybootAbAdapter(_DeferredExecutionAdapter):
                 ),
             ),
         )
+
+
+    def build_commands(
+        self, plan: LayoutPlan, target: DeviceObservation
+    ) -> tuple[tuple[str, ...], ...]:
+        """Partition Pi P1-P3 FAT, P4 extended, P5-P7 logical ext4.
+
+        This is a partition adapter, NOT the firmware/tryboot installer.
+        Only the orchestrator may authorize destructive execution after
+        checking that complete board boot assets and a release are ready.
+        """
+        if plan.adapter_id != self.adapter_id:
+            raise LayoutError("layout plan does not belong to this adapter")
+        validate_layout_plan(plan)
+        canonical = self.plan(
+            device_size_bytes=plan.device_size_bytes,
+            slot_bytes=plan.slot_bytes,
+            persist_minimum_bytes=plan.persist_minimum_bytes,
+        )
+        if plan.partitions != canonical.partitions:
+            raise LayoutError("Pi partition geometry must match its canonical role model")
+        if target.device_type != "disk" or not target.path.is_absolute():
+            raise LayoutError("Pi partitioning requires a verified whole-disk locator")
+        if not PiBuiltInMicroSdTargetPolicy().evaluate(target).eligible:
+            raise LayoutError("Pi partitioning requires eligible built-in microSD, not USB")
+        device = str(target.path)
+        commands: list[tuple[str, ...]] = [
+            _check_command(("wipefs", "--all", "--force", device)),
+            _check_command(("parted", "--script", device, "mklabel", "msdos")),
+        ]
+        cursor_mib = LABEL_RESERVED_BYTES // MIB
+        for part in canonical.partitions[:3]:
+            end_mib = cursor_mib + int(part.size_bytes) // MIB
+            commands.append(_check_command((
+                "parted", "--script", device, "mkpart", "primary", "fat32",
+                f"{cursor_mib}MiB", f"{end_mib}MiB",
+            )))
+            cursor_mib = end_mib
+        commands.append(_check_command((
+            "parted", "--script", device, "mkpart", "extended",
+            f"{cursor_mib}MiB", "100%",
+        )))
+        for part in canonical.partitions[3:]:
+            start_mib = cursor_mib + 1  # one 1-MiB gap for each logical EBR
+            end_mib = (
+                f"{start_mib + int(part.size_bytes) // MIB}MiB"
+                if part.size_bytes is not None else "100%"
+            )
+            commands.append(_check_command((
+                "parted", "--script", device, "mkpart", "logical", "ext4",
+                f"{start_mib}MiB", end_mib,
+            )))
+            if part.size_bytes is not None:
+                cursor_mib = start_mib + int(part.size_bytes) // MIB
+        commands.extend((
+            _check_command(("parted", "--script", device, "set", "1", "boot", "on")),
+            _check_command(("partprobe", device)),
+            _check_command(("udevadm", "settle")),
+        ))
+        for part in canonical.partitions:
+            try:
+                node = str(partition_number_path(target.path, part.number))
+            except DiskProbeError as exc:
+                raise LayoutError(str(exc)) from exc
+            if part.filesystem == "fat32":
+                commands.append(_check_command((
+                    "mkfs.vfat", "-F", "32", "-n", part.label, node,
+                )))
+            elif part.filesystem == "ext4":
+                commands.append(_check_command((
+                    "mkfs.ext4", "-F", "-m", "1", "-L", part.label, node,
+                )))
+            else:
+                raise LayoutError("unsupported Pi partition filesystem")
+        return tuple(commands)
 
 
 #: Expected semantic role set per canonical adapter id (common validation).
@@ -1062,8 +1147,8 @@ def observe_legacy_mbr_identities(
     scheme-explicit identity mappings in the exact shape
     :class:`greia_platform.persistent_layout.PartitionIdentity` consumes.
     """
-    if plan.adapter_id != LEGACY_BIOS_AB_ADAPTER_ID:
-        raise LayoutError("MBR observation requires the legacy-bios-ab-v1 plan")
+    if plan.adapter_id not in (LEGACY_BIOS_AB_ADAPTER_ID, PI_MBR_TRYBOOT_AB_ADAPTER_ID):
+        raise LayoutError("MBR observation requires a registered DOS A/B plan")
     if target.device_type != "disk":
         raise LayoutError("MBR observation requires a whole-disk target")
     device = target.path
@@ -1114,8 +1199,8 @@ def build_observed_mbr_topology(
     ancestry comes from the verified target name. Fails closed on role
     gaps so a partial observation can never validate.
     """
-    if plan.adapter_id != LEGACY_BIOS_AB_ADAPTER_ID:
-        raise LayoutError("MBR topology requires the legacy-bios-ab-v1 plan")
+    if plan.adapter_id not in (LEGACY_BIOS_AB_ADAPTER_ID, PI_MBR_TRYBOOT_AB_ADAPTER_ID):
+        raise LayoutError("MBR topology requires a registered DOS A/B plan")
     if set(identities) != set(OBSERVED_MBR_ROLES):
         raise LayoutError("observed MBR identities must cover system-a/system-b/persist")
     try:
@@ -1191,7 +1276,7 @@ def observe_partition_identities(
     behind this same interface when their execution paths land. Routing
     by adapter id keeps MBR parsing out of the GPT/Pi paths.
     """
-    if plan.adapter_id == LEGACY_BIOS_AB_ADAPTER_ID:
+    if plan.adapter_id in (LEGACY_BIOS_AB_ADAPTER_ID, PI_MBR_TRYBOOT_AB_ADAPTER_ID):
         return observe_legacy_mbr_identities(runner, target=target, plan=plan)
     raise LayoutError(
         f"adapter {plan.adapter_id!r} observation is deferred; "
@@ -1495,7 +1580,7 @@ def minimum_device_bytes_for_profile(sizing: ProfileSizing) -> int:
         persist_minimum_bytes=int(sizing.persist_minimum_bytes),
     )
     return int(
-        LABEL_RESERVED_BYTES + probe.fixed_bytes() + int(sizing.persist_minimum_bytes)
+        _layout_overhead_bytes(probe.adapter_id) + probe.fixed_bytes() + int(sizing.persist_minimum_bytes)
     )
 
 

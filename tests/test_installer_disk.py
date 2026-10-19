@@ -223,6 +223,7 @@ class TypedPolicyTests(unittest.TestCase):
             name="mmcblk0", path="/dev/mmcblk0", transport="mmc",
             serial="CARD", wwn="", major_minor="179:0",
             mmc_host_built_in=True,
+            mmc_cid="1234567890abcdef1234567890abcdef",
         )
         self.assertTrue(policy.evaluate(builtin).eligible)
         self.assertFalse(policy.evaluate(obs()).eligible)
