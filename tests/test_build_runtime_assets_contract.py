@@ -36,6 +36,11 @@ class RuntimeAssetInstallContractTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls._tmp = tempfile.TemporaryDirectory(prefix="greia-runtime-assets-")
         cls.rootfs = Path(cls._tmp.name)
+        # Reusing a staging root must also remove authoring references left by
+        # an older composition rule, not merely stop copying new versions.
+        stale = cls.rootfs / "opt/greia-os/assets/audio/characters/canonical/stale.wav"
+        stale.parent.mkdir(parents=True)
+        stale.write_bytes(b"old authoring reference")
         script = (
             _function_source("compose_install_runtime_assets")
             + f'\ncompose_install_runtime_assets "{cls.rootfs}" "{PROJECT_ROOT}"\n'
@@ -87,6 +92,9 @@ class RuntimeAssetInstallContractTests(unittest.TestCase):
             self.assertTrue((self.installed / relative).exists(), relative)
 
     def test_authoring_and_candidate_material_is_not_installed(self) -> None:
+        # All canonical versions are authoring references, never runtime banks.
+        self.assertFalse((self.installed / "audio/characters/canonical").exists())
+        self.assertTrue((self.installed / "audio/characters/shared/v0.2/manifest.toml").is_file())
         visual = self.installed / "visual"
         self.assertEqual(["runtime"], sorted(p.name for p in visual.iterdir()))
         leaked = sorted(

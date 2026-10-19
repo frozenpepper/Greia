@@ -3,7 +3,7 @@
 
 This is the only production entry point Activity/OS/Encyclopedia authoring agents
 should need. It routes semantic speech requests to canonical providers and keeps
-Chatterbox mechanics, native TTS quirks, Whisper verification and receipts behind
+VoxStage/Chatterbox mechanics, native TTS quirks, Whisper verification and receipts behind
 one Greia-owned contract.
 """
 from __future__ import annotations
@@ -15,13 +15,12 @@ import sys
 
 from greia_voice_core import SpeechKind, VerificationMode, VoiceEngine, VoiceRegistry, VoiceRequest
 from greia_voice_core.audio import AudioPipeline
+from greia_voice_core.composition import CHARACTER_PROVIDERS, build_providers, selected_character_provider
 from greia_voice_core.locking import GenerationLockError, InterprocessGenerationLock, NullGenerationLock
 from greia_voice_core.paths import voice_home
 from greia_voice_core.registry import VoiceRegistryError
 from greia_voice_core.providers import (
     ChatterboxMLXProvider,
-    MacOSNativeSpeechProvider,
-    UnsupportedNativeSpeechProvider,
 )
 from greia_voice_core.service import request_from_mapping, send_request, serve_loop
 from greia_voice_core.verification import WhisperVerifier
@@ -31,16 +30,12 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 43841
 
 
-def build_engine(generation_lock: object | None = None) -> VoiceEngine:
+def build_engine(generation_lock: object | None = None, character_provider: str | None = None) -> VoiceEngine:
     registry = VoiceRegistry.load(PROJECT_ROOT)
     return VoiceEngine(
         project_root=PROJECT_ROOT,
         registry=registry,
-        providers=(
-            ChatterboxMLXProvider(),
-            MacOSNativeSpeechProvider(),
-            UnsupportedNativeSpeechProvider(),
-        ),
+        providers=build_providers(character_provider),
         verifier=WhisperVerifier(),
         audio_pipeline=AudioPipeline(),
         generation_lock=generation_lock,
@@ -77,22 +72,34 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         except Exception as exc:
             anchor_status[name] = {"required": True, "ok": False, "detail": str(exc)}
 
-    providers = [ChatterboxMLXProvider(), MacOSNativeSpeechProvider(), UnsupportedNativeSpeechProvider()]
+    selected = selected_character_provider(args.character_provider)
+    providers = list(build_providers(selected))
+    if selected != "chatterbox":
+        providers.append(ChatterboxMLXProvider())
     verifier = WhisperVerifier()
     verifier_ok, verifier_detail = verifier.probe()
+    provider_statuses = [provider.probe().to_dict() for provider in providers]
+    character_ready = (
+        all(row["ok"] for row in anchor_status.values())
+        and AudioPipeline.ffmpeg_available()
+        and provider_statuses[0]["available"]
+    )
     payload = {
         "registry_version": registry.registry_version,
+        "default_character_provider": "voxstage",
+        "selected_character_provider": selected,
+        "character_production_ready": bool(character_ready),
         "anchors": anchor_status,
         "ffmpeg": {"available": AudioPipeline.ffmpeg_available()},
-        "providers": [provider.probe().to_dict() for provider in providers],
+        "providers": provider_statuses,
         "verifier": {"id": verifier.verifier_id, "available": verifier_ok, "detail": verifier_detail},
     }
     _print(payload)
-    return 0
+    return 0 if character_ready else 2
 
 
 def cmd_generate(args: argparse.Namespace) -> int:
-    with build_engine() as engine:
+    with build_engine(character_provider=args.character_provider) as engine:
         result = engine.generate(_request_from_args(args))
     _print(result.to_dict())
     return 0 if result.output_path is not None else 2
@@ -104,7 +111,7 @@ def cmd_batch(args: argparse.Namespace) -> int:
     # Hold the global worker lock for the entire batch so no second process can
     # load another multi-GB model while this engine keeps its model warm.
     with InterprocessGenerationLock(voice_home() / "generation.lock"):
-        with build_engine(generation_lock=NullGenerationLock()) as engine:
+        with build_engine(generation_lock=NullGenerationLock(), character_provider=args.character_provider) as engine:
             for line_number, raw in enumerate(input_path.read_text(encoding="utf-8").splitlines(), 1):
                 if not raw.strip() or raw.lstrip().startswith("#"):
                     continue
@@ -122,11 +129,11 @@ def cmd_serve(args: argparse.Namespace) -> int:
     # The daemon owns the global worker lock for its whole lifetime. That prevents
     # an idle warm daemon and a one-shot/batch process from holding two model copies.
     with InterprocessGenerationLock(voice_home() / "generation.lock"):
-        engine = build_engine(generation_lock=NullGenerationLock())
+        engine = build_engine(generation_lock=NullGenerationLock(), character_provider=args.character_provider)
         try:
             print(
                 json.dumps(
-                    {"status": "READY", "host": args.host, "port": args.port, "single_worker": True}
+                    {"status": "READY", "host": args.host, "port": args.port, "single_worker": True, "character_provider": selected_character_provider(args.character_provider)}
                 ),
                 flush=True,
             )
@@ -138,7 +145,7 @@ def cmd_serve(args: argparse.Namespace) -> int:
 
 def cmd_request(args: argparse.Namespace) -> int:
     payload = _request_from_args(args).to_dict()
-    response = send_request(args.host, args.port, payload)
+    response = send_request(args.host, args.port, payload, response_timeout=args.timeout)
     _print(response)
     if not response.get("ok"):
         return 2
@@ -187,9 +194,16 @@ def build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--port", type=int, default=DEFAULT_PORT)
     serve.set_defaults(func=cmd_serve)
 
+    for command in (doctor, generate, batch, serve):
+        command.add_argument(
+            "--character-provider", choices=CHARACTER_PROVIDERS,
+            help="operator choice for character speech; defaults to GREIA_VOICE_CHARACTER_PROVIDER or voxstage",
+        )
+
     request = sub.add_parser("request", help="send one semantic request to a running service")
     request.add_argument("--host", default=DEFAULT_HOST)
     request.add_argument("--port", type=int, default=DEFAULT_PORT)
+    request.add_argument("--timeout", type=float, default=3600, help="bounded response wait in seconds (1–7200); generation may take minutes")
     add_request_arguments(request)
     request.set_defaults(func=cmd_request)
 

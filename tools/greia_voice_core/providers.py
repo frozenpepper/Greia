@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from contextlib import redirect_stdout
 import gc
 import os
 from pathlib import Path
@@ -58,6 +59,7 @@ class ChatterboxMLXProvider(VoiceProvider):
             in {
                 SpeechKind.CHARACTER_DIALOGUE,
                 SpeechKind.SHARED_CHARACTER_UTTERANCE,
+                SpeechKind.DANI_SYSTEM_SPEECH,
             }
             and profile is not None
             and profile.production == "cloned_reference"
@@ -83,6 +85,7 @@ class ChatterboxMLXProvider(VoiceProvider):
             capabilities=(
                 SpeechKind.CHARACTER_DIALOGUE.value,
                 SpeechKind.SHARED_CHARACTER_UTTERANCE.value,
+                SpeechKind.DANI_SYSTEM_SPEECH.value,
             ),
         )
         return self._probe_cache
@@ -168,16 +171,18 @@ class ChatterboxMLXProvider(VoiceProvider):
         generator = result = audio_tensor = cleaned = None
         try:
             try:
-                model = self._load_model()
-                # model.generate is a generator. Force the first take, then break
-                # the generator reference so remaining stream frames get freed.
-                generator = model.generate(
-                    text=request.text,
-                    ref_audio=str(profile.anchor_path),
-                    lang_code=request.language,
-                    verbose=False,
-                )
-                result = next(generator)
+                # Upstream loading prints diagnostics even with verbose=False.
+                # Keep CLI/batch stdout machine-readable when this is selected.
+                with redirect_stdout(sys.stderr):
+                    model = self._load_model()
+                    # Force one take, then release the remaining stream below.
+                    generator = model.generate(
+                        text=request.text,
+                        ref_audio=str(profile.anchor_path),
+                        lang_code=request.language,
+                        verbose=False,
+                    )
+                    result = next(generator)
                 # Materialize the autoregressive output so the lazy MLX graph
                 # associated with the just-finished stream can be released.
                 audio_tensor = result.audio

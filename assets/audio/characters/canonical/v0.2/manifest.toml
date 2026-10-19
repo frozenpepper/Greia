@@ -1,0 +1,135 @@
+schema_version = 2
+registry_version = "v0.2"
+status = "owner-accepted canonical character masters"
+created = "2026-10-19"
+default_character_provider = "voxstage"
+character_renderer_family = "VoxCPM2 via shared local VoxStage"
+pedagogical_speech_policy = "deterministic native/system speech; cloned characters are not pronunciation-authoritative"
+source_method = "local synthetic VoxStage voice design; owner selected all six masters and accepted the four-language comparison"
+production_anchor_derivation = "exact unchanged 48 kHz mono PCM16 selected master WAV"
+
+[[voice]]
+character = "lilli"
+voice_id = "greia.lilli.v2"
+production = "cloned_reference"
+production_anchor = "lilli-reference-v2.wav"
+purpose = "Animated cartoon unicorn with a distinctive silvery, bell-bright feminine voice. Light high register, airy shimmer, rounded singing vowels and playful upward pitch swoops. A fanciful little dreamer who treats every ordinary object as enchanted. Expressive storybook character acting, affectionate and slightly theatrical, with crisp intelligible English."
+anchor_transcript = "Ooh, a blank page! My horn is tingling with ideas. Shall we paint a tiny moon with enormous rainbow wings?"
+voxstage_voice_id = "greia-audition-20261019-lilli-v2-03"
+anchor_sha256 = "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7"
+anchor_bytes = 768060
+anchor_duration_seconds = 8.000166666666667
+anchor_sample_rate_hz = 48000
+anchor_channels = 1
+anchor_sample_width_bits = 16
+anchor_container = "wav"
+anchor_codec = "pcm_s16le"
+source_master = "assets/source/audio/character-voice-masters/v0.2/lilli-source-v2.wav"
+source_sha256 = "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7"
+source_bytes = 768060
+source_duration_seconds = 8.000166666666667
+
+[[voice]]
+character = "leo"
+voice_id = "greia.leo.v2"
+production = "cloned_reference"
+production_anchor = "leo-reference-v2.wav"
+purpose = "Older male storyteller, warm mellow low-mid register, softly textured and wise, kindly grandfather with a curious smile, clear consonants, natural English, unhurried conversational delivery."
+anchor_transcript = "Hello, my friend. Every good question opens a little door. Let us take our time and discover what is waiting on the other side."
+voxstage_voice_id = "greia-audition-20261019-leo-v1-03"
+anchor_sha256 = "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1"
+anchor_bytes = 768060
+anchor_duration_seconds = 8.000166666666667
+anchor_sample_rate_hz = 48000
+anchor_channels = 1
+anchor_sample_width_bits = 16
+anchor_container = "wav"
+anchor_codec = "pcm_s16le"
+source_master = "assets/source/audio/character-voice-masters/v0.2/leo-source-v2.wav"
+source_sha256 = "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1"
+source_bytes = 768060
+source_duration_seconds = 8.000166666666667
+
+[[voice]]
+character = "flash"
+voice_id = "greia.flash.v2"
+production = "cloned_reference"
+production_anchor = "flash-reference-v2.wav"
+purpose = "Youthful masculine mid-high voice, bright springy and playful, friendly rabbit with a smile, crisp clear consonants, natural English, lively conversational delivery."
+anchor_transcript = "Hello, my friend. Are you ready for a little challenge? Keep your eyes open, take a breath, and we will give it a try together."
+voxstage_voice_id = "greia-audition-20261019-flash-v1-02"
+anchor_sha256 = "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d"
+anchor_bytes = 706620
+anchor_duration_seconds = 7.360166666666666
+anchor_sample_rate_hz = 48000
+anchor_channels = 1
+anchor_sample_width_bits = 16
+anchor_container = "wav"
+anchor_codec = "pcm_s16le"
+source_master = "assets/source/audio/character-voice-masters/v0.2/flash-source-v2.wav"
+source_sha256 = "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d"
+source_bytes = 706620
+source_duration_seconds = 7.360166666666666
+
+[[voice]]
+character = "dani"
+voice_id = "greia.dani.v2"
+production = "cloned_reference"
+production_anchor = "dani-reference-v2.wav"
+purpose = "Animated little toy robot with a distinctive buzzy, nasal, bell-like androgynous voice. Bouncy staccato syllables, precise consonants and small stepped pitch changes. Earnest literal-minded curiosity, adorably proud of each discovery. Cheerful mechanical cartoon character acting with clear intelligible English."
+anchor_transcript = "Aha! Three little circles, all in a row. My circuits are doing a happy wiggle. Shall we find the next one?"
+voxstage_voice_id = "greia-audition-20261019-dani-v2-03"
+anchor_sha256 = "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967"
+anchor_bytes = 768060
+anchor_duration_seconds = 8.000166666666667
+anchor_sample_rate_hz = 48000
+anchor_channels = 1
+anchor_sample_width_bits = 16
+anchor_container = "wav"
+anchor_codec = "pcm_s16le"
+source_master = "assets/source/audio/character-voice-masters/v0.2/dani-source-v2.wav"
+source_sha256 = "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967"
+source_bytes = 768060
+source_duration_seconds = 8.000166666666667
+
+[[voice]]
+character = "tito"
+voice_id = "greia.tito.v2"
+production = "cloned_reference"
+production_anchor = "tito-reference-v2.wav"
+purpose = "Animated cartoon fox with a distinctive cheeky, lightly husky masculine voice in a bright middle register. Pointed nasal resonance, nimble consonants and a conspiratorial grin. A plucky woodland explorer, mischievous and full of curious confidence. Lively storybook character acting with clear intelligible English."
+anchor_transcript = "Psst, look at those tiny footprints! My whiskers say there is a mystery here. Come along, clever explorer. Let us follow the trail!"
+voxstage_voice_id = "greia-audition-20261019-tito-v2-01"
+anchor_sha256 = "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef"
+anchor_bytes = 937020
+anchor_duration_seconds = 9.760166666666667
+anchor_sample_rate_hz = 48000
+anchor_channels = 1
+anchor_sample_width_bits = 16
+anchor_container = "wav"
+anchor_codec = "pcm_s16le"
+source_master = "assets/source/audio/character-voice-masters/v0.2/tito-source-v2.wav"
+source_sha256 = "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef"
+source_bytes = 937020
+source_duration_seconds = 9.760166666666667
+
+[[voice]]
+character = "momo"
+voice_id = "greia.momo.v2"
+production = "cloned_reference"
+production_anchor = "momo-reference-v2.wav"
+purpose = "Lovable fluffy cartoon monster with a distinctive round, low, rubbery voice. Furry throaty texture, hollow rounded vowels, gently honking nasal resonance and a wobbly musical bounce. An endearingly goofy creature delighted by small discoveries. Big warm comic character acting with clear intelligible English."
+anchor_transcript = "Oh, my wiggly toes! That little tune has got into my tummy. Come on, let us bounce to the beat together!"
+voxstage_voice_id = "greia-audition-20261019-momo-v2-03"
+anchor_sha256 = "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea"
+anchor_bytes = 660540
+anchor_duration_seconds = 6.880166666666667
+anchor_sample_rate_hz = 48000
+anchor_channels = 1
+anchor_sample_width_bits = 16
+anchor_container = "wav"
+anchor_codec = "pcm_s16le"
+source_master = "assets/source/audio/character-voice-masters/v0.2/momo-source-v2.wav"
+source_sha256 = "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea"
+source_bytes = 660540
+source_duration_seconds = 6.880166666666667

@@ -1,5 +1,7 @@
 # Greia — Chatterbox Provider Field Guide
 
+**Retained alternative (2026-10-19):** VoxStage/VoxCPM2 is the default character provider. This guide applies only when explicitly selecting `--character-provider chatterbox` or its environment equivalent. All six active references are now v0.2, including Dani; historical descriptions of Dani as system-only do not describe the current default. Keep the Chatterbox mechanisms below; unload VoxStage before loading this alternative model on the same host.
+
 **Status:** Voice Production Engine maintainer/troubleshooting reference  
 **Reviewed:** 2026-08-28  
 **Target provider:** Apple-Silicon MLX `mlx-community/chatterbox-multilingual-v3`
@@ -26,7 +28,7 @@ If a caller-facing document says to invoke `mlx_audio`, Chatterbox, `mlx_whisper
 
 ## 1. Provider role
 
-Chatterbox is currently used behind the engine for canonical cloned-character speech:
+When explicitly selected, Chatterbox implements canonical cloned-character speech:
 
 ```text
 Lilli
@@ -34,11 +36,10 @@ Leo
 Flash
 Tito
 Momo
+Dani
 ```
 
-It is not pronunciation authority for letters/syllables/phonics and is not Dani's identity.
-
-Those use the engine's native/system provider.
+It is not pronunciation authority for letters/syllables/phonics; those retain the independent native/system provider. Dani now has a reviewed v0.2 cloned reference and can use this explicit alternative.
 
 No Chatterbox model or dependency is shipped to the child device.
 
@@ -92,7 +93,7 @@ The daemon/batch path holds the global lock for its lifetime so a second process
 Voice identity is source-controlled by:
 
 ```text
-assets/audio/characters/canonical/v0.1/manifest.toml
+assets/audio/characters/canonical/v0.2/manifest.toml
 ```
 
 `VoiceRegistry.verify_anchor()` validates the reference SHA-256 before cloned generation.

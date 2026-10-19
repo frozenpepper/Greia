@@ -74,12 +74,16 @@ class VoiceRequest:
 
 @dataclass(frozen=True)
 class VoiceProfile:
+    """Canonical character identity and its portable authoring reference."""
+
     character: str
     voice_id: str
     production: str
     purpose: str
     anchor_path: Path | None = None
     anchor_sha256: str | None = None
+    anchor_transcript: str = ""
+    voxstage_voice_id: str = ""
 
 
 @dataclass(frozen=True)

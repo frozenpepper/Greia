@@ -1,5 +1,7 @@
 # Greia Canonical Character Voice Registry v0.1
 
+**HISTORICAL — superseded for new production on 2026-10-19 by v0.2.** The active canonical manifest is `assets/audio/characters/canonical/v0.2/manifest.toml`. These earlier bytes are retained for historical recordings/provenance; new generation does not load this registry.
+
 This directory owns the reviewed **production-anchor registry** used by the local Activity voice-generation workflow.
 
 The binary FLAC anchors are canonical private-project repository assets and belong in this directory beside `manifest.toml`. They are not ordinary Activity playback assets and must not be copied into every `.greiaactivity` package.

@@ -13,7 +13,7 @@ Generate the shared reaction library with:
 tools/record_shared_character_utterances.py
 ```
 
-The script is a thin semantic producer over `VoiceEngine`. It must remain free of direct Chatterbox, Whisper, native-TTS, trimming and FFmpeg implementation logic.
+The script is a thin semantic producer over `VoiceEngine`. It inherits the VoxStage/VoxCPM2 default from the common engine composition (2026-10-19); existing accepted library bytes are not replaced by this provider change. It must remain free of direct Chatterbox, Whisper, native-TTS, trimming and FFmpeg implementation logic.
 
 Read first:
 
@@ -67,8 +67,9 @@ kind = shared_character_utterance
 Routing is automatic:
 
 ```text
-Lilli/Leo/Flash/Tito/Momo -> canonical cloned-character provider
-Dani                       -> deterministic system/native provider
+All six characters -> selected v0.2 cloned-character provider
+Default            -> shared local VoxStage/VoxCPM2
+Explicit alternative -> retained Chatterbox provider
 ```
 
 Suitable multi-word natural-character lines may receive advisory Whisper verification. Tiny reactions and Dani may legitimately skip ASR.

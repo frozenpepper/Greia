@@ -231,13 +231,13 @@ Localization returns a string or a file path; it never plays audio.
 
 - Greia ships exactly four selectable languages: `en`, `it`, `es`, `fr` (owner decision 2026-10-17). The single registry is `SUPPORTED_SYSTEM_LANGUAGES` / `SUPPORTED_SYSTEM_LOCALES` in `greia_platform.system_language`; every selector (installer, Parent panel, simulator) reads it. Never add a second list.
 - A built-in Activity declares `languages = ["it", "en", "es", "fr"]` (or `["*"]` when language-neutral) and ships `locales/{en,it,es,fr}.json` with identical string keys and placeholders. New text keys land in all four bundles in the same change.
-- A new spoken line is recorded in all four languages with the same speaker (Leo/Lilli/Flash/Tito/Momo via Chatterbox, Dani and `pedagogical` via macOS voices Samantha/Alice/Mónica/Thomas) through `tools/greia_voice.py`, staged outside the repo, then copied with `tools/integrate_reviewed_voices.py --layout mirror` (never overwrites). An ES/FR `audio` map entry must name a real file in that language.
+- A new spoken line is recorded in all four languages with the same speaker (all six characters, including Dani, via the default VoxStage/VoxCPM2 provider with their selected v0.2 masters; `pedagogical` retains native/system pronunciation) through `tools/greia_voice.py`, staged outside the repo, then copied with `tools/integrate_reviewed_voices.py --layout mirror` (never overwrites). An ES/FR `audio` map entry must name a real file in that language.
 - Authorities: `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`, its `PROGRESS.md`, `LOCAL_AGENT_VOICE_PRODUCTION.md` and `SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md`.
 - Tests: `tests/test_four_language_release_contract.py` (registry, manifests, four-way key parity, shared spoken banks), `tests/test_staged_activity_translations.py`, `tests/test_four_language_activity_runtime_text.py`.
 
 ## 8. Greia already owns voice production
 
-Normal Activity narration/instructions are **authoring-time prerecorded audio**. Canonical production entry point: `tools/greia_voice.py`. The child device does not run Chatterbox/Whisper or narration TTS, and Activity code/tooling must not create a parallel Chatterbox/MLX/Whisper/native-TTS/FFmpeg stack. New speech needs fresh human acceptance; until approved clips exist, request lines (current list: `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/VOICE_LINES_REQUESTED_2026-10-16.md`) and keep the Activity playable in silence.
+Normal Activity narration/instructions are **authoring-time prerecorded audio**. Canonical production entry point: `tools/greia_voice.py`. The child device does not run VoxCPM2/Chatterbox/Whisper or narration TTS, and Activity code/tooling must not create a parallel VoxStage/Chatterbox/MLX/Whisper/native-TTS/FFmpeg stack. New speech needs fresh human acceptance; until approved clips exist, request lines (current list: `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/VOICE_LINES_REQUESTED_2026-10-16.md`) and keep the Activity playable in silence.
 
 Speech kinds are semantic:
 

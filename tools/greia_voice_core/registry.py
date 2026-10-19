@@ -7,6 +7,8 @@ import tomllib
 
 from .models import VoiceProfile
 
+CANONICAL_MANIFEST = Path("assets/audio/characters/canonical/v0.2/manifest.toml")
+
 
 class VoiceRegistryError(RuntimeError):
     pass
@@ -20,15 +22,7 @@ class VoiceRegistry:
 
     @classmethod
     def load(cls, project_root: Path) -> "VoiceRegistry":
-        manifest_path = (
-            project_root
-            / "assets"
-            / "audio"
-            / "characters"
-            / "canonical"
-            / "v0.1"
-            / "manifest.toml"
-        )
+        manifest_path = project_root / CANONICAL_MANIFEST
         if not manifest_path.is_file():
             raise VoiceRegistryError(f"canonical voice manifest missing: {manifest_path}")
         with manifest_path.open("rb") as handle:
@@ -50,6 +44,8 @@ class VoiceRegistry:
                 purpose=str(row.get("purpose", "")).strip(),
                 anchor_path=(anchor_root / production_anchor) if production_anchor else None,
                 anchor_sha256=str(row.get("anchor_sha256", "")).strip() or None,
+                anchor_transcript=str(row.get("anchor_transcript", "")).strip(),
+                voxstage_voice_id=str(row.get("voxstage_voice_id", "")).strip(),
             )
         return cls(
             project_root=project_root,

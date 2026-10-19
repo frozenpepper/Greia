@@ -1,5 +1,7 @@
 # Greia — Local Agent: Four-Language Audio Production and Gap Closure
 
+**Current routing override — owner decision 2026-10-19:** new character production uses the six accepted v0.2 masters through shared local VoxStage/VoxCPM2 by default, including Dani. Chatterbox is explicitly selectable; pedagogical pronunciation retains its native route. Any older provider/reference descriptions below describe the earlier recording programme and do not select the current backend. Use `tools/greia_voice.py` and current `SETUP.md` §7; existing accepted audio remains unchanged.
+
 **Owner request:** record *all* missing spoken content across Greia OS,
 installer (if any spoken UX), launcher and Parent surfaces, every built-in
 Activity, encyclopedia, shared characters and the new Spanish/French
@@ -59,8 +61,7 @@ require the full Voice Studio generation/listening process.
    **only semantic production entry point** is `tools/greia_voice.py`
    and its `greia_voice_core` provider contract. The existing engine
    currently supports macOS/MLX and native speakers; a **Modal
-   `VoiceProvider` does not yet exist**. Modal is the preferred future
-   authoring platform, **not an already-working integration**.
+   `VoiceProvider` does not yet exist**. VoxStage/VoxCPM2 is the current selected local default; Modal is not an implemented provider.
 2. **Never invent a spoken line or translate a missing script.** The
    owner approved all *existing authored* four-language text on
    2026-10-14; a complete, semantically correct utterance in those

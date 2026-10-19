@@ -62,11 +62,16 @@ def serve_loop(host: str, port: int, handler: Callable[[VoiceRequest], dict]) ->
                 conn.sendall((json.dumps(response, ensure_ascii=False) + "\n").encode("utf-8"))
 
 
-def send_request(host: str, port: int, payload: dict) -> dict:
+def send_request(host: str, port: int, payload: dict, response_timeout: float = 3600) -> dict:
+    if not 1 <= response_timeout <= 7200:
+        raise ValueError("response timeout must be between 1 and 7200 seconds")
     wire = (json.dumps(payload, ensure_ascii=False) + "\n").encode("utf-8")
     if len(wire) > MAX_REQUEST_BYTES:
         raise ValueError("request exceeds Greia voice service size limit")
     with closing(socket.create_connection((host, port), timeout=10.0)) as conn:
+        # Connecting should fail promptly, but queued synthesis can legitimately
+        # take minutes. A ten-second read deadline encouraged duplicate requests.
+        conn.settimeout(response_timeout)
         conn.sendall(wire)
         response = b""
         while b"\n" not in response:

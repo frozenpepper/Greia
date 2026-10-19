@@ -107,6 +107,8 @@ def _snapshot() -> dict[str, float | None]:
 
 
 def _build_engine() -> VoiceEngine:
+    # Deliberately retained Chatterbox diagnostic; this is not the Studio default.
+    # VoxStage model memory belongs to its separate shared worker process.
     return VoiceEngine(
         project_root=PROJECT_ROOT,
         registry=VoiceRegistry.load(PROJECT_ROOT),

@@ -6,7 +6,7 @@ description: Canonical Greia authoring skill for producing prerecorded character
 # Greia Voice Production
 
 **Status:** canonical authoring-time voice-production contract  
-**Reviewed:** 2026-09-02
+**Reviewed:** 2026-10-19
 
 ## One rule
 
@@ -16,7 +16,7 @@ All new Greia prerecorded speech production goes through:
 tools/greia_voice.py
 ```
 
-Activity, OS/shared-library and content-project agents must not invoke Chatterbox, `mlx_audio`, `mlx_whisper`, macOS `say`, `afconvert`, FFmpeg trimming or canonical reference files directly. Those are implementation details owned by the Voice Production Engine.
+Activity, OS/shared-library and content-project agents must not invoke VoxStage, Chatterbox, `mlx_audio`, `mlx_whisper`, macOS `say`, `afconvert`, FFmpeg trimming or canonical reference files directly. Those are implementation details owned by the Voice Production Engine.
 
 If an older project generator, runbook or queue contains direct backend instructions, treat those **production mechanics as superseded** by this skill. Preserve useful semantic cue/text/acceptance data, but submit speech through the engine.
 
@@ -84,6 +84,40 @@ voice audio are separate ledger states. See
 The 2026-10-14 all-app agent work order explicitly respects this
 distinction.
 
+## Current selected provider and masters — owner decision 2026-10-19
+
+All six characters use the owner-accepted **v0.2 cloned masters**, including Dani.
+VoxCPM2 through the existing shared local VoxStage worker is now the default
+VoiceEngine provider. Chatterbox remains explicitly selectable through
+`--character-provider chatterbox` on `doctor`/`generate`/`batch`/`serve`, or
+`GREIA_VOICE_CHARACTER_PROVIDER=chatterbox` for repository producers. No silent
+fallback occurs when the selected backend is unavailable.
+
+Start/reuse the installed service with `voxstage start`, then run the Greia
+`doctor`. Model installation still needs explicit authorization. The adapter
+reuses/imports exact registry references on a fresh local worker, never replaces
+an existing voice ID, and does not start a second MLX process. The shared worker
+owns warm-model lifecycle: finish with `voxstage unload`; closing Greia leaves
+other projects' worker intact. Chatterbox is a retained alternative; unload the
+VoxStage model before switching to it on the same host.
+
+Active registry: `assets/audio/characters/canonical/v0.2/manifest.toml`.
+Source masters/provenance: `assets/source/audio/character-voice-masters/v0.2/`.
+The old v0.1 set is historical. The owner's acceptance of these masters and the
+24 EN/IT/FR/ES comparison samples does not accept future generations or authorize
+regeneration of previously accepted runtime recordings.
+
+`dani_system_speech` remains compatible and now clones Dani's selected master;
+Dani can also use `character_dialogue`. Pedagogical pronunciation retains the
+independent native/system route. VoxCPM2 language direction is probabilistic;
+there is no hard language selector. Every new clip still needs listening review.
+
+The default integration uses loopback HTTP (`GREIA_VOXSTAGE_URL`, default
+`http://127.0.0.1:8791`). A job wait is bounded by `GREIA_VOXSTAGE_TIMEOUT`
+(default 1,800 seconds); timeout does not cancel an external job. Preserve the
+reported ID and inspect it before resubmitting. `request --timeout` separately
+bounds the warm-service response (default 3,600 seconds).
+
 ## Semantic input
 
 Every generated cue needs:
@@ -111,20 +145,19 @@ The caller chooses semantic purpose, never backend/model.
 Routing:
 
 ```text
-Lilli/Leo/Flash/Tito/Momo + character_dialogue
+Lilli/Leo/Flash/Tito/Momo/Dani + character_dialogue
     -> canonical cloned-character provider
 
 shared_character_utterance
     -> production of Greia's central reviewed shared library
-    -> cloned provider for Lilli/Leo/Flash/Tito/Momo
-    -> system provider for Dani
+    -> cloned provider for all six characters
 
 pedagogical_speech
     -> deterministic native/system provider
     -> speaker must be pedagogical or system
 
 Dani + dani_system_speech
-    -> deterministic native/system provider
+    -> selected Dani cloned-character provider
 ```
 
 At runtime, Activities never synthesize `shared_character_utterance`; they resolve reviewed static Greia shared assets through the current runtime resolver.
@@ -190,7 +223,7 @@ Prefer one warm worker:
 python3 tools/greia_voice.py serve
 ```
 
-Then use `request`, or use `batch` for JSONL queues. Never launch concurrent Chatterbox workers. The engine owns the cross-process generation lock.
+Then use `request`, or use `batch` for JSONL queues. Never launch concurrent raw model workers. VoxStage owns one serialized shared worker; Chatterbox remains in-process when explicitly selected. The engine owns the cross-process generation lock.
 
 ## Chatterbox output-length policy
 
@@ -247,7 +280,7 @@ A project-local producer may own only:
 
 It must not own or reintroduce:
 
-- Chatterbox/MLX imports or model IDs;
+- VoxStage/Chatterbox/MLX imports, direct service calls or model IDs;
 - canonical reference paths/hashes;
 - native host voice names/rates or `say`/`afconvert` calls;
 - Whisper calls;

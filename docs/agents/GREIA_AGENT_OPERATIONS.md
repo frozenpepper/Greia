@@ -22,6 +22,8 @@ Before substantive work:
 7. resolve the actual current `main` HEAD before writing;
 8. classify the evidence lane the task can genuinely exercise.
 
+Repository `skills/` owns current guidance. If the local skill catalog points to ignored `.agents/skills/` copies, refresh the affected directories from `skills/` after a skill update; these installed copies do not own separate policy.
+
 Before installing/configuring any Greia toolchain, image builder, Simulator dependency, Parent client, voice backend or developer-remote environment, read `SETUP.md`.
 
 Current test/evidence routing starts at:
@@ -43,12 +45,7 @@ That router follows `HANDOVER.md`. Do not select a dated procedure merely becaus
 four-language rollout, read
 `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`
 and its sibling `LOCAL_AGENT_VOICE_PRODUCTION.md`, then operate
-the exact GLA-014 task in the single queue. The visible OS/installer
-language registry is currently EN/IT; ES/FR texts are *staged*
-and must not become selectable until complete acceptance.
-Authoring-only Modal is preferred for speech but no Modal adapter
-exists in the canonical Greia VoiceEngine today; do not launch
-any cloud workload or download models based on the plan alone.
+the exact GLA-014 task in the single queue. The visible OS/installer language registry contains EN/IT/ES/FR by owner decision 2026-10-17. As of 2026-10-19, Voice Studio/VoiceEngine defaults to the shared local VoxStage/VoxCPM2 worker and all six v0.2 cloned masters, including Dani. Chatterbox remains an explicit operator alternative; pedagogical pronunciation retains native/system routing. Read the voice-production skill and `SETUP.md` §7 for startup, timeout/job recovery and shared-model unloading. No Modal adapter exists; do not launch a cloud workload or download models based on an older plan. Existing accepted runtime recordings remain unchanged.
 Inventoried absent WAVs and missing translations are real
 `BLOCKED` content. Never substitute placeholder or wrong-language
 speech, treat ASR PASS as human listening, or claim a voice

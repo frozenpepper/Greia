@@ -1,5 +1,7 @@
 # Canonical Character Voice Source Masters v0.1
 
+**HISTORICAL — superseded for new production on 2026-10-19 by v0.2.** The active canonical manifest is `assets/audio/characters/canonical/v0.2/manifest.toml`. These earlier bytes are retained for historical recordings/provenance; new generation does not load this registry.
+
 The five full WAV source masters are private owner-supplied project assets. Their expected filenames, metadata and SHA-256 values are registered in:
 
 ```text

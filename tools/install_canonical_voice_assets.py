@@ -17,6 +17,8 @@ import sys
 import tempfile
 import tomllib
 
+from greia_voice_core.registry import CANONICAL_MANIFEST
+
 
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
@@ -64,9 +66,7 @@ def main() -> int:
     args = build_parser().parse_args()
     checkout = args.greia_checkout.resolve()
     pack_root = args.pack_root.resolve()
-    manifest_path = (
-        checkout / "assets/audio/characters/canonical/v0.1/manifest.toml"
-    )
+    manifest_path = checkout / CANONICAL_MANIFEST
     if not manifest_path.is_file():
         raise RuntimeError(f"Canonical manifest not found: {manifest_path}")
 
@@ -79,7 +79,7 @@ def main() -> int:
             continue
         source_relative = Path(voice["source_master"])
         anchor_relative = (
-            Path("assets/audio/characters/canonical/v0.1")
+            CANONICAL_MANIFEST.parent
             / voice["production_anchor"]
         )
         expected.extend(
@@ -97,8 +97,8 @@ def main() -> int:
             ]
         )
 
-    if len(expected) != 10:
-        raise RuntimeError(f"Expected ten registered files, found {len(expected)}")
+    if len(expected) != 12:
+        raise RuntimeError(f"Expected twelve registered files, found {len(expected)}")
 
     validated: list[tuple[Path, Path]] = []
     for relative, expected_hash, expected_bytes in expected:
@@ -120,13 +120,13 @@ def main() -> int:
         validated.append((source, checkout / relative))
 
     if args.check_only:
-        print("PASS: all ten canonical voice files match manifest.toml")
+        print("PASS: all twelve canonical voice files match manifest.toml")
         return 0
 
     for source, target in validated:
         publish(source, target, args.replace)
 
-    print("PASS: installed five WAV masters and five FLAC anchors")
+    print("PASS: installed six WAV masters and six WAV references")
     print("Review git status and commit the exact binary assets.")
     return 0
 

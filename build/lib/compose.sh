@@ -476,8 +476,11 @@ compose_install_runtime_assets() {
   local rootfs="$1"
   local project_root="$2"
   install -d -m 0755 "$rootfs/opt/greia-os/assets"
+  # Hide canonical references on the sender only: --delete must also remove
+  # references leaked into a reused staging root by older composition rules.
   rsync -a --delete \
     --exclude 'source/' \
+    --filter 'H /audio/characters/canonical/' \
     --exclude '*contact_sheet*' \
     --include '/audio/***' \
     --include '/boot/***' \

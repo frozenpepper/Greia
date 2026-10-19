@@ -48,9 +48,9 @@ def transcript_similarity(expected: str, actual: str) -> float:
 def asr_eligible(request: VoiceRequest) -> bool:
     if request.verification is VerificationMode.OFF:
         return False
-    # Dani is rendered deterministically by the system/native provider. Running
-    # Whisper adds cost without providing a useful acceptance signal for that route,
-    # including when Dani's line is being produced for the shared utterance library.
+    # Preserve Dani's human-review-only verification policy across the v0.2
+    # cloned-voice migration. This no longer implies a native synthesis provider;
+    # neither that legacy route nor optional ASR can accept a new recording.
     if request.speaker == "dani":
         return False
     if request.kind not in {

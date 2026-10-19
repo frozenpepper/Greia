@@ -1,7 +1,7 @@
 # Greia Setup Index
 
 **Status:** LIVING workstation / contributor / operator setup router  
-**Reviewed:** 2026-10-16  
+**Reviewed:** 2026-10-19
 **Canonical repository:** `frozenpepper/Greia`
 
 This file answers one question: **what does this workstation/operator role need to read and install?** It does not replace the narrower manuals that own exact procedures. New contributors should start with `CONTRIBUTING.md`; this file covers the heavier roles.
@@ -65,6 +65,10 @@ skills/greia-activity-authoring/SKILL.md
 skills/greia-visual-authoring/SKILL.md
 skills/greia-voice-production/SKILL.md
 ```
+
+Repository `skills/` files are canonical. Some workstations keep ignored installed
+copies under `.agents/skills/`; refresh the affected skill directories from
+`skills/` after changes (for example `rsync -a skills/greia-voice-production/ .agents/skills/greia-voice-production/`). Do not treat an older installed copy as a second authority.
 
 For current testing/evidence routing use:
 
@@ -168,32 +172,55 @@ pedagogical_speech
 dani_system_speech
 ```
 
-### 7.1 Base engine
+### 7.1 Base engine and default character production
 
-The authoring engine source is repository tooling; it is not installed into Greia OS. Python 3.11+ is required for the CLI; Python 3.12 is the current tested production version recorded by the voice tooling docs.
+Python 3.11+ runs the Greia CLI. All six characters, including Dani, now use the
+owner-selected v0.2 masters with **VoxCPM2 through the shared local VoxStage
+service** by default (owner decision 2026-10-19). No model runs on the child device.
 
-### 7.2 Apple-Silicon natural-character production
+On this workstation VoxStage is already installed. Start/reuse its single worker:
 
-For Lilli/Leo/Flash/Tito/Momo production:
-
-```text
-tools/greia_voice_core/README.md
-docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
-tools/greia_voice_requirements_mlx.txt
+```bash
+voxstage start
+python3 tools/greia_voice.py doctor
 ```
 
-Machine-local venv/cache/model data stays below the configured Voice home/cache outside Git.
+Greia uses only standard-library HTTP to talk to VoxStage; it does not import a
+second MLX model or require the Chatterbox venv for default character production.
+FFmpeg remains required for engine-owned 22,050 Hz mono WAV/OGG packaging.
+VoxStage owns its optional Apple-Silicon model/runtime installation; consult the
+shared tools catalog and VoxStage skill before installing anything. Never copy
+its weights, venv or generated job cache into this repository.
 
-Current implemented provider composition:
+### 7.2 Configuration and retained alternative
 
-```text
-natural canonical characters -> Chatterbox Multilingual V3 / MLX
-optional transcript warning   -> mlx-whisper-tiny
-pedagogical + Dani speech     -> deterministic macOS native/system provider
-packaging                     -> engine-owned FFmpeg path
-```
+- Default character provider: `voxstage` (`voxstage-voxcpm2` in receipts).
+- Override for an engine process: `--character-provider chatterbox` on `doctor`,
+  `generate`, `batch` or `serve`; repository producers can use
+  `GREIA_VOICE_CHARACTER_PROVIDER=chatterbox`. An explicit CLI flag wins.
+- The default service origin is `http://127.0.0.1:8791`;
+  `GREIA_VOXSTAGE_URL` may select another loopback HTTP origin only.
+- `GREIA_VOXSTAGE_TIMEOUT` bounds each job wait (default 1,800 seconds;
+  allowed 1–7,200). A timed-out job can still run in VoxStage; inspect its
+  recorded job ID before submitting more work. No automatic POST resubmission.
+- Voice IDs and transcripts come from the v0.2 registry. Missing VoxStage library
+  entries are imported from the repository's exact reviewed WAV; existing IDs
+  are reused without replacement. `doctor` never imports or generates.
+- All six character profiles use cloned references, including the compatible
+  `dani_system_speech` route. `pedagogical_speech` retains deterministic macOS
+  native pronunciation through the independent native provider.
 
-Other hosts must report unavailable provider gaps honestly until an accepted provider exists. Do not bypass VoiceEngine with direct `espeak`, Piper, Coqui, Windows Speech or arbitrary host commands.
+Chatterbox remains implemented. Its optional installation and requirements are
+in `docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md` and
+`tools/greia_voice_requirements_mlx.txt`. Unload the shared VoxStage model before
+using in-process Chatterbox on the same workstation. No silent backend fallback
+occurs if the chosen character provider is unavailable.
+
+Greia's `serve` process selects its provider at startup; `request` clients use
+that server's choice. `request --timeout` controls the response wait (default
+3,600 seconds), separate from the ten-second connection deadline. VoxStage
+owns its warm worker: `voxstage unload` releases model memory after production;
+closing a Greia client does not stop a service used by other projects.
 
 ### 7.3 Shared reactions + character introductions — authoring COMPLETE
 
@@ -240,7 +267,7 @@ Normal Activity authors do not need a cloning environment merely to consume an a
 
 Letters, syllables, phonics and other pronunciation-authoritative material use `pedagogical_speech` through VoiceEngine. Activity/OS scripts must not call macOS `say` or encode host voice names/pronunciation hacks.
 
-Dani-specific robotic speech uses `dani_system_speech`.
+Dani-specific robotic speech uses `dani_system_speech`, now backed by Dani’s selected cloned master through VoxStage by default.
 
 ### 7.5 Human review
 
@@ -363,8 +390,8 @@ Do not add destructive disk/removable-media writes to a generic setup helper.
 | Activity Simulator | implemented/documented; desktop development dependencies required |
 | Developer remote | implemented for explicit developer images only |
 | Voice Production Engine | implemented/canonical; provider readiness is workstation-specific and reported by `doctor` |
-| Natural-character production | Apple-Silicon MLX provider implemented behind VoiceEngine |
-| Pedagogical/Dani production | macOS deterministic provider implemented behind VoiceEngine |
+| Character production (all six) | shared local VoxStage/VoxCPM2 default behind VoiceEngine; Chatterbox explicitly selectable |
+| Pedagogical production | independent macOS native provider; Dani now uses the cloned-character route |
 | Whisper verification | optional advisory verifier; never acceptance authority |
 | Shared reactions | **180 generated + owner-accepted in `shared/v0.2`** |
 | Character introductions | **12 generated + owner-accepted in `shared/v0.2/_intros`**; product placement separate |

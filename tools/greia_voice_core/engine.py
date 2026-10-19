@@ -96,7 +96,7 @@ class VoiceEngine:
             if profile.character == "dani":
                 raise VoiceRoutingError(
                     "Dani must use kind=dani_system_speech for Activity-specific dialogue, "
-                    "never cloned character dialogue"
+                    "when configured with a legacy system-speech profile"
                 )
             raise VoiceRoutingError(
                 f"speaker {request.speaker} does not have a cloned character-speech profile"
@@ -226,6 +226,7 @@ class VoiceEngine:
             detail="not yet run",
         )
         attempts = 0
+        take = None
         try:
             with self.generation_lock:
                 for attempts in range(1, request.max_attempts + 1):
@@ -277,5 +278,7 @@ class VoiceEngine:
                 detail=str(exc),
             )
         finally:
+            if take is not None and take is not best_take:
+                take.temporary_wav.unlink(missing_ok=True)
             if best_take is not None and best_take.temporary_wav.exists():
                 best_take.temporary_wav.unlink()

@@ -19,7 +19,7 @@ This file tells an agent **what to read for the task**. It is deliberately not a
 5. Low-resource behavior is correctness. The Acer reference floor is not a later optimization target.
 6. GitHub-hosted Actions/execution are opt-in only and require explicit owner authorization.
 7. Claim only evidence that actually ran. Source, authoring-provider+human, browser, Simulator, VM/image and physical evidence are distinct.
-8. After substantive implementation, update the active plan/HANDOVER and affected living manuals/skills as required by `AGENTS.md`.
+8. After substantive implementation, update the active plan/HANDOVER and affected living manuals/skills as required by `AGENTS.md`. Refresh affected ignored `.agents/skills/` copies from canonical `skills/` when this workstation uses installed copies.
 9. New prerecorded Greia speech is authoring-time work through `tools/greia_voice.py`; OS/Activity/shared-library code must not grow a parallel TTS/ASR backend.
 10. Launcher spoken labels are Shell-owned prerecorded assets; no child-runtime TTS and no Activity-owned hover/focus speech.
 11. Display/session/input abstraction must preserve direct safe Activity SDL/Pygame rendering and high-rate input paths; do not introduce avoidable full-frame copies or generic high-rate IPC merely for abstraction symmetry.
@@ -581,7 +581,7 @@ Canonical entry:
 python3 tools/greia_voice.py doctor
 ```
 
-All new production goes through VoiceEngine. Current accepted shared v0.2 assets contain 180 shared reactions + 12 introductions; runtime resolver/product placement remain separate concerns. Launcher spoken labels are a separate accepted prerecorded Shell asset set.
+All new production goes through VoiceEngine. As of the owner decision 2026-10-19, all six characters use the selected v0.2 masters through shared local VoxStage/VoxCPM2 by default; Chatterbox is explicitly selectable. Dani’s compatible speech kind now clones Dani; pedagogical pronunciation remains native/system. Start/reuse the installed `voxstage start` worker before the Greia readiness probe; use `voxstage unload` after production. New provider metadata and setup live in the voice-production skill and engine docs. Previously accepted runtime audio remains unchanged. Current accepted shared v0.2 assets contain 180 shared reactions + 12 introductions; runtime resolver/product placement remain separate concerns. Launcher spoken labels are a separate accepted prerecorded Shell asset set.
 
 ## Progression / achievements / Badge Library
 

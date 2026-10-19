@@ -1,7 +1,7 @@
 # Greia Voice Generation and Canonical Character Voices
 
 **Status:** accepted voice policy + canonical authoring Voice Production Engine + owner-accepted shared/introduction v0.2 assets  
-**Reviewed:** 2026-09-02  
+**Reviewed:** 2026-10-19
 **Scope:** presenter speech, researched narration, shared reactions, pedagogical speech, Dani system speech, character introductions, multilingual static audio and human review  
 **Canonical production tool:** `tools/greia_voice.py`
 
@@ -32,7 +32,7 @@ semantic request
 
 It is not a child-runtime TTS service and does not require a GUI.
 
-No Chatterbox/Whisper model stack runs on the Acer/child device for normal narration. Child runtime consumes reviewed prerecorded assets.
+No VoxCPM2/Chatterbox/Whisper model stack runs on the Acer/child device for normal narration. Child runtime consumes reviewed prerecorded assets.
 
 ## 2. Speech has semantic jobs
 
@@ -80,7 +80,7 @@ cue/output identity
 Callers do not own:
 
 ```text
-Chatterbox/MLX model selection or lifecycle
+VoxStage/Chatterbox/MLX model selection or lifecycle
 canonical cloning references/hashes
 native host voice names/rates
 pedagogical pronunciation workarounds
@@ -91,53 +91,71 @@ token budgets/silence heuristics
 
 Those mechanics belong behind `VoiceEngine` and provider interfaces. Historical direct-backend producers are not accepted extension points; new work should migrate them to thin semantic VoiceEngine clients.
 
-## 4. Canonical character identities
+## 4. Canonical character identities — v0.2 active
 
-| Character | Voice ID | Speech personality |
-|---|---|---|
-| Lilli | `greia.lilli.v1` | warm wonder, creativity, stories, art and imagination |
-| Leo | `greia.leo.v1` | warm oldish savvy storyteller; thoughtful and curious, not young-teacher energy |
-| Flash | `greia.flash.v1` | bright, quick, playful action and friendly challenge |
-| Tito | `greia.tito.v1` | warm adventurous discovery, nature, investigation and curiosity |
-| Momo | `greia.momo.v1` | musical, unusual, playful emotion, silliness and celebration |
-| Dani | `greia.dani.system-v1` | fun, concise, clearly robotic logic/pattern feedback |
+Owner decision 2026-10-19: replace the active masters with the six selected local
+VoxStage voice designs and make VoxCPM2 the default character provider. The owner
+accepted the selected-master comparison in English, Italian, French and Spanish.
 
-Canonical source masters/references:
+| Character | Current voice ID | Selected audition | Speech personality |
+|---|---|---|---|
+| Lilli | `greia.lilli.v2` | round 2, candidate 3 | silvery theatrical cartoon unicorn, wonder and imagination |
+| Leo | `greia.leo.v2` | round 1, candidate 3 | warm older storyteller, thoughtful curiosity |
+| Flash | `greia.flash.v2` | round 1, candidate 2 | springy, bright, playful challenge |
+| Dani | `greia.dani.v2` | round 2, candidate 3 | buzzy, precise, bouncy toy robot |
+| Tito | `greia.tito.v2` | round 2, candidate 1 | cheeky woodland fox, nimble adventurous curiosity |
+| Momo | `greia.momo.v2` | round 2, candidate 3 | round, furry, rubbery comic monster with musical rhythm |
+
+Active source masters/references:
 
 ```text
-assets/source/audio/character-voice-masters/v0.1/
-assets/audio/characters/canonical/v0.1/
-assets/audio/characters/canonical/v0.1/manifest.toml
+assets/source/audio/character-voice-masters/v0.2/
+assets/source/audio/character-voice-masters/v0.2/provenance.json
+assets/audio/characters/canonical/v0.2/manifest.toml
 ```
 
-VoiceEngine verifies natural-character cloning-reference hashes before generation. Dani intentionally has no natural cloned reference.
+Every reference is the full, unchanged selected master WAV. The registry records
+its transcript, canonical ID, saved VoxStage ID and existing identity hash.
+Dani now has a reviewed cloning reference. v0.1 masters/references remain
+historical; they are not the source for new production. Existing accepted
+runtime recordings and receipts retain their earlier identity and acceptance.
 
 ## 5. Current provider implementation
 
-Current accepted authoring implementation path:
-
 ```text
-Lilli/Leo/Flash/Tito/Momo
-  -> Chatterbox Multilingual V3 on Apple-Silicon MLX
+all six canonical characters (dialogue, shared utterances, Dani speech)
+  -> VoxStageProvider -> shared local VoxStage -> VoxCPM2 (default)
+
+explicit character-provider=chatterbox
+  -> retained ChatterboxMLXProvider, same v0.2 character references
 
 pedagogical_speech
-  -> deterministic macOS native/system provider
-
-Dani
-  -> deterministic macOS native/system provider
+  -> independent deterministic native/system provider
 
 optional semantic warning
-  -> mlx-whisper-tiny for suitable multi-word natural-character lines
+  -> existing advisory Whisper verifier where available
 ```
 
-Providers are implementation details below VoiceEngine. A future provider should not require Activities/OS content producers to learn another backend command.
+`dani_system_speech` remains a compatible semantic kind; it now uses Dani’s
+cloned master. Dani may also use ordinary `character_dialogue`. The kind never
+means permission to use another character's reference.
 
-Rejected directions remain rejected:
+Select the retained alternative through `--character-provider chatterbox` on
+`doctor`, `generate`, `batch` or `serve`, or set
+`GREIA_VOICE_CHARACTER_PROVIDER=chatterbox` for repository producers.
+Unavailable default synthesis is reported, never silently replaced by another
+backend or native imitation. Pedagogical pronunciation keeps its separate route.
 
-- cloned character speech as phonics/syllable correctness authority;
-- arbitrary host TTS impersonating a canonical character;
-- placeholder audio reported as successful speech;
-- normal narration model stacks on child devices.
+VoxStage is an authoring dependency, not a second Greia content-production API.
+Activity/OS/Encyclopedia scripts still submit semantic requests to VoiceEngine.
+The adapter reuses its single serialized local worker; it owns no second MLX
+process. Fresh workstations import missing saved IDs from the versioned repository
+references without replacing existing voices. Language follows native text plus
+concise direction; VoxCPM2 has no hard language selector. Listening remains the
+pronunciation and identity gate.
+
+Rejected directions remain rejected: cloned character speech as phonics
+correctness authority, silent placeholders, and narration models on child devices.
 
 ## 6. Presenter/speech design belongs to Activity/content design
 
@@ -394,7 +412,7 @@ Low-level Chatterbox details are maintainer/troubleshooting material, not the or
 Never package authoring machinery into Activities/child runtime:
 
 ```text
-Chatterbox/Whisper model weights
+VoxCPM2/Chatterbox/Whisper model weights
 MLX/PyTorch environments
 model caches
 canonical cloning-reference masters
@@ -410,8 +428,9 @@ Implemented authoring infrastructure:
 
 - semantic `VoiceRequest` / `VoiceEngine` abstraction;
 - canonical voice registry + hash validation;
-- Apple-Silicon Chatterbox MLX natural-character provider;
-- deterministic macOS pedagogical/Dani provider;
+- default shared-worker VoxStage/VoxCPM2 provider for all six v0.2 characters;
+- retained explicit Chatterbox MLX alternative;
+- independent deterministic macOS pedagogical provider; compatible Dani speech kind now cloned;
 - shared-library authoring kind;
 - optional advisory verifier;
 - bounded retries;

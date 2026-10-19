@@ -1,5 +1,7 @@
 # Greia — Local Agent: Record All Missing Voices in Every App (EN / IT / ES / FR)
 
+**Current routing override — owner decision 2026-10-19:** new character production uses the six accepted v0.2 masters through shared local VoxStage/VoxCPM2 by default, including Dani. Chatterbox is explicitly selectable; pedagogical pronunciation retains its native route. Any older provider/reference descriptions below describe the earlier recording programme and do not select the current backend. Use `tools/greia_voice.py` and current `SETUP.md` §7; existing accepted audio remains unchanged.
+
 **Owner instruction:** 2026-10-14. The owner has approved all *currently authored text translations* in English, Italian, Spanish and French for voice-production use. **Do the work, app by app; do not stop after an inventory.** Missing spoken scripts, pronunciation distinctions, and as-yet-untranslated inline runtime text are *not* magically filled by this approval.
 
 **Canonical repository:** frozenpepper/Greia, branch main. **Scope:** all 45 built-in Activities; every system/launcher/Creations/Parent spoken cue; the Encyclopedia; the My Time incubator; all canonical character/shared voice packs. Repair missing EN/IT recordings as well as creating ES/FR recordings. **Voice path:** only the existing tools/greia_voice.py semantic engine. **Authoring platform:** prefer Modal if an approved provider exists; at this checkpoint it does not, so an already-working, registered, zero-new-spend local provider is authorized for actual production. Do not wait for Modal if the local engine can complete a cue. No unapproved provider installations, model downloads, paid/cloud jobs, or new spend limits. Ask separately for a priced Modal implementation or expenditure if necessary.
@@ -29,8 +31,9 @@ approved, exact text + cue_id + locale + semantic speaker/speech kind
     -> greia_voice_core.registry.VoiceRegistry
        (canonical speaker and anchor SHA-256)
     -> registered greia_voice_core.providers.VoiceProvider
-       (Chatterbox MLX for natural characters, macOS native for pedagogical/Dani
-        when supported; doctor is authoritative about workstation readiness)
+       (VoxStage/VoxCPM2 default for all six v0.2 cloned characters;
+        Chatterbox explicitly selectable; native pedagogical route;
+        doctor is authoritative about workstation readiness)
     -> one locked worker -> SpeechVerifier (advisory Whisper where suitable)
     -> AudioPipeline (WAV/OGG package and format checks)
     -> candidate audio + adjacent .receipt.json (human_review = PENDING)

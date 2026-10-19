@@ -15,7 +15,7 @@ tools/greia_voice_core/
 
 Greia Activity narration/instructions are **prerecorded at authoring time**.
 
-The child runtime does not run Chatterbox, Whisper or ordinary live TTS for Activity narration.
+The child runtime does not run VoxCPM2, Chatterbox, Whisper or ordinary live TTS for Activity narration.
 
 Activity code receives reviewed static audio or uses an accepted Greia shared/runtime speech resolver.
 
@@ -124,7 +124,7 @@ Example:
 Dani: "Metti tre mele nel cestino."
 ```
 
-Dani is a character, but his canonical voice is the deterministic system route.
+Dani now uses the owner-accepted `greia.dani.v2` cloned master through the default VoxStage/VoxCPM2 provider. `dani_system_speech` remains a compatible semantic kind; ordinary `character_dialogue` is also supported. Pedagogical pronunciation keeps its separate native/system route.
 
 ## 4. Canonical speakers
 
@@ -226,6 +226,8 @@ Do not hard-code locale branches into game rules.
 
 ## 7. Produce through VoiceEngine only
 
+Default character production uses the shared local VoxStage/VoxCPM2 worker and the six selected v0.2 masters (2026-10-19). The operator starts the installed worker with `voxstage start`; Activity producers still submit only semantic Greia requests. Chatterbox is an explicit operator alternative, never a silent fallback. Do not regenerate existing accepted clips.
+
 Start with:
 
 ```bash
@@ -279,7 +281,7 @@ It may own:
 
 It must not own:
 
-- Chatterbox/MLX imports;
+- VoxStage/Chatterbox/MLX imports or direct service calls;
 - model IDs;
 - reference voice paths/hashes;
 - Whisper invocation;

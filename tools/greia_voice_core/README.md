@@ -1,156 +1,80 @@
 # Greia Voice Production Engine — Quick Start
 
-Greia uses one authoring-time voice tool for prerecorded speech:
+**Current default:** VoxStage/VoxCPM2 with the six owner-selected v0.2 masters
+(2026-10-19). Chatterbox remains explicitly selectable. Dani now has a cloned
+reference; its existing `dani_system_speech` kind still works.
 
-```text
-tools/greia_voice.py
-```
+One semantic authoring entry point serves Activities, OS/shared libraries and
+Encyclopedia: `tools/greia_voice.py`. Callers never operate VoxStage, Chatterbox,
+native TTS, Whisper, reference files or FFmpeg directly. No synthesis model,
+worker or reference master is installed on child devices.
 
-Use it for new Activity, OS/shared-library and Encyclopedia voice production. Do **not** call Chatterbox, MLX, Whisper, macOS `say`, `afconvert` or FFmpeg directly from content-authoring scripts. Those are provider details owned by this engine.
+## Setup and readiness
 
-The engine is authoring-only. It is **not installed on the child device** and does not add runtime TTS, speech recognition or model dependencies to Greia OS.
-
-## Features
-
-- semantic routing by `speaker + kind + locale + exact text`;
-- canonical Lilli/Leo/Flash/Tito/Momo voice references with SHA-256 verification;
-- deterministic native/system speech for pedagogical pronunciation and Dani;
-- shared-character-library production through the same engine;
-- optional Whisper verification for suitable generated dialogue;
-- automatic bounded regeneration after likely ASR mismatch;
-- model loaded once for batch/service runs;
-- cross-process single-worker guard to avoid multiple multi-GB Chatterbox instances;
-- WAV/OGG packaging and generation receipts;
-- localhost warm service for repeated agent requests;
-- provider-neutral design so future TTS engines can be added without changing Activity code.
-
-Every generated clip remains `human_review = PENDING`. Whisper can reject or warn about suspicious output, but it never accepts audio.
-
-## Speech kinds
-
-| Kind | Use | Current route |
-|---|---|---|
-| `character_dialogue` | presenter dialogue, narration, hints, facts | canonical character provider |
-| `shared_character_utterance` | producing Greia's central praise/retry/start library | canonical character provider; Dani uses system speech |
-| `pedagogical_speech` | letters, syllables, phonics, pronunciation targets | deterministic native/system speech |
-| `dani_system_speech` | Activity-specific Dani dialogue | deterministic native/system speech |
-
-For normal Activity playback of a **shared** utterance, request the reviewed shared family from Greia at runtime; do not synthesize it on the child device. `shared_character_utterance` here is for producing/extending that shared library during authoring.
-
----
-
-# Installation
-
-## 1. Base tool
-
-The engine source is already part of the Greia repository. There is no package to install into Greia OS.
-
-Requirements for the CLI itself:
-
-- Python **3.11+** (`tomllib` is used; Python 3.12 is the tested production version);
-- the Greia repository checkout;
-- canonical voice assets when character cloning is requested.
-
-From the repository root:
+The Greia CLI requires Python 3.11+ and FFmpeg for 22,050 Hz mono WAV/OGG packaging.
+Default character production uses the shared local VoxStage service through
+standard-library HTTP, so the Greia process needs no MLX environment of its own.
+On a workstation where the shared tool is installed:
 
 ```bash
+voxstage start
 python3 tools/greia_voice.py doctor
 ```
 
-`doctor` is non-mutating: it checks what is already available and does not download model weights.
+The active registry is `assets/audio/characters/canonical/v0.2/manifest.toml`.
+A fresh local VoxStage library is populated lazily from the repository's exact
+reviewed references and transcripts. Saved IDs are never overwritten. `doctor`
+is non-mutating and does not download weights, import voices or synthesize.
 
-## 2. Full Apple-Silicon production setup
+For initial shared-tool installation, read `SETUP.md`, the in-house tools catalog
+and the VoxStage skill. Do not install/download another model stack silently.
+VoxStage's synthesis host currently uses Apple Silicon/MLX. Default HTTP-client
+readiness is portable; native pedagogical availability remains host-specific.
+Do not configure a cloud or remote host: the adapter permits loopback only.
 
-The currently implemented full character-production provider is the tested macOS/Apple-Silicon MLX path.
+All four released languages (English, Italian, French and Spanish) use native
+text plus language direction. There is no hard VoxCPM2 language selector, so
+pronunciation and identity still need listening review.
 
-Keep the environment and model cache outside the repository:
+## Speech routing
 
-```bash
-export GREIA_VOICE_HOME="${HOME}/Library/Application Support/Greia/voice-production"
-export GREIA_VOICE_CACHE="${HOME}/Library/Caches/Greia/voice-production"
-export HF_HOME="${GREIA_VOICE_CACHE}/huggingface"
-export HF_HUB_DISABLE_TELEMETRY=1
+| Kind | Current route |
+|---|---|
+| `character_dialogue` | selected cloned character, all six speakers |
+| `shared_character_utterance` | selected cloned character, all six speakers |
+| `dani_system_speech` | selected Dani cloned master; compatible existing kind |
+| `pedagogical_speech` | independent deterministic native/system pronunciation |
 
-mkdir -p "${GREIA_VOICE_HOME}" "${GREIA_VOICE_CACHE}" "${HF_HOME}"
-```
+Pedagogical requests use speaker `pedagogical` or `system`, never a character.
+Existing accepted runtime recordings and receipts remain unchanged. Every new
+result remains `human_review=PENDING`, even when its master is accepted.
 
-### Recommended install with `uv`
-
-```bash
-uv venv "${GREIA_VOICE_HOME}/venv" --python 3.12
-uv pip install --python "${GREIA_VOICE_HOME}/venv" \
-  -r tools/greia_voice_requirements_mlx.txt
-```
-
-### Standard `venv` / `pip` alternative
-
-```bash
-python3.12 -m venv "${GREIA_VOICE_HOME}/venv"
-"${GREIA_VOICE_HOME}/venv/bin/python" -m pip install -U pip
-"${GREIA_VOICE_HOME}/venv/bin/python" -m pip install \
-  -r tools/greia_voice_requirements_mlx.txt
-```
-
-FFmpeg is required for canonical WAV/OGG packaging. On macOS, when installation is owner-authorized:
+## Retained alternative and lifecycle
 
 ```bash
-brew install ffmpeg
+# Release the default worker's model before loading another large model.
+voxstage unload
+python3 tools/greia_voice.py doctor --character-provider chatterbox
+python3 tools/greia_voice.py serve --character-provider chatterbox
 ```
 
-macOS `say` and `afconvert` are supplied by the OS and are used by the deterministic pedagogical/Dani provider.
+`GREIA_VOICE_CHARACTER_PROVIDER=chatterbox` selects the alternative for repository
+producers. Explicit CLI choices win. There is no automatic backend fallback.
+Chatterbox's optional tested dependencies remain in
+`tools/greia_voice_requirements_mlx.txt`; its setup and field guide are linked
+from `docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md`.
 
-Activate the voice environment before using the full MLX stack:
+Default endpoint: `http://127.0.0.1:8791`; override with a loopback origin in
+`GREIA_VOXSTAGE_URL`. `VOXSTAGE_API_KEY` is optional environment-only service auth.
+`GREIA_VOXSTAGE_TIMEOUT` bounds job waits (default 1,800 seconds; 1–7,200). A
+reported job timeout does not cancel shared inference: inspect the job ID before
+submitting more work. POSTs are never automatically repeated.
 
-```bash
-source "${GREIA_VOICE_HOME}/venv/bin/activate"
-python tools/greia_voice.py doctor
-```
-
-A healthy full Apple-Silicon setup should report:
-
-- canonical cloning anchors present and hash-valid;
-- `ffmpeg` available;
-- `chatterbox-mlx-multilingual-v3` available;
-- `macos-native-say` available;
-- `mlx-whisper-tiny` available when optional ASR verification is installed.
-
-The first actual Chatterbox generation may download `mlx-community/chatterbox-multilingual-v3` weights if they are not already cached. Do not trigger that network download without owner authorization.
-
-## 3. Per-host install
-
-Pick the section that matches your machine. The semantic engine and `doctor` are portable, but each provider is OS-specific.
-
-### macOS on Apple Silicon (M1/M2/M3/M4, arm64) — full cloned-character production
-
-Same as §2 above. This is the **only** configuration with a complete provider stack today.
-
-### Intel macOS — pedagogical/Dani only
-
-The MLX provider requires Apple Silicon, so `chatterbox-mlx-multilingual-v3` and `mlx-whisper-tiny` are `UNAVAILABLE`. Install only `soundfile` and `sentencepiece` and keep `macos-native-say` for `pedagogical_speech` and `dani_system_speech`.
-
-### Linux — system speech only (no cloned character yet)
-
-No `VoiceProvider` for `pedagogical_speech`/`dani_system_speech` ships for Linux; the engine reports `UNAVAILABLE` honestly. Install `ffmpeg` and `espeak-ng` via your package manager so they are present whenever a Linux provider lands. Do not synthesize speech through `subprocess`/`espeak`/`piper` directly from Activity or skill code.
-
-### Windows — no providers yet
-
-The engine source and `doctor` work; every provider reports `UNAVAILABLE` until a Windows-native `VoiceProvider` is implemented. Install `ffmpeg` (e.g. `winget install Gyan.FFmpeg`) but do not route speech through `System.Speech`/`Add-Type` to make providers appear available.
-
-Add future backends behind the `VoiceProvider` interface in `tools/greia_voice_core/providers.py`. Do not teach Activities, OS, shared-library or Encyclopedia scripts a new host-specific backend command.
-
-For detailed installation/troubleshooting, see:
-
-```text
-docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
-```
-
-The Chatterbox field guide is for **engine maintainers/troubleshooting only**:
-
-```text
-docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md
-```
-
----
+Greia closes only its own temporary audio; VoxStage owns its shared warm worker.
+Use `voxstage unload` when finished to release model memory, or `voxstage stop`
+to drain and stop the service. Greia client shutdown never stops other projects'
+worker. The warm Greia server selects its provider at startup; `request` uses that
+choice and has a separate `--timeout` (default 3,600 seconds, 1–7,200).
 
 # Usage
 
@@ -187,7 +111,7 @@ python tools/greia_voice.py generate \
 
 Do not ask a canonical character to speak a pronunciation-authoritative teaching target merely to preserve mascot identity.
 
-## Generate Dani
+## Generate Dani with the selected cloned master
 
 ```bash
 python tools/greia_voice.py generate \
@@ -286,4 +210,8 @@ Activity / OS / Encyclopedia author
     -> owning workflow integrates only accepted audio
 ```
 
-Do not add another Activity-specific Chatterbox/system-TTS/Whisper implementation. Legacy `generate_*_audio.py` scripts are historical compatibility/evidence unless and until converted into thin semantic request producers.
+Do not add another Activity-specific VoxStage/Chatterbox/system-TTS/Whisper implementation. Legacy `generate_*_audio.py` scripts are historical compatibility/evidence unless and until converted into thin semantic request producers.
+`doctor` exits 0 when the selected character provider, all active references and
+FFmpeg are ready; otherwise it exits 2. Optional verifier/retained-alternative
+status is reported independently. `selected_character_provider` records the
+effective choice; `default_character_provider` records the built-in `voxstage` default.
