@@ -72,6 +72,26 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-19 — Corpus replacement checkpoint: 602 complete
+
+The resumed full READY pass is active in shell session `85073`. Latest status:
+**602 DONE, 1 GENERATING, 3,940 READY, 167 BLOCKED_METADATA, 598 PRESERVED**;
+current cue is Costruiamo Ponti IT `too_heavy.wav`. VoxStage PID `19719` is loaded
+with one active job. The earlier failed cue, Bottega delle Misure ES
+`prompt_order_length.wav`, produced effectively silent audio; its original was
+untouched, the job failed terminally with no candidate output, and queue 0 was
+confirmed before an explicit single-cue retry. Fresh job
+`20261019-201240-59474c63` completed and was transactionally installed with its
+receipt PENDING. The full pass has resumed past it; no further failures are
+recorded. External logs, journal, candidates and backups remain under
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/`.
+
+Whisper remains unavailable and verification is off; no listening acceptance is
+claimed. The 167 metadata blockers remain unresolved and are skipped while READY
+cues continue. This checkpoint supersedes prior running counts; next continue
+monitoring and inspect any exact job before an explicit idle-confirmed retry.
+
+
 ## 2026-10-19 — Corpus replacement checkpoint: 304 complete
 
 Latest status for the active serial full pass (session `45485`): **304 DONE,

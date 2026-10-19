@@ -6,6 +6,14 @@
 **Evidence status:** The 2026-10-19 corpus replacement is locally running with pending-review receipts; no full checkout test, GUI or physical-install evidence was produced in this session.
 
 
+## 2026-10-19 — Corpus replacement checkpoint: 602 complete
+
+Current full-pass status: **602 DONE, 1 GENERATING, 3,940 READY, 167 BLOCKED_METADATA, 598 PRESERVED**; active Costruiamo Ponti IT `too_heavy.wav`. Run session `85073`, external directory/log/journal `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/`, VoxStage PID `19719`.
+
+One failed provider output is recorded: Bottega delle Misure ES `prompt_order_length.wav` was rejected as effectively silent (job `20261019-201154-4db4072d`, submission key `greia-58a10aed9a584858a4e3b3b49069ea2f`). The VoxStage job was terminally failed with no result WAV; queue 0/idle was confirmed and original bytes were unchanged. The explicit retry used a new job `20261019-201240-59474c63` and key `greia-aa79d4bc7a31459cb64cd97b2d0d86f0`; it completed, was transactionally installed, and its receipt remains `human_review=PENDING`. The full pass resumed afterward. No source bug was found and no second failure is present.
+
+All current generated receipts remain pending human review; Whisper is unavailable and verification is off. No ASR/listening acceptance is claimed. The 167 blocked legacy rows remain unmodified absent exact source-backed scripts. Continue monitoring the full READY pass and preserve the external journal, originals and log. This checkpoint updates current state without rewriting launch/recovery history.
+
 ## 2026-10-19 — Corpus replacement checkpoint: 304 complete
 
 The active owner-authorized full pass now reports **304 DONE, 1 GENERATING, 4,238 READY, 167 BLOCKED_METADATA, 598 PRESERVED**. Baia delle Orche FR activity-title is current. Process session `45485` writes to the external prepared run directory/log; VoxStage PID `19719` is loaded and remains the single worker. Progress heartbeat and transactions are healthy; no failed/recovery rows. New outputs and receipts stay human-review PENDING; no ASR or listening acceptance is claimed.
