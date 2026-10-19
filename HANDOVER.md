@@ -84,6 +84,16 @@ promote unvoiced locales.
 
 **Next exact step:** the local agent follows `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`: recover the 167 missing legacy scripts where possible, inspect/pilot the character performance defaults, launch/resume the production run, monitor status/jobs, fix owning modules if necessary, and retain backups plus new listening-pending receipts. The runbook is the current executable replacement order within the existing four-language workstream. Relevant source manuals/skills, earlier work-order overrides and the one local-agent queue were updated; ignored installed skill copies were refreshed. Unrelated untracked `final.mp4`/`launch-video/` remain preserved.
 
+## 2026-10-19 — RC installer rebuilt from current `main` and flashed to the LaCie
+
+**Evidence class: SOURCE + BUILD/MEDIA READ-BACK GATES. No QEMU boot, no physical Acer install in this turn.**
+
+- Pulled `main` `6965adb9` → `b750e714` (clean tree) and built `legacy-x86-i686-rc` through the documented front door (`tools/build-and-flash-development-usb.sh`, inside `unshare --mount --propagation private`, operator public key `SHA256:0oRmaFqZpIYFsGj0N2++I6oma2kHtqdOQMQjXITYVXU`).
+- Flashed the whole-device-authorized LaCie `/dev/sdc` (`iamaKey`, serial `eca3505216d7d3`, 7.5 GiB, `TRAN=usb RM=1`), previously mounted and unmounted before writing.
+- **Image** SHA-256 `d177baec8ba0cf8229fee05512e1a1e4ec31994a3152b88fca229dfee199f514`; live media id `a7f03fe3-2240-48e6-9c53-811c35765b26`; payload accounted **1,201 MiB** (< 1,300 gate); `boot_console_policy=quiet`.
+- **Gates:** artifact verification PASS, live USB read-only verification PASS, `usb_readback_verification=PASS`, `loop_hygiene_verification=PASS`; independent verifier re-run PASS; no Greia loop devices left. Log `out/rc-build7-b750e714.log`; plan entry appended to the 2026-09-15 lifecycle plan.
+- **Next exact step:** install from this LaCie on the reference Acer through the graphical installer, then run premortem §5 F1–F19 including the hidden `verbose` recovery check (F2), and record physical results here.
+
 ## 2026-10-19 — Owner-selected v0.2 masters and VoxStage/VoxCPM2 default
 
 **Owner direction:** the six selected masters and 24 EN/IT/FR/ES comparison samples are accepted; adopt the new masters and provider as the Voice Studio / general character-production default, retaining Chatterbox. Active registry is now `assets/audio/characters/canonical/v0.2/manifest.toml`; exact source WAVs and portable design/selection provenance are in `assets/source/audio/character-voice-masters/v0.2/`. The old v0.1 set is historical. Existing accepted runtime audio and receipts are unchanged.

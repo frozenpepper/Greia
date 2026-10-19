@@ -2753,3 +2753,16 @@ Eight tests passed in isolated Python 3.13 run with stand-in Greia helpers; full
 ### 2026-10-19 — Authoring-reference exclusion from runtime asset composition (SOURCE)
 
 The owner-directed voice-master migration exposed that the existing broad `audio/***` runtime copy also included canonical authoring references. `compose_install_runtime_assets` now hides `audio/characters/canonical/` on the sender while allowing `--delete` to remove stale copies from reused staging roots. The existing real-rsync contract verifies all canonical versions remain absent and shared playable audio remains installed. Four focused packaging tests PASS. No image was rebuilt; no installer/update/physical acceptance or lifecycle phase closure is claimed. The voice provider/master migration itself is tracked in the non-lifecycle remediation ledger and `docs/reviews/2026-10-19_VOXSTAGE_VOICE_MIGRATION.md`.
+
+
+### 2026-10-19 — RC installer rebuilt from current `main` and flashed to the LaCie (BUILD + USB READ-BACK PASS)
+
+Owner asked to pull all commits, build the installer image and flash the only connected 8 GB LaCie USB key (whole-device disposal authorized).
+
+- **Source:** `main` fast-forwarded `6965adb9` → `b750e714` (voice v0.2/VoxStage migration, Pi installer source foundation and reviews); clean working tree at build start.
+- **Target media identification:** `/dev/sdc`, `iamaKey`, serial `eca3505216d7d3`, vendor LaCie, `TRAN=usb RM=1 TYPE=disk`, 7.5 GiB, previously mounted at `/media/orb/GREIA`; unmounted before the front door.
+- **Command:** `tools/build-and-flash-development-usb.sh legacy-x86-i686-rc /dev/sdc ./out --operator-key /home/orb/greia-rc/greia-operator.pub` inside `setsid nohup sudo -n unshare --mount --propagation private`, log `out/rc-build7-b750e714.log`.
+- **Result:** `operator_ssh_key=SHA256:0oRmaFqZpIYFsGj0N2++I6oma2kHtqdOQMQjXITYVXU`; payload accounted **1,201 MiB** (< 1,300 owner gate); image SHA-256 `d177baec8ba0cf8229fee05512e1a1e4ec31994a3152b88fca229dfee199f514`; live media id `a7f03fe3-2240-48e6-9c53-811c35765b26`; `boot_console_policy=quiet`.
+- **Gates:** `Developer installer artifact verification: PASS`, `Greia live USB read-only verification: PASS`, `usb_readback_verification=PASS`, `loop_hygiene_verification=PASS`; an independent re-run of `tools/verify-live-usb.sh` after the build also PASSed; no Greia loop devices remain.
+- **Evidence scope:** source/build/media read-back only. No QEMU boot and no physical Acer install/first-boot was performed in this turn; physical Acer acceptance (premortem §5 F1–F19, F2 hidden `verbose` path) remains the next exact step.
+- **Exact next step:** install from this LaCie on the reference Acer through the graphical installer, then run the premortem first-boot checklist and record the results here and in `HANDOVER.md`.
