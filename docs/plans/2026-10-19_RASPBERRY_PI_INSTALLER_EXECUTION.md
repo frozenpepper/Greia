@@ -16,7 +16,7 @@ Do not conflate typed Pi profile schema, native tryboot fakes, or role-model par
 - Pi layout tests use only a command-recording fake and never perform device writes.
 - **Safety gate:** the full fresh-install orchestrator refuses non-GRUB backends *before any destructive partition command* until Pi-specific finalization exists. This is intentional and must not be removed merely to make tests green.
 
-## Remaining production work (required before declaring Pi support)
+Additional partial implementation in the same feature branch: ARM64 `raspberry-pi-400-arm64` and `raspberry-pi-500-arm64` experimental profile declarations and the `boot-pi-native` package set, `PiBootAssetStager` (both boards' own kernels/DTBs/KMS overlays, matching finalized release kernel/initramfs digests, observed MBR root PARTUUID in cmdline, 32 MiB FAT headroom), canonical firmware `autoboot.txt` renderer/parser, plus `test_pi_build_profiles.py` and `test_pi_boot_assets.py`. These are isolated source components **not a built image**.\n\n## Remaining production work (required before declaring Pi support)
 
 1. **Pi profiles:** add declarative Pi 400 and Pi 500 ARM64 A/B profiles with native boot adapters; make the composition-engine/package maps deliberately support them rather than weakening `check_phase0_builder_support`. Select and lock real kernel/firmware/DTB assets for Pi 4/BCM2711 and Pi 5/BCM2712; cross-build on supported Debian host with binfmt/qemu-user or native arm64; fail on missing packages/DTBs.
 2. **ARM system release:** compose full relocatable Greia arm64 ext4 system slots with current Python/SDL/Pygame runtime and four released locale assets, boot hooks/services and kernel modules. Build matching `.greiaupdate` v3 complete payloads. Run read-only completeness and capacity/footprint checks.
@@ -34,7 +34,7 @@ On a clean checkout of the feature branch:
 
 ```bash
 export PYTHONDONTWRITEBYTECODE=1
-PYTHONPATH=src python3 -m unittest tests.test_pi_installer_layout tests.test_installer_layout -v
+PYTHONPATH=src python3 -m unittest tests.test_pi_installer_layout tests.test_installer_layout tests.test_pi_boot_assets tests.test_pi_build_profiles -v
 make verify
 ```
 

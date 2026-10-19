@@ -57,9 +57,11 @@ _RUNTIME_PACKAGE_SETS: Mapping[str, str] = {
 # the same profile model.
 _INSTALLED_BOOT_PACKAGE_SETS: Mapping[str, str] = {
     "grub-pc-bios": "boot-grub-pc",
+    "pi-native-tryboot": "boot-pi-native",
 }
 _INSTALLER_BOOT_PACKAGE_SETS: Mapping[str, str] = {
     "grub-pc-bios-live": "boot-grub-pc",
+    "pi-native-live": "boot-pi-native",
 }
 _BOOT_COVER_PACKAGE_SETS: Mapping[str, str] = {
     "stock-plymouth-provisional": "boot-cover-plymouth",
@@ -484,7 +486,7 @@ class BuildProfile:
                 f"x86 A/B layout {layout!r} requires updates.boot_backend='grub-ab-v1'"
             )
         # Architecture/layout binding keeps Pi layouts off x86 and vice versa.
-        if is_pi_layout and not is_arm:
+        if is_pi_layout and not (self.base.architecture == "arm64" and self.platform.family == "arm64"):
             raise BuildProfileError(
                 f"Pi layout {layout!r} requires base.architecture='arm64' and platform.family='arm64'"
             )

@@ -1,0 +1,70 @@
+schema_version = 1
+
+[profile]
+id = "raspberry-pi-400-arm64"
+certification_state = "experimental"
+description = "Source-only ARM64 A/B profile for Raspberry Pi 400; not a bootable image until native firmware/Setup integration."
+
+[platform]
+family = "arm64"
+board = "pi-400-v1"
+compatibility_class = "C2"
+
+[base]
+suite = "trixie"
+architecture = "arm64"
+mirror = "https://deb.debian.org/debian"
+security_mirror = "https://security.debian.org/debian-security"
+support_end_date = "2030-06-30"
+kernel_package = "linux-image-arm64"
+
+[image]
+# Intermediate relocatable ext4 payload; installed Pi layout is below.
+layout = "bios-single-ext4"
+size_mib = 3072
+hostname = "greia"
+
+[boot]
+installed_adapter = "pi-native-tryboot"
+installer_adapter = "pi-native-live"
+cover_backend = "greia-early-framebuffer-v1"
+console_policy = "quiet"
+
+[display]
+adapter = "xorg"
+video_packages = []
+
+[runtimes]
+enabled = ["python"]
+
+[packages]
+target_sets = [
+  "platform-base",
+  "platform-shell-pygame",
+  "activity-sandbox",
+  "network-basic",
+  "removable-media-common",
+  "parent-recovery",
+]
+installer_sets = ["installer-base"]
+extra_packages = []
+
+[resources]
+preferred_core_mib = 800
+required_core_mib = 1300
+architecture_review_mib = 1300
+
+[storage]
+layout_adapter = "pi-mbr-tryboot-ab-v1"
+system_slot_bytes = 2147483648
+persistent_minimum_bytes = 1610612736
+
+[installer]
+target_policy = "pi-builtin-microsd-v1"
+
+[updates]
+boot_backend = "pi-tryboot-ab-v1"
+required = true
+
+[setup]
+live_boot_adapter = "pi-live-usb-v1"

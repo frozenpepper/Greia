@@ -1,0 +1,5 @@
+# Native Pi firmware boot uses board-bound staged files on FAT partitions.
+# This is NOT a claim that Debian supplies Pi 500 boot firmware.
+# Package builders must supply and verify the chosen firmware source separately.
+dosfstools
+initramfs-tools

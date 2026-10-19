@@ -27,7 +27,7 @@ Adapter and runtime package sets are composed by `tools/build_profile.py`; profi
 
 The profile schema recognizes `arm64` as an architecture, but the current image builders intentionally implement only the BIOS x86 path (`i386`/`amd64`, GRUB PC, one ext4 root, Xorg). An ARM profile must not be faked by pushing ARM values through x86 builder logic. A board-specific boot/image adapter is required first.
 
-Likewise, the architecture recognizes a future `web` Activity runtime family, but no Web engine/package set is implemented yet. Declaring `web` therefore fails closed during package resolution until a measured platform-owned Web adapter exists.
+The experimental, distinct `raspberry-pi-400-arm64` and `raspberry-pi-500-arm64` profiles now describe the native Pi A/B storage, firmware adapter and target policy. Their package scopes resolve for source validation but **`check-phase0-builder` correctly refuses them**: they do not create an ARM64 bootable image. The native Pi staging code under `greia_platform.pi_boot_assets` remains offline-only.\n\nLikewise, the architecture recognizes a future `web` Activity runtime family, but no Web engine/package set is implemented yet. Declaring `web` therefore fails closed during package resolution until a measured platform-owned Web adapter exists.
 
 ## Acer Aspire One candidates
 
