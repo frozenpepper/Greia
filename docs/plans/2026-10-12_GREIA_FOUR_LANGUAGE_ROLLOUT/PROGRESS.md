@@ -6,6 +6,12 @@
 **Evidence status:** The 2026-10-19 corpus replacement is locally running with pending-review receipts; no full checkout test, GUI or physical-install evidence was produced in this session.
 
 
+## 2026-10-19 — Corpus replacement checkpoint: 304 complete
+
+The active owner-authorized full pass now reports **304 DONE, 1 GENERATING, 4,238 READY, 167 BLOCKED_METADATA, 598 PRESERVED**. Baia delle Orche FR activity-title is current. Process session `45485` writes to the external prepared run directory/log; VoxStage PID `19719` is loaded and remains the single worker. Progress heartbeat and transactions are healthy; no failed/recovery rows. New outputs and receipts stay human-review PENDING; no ASR or listening acceptance is claimed.
+
+Alfabeto Leo's four-language set is complete; Baia delle Orche cues continue. No blocked script override has been verified, and READY work advances without them. Continue monitoring, preserve the external journal/backups, and do not regenerate DONE rows. This is a new dated checkpoint; earlier entries remain as history.
+
 ## 2026-10-19 — Corpus replacement checkpoint: 198 complete
 
 Latest status for the active owner-authorized full pass: **198 DONE, 1 GENERATING, 4,344 READY, 167 BLOCKED_METADATA, 598 PRESERVED**. Alfabeto Leo IT `ask_G.wav` is active. Shell session `45485`, log and journal `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/`, VoxStage PID `19719`. Heartbeats and completed transactions continue; no failures or recovery work. New receipts remain `human_review=PENDING`; no ASR or human listening acceptance is claimed.

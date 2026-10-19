@@ -72,6 +72,23 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-19 — Corpus replacement checkpoint: 304 complete
+
+Latest status for the active serial full pass (session `45485`): **304 DONE,
+1 GENERATING, 4,238 READY, 167 BLOCKED_METADATA, 598 PRESERVED**. Current cue:
+Baia delle Orche FR activity-title. VoxStage PID `19719` remains the sole loaded
+worker. The producer heartbeat and per-cue journal transactions continue without
+FAILED or NEEDS_RECOVERY rows. Completed receipts remain `human_review=PENDING`;
+Whisper is unavailable and verification remains off.
+
+The pass has completed the four-language Alfabeto Leo set and substantial
+Baia delle Orche cues. The 167 exact-script blockers are unchanged and continue
+to be skipped independently. External work directory, backups and logs remain
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/`.
+Continue monitoring and recover only source-backed scripts; this checkpoint
+supersedes earlier running counts below.
+
+
 ## 2026-10-19 — Corpus replacement checkpoint: 198 complete
 
 The active full READY pass (shell session `45485`) has **198 DONE, 1 GENERATING,
