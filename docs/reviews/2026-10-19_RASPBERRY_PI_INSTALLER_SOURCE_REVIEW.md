@@ -54,3 +54,54 @@ make verify
 Prerequisites: Python 3.12+ and repo dependencies installed per `SETUP.md`. Stop at first failure; capture exit code, full stdout/stderr, `git rev-parse HEAD`, and `git status --short`. Do not run `build_commands` against actual disks. Do not spend hosted Actions or cloud provider money without owner approval. With source tests green, authorize **disposable loopback** `parted` geometry validation only; still no physical card erasure until complete ARM boot chain and separate owner-approved acceptance procedure.
 
 Reference material: Raspberry Pi config and tryboot docs https://www.raspberrypi.com/documentation/computers/config_txt.html ; Raspberry Pi native kernels https://www.raspberrypi.com/documentation/computers/linux_kernel.html ; AArch64 raw Image header https://www.kernel.org/doc/html/latest/arch/arm64/booting.html .
+
+## 2026-10-19 — follow-up verification pass 2 (post-commit, `e37aa437` baseline)
+
+**Scope:** actual `main` source and previously committed Pi tests; official Raspberry Pi autoboot/kernel documentation. **Evidence:** source inspection plus locally executed isolated Python reproduction of the frozen+slotted-dataclass `super()` failure; **no actual Greia test suite/installer image was run**.
+
+### Confirmed runtime defect repaired
+
+`PiBuiltInMicroSdTargetPolicy` is `@dataclass(frozen=True, slots=True)` and previously called zero-argument `super()._removable_rejection(observation)` in the fallback path. Python dataclasses synthesize a replacement class when `slots=True`, so `super()` can raise `TypeError: super(type, obj): obj must be an instance or subtype of type`. Reproduced independently with the same `@dataclass(frozen=True, slots=True)` subclass pattern in Python. This was on the **negative SD-destination path**, where a removable card lacks proven built-in MMC + CID; instead of a controlled “not eligible” result, evaluation raised.
+
+**Fix:** explicit `InstallTargetPolicy._removable_rejection(self, observation)` delegation. Added focused no-exception rejection regression and integration test that passes `lsblk` JSON through the **actual** `LsblkDiskProbe`, injected Pi 500 sysfs fixture/CID, Pi target policy, and inventory eligible-target filtering with a USB device present. This checks an end-to-end detection path absent from the previous hand-built `DeviceObservation` tests.
+
+### Boot file format check tightened
+
+Previous stager/tests treated `b"dtb"` and `b"kms"` as acceptable board DTB and KMS overlay files, so an obviously unbootable file could be staged successfully under a plausible name. The stager now requires an FDT magic header, a 40-byte minimum header and consistent declared total size for both `.dtb` and `.dtbo`. Added negative cases for 3-byte DTB and length-mismatched overlay; synthetic valid headers in positive tests prove only this boundary.
+
+**Limit:** FDT container validation does *not* confirm the board's `compatible` metadata, overlay correctness, firmware/kernel-module ABI, live hardware detection or actual boot. Those remain acceptance blockers; do not downgrade them to “verified” because a file has FDT magic.
+
+### Other source checks
+
+- Re-read `PiMbrTrybootAbAdapter` on actual `main`: it now subclasses `LayoutAdapter` and emits P1/P2/P3 FAT, P4 extended, P5/P6/P7 logical ext4 commands; output still unexecuted against `parted` or loopback. Its target policy recheck exists and the early, no-erasure Pi refusal remains in `fresh_ab_install.py`.
+- Checked the `[all]` + `tryboot_a_b=1` + `[tryboot]` selection and Pi 400 `kernel8.img` vs Pi 500 `kernel_2712.img` against Raspberry Pi official documentation (see references below). Source agreement is **not** physical firmware behavior evidence.
+- Only source files and tests were changed. ARM64 live/root composition and production Pi A/B firmware boot, recovery and the required one public universal image remain absent.
+
+### Integration risks newly made explicit
+
+- The current fresh-install request requires a **GRUB password hash** and its result exposes `grub_config_text`. The future Pi boot installation must replace these x86-only transaction assumptions polymorphically rather than feeding fabricated GRUB values to satisfy a shared request shape.
+- The current boot-asset stager proves kernel/initramfs receipt hashes but does not bind the supplied firmware/DTB/overlay files to a trusted per-board release manifest. Implement release/board compatibility verification when the ARM image composer is integrated; a directory name alone is not a release binding.
+- Current Pi MBR P7 extends to `100%` and its theoretical PERSIST remainder calculation may differ slightly from actual filesystem usable bytes due to partition/FS rounding. The exact minimum-size boundary remains **source-modeled** and requires a disposable loop-device geometry/filesystem check, not a source-only PASS.
+- During physically safe tests, verify sysfs path/model/CID on Pi 400 and Pi 500 separately. The strict board-specific MMC observer can intentionally refuse any unrecognized host; no generic allow-MMC fallback.
+- The Pi 500 kernel optimization can use 16 KiB pages, while common Pi 400 ARM64 kernels use 4 KiB; a matching AArch64 Image magic does not prove kernel/userland/firmware compatibility.
+
+### Required next real verification
+
+On the exact committed `main` SHA with Python >=3.12 and dependencies installed via `SETUP.md`:
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1
+PYTHONPATH=src python3 -m unittest \
+    tests.test_pi_installer_layout \
+    tests.test_pi_boot_assets \
+    tests.test_pi_build_profiles \
+    tests.test_pi_mmc_host_probe \
+    tests.test_installer_layout \
+    tests.test_installer_disk \
+    tests.test_build_profiles_storage -v
+make verify
+```
+
+Stop at first failure, return full stdout/stderr, command RC, pinned `git rev-parse HEAD`, and `git status --short`. **Do not run destructive commands on a physical disk.** Only a subsequent owner-authorized disposable loop test can validate the planned geometry, and only a full native Pi media implementation followed by explicit authorization can permit hardware installation. This pass remains SOURCE REVIEW / local Python isolated reproduction, *not* repository tests green or installer complete.
+
+Official references: https://github.com/raspberrypi/documentation/blob/master/documentation/asciidoc/computers/config_txt/autoboot.adoc and https://www.raspberrypi.com/documentation/computers/linux_kernel.html .

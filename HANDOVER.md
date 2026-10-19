@@ -63,6 +63,13 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-19 — Pi verification pass 2: slotted-dataclass policy failure and malformed FDT assets
+
+**Baseline reviewed:** main `e37aa437a3cdcc87c65fc26bd36a43ca25b7751a`. Source inspection reconfirmed executable Pi adapter, MBR sizing and early non-destructive full-installer refusal. An independent Python reproduction confirmed that zero-argument `super()` in `@dataclass(frozen=True, slots=True)` can throw `TypeError`; the Pi removable-card policy did exactly that when built-in CID proof was absent. Replaced with explicit parent-method delegation. Added `lsblk` JSON → sysfs Pi 500 MMC CID → policy target-selection integration test (including a USB installer competitor) and negative no-exception cases. Boot-asset stager now rejects non-FDT/truncated DTB and overlay containers, with corresponding tests. Read `docs/reviews/2026-10-19_RASPBERRY_PI_INSTALLER_SOURCE_REVIEW.md` § follow-up verification pass 2 for full findings and first-run test commands.
+
+**Evidence limitations:** no Greia Python tests, `make verify`, real parted/mkfs, ARM64 composition, QEMU or Pi hardware tests executed in this turn. Native Pi installation remains **NOT IMPLEMENTED END TO END**; early fail-closed before erase is intentionally preserved. Next action: local source tests, then only authorized disposable loop geometry, then finish ARM setup/live and native Pi firmware A/B/recovery before any physical erasure.
+
+
 ## 2026-10-19 — Pi 400/500 WIP source consolidated on main after adversarial review (UNVERIFIED)
 
 Owner asked for Pi installer implementation and review. The earlier draft PR #10 at `9f209139` had a serious source/claim regression: the final committed `PiMbrTrybootAbAdapter` was STILL deferred/64 MiB despite an intermediate blob being executable/256 MiB. This review discovered it by fetching the committed file. The new `main` changes reconstruct the executable Pi DOS P1/P2/P3 256 MiB FAT, P4 extended, P5-P7 ext4 A/B/PERSIST adapter, account for logical EBR alignment in exact minimum capacity, reuse observed MBR PARTUUIDs, and check the Pi built-in microSD target policy before emitting destructive commands. Source also adds Pi 400/500 ARM64 experimental profiles and package maps (builder correctly refuses ARM64 still), offline board-specific boot-file staging with uncompressed AArch64 Image-header preflight, and sysfs Pi MMC-host/card-CID observation while preserving USB/removable safety. Full Pi install transaction still **refuses prior to wipe** until the ARM media and native firmware installer are complete.

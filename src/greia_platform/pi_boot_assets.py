@@ -72,6 +72,24 @@ def _require_regular(path: Path) -> Path:
     return path
 
 
+def _require_fdt_blob(path: Path) -> Path:
+    """Check the binary FDT container before offering a DTB/DTBO to firmware.
+
+    Correct filenames are insufficient: 3-byte placeholders and truncated
+    downloads must not be staged as boot assets. This checks the standard
+    40-byte FDT header and its total length, not the model's full schema.
+    """
+    source = _require_regular(path)
+    with source.open("rb") as stream:
+        header = stream.read(40)
+    if len(header) < 40 or header[:4] != bytes((0xd0, 0x0d, 0xfe, 0xed)):
+        raise PiBootAssetError("boot device-tree is not a flattened device tree")
+    total_size = int.from_bytes(header[4:8], "big")
+    if total_size < 40 or total_size != source.stat().st_size:
+        raise PiBootAssetError("boot device-tree FDT size is invalid or truncated")
+    return source
+
+
 def _require_raw_arm64_image(path: Path) -> None:
     """Refuse gzip/PE-only/generic distro vmlinuz without a raw arm64 header.
 
@@ -192,7 +210,7 @@ class PiBootAssetStager:
             raise PiBootAssetError("initramfs does not match finalized release receipt")
 
         board_files: dict[str, Path] = {
-            board.dtb_filename: _require_regular(firmware_root / board.dtb_filename),
+            board.dtb_filename: _require_fdt_blob(firmware_root / board.dtb_filename),
         }
         if board is PiBoard.PI_400:
             for name in ("start4.elf", "fixup4.dat"):
@@ -201,7 +219,7 @@ class PiBootAssetStager:
         overlay = f"{board.kms_overlay}.dtbo"
         if overlay_root.is_symlink() or not overlay_root.is_dir():
             raise PiBootAssetError("Pi KMS overlay directory is missing or symlinked")
-        board_files[f"overlays/{overlay}"] = _require_regular(overlay_root / overlay)
+        board_files[f"overlays/{overlay}"] = _require_fdt_blob(overlay_root / overlay)
 
         sources = {
             board.kernel_filename: kernel,

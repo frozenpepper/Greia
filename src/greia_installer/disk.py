@@ -443,7 +443,9 @@ class PiBuiltInMicroSdTargetPolicy(InstallTargetPolicy):
         # remain excluded by the transport+host-topology checks below.
         if observation.mmc_host_built_in and observation.mmc_cid:
             return None
-        return super()._removable_rejection(observation)
+        # dataclass(slots=True) reconstructs the class, so zero-argument
+        # super() can raise TypeError at runtime; delegate explicitly.
+        return InstallTargetPolicy._removable_rejection(self, observation)
 
     def _transport_rejection(self, transport: str) -> str | None:
         if transport in EXTERNAL_TRANSPORTS or transport == "usb":

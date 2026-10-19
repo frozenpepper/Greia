@@ -35,6 +35,16 @@ def raw_arm64_kernel() -> bytes:
     return bytes(header)
 
 
+def fake_fdt() -> bytes:
+    """Synthetic FDT container for header/length checks (not a board DTB)."""
+    body = bytearray(64)
+    body[:4] = bytes((0xd0, 0x0d, 0xfe, 0xed))
+    body[4:8] = len(body).to_bytes(4, "big")
+    body[20:24] = (17).to_bytes(4, "big")
+    body[24:28] = (16).to_bytes(4, "big")
+    return bytes(body)
+
+
 def artifacts(slot: str = "A") -> BootArtifactSet:
     return BootArtifactSet(
         slot=slot,
@@ -79,8 +89,8 @@ class NativePiBootAssetTests(unittest.TestCase):
                     root = Path(tmp)
                     write(root / "system/boot/vmlinuz-greia", raw_arm64_kernel())
                     write(root / "system/boot/initramfs-greia.img", b"greia-initrd")
-                    write(root / "firmware" / board.dtb_filename, b"dtb")
-                    write(root / "firmware/overlays" / (board.kms_overlay + ".dtbo"), b"kms")
+                    write(root / "firmware" / board.dtb_filename, fake_fdt())
+                    write(root / "firmware/overlays" / (board.kms_overlay + ".dtbo"), fake_fdt())
                     if board == PiBoard.PI_400:
                         write(root / "firmware/start4.elf", b"firmware")
                         write(root / "firmware/fixup4.dat", b"fixup")
@@ -118,6 +128,44 @@ class NativePiBootAssetTests(unittest.TestCase):
             with self.assertRaisesRegex(PiBootAssetError, "boot source"):
                 PiBootAssetStager().stage(
                     board=PiBoard.PI_500, artifacts=artifacts(),
+                    system_root=root / "system",
+                    firmware_root=root / "firmware",
+                    destination=root / "stage",
+                )
+            self.assertEqual([], list((root / "stage").iterdir()))
+
+    def test_invalid_dtb_does_not_create_any_staged_boot_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(root / "system/boot/vmlinuz-greia", raw_arm64_kernel())
+            write(root / "system/boot/initramfs-greia.img", b"greia-initrd")
+            write(root / "firmware/bcm2712-rpi-500.dtb", b"dtb")
+            write(root / "firmware/overlays/vc4-kms-v3d-pi5.dtbo", fake_fdt())
+            (root / "stage").mkdir()
+            with self.assertRaisesRegex(PiBootAssetError, "flattened device tree"):
+                PiBootAssetStager().stage(
+                    board=PiBoard.PI_500, artifacts=artifacts(),
+                    system_root=root / "system",
+                    firmware_root=root / "firmware",
+                    destination=root / "stage",
+                )
+            self.assertEqual([], list((root / "stage").iterdir()))
+
+    def test_truncated_dtbo_does_not_create_any_staged_boot_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(root / "system/boot/vmlinuz-greia", raw_arm64_kernel())
+            write(root / "system/boot/initramfs-greia.img", b"greia-initrd")
+            write(root / "firmware/bcm2711-rpi-400.dtb", fake_fdt())
+            damaged = bytearray(fake_fdt())
+            damaged[4:8] = (128).to_bytes(4, "big")
+            write(root / "firmware/overlays/vc4-kms-v3d.dtbo", bytes(damaged))
+            write(root / "firmware/start4.elf", b"firmware")
+            write(root / "firmware/fixup4.dat", b"fixup")
+            (root / "stage").mkdir()
+            with self.assertRaisesRegex(PiBootAssetError, "size is invalid"):
+                PiBootAssetStager().stage(
+                    board=PiBoard.PI_400, artifacts=artifacts(),
                     system_root=root / "system",
                     firmware_root=root / "firmware",
                     destination=root / "stage",
