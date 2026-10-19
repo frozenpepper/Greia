@@ -144,6 +144,15 @@ byte-compares it, refusing any `DISPLAY` on the diagnostic/recovery template.
 the fatal `console=null` rollback of 2026-08-20. See
 `docs/INSTALLATION_ISSUES_LOG.md` §34–§35.
 
+Installer completion power-off (2026-10-18): the unprivileged UI writes
+`/run/greia-installer/finish-request`; the root
+`greia-installer-finish.path` watches it and `greia-installer-finish.service`
+performs the single power-off after lowering PID1's `LogLevel` to `emerg`, so
+`systemd-shutdown` teardown text never draws over the Greia cover. The UI must
+not call `systemctl poweroff` directly (logind/polkit denies `nobody`). The
+composed-root verifier enforces the units, helper and silence. See
+`docs/INSTALLATION_ISSUES_LOG.md` §36.
+
 ## Installer, image composition or build pipeline
 
 Read:
