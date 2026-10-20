@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T17:53:59.691256+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Ogni delfino ha un fischietto speciale, quasi un nome: così gli amici lo riconoscono!",
+    "cue_id": "viaggio_delfino.curiosity-whistle",
+    "output": "activities/viaggio_delfino/assets/audio/it/curiosity-whistle.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "generation_parameters": {
+    "job_id": "20261020-195332-957cda8a",
+    "idempotency_key": "greia-4ca76446202a4512a50652892d2df0f0",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3286117786,
+    "language_direction": "Italian",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak in Italian. Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2155645259,
+        "sha256": "007572849a1a12d8b754c3f0e1fbee8883704c09e3a7a37c4c446d915831bba6",
+        "generation": {
+          "elapsed_seconds": 26.692530667001847,
+          "model_load_seconds": 0.0,
+          "rtf": 4.766381476801616,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/viaggio_delfino/assets/audio/it/curiosity-whistle.ogg",
+    "bytes": 42343,
+    "sha256": "542c0596922300af45e72a89597fffc1cbd47fc0786692702623533eadace315"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "df59f84e68a8a75f39d153c1c1a71115321887246018ad0ba38975a33af5174f",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

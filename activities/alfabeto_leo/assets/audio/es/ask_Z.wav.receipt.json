@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T12:40:00.684629+00:00",
+  "created_utc": "2026-10-19T20:52:00.174184+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¿Dónde está la letra Z?",
     "cue_id": "alfabeto_leo.ask_Z.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/es/ask_Z.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/alfabeto_leo/assets/audio/es/ask_Z.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261019-225152-9262bf96",
+    "idempotency_key": "greia-3fa7e8edf18348cfbb894209a6598aca",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2010015562,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "effective_delivery": "Speak naturally in Spanish. Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1172504174,
+        "sha256": "7eddbefec3693d95de82be233c01dea18d9abe84b297f62e98b7eb98b9ce49bd",
+        "generation": {
+          "elapsed_seconds": 6.174114291963633,
+          "model_load_seconds": 0.0,
+          "rtf": 4.287083179236408,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "donde está la letra ceta.",
-    "score": 0.7589,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/es/ask_Z.wav",
-    "bytes": 94894,
-    "sha256": "b7c20782a3612a46f015a19415427dd56631c2f46c1cfd2a223aa396853ffbdc"
+    "bytes": 63590,
+    "sha256": "3a675dcbb1af44fb97a3ca250d898110946a442969b3c8bb94420144219c84f1"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "450d23964634f36fff8275e2d690713e7cdeaeea00795aa91b18e1033de53567",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

@@ -1,38 +1,91 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T13:54:10.880492+00:00",
+  "created_utc": "2026-10-20T07:32:18.891572+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "flash",
     "kind": "character_dialogue",
     "locale": "es",
-    "text": "Los engranajes transforman el movimiento, pero no crean energía",
+    "text": "Los cambios no crean energía gratis. Pueden hacer más útil cambiar fuerza por movimiento o movimiento por fuerza, pero siempre hay que elegir.",
     "cue_id": "encyclopedia.machines.bicycle.energy.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/bicycle_energy.ogg",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/enciclopedia_greia/assets/audio/es/machines/bicycle_energy.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-093142-5ae6ef98",
+    "idempotency_key": "greia-4b2b3f716c504137aa4e012e959e6e68",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2107858182,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in Spanish. Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1071315229,
+        "sha256": "1df4ee2c5389131f0d8c17f2d770a12ca1c1906f8a4b529e0e2b04242cd6457b",
+        "generation": {
+          "elapsed_seconds": 35.833335250034,
+          "model_load_seconds": 0.0,
+          "rtf": 3.929021975113832,
+          "peak_memory_gb": 7.604438164
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Los engranajes transforman el movimiento, pero no crean energía.",
-    "score": 1.0,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/es/machines/bicycle_energy.ogg",
-    "bytes": 35114,
-    "sha256": "05b398d1d510cf82b8fbf33b708901bf41cf47735fe98643cdc9f1cd9076a2c3"
+    "bytes": 47706,
+    "sha256": "9235aeb373e15ddce6b1604212670a7f30b9b6f4a6505364caa50b7be311aa3b"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "05b398d1d510cf82b8fbf33b708901bf41cf47735fe98643cdc9f1cd9076a2c3",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "1df4ee2c5389131f0d8c17f2d770a12ca1c1906f8a4b529e0e2b04242cd6457b",
+      "source_job_id": "20261020-093142-5ae6ef98",
+      "repackaged_utc": "2026-10-20T22:30:03Z"
+    }
+  }
 }

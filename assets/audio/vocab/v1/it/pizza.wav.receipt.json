@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:15:13.372439+00:00",
+  "created_utc": "2026-10-20T22:15:24.835652+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "it",
     "text": "pizza",
     "cue_id": "sillabe_magiche.word_pizza.it",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/word_pizza.wav",
+    "output": "assets/audio/vocab/v1/it/pizza.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Alice",
-    "rate_wpm": 175,
-    "synthesis_text": "pizza"
+    "job_id": "20261021-001519-4bec6958",
+    "idempotency_key": "greia-4b7e638f6c774e5f9298ffb1b91f6683",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1022117100,
+    "language_direction": "Italian",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 183387457,
+        "sha256": "541f9909f7befb23fac8bb594dc2aa97247fee7458568118bdfb95ce03002dfd",
+        "generation": {
+          "elapsed_seconds": 4.465088792000188,
+          "model_load_seconds": 0.0,
+          "rtf": 6.974884861234347,
+          "peak_memory_gb": 5.436131172
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -29,10 +69,14 @@
   },
   "attempts": 1,
   "output": {
-    "path": "activities/sillabe_magiche/assets/audio/it/word_pizza.wav",
-    "bytes": 20482,
-    "sha256": "670da1bdf92fcfd997649ad6b681dcb66d09881f3b25a278f37a15b4b4c8fdba"
+    "path": "assets/audio/vocab/v1/it/pizza.wav",
+    "bytes": 28310,
+    "sha256": "eb51526fc87151c6c9ee8ad386e50466ddf5866be47bcdb05fea29b2aba33e33"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "670da1bdf92fcfd997649ad6b681dcb66d09881f3b25a278f37a15b4b4c8fdba",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

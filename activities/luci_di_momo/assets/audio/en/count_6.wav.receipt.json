@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:37:10.136057+00:00",
+  "created_utc": "2026-10-20T12:57:53.885098+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Six",
     "cue_id": "greia.wired.count_6.en",
-    "output": "tmp/greia-four-languages-20261017/review/activities/luci_di_momo/assets/audio/en/count_6.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/luci_di_momo/assets/audio/en/count_6.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.momo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.momo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "en",
-    "model_load_count": 1
+    "job_id": "20261020-145748-c8622b13",
+    "idempotency_key": "greia-47a60ddf16df4c089aeb1cca56706006",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
+    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2339295918,
+    "language_direction": "English",
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "effective_delivery": "Speak in English. Momo, a lovable, whimsical comic creature. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2976404073,
+        "sha256": "885f4dd81539c63d934ad40f3b31a2e951ac886606f64bea66b91a6a74ab59ad",
+        "generation": {
+          "elapsed_seconds": 4.659211291989777,
+          "model_load_seconds": 0.0,
+          "rtf": 4.852502647446392,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/luci_di_momo/assets/audio/en/count_6.wav",
-    "bytes": 16616,
-    "sha256": "e5226f8ae1f58aabc162fa90ab0d328940e4909a9b6b59a0cef2498fd6fd8a08"
+    "bytes": 42422,
+    "sha256": "192bc4cc43b6c718bb7c5c14a3145ff36d1b1563387b24130f22b65a4f8b502a"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "e5226f8ae1f58aabc162fa90ab0d328940e4909a9b6b59a0cef2498fd6fd8a08",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

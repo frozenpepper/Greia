@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T05:00:59.473133+00:00",
+  "created_utc": "2026-10-20T17:41:07.011215+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Cada delfín puede tener un silbido distintivo, casi como un nombre, que permite a otros reconocerlo.",
     "cue_id": "curiosity.delfino.whistle.voice",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/es/curiosity-whistle.ogg",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/viaggio_delfino/assets/audio/es/curiosity-whistle.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-194039-e299a775",
+    "idempotency_key": "greia-f7c09c6afffc4ad9b46eba08a94faff0",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 892468629,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak in Spanish. Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 38888702,
+        "sha256": "6bec6423f55f2d158a5c0a27e58faff15e66aa4c8b67f3561ab864f60eccee76",
+        "generation": {
+          "elapsed_seconds": 26.576661834027618,
+          "model_load_seconds": 0.0,
+          "rtf": 4.489174601057563,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Cada del fin puede tener un cibido distintivo casi como un nombre que permite a otros reconocerlo.",
-    "score": 0.9234,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/viaggio_delfino/assets/audio/es/curiosity-whistle.ogg",
-    "bytes": 49328,
-    "sha256": "b115298dcf16e1fc501de4ede0d522f803a04accb11eb9be95a8d71adf03f324"
+    "bytes": 45807,
+    "sha256": "8fb523925e512d34ab76737821042b6f71abeb8403ec2646aff34af5440df5c6"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "b115298dcf16e1fc501de4ede0d522f803a04accb11eb9be95a8d71adf03f324",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

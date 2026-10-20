@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T13:08:59.310441+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Ben fatto!",
+    "cue_id": "activities/luci_di_momo/assets/audio/it/correct_2.wav",
+    "output": "activities/luci_di_momo/assets/audio/it/correct_2.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.momo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "generation_parameters": {
+    "job_id": "20261020-150852-caa52f57",
+    "idempotency_key": "greia-7d28338acc974cc188ede4566a9277f8",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
+    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2413724363,
+    "language_direction": "Italian",
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "effective_delivery": "Speak in Italian. Momo, a lovable, whimsical comic creature. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3455522681,
+        "sha256": "f0f52d2bac930e791d14141bdfb5f7c8dc19215f334927a6107da58ba370e29d",
+        "generation": {
+          "elapsed_seconds": 6.177969708980527,
+          "model_load_seconds": 0.0,
+          "rtf": 4.825910461383044,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/luci_di_momo/assets/audio/it/correct_2.wav",
+    "bytes": 56534,
+    "sha256": "2e36ed2a2983034f0ea35f9eea2f800aa2cdc1b0f618098f634dbb7e2d53a81b"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "7361fabe697ae0f45191fac626ae707909f1d91d04b876f9df5bf17c9d5ca50e",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

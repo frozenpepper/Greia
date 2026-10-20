@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T18:44:58.776515+00:00",
+  "created_utc": "2026-10-20T00:05:14.643190+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -9,16 +9,56 @@
     "cue_id": "bosco_numeri.ask_6",
     "output": "activities/bosco_numeri/assets/audio/it/ask_6.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "it",
-    "model_load_count": 1
+    "job_id": "20261020-020506-1759d237",
+    "idempotency_key": "greia-d4995da3cbea43578f44342b980eac63",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1613658755,
+    "language_direction": "Italian",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "effective_delivery": "Speak naturally in Italian. Tito, a cheeky, confident woodland explorer. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2093556272,
+        "sha256": "20c63a783032e0960baa44919b590e67a2dcd2bd0e21d179f725e0b45551134c",
+        "generation": {
+          "elapsed_seconds": 7.600514583988115,
+          "model_load_seconds": 0.0,
+          "rtf": 4.318065287750089,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/bosco_numeri/assets/audio/it/ask_6.wav",
-    "bytes": 55424,
-    "sha256": "794469707c419f275186fa2bba3c759f4b8a88f1f3c428d88d7329cfb0d25565"
+    "bytes": 77702,
+    "sha256": "867c279f4086269ab03ca889247c7b78f142871d56dbc7b4f126e33bc75a1b47"
   },
   "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "a0e67004515d9b87546a309124916251140fd83e853780ed7f6bd44b5a113e6a",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

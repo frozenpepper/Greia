@@ -1,38 +1,91 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T13:56:47.468379+00:00",
+  "created_utc": "2026-10-20T07:36:01.312947+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "dani",
     "kind": "character_dialogue",
     "locale": "es",
-    "text": "La carga: cuando pasan coches y camiones, su peso empuja hacia abajo el tablero del puente.",
+    "text": "Cuando pones una carga sobre un puente, la fuerza entra por el tablero. Las partes unidas del puente la llevan hacia los apoyos de los lados.",
     "cue_id": "encyclopedia.machines.bridge.load.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/machines/bridge_load.ogg",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/enciclopedia_greia/assets/audio/es/machines/bridge_load.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-093530-b383d1c4",
+    "idempotency_key": "greia-5716243c05004bf086e8876c10d9f201",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2607571212,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in Spanish. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 4040459055,
+        "sha256": "de5db0a4dea6100abdb66783790dbcdb76f49fca5b2dfa9570e4407fef23b497",
+        "generation": {
+          "elapsed_seconds": 30.09501495800214,
+          "model_load_seconds": 0.0,
+          "rtf": 3.8385682648755943,
+          "peak_memory_gb": 7.604438164
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "La carga, cuando pasan coches y camiones, su peso empuja hacia abajo el tablero del puente.",
-    "score": 1.0,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/es/machines/bridge_load.ogg",
-    "bytes": 56693,
-    "sha256": "73e79982973e1b03762b3a100079e6a5bc65ee7bb8583324f42e25bb0a6a5d04"
+    "bytes": 49256,
+    "sha256": "2608adf03153a4e40a9d920baf86ec1faa060563a087511bd82b60fcd118355f"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "73e79982973e1b03762b3a100079e6a5bc65ee7bb8583324f42e25bb0a6a5d04",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "de5db0a4dea6100abdb66783790dbcdb76f49fca5b2dfa9570e4407fef23b497",
+      "source_job_id": "20261020-093530-b383d1c4",
+      "repackaged_utc": "2026-10-20T22:30:04Z"
+    }
+  }
 }

@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T19:17:30.292410+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "shared_character_utterance",
+    "locale": "it",
+    "text": "Ce l'hai fatta!",
+    "cue_id": "shared.celebrate.success.01",
+    "output": "assets/audio/characters/shared/v0.2/momo/it/momo__it__celebrate.success__01.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.momo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "generation_parameters": {
+    "job_id": "20261020-211724-36ad5ab4",
+    "idempotency_key": "greia-d00dae7cf86b4fd598f683b7b8b161bc",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
+    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2555613272,
+    "language_direction": "Italian",
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "effective_delivery": "Speak in Italian. Momo, a lovable, whimsical comic creature. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 694105091,
+        "sha256": "93da9d878e94e234ad42c5984ea654f101cd11c652d5bb0031d741660ba6193a",
+        "generation": {
+          "elapsed_seconds": 5.768187167006545,
+          "model_load_seconds": 0.0,
+          "rtf": 4.00522196528634,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/momo/it/momo__it__celebrate.success__01.wav",
+    "bytes": 63590,
+    "sha256": "deadfcb0a7a52b43dbcfdcc07ae5dd564973eae71319d16f7998d1247a96a41f"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "06708b109fdac1a25e14e5978bd2c2bb01b11eed7fdff57d4fda6f9d06412bec",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

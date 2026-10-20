@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T11:16:15.389714+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Questa è casa nostra vista dallo spazio: la Terra, il terzo pianeta dal Sole. È un mondo roccioso con oceani, aria e vita.",
+    "cue_id": "encyclopedia.space.earth.intro",
+    "output": "activities/enciclopedia_greia/assets/audio/it/space/earth_intro.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+  "generation_parameters": {
+    "job_id": "20261020-131534-d920bb96",
+    "idempotency_key": "greia-d78ba155c58147748c5059895404c295",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1283120076,
+    "language_direction": "Italian",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in Italian. Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 4158320127,
+        "sha256": "0ffef7da319188182827ef12868a3d976b0e2acc1687ec6905bb3261540f713e",
+        "generation": {
+          "elapsed_seconds": 39.29061741696205,
+          "model_load_seconds": 0.0,
+          "rtf": 4.385031984185047,
+          "peak_memory_gb": 8.079945652
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/enciclopedia_greia/assets/audio/it/space/earth_intro.ogg",
+    "bytes": 52433,
+    "sha256": "42cb0c83f135bc555c682f0f0d0d869d1cb23b60d8a2be8b7ddfa8414b22071b"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "9f29cf4e7802454ae0de3ba82768f39e5259e28816ff83e27f4203cdca7c48ff",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "0ffef7da319188182827ef12868a3d976b0e2acc1687ec6905bb3261540f713e",
+      "source_job_id": "20261020-131534-d920bb96",
+      "repackaged_utc": "2026-10-20T22:30:52Z"
+    }
+  }
+}

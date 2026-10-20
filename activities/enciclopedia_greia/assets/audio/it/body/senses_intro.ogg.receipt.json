@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T10:16:52.075798+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Il corpo raccoglie informazioni in tanti modi. Occhi, orecchie, naso, bocca e nervi della pelle inviano segnali al cervello, che li usa per costruire quello che vediamo, sentiamo e percepiamo.",
+    "cue_id": "encyclopedia.body.senses.intro",
+    "output": "activities/enciclopedia_greia/assets/audio/it/body/senses_intro.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+  "generation_parameters": {
+    "job_id": "20261020-121602-4cfbb236",
+    "idempotency_key": "greia-2ee82ab98f4c4ffbb4ae9566a5a3cd9f",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 527774768,
+    "language_direction": "Italian",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in Italian. Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 4002275348,
+        "sha256": "f93dd59d807be978303f54f4454314ab034bf92fac8c96676ea5ad8c90ccba5b",
+        "generation": {
+          "elapsed_seconds": 49.088169166003354,
+          "model_load_seconds": 0.0,
+          "rtf": 3.4088611821161807,
+          "peak_memory_gb": 8.079945652
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/enciclopedia_greia/assets/audio/it/body/senses_intro.ogg",
+    "bytes": 78054,
+    "sha256": "6a4681e078b7adf88919cdea120f8d09dee358e21309ebead40caa107e645525"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "0f0f41e99ba35741d9e1d2c3591e7d258a176a18a8fd656c9a8ceb4cce097715",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "f93dd59d807be978303f54f4454314ab034bf92fac8c96676ea5ad8c90ccba5b",
+      "source_job_id": "20261020-121602-4cfbb236",
+      "repackaged_utc": "2026-10-20T22:30:41Z"
+    }
+  }
+}

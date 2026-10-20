@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T05:28:16.438662+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "By studying fossils and rocks, scientists can learn what lived long ago and what those ancient environments were like.",
+    "cue_id": "encyclopedia.history.fossils.clues",
+    "output": "activities/enciclopedia_greia/assets/audio/en/history/fossils_clues.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+  "generation_parameters": {
+    "job_id": "20261020-072747-5f8ec7d4",
+    "idempotency_key": "greia-67331d2723a944d18b9e326c978b9e96",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3037342006,
+    "language_direction": "English",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in English. Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1670780128,
+        "sha256": "75ee69d0790aed3ae8677a4df0b1aa7cf0cde61a96b48efd30f142e49ba96208",
+        "generation": {
+          "elapsed_seconds": 27.726412708987482,
+          "model_load_seconds": 0.0,
+          "rtf": 3.9383176594759806,
+          "peak_memory_gb": 7.126560228
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/enciclopedia_greia/assets/audio/en/history/fossils_clues.ogg",
+    "bytes": 40912,
+    "sha256": "b6340cd7c1ad6b53cfe980c9457189dc45256c9e81e2736067d3155ad538d4ef"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "9bf178471354dcb7ce5d0c3a7dea78b5a6cc76bf0031c4745d2917433e892d6b",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "75ee69d0790aed3ae8677a4df0b1aa7cf0cde61a96b48efd30f142e49ba96208",
+      "source_job_id": "20261020-072747-5f8ec7d4",
+      "repackaged_utc": "2026-10-20T22:29:35Z"
+    }
+  }
+}

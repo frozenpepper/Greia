@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T04:55:59.988850+00:00",
+  "created_utc": "2026-10-20T16:57:26.813347+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Les étoiles d'une constellation semblent proches, mais beaucoup sont en réalité très éloignées !",
     "cue_id": "curiosity.orione.fact",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/stelle_incantate/fr/curiosity_orione.ogg",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/stelle_incantate/assets/audio/fr/curiosity_orione.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-185705-e7b79345",
+    "idempotency_key": "greia-defcc1a83ac2410398bd41deb84c2758",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1308535777,
+    "language_direction": "French",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 878959630,
+        "sha256": "eeec816227581a56190ac8693bbdf7b5645feb7746b8f63627cc2290942fbd4f",
+        "generation": {
+          "elapsed_seconds": 20.837750791979488,
+          "model_load_seconds": 0.0,
+          "rtf": 3.8303515441278435,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Les étoiles d'une constellation semble proche, mais beaucoup sont en réalité très éloignée.",
-    "score": 0.9107,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/stelle_incantate/assets/audio/fr/curiosity_orione.ogg",
-    "bytes": 46642,
-    "sha256": "12f3bf321827efa03114896714cc7d0c8cbb4c3b4aa6963b55b073267310537c"
+    "bytes": 39246,
+    "sha256": "45454a1a61b07b8a0c6aeb11e70f6833f392f4f931d3c13da4f76acc2a1fbf6a"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "12f3bf321827efa03114896714cc7d0c8cbb4c3b4aa6963b55b073267310537c",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

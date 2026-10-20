@@ -1,38 +1,91 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T13:45:21.906289+00:00",
+  "created_utc": "2026-10-20T06:41:48.668535+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "es",
-    "text": "Cuatro cavidades",
+    "text": "Dentro del corazón hay cuatro cavidades. Las dos de arriba reciben la sangre, y las dos de abajo la bombean fuera del corazón.",
     "cue_id": "encyclopedia.body.heart.chambers.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/body/heart_chambers.ogg",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/enciclopedia_greia/assets/audio/es/body/heart_chambers.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-084123-0ce331d9",
+    "idempotency_key": "greia-d17ae5653a884823bb32e760abe6c71c",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1733531830,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in Spanish. Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 332273379,
+        "sha256": "4a20446bfa3bf97b57be676d07f9aa416e493b8c927b095dff64fd2a7cd66d1f",
+        "generation": {
+          "elapsed_seconds": 24.81383212498622,
+          "model_load_seconds": 0.0,
+          "rtf": 3.446285797780545,
+          "peak_memory_gb": 7.367403796
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "4 cavidades. Por del atisona, por comerlo.",
-    "score": 0.3239,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/es/body/heart_chambers.ogg",
-    "bytes": 31678,
-    "sha256": "101f3d969fb830c12c6030b4de7dc1a3361c166d7ba7348f2f9e91bbf0834465"
+    "bytes": 42008,
+    "sha256": "a2025377d2b45edc643115ddf8bfac011261596c963bd6876e063d268e8886c8"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "101f3d969fb830c12c6030b4de7dc1a3361c166d7ba7348f2f9e91bbf0834465",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "4a20446bfa3bf97b57be676d07f9aa416e493b8c927b095dff64fd2a7cd66d1f",
+      "source_job_id": "20261020-084123-0ce331d9",
+      "repackaged_utc": "2026-10-20T22:29:52Z"
+    }
+  }
 }

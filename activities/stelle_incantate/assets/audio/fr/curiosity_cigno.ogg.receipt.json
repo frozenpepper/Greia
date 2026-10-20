@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T04:55:09.024996+00:00",
+  "created_utc": "2026-10-20T16:56:49.267621+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Le Cygne semble voler dans le ciel d'été, et ses étoiles dessinent une grande croix.",
     "cue_id": "curiosity.cigno.fact",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/stelle_incantate/fr/curiosity_cigno.ogg",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/stelle_incantate/assets/audio/fr/curiosity_cigno.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-185626-0a7451f7",
+    "idempotency_key": "greia-80799eee69cc4853a534282f737dadd0",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2175599903,
+    "language_direction": "French",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 250568773,
+        "sha256": "96614c68c5d065f079490e347f7067934eab07aa98cb363e2ef8541d0e15ef10",
+        "generation": {
+          "elapsed_seconds": 21.353972457989585,
+          "model_load_seconds": 0.0,
+          "rtf": 3.8130958825016372,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Le signe semble voler dans le ciel d'été et ses étoiles dessinent une grande croix.",
-    "score": 0.9608,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/stelle_incantate/assets/audio/fr/curiosity_cigno.ogg",
-    "bytes": 38428,
-    "sha256": "300ae2f9965db44464ac019ae512e3cf82f8c40f6bd660299c4066491eecf220"
+    "bytes": 39603,
+    "sha256": "5d28754c15713009b09537d753b26edb54e8af886c716302ea95500ad50e599b"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "300ae2f9965db44464ac019ae512e3cf82f8c40f6bd660299c4066491eecf220",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

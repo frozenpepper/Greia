@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:12:00.574423+00:00",
+  "created_utc": "2026-10-19T21:03:51.219937+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "es",
     "text": "X de Xilófono",
     "cue_id": "alfabeto_leo.letter_X.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/es/letter_X.wav",
+    "output": "activities/alfabeto_leo/assets/audio/es/letter_X.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Mónica",
-    "rate_wpm": 175,
-    "synthesis_text": "x de xilófono"
+    "job_id": "20261019-225708-9b0d6b38",
+    "idempotency_key": "greia-20024b58864a4bb9b5e88245df5f6e14",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3634127897,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "effective_delivery": "Speak naturally in Spanish. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 891133503,
+        "sha256": "1840676f74ac38eb80b9f662485a4794993646e776e08252b99ccc577fe29483",
+        "generation": {
+          "elapsed_seconds": 9.687928874976933,
+          "model_load_seconds": 0.0,
+          "rtf": 3.5615203265646467,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/es/letter_X.wav",
-    "bytes": 45990,
-    "sha256": "838889ff2370715d5e1739842313cbfac108feef50ad9a063e0261250a1e6a86"
+    "bytes": 120038,
+    "sha256": "f6ffa4fde85631fd022ae82c3b8f2e422c445a8eb912c053e619c9fe4e66519e"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "dad90d039fa95b85f62b19e5a4c1d22f4f7639071e8c75b83fb1b655ee4e4d18",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

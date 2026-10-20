@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T04:58:47.852435+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Gently brushing all sides of your teeth helps remove plaque. Fluoride toothpaste helps make enamel more resistant to tooth decay.",
+    "cue_id": "encyclopedia.body.teeth.care",
+    "output": "activities/enciclopedia_greia/assets/audio/en/body/teeth_care.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+  "generation_parameters": {
+    "job_id": "20261020-065813-629c2a23",
+    "idempotency_key": "greia-23dc5480cf394095a87ccb20a36d20e8",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3956802889,
+    "language_direction": "English",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in English. Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 353637723,
+        "sha256": "ea9a8fa5a376d5c61c233132eed898570b2998c89efa5ce3451868fdd5b796d7",
+        "generation": {
+          "elapsed_seconds": 34.275258791982196,
+          "model_load_seconds": 0.0,
+          "rtf": 4.1195399281243,
+          "peak_memory_gb": 6.933981892
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/enciclopedia_greia/assets/audio/en/body/teeth_care.ogg",
+    "bytes": 45772,
+    "sha256": "93e53c2a420c914612f788102e7189a2a46bb271cc8b2d13d957f0d1a96f5034"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "8289c14c38685de303ae3c603397f933c54e3804140c23c1d18f9cabcaa5cdeb",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "ea9a8fa5a376d5c61c233132eed898570b2998c89efa5ce3451868fdd5b796d7",
+      "source_job_id": "20261020-065813-629c2a23",
+      "repackaged_utc": "2026-10-20T22:29:29Z"
+    }
+  }
+}

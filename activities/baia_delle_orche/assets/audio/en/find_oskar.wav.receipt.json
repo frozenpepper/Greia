@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T08:49:00.210941+00:00",
+  "created_utc": "2026-10-19T23:32:36.953842+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Find Oskar",
     "cue_id": "greia.requested.find_oskar.en",
-    "output": "tmp/greia-four-languages-20261017/review/activities/baia_delle_orche/assets/audio/en/find_oskar.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/baia_delle_orche/assets/audio/en/find_oskar.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "en",
-    "model_load_count": 1
+    "job_id": "20261020-013224-eec6fbe5",
+    "idempotency_key": "greia-a812a4a03f814f9699621b6c6f98d39f",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3220723431,
+    "language_direction": "English",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak naturally in English. Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2833143069,
+        "sha256": "5c23e1fd3f40c180dc5155d8cc1efae04e1e778d97049a1c2b144375af68cdaa",
+        "generation": {
+          "elapsed_seconds": 11.71421475004172,
+          "model_load_seconds": 0.0,
+          "rtf": 7.320621654020448,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Find Oscar.",
-    "score": 0.76,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/en/find_oskar.wav",
-    "bytes": 50574,
-    "sha256": "7251e89b290421570e3d93e44a57b14c313abb6d5021670b1650de93fedee1bf"
+    "bytes": 70646,
+    "sha256": "e14b919ab9d18c82eaa5e873d19089355ea52d1932ede9f84abf2cddf9eb5d4d"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "966bf350071209be2d977593b4de1bb7f5ffb160993c8c27fc0ad1c52de4978c",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

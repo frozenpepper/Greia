@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T05:13:41.329117+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "A tree continues below the ground. Its roots anchor it and absorb water and minerals, while its leaves use sunlight to make food for the tree.",
+    "cue_id": "encyclopedia.earth.tree.intro",
+    "output": "activities/enciclopedia_greia/assets/audio/en/earth/tree_intro.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "generation_parameters": {
+    "job_id": "20261020-071300-980d2feb",
+    "idempotency_key": "greia-3c53e84f044e49bfb1bbca3e9d0d2adf",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 101907215,
+    "language_direction": "English",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in English. Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 718336542,
+        "sha256": "df86347b154dcc3915a0e7fa6fbc708502386711404df5e41ffead6d6255aead",
+        "generation": {
+          "elapsed_seconds": 40.25876275001792,
+          "model_load_seconds": 0.0,
+          "rtf": 3.7001972472864626,
+          "peak_memory_gb": 6.933981892
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/enciclopedia_greia/assets/audio/en/earth/tree_intro.ogg",
+    "bytes": 57796,
+    "sha256": "ffde9e18ed78c3e037aabc4bb48f0c07741b57adbc5f60fd10dc9c0b6541402a"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "60f81930f9dd7597d7ff678ea49aa5c4bc48a2fc36c5d74309d8c1d56b1b4282",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "df86347b154dcc3915a0e7fa6fbc708502386711404df5e41ffead6d6255aead",
+      "source_job_id": "20261020-071300-980d2feb",
+      "repackaged_utc": "2026-10-20T22:29:32Z"
+    }
+  }
+}

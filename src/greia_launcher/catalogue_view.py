@@ -134,11 +134,11 @@ _CATEGORY_TRANSLATIONS: dict[str, dict[str, str]] = {
         "fr": "Mes créations",
     },
     "my_greia": {
-        "it": "Mio Greia",
+        "it": "La mia Greia",
         "en": "My Greia",
         "es": "Mi Greia",
         "de": "Mein Greia",
-        "fr": "Mon Greia",
+        "fr": "Ma Greia",
     },
 }
 

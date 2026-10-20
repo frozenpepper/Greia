@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T16:25:42.934683+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Well done!",
+    "cue_id": "activities/specchi_magici/assets/audio/en/correct_2.wav",
+    "output": "activities/specchi_magici/assets/audio/en/correct_2.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+  "generation_parameters": {
+    "job_id": "20261020-182535-143a85ed",
+    "idempotency_key": "greia-6ffcbc1500c844a3bbc13982fafe5bc1",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2833114948,
+    "language_direction": "English",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "effective_delivery": "Speak in English. Lilli, a sparkly, affectionate storybook unicorn. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2654762109,
+        "sha256": "04e7ff2e7eea2b3bc9acaf44b03c5a0f960eb787c2b61cc6a7c79c71015df983",
+        "generation": {
+          "elapsed_seconds": 6.202071624982636,
+          "model_load_seconds": 0.0,
+          "rtf": 5.536740031229849,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/specchi_magici/assets/audio/en/correct_2.wav",
+    "bytes": 49478,
+    "sha256": "8b97a8cd4cfd38373ae19a73f3e33005b293eb0e082613ade097c73dd6a7012e"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "abbfef6f3a149482db252ee6a6fec0bdfc05da84531fa3bdebb05098b81d732c",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

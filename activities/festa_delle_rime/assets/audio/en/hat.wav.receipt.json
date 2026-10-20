@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:26:21.560764+00:00",
+  "created_utc": "2026-10-20T12:01:26.168642+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "en",
     "text": "hat",
     "cue_id": "festa_delle_rime.hat.en",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/en/hat.wav",
+    "output": "activities/festa_delle_rime/assets/audio/en/hat.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Let the ending of the word ring out clearly so the rhyme is easy to hear."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Samantha",
-    "rate_wpm": 180,
-    "synthesis_text": "hat"
+    "job_id": "20261020-140118-1971994f",
+    "idempotency_key": "greia-1ac3fcdc2a594b02aa7f38e5a93d8538",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1616397812,
+    "language_direction": "English",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Let the ending of the word ring out clearly so the rhyme is easy to hear.",
+    "effective_delivery": "Speak naturally in English. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Let the ending of the word ring out clearly so the rhyme is easy to hear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3776291470,
+        "sha256": "04db74b87198d9e4d231530395dd9a0f44e52cf54cf150bb856fd2913b11c0ca",
+        "generation": {
+          "elapsed_seconds": 6.842224584019277,
+          "model_load_seconds": 0.0,
+          "rtf": 8.550999271842462,
+          "peak_memory_gb": 8.079945652
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/festa_delle_rime/assets/audio/en/hat.wav",
-    "bytes": 17740,
-    "sha256": "a790da4eb8c4b333fb931959652b34269487bd46789c0fbb6bdab5a84b90cdc5"
+    "bytes": 35366,
+    "sha256": "5cd72a1ce050a18fe552a1b156dccfbee0e5509291fcde846488aa7a252af147"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "a790da4eb8c4b333fb931959652b34269487bd46789c0fbb6bdab5a84b90cdc5",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

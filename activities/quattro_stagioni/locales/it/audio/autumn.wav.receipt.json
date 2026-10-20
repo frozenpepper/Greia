@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T21:30:54.745851+00:00",
+  "created_utc": "2026-10-20T14:31:00.457490+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -9,16 +9,56 @@
     "cue_id": "quattro_stagioni.autumn",
     "output": "activities/quattro_stagioni/locales/it/audio/autumn.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "it",
-    "model_load_count": 1
+    "job_id": "20261020-163045-91cc9e0c",
+    "idempotency_key": "greia-5ec37abeccc34045a596f6d6c259fac5",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1179687202,
+    "language_direction": "Italian",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in Italian. Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2332399553,
+        "sha256": "a9581ab39335a9643744fbf0cf2785c0b28fd4178f9d8a0d9326b4e20f9e5055",
+        "generation": {
+          "elapsed_seconds": 14.811050958000124,
+          "model_load_seconds": 0.0,
+          "rtf": 3.560206151516395,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/quattro_stagioni/locales/it/audio/autumn.wav",
-    "bytes": 177802,
-    "sha256": "3e1325276d99bdc6d57fc83f50b76dc25f05ed14b1997e242788e5f73ff8dcf3"
+    "bytes": 183542,
+    "sha256": "6573138e6e6b4e60c4e70b706b068044bd3d44b0738c76161e20347cbeef6cb8"
   },
   "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "3e1325276d99bdc6d57fc83f50b76dc25f05ed14b1997e242788e5f73ff8dcf3",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

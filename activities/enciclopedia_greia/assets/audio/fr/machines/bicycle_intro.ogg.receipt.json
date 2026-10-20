@@ -1,38 +1,91 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T14:36:19.312472+00:00",
+  "created_utc": "2026-10-20T09:16:16.483040+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "flash",
     "kind": "character_dialogue",
     "locale": "fr",
-    "text": "Tourne les pédales et suis le mouvement jusqu'à la roue !",
+    "text": "C'est parti ! Quand tu tournes les pédales, tu fais tourner la manivelle et le plateau avant. La chaîne transmet ce mouvement au pignon de la roue arrière.",
     "cue_id": "encyclopedia.machines.bicycle.intro.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/bicycle_intro.ogg",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/enciclopedia_greia/assets/audio/fr/machines/bicycle_intro.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-111548-be8972b2",
+    "idempotency_key": "greia-ffae0ded7f0c4d638d914755ed54f86b",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1266142500,
+    "language_direction": "French",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in French. Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1870827252,
+        "sha256": "c1c898abf492e42cadc2cb62a96e01e5c028d04815789f068468e7dcfdb4ac05",
+        "generation": {
+          "elapsed_seconds": 26.739877915999386,
+          "model_load_seconds": 0.0,
+          "rtf": 3.3424151058518845,
+          "peak_memory_gb": 7.648602244
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "tourne l'épédale et suivre le mouvement jusqu'à l'arrou.",
-    "score": 0.7791,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/fr/machines/bicycle_intro.ogg",
-    "bytes": 22655,
-    "sha256": "63599ca7e21fcd479f6b742e5c901a249965863b4cc94ea2d50e91b558bc9963"
+    "bytes": 42389,
+    "sha256": "1de2400a777adfb919b7566b4804efb0dc4a15414051d01792c942a90bf792da"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "63599ca7e21fcd479f6b742e5c901a249965863b4cc94ea2d50e91b558bc9963",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "c1c898abf492e42cadc2cb62a96e01e5c028d04815789f068468e7dcfdb4ac05",
+      "source_job_id": "20261020-111548-be8972b2",
+      "repackaged_utc": "2026-10-20T22:30:27Z"
+    }
+  }
 }

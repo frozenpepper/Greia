@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T04:59:39.374511+00:00",
+  "created_utc": "2026-10-20T17:39:36.160217+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Los delfines emiten pequeños chasquidos y escuchan el eco. ¡Así encuentran peces incluso cuando apenas pueden verlos!",
     "cue_id": "curiosity.delfino.echolocation.voice",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/es/curiosity-echolocation.ogg",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/viaggio_delfino/assets/audio/es/curiosity-echolocation.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-193853-6058db37",
+    "idempotency_key": "greia-e19a47e1d8f345aca6ff0a0be632c752",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2005541126,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak in Spanish. Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 566151540,
+        "sha256": "41b64fe3c0700a8f4aaab851131e5fb0471d7d353443cb88d5f0e6c9fc32f90c",
+        "generation": {
+          "elapsed_seconds": 41.51565595797729,
+          "model_load_seconds": 0.0,
+          "rtf": 4.895617927082088,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Los del fines se miten pequeños chasquidos y escuchan el eco. Así en cuentran veces incluso cuando apenas pueden verlos.",
-    "score": 0.8791,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/viaggio_delfino/assets/audio/es/curiosity-echolocation.ogg",
-    "bytes": 59841,
-    "sha256": "d41a420c2555764b3d46fcbc51b4e335563c3fd4afa0110f4fa41dd969c9e827"
+    "bytes": 64074,
+    "sha256": "5f774681630e45fc784aa097c73e255a5887c8c0eca12425a78bd1d9811986b2"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "d41a420c2555764b3d46fcbc51b4e335563c3fd4afa0110f4fa41dd969c9e827",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

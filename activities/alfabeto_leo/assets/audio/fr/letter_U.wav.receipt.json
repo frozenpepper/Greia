@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:12:25.594651+00:00",
+  "created_utc": "2026-10-19T23:18:53.022655+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "fr",
     "text": "U comme Usine",
     "cue_id": "alfabeto_leo.letter_U.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/fr/letter_U.wav",
+    "output": "activities/alfabeto_leo/assets/audio/fr/letter_U.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Thomas",
-    "rate_wpm": 175,
-    "synthesis_text": "u comme usine"
+    "job_id": "20261020-011842-7d171def",
+    "idempotency_key": "greia-40a039da314a4871b22764bafd8b4eb9",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1399491564,
+    "language_direction": "French",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "effective_delivery": "Speak naturally in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2222026461,
+        "sha256": "67ca817460920a97d08541b78c12d60353ff5d5436b51a7edb8959f77ed2ac22",
+        "generation": {
+          "elapsed_seconds": 9.740536666999105,
+          "model_load_seconds": 0.0,
+          "rtf": 5.533871792632765,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/fr/letter_U.wav",
-    "bytes": 37356,
-    "sha256": "82569a4e7bf6d1a6d37f9e250b3a72332d7f026c4b0cd2e8dd42bc6db76a576d"
+    "bytes": 77702,
+    "sha256": "76b02f33409f9282cddcfc5bc93b582b01a071f22455ec6b726e57a660ebc0e4"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "8c8676073b5dc520272ebf7a4d7d79f538f877cc9bcd57f49a52dba929d30a4a",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

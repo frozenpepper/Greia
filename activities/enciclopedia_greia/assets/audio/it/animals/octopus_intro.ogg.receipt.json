@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T10:04:33.419181+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Guarda che polpo! Ha otto braccia morbide, piene di ventose. Tocca il polpo e scopri i suoi trucchi!",
+    "cue_id": "encyclopedia.animals.octopus.intro",
+    "output": "activities/enciclopedia_greia/assets/audio/it/animals/octopus_intro.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "generation_parameters": {
+    "job_id": "20261020-120409-1ac6bd1d",
+    "idempotency_key": "greia-9eab7a36dc6a423b829fec5daad75dc8",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2273767969,
+    "language_direction": "Italian",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in Italian. Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1130640546,
+        "sha256": "c3e650df9b68576dc8eb0da7f98d1da02d670b655ac7ede511244fa6d1ba2768",
+        "generation": {
+          "elapsed_seconds": 22.38668825000059,
+          "model_load_seconds": 0.0,
+          "rtf": 3.331269797376145,
+          "peak_memory_gb": 8.079945652
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/enciclopedia_greia/assets/audio/it/animals/octopus_intro.ogg",
+    "bytes": 38474,
+    "sha256": "4ae212ddb742042237eb80dab5d113622747a8051c7f77ec07966bb92a6276bc"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "dfcc47f585d42e439df9817d890787655073c51a2d292e89d8711d31f0933df4",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "c3e650df9b68576dc8eb0da7f98d1da02d670b655ac7ede511244fa6d1ba2768",
+      "source_job_id": "20261020-120409-1ac6bd1d",
+      "repackaged_utc": "2026-10-20T22:30:39Z"
+    }
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T18:10:16.952546+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Hey! I'm Flash! I love running, playing, and trying super-fast challenges. If you hear someone shout go, I've probably already started!",
+    "cue_id": "character.intro.flash",
+    "output": "assets/audio/characters/shared/v0.2/_intros/en/flash.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+  "generation_parameters": {
+    "job_id": "20261020-200932-7cdde815",
+    "idempotency_key": "greia-2a2b3e6da6cd4e4ab0168556f8b06da4",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3411853770,
+    "language_direction": "English",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "effective_delivery": "Speak in English. Flash, a springy, eager little rabbit. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1030117372,
+        "sha256": "c1ceb4e3d01f9bde5233e4dc7a49a19717cfd444e96aaf5e0ce959252e259659",
+        "generation": {
+          "elapsed_seconds": 42.68510120798601,
+          "model_load_seconds": 0.0,
+          "rtf": 5.557835273711857,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/_intros/en/flash.ogg",
+    "bytes": 52059,
+    "sha256": "456a8345098243e8aa8f7c78783123d1d5fd02ec51fc67bc21e2af97b8baa7cb"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "9e5cf16c40c4b97500bdfa050a0d503c7ace9020fd9dd0a2263d1b468dc495a2",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

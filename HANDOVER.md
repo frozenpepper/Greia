@@ -33,11 +33,11 @@ text and voice support to ES/FR. Its standing local-agent speech design and cue-
 `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`, executed with
 `tools/regenerate_voice_corpus.py`. It explicitly permits fresh replacement
 with new masters and per-recording acting prompts, preserving deterministic
-isolated letters/syllables and backups. New takes are listening-pending.
-Full production has not been launched; the prepared inventory is 4,543 READY,
-167 metadata-blocked, 598 preserved. Source bug fixes needed to operate this tool
-are authorized by this work order; ordinary queue-only restrictions do not
-block that requested task.
+isolated letters/syllables and backups. V2 production has completed: 4,168 DONE,
+741 PRESERVED, zero blocked or unresolved rows. Every new take remains
+listening-pending. Source fixes needed to operate the tool and packaging are
+authorized by this work order; ordinary queue-only restrictions do not block
+that requested task.
 **Earlier add-only voice-production work order:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md`
 (owner instruction 2026-10-14; archived full-run instruction). The owner approved
 every **currently authored** EN/IT/ES/FR text translation, and personally
@@ -71,6 +71,30 @@ audit programme. Do not invent a second language registry or silently
 promote unvoiced locales.
 
 ## Recent entries
+
+## 2026-10-21 — V2 corpus replacement completed; verification recorded
+
+The owner-authorized V2 journal is complete: **4,168 DONE, 741 PRESERVED, zero
+READY, FAILED, NEEDS_RECOVERY, or BLOCKED**. The interrupted French strawberry
+cue was resumed only after correlating its original, plan request, last job and
+absence of a candidate or prior POST; job `20261020-235846-ff7ff0a5` completed.
+Bean's runner timeout was reconciled to completed VoxStage job
+`20261021-000412-50cad22f` by exact idempotency key and frozen request/master
+metadata, then installed offline through the existing transaction path without
+another inference. Final DONE receipts, requests, and output hashes were checked;
+all replacements remain `human_review=PENDING`.
+
+VoxStage queue is empty and its model was unloaded after the serial batch. The
+final `make verify` ran 5,472 tests: **1 failure, 4 errors, 8 skipped**. The
+remaining failures are the known host-only MBR diagnostic mismatch, missing
+macOS `lsblk` (three installer errors), and non-executable
+`tools/build_profile.py`; Encyclopedia's size regression was fixed while
+preserving its 50 MiB cap. See the four-language progress ledger and external
+run journal for detailed evidence. No ASR or human listening, GUI, Simulator,
+or physical acceptance is claimed. Current source, docs, regenerated corpus,
+receipts, manifests, and identified leftover deletions are being selectively
+published to `main`; unrelated `final.mp4`, `launch-video/`, and the separate
+review audit remain untouched.
 
 ## 2026-10-19 — Corpus replacement checkpoint: 700 complete
 

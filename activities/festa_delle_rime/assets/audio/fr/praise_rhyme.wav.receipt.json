@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:28:20.890063+00:00",
+  "created_utc": "2026-10-20T12:15:31.214322+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
     "locale": "fr",
     "text": "Fantastique, ils riment !",
     "cue_id": "festa_delle_rime.praise_rhyme.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/fr/praise_rhyme.wav",
+    "output": "activities/festa_delle_rime/assets/audio/fr/praise_rhyme.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Thomas",
-    "rate_wpm": 185,
-    "synthesis_text": "Fantastique, ils riment !"
+    "job_id": "20261020-141520-3575c6e6",
+    "idempotency_key": "greia-e2a11c20ebe74dc28115fde2a1d5c695",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 4120297931,
+    "language_direction": "French",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "effective_delivery": "Speak in French. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1574124367,
+        "sha256": "12f8a3d4a49aee2800a7fbff84c5d904d579e995fbddb2818b324262ae4cdcb5",
+        "generation": {
+          "elapsed_seconds": 9.759517583996058,
+          "model_load_seconds": 0.0,
+          "rtf": 5.08264087353323,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/festa_delle_rime/assets/audio/fr/praise_rhyme.wav",
-    "bytes": 71548,
-    "sha256": "f72d6f3d2bc36488839a34d97c31d135a413590a004b2fb4e7889d7ed9b77926"
+    "bytes": 84758,
+    "sha256": "b9975a75ed09bcd81cbbd0b34587ebff48f5863143fb88f37b4bad3a9f253e79"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "f72d6f3d2bc36488839a34d97c31d135a413590a004b2fb4e7889d7ed9b77926",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

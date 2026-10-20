@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T19:11:25.470173+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "shared_character_utterance",
+    "locale": "en",
+    "text": "Let's try again!",
+    "cue_id": "shared.encourage.retry.01",
+    "output": "assets/audio/characters/shared/v0.2/momo/en/momo__en__encourage.retry__01.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.momo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "generation_parameters": {
+    "job_id": "20261020-211117-fcd7da76",
+    "idempotency_key": "greia-299cf56741b247d58e5c52b22b671bd7",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
+    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3957740342,
+    "language_direction": "English",
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak in English. Momo, a lovable, whimsical comic creature. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1784724509,
+        "sha256": "436a3d303813e19a1204c35d7ac771e1d52875f18986ec691b48655933dd20a7",
+        "generation": {
+          "elapsed_seconds": 7.615777041006368,
+          "model_load_seconds": 0.0,
+          "rtf": 4.75936488345362,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/momo/en/momo__en__encourage.retry__01.wav",
+    "bytes": 70646,
+    "sha256": "71a69e41d73f5c2f7495732e3301e3d9394c6cd49de92f854a548054fce3881f"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "85dd2bd54b4e276812fd4e1ed5f3db75c132738f71225cad111688f9b3e3c44e",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

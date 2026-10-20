@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:53:47.876200+00:00",
+  "created_utc": "2026-10-19T20:43:36.414956+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -9,16 +9,56 @@
     "cue_id": "alfabeto_leo.ask_W",
     "output": "activities/alfabeto_leo/assets/audio/en/ask_W.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "en",
-    "model_load_count": 1
+    "job_id": "20261019-224323-7873b44c",
+    "idempotency_key": "greia-52e78366bed14513915ef7b98c3c5d2d",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1030803124,
+    "language_direction": "English",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "effective_delivery": "Speak naturally in English. Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2996148991,
+        "sha256": "3f9e81bdc6df5a5382b1952078cfd2c585b9778bbfd1736dc418909323fb2d7a",
+        "generation": {
+          "elapsed_seconds": 11.877796459011734,
+          "model_load_seconds": 0.0,
+          "rtf": 4.123996224412384,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/ask_W.wav",
-    "bytes": 125322,
-    "sha256": "2c34d4a592cf20f1e395aa4df09665633aecc6dfaeec7d0a60f9e6b872a180ea"
+    "bytes": 127094,
+    "sha256": "d4c8490da34eea11da3da90dc9e2f59d6ed5e8f2de912d06c3c9e62768d95086"
   },
   "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "a4fb08fbb99032a4a62d2378115f7c9df77b66076654e938eaea011dc401fa44",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

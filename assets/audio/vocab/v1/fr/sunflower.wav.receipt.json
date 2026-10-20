@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:46:20.921666+00:00",
+  "created_utc": "2026-10-20T21:59:36.380056+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "fr",
     "text": "Tournesol",
     "cue_id": "greia.vocab.sunflower.fr",
-    "output": "tmp/greia-four-languages-20261017/review/assets/audio/vocab/v1/fr/sunflower.wav",
+    "output": "assets/audio/vocab/v1/fr/sunflower.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Thomas",
-    "rate_wpm": 175,
-    "synthesis_text": "tournesol"
+    "job_id": "20261020-235926-aaccb9b6",
+    "idempotency_key": "greia-9d2bc89aa41b443f912cd12e90073dbf",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1338203665,
+    "language_direction": "French",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3589530513,
+        "sha256": "447850e2ad353b0b34b815883c3e24644e3eaf3262389088a60a8a20cb5631c1",
+        "generation": {
+          "elapsed_seconds": 9.050248834000286,
+          "model_load_seconds": 0.0,
+          "rtf": 5.141699934097312,
+          "peak_memory_gb": 4.635752704
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/vocab/v1/fr/sunflower.wav",
-    "bytes": 32724,
-    "sha256": "b1fcd965890b93dc3427d213a61c3a52917ed9b6bb14c4d381c21dcd0cae1b66"
+    "bytes": 77702,
+    "sha256": "e31df2b625ec9aee626839b34a22ccad0b556603b8025e6e3c9d9bffc21813db"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "b1fcd965890b93dc3427d213a61c3a52917ed9b6bb14c4d381c21dcd0cae1b66",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T11:53:28.022843+00:00",
+  "created_utc": "2026-10-20T00:27:37.507030+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "dani",
     "kind": "character_dialogue",
     "locale": "es",
-    "text": "¡Quita!",
+    "text": "¿Cuántas luces quedan encendidas?",
     "cue_id": "casa_del_dieci.prompt_take_away.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/casa_del_dieci/es/prompt_take_away.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/casa_del_dieci/assets/audio/es/prompt_take_away.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-022724-511c0ddc",
+    "idempotency_key": "greia-f0674b0235a54773b55c117110947531",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1846617187,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "effective_delivery": "Speak naturally in Spanish. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 788139902,
+        "sha256": "65d017e48f44ed7ae03fd1016834cdf3d71d27c693474a3c7d292185c18bbf93",
+        "generation": {
+          "elapsed_seconds": 12.676260041014757,
+          "model_load_seconds": 0.0,
+          "rtf": 5.281408252627494,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/casa_del_dieci/assets/audio/es/prompt_take_away.wav",
-    "bytes": 74388,
-    "sha256": "4e02e04f36a29d9092d432152a238f845a7d7208f1534205fb29b11e7a1ae405"
+    "bytes": 105926,
+    "sha256": "9eefecfb411843b00f0c73f5a05cca534f463a944d4096806e8a2b4af043eea2"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "2e94ff41d09673de4e17ee90209eab9cc0e80fde6f218ec87d6d2b560ee54641",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

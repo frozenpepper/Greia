@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T04:41:25.125843+00:00",
+  "created_utc": "2026-10-20T16:09:02.783648+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Le barriere coralline proteggono le coste dalle onde forti del mare!",
     "cue_id": "voice.fact.coral.2",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/sottomarino_giramondo/it/sub_fact_coral_2.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/sottomarino_giramondo/audio/it/sub_fact_coral_2.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "it",
-    "model_load_count": 1
+    "job_id": "20261020-180832-7960e45f",
+    "idempotency_key": "greia-4e7e360e73bd4d6abb8d95baf4f7ef98",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2954070577,
+    "language_direction": "Italian",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2765299082,
+        "sha256": "06b8c3be8537aa88cd5592963ffda578f55c91037c120b0a619832c1666b35b3",
+        "generation": {
+          "elapsed_seconds": 28.95884991704952,
+          "model_load_seconds": 0.0,
+          "rtf": 6.240907277119971,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "The barriere queraline, proteggono le coste dalle onde forti del mare.",
-    "score": 0.9067,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/sottomarino_giramondo/audio/it/sub_fact_coral_2.wav",
-    "bytes": 198528,
-    "sha256": "01fdfeb8034011e5df780476379e389bb075535c083feece15233cf3efafb498"
+    "bytes": 204710,
+    "sha256": "fc1635d059b55a9fb07360c1019ef6dbc97cbacdd8ace32cd42794f83dd8d6b6"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "01fdfeb8034011e5df780476379e389bb075535c083feece15233cf3efafb498",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

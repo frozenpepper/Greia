@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T21:31:22.904168+00:00",
+  "created_utc": "2026-10-20T14:31:16.175560+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -9,16 +9,56 @@
     "cue_id": "quattro_stagioni.praise_2",
     "output": "activities/quattro_stagioni/locales/it/audio/praise_2.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "it",
-    "model_load_count": 1
+    "job_id": "20261020-163111-084d2b49",
+    "idempotency_key": "greia-35f351be86884b92b43fd7bd1efe56c7",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2388298543,
+    "language_direction": "Italian",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "effective_delivery": "Speak in Italian. Tito, a cheeky, confident woodland explorer. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 121359119,
+        "sha256": "0a1cc4b3dbcd07c179247348ba80a83548728a048f2947d15747c5ec069b0bc0",
+        "generation": {
+          "elapsed_seconds": 4.818243625049945,
+          "model_load_seconds": 0.0,
+          "rtf": 3.763762758794385,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/quattro_stagioni/locales/it/audio/praise_2.wav",
-    "bytes": 47486,
-    "sha256": "2e7141f5e251a23ff17bb84a5895b5e195b38989e48f013bf8c590b8d0ae50f2"
+    "bytes": 56534,
+    "sha256": "3825f334f705fb35ccb0be941fc20f7fc3f1512ad09b990a6679b065e860dd7e"
   },
   "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "2e7141f5e251a23ff17bb84a5895b5e195b38989e48f013bf8c590b8d0ae50f2",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

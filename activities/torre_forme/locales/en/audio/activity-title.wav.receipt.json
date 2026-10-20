@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-01T07:51:57.265502+00:00",
+  "created_utc": "2026-10-20T17:17:12.455175+00:00",
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
@@ -9,16 +9,56 @@
     "cue_id": "torre_forme.activity-title",
     "output": "activities/torre_forme/locales/en/audio/activity-title.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.lilli.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "en",
-    "model_load_count": 1
+    "job_id": "20261020-191704-f2008fca",
+    "idempotency_key": "greia-a701e8f122a54ee9ac2d9fb6fedb0eb9",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3542068153,
+    "language_direction": "English",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "effective_delivery": "Speak in English. Lilli, a sparkly, affectionate storybook unicorn. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3656758219,
+        "sha256": "e00a51d6d89db59e69a2d5e2bbed4f131abd131b9d68b29a05f911f378baa111",
+        "generation": {
+          "elapsed_seconds": 7.9304430420161225,
+          "model_load_seconds": 0.0,
+          "rtf": 5.5066147728384145,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/torre_forme/locales/en/audio/activity-title.wav",
-    "bytes": 43078,
-    "sha256": "080b01088349618852a3da739581b8fb56ed882d2f7968ee757d433fc92d5da1"
+    "bytes": 63590,
+    "sha256": "c5d1432c23a3184761d3355b8758b9b8fd8bde858de0af2526344a5d59b4285e"
   },
   "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "080b01088349618852a3da739581b8fb56ed882d2f7968ee757d433fc92d5da1",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

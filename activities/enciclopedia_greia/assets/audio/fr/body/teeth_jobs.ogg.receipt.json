@@ -1,38 +1,91 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T14:30:02.559324+00:00",
+  "created_utc": "2026-10-20T08:40:34.343447+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "fr",
-    "text": "Les incisives coupent, les canines saisissent et les molaires broient",
+    "text": "Les incisives ont un bord fait pour couper. Les canines sont plus pointues. Les molaires ont de larges surfaces qui aident à écraser et à mâcher les aliments.",
     "cue_id": "encyclopedia.body.teeth.jobs.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/body/teeth_jobs.ogg",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/enciclopedia_greia/assets/audio/fr/body/teeth_jobs.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-104007-ce609dda",
+    "idempotency_key": "greia-d6acdeacefd04e0b963e67a7001b2b19",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3348223118,
+    "language_direction": "French",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in French. Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3247073734,
+        "sha256": "bbd647ec7ffa5522731fe0358a7065e7cbf1d675c0189aa767e96ec0bb848042",
+        "generation": {
+          "elapsed_seconds": 25.990048332954757,
+          "model_load_seconds": 0.0,
+          "rtf": 3.314986713669534,
+          "peak_memory_gb": 7.648602244
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Les incésives coupe, les canines s'assis et les molairent broues.",
-    "score": 0.6793,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/fr/body/teeth_jobs.ogg",
-    "bytes": 32430,
-    "sha256": "da77d0d1f106158d540f3ae8c8abaa95f12af60b549ab8eba93b49920dd419ee"
+    "bytes": 44265,
+    "sha256": "47bcdafe351e6d7ab9c9e5fbe9fd281e17816ad91437123e887eb3e9212b5923"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "da77d0d1f106158d540f3ae8c8abaa95f12af60b549ab8eba93b49920dd419ee",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "bbd647ec7ffa5522731fe0358a7065e7cbf1d675c0189aa767e96ec0bb848042",
+      "source_job_id": "20261020-104007-ce609dda",
+      "repackaged_utc": "2026-10-20T22:30:18Z"
+    }
+  }
 }

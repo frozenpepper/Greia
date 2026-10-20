@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T10:18:05.943817+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "I nervi sensoriali portano al cervello informazioni come il tocco, la pressione e la temperatura. Persone diverse possono percepire il mondo in modi un po' diversi, ed è normale.",
+    "cue_id": "encyclopedia.body.senses.touch",
+    "output": "activities/enciclopedia_greia/assets/audio/it/body/senses_touch.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+  "generation_parameters": {
+    "job_id": "20261020-121728-74c818ad",
+    "idempotency_key": "greia-8593299c1c684540bc72f5fb6d4167af",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3498064958,
+    "language_direction": "Italian",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in Italian. Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1968050874,
+        "sha256": "9d3ec583e38d414e8e2e756763b65e5d70ecb01021dfa6d799557425185599e1",
+        "generation": {
+          "elapsed_seconds": 37.137767540989444,
+          "model_load_seconds": 0.0,
+          "rtf": 3.3158227592734733,
+          "peak_memory_gb": 8.079945652
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/enciclopedia_greia/assets/audio/it/body/senses_touch.ogg",
+    "bytes": 63369,
+    "sha256": "9f8de4e4a8fa54583a593c225170d6d72a1cdf60d38c13bee03f127bdefafe5d"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "f2e09b4a694cd5ace39609a09934708b6f1d1f02cd3b5bb7f815f2843edbb87b",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "9d3ec583e38d414e8e2e756763b65e5d70ecb01021dfa6d799557425185599e1",
+      "source_job_id": "20261020-121728-74c818ad",
+      "repackaged_utc": "2026-10-20T22:30:42Z"
+    }
+  }
+}

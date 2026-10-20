@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T11:57:05.688040+00:00",
+  "created_utc": "2026-10-20T00:32:18.637978+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "dani",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Compte encore !",
     "cue_id": "casa_del_dieci.retry_2.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/casa_del_dieci/fr/retry_2.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/casa_del_dieci/assets/audio/fr/retry_2.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-023206-2aa480b8",
+    "idempotency_key": "greia-2e3667973036426191023df8c0c85b1d",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3067485515,
+    "language_direction": "French",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak naturally in French. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3354920272,
+        "sha256": "8929c60321449c0516b40913a46b0f189198e6ffcacba4577dff0fe064d75cb2",
+        "generation": {
+          "elapsed_seconds": 11.909069624962285,
+          "model_load_seconds": 0.0,
+          "rtf": 9.302749349013633,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Colleopard",
-    "score": 0.2261,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/casa_del_dieci/assets/audio/fr/retry_2.wav",
-    "bytes": 35582,
-    "sha256": "7f79ce5e89f830e90e311e32c59a07c5a15c8d3a5c31c6737dd2f5d4f84b300c"
+    "bytes": 56534,
+    "sha256": "b9f9daaf9c5e8759835ce0ebc88c7beceada70503443f2b88c69a4d2084b7954"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "78e82390c92d944f3044570753ff68f6e22b5814487af417a1d31b0bf176c1ab",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

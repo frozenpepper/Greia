@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T16:37:42.777271+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Semicerchio!",
+    "cue_id": "activities/specchi_magici/assets/audio/it/shape_semicircle.wav",
+    "output": "activities/specchi_magici/assets/audio/it/shape_semicircle.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+  "generation_parameters": {
+    "job_id": "20261020-183733-084ea6c7",
+    "idempotency_key": "greia-52aa116d78ba4906b094f5a7b390fbb3",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 557457,
+    "language_direction": "Italian",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "effective_delivery": "Speak in Italian. Lilli, a sparkly, affectionate storybook unicorn. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1590004034,
+        "sha256": "325398800c3134c3d56b8cb2920bd01c1255729a31daf6b6493c0ff9fa249f2b",
+        "generation": {
+          "elapsed_seconds": 8.795656250033062,
+          "model_load_seconds": 0.0,
+          "rtf": 4.997058753924663,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/specchi_magici/assets/audio/it/shape_semicircle.wav",
+    "bytes": 77702,
+    "sha256": "3b61f1d6570a5b20d8fb3c7e7b49ba88c1c1437bb9dcf51993dbdac9666ac6ad"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "8a7db7249c626ceebf9abc2ceedd87b49af7e08eb040fa3388001bcaa62dfc55",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

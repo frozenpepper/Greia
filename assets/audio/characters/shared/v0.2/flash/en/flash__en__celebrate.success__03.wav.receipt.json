@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T18:37:21.168608+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "shared_character_utterance",
+    "locale": "en",
+    "text": "Wonderful!",
+    "cue_id": "shared.celebrate.success.03",
+    "output": "assets/audio/characters/shared/v0.2/flash/en/flash__en__celebrate.success__03.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+  "generation_parameters": {
+    "job_id": "20261020-203714-fa85ede7",
+    "idempotency_key": "greia-9a679409582f40f181ed1baa7449f697",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 534512127,
+    "language_direction": "English",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "effective_delivery": "Speak in English. Flash, a springy, eager little rabbit. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 476616875,
+        "sha256": "21bcc99fb55837a18a67fed32ded985c505d2e3296184ec30c7d8766c975b396",
+        "generation": {
+          "elapsed_seconds": 5.2835310419905,
+          "model_load_seconds": 0.0,
+          "rtf": 4.127221227957688,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/flash/en/flash__en__celebrate.success__03.wav",
+    "bytes": 56534,
+    "sha256": "32d24af92b85e0c44c7992503cad39b14ec9d6e97434fbb99bfb51e0961fa2c6"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "38038f2717675949f78e4629ce8037e2d3b801939d39bdc923f5e8bddbe94553",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

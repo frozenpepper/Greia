@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T11:43:42.455806+00:00",
+  "created_utc": "2026-10-20T00:03:50.437012+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "fr",
-    "text": "Bienvenue dans la forêt des nombres !",
+    "text": "Salut, moi c'est Tito ! Comptons ensemble jusqu'à dix dans la forêt !",
     "cue_id": "bosco_numeri.intro.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/fr/intro.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/bosco_numeri/assets/audio/fr/intro.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-020328-75776b6f",
+    "idempotency_key": "greia-166e9411a23047ffb62f9422ec6ed8de",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2023432656,
+    "language_direction": "French",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace.",
+    "effective_delivery": "Speak naturally in French. Tito, a cheeky, confident woodland explorer. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 461514952,
+        "sha256": "6dc7ca416e6b0605e54830cfc585d4d3aebcf8be08a853f84b8a2c942c578deb",
+        "generation": {
+          "elapsed_seconds": 21.07759837503545,
+          "model_load_seconds": 0.0,
+          "rtf": 4.878885469318804,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Bienvenue dans la forêt des nombres.",
-    "score": 1.0,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/bosco_numeri/assets/audio/fr/intro.wav",
-    "bytes": 84750,
-    "sha256": "d85fb793c539fa057c2cad51f04bda4fe2b86247c0c3bfd51211c079243769a7"
+    "bytes": 190598,
+    "sha256": "d6d5cddbd1c5cc1070467faeffaa9f766bf5afc408ffc89581f86f575cbb3756"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "54fbfb12854650234878c4fd0a1763826d0840aca66f9e380b4629136acda881",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

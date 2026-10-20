@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T11:41:17.702513+00:00",
+  "created_utc": "2026-10-20T00:02:01.533554+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Où est le numéro 8 ?",
     "cue_id": "bosco_numeri.ask_8.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/fr/ask_8.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/bosco_numeri/assets/audio/fr/ask_8.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-020152-25ffd531",
+    "idempotency_key": "greia-8f6e9a8ce8a44811a7ab0b09247e234f",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2744613780,
+    "language_direction": "French",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "effective_delivery": "Speak naturally in French. Tito, a cheeky, confident woodland explorer. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 662898397,
+        "sha256": "4dff7782dee938d8263ff2d457361aa1084e52e241f44d58ff2c7c69c3083c26",
+        "generation": {
+          "elapsed_seconds": 8.459732667019125,
+          "model_load_seconds": 0.0,
+          "rtf": 5.874134475421219,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "où est-ce un numéro 8 ?",
-    "score": 0.8212,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/bosco_numeri/assets/audio/fr/ask_8.wav",
-    "bytes": 56086,
-    "sha256": "d50595cc7cb7ead09fce73b0a50549d17d96e04ed1df40400a78b419bbd0c943"
+    "bytes": 63590,
+    "sha256": "97ce355792bf0f41bd5c9b4b5118963262d68302ddd35aeba3620c8aade12b7d"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "b1b94a43e296386e0858b53be39b0d7d7c0a0601b41cd24136ef42bd01d8cf99",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

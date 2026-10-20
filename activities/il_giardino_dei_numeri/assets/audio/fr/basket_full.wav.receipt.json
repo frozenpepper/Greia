@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T12:05:39.701418+00:00",
+  "created_utc": "2026-10-20T12:41:40.866158+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "dani",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Le panier est plein !",
     "cue_id": "il_giardino_dei_numeri.basket_full.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/il_giardino_dei_numeri/fr/basket_full.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/il_giardino_dei_numeri/assets/audio/fr/basket_full.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-144130-83230fff",
+    "idempotency_key": "greia-a8dbaea5343a44b9bdfcc107c7cceb49",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1161013682,
+    "language_direction": "French",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "effective_delivery": "Speak in French. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1326744420,
+        "sha256": "b9a7cf7c6377fe9d41690223e205bff13b8d6a03e1a713f8f1c107a91d324dd6",
+        "generation": {
+          "elapsed_seconds": 9.63543079199735,
+          "model_load_seconds": 0.0,
+          "rtf": 5.018017945663059,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Le panier est plein.",
-    "score": 1.0,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/il_giardino_dei_numeri/assets/audio/fr/basket_full.wav",
-    "bytes": 51676,
-    "sha256": "1a9eca855a312902fabc4a634a4b67b18f1c0afd57ca745624ab52356bc33985"
+    "bytes": 84758,
+    "sha256": "284f05bba4955e09cf2d742a05f5fc8dff493a32b2c58a69376d1f66dac83240"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "1a9eca855a312902fabc4a634a4b67b18f1c0afd57ca745624ab52356bc33985",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

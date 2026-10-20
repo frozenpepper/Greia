@@ -1,38 +1,91 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T13:47:56.090163+00:00",
+  "created_utc": "2026-10-20T06:51:08.072420+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "es",
-    "text": "¡Cada tipo de diente tiene un trabajo!",
+    "text": "Tus dientes no tienen todos la misma forma. Los de delante cortan, los colmillos ayudan a sujetar y desgarrar, y las muelas anchas aplastan y trituran la comida.",
     "cue_id": "encyclopedia.body.teeth.intro.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/body/teeth_intro.ogg",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/enciclopedia_greia/assets/audio/es/body/teeth_intro.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-085033-dc2ac70b",
+    "idempotency_key": "greia-7bbd68e83a044a1aaa741e7ef960a050",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3895683165,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in Spanish. Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2322958276,
+        "sha256": "3a974498668de45fb7b3a2555afb5ca064a21132bdaafe2eea9c34213c02838b",
+        "generation": {
+          "elapsed_seconds": 33.72988808399532,
+          "model_load_seconds": 0.0,
+          "rtf": 3.4558721419369873,
+          "peak_memory_gb": 7.36745482
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Cara, tipo de diente tiene un trabajo.",
-    "score": 0.9319,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/es/body/teeth_intro.ogg",
-    "bytes": 20865,
-    "sha256": "95c13a381115e723e680f8a081ab64bc45f42d4b29c085788fd4593ec89aa1ca"
+    "bytes": 56988,
+    "sha256": "d70b169e4f0bfa153b16152bf35cd2c2138cc68ec3ca9d5554fa829cf1ac7b2e"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "95c13a381115e723e680f8a081ab64bc45f42d4b29c085788fd4593ec89aa1ca",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "3a974498668de45fb7b3a2555afb5ca064a21132bdaafe2eea9c34213c02838b",
+      "source_job_id": "20261020-085033-dc2ac70b",
+      "repackaged_utc": "2026-10-20T22:29:54Z"
+    }
+  }
 }

@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T08:39:37.578272+00:00",
+  "created_utc": "2026-10-20T03:33:00.151529+00:00",
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "On joue !",
     "cue_id": "greia.requested.play.fr",
-    "output": "tmp/greia-four-languages-20261017/review/activities/cucciolo_mio/assets/audio/fr/play.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/cucciolo_mio/assets/audio/fr/play.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.lilli.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-053248-b0e96594",
+    "idempotency_key": "greia-d0891eec9e9842d5867ec71ab4ec52d0",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2829826152,
+    "language_direction": "French",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak naturally in French. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2992575304,
+        "sha256": "a50562b7f9459bb333916ab071b6e9e69060e24d1a11a65de4d923e6c04c5f09",
+        "generation": {
+          "elapsed_seconds": 11.133132167044096,
+          "model_load_seconds": 0.0,
+          "rtf": 4.969778513671942,
+          "peak_memory_gb": 6.61593154
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "OUH, SIN",
-    "score": 0.1857,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
-  "attempts": 2,
+  "attempts": 1,
   "output": {
     "path": "activities/cucciolo_mio/assets/audio/fr/play.wav",
-    "bytes": 38666,
-    "sha256": "216470a5f3504ff6f6efd9afcd02e91d53b48eb8b4517389214e95f307fd1453"
+    "bytes": 98870,
+    "sha256": "4f07a0819002fe806d384e2331cc5c13055ce5e6d64cf63f3e774f143ce76067"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "dbe73bd7c484f62380a571a0aa88ed639122e1d1c391f02bb28347554e23a0e6",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

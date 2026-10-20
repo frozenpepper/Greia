@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T11:33:41.902310+00:00",
+  "created_utc": "2026-10-20T03:25:31.640755+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Trop lourd ! Essaie une planche en pierre !",
     "cue_id": "greia.requested.too_heavy.fr",
-    "output": "tmp/greia-four-languages-20261017/review/activities/costruiamo_ponti/assets/audio/fr/too_heavy.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/costruiamo_ponti/assets/audio/fr/too_heavy.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-052507-b497882a",
+    "idempotency_key": "greia-459154eee3784f4494b175c770891c4f",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 320841347,
+    "language_direction": "French",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak naturally in French. Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 16415935,
+        "sha256": "168b128323502eefb6f60900565ee6c2a86bb57ef2e927fbf3752f2d7e4ae8cc",
+        "generation": {
+          "elapsed_seconds": 22.08237104199361,
+          "model_load_seconds": 0.0,
+          "rtf": 6.273103842240503,
+          "peak_memory_gb": 6.61593154
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "trop lourd et c'est une planche en pierre.",
-    "score": 0.8312,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/costruiamo_ponti/assets/audio/fr/too_heavy.wav",
-    "bytes": 112092,
-    "sha256": "2653d45c63f2d12eef011ed8bf14fffc68a8ef5239664105e94f1b3226f24922"
+    "bytes": 155318,
+    "sha256": "ef589663a4dcca631757e26a11312493c5004e37d7c628ef8a9babce182919bb"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "ff586c2ab4a77291c227c78f8d234fe78afe80437aaca5738a21c5973a31580f",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

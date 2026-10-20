@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T12:46:16.151649+00:00",
+  "created_utc": "2026-10-19T23:13:04.354162+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Où est la lettre U ?",
     "cue_id": "alfabeto_leo.ask_U.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/fr/ask_U.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/alfabeto_leo/assets/audio/fr/ask_U.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-011247-c8bb01d3",
+    "idempotency_key": "greia-48acdc33ef244dbeaa5d72991ca71142",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2092366749,
+    "language_direction": "French",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "effective_delivery": "Speak naturally in French. Leo, a warm, curious cartoon guide. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3376151108,
+        "sha256": "089b5da753b52e73529dec2ea122a6dfdae1c256b978ee742c71f6255c95f1ed",
+        "generation": {
+          "elapsed_seconds": 15.790141209028661,
+          "model_load_seconds": 0.0,
+          "rtf": 10.96410684575535,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Où est la lettre U ?",
-    "score": 1.0,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/fr/ask_U.wav",
-    "bytes": 74166,
-    "sha256": "245d6fb40dd30943643b00735b13429241f52abc2b4acc60e4019c42553d72b0"
+    "bytes": 63590,
+    "sha256": "a670b86a1226f4bae126f39fce99e6a0a4581739f9a2a5f2a0394e19bb000b29"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "b419ac0192b3b068e65a8b4783926737a4ea6166f2d572f3ddcf210abe41710e",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

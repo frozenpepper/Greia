@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T11:57:43.023273+00:00",
+  "created_utc": "2026-10-20T00:30:01.186583+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "dani",
     "kind": "character_dialogue",
     "locale": "fr",
-    "text": "Forme le nombre 4 !",
+    "text": "Allume 4 lumières dans la maison !",
     "cue_id": "casa_del_dieci.prompt_compose_4.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/casa_del_dieci/fr/prompt_compose_4.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/casa_del_dieci/assets/audio/fr/prompt_compose_4.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-022950-0fbf10d5",
+    "idempotency_key": "greia-118a444136c1416486724be1f55c3dda",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2907555064,
+    "language_direction": "French",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak naturally in French. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3562964889,
+        "sha256": "e3e5ccba729d316fc3a864d78b59fbf1c117689d0bab6dd05711849813a49a39",
+        "generation": {
+          "elapsed_seconds": 9.708967458980624,
+          "model_load_seconds": 0.0,
+          "rtf": 4.6673988265270205,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Forme la numbere quoi.",
-    "score": 0.5664,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/casa_del_dieci/assets/audio/fr/prompt_compose_4.wav",
-    "bytes": 86516,
-    "sha256": "8bab59be83966936c971fbbb5fa3b925c92d5bc87e9c830f432dc59a2da612c7"
+    "bytes": 91814,
+    "sha256": "56e0d77a8697b17d4e89db123b32ccd6249b19bcb28b85b8027c98db14fdac02"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "11db32a92823decd4513c128845d10e8d37dcd42b3dc4bb03232a5a19e8888b9",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

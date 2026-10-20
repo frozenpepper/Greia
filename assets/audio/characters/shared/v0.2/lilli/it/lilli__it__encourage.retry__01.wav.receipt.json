@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T19:08:52.331252+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "shared_character_utterance",
+    "locale": "it",
+    "text": "Riproviamo!",
+    "cue_id": "shared.encourage.retry.01",
+    "output": "assets/audio/characters/shared/v0.2/lilli/it/lilli__it__encourage.retry__01.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+  "generation_parameters": {
+    "job_id": "20261020-210840-6bbd2e24",
+    "idempotency_key": "greia-3acbcfefd9af4c64b4b17a3f79e2931e",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3543949233,
+    "language_direction": "Italian",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak in Italian. Lilli, a sparkly, affectionate storybook unicorn. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2861514076,
+        "sha256": "e86cd4887de40d2e224fcc10e69abd590fd7e656a4bcadb3aa8393ff08903216",
+        "generation": {
+          "elapsed_seconds": 10.696685874951072,
+          "model_load_seconds": 0.0,
+          "rtf": 6.684732345558424,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/lilli/it/lilli__it__encourage.retry__01.wav",
+    "bytes": 70646,
+    "sha256": "6e0de3fbf42f38cf4b3993dd9036cab6090435f42c2a14014287ba32c6b151a2"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "5d98d98faf89f6d9dddd7f388c3fff2a037e54148369b0ba5d949d77915bc7b2",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:12:23.546677+00:00",
+  "created_utc": "2026-10-19T23:18:26.766171+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "fr",
     "text": "S comme Soleil",
     "cue_id": "alfabeto_leo.letter_S.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/fr/letter_S.wav",
+    "output": "activities/alfabeto_leo/assets/audio/fr/letter_S.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Thomas",
-    "rate_wpm": 175,
-    "synthesis_text": "s comme soleil"
+    "job_id": "20261020-011815-26e4ed75",
+    "idempotency_key": "greia-f78ccbd1e02942f2ac9d2256e57145c0",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3885372037,
+    "language_direction": "French",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "effective_delivery": "Speak naturally in French. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2905432916,
+        "sha256": "7dd20848dd65f705b84542fc851028ed0d57833109820c7450fc1fc3858003a1",
+        "generation": {
+          "elapsed_seconds": 10.309063541993964,
+          "model_load_seconds": 0.0,
+          "rtf": 7.158243403768521,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/fr/letter_S.wav",
-    "bytes": 42982,
-    "sha256": "d41d531baa1d17ced1993c500e24659a1353453e1e70cc8831e9091bdbd1350a"
+    "bytes": 63590,
+    "sha256": "2e48c43f1a3911ea004f716550468591e005ead6d44a03188b10f5934fee4c23"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "24956dcda8c17dc1dc3c91176a5d1c39e8efa9d07b4cac7724b65402ad8dee6b",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

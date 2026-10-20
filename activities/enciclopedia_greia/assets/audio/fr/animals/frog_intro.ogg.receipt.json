@@ -1,38 +1,91 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T14:10:04.178500+00:00",
+  "created_utc": "2026-10-20T08:20:01.787607+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "fr",
-    "text": "Suis la transformation d'un têtard en grenouille !",
+    "text": "Les grenouilles sont des amphibiens et elles changent énormément en grandissant. Suis une transformation très courante : de l'œuf au têtard, puis à la petite grenouille !",
     "cue_id": "encyclopedia.animals.frog.intro.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/animals/frog_intro.ogg",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/enciclopedia_greia/assets/audio/fr/animals/frog_intro.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-101931-cb9e99e2",
+    "idempotency_key": "greia-c33a9395f27e45eab9028aafcbe1f2db",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1772268006,
+    "language_direction": "French",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in French. Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1958994216,
+        "sha256": "075567ae8b12d9aeeff082f02046d910cca230a6ec544c3e23824f6eae06ef43",
+        "generation": {
+          "elapsed_seconds": 30.414575542032253,
+          "model_load_seconds": 0.0,
+          "rtf": 3.4561363090129644,
+          "peak_memory_gb": 7.648602244
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Turingtrelye l'at halfway d'entrairet. on a enunuit.",
-    "score": 0.28,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/fr/animals/frog_intro.ogg",
-    "bytes": 29804,
-    "sha256": "1a7474c847169a21bcd79ddc23a2cae4e62dc85178810868be929bf8163dc706"
+    "bytes": 51516,
+    "sha256": "606d6d6735a97fe490b1ff7306481aa22b5c7e87d8145eaddedc5dfde069bebb"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "1a7474c847169a21bcd79ddc23a2cae4e62dc85178810868be929bf8163dc706",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "075567ae8b12d9aeeff082f02046d910cca230a6ec544c3e23824f6eae06ef43",
+      "source_job_id": "20261020-101931-cb9e99e2",
+      "repackaged_utc": "2026-10-20T22:30:13Z"
+    }
+  }
 }

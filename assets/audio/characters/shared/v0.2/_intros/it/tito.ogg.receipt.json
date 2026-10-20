@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T18:28:38.146145+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Ciao! Io sono Tito! Mi piace curiosare tra boschi, mari, sentieri e piccoli misteri. Andiamo a vedere cosa c'è dietro l'angolo!",
+    "cue_id": "character.intro.tito",
+    "output": "assets/audio/characters/shared/v0.2/_intros/it/tito.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "generation_parameters": {
+    "job_id": "20261020-202759-d7e2f9ce",
+    "idempotency_key": "greia-f7dfd168fcc743cfb8812bf85db4eb8e",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1040958704,
+    "language_direction": "Italian",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "effective_delivery": "Speak in Italian. Tito, a cheeky, confident woodland explorer. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3630174807,
+        "sha256": "a109ea5bf95d7ef3f5cf5688301f713a2e717b8653a2cee4a025d4570745220f",
+        "generation": {
+          "elapsed_seconds": 37.70905458298512,
+          "model_load_seconds": 0.0,
+          "rtf": 3.740915783434644,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/_intros/it/tito.ogg",
+    "bytes": 59607,
+    "sha256": "b1339b543b5652c36a4baa1ab2d61604db82b489c572761ef3cf9fbcd4d4b527"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "24efaf260299e64581c4c16878ba71022e9a29b4d3fe205a693f57bd82d01c9e",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

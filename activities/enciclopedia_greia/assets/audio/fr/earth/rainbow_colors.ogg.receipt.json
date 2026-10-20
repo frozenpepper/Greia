@@ -1,38 +1,91 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T14:26:16.634874+00:00",
+  "created_utc": "2026-10-20T08:48:14.285856+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "fr",
-    "text": "Les couleurs se séparent parce qu'elles se courbent différemment",
+    "text": "La lumière blanche du soleil contient plein de couleurs. Dans la goutte, chaque couleur se courbe un tout petit peu différemment, alors elles arrivent séparées à nos yeux.",
     "cue_id": "encyclopedia.earth.rainbow.colors.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/rainbow_colors.ogg",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/enciclopedia_greia/assets/audio/fr/earth/rainbow_colors.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-104747-7eeb2ef3",
+    "idempotency_key": "greia-2d35eaa4ba2d4e73819a49e870689c0d",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3390778609,
+    "language_direction": "French",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in French. Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2554411206,
+        "sha256": "79f863ceb277eec42e4cbc5e9ed2d2af2517a30a6535c3a03338529e2ecb9b81",
+        "generation": {
+          "elapsed_seconds": 25.737560665991623,
+          "model_load_seconds": 0.0,
+          "rtf": 3.351172153294194,
+          "peak_memory_gb": 7.648602244
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Les couleurs ne s'est pas parce que ce courbe différemment.",
-    "score": 0.6621,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/fr/earth/rainbow_colors.ogg",
-    "bytes": 27683,
-    "sha256": "d6ec1a61375d56901c108f78f288d1203d6531cbb042d7e1b7290c8c3ae04412"
+    "bytes": 44784,
+    "sha256": "6aa22e9b174d0f7052df0f5a029076e76186cfe8f2dd581a7e5a4308bed3e629"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "d6ec1a61375d56901c108f78f288d1203d6531cbb042d7e1b7290c8c3ae04412",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "79f863ceb277eec42e4cbc5e9ed2d2af2517a30a6535c3a03338529e2ecb9b81",
+      "source_job_id": "20261020-104747-7eeb2ef3",
+      "repackaged_utc": "2026-10-20T22:30:20Z"
+    }
+  }
 }

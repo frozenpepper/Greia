@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T11:50:13.078928+00:00",
+  "created_utc": "2026-10-20T14:20:15.411457+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "es",
-    "text": "Otoño",
+    "text": "En otoño las hojas se ponen rojas y caen: ¡fris, fras!",
     "cue_id": "quattro_stagioni.autumn.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/quattro_stagioni/es/autumn.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/quattro_stagioni/assets/audio/es/autumn.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-161959-2f28cc3b",
+    "idempotency_key": "greia-695bdaded71c42009c5b7e11892ed7e9",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2174396967,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in Spanish. Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 244988117,
+        "sha256": "8005951697ef61d1aa2e6c1a8258a098e777b1204739cff427b69c43d2ee2183",
+        "generation": {
+          "elapsed_seconds": 15.732788416964468,
+          "model_load_seconds": 0.0,
+          "rtf": 4.096902499969047,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/quattro_stagioni/assets/audio/es/autumn.wav",
-    "bytes": 34698,
-    "sha256": "9a5831a4f3002f4e7c60ce00241bc59fbc11b02ed65315ed6ad05301ac30bad2"
+    "bytes": 169430,
+    "sha256": "b32e3f5e18b84d3430e6f80afae08b59c7bbfbff2b31f6e28dac7da5927a3613"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "9a5831a4f3002f4e7c60ce00241bc59fbc11b02ed65315ed6ad05301ac30bad2",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

@@ -1,38 +1,102 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T14:25:22.270119+00:00",
+  "created_utc": "2026-10-20T08:52:08.768245+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "fr",
-    "text": "Tous les arbres ne changent pas de la même façon",
+    "text": "Les arbres ne changent pas tous de la même façon. Beaucoup d'arbres à larges feuilles perdent leurs feuilles pendant la saison froide, alors que beaucoup de conifères restent verts ; dans d'autres climats, les feuilles tombent pendant la saison sèche.",
     "cue_id": "encyclopedia.earth.tree.seasons.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/tree_seasons.ogg",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/enciclopedia_greia/assets/audio/fr/earth/tree_seasons.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-105124-23c0944a",
+    "idempotency_key": "greia-def9ce5744e74c488c4439dbadc236f9",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 500130529,
+    "language_direction": "French",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in French. Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2812239379,
+        "sha256": "040c2c3f0cfa55ebf243325f160b30baf23516dc578acee6b21ac4688a6edcdf",
+        "generation": {
+          "elapsed_seconds": 36.42126679199282,
+          "model_load_seconds": 0.0,
+          "rtf": 3.347491624698717,
+          "peak_memory_gb": 7.648602244
+        }
+      },
+      {
+        "file": "speech-002-take-01.wav",
+        "seed": 906776744,
+        "sha256": "3c624875f5bee94b008b3c7a60fd98c51653bb45f9b63c83c4c17493ced08de8",
+        "generation": {
+          "elapsed_seconds": 6.271762332995422,
+          "model_load_seconds": 0.0,
+          "rtf": 3.563163904741268,
+          "peak_memory_gb": 7.648602244
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "De les arbres ne changent pas de la main façon.",
-    "score": 0.8618,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/fr/earth/tree_seasons.ogg",
-    "bytes": 22326,
-    "sha256": "124942c8196ebc72234c876a8265f1cb1c42e5c81dc9f1070042577b64fa72a3"
+    "bytes": 68956,
+    "sha256": "627fc6219cb99a1bfd0388b81180ec365f7ea3aa6999f199a9fba2791164d5f4"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "124942c8196ebc72234c876a8265f1cb1c42e5c81dc9f1070042577b64fa72a3",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "6721749dc9ef7b21bd62796b465042b76527d36c0ad939a5fa9d45c0b3332a88",
+      "source_job_id": "20261020-105124-23c0944a",
+      "repackaged_utc": "2026-10-20T22:30:21Z"
+    }
+  }
 }

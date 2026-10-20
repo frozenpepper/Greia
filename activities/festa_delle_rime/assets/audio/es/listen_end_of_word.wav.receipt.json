@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:58:53.093146+00:00",
+  "created_utc": "2026-10-20T12:06:23.873108+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¡Escucha el final de la palabra!",
     "cue_id": "greia.requested.listen_end_of_word.es",
-    "output": "tmp/greia-four-languages-20261017/review/activities/festa_delle_rime/assets/audio/es/listen_end_of_word.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/festa_delle_rime/assets/audio/es/listen_end_of_word.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-140610-c73164d6",
+    "idempotency_key": "greia-22f8681b85ff4e1a88b4164ae0bf9209",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 241856377,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak naturally in Spanish. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2784123622,
+        "sha256": "d2041c35e029dc596192acc7b3e10f450ee2fa3e9f793d55353707ca25c691a7",
+        "generation": {
+          "elapsed_seconds": 12.635928332980257,
+          "model_load_seconds": 0.0,
+          "rtf": 4.645277250038695,
+          "peak_memory_gb": 8.079945652
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Escucha el final de la palabra.",
-    "score": 1.0,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/festa_delle_rime/assets/audio/es/listen_end_of_word.wav",
-    "bytes": 99744,
-    "sha256": "6e93c2d9aafd771471975275f90629104d2be7d06631589663638844b441ae43"
+    "bytes": 120038,
+    "sha256": "9806cb10be40fa84493a3a33d6da8f141ad707991562660275bfe0857f7331e5"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "6e93c2d9aafd771471975275f90629104d2be7d06631589663638844b441ae43",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

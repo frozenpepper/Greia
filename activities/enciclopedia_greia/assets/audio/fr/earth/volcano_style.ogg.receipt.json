@@ -1,38 +1,91 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T14:21:29.978922+00:00",
+  "created_utc": "2026-10-20T08:54:53.258185+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "fr",
-    "text": "Différents types d'éruptions",
+    "text": "Si les gaz peuvent s'échapper facilement, la lave peut couler. Si le gaz reste piégé dans un magma très épais, la pression peut monter et l'éruption peut être explosive.",
     "cue_id": "encyclopedia.earth.volcano.style.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/earth/volcano_style.ogg",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/enciclopedia_greia/assets/audio/fr/earth/volcano_style.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-105418-9ff580d8",
+    "idempotency_key": "greia-fdc1a18a631c41999c06d33ee3acd1d4",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3402683657,
+    "language_direction": "French",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in French. Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 4103453100,
+        "sha256": "29ff4371406856138229e8388ea6686a9f3acb2fe002b3544e58bdf530724a88",
+        "generation": {
+          "elapsed_seconds": 34.13769062497886,
+          "model_load_seconds": 0.0,
+          "rtf": 3.333704590580771,
+          "peak_memory_gb": 7.648602244
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "de l'antro, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l'anxin, l",
-    "score": 0.0119,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/fr/earth/volcano_style.ogg",
-    "bytes": 21421,
-    "sha256": "dc00c5f02bd9e9e5949f768863dc5326da47511dfb9f507aa61afb49dc88cf41"
+    "bytes": 55228,
+    "sha256": "6036542306e7fb52b488a315bf76f59cb0eccfb18062e99eb1f3c6c3f848ecc3"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "dc00c5f02bd9e9e5949f768863dc5326da47511dfb9f507aa61afb49dc88cf41",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "29ff4371406856138229e8388ea6686a9f3acb2fe002b3544e58bdf530724a88",
+      "source_job_id": "20261020-105418-9ff580d8",
+      "repackaged_utc": "2026-10-20T22:30:22Z"
+    }
+  }
 }

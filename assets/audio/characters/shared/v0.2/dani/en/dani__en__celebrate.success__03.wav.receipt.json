@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T18:28:58.352210+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "shared_character_utterance",
+    "locale": "en",
+    "text": "Wonderful!",
+    "cue_id": "shared.celebrate.success.03",
+    "output": "assets/audio/characters/shared/v0.2/dani/en/dani__en__celebrate.success__03.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "generation_parameters": {
+    "job_id": "20261020-202853-8c3ba8c5",
+    "idempotency_key": "greia-d04f5007d8e049b39c61c724efaa36e3",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3052488137,
+    "language_direction": "English",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "effective_delivery": "Speak in English. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 926285298,
+        "sha256": "78ea3d7c56a48c89da04ea15928516ae9a31399221bb6f226bb24b0b24258610",
+        "generation": {
+          "elapsed_seconds": 5.006976749980822,
+          "model_load_seconds": 0.0,
+          "rtf": 4.469849799119912,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/dani/en/dani__en__celebrate.success__03.wav",
+    "bytes": 49478,
+    "sha256": "f19aefbf9d40396d2486ecac93fd87304568ac8a6b9498b4550f40befe63298e"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "cf490b3a6437c04a47f96f535b21d8374ebf2b1eee0566b22463ec692736daea",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

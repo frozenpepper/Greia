@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T12:57:33.866559+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Four fireflies!",
+    "cue_id": "activities/luci_di_momo/assets/audio/en/count_4.wav",
+    "output": "activities/luci_di_momo/assets/audio/en/count_4.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.momo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "generation_parameters": {
+    "job_id": "20261020-145723-afdde4a5",
+    "idempotency_key": "greia-fb9e4386bcc44f8dab39e9c6101b8f39",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
+    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3376768903,
+    "language_direction": "English",
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "effective_delivery": "Speak in English. Momo, a lovable, whimsical comic creature. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3915299084,
+        "sha256": "b975d46248a5082e5529c267a4ce0d5e68f148c27ec154f2a5b39606982541c0",
+        "generation": {
+          "elapsed_seconds": 9.198366500029806,
+          "model_load_seconds": 0.0,
+          "rtf": 5.225849730156125,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/luci_di_momo/assets/audio/en/count_4.wav",
+    "bytes": 77702,
+    "sha256": "1d9c6ae532564bcef6539aee188a5b627df9088699ffa9feb44ed789ccce0f1d"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "276053cda389e1361004fa71ca626f7474342f85d8335dabb1316aec43028e57",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

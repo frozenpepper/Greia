@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T12:02:12.182202+00:00",
+  "created_utc": "2026-10-20T00:13:48.178088+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "dani",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Bravo !",
     "cue_id": "bottega_delle_misure.correct_1.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/bottega_delle_misure/fr/correct_1.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/bottega_delle_misure/assets/audio/fr/correct_1.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-021338-ddab607c",
+    "idempotency_key": "greia-67dc618cc522435db9c24b5d861a579a",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2935064309,
+    "language_direction": "French",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "effective_delivery": "Speak naturally in French. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 921791649,
+        "sha256": "c373e7176045314e7efcc2d2fc0103b28ee63182dbcfba6670db6994ab28f39b",
+        "generation": {
+          "elapsed_seconds": 8.88078674999997,
+          "model_load_seconds": 0.0,
+          "rtf": 5.549913602749695,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/bottega_delle_misure/assets/audio/fr/correct_1.wav",
-    "bytes": 37786,
-    "sha256": "d7840392dbd537b77291270cfea6a18bff116f5fe4aa284078a78a95c06200e3"
+    "bytes": 70646,
+    "sha256": "4ca9c018d34e83f1463103c0d24a27851a90f4d8342ce20e027777ccf59db200"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "cff5b60618fd429f55585076a5edf9317b4baab872cab255fbd0ce3b8bea64e6",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

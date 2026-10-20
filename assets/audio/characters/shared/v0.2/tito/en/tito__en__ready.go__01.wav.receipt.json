@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T19:22:48.519924+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "shared_character_utterance",
+    "locale": "en",
+    "text": "Come on, let's go!",
+    "cue_id": "shared.ready.go.01",
+    "output": "assets/audio/characters/shared/v0.2/tito/en/tito__en__ready.go__01.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "generation_parameters": {
+    "job_id": "20261020-212236-af5754b3",
+    "idempotency_key": "greia-54c1dbd194a54ade8ce0665ad13379ba",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2185415723,
+    "language_direction": "English",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in English. Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2202917910,
+        "sha256": "41d4f02e03e04427e9a770a71b5aa11c0e1a269e2c1cb745be3bd330027a8b19",
+        "generation": {
+          "elapsed_seconds": 11.608169540995732,
+          "model_load_seconds": 0.0,
+          "rtf": 4.534146035152294,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/tito/en/tito__en__ready.go__01.wav",
+    "bytes": 112982,
+    "sha256": "7f36ad95dff00b8b18f8b259b64db832c042e7d392263764940260a174b7d742"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "7eb559828e4c562ab4ab3d04fa21803d900e4361a307812619437ae38bfb1afa",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

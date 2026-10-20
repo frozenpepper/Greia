@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T12:01:24.971771+00:00",
+  "created_utc": "2026-10-20T00:15:23.761605+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "dani",
     "kind": "character_dialogue",
     "locale": "fr",
-    "text": "Lequel est le plus haut ?",
+    "text": "Touche le colis le plus haut !",
     "cue_id": "bottega_delle_misure.prompt_compare_taller.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/bottega_delle_misure/fr/prompt_compare_taller.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/bottega_delle_misure/assets/audio/fr/prompt_compare_taller.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-021513-7fec3049",
+    "idempotency_key": "greia-cba1774447e84c33b0fed68d4c757c94",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1547422055,
+    "language_direction": "French",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak naturally in French. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1722748347,
+        "sha256": "515b5bed1bf4b0da1b1bbe0eccb1bfec8de62c1c333af638e26f544c537734a9",
+        "generation": {
+          "elapsed_seconds": 9.719423333997838,
+          "model_load_seconds": 0.0,
+          "rtf": 4.67242528675483,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "la quel est le puir?",
-    "score": 0.6043,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/bottega_delle_misure/assets/audio/fr/prompt_compare_taller.wav",
-    "bytes": 53440,
-    "sha256": "d1d699070c2b1302132ccfb269007a339d5a98c13bd7f92d6d0e8c5f8fb24621"
+    "bytes": 91814,
+    "sha256": "a09fcc9fe54dadd0e9aad33d6823ad56d13a8cab5d1c911911bdc1189143c735"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "4519957c229e7c4be1e0c44d7a94c28b58259b0def63a78b77dbdd07986a0e8e",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

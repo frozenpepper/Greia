@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T08:42:16.903563+00:00",
+  "created_utc": "2026-10-20T03:33:38.896353+00:00",
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "C'est l'heure d'aller au lit",
     "cue_id": "greia.requested.time_for_bed.fr",
-    "output": "tmp/greia-four-languages-20261017/review/activities/cucciolo_mio/assets/audio/fr/time_for_bed.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/cucciolo_mio/assets/audio/fr/time_for_bed.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.lilli.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-053321-ec96eb1b",
+    "idempotency_key": "greia-55d4fbf4212a458493ba8e1bad3cce9f",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3050641834,
+    "language_direction": "French",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak naturally in French. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2935341629,
+        "sha256": "73fc02aa98d4a68f358b75b7818f4562e9834ce99fd7eb77aaf0a02c7e3c5241",
+        "generation": {
+          "elapsed_seconds": 15.855824332975317,
+          "model_load_seconds": 0.0,
+          "rtf": 8.25752504104261,
+          "peak_memory_gb": 6.61593154
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "C'est l'heure d'aller ou l'y?",
-    "score": 0.8429,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
-  "attempts": 2,
+  "attempts": 1,
   "output": {
     "path": "activities/cucciolo_mio/assets/audio/fr/time_for_bed.wav",
-    "bytes": 82986,
-    "sha256": "d97617f79d12d995a00078c3651c6120849ad7cec63e54ca2c6a50beeecffa38"
+    "bytes": 84758,
+    "sha256": "c04bd3d04f6f006e39bc41f458b20721d2d97dfce8ba8c0a499f01957736e6ee"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "c2b076243181329c433229c00185225fc3bb9dfe4345e43eb5f852cc1d0e04a2",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

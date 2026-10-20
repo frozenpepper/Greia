@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:40:14.306888+00:00",
+  "created_utc": "2026-10-20T16:27:28.909860+00:00",
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Heart!",
     "cue_id": "greia.wired.shape_heart.en",
-    "output": "tmp/greia-four-languages-20261017/review/activities/specchi_magici/assets/audio/en/shape_heart.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/specchi_magici/assets/audio/en/shape_heart.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.lilli.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "en",
-    "model_load_count": 1
+    "job_id": "20261020-182724-de1c821f",
+    "idempotency_key": "greia-787473283fbd429e93cf3518c97f5775",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 19101891,
+    "language_direction": "English",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "effective_delivery": "Speak in English. Lilli, a sparkly, affectionate storybook unicorn. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3764194468,
+        "sha256": "fdd9f6d46a909206370c5205a3b1989cf6c9f6d6e92eec0603ffa71c90a00f83",
+        "generation": {
+          "elapsed_seconds": 3.7578984160209075,
+          "model_load_seconds": 0.0,
+          "rtf": 4.696394604483533,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/specchi_magici/assets/audio/en/shape_heart.wav",
-    "bytes": 35358,
-    "sha256": "f7364262dd4146bce549839a668ae508367fecfa1624a5e736589dec816ecc65"
+    "bytes": 35366,
+    "sha256": "12cc78585b8f4510b7ef2e823ca02d57b9788629cec3b9868ae77973c263d4e8"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "f7364262dd4146bce549839a668ae508367fecfa1624a5e736589dec816ecc65",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

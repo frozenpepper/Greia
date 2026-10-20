@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T08:09:09.233688+00:00",
+  "created_utc": "2026-10-20T14:15:24.806847+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¡Haz tres en raya!",
     "cue_id": "greia.requested.make_three_in_row.es",
-    "output": "tmp/greia-four-languages-20261017/review/activities/quattro_amici/assets/audio/es/make_three_in_row.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/quattro_amici/assets/audio/es/make_three_in_row.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-161517-9fa9153c",
+    "idempotency_key": "greia-de80e4f579a0443781555ae678c324ab",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3943873304,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3214443561,
+        "sha256": "28d5e1d30744ae6985454f48c961e7156d047a237a298609ca81e715aed2c575",
+        "generation": {
+          "elapsed_seconds": 6.752871082979254,
+          "model_load_seconds": 0.0,
+          "rtf": 4.6889511049502985,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "¡Astres en Raya!",
-    "score": 0.7633,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
-  "attempts": 2,
+  "attempts": 1,
   "output": {
     "path": "activities/quattro_amici/assets/audio/es/make_three_in_row.wav",
-    "bytes": 58954,
-    "sha256": "c67690580f8f30932e3e033aa88a2928eeebb6ce305d7abebd0624f4de8955e4"
+    "bytes": 63590,
+    "sha256": "93c5089090ae6b090d4504c857c60c0c507c455ce5f3a54240174fe66acf93bf"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "c67690580f8f30932e3e033aa88a2928eeebb6ce305d7abebd0624f4de8955e4",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

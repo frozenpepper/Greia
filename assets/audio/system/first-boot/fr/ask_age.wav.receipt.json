@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:21:05.115917+00:00",
+  "created_utc": "2026-10-20T20:05:22.057543+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Quel âge as-tu ? Choisis ton nombre. Tu peux aussi passer.",
     "cue_id": "greia.first_boot.ask_age.fr",
-    "output": "tmp/greia-four-languages-20261017/review/assets/audio/system/first-boot/fr/ask_age.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "assets/audio/system/first-boot/fr/ask_age.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-220506-0d9bef09",
+    "idempotency_key": "greia-93c8b57e6c3a4dfd8e5c6f8134d1a2c5",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3631763888,
+    "language_direction": "French",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3624085563,
+        "sha256": "55bfb900395da60d1f2fc74e90769fd1a679e73a7e528ce50b525b3021c0ecde",
+        "generation": {
+          "elapsed_seconds": 14.614773667010013,
+          "model_load_seconds": 0.0,
+          "rtf": 3.9712260315230323,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Que là, j'estu, choisit ton nombre. Tu peux aussi passer.",
-    "score": 0.7832,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "assets/audio/system/first-boot/fr/ask_age.wav",
-    "bytes": 173832,
-    "sha256": "0f7a148de590555805e859a3456a5c62f40239974ee4fa4c6fac7d33b160e788"
+    "bytes": 162374,
+    "sha256": "aed79028303945fd5156022d17f9a1b8c5525530582448bc2e07753f5046af04"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "0f7a148de590555805e859a3456a5c62f40239974ee4fa4c6fac7d33b160e788",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

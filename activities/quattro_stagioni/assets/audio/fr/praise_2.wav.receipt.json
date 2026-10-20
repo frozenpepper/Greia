@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T11:52:47.178052+00:00",
+  "created_utc": "2026-10-20T14:23:58.891043+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Très bien !",
     "cue_id": "quattro_stagioni.praise_2.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/quattro_stagioni/fr/praise_2.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/quattro_stagioni/assets/audio/fr/praise_2.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-162351-f319b140",
+    "idempotency_key": "greia-7f4d2b0d13a04b1696dc8b00ce81cc27",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 60890366,
+    "language_direction": "French",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "effective_delivery": "Speak in French. Tito, a cheeky, confident woodland explorer. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2984099772,
+        "sha256": "3100d6b85d59fd6ebc4012d32278f653328d9e0028c9fb4247b74e13b2cc217a",
+        "generation": {
+          "elapsed_seconds": 6.255530374997761,
+          "model_load_seconds": 0.0,
+          "rtf": 4.343615582685635,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "T'es hybian?",
-    "score": 0.39,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/quattro_stagioni/assets/audio/fr/praise_2.wav",
-    "bytes": 32272,
-    "sha256": "7772d9f02fd170ee629ba6f570d6301c375fa4c2f0f14b61ca17c0f32e800400"
+    "bytes": 63590,
+    "sha256": "568df57cab1facb3074b5f58e6c0d2ce08061e94499abeb1faf12da2df36e4dd"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "7772d9f02fd170ee629ba6f570d6301c375fa4c2f0f14b61ca17c0f32e800400",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

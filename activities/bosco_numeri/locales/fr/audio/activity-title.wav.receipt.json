@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T04:09:38.103023+00:00",
+  "created_utc": "2026-10-20T00:08:33.664287+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "La forêt des nombres de Tito",
     "cue_id": "bosco_numeri.title.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/fr/activity-title.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/bosco_numeri/locales/fr/audio/activity-title.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-020820-9bd71039",
+    "idempotency_key": "greia-6a1db66e799944f69b616c90c8da3850",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1896350975,
+    "language_direction": "French",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "effective_delivery": "Speak naturally in French. Tito, a cheeky, confident woodland explorer. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2290947707,
+        "sha256": "88bf8dae5c377c7329620191359b37793ee4dd066fa9b2db1855b0d28a6fdc9e",
+        "generation": {
+          "elapsed_seconds": 12.629134083050303,
+          "model_load_seconds": 0.0,
+          "rtf": 6.071212603020737,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "la forêt des nombre de titaux.",
-    "score": 0.8263,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/bosco_numeri/locales/fr/audio/activity-title.wav",
-    "bytes": 86956,
-    "sha256": "bd871af9180e6c080711d388b6def9198363ff06b3a285dfd0733f1b920c8871"
+    "bytes": 91814,
+    "sha256": "48271ee6fca951c765f869c22f0c88a769c18a44e79cf5d0e366efbcf4be432a"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "c413ef627df5c192836a6359417e27460a619817b7ab92dca80b468b4643ea54",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

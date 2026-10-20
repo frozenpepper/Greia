@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:55:34.276567+00:00",
+  "created_utc": "2026-10-20T03:26:28.606285+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Metti un pilastro sul sasso!",
     "cue_id": "greia.requested.pillar_on_rock.it",
-    "output": "tmp/greia-four-languages-20261017/review/activities/costruiamo_ponti/assets/audio/it/pillar_on_rock.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/costruiamo_ponti/assets/audio/it/pillar_on_rock.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "it",
-    "model_load_count": 1
+    "job_id": "20261020-052618-049e11f6",
+    "idempotency_key": "greia-b9f2ad96e58c4d4d8792de58a15b5a56",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3319588527,
+    "language_direction": "Italian",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak naturally in Italian. Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1637376158,
+        "sha256": "eeb84dc29780060a76b66ec48c1be6a1b348dcc5377dade3d8a9d9ad4b6c3824",
+        "generation": {
+          "elapsed_seconds": 10.033303834032267,
+          "model_load_seconds": 0.0,
+          "rtf": 5.700201023027517,
+          "peak_memory_gb": 6.61593154
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "metti un pilastro su sasso.",
-    "score": 0.9177,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/costruiamo_ponti/assets/audio/it/pillar_on_rock.wav",
-    "bytes": 80782,
-    "sha256": "6418257f2bbee49cc8e33c41a37153a8a46371f16815ca03a7e2d4bb4b4eb166"
+    "bytes": 77702,
+    "sha256": "7e40bc2e95e0c9e4d1de6de1caa1633bb0f789fb73305614e015e36b1ba9be24"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "8d0375b930c667c6d8832d4a852d5d2e93ab6bc561de3b721fb634b735c17026",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

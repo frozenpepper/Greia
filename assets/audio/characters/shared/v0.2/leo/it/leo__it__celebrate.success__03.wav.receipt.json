@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T18:56:25.737880+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "shared_character_utterance",
+    "locale": "it",
+    "text": "Che meraviglia!",
+    "cue_id": "shared.celebrate.success.03",
+    "output": "assets/audio/characters/shared/v0.2/leo/it/leo__it__celebrate.success__03.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+  "generation_parameters": {
+    "job_id": "20261020-205619-20be2d48",
+    "idempotency_key": "greia-8778c750bf794aaeaa63c904ad3b5fcb",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3768655727,
+    "language_direction": "Italian",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3284789612,
+        "sha256": "032ccfaf696a74146530d8b9b2b16c4322ea61074271d4aa5896cde2fd985694",
+        "generation": {
+          "elapsed_seconds": 5.3691037080134265,
+          "model_load_seconds": 0.0,
+          "rtf": 4.793129333146936,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/leo/it/leo__it__celebrate.success__03.wav",
+    "bytes": 49478,
+    "sha256": "49f7627852338ef73fec17036a83d22b788e2ee175406886b4a62a6ecd3b26db"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "f28de49289e6ea27ff20dac8f14dbe717b807e1ddf1c79c35ba5f4a326de0cf7",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

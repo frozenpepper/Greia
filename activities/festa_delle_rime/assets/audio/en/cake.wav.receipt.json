@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:26:24.934561+00:00",
+  "created_utc": "2026-10-20T12:00:00.179221+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "en",
     "text": "cake",
     "cue_id": "festa_delle_rime.cake.en",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/en/cake.wav",
+    "output": "activities/festa_delle_rime/assets/audio/en/cake.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Let the ending of the word ring out clearly so the rhyme is easy to hear."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Samantha",
-    "rate_wpm": 180,
-    "synthesis_text": "cake"
+    "job_id": "20261020-135953-e7155513",
+    "idempotency_key": "greia-d9c98c13034849c5b1536e446d51c050",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3305375724,
+    "language_direction": "English",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Let the ending of the word ring out clearly so the rhyme is easy to hear.",
+    "effective_delivery": "Speak naturally in English. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Let the ending of the word ring out clearly so the rhyme is easy to hear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1615728787,
+        "sha256": "d557f75573bc615f22b209d3cedc70aefc4251d8dce81db0b9920a6b4fc45aa5",
+        "generation": {
+          "elapsed_seconds": 5.871690083004069,
+          "model_load_seconds": 0.0,
+          "rtf": 9.172127179907424,
+          "peak_memory_gb": 8.079945652
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/festa_delle_rime/assets/audio/en/cake.wav",
-    "bytes": 20114,
-    "sha256": "54581cb65af41ec6209418009489d19a198d567f8cd3bef38d11cdeb31e8e526"
+    "bytes": 28310,
+    "sha256": "2f72ccf40a5c657de1c645e1133455cd535bbf32a56cb8a99bdce835482502f6"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "54581cb65af41ec6209418009489d19a198d567f8cd3bef38d11cdeb31e8e526",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

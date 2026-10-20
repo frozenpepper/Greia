@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T08:13:05.921836+00:00",
+  "created_utc": "2026-10-20T14:14:51.793441+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¡Empate!",
     "cue_id": "greia.requested.draw.es",
-    "output": "tmp/greia-four-languages-20261017/review/activities/quattro_amici/assets/audio/es/draw.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/quattro_amici/assets/audio/es/draw.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-161446-f459665d",
+    "idempotency_key": "greia-348402cfd9c74da0a185d842ca338881",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3260270813,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1077876288,
+        "sha256": "dc5c2fb45f1a5c26cba316bb2d5534ad24f931863203f2a2986fec15bf12e199",
+        "generation": {
+          "elapsed_seconds": 4.574747667007614,
+          "model_load_seconds": 0.0,
+          "rtf": 4.083988394888511,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/quattro_amici/assets/audio/es/draw.wav",
-    "bytes": 37784,
-    "sha256": "a013fc219eb841bec32adbc9d54d0774d4e398d522cab948a01b1c4706f3179b"
+    "bytes": 49478,
+    "sha256": "41a7dc428df31fe15ea63158ed44d72eaffc8c6aa19298a771323ad447fa8019"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "a013fc219eb841bec32adbc9d54d0774d4e398d522cab948a01b1c4706f3179b",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

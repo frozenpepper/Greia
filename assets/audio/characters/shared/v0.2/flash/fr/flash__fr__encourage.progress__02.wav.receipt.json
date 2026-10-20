@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T06:49:03.674540+00:00",
+  "created_utc": "2026-10-20T18:43:19.985993+00:00",
   "request": {
     "speaker": "flash",
     "kind": "shared_character_utterance",
     "locale": "fr",
     "text": "Tu y es presque !",
     "cue_id": "greia.shared.flash__fr__encourage.progress__02.fr",
-    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/flash/fr/flash__fr__encourage.progress__02.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "assets/audio/characters/shared/v0.2/flash/fr/flash__fr__encourage.progress__02.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.flash.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-204310-a281792a",
+    "idempotency_key": "greia-c6ffe86489114bfeb1647a61f4e2b71b",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 289170730,
+    "language_direction": "French",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in French. Flash, a springy, eager little rabbit. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2878911861,
+        "sha256": "ea39f2f7f3d96c90151bfe30fcecaac18a57edccf73b7b34ec6e51694198bcf5",
+        "generation": {
+          "elapsed_seconds": 8.822990791988559,
+          "model_load_seconds": 0.0,
+          "rtf": 5.513794891358333,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Tu es presque ?",
-    "score": 0.9036,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/flash/fr/flash__fr__encourage.progress__02.wav",
-    "bytes": 51676,
-    "sha256": "6f06e47a147a13a75d4c0e6c78eae0d224bcd53ec0014d174ad280cb28230496"
+    "bytes": 70646,
+    "sha256": "1001710a7fc57c146b6a57af22e4ad4f078be71cd03c74aee497050ce880928d"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "6f06e47a147a13a75d4c0e6c78eae0d224bcd53ec0014d174ad280cb28230496",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

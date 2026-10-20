@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T08:34:03.620182+00:00",
+  "created_utc": "2026-10-20T13:29:52.965065+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Buonanotte, nuvoletta",
     "cue_id": "greia.requested.goodnight_cloud.it",
-    "output": "tmp/greia-four-languages-20261017/review/activities/nanna_delle_nuvolette/assets/audio/it/goodnight_cloud.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/nanna_delle_nuvolette/assets/audio/it/goodnight_cloud.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.momo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.momo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "it",
-    "model_load_count": 1
+    "job_id": "20261020-152942-d030e607",
+    "idempotency_key": "greia-1d90221b8f7448c4a70dcb9aec0860d5",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
+    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 188518456,
+    "language_direction": "Italian",
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm.",
+    "effective_delivery": "Speak in Italian. Momo, a lovable, whimsical comic creature. Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 285719623,
+        "sha256": "c4bf6f76d990d50072fc092ac11744d780e552b2fa17461dc14584e54903b576",
+        "generation": {
+          "elapsed_seconds": 9.853124291985296,
+          "model_load_seconds": 0.0,
+          "rtf": 4.398388940697253,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Buona note, nuvoletta!",
-    "score": 0.7575,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/nanna_delle_nuvolette/assets/audio/it/goodnight_cloud.wav",
-    "bytes": 153326,
-    "sha256": "62e5e3d7c9c94928dbbf5b549d51980fdac9f8dedbb4078d14a41b987ff1d9b6"
+    "bytes": 98870,
+    "sha256": "2f1ad6b2bd0f6749016ee48b72f11626cb3f0f29bafbb3a3921557e719220537"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "62e5e3d7c9c94928dbbf5b549d51980fdac9f8dedbb4078d14a41b987ff1d9b6",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

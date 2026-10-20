@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T05:06:09.761587+00:00",
+  "created_utc": "2026-10-20T20:16:49.507489+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Apprendre",
     "cue_id": "collection.learn",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/launcher-labels/fr/learn.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "assets/audio/system/launcher-labels/fr/learn.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names a menu button for a small child: friendly, clear and matter-of-fact, even pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-221639-931cb8b2",
+    "idempotency_key": "greia-53f73985268d4c7c854c8b433488866c",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 820994882,
+    "language_direction": "French",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names a menu button for a small child: friendly, clear and matter-of-fact, even pace.",
+    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Names a menu button for a small child: friendly, clear and matter-of-fact, even pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3796072442,
+        "sha256": "c75a7203a551a89f823ffafc6e647292863275c96202055c80a2ee4e0c01868a",
+        "generation": {
+          "elapsed_seconds": 9.308796541008633,
+          "model_load_seconds": 0.0,
+          "rtf": 4.847910706193195,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/system/launcher-labels/fr/learn.wav",
-    "bytes": 34700,
-    "sha256": "916371a133bb935f365da5bb42eb20b6021394f50a780882759c981c496a5393"
+    "bytes": 84758,
+    "sha256": "17649fec12a30969e53bfc16dcd0ec72d462cc77e5090f07351d91785b18f47a"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "916371a133bb935f365da5bb42eb20b6021394f50a780882759c981c496a5393",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

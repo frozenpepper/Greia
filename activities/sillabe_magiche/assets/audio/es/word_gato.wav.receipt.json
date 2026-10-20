@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:20:28.992776+00:00",
+  "created_utc": "2026-10-20T14:41:17.280172+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "es",
     "text": "gato",
     "cue_id": "sillabe_magiche.word_gato.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/es/word_gato.wav",
+    "output": "activities/sillabe_magiche/assets/audio/es/word_gato.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Mónica",
-    "rate_wpm": 175,
-    "synthesis_text": "gato"
+    "job_id": "20261020-164111-94b4aa3a",
+    "idempotency_key": "greia-3a2c5643beb44bd48569e8429ddeebac",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3469793363,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm.",
+    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1134888078,
+        "sha256": "666436f080adf683303e808dedf8bbd27349b6564f53d633a15bb479e95c3e2b",
+        "generation": {
+          "elapsed_seconds": 4.992267208988778,
+          "model_load_seconds": 0.0,
+          "rtf": 7.798386684179294,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/sillabe_magiche/assets/audio/es/word_gato.wav",
-    "bytes": 18388,
-    "sha256": "bcffc5ee2fd88c4a11caa6796a4bff229e3550f3bdb04eabd378214356f555ff"
+    "bytes": 28310,
+    "sha256": "13aad97614ca23a596a6cea33925fe391343b3706d3485774ee5f84de671d8fa"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "bcffc5ee2fd88c4a11caa6796a4bff229e3550f3bdb04eabd378214356f555ff",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

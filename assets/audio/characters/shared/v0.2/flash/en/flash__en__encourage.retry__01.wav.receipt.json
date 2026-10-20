@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T18:38:07.383590+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "shared_character_utterance",
+    "locale": "en",
+    "text": "Let's try again!",
+    "cue_id": "shared.encourage.retry.01",
+    "output": "assets/audio/characters/shared/v0.2/flash/en/flash__en__encourage.retry__01.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+  "generation_parameters": {
+    "job_id": "20261020-203758-2526b8ab",
+    "idempotency_key": "greia-6e76a4350ba64ebb9665c6603472a6b0",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 4255468247,
+    "language_direction": "English",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak in English. Flash, a springy, eager little rabbit. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 4263388850,
+        "sha256": "d7617ade40fc5aea7eff6b7c30ff0fb18a6d90407e2988ef69995fe544322f02",
+        "generation": {
+          "elapsed_seconds": 7.183721541019622,
+          "model_load_seconds": 0.0,
+          "rtf": 5.611551783116487,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/flash/en/flash__en__encourage.retry__01.wav",
+    "bytes": 56534,
+    "sha256": "c39bc70a379b895dea3f2f7f69be109d35467b01ef6c3c739445fed8c86d2ab9"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "41b32798aef2f8b1c69841f6cf86015c5612cdf596ee28a2655879ccf3ced028",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

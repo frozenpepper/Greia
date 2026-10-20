@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T00:10:02.219069+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Tap the taller parcel!",
+    "cue_id": "activities/bottega_delle_misure/assets/audio/en/prompt_compare_taller.wav",
+    "output": "activities/bottega_delle_misure/assets/audio/en/prompt_compare_taller.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "generation_parameters": {
+    "job_id": "20261020-020953-2cf0e32c",
+    "idempotency_key": "greia-700d48785c774c46bc3d816c3be473d5",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1920819432,
+    "language_direction": "English",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak naturally in English. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3415727829,
+        "sha256": "40070b225c258155e79836020f4c89fcc49413e65546d9c9de062302a04ab28e",
+        "generation": {
+          "elapsed_seconds": 7.194439333048649,
+          "model_load_seconds": 0.0,
+          "rtf": 4.496056243963326,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/bottega_delle_misure/assets/audio/en/prompt_compare_taller.wav",
+    "bytes": 70646,
+    "sha256": "85c6a0fd5f997096100303af704ad99d8d20e644dd42e92cc95f4f5f3b7bb2dc"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "df1b7fbeee690bf9593ad0444d103d851808d33dbd6734d161f5b09c9beac57e",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

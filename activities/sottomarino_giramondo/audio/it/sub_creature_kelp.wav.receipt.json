@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-03T18:18:07.181491+00:00",
+  "created_utc": "2026-10-20T16:04:02.326546+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,31 +8,75 @@
     "text": "Foresta sottomarina di alghe kelp!",
     "cue_id": "sub_creature_kelp",
     "output": "activities/sottomarino_giramondo/audio/it/sub_creature_kelp.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "it",
-    "model_load_count": 1
+    "job_id": "20261020-180347-54eec00b",
+    "idempotency_key": "greia-9176d954577e408d95dd0abe77fbf295",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 395791932,
+    "language_direction": "Italian",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1868651903,
+        "sha256": "ad77823429e3a3282a8032586e0e0eb7395be9f32b8c512b118b4923a4f9905a",
+        "generation": {
+          "elapsed_seconds": 14.028533666976728,
+          "model_load_seconds": 0.0,
+          "rtf": 5.157233135338544,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "NOT_RUN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
     "transcript": null,
     "score": null,
-    "detail": "mlx_whisper unavailable: numpy.core.multiarray failed to import"
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/sottomarino_giramondo/audio/it/sub_creature_kelp.wav",
-    "bytes": 139876,
-    "sha256": "3e072e56ad2e32294b3f7fc928a00ed536f43d1b956477c6904e0f2e4fea85db"
+    "bytes": 120038,
+    "sha256": "232b440db3d1a5ffaceeb778aa398c3a15e420af8c33911ab370611c34ce7fad"
   },
   "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "3e072e56ad2e32294b3f7fc928a00ed536f43d1b956477c6904e0f2e4fea85db",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

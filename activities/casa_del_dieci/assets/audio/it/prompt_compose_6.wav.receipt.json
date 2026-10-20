@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T00:51:33.911259+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Accendi 6 luci nella casa!",
+    "cue_id": "activities/casa_del_dieci/assets/audio/it/prompt_compose_6.wav",
+    "output": "activities/casa_del_dieci/assets/audio/it/prompt_compose_6.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "generation_parameters": {
+    "job_id": "20261020-025111-c6f5abf9",
+    "idempotency_key": "greia-0b5d3767f04341cfa9aa9d773a2e4d49",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 48700413,
+    "language_direction": "Italian",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak naturally in Italian. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 636978180,
+        "sha256": "b51d6fbb90a11c5b319acda7eef5b001a210a192ea8f80f366b18e60e17f6802",
+        "generation": {
+          "elapsed_seconds": 19.89401520899264,
+          "model_load_seconds": 0.0,
+          "rtf": 8.2885974067048,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/casa_del_dieci/assets/audio/it/prompt_compose_6.wav",
+    "bytes": 105926,
+    "sha256": "80e7c0f8792281b08d65d6ef779c3690b018776db46b25ddcf715636ec607df1"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "7b12b2924b5000ee2f2dfc094bdab25bc37fbf4a819ffa0139e4ce1fbb4847bc",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

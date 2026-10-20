@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:10:53.222987+00:00",
+  "created_utc": "2026-10-19T23:28:28.979095+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "it",
     "text": "O come Orso",
     "cue_id": "alfabeto_leo.letter_O.it",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_O.wav",
+    "output": "activities/alfabeto_leo/assets/audio/it/letter_O.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Alice",
-    "rate_wpm": 175,
-    "synthesis_text": "o come orso"
+    "job_id": "20261020-012817-6d7d2123",
+    "idempotency_key": "greia-659deaec7d35487182735b7991ac92e4",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3718324927,
+    "language_direction": "Italian",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "effective_delivery": "Speak naturally in Italian. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2911580690,
+        "sha256": "43f542098c7dc6b544d5fe8ea14e783afd0e658e3c9c7c5cbdd9d9ef2200b894",
+        "generation": {
+          "elapsed_seconds": 11.006551583996043,
+          "model_load_seconds": 0.0,
+          "rtf": 6.253130338412674,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/it/letter_O.wav",
-    "bytes": 35300,
-    "sha256": "a807782c6f60d2bf1f3975bce1a2ee3cb4c92972a6be7d53ac34c980d6950f52"
+    "bytes": 77702,
+    "sha256": "474d8fdc150cd2226705f00fe23266d00d70b1a6c648b84219866bfcb422b830"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "6c1436b29e2d46588b7a370e013658ffdf39de8c51aa5a7e012a3aa430d42238",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

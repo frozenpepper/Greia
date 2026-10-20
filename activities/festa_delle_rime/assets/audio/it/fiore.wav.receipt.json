@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:25:54.504818+00:00",
+  "created_utc": "2026-10-20T12:17:31.042838+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "it",
     "text": "fiore",
     "cue_id": "festa_delle_rime.fiore.it",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/festa_delle_rime/it/fiore.wav",
+    "output": "activities/festa_delle_rime/assets/audio/it/fiore.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Let the ending of the word ring out clearly so the rhyme is easy to hear."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Alice",
-    "rate_wpm": 175,
-    "synthesis_text": "fiore"
+    "job_id": "20261020-141725-504517c9",
+    "idempotency_key": "greia-ae16c63f58ab4438b650bfd48709afcf",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1533434752,
+    "language_direction": "Italian",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Let the ending of the word ring out clearly so the rhyme is easy to hear.",
+    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Let the ending of the word ring out clearly so the rhyme is easy to hear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1991851133,
+        "sha256": "f5d9234d0f8500d36859e6d5c04f83182ee563aac6f5afd31d3e554b1fd793fe",
+        "generation": {
+          "elapsed_seconds": 4.525402874976862,
+          "model_load_seconds": 0.0,
+          "rtf": 5.655575348856733,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/festa_delle_rime/assets/audio/it/fiore.wav",
-    "bytes": 22082,
-    "sha256": "09a58f17186503d8850d91cff263fdfea6f78fc84c40ea27a06ac622ce71e4be"
+    "bytes": 35366,
+    "sha256": "04c7ce170ca8998fe0d2c5a2451134f5138813320134e1a0f2046e9375dab770"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "09a58f17186503d8850d91cff263fdfea6f78fc84c40ea27a06ac622ce71e4be",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

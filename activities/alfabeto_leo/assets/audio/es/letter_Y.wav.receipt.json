@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:12:01.598123+00:00",
+  "created_utc": "2026-10-19T21:11:14.533478+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "es",
     "text": "Y de Yate",
     "cue_id": "alfabeto_leo.letter_Y.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/es/letter_Y.wav",
+    "output": "activities/alfabeto_leo/assets/audio/es/letter_Y.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Mónica",
-    "rate_wpm": 175,
-    "synthesis_text": "y de yate"
+    "job_id": "20261019-230351-34567f48",
+    "idempotency_key": "greia-8165b7743f4e4edeaf2fd816ad7db5d6",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 29271826,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "effective_delivery": "Speak naturally in Spanish. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 595499763,
+        "sha256": "f0484b3c517293aa7a0e8bd711d92bbc877b9ffb3069d6f5b92c4e826266be47",
+        "generation": {
+          "elapsed_seconds": 8.27307054202538,
+          "model_load_seconds": 0.0,
+          "rtf": 3.9771190811755694,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/es/letter_Y.wav",
-    "bytes": 25510,
-    "sha256": "cee48d20b16817953fce7cac7f65ddb90cb2fe4a1190bab7d5f01567878ec5d6"
+    "bytes": 91814,
+    "sha256": "86d6c74a574b0bf7a28cbc51c9488a573cdbe8bdf4b6ac5028c53cd79abd26f8"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "6ac93ec3c995975a9284754fab0a427cc5b4552e0374ee63bd30826a8c2cf87e",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

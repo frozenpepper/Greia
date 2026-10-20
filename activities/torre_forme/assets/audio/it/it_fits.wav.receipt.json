@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:47:59.624316+00:00",
+  "created_utc": "2026-10-20T17:16:53.266079+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
     "locale": "it",
     "text": "Ci sta!",
     "cue_id": "greia.requested.it_fits.it",
-    "output": "tmp/greia-four-languages-20261017/review/activities/torre_forme/assets/audio/it/it_fits.wav",
+    "output": "activities/torre_forme/assets/audio/it/it_fits.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Alice",
-    "rate_wpm": 185,
-    "synthesis_text": "Ci sta!"
+    "job_id": "20261020-191646-1dd72f6d",
+    "idempotency_key": "greia-d3c4ecb3a3964697a4a5eadebaaaf77a",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 34971281,
+    "language_direction": "Italian",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "effective_delivery": "Speak in Italian. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 865679444,
+        "sha256": "b0498fd27e29b2988118f84dbf0f8ff809a93ab4831d6f238ff8d9f043271213",
+        "generation": {
+          "elapsed_seconds": 5.728171875001863,
+          "model_load_seconds": 0.0,
+          "rtf": 5.113678210089447,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/torre_forme/assets/audio/it/it_fits.wav",
-    "bytes": 22736,
-    "sha256": "216d1017076a4c356c8f731eab8c806a68ed055443a4b2fdfee705ab3b524794"
+    "bytes": 49478,
+    "sha256": "70494299b8d44e0a69ba81b592f32a994cf224adf8b247fc1a90be8b2cf3daa7"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "216d1017076a4c356c8f731eab8c806a68ed055443a4b2fdfee705ab3b524794",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

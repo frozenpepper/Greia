@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:47:09.439281+00:00",
+  "created_utc": "2026-10-20T17:29:26.060676+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
     "locale": "fr",
     "text": "Fais ce wagon pareil !",
     "cue_id": "greia.requested.make_same.fr",
-    "output": "tmp/greia-four-languages-20261017/review/activities/treno_numeri/assets/audio/fr/make_same.wav",
+    "output": "activities/treno_numeri/assets/audio/fr/make_same.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Thomas",
-    "rate_wpm": 185,
-    "synthesis_text": "Fais ce wagon pareil !"
+    "job_id": "20261020-192917-cc547890",
+    "idempotency_key": "greia-638a02c9739e4fc3837066aa57230ce0",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3153401252,
+    "language_direction": "French",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in French. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3010368458,
+        "sha256": "72d5ddfe78f4c701c4243df2738ecba9493c09b91eab3c011a257fb7524bcc65",
+        "generation": {
+          "elapsed_seconds": 7.50600370799657,
+          "model_load_seconds": 0.0,
+          "rtf": 5.863301946098089,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/treno_numeri/assets/audio/fr/make_same.wav",
-    "bytes": 55176,
-    "sha256": "fb7569a9977cf47acd20dd7cdffc8e8ba47a70a75c434bdaeb53228c41da6992"
+    "bytes": 56534,
+    "sha256": "973a7c558cc66efd2577d88ddf1fabd2e7049e3f97f291a038f8ecce54f968f3"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "fb7569a9977cf47acd20dd7cdffc8e8ba47a70a75c434bdaeb53228c41da6992",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

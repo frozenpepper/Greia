@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T06:24:26.152156+00:00",
+  "created_utc": "2026-10-20T18:20:47.685748+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
     "locale": "fr",
     "text": "Bip-bop ! Moi, c'est Dani ! J'aime les nombres, les motifs, les casse-têtes et les choses qui s'emboîtent pile au bon endroit. Mode amitié : activé !",
     "cue_id": "greia.shared.dani.fr",
-    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/_intros/fr/dani.ogg",
+    "output": "assets/audio/characters/shared/v0.2/_intros/fr/dani.ogg",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Thomas",
-    "rate_wpm": 185,
-    "synthesis_text": "Bip-bop ! Moi, c'est Dani ! J'aime les nombres, les motifs, les casse-têtes et les choses qui s'emboîtent pile au bon endroit. Mode amitié : activé !"
+    "job_id": "20261020-202010-bd3d3502",
+    "idempotency_key": "greia-ed52e52dc0894cf2be1178c790b274df",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 33124625,
+    "language_direction": "French",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "effective_delivery": "Speak in French. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 526496300,
+        "sha256": "66d7abf44a1cd70ea5854a598658abfc2ac814975f3ce86870444ce472d97313",
+        "generation": {
+          "elapsed_seconds": 35.861136749968864,
+          "model_load_seconds": 0.0,
+          "rtf": 4.872326724934064,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/_intros/fr/dani.ogg",
-    "bytes": 69969,
-    "sha256": "45437973a6cfcee8db657a6111a4ab4f6a87ced33aea22d93bf3e01bf99365e0"
+    "bytes": 56234,
+    "sha256": "7971c3542ddcb69ead916049345f9114a9da68ab7136d9fc074243110fa3449a"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "45437973a6cfcee8db657a6111a4ab4f6a87ced33aea22d93bf3e01bf99365e0",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T04:56:40.397644+00:00",
+  "created_utc": "2026-10-20T17:12:11.964189+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "LES HISTOIRES DE MA VOIX",
     "cue_id": "storie_della_mia_voce.title.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/storie_della_mia_voce/fr/activity-title.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/storie_della_mia_voce/locales/fr/audio/activity-title.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-191158-8696402e",
+    "idempotency_key": "greia-8bb0cf972cb342858d12b2458f1f713c",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2410498934,
+    "language_direction": "French",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 915504711,
+        "sha256": "2eabe0c538f214a8cb9eeef998901392622bf0a4b9e981e287bc95b7f0ae82b0",
+        "generation": {
+          "elapsed_seconds": 11.600087374972645,
+          "model_load_seconds": 0.0,
+          "rtf": 5.178225150646222,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "L'essence tour est de maveauac.",
-    "score": 0.3766,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
-  "attempts": 2,
+  "attempts": 1,
   "output": {
     "path": "activities/storie_della_mia_voce/locales/fr/audio/activity-title.wav",
-    "bytes": 89160,
-    "sha256": "d64a28b53864876c62965df3e7b1ea367e0f293a22cd36f673539d093ca4eada"
+    "bytes": 98870,
+    "sha256": "00e53734283995842d7ddf71f25d61c8301d7a875df37d423c7337c17363333d"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "d64a28b53864876c62965df3e7b1ea367e0f293a22cd36f673539d093ca4eada",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

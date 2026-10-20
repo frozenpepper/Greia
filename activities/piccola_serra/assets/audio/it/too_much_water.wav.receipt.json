@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T08:45:24.705037+00:00",
+  "created_utc": "2026-10-20T14:10:14.312077+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Troppa acqua — aspettiamo.",
     "cue_id": "greia.requested.too_much_water.it",
-    "output": "tmp/greia-four-languages-20261017/review/activities/piccola_serra/assets/audio/it/too_much_water.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/piccola_serra/assets/audio/it/too_much_water.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "it",
-    "model_load_count": 1
+    "job_id": "20261020-161004-32d9da69",
+    "idempotency_key": "greia-f67f9c90700d4c6ea8860dc452e4edd0",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 22745156,
+    "language_direction": "Italian",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak in Italian. Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1542951923,
+        "sha256": "800d0492c7add7e3842b6fc0d12410c7e25292ede0aad87279ce83ea4066e9e4",
+        "generation": {
+          "elapsed_seconds": 9.202389540965669,
+          "model_load_seconds": 0.0,
+          "rtf": 3.8340627210467337,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "troppa acqua, aspechiamo!",
-    "score": 0.8268,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/piccola_serra/assets/audio/it/too_much_water.wav",
-    "bytes": 69980,
-    "sha256": "a2fd109fc613a090866e79efb54ee0026d688d30b0a69a52213ecb524a455ab7"
+    "bytes": 105926,
+    "sha256": "5d2e24974ffd85287830c756463e1cd7133e24bc7697f2864f5376480cb226bc"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "a2fd109fc613a090866e79efb54ee0026d688d30b0a69a52213ecb524a455ab7",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T19:08:12.811833+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "shared_character_utterance",
+    "locale": "it",
+    "text": "Continua così!",
+    "cue_id": "shared.encourage.progress.01",
+    "output": "assets/audio/characters/shared/v0.2/lilli/it/lilli__it__encourage.progress__01.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+  "generation_parameters": {
+    "job_id": "20261020-210804-c4e08afc",
+    "idempotency_key": "greia-1a0fff7f0b6547a8b8844dd0202ffcfb",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2999784576,
+    "language_direction": "Italian",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "effective_delivery": "Speak in Italian. Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2552099820,
+        "sha256": "df5552ad0de5bedb1cb12995e0e485baf462fbc721b030dfa73a1df1b07d9327",
+        "generation": {
+          "elapsed_seconds": 7.799912457994651,
+          "model_load_seconds": 0.0,
+          "rtf": 6.092888262982412,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/lilli/it/lilli__it__encourage.progress__01.wav",
+    "bytes": 56534,
+    "sha256": "4fbbf0d7c958dada48af88d2a6ef61a1b78cc9222d2d51a97cd3e31efda7689d"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "e16089956fba374bc4baa3a7a9b577d56cc8e623b9eb371b2e085079fe813583",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

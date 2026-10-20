@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:03:03.095547+00:00",
+  "created_utc": "2026-10-20T12:21:24.773237+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "en",
     "text": "D as Dolphin",
     "cue_id": "foresta_parole.find_d",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/foresta_parole/en/find_d.wav",
+    "output": "activities/foresta_parole/assets/audio/en/find_d.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Samantha",
-    "rate_wpm": 180,
-    "synthesis_text": "d as dolphin"
+    "job_id": "20261020-142117-0a24fe14",
+    "idempotency_key": "greia-80a5d3ad65f745b181b6b1c9863e1d44",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2885573052,
+    "language_direction": "English",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 331693696,
+        "sha256": "4db05c4b89d549abc52a3a6d16da72ad2b94333b2dc53511971d272a8e97eaa3",
+        "generation": {
+          "elapsed_seconds": 6.433131291996688,
+          "model_load_seconds": 0.0,
+          "rtf": 4.020288277469026,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/foresta_parole/assets/audio/en/find_d.wav",
-    "bytes": 39134,
-    "sha256": "f0b32d3c28b1dcde0afbce3d448a8064c23121b0add481fcbac9d95935c80a78"
+    "bytes": 70646,
+    "sha256": "1cd84209fffb61f890c72ba809514f1767d8c95fc66e74ea6c8accd15f04ad3a"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "f0b32d3c28b1dcde0afbce3d448a8064c23121b0add481fcbac9d95935c80a78",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

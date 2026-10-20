@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T23:56:38.341756+00:00",
+  "created_utc": "2026-10-20T13:20:29.553004+00:00",
   "request": {
     "speaker": "flash",
     "kind": "character_dialogue",
@@ -9,16 +9,56 @@
     "cue_id": "mondo_contrari.down",
     "output": "activities/mondo_contrari/locales/en/audio/down.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Acts out the word for a child. Let the pitch slide downward. Playful, clear words."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.flash.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "en",
-    "model_load_count": 1
+    "job_id": "20261020-152021-c4798067",
+    "idempotency_key": "greia-8bc8432b2410474c8707191fa8af6e9d",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 763169432,
+    "language_direction": "English",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Acts out the word for a child. Let the pitch slide downward. Playful, clear words.",
+    "effective_delivery": "Speak in English. Flash, a springy, eager little rabbit. Acts out the word for a child. Let the pitch slide downward. Playful, clear words.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2808598159,
+        "sha256": "4d46c5f8daf736b6c8230accbef556e1a1f1dfa26f264dc8362e258d5fed9e6e",
+        "generation": {
+          "elapsed_seconds": 7.972842667018995,
+          "model_load_seconds": 0.0,
+          "rtf": 3.559039952541773,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/mondo_contrari/locales/en/audio/down.wav",
-    "bytes": 110770,
-    "sha256": "e9f34adc03a4920494b47eda3abe9935e965b611067f5ebc3a325936b65c8f3a"
+    "bytes": 98870,
+    "sha256": "cc91d654cb910aa8bf74a4b6257a92ebb242420a3f76e9a1aee42adc63dc957e"
   },
   "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "e9f34adc03a4920494b47eda3abe9935e965b611067f5ebc3a325936b65c8f3a",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

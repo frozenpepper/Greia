@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:57:43.203722+00:00",
+  "created_utc": "2026-10-20T14:05:06.840769+00:00",
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Merci !",
     "cue_id": "greia.requested.thank_you.fr",
-    "output": "tmp/greia-four-languages-20261017/review/activities/pasticceria_magica/assets/audio/fr/thank_you.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/pasticceria_magica/assets/audio/fr/thank_you.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.lilli.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-160450-f4c0d2b0",
+    "idempotency_key": "greia-53831a07c0f64770ba5329f098de6dda",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3065222258,
+    "language_direction": "French",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "effective_delivery": "Speak in French. Lilli, a sparkly, affectionate storybook unicorn. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3816908581,
+        "sha256": "d042bbe6f1cb8f1c99ead7da0c344873295b3ead0e56a18f501ba782061e8fc6",
+        "generation": {
+          "elapsed_seconds": 15.763649458007421,
+          "model_load_seconds": 0.0,
+          "rtf": 4.925883899174237,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/pasticceria_magica/assets/audio/fr/thank_you.wav",
-    "bytes": 34258,
-    "sha256": "dff48160c0f58bca26d826149157703aa8eb0f0726d69e74e6e2cab839df07c0"
+    "bytes": 141206,
+    "sha256": "b98246616a8c9897c4715f427837beb9591859b307b20fd4760bcdd4f552949e"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "dff48160c0f58bca26d826149157703aa8eb0f0726d69e74e6e2cab839df07c0",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

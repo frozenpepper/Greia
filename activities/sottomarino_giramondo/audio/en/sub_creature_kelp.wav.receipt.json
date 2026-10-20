@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-03T18:22:03.069903+00:00",
+  "created_utc": "2026-10-20T14:51:37.835767+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,31 +8,75 @@
     "text": "Kelp forest!",
     "cue_id": "sub_creature_kelp",
     "output": "activities/sottomarino_giramondo/audio/en/sub_creature_kelp.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "en",
-    "model_load_count": 1
+    "job_id": "20261020-165112-2539de67",
+    "idempotency_key": "greia-875a85e098864c79b8688699d250f137",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2438032321,
+    "language_direction": "English",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1893605781,
+        "sha256": "94d4d6364f0ee6dfe7bd6d2c7fa7ff8ea3f2e361788389629afa301d7fbec4cb",
+        "generation": {
+          "elapsed_seconds": 24.429672583995853,
+          "model_load_seconds": 0.0,
+          "rtf": 16.963087085288176,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "NOT_RUN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
     "transcript": null,
     "score": null,
-    "detail": "mlx_whisper unavailable: numpy.core.multiarray failed to import"
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/sottomarino_giramondo/audio/en/sub_creature_kelp.wav",
-    "bytes": 165236,
-    "sha256": "94b78d90bba41b1dbf53af2a35f3c7fcd22b782a6892d2406f55c4fdc758a0f9"
+    "bytes": 63590,
+    "sha256": "4e147e0db817a601a5200ee1ea1c4564f8f3bcc50a37f6e4c49384a9463af4ae"
   },
   "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "94b78d90bba41b1dbf53af2a35f3c7fcd22b782a6892d2406f55c4fdc758a0f9",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

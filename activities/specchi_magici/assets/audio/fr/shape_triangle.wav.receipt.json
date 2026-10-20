@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T12:08:45.834884+00:00",
+  "created_utc": "2026-10-20T16:34:43.703255+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Triangle",
     "cue_id": "specchi_magici.shape_triangle.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/specchi_magici/fr/shape_triangle.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/specchi_magici/assets/audio/fr/shape_triangle.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-183435-5545dcf7",
+    "idempotency_key": "greia-0f3c0ab4a76c4695b32eaeef7bc2745b",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3742216608,
+    "language_direction": "French",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "effective_delivery": "Speak in French. Lilli, a sparkly, affectionate storybook unicorn. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1214031717,
+        "sha256": "b32dc9417492c30c12819d812844519b30080829268c7138daf03ea3101e7e48",
+        "generation": {
+          "elapsed_seconds": 7.315365665999707,
+          "model_load_seconds": 0.0,
+          "rtf": 5.079527137599611,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/specchi_magici/assets/audio/fr/shape_triangle.wav",
-    "bytes": 228296,
-    "sha256": "0f7a63ac1f5ac9eec7df8832120d253f3305fc671bec0ef818babf391b97e765"
+    "bytes": 63590,
+    "sha256": "edb63eebd8ca48413ef26b001832a96bc02eb71009c6129da72382df91b2ba68"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "0f7a63ac1f5ac9eec7df8832120d253f3305fc671bec0ef818babf391b97e765",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

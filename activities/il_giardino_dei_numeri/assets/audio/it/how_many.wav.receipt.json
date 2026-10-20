@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T06:32:13.843358+00:00",
+  "created_utc": "2026-10-20T12:45:37.536258+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
     "locale": "it",
     "text": "Quanti sono nella cassetta?",
     "cue_id": "greia.wired.how_many.it",
-    "output": "tmp/greia-four-languages-20261017/review/activities/il_giardino_dei_numeri/assets/audio/it/how_many.wav",
+    "output": "activities/il_giardino_dei_numeri/assets/audio/it/how_many.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Alice",
-    "rate_wpm": 185,
-    "synthesis_text": "Quanti sono nella cassetta?"
+    "job_id": "20261020-144524-09f6bc98",
+    "idempotency_key": "greia-779e77eb21034ec0be50ce574b5c16bb",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2314745840,
+    "language_direction": "Italian",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "effective_delivery": "Speak in Italian. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3104093547,
+        "sha256": "f9578eb73c2664089fffa789c6451d89dbe3922620f7941ba9bb528ee7b68508",
+        "generation": {
+          "elapsed_seconds": 12.776187665993348,
+          "model_load_seconds": 0.0,
+          "rtf": 7.258510178577795,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/il_giardino_dei_numeri/assets/audio/it/how_many.wav",
-    "bytes": 63654,
-    "sha256": "e208745ed1db4ec33d60fd219c3a66150da5c9e63b3bc5aac66b0615c4cdc4ee"
+    "bytes": 77702,
+    "sha256": "f3dbaf3d5cc05f28faee6910075afd54cdfd389ef0afc5604499209efd30a32f"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "e208745ed1db4ec33d60fd219c3a66150da5c9e63b3bc5aac66b0615c4cdc4ee",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

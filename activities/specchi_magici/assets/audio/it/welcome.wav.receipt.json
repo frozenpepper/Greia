@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T16:39:03.573290+00:00",
+  "request": {
+    "speaker": "lilli",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Ciao! Guarda lo specchio magico e posiziona le forme uguali dall altra parte!",
+    "cue_id": "activities/specchi_magici/assets/audio/it/welcome.wav",
+    "output": "activities/specchi_magici/assets/audio/it/welcome.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+  "generation_parameters": {
+    "job_id": "20261020-183832-02c65203",
+    "idempotency_key": "greia-f931d9a5c6fb478b9fe88c3cf2bed324",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2963863667,
+    "language_direction": "Italian",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace.",
+    "effective_delivery": "Speak in Italian. Lilli, a sparkly, affectionate storybook unicorn. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2354932454,
+        "sha256": "250370fa562e2f392d47f63b35c3a1333b5fe9ff101c8b8ee51d43fe74b92019",
+        "generation": {
+          "elapsed_seconds": 29.313249708036892,
+          "model_load_seconds": 0.0,
+          "rtf": 6.317283799009424,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/specchi_magici/assets/audio/it/welcome.wav",
+    "bytes": 204710,
+    "sha256": "62534b886a0e435f166a9f456f1728a72f193f4fe19899830496b351a6c2f943"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "e034e2d3eb6f1794278d980d7c991901124aea2b2bfa29f3d2040eef6ed77616",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

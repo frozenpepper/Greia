@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T10:57:19.208183+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Pronti al decollo! Un aereo vola grazie a diverse forze che lavorano insieme. Le ali interagiscono con l'aria in movimento e producono portanza, mentre il motore o l'elica forniscono spinta.",
+    "cue_id": "encyclopedia.machines.airplane.intro",
+    "output": "activities/enciclopedia_greia/assets/audio/it/machines/airplane_intro.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+  "generation_parameters": {
+    "job_id": "20261020-125617-6559b641",
+    "idempotency_key": "greia-091a346e57464bc4a3128cf0a6dc11eb",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 4109522854,
+    "language_direction": "Italian",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in Italian. Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 566459866,
+        "sha256": "c0803e99bb282981046a869fcd0d30e84e1e44c245bc652740834389fa6f632c",
+        "generation": {
+          "elapsed_seconds": 59.87381845904747,
+          "model_load_seconds": 0.0,
+          "rtf": 4.736790268512873,
+          "peak_memory_gb": 8.079945652
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/enciclopedia_greia/assets/audio/it/machines/airplane_intro.ogg",
+    "bytes": 66455,
+    "sha256": "acc07bd540f9019e3f2dc00a09a36bb427711f43151895a9ee79f548f652b82e"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "821ce359852e87e9a41274d229f3eb1e6a0923e5001df532548fd1fccbc64d9e",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "c0803e99bb282981046a869fcd0d30e84e1e44c245bc652740834389fa6f632c",
+      "source_job_id": "20261020-125617-6559b641",
+      "repackaged_utc": "2026-10-20T22:30:49Z"
+    }
+  }
+}

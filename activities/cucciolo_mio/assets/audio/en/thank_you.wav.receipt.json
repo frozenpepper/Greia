@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T08:41:26.496340+00:00",
+  "created_utc": "2026-10-20T03:28:58.597602+00:00",
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Thank you!",
     "cue_id": "greia.requested.thank_you.en",
-    "output": "tmp/greia-four-languages-20261017/review/activities/cucciolo_mio/assets/audio/en/thank_you.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/cucciolo_mio/assets/audio/en/thank_you.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.lilli.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "en",
-    "model_load_count": 1
+    "job_id": "20261020-052844-054c4357",
+    "idempotency_key": "greia-475ec109d36241cd900edef766c8aed5",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 986881363,
+    "language_direction": "English",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "effective_delivery": "Speak naturally in English. Lilli, a sparkly, affectionate storybook unicorn. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3981561737,
+        "sha256": "c547101fd9b21259e78ec41191906f592614d22d7df1ebf9dfe3cfc0e6631603",
+        "generation": {
+          "elapsed_seconds": 13.567482999991626,
+          "model_load_seconds": 0.0,
+          "rtf": 7.065784046519378,
+          "peak_memory_gb": 6.61593154
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Thank you.",
-    "score": 1.0,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/cucciolo_mio/assets/audio/en/thank_you.wav",
-    "bytes": 51014,
-    "sha256": "a4c71c84cf496f7d239a70aa5d36107d4b9a2f5876ff585d1e0375a025980104"
+    "bytes": 84758,
+    "sha256": "5b955a2b17615556a66b6a35f8cfa16c2dba3b3eabec7d6bbf9bcf8c7b1b53e1"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "779fc88b8759b0c8af97bd83d4976d25ac305fc7a022a03e6d8b2c09fd58db77",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

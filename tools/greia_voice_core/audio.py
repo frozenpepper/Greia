@@ -22,10 +22,18 @@ class AudioPipelineError(RuntimeError):
 
 
 class AudioPipeline:
-    """Owns deterministic authoring-time audio packaging and basic signal checks."""
+    """Owns bounded authoring-time audio packaging and basic signal checks.
 
-    def __init__(self, target_sample_rate_hz: int = 22050) -> None:
+    OGG output defaults to Vorbis quality 5. A caller may select another bounded
+    FFmpeg quality for a corpus-specific footprint constraint; that changes only
+    packaging, never the frozen synthesis request or its human-review state.
+    """
+
+    def __init__(self, target_sample_rate_hz: int = 22050, ogg_quality: int = 5) -> None:
+        if not 0 <= ogg_quality <= 10:
+            raise ValueError("OGG quality must be between 0 and 10")
         self.target_sample_rate_hz = target_sample_rate_hz
+        self.ogg_quality = ogg_quality
 
     @staticmethod
     def ffmpeg_available() -> bool:
@@ -42,7 +50,7 @@ class AudioPipeline:
         if suffix == ".wav":
             codec = ["-c:a", "pcm_s16le"]
         else:
-            codec = ["-c:a", "libvorbis", "-q:a", "5"]
+            codec = ["-c:a", "libvorbis", "-q:a", str(self.ogg_quality)]
 
         cmd = [
             "ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin", "-y",

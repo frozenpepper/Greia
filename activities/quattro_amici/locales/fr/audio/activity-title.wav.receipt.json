@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T04:37:45.981080+00:00",
+  "created_utc": "2026-10-20T14:19:17.643189+00:00",
   "request": {
     "speaker": "flash",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "QUATRE AMIS ALIGNÉS",
     "cue_id": "quattro_amici.title.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/quattro_amici/fr/activity-title.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/quattro_amici/locales/fr/audio/activity-title.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.flash.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-161907-03fda8a8",
+    "idempotency_key": "greia-e392431584f1465fb4ee540419eb5746",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3781744364,
+    "language_direction": "French",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "effective_delivery": "Speak in French. Flash, a springy, eager little rabbit. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 579497989,
+        "sha256": "50bed80fd8079b87830c3b40f1810507a6b465b7f5ea7a3e706583b2043bb220",
+        "generation": {
+          "elapsed_seconds": 9.969460707972758,
+          "model_load_seconds": 0.0,
+          "rtf": 4.792625931242412,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "annes de la",
-    "score": 0.1733,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
-  "attempts": 2,
+  "attempts": 1,
   "output": {
     "path": "activities/quattro_amici/locales/fr/audio/activity-title.wav",
-    "bytes": 59834,
-    "sha256": "f4e009e3142a29061fbd847e3106962d38b043a7e89a224d116d7970aa7e95c9"
+    "bytes": 91814,
+    "sha256": "b2c0349278d9309d8b63fae791a27c30c8cb7ccab2d3245fc499a084ebc0327d"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "f4e009e3142a29061fbd847e3106962d38b043a7e89a224d116d7970aa7e95c9",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

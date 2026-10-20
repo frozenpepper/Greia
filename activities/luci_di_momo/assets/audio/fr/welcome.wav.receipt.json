@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T11:34:49.623302+00:00",
+  "created_utc": "2026-10-20T13:08:42.384665+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "fr",
-    "text": "Bienvenue dans le jardin des lumières !",
+    "text": "Coucou ! Regarde bien combien de lucioles brillent dans la nuit, puis touche le bon nombre !",
     "cue_id": "luci_di_momo.welcome.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/luci_di_momo/fr/welcome.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/luci_di_momo/assets/audio/fr/welcome.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.momo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.momo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-150818-0e399437",
+    "idempotency_key": "greia-3ddfa4a2665d4695b956c801bdec1fdb",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
+    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 4048026780,
+    "language_direction": "French",
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace.",
+    "effective_delivery": "Speak in French. Momo, a lovable, whimsical comic creature. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2735764822,
+        "sha256": "c60ce37a49d3401c4632a434d2198729e0d2fa20ae24c6e613d1243c623fc30b",
+        "generation": {
+          "elapsed_seconds": 23.16537604201585,
+          "model_load_seconds": 0.0,
+          "rtf": 4.387243339922828,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Béa fus''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''",
-    "score": 0.0886,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/luci_di_momo/assets/audio/fr/welcome.wav",
-    "bytes": 103272,
-    "sha256": "abc47131f64bea8f61c49d7d1ff92dc3a946df96a9789d53fb84fb22471ae8ec"
+    "bytes": 232934,
+    "sha256": "a459a57c71141da849b25b3caef7ff68dd322268a051098d661058ee173f977a"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "abc47131f64bea8f61c49d7d1ff92dc3a946df96a9789d53fb84fb22471ae8ec",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

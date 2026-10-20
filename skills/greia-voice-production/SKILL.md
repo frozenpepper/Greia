@@ -183,6 +183,16 @@ At runtime, Activities never synthesize `shared_character_utterance`; they resol
 
 Do not infer `pedagogical_speech` from short text. `Vai!` may be character dialogue; `ma` may be a teaching target.
 
+## Packaging and footprint
+
+`VoiceEngine` delegates WAV checks and output packaging to `AudioPipeline`.
+Outputs are 22,050 Hz mono; WAV uses PCM16 and OGG uses Vorbis quality 5 by
+default. Engine maintainers may pass a bounded `ogg_quality` value from 0 to 10
+to `AudioPipeline` for an explicit corpus package-footprint constraint. Keep
+that choice inside the shared pipeline, retain output hashes in receipts, and
+leave every new recording `human_review=PENDING` until a person listens. Do not
+invoke FFmpeg directly from corpus or Activity code to work around the bound.
+
 ## Installation / readiness
 
 The engine source ships in the repository. The optional heavy MLX production environment lives outside Git.

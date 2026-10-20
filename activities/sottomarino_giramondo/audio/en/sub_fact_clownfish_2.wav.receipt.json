@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-03T19:05:03.992234+00:00",
+  "created_utc": "2026-10-20T14:55:06.228171+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,31 +8,75 @@
     "text": "A clownfish has special mucus on its skin that protects it from stings!",
     "cue_id": "sub_fact_clownfish_2",
     "output": "activities/sottomarino_giramondo/audio/en/sub_fact_clownfish_2.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "en",
-    "model_load_count": 1
+    "job_id": "20261020-165414-525f9c98",
+    "idempotency_key": "greia-03acf3b49dfa4514aded53db021b5d38",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2629895764,
+    "language_direction": "English",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1730260728,
+        "sha256": "689eb61cf4ec289562caa6699acc2b2e1735df2065ff6e873f1cbb28f6125c09",
+        "generation": {
+          "elapsed_seconds": 50.547116167028435,
+          "model_load_seconds": 0.0,
+          "rtf": 9.872162266923947,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "NOT_RUN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
     "transcript": null,
     "score": null,
-    "detail": "mlx_whisper unavailable: numpy.core.multiarray failed to import"
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/sottomarino_giramondo/audio/en/sub_fact_clownfish_2.wav",
-    "bytes": 215724,
-    "sha256": "e54a7a9150c3a370e5da29ffd000357f4b5c82c8fc7879cef2a59cf02d24e52b"
+    "bytes": 225878,
+    "sha256": "77c1610aa74d4d599341dd2add377bad7bfaec40323b73f3042f81bcbd582ec5"
   },
   "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "e54a7a9150c3a370e5da29ffd000357f4b5c82c8fc7879cef2a59cf02d24e52b",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

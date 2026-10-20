@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:47:31.857687+00:00",
+  "created_utc": "2026-10-20T00:18:48.531295+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
     "locale": "it",
     "text": "Metti i due pacchi sulla bilancia.",
     "cue_id": "greia.requested.put_parcels.it",
-    "output": "tmp/greia-four-languages-20261017/review/activities/bottega_delle_misure/assets/audio/it/put_parcels.wav",
+    "output": "activities/bottega_delle_misure/assets/audio/it/put_parcels.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Alice",
-    "rate_wpm": 185,
-    "synthesis_text": "Metti i due pacchi sulla bilancia."
+    "job_id": "20261020-021833-ecf2a2e0",
+    "idempotency_key": "greia-e9e5b818c16249f2a5b18c7c63b5ef82",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2410275958,
+    "language_direction": "Italian",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak naturally in Italian. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3035156337,
+        "sha256": "fe7fba760c3b60c70a60f1220954260c708759abe15a2c3bb40e4e769ffeeff1",
+        "generation": {
+          "elapsed_seconds": 13.629767708014697,
+          "model_load_seconds": 0.0,
+          "rtf": 5.323781410590989,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/bottega_delle_misure/assets/audio/it/put_parcels.wav",
-    "bytes": 76782,
-    "sha256": "4cdf5e8d5a122f95e8f9aa95519427e1df9ac8b92f2cfca58d6acc66d03bb8c4"
+    "bytes": 112982,
+    "sha256": "188087c4ac6fc9f4b86dc08f7d12e8b7ecf06822322d74fbf715b7e8697f95d3"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "47bc8ecb0641eb61d889a9c5d2e8c24abe7853c568eb83bd91af26ebd67191cd",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

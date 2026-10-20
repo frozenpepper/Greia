@@ -6,12 +6,14 @@ from pathlib import Path
 import tempfile
 import unittest
 import wave
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 import sys
 sys.path.insert(0, str(ROOT / "tools"))
 
 from greia_voice_core.engine import VoiceEngine
+from greia_voice_core.audio import AudioPipeline
 from greia_voice_core.locking import GenerationLockError, InterprocessGenerationLock
 from greia_voice_core.models import (
     GeneratedTake,
@@ -46,6 +48,27 @@ class FakeAudioPipeline:
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_bytes(source.read_bytes())
         return output
+
+
+class AudioPipelinePackagingTests(unittest.TestCase):
+    def test_ogg_quality_is_bounded_and_applied_to_vorbis_packaging(self):
+        with self.assertRaisesRegex(ValueError, "between 0 and 10"):
+            AudioPipeline(ogg_quality=11)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source.wav"
+            output = Path(temporary) / "packed.ogg"
+            source.write_bytes(b"source")
+            pipeline = AudioPipeline(ogg_quality=3)
+            with patch.object(AudioPipeline, "ffmpeg_available", return_value=True), patch(
+                "greia_voice_core.audio.subprocess.run"
+            ) as run:
+                pipeline.package(source, output)
+            command = run.call_args.args[0]
+            self.assertEqual(command[command.index("-q:a") + 1], "3")
+
+    def test_default_ogg_quality_remains_five(self):
+        self.assertEqual(AudioPipeline().ogg_quality, 5)
 
 
 class FakeProvider(VoiceProvider):

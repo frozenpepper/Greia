@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T23:56:00.856666+00:00",
+  "created_utc": "2026-10-20T13:25:35.240610+00:00",
   "request": {
     "speaker": "flash",
     "kind": "character_dialogue",
@@ -9,16 +9,56 @@
     "cue_id": "mondo_contrari.praise_3",
     "output": "activities/mondo_contrari/locales/it/audio/praise_3.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.flash.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "it",
-    "model_load_count": 1
+    "job_id": "20261020-152529-754a15ca",
+    "idempotency_key": "greia-67dfe926fc784fbda9e108a20c33117d",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 449135703,
+    "language_direction": "Italian",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "effective_delivery": "Speak in Italian. Flash, a springy, eager little rabbit. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1988899083,
+        "sha256": "783d91577ce69068ee13748e7d9bbfbd013ba0102e5f0c1ba02cac70de4561b2",
+        "generation": {
+          "elapsed_seconds": 5.253349833015818,
+          "model_load_seconds": 0.0,
+          "rtf": 4.1036452282378475,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/mondo_contrari/locales/it/audio/praise_3.wav",
-    "bytes": 44840,
-    "sha256": "a8c7134b6e25da5b43e871753d0ed1aafca6574dd0670470e8105cf452be131c"
+    "bytes": 56534,
+    "sha256": "d07475cb158270c8953bee9baaae26e7b54390ed5c13389aaf4a3b14d4b93c4a"
   },
   "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "a8c7134b6e25da5b43e871753d0ed1aafca6574dd0670470e8105cf452be131c",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

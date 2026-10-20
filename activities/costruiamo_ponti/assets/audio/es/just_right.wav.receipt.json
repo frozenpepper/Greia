@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:54:06.160323+00:00",
+  "created_utc": "2026-10-20T03:23:12.499427+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¡Justo!",
     "cue_id": "greia.requested.just_right.es",
-    "output": "tmp/greia-four-languages-20261017/review/activities/costruiamo_ponti/assets/audio/es/just_right.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/costruiamo_ponti/assets/audio/es/just_right.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-052306-2c8de331",
+    "idempotency_key": "greia-f7b82bdae7984c3a9735371fcc58fb64",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 4147238461,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "effective_delivery": "Speak naturally in Spanish. Tito, a cheeky, confident woodland explorer. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2542462640,
+        "sha256": "d4d471ebb03e139fc9148d4cc12768ca8860d482a87d32f8bb6281017158dcef",
+        "generation": {
+          "elapsed_seconds": 5.985768666025251,
+          "model_load_seconds": 0.0,
+          "rtf": 7.480652363289212,
+          "peak_memory_gb": 6.61593154
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/costruiamo_ponti/assets/audio/es/just_right.wav",
-    "bytes": 37344,
-    "sha256": "d1f15ca6418813d65cad0b454761d32c0b8c7237eea2b69ac44193195442ee5e"
+    "bytes": 35366,
+    "sha256": "a38ae769391f3dd2feba2e61970922b7f0fa057a0fdb3a177b4c73e08644388c"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "b673b8e403d72c41e711faeb27971d3d6de7a8894f66f91bea7fe28d64f671a6",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

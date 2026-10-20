@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T18:39:16.242679+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "shared_character_utterance",
+    "locale": "en",
+    "text": "Ready? Go!",
+    "cue_id": "shared.ready.go.02",
+    "output": "assets/audio/characters/shared/v0.2/flash/en/flash__en__ready.go__02.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. A short, lively reaction: expressive and clear, one breath, no extra words."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+  "generation_parameters": {
+    "job_id": "20261020-203909-a1025133",
+    "idempotency_key": "greia-73e07f14b1644ac6a8ed72a4f770dd4c",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3025954289,
+    "language_direction": "English",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "effective_delivery": "Speak in English. Flash, a springy, eager little rabbit. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2494319775,
+        "sha256": "64ab84ab5c4d15b4bd3563c823df3c0928c315b755877c9c0b4cc06b22802969",
+        "generation": {
+          "elapsed_seconds": 6.083864375017583,
+          "model_load_seconds": 0.0,
+          "rtf": 4.224416878845678,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/flash/en/flash__en__ready.go__02.wav",
+    "bytes": 63590,
+    "sha256": "bf7c31aab3c3a56471c4c36198f21b1302333852d3b7bfecb0154e1265558a4d"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "d00446dccf339600db9419997e3b9c7d7bbe876bb8883e09441e7ac795a596f6",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

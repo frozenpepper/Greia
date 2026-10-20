@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T13:58:32.153330+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Magic Orchestra",
+    "cue_id": "activity.title",
+    "output": "activities/orchestra_animali/locales/en/audio/activity-title.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+  "generation_parameters": {
+    "job_id": "20261020-155825-479e99bf",
+    "idempotency_key": "greia-6a498772dd5f4db4966036d2911a8a9e",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1481835239,
+    "language_direction": "English",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 185393718,
+        "sha256": "9020c1e08a7353b58ecf22470d7c274456ae35300c0e8dc6e08cc5445e4881a3",
+        "generation": {
+          "elapsed_seconds": 5.430254041973967,
+          "model_load_seconds": 0.0,
+          "rtf": 3.7705733424191417,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/orchestra_animali/locales/en/audio/activity-title.wav",
+    "bytes": 63590,
+    "sha256": "d1446ddd335310d893537c85b6ce22773280ad77988c99ea3f6f44c1e8464be5"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "5d54b75f2be10b60cf8f3156dcb3bd0ed657e4da5b8bc0897c15b8a2a2e7533b",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

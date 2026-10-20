@@ -1,24 +1,67 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:12:02.689459+00:00",
+  "created_utc": "2026-10-19T22:01:23.038268+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "es",
     "text": "Z de Zapato",
     "cue_id": "alfabeto_leo.letter_Z.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/es/letter_Z.wav",
+    "output": "activities/alfabeto_leo/assets/audio/es/letter_Z.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Mónica",
-    "rate_wpm": 175,
-    "synthesis_text": "z de zapato"
+    "job_id": "20261019-231115-092be906",
+    "idempotency_key": "greia-5fc72bc71d3d43e1be0ae7a9a9084e74",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3602857205,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "effective_delivery": "Speak naturally in Spanish. Leo, a warm, curious cartoon guide. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1947987006,
+        "sha256": "10aeff036efad3d2b1458564b3b807761a6d8e6aade85659530b3be5fb902f73",
+        "generation": {
+          "elapsed_seconds": 6.450162582972553,
+          "model_load_seconds": 0.0,
+          "rtf": 4.0309317256364245,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ],
+    "recovered_completed_job": true,
+    "recovered_at_utc": "2026-10-19T22:01:23.036013+00:00",
+    "recovery_note": "Installed the exact already-completed VoxStage recording; no new inference submitted."
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +73,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/es/letter_Z.wav",
-    "bytes": 42694,
-    "sha256": "2b20cd55fe9d849d43a06e375f749715b03fdd9aab49809f935fec3d0ca02e58"
+    "bytes": 70646,
+    "sha256": "ae666d1f8ac712a56c394bf9bb1b950059cd499ec92c9b9a826f7ca02eceed3f"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "e61b1f5be46311da7f7b69d44eb65800d4a34121c200fb6cc948b88ef29f6565",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T10:58:07.844373+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Quando l'aria scorre intorno a un'ala, l'ala cambia il movimento dell'aria e si crea una distribuzione di pressione che produce una forza verso l'alto: la portanza.",
+    "cue_id": "encyclopedia.machines.airplane.lift",
+    "output": "activities/enciclopedia_greia/assets/audio/it/machines/airplane_lift.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+  "generation_parameters": {
+    "job_id": "20261020-125720-8d6f2da8",
+    "idempotency_key": "greia-85a144299e444a6ba30375e5ee57d29c",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3413183204,
+    "language_direction": "Italian",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in Italian. Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3631584469,
+        "sha256": "6819130db59808145daa9cff3facbd6f74265c17e1addba4528c4c241764e71b",
+        "generation": {
+          "elapsed_seconds": 45.981117958028335,
+          "model_load_seconds": 0.0,
+          "rtf": 5.526465971197893,
+          "peak_memory_gb": 8.079945652
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/enciclopedia_greia/assets/audio/it/machines/airplane_lift.ogg",
+    "bytes": 46341,
+    "sha256": "b047a421609cb20876e17f4b263b3c64615f8e115692c2a2b9a5b0b6b3f769f4"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "df88e8b9a67f7f93d5d225c5ec4ef21128b1968c1d8fac944191a70485bca186",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "6819130db59808145daa9cff3facbd6f74265c17e1addba4528c4c241764e71b",
+      "source_job_id": "20261020-125720-8d6f2da8",
+      "repackaged_utc": "2026-10-20T22:30:49Z"
+    }
+  }
+}

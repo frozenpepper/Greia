@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T06:23:31.227953+00:00",
+  "created_utc": "2026-10-20T18:33:09.778237+00:00",
   "request": {
     "speaker": "dani",
     "kind": "shared_character_utterance",
     "locale": "fr",
     "text": "Tu as réussi !",
     "cue_id": "greia.shared.dani__fr__celebrate.success__01.fr",
-    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/dani/fr/dani__fr__celebrate.success__01.wav",
+    "output": "assets/audio/characters/shared/v0.2/dani/fr/dani__fr__celebrate.success__01.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Thomas",
-    "rate_wpm": 185,
-    "synthesis_text": "Tu as réussi !"
+    "job_id": "20261020-203302-75bac800",
+    "idempotency_key": "greia-e3fb4c2e38f84471bbf99d417549dc6b",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2815149009,
+    "language_direction": "French",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "effective_delivery": "Speak in French. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3125506928,
+        "sha256": "4900e53c77fe02b8510445a1b49e70ad279b140740fad0a35f51262cbfa0d3f7",
+        "generation": {
+          "elapsed_seconds": 6.511618125019595,
+          "model_load_seconds": 0.0,
+          "rtf": 5.086539350360313,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/dani/fr/dani__fr__celebrate.success__01.wav",
-    "bytes": 37344,
-    "sha256": "f62b4b40bed2b915994a65c837c0438dad23ca3b01499015f17971270c43f41d"
+    "bytes": 56534,
+    "sha256": "83ecd1d934520c5677735f99381ff917b7843d799439b4bb30daf4b2c3fb71e2"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "f62b4b40bed2b915994a65c837c0438dad23ca3b01499015f17971270c43f41d",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

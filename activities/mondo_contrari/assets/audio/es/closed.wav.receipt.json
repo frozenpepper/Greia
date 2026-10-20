@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T11:45:58.513891+00:00",
+  "created_utc": "2026-10-20T13:15:42.858497+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "flash",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Cerrado",
     "cue_id": "mondo_contrari.closed.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/mondo_contrari/es/closed.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/mondo_contrari/assets/audio/es/closed.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Acts out the word for a child. Snug and settled, like a door clicking shut. Playful, clear words."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-151536-2b9afabc",
+    "idempotency_key": "greia-6023321f88cc4b71b5f1e86a5cee2594",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3051323831,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Acts out the word for a child. Snug and settled, like a door clicking shut. Playful, clear words.",
+    "effective_delivery": "Speak in Spanish. Flash, a springy, eager little rabbit. Acts out the word for a child. Snug and settled, like a door clicking shut. Playful, clear words.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1051250261,
+        "sha256": "ca4dd142bd15365a7da83853acd38e1cc6b19db6e2899c7a774ef8710bcada9c",
+        "generation": {
+          "elapsed_seconds": 5.2974246249650605,
+          "model_load_seconds": 0.0,
+          "rtf": 5.517192805032176,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/mondo_contrari/assets/audio/es/closed.wav",
-    "bytes": 42636,
-    "sha256": "22da40c568959a044f3ab4b0b8bdc7df2c18c663547c3061be89f75b671513ea"
+    "bytes": 42422,
+    "sha256": "bb9ea3cfdb74283237df4f894ece5484725ab44cc5bb1fe884cae143ec702223"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "22da40c568959a044f3ab4b0b8bdc7df2c18c663547c3061be89f75b671513ea",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

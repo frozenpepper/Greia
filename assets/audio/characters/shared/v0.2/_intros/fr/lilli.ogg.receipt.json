@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:06:49.759374+00:00",
+  "created_utc": "2026-10-20T18:23:04.503169+00:00",
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Salut ! Moi, c'est Lilli ! J'adore inventer des histoires, dessiner des choses toutes colorées et trouver un peu de magie partout. Tu as une idée rigolote ? Viens avec moi !",
     "cue_id": "greia.shared.lilli.fr",
-    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/_intros/fr/lilli.ogg",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "assets/audio/characters/shared/v0.2/_intros/fr/lilli.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.lilli.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-202218-e851834f",
+    "idempotency_key": "greia-dfff6bf8c4c6459aa57e181b61ab09eb",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 244395324,
+    "language_direction": "French",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "effective_delivery": "Speak in French. Lilli, a sparkly, affectionate storybook unicorn. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 399693636,
+        "sha256": "386b4e64ca9b22bbd95e2971bfb97e680cbd970185cb59cb227ad34265a67c7a",
+        "generation": {
+          "elapsed_seconds": 44.737129291985184,
+          "model_load_seconds": 0.0,
+          "rtf": 4.3687891758257695,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Salut ! Moi c'est Lily, Shador a vente des histoires, dessinés des choses toutes colorées et trouver un peu de magie partout. Tu as une idée, végorote ? Viens avec moi !",
-    "score": 0.8784,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/_intros/fr/lilli.ogg",
-    "bytes": 78693,
-    "sha256": "ea1431236f906ce219d18adee022206620e8ad5267bc444ee561d6440c6c1480"
+    "bytes": 68124,
+    "sha256": "3355b939f6a7142406e4a3a8dec33a5b083e045c6e47c7c58efb59bc510c4dd4"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "ea1431236f906ce219d18adee022206620e8ad5267bc444ee561d6440c6c1480",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

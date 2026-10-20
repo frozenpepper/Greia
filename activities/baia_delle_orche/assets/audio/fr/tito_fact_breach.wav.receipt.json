@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T04:05:20.615476+00:00",
+  "created_utc": "2026-10-19T23:44:34.715095+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Les orques sautent parfois hors de l'eau. Lorsqu'elles retombent, elles produisent une grande éclaboussure qui peut servir à communiquer.",
     "cue_id": "baia.fact_breach",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/baia_delle_orche/fr/tito_fact_breach.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/baia_delle_orche/assets/audio/fr/tito_fact_breach.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-014400-449a05e8",
+    "idempotency_key": "greia-065d07bd8c804e2b9457c58ea0705e04",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 163309177,
+    "language_direction": "French",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in French. Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2521074006,
+        "sha256": "44e7b67c3b82c23995834087908dc26e54fd9bcd0fb35eaf2f170024a3724ef4",
+        "generation": {
+          "elapsed_seconds": 33.516250832995865,
+          "model_load_seconds": 0.0,
+          "rtf": 4.871430076741726,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "les heures que saute parfois en deux loup. Lorsque elle retombe, elle produise une grande éclabousure qui peut servir à communiquer.",
-    "score": 0.7309,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/fr/tito_fact_breach.wav",
-    "bytes": 332592,
-    "sha256": "b7c230be146eead3b67dd4a7377caae026f3f9d0df98e5fb4f5b96eb546fad0c"
+    "bytes": 303494,
+    "sha256": "2a1286da6e4ebe1c08d8aed1a0485a391f6a3ff03204801ab6babdec52707444"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "d69098df92320e21a24cde5f35fa6ff1428059cb1c245650ecad270afc866c46",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

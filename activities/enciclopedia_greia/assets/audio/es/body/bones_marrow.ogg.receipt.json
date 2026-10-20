@@ -1,38 +1,91 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T13:47:48.021582+00:00",
+  "created_utc": "2026-10-20T06:40:16.938953+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "es",
-    "text": "La médula ósea produce nuevas células de la sangre",
+    "text": "Dentro de algunos huesos está la médula ósea. En este tejido blando, tu cuerpo fabrica nuevas células de la sangre.",
     "cue_id": "encyclopedia.body.bones.marrow.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/body/bones_marrow.ogg",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/enciclopedia_greia/assets/audio/es/body/bones_marrow.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-083952-1537ce34",
+    "idempotency_key": "greia-59bcabac4cec4c3cbc1226dc19f0c57b",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1770340407,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in Spanish. Lilli, a sparkly, affectionate storybook unicorn. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1477511768,
+        "sha256": "5695e6eb6f3bc6155da2ae1ed00bf914e9c792f87a780d425fa989a36db405f2",
+        "generation": {
+          "elapsed_seconds": 24.129452374996617,
+          "model_load_seconds": 0.0,
+          "rtf": 3.5071028863152467,
+          "peak_memory_gb": 7.367403796
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "La medula Ossia produce nuevas células de la sangre.",
-    "score": 0.8675,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/es/body/bones_marrow.ogg",
-    "bytes": 26868,
-    "sha256": "96bcde828a520e39b1e753e3e5c1d7e6055c614b0a743d1aa26f19916daabf5b"
+    "bytes": 40083,
+    "sha256": "3d6e2ab83100427cfb8241accea49e1649be34d6e82a00a0d5005b3d7c56d490"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "96bcde828a520e39b1e753e3e5c1d7e6055c614b0a743d1aa26f19916daabf5b",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "5695e6eb6f3bc6155da2ae1ed00bf914e9c792f87a780d425fa989a36db405f2",
+      "source_job_id": "20261020-083952-1537ce34",
+      "repackaged_utc": "2026-10-20T22:29:52Z"
+    }
+  }
 }

@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T05:09:42.964511+00:00",
+  "created_utc": "2026-10-20T18:06:47.256968+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
     "locale": "it",
     "text": "Il mio tempo.",
     "cue_id": "tempo_di_greia.activity.title",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/tempo_di_greia/it/activity_title.wav",
+    "output": "activity_incubator/tempo_di_greia/locales/it/audio/activity_title.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Alice",
-    "rate_wpm": 185,
-    "synthesis_text": "Il mio tempo."
+    "job_id": "20261020-200638-8669329a",
+    "idempotency_key": "greia-75270471817d4aeb9fa5158ae4043bd8",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1661021256,
+    "language_direction": "Italian",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "effective_delivery": "Speak in Italian. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2531961119,
+        "sha256": "b5f1d2a2c2d65dde131f9fd7407f13f1f27503ba793ef1eecc54b4964e2997bb",
+        "generation": {
+          "elapsed_seconds": 8.025259708985686,
+          "model_load_seconds": 0.0,
+          "rtf": 5.572452060399736,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activity_incubator/tempo_di_greia/locales/it/audio/activity_title.wav",
-    "bytes": 37348,
-    "sha256": "54602d18fd27dc8fe6b119b068a94158858fd897d620913176285ced534d6ce5"
+    "bytes": 63590,
+    "sha256": "ae9c9a5a9faac975e732f081a84ecbdd13ef5cb59dcc9a29e4a00a2a80acbeb6"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "54602d18fd27dc8fe6b119b068a94158858fd897d620913176285ced534d6ce5",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

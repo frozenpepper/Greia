@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-03T17:58:45.699723+00:00",
+  "created_utc": "2026-10-20T16:04:25.710798+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
@@ -8,31 +8,75 @@
     "text": "Manta gigante!",
     "cue_id": "sub_creature_manta",
     "output": "activities/sottomarino_giramondo/audio/it/sub_creature_manta.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "it",
-    "model_load_count": 1
+    "job_id": "20261020-180417-9909ba31",
+    "idempotency_key": "greia-3dea207aa7224ac1888a37b140e92861",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2615235512,
+    "language_direction": "Italian",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 501210067,
+        "sha256": "938b59d4b33f4787b6cd44f4000113bedadcc6a9de8b6ce5360bf9350a8b36c5",
+        "generation": {
+          "elapsed_seconds": 7.97863095899811,
+          "model_load_seconds": 0.0,
+          "rtf": 6.232493914072212,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "NOT_RUN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
     "transcript": null,
     "score": null,
-    "detail": "mlx_whisper unavailable: numpy.core.multiarray failed to import"
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/sottomarino_giramondo/audio/it/sub_creature_manta.wav",
-    "bytes": 71300,
-    "sha256": "329fc6e2fe1ec844b52e2b5c8bab1f4539cb852d539389a38daf2aa6eb7404cb"
+    "bytes": 56534,
+    "sha256": "efbfdf3af7f47ab6493711ae1eebda1e3e5f87ddd50a3da8a3f7685482cb2503"
   },
   "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "329fc6e2fe1ec844b52e2b5c8bab1f4539cb852d539389a38daf2aa6eb7404cb",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

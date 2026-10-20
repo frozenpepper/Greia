@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T04:11:58.246694+00:00",
+  "created_utc": "2026-10-20T03:21:06.586965+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Carrera de bayas",
     "cue_id": "corsa_bacche.title.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/corsa_bacche/es/activity-title.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/corsa_bacche/locales/es/audio/activity-title.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.momo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.momo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-052056-33d5527f",
+    "idempotency_key": "greia-2e65d63fe6104017ba4189947635f2eb",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
+    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2956135889,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "effective_delivery": "Speak naturally in Spanish. Momo, a lovable, whimsical comic creature. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2409492232,
+        "sha256": "ba9f026dcd423fe38168f50b3cf62dcbb1468003abcdcfe32684080ab4595296",
+        "generation": {
+          "elapsed_seconds": 9.78467829094734,
+          "model_load_seconds": 0.0,
+          "rtf": 5.558949885965727,
+          "peak_memory_gb": 6.61593154
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Careo de bayas",
-    "score": 0.7967,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
-  "attempts": 2,
+  "attempts": 1,
   "output": {
     "path": "activities/corsa_bacche/locales/es/audio/activity-title.wav",
-    "bytes": 64686,
-    "sha256": "b288ef9f9113d075623266c314d928998fd6b5c50c96530ae36e38fa5a58e9da"
+    "bytes": 77702,
+    "sha256": "1d1e6996b7d105c67dbd5643b3a132c440f1e311f06b0a2dc1c0d745c9367f12"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "cf7339326ff70823b465dfe75288816b28fbed6315d71e34aebdc34bd3cbcdc6",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

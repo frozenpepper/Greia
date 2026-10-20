@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T12:07:55.065707+00:00",
+  "created_utc": "2026-10-20T16:30:33.658971+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "es",
-    "text": "¡Gira la forma!",
+    "text": "Inténtalo otra vez, ¡ya casi lo tienes!",
     "cue_id": "specchi_magici.retry_2.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/specchi_magici/es/retry_2.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/specchi_magici/assets/audio/es/retry_2.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-183021-ea937677",
+    "idempotency_key": "greia-f3875554065e4203ba76e30e3ec5d12b",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1764258416,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak in Spanish. Lilli, a sparkly, affectionate storybook unicorn. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 4166379593,
+        "sha256": "0a2acd09182961e24b0eabd5070c1488f6e7a953bc267f9fccd7c56e889aa3e1",
+        "generation": {
+          "elapsed_seconds": 12.026888999971561,
+          "model_load_seconds": 0.0,
+          "rtf": 4.175761472127155,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "¡Hira la forma!",
-    "score": 0.8333,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/specchi_magici/assets/audio/es/retry_2.wav",
-    "bytes": 69978,
-    "sha256": "f1172e0522d143f73de7e4a58688a8fbc11fea50626297dc9c829820674d60da"
+    "bytes": 127094,
+    "sha256": "46b376bbf7a6e2a457f443b8b1cf7010a126f3f91ea50cafecdde17af8e21228"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "f1172e0522d143f73de7e4a58688a8fbc11fea50626297dc9c829820674d60da",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

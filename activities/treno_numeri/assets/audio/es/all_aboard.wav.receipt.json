@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:47:01.565426+00:00",
+  "created_utc": "2026-10-20T17:22:59.951517+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
     "locale": "es",
     "text": "¡Todos a bordo!",
     "cue_id": "greia.requested.all_aboard.es",
-    "output": "tmp/greia-four-languages-20261017/review/activities/treno_numeri/assets/audio/es/all_aboard.wav",
+    "output": "activities/treno_numeri/assets/audio/es/all_aboard.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Mónica",
-    "rate_wpm": 185,
-    "synthesis_text": "¡Todos a bordo!"
+    "job_id": "20261020-192247-71dba316",
+    "idempotency_key": "greia-08536cdd1dbc4c399c7058d70e79791b",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 232706051,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in Spanish. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3513897946,
+        "sha256": "16e280275ef3fe4c83ddb065af593e0249ed2b47151cf3f465dd321b63f16e2d",
+        "generation": {
+          "elapsed_seconds": 11.294256833032705,
+          "model_load_seconds": 0.0,
+          "rtf": 5.429496113948901,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/treno_numeri/assets/audio/es/all_aboard.wav",
-    "bytes": 29954,
-    "sha256": "397fc289d1be406820d16034c0bdc45b835d64687fa0f7896125cddd85a3d5bb"
+    "bytes": 91814,
+    "sha256": "3c87f1351d614f7609fb0c1f0ecc8e5dc579ec4e2e7f4347a91ce1df402a171d"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "397fc289d1be406820d16034c0bdc45b835d64687fa0f7896125cddd85a3d5bb",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

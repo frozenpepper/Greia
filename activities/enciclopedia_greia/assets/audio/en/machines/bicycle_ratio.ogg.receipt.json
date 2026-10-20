@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T05:43:34.431894+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Changing gear sizes changes the ratio. An easier gear needs less force but turns the wheel less for each pedal turn; a harder gear does the opposite.",
+    "cue_id": "encyclopedia.machines.bicycle.ratio",
+    "output": "activities/enciclopedia_greia/assets/audio/en/machines/bicycle_ratio.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+  "generation_parameters": {
+    "job_id": "20261020-074258-61620cf8",
+    "idempotency_key": "greia-e5eda3d3b6874f90aeb7e49d5a07ab18",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 4062382320,
+    "language_direction": "English",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in English. Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 812786205,
+        "sha256": "cd32860ea4596cf9a2e8513c9eb81c114a729c0e8948356f5a9cf7c42d4f8187",
+        "generation": {
+          "elapsed_seconds": 35.35899741697358,
+          "model_load_seconds": 0.0,
+          "rtf": 3.745590376261745,
+          "peak_memory_gb": 7.367403796
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/enciclopedia_greia/assets/audio/en/machines/bicycle_ratio.ogg",
+    "bytes": 48588,
+    "sha256": "8b98d141d8270e7ca744c0e37ea52bd8327f70973e86cd36aa58ad984409c590"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "69f06e9de9b5462a6f451ad1df39f916ae49e902945852364da930ad2a109725",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "cd32860ea4596cf9a2e8513c9eb81c114a729c0e8948356f5a9cf7c42d4f8187",
+      "source_job_id": "20261020-074258-61620cf8",
+      "repackaged_utc": "2026-10-20T22:29:38Z"
+    }
+  }
+}

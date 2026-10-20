@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T08:52:59.383221+00:00",
+  "created_utc": "2026-10-19T23:48:50.361272+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Fai saltare Oskar",
     "cue_id": "greia.requested.jump_oskar.it",
-    "output": "tmp/greia-four-languages-20261017/review/activities/baia_delle_orche/assets/audio/it/jump_oskar.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/baia_delle_orche/assets/audio/it/jump_oskar.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "it",
-    "model_load_count": 1
+    "job_id": "20261020-014841-034173a6",
+    "idempotency_key": "greia-6494d9eb931746028a98e0847fd65451",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2743390363,
+    "language_direction": "Italian",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak naturally in Italian. Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1745118269,
+        "sha256": "936c3dfe4bcd4136795c0a6f367b891ff5450cb4a85668b2740b28d12f6f0e3f",
+        "generation": {
+          "elapsed_seconds": 8.926364874991123,
+          "model_load_seconds": 0.0,
+          "rtf": 6.198147118382911,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Fai sautaurioskele!",
-    "score": 0.5857,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
-  "attempts": 2,
+  "attempts": 1,
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/it/jump_oskar.wav",
-    "bytes": 46604,
-    "sha256": "ca77da6be0810dda5bb6643a2b897777671dcdbfc74016a1e3d039ef1810956a"
+    "bytes": 63590,
+    "sha256": "df27562166a0b28b1f5a3f90bc2e13be5a69a9f1a7a75cf32184193d3483ddaf"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "c8dc0334c7854700c9784bffb3984d8e3a1ede589d2876f71453697f97c5eadd",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

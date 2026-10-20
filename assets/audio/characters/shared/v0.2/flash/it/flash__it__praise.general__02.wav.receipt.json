@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T18:47:49.480288+00:00",
+  "request": {
+    "speaker": "flash",
+    "kind": "shared_character_utterance",
+    "locale": "it",
+    "text": "Ottimo lavoro!",
+    "cue_id": "shared.praise.general.02",
+    "output": "assets/audio/characters/shared/v0.2/flash/it/flash__it__praise.general__02.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+  "generation_parameters": {
+    "job_id": "20261020-204741-4f9f55fe",
+    "idempotency_key": "greia-054e5097383b414389188c7cee0adc3a",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 703580789,
+    "language_direction": "Italian",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "effective_delivery": "Speak in Italian. Flash, a springy, eager little rabbit. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3691303468,
+        "sha256": "312f32b21489316707587d34b4d30d3db3766d441984c9320e3fd70d5e2d6f74",
+        "generation": {
+          "elapsed_seconds": 7.418174916994758,
+          "model_load_seconds": 0.0,
+          "rtf": 5.15091418840048,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/flash/it/flash__it__praise.general__02.wav",
+    "bytes": 63590,
+    "sha256": "1685506ac789856f5180cacd183512e0256ea8b8262323717d04bba4d74e4def"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "407a31c00bacf3a3ceb4d5d78c79ae1cf909d4c419cf9cd7bcb7a47ed94c5eae",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

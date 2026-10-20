@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T18:51:08.127935+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "shared_character_utterance",
+    "locale": "en",
+    "text": "Ready? Go!",
+    "cue_id": "shared.ready.go.02",
+    "output": "assets/audio/characters/shared/v0.2/leo/en/leo__en__ready.go__02.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+  "generation_parameters": {
+    "job_id": "20261020-205052-6b681a8e",
+    "idempotency_key": "greia-a49380e3d15d4d2d872a4951155d09a3",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1111079316,
+    "language_direction": "English",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2887667449,
+        "sha256": "6c94dd388a5026f2adafd098daa03b77aae210b85ab9627cd98defa252c1de9e",
+        "generation": {
+          "elapsed_seconds": 15.085974082991015,
+          "model_load_seconds": 0.0,
+          "rtf": 4.285585175794048,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/leo/en/leo__en__ready.go__02.wav",
+    "bytes": 155318,
+    "sha256": "ee8a6d02d0f2e769a9a3adadc69898e24e49a31a822a48749ff9023651216a4c"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "cbd1f53710f03a438845a469e01ad686d15b2af5fd374d3b4fc2bdb5cf7805be",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

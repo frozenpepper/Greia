@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:47:54.625859+00:00",
+  "created_utc": "2026-10-20T17:16:11.677935+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
     "locale": "fr",
     "text": "Remplis la forme avec des blocs !",
     "cue_id": "greia.requested.fill_shape_blocks.fr",
-    "output": "tmp/greia-four-languages-20261017/review/activities/torre_forme/assets/audio/fr/fill_shape_blocks.wav",
+    "output": "activities/torre_forme/assets/audio/fr/fill_shape_blocks.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Thomas",
-    "rate_wpm": 185,
-    "synthesis_text": "Remplis la forme avec des blocs !"
+    "job_id": "20261020-191557-87ae7115",
+    "idempotency_key": "greia-2c549f7e96f74762a242a1029a02791a",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 960283935,
+    "language_direction": "French",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in French. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3880590545,
+        "sha256": "f0b7e81a721a7ff2f39c7314da5b089fd26ff092d40ad3b8663332562f6a351d",
+        "generation": {
+          "elapsed_seconds": 13.630040583957452,
+          "model_load_seconds": 0.0,
+          "rtf": 4.732379116008605,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/torre_forme/assets/audio/fr/fill_shape_blocks.wav",
-    "bytes": 77292,
-    "sha256": "9657ea66024b7990190ddace23aa0ef0519738cee9bcc29fcace541108c871e9"
+    "bytes": 127094,
+    "sha256": "300e8912dea0aa49fab086becbec339f96310d56abce6fb57808262348a87665"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "9657ea66024b7990190ddace23aa0ef0519738cee9bcc29fcace541108c871e9",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

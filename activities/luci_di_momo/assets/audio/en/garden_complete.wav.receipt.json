@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T12:58:45.129085+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "character_dialogue",
+    "locale": "en",
+    "text": "Wonderful! All the fireflies are shining bright and happy!",
+    "cue_id": "activities/luci_di_momo/assets/audio/en/garden_complete.wav",
+    "output": "activities/luci_di_momo/assets/audio/en/garden_complete.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.momo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "generation_parameters": {
+    "job_id": "20261020-145825-c2b0d9c6",
+    "idempotency_key": "greia-44d838cefc0b49c6b62c14ab0210ade1",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
+    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3295602560,
+    "language_direction": "English",
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "effective_delivery": "Speak in English. Momo, a lovable, whimsical comic creature. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3303301879,
+        "sha256": "68484e90ab0581958914bdfe0f5d2f2b3ccfae326c37ac613ecd91495fe8a9fe",
+        "generation": {
+          "elapsed_seconds": 18.41609087504912,
+          "model_load_seconds": 0.0,
+          "rtf": 3.9688425433818733,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/luci_di_momo/assets/audio/en/garden_complete.wav",
+    "bytes": 204710,
+    "sha256": "4e2906ec9c60052db4cd5c768291206a69151b193dbd208d6747e659420ead48"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "a4296bc0d385ed51ea9931d5e6f3874f4ef0fc93374a180093b1fd20034fbfe4",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

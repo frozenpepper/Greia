@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:47:25.404315+00:00",
+  "created_utc": "2026-10-20T00:24:27.864346+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
     "locale": "es",
     "text": "¡Algunas luciérnagas vuelven a casa!",
     "cue_id": "greia.requested.fireflies_home.es",
-    "output": "tmp/greia-four-languages-20261017/review/activities/casa_del_dieci/assets/audio/es/fireflies_home.wav",
+    "output": "activities/casa_del_dieci/assets/audio/es/fireflies_home.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Mónica",
-    "rate_wpm": 185,
-    "synthesis_text": "¡Algunas luciérnagas vuelven a casa!"
+    "job_id": "20261020-022416-69ff9c0c",
+    "idempotency_key": "greia-868c7639f2554f19ac064584958ac5ee",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2348957711,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak naturally in Spanish. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3031711699,
+        "sha256": "ab246971caa853de27f5d35d7b914bbf59ce18108b89d499c05a37f21a1c4f08",
+        "generation": {
+          "elapsed_seconds": 9.683283250022214,
+          "model_load_seconds": 0.0,
+          "rtf": 4.034421186038003,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/casa_del_dieci/assets/audio/es/fireflies_home.wav",
-    "bytes": 80356,
-    "sha256": "84a9a5dca8a396242da2526db8276e307f512ae5f99839cfb4e901fec654f0cb"
+    "bytes": 105926,
+    "sha256": "ca58948c1a22920c3a45abba10007bcba11617d400668c520c829949f09d40d4"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "6f8578ae68fa51e49a90319ac1f6131c1b735b4f20628a36f1a106e9e60ac9ac",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

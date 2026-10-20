@@ -171,17 +171,35 @@ class VoxStageProviderTests(unittest.TestCase):
         self.assertEqual(self.client.submitted["voice"], self.profile.voxstage_voice_id)
         self.assertEqual(self.client.submitted["takes"], 1)
         self.assertEqual(self.client.submitted["segments"][0]["text"], self.request.text)
-        self.assertIn("Speak naturally in French.", self.client.submitted["segments"][0]["delivery"])
+        self.assertIn("Speak in French.", self.client.submitted["segments"][0]["delivery"])
         self.assertTrue(take.generation_parameters["delivery_prompt"])
 
     def test_explicit_performance_reaches_worker_and_receipt_parameters(self):
         request = VoiceRequest("leo", SpeechKind.CHARACTER_DIALOGUE, "it", "Ciao!", delivery_prompt="Quiet, curious and reassuring.")
         take = self.provider.generate(request, self.profile)
         try:
-            self.assertEqual(self.client.submitted["segments"][0]["delivery"], "Speak naturally in Italian. Quiet, curious and reassuring.")
+            self.assertEqual(self.client.submitted["segments"][0]["delivery"], "Speak in Italian. Quiet, curious and reassuring.")
             self.assertEqual(take.generation_parameters["delivery_prompt"], request.delivery_prompt)
         finally:
             take.temporary_wav.unlink()
+
+    def test_delivery_direction_fits_voxstage_limit_without_truncating_prompt(self):
+        prefix = "Speak in Spanish. "
+        delivery_prompt = "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Let the ending of the word ring out clearly so the rhyme is easy to hear."
+        request = VoiceRequest("leo", SpeechKind.CHARACTER_DIALOGUE, "es", "¡Fantástico, riman!", delivery_prompt=delivery_prompt)
+        take = self.provider.generate(request, self.profile)
+        try:
+            delivery = self.client.submitted["segments"][0]["delivery"]
+            self.assertEqual(delivery, prefix + delivery_prompt)
+            self.assertLessEqual(len(delivery), 300)
+        finally:
+            take.temporary_wav.unlink()
+
+    def test_overlong_delivery_is_rejected_before_job_submission(self):
+        request = VoiceRequest("leo", SpeechKind.CHARACTER_DIALOGUE, "es", "Hola!", delivery_prompt="x" * 283)
+        with self.assertRaisesRegex(VoiceProviderError, "300-character segment limit"):
+            self.provider.generate(request, self.profile)
+        self.assertFalse(any(path == "/v1/jobs" for path, _ in self.client.calls))
 
     def test_chatterbox_rejects_explicit_unsupported_acting_direction(self):
         with build_engine(character_provider="chatterbox") as engine:

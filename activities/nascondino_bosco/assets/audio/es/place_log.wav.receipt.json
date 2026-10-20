@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T08:15:49.890735+00:00",
+  "created_utc": "2026-10-20T13:35:41.617508+00:00",
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Detrás del tronco",
     "cue_id": "greia.requested.place_log.es",
-    "output": "tmp/greia-four-languages-20261017/review/activities/nascondino_bosco/assets/audio/es/place_log.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/nascondino_bosco/assets/audio/es/place_log.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.lilli.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-153532-c83c3731",
+    "idempotency_key": "greia-588ed0946ab1498288fd8a7e500ba96a",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 845398287,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in Spanish. Lilli, a sparkly, affectionate storybook unicorn. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 4150549971,
+        "sha256": "d4625f26be900bd5fc4c4683cbe94d42df87027561e39c630045abec1b68af63",
+        "generation": {
+          "elapsed_seconds": 8.739710875030141,
+          "model_load_seconds": 0.0,
+          "rtf": 4.9652746188979116,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "detrás del tronco",
-    "score": 1.0,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
-  "attempts": 2,
+  "attempts": 1,
   "output": {
     "path": "activities/nascondino_bosco/assets/audio/es/place_log.wav",
-    "bytes": 64024,
-    "sha256": "84e5ef760e95c88988d24715f7381d14ee746c74af61b65422b17f6671ea98b0"
+    "bytes": 77702,
+    "sha256": "a9ca1d2987c4af8506ce33410c85a76a5ee906c5ecee094ea0aa04f2c16b0542"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "84e5ef760e95c88988d24715f7381d14ee746c74af61b65422b17f6671ea98b0",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

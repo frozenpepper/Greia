@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:13:41.905739+00:00",
+  "created_utc": "2026-10-20T20:09:44.187431+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Oh, ciao! Io sono Leo. Questa Greia è tutta nuova: prepariamo un posto solo per te!",
     "cue_id": "greia.first_boot.welcome.it",
-    "output": "tmp/greia-four-languages-20261017/review/assets/audio/system/first-boot/it/welcome.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "assets/audio/system/first-boot/it/welcome.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "it",
-    "model_load_count": 1
+    "job_id": "20261020-220918-1177b60e",
+    "idempotency_key": "greia-37659354bf874e31b8f244b91d22fbc4",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1277171054,
+    "language_direction": "Italian",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace.",
+    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1685139517,
+        "sha256": "f3ce7a5098adb03449114da2cd832013aa722a5eb3538f786ebba6d9ffebf18b",
+        "generation": {
+          "elapsed_seconds": 24.64897437498439,
+          "model_load_seconds": 0.0,
+          "rtf": 3.5826129757008394,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "hai oh ciao e io sono Leo questa graia tutta nuova prepariamo un posto solo per te",
-    "score": 0.9063,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "assets/audio/system/first-boot/it/welcome.wav",
-    "bytes": 266442,
-    "sha256": "23175404ffa27533572c22030cd7945ce4f4dc4e5b04d01a1f5cae8ad2424859"
+    "bytes": 303494,
+    "sha256": "42cb6e138b2b97896e67c294c0bdb8be77c4bdf88583da1a7c15d09a3775922d"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "23175404ffa27533572c22030cd7945ce4f4dc4e5b04d01a1f5cae8ad2424859",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

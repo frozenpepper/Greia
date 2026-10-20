@@ -3,7 +3,32 @@
 **Product authority:** [PLAN.md](./PLAN.md)  
 **Local voice execution:** [LOCAL_AGENT_VOICE_PRODUCTION.md](./LOCAL_AGENT_VOICE_PRODUCTION.md)  
 **Single local task queue:** `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`  
-**Evidence status:** The 2026-10-19 corpus replacement is locally running with pending-review receipts; no full checkout test, GUI or physical-install evidence was produced in this session.
+**Evidence status:** The 2026-10-21 V2 corpus replacement completed with pending-review receipts. Full `make verify` ran but remains NOT GREEN on known host-only failures; no ASR, human listening, GUI, Simulator or physical-install acceptance is claimed.
+
+## 2026-10-21 — V2 corpus replacement completed
+
+The frozen V2 plan completed with **4,168 DONE, 741 PRESERVED, and zero READY,
+FAILED, NEEDS_RECOVERY, or BLOCKED**. The persisted journal and all DONE receipt
+request metadata/output hashes were checked against the frozen plan; every new
+recording remains `human_review=PENDING`. Interrupted strawberry was recovered
+after establishing no earlier submitted job or candidate and completed as
+`20261020-235846-ff7ff0a5`. Bean's timeout was matched by exact key and frozen
+request/master data to already-completed job `20261021-000412-50cad22f`; its
+result was installed offline without another inference. External originals,
+candidates, plan and journal remain under
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-v2/`.
+
+The serial runner finished; VoxStage queue was empty and the model was unloaded.
+`make verify` ran 5,472 tests: 1 failure, 4 errors, 8 skipped. The failures are
+the known macOS host cases: three missing `lsblk` installer errors, the
+`tools/build_profile.py` execute-bit error, and an MBR diagnostic-message
+mismatch. The corpus-size regression was corrected using the existing packaging
+pipeline at bounded Vorbis quality 3, reducing Encyclopedia activity footprint
+below its unchanged 50 MiB cap; this reused persisted jobs and did not re-run
+inference. Focused packaging/voice tests and activity validation passed. No
+ASR, listening, GUI, Simulator or physical acceptance is claimed. See HANDOVER
+and the runbook; selectively publish the authorized corpus, receipts, manifests,
+leftover deletions and scoped source/docs to `main`.
 
 
 ## 2026-10-19 — Corpus replacement checkpoint: 700 complete

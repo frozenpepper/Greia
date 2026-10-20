@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T08:13:17.679156+00:00",
+  "created_utc": "2026-10-20T14:16:05.376672+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Match nul !",
     "cue_id": "greia.requested.draw.fr",
-    "output": "tmp/greia-four-languages-20261017/review/activities/quattro_amici/assets/audio/fr/draw.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/quattro_amici/assets/audio/fr/draw.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-161558-45a7e4ee",
+    "idempotency_key": "greia-ca5ceeb7f14a4938b1f89bac38adb296",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 357646320,
+    "language_direction": "French",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "effective_delivery": "Speak in French. Leo, a warm, curious cartoon guide. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2261069994,
+        "sha256": "f0bcc858f87d4278d91a5f2a2335fbdfbf5267f910c400f2cc8d548225c5672f",
+        "generation": {
+          "elapsed_seconds": 6.823892207990866,
+          "model_load_seconds": 0.0,
+          "rtf": 6.091854374043326,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Match Nol",
-    "score": 0.7528,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
-  "attempts": 2,
+  "attempts": 1,
   "output": {
     "path": "activities/quattro_amici/assets/audio/fr/draw.wav",
-    "bytes": 47930,
-    "sha256": "8819ec3ab6fc48b86c13b3e4b1136d4663245a75a45e08a794446f6e4715966c"
+    "bytes": 49478,
+    "sha256": "a5674048bbda7302a0aadb3d0019d5c6dd363485407f11d808118d54873c2953"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "8819ec3ab6fc48b86c13b3e4b1136d4663245a75a45e08a794446f6e4715966c",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

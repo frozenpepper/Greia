@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T19:18:26.096432+00:00",
+  "request": {
+    "speaker": "momo",
+    "kind": "shared_character_utterance",
+    "locale": "it",
+    "text": "Vai avanti!",
+    "cue_id": "shared.encourage.progress.03",
+    "output": "assets/audio/characters/shared/v0.2/momo/it/momo__it__encourage.progress__03.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A short, lively reaction: expressive and clear, one breath, no extra words."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.momo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "generation_parameters": {
+    "job_id": "20261020-211819-dfd41de3",
+    "idempotency_key": "greia-ce3b3b2023a6468194ac1c808d91f2f3",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
+    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2590344909,
+    "language_direction": "Italian",
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "effective_delivery": "Speak in Italian. Momo, a lovable, whimsical comic creature. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2877174975,
+        "sha256": "ff6bdf8e566bd3d3a22f6ded1ede610f6f8ec8994a5a7921e40334957082d5a9",
+        "generation": {
+          "elapsed_seconds": 5.813409124966711,
+          "model_load_seconds": 0.0,
+          "rtf": 5.189771574140792,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/momo/it/momo__it__encourage.progress__03.wav",
+    "bytes": 49478,
+    "sha256": "44ba12f11e01a3b9ff8fe58fa59c7b02621f9e2795ee8470110145c1ff5997d6"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "b3d240757be7d09f96f10ce2153238a022105f4d30934568a0d2e02bb268355e",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

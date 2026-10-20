@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:36:44.454089+00:00",
+  "created_utc": "2026-10-19T23:56:39.994109+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¿Dónde está el número 0?",
     "cue_id": "greia.wired.ask_0.es",
-    "output": "tmp/greia-four-languages-20261017/review/activities/bosco_numeri/assets/audio/es/ask_0.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/bosco_numeri/assets/audio/es/ask_0.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-015632-5180be10",
+    "idempotency_key": "greia-5fa4af15e6eb4b0d9a3281f40abd1a06",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3172699272,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "effective_delivery": "Speak naturally in Spanish. Tito, a cheeky, confident woodland explorer. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2119986966,
+        "sha256": "a2c1ccdd5754b774c4bdfd25f846d21ed2c5bf94f00570c2585ac4181b37560a",
+        "generation": {
+          "elapsed_seconds": 6.410887375008315,
+          "model_load_seconds": 0.0,
+          "rtf": 5.007853697441725,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "¿Dónde está el número 0?",
-    "score": 1.0,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/bosco_numeri/assets/audio/es/ask_0.wav",
-    "bytes": 89602,
-    "sha256": "1bd82074dc46869b2af08365d888e760244d85f0c113a2f460ad0a3e3daa8a2a"
+    "bytes": 56534,
+    "sha256": "e8cb24a8a3c5e9186c076f0c5788c73e73abccb3dd29698a87647f7821b24de5"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "8bcccc98c0844a289c4fce9724e39b645c7e9a4ec5319c0365cfb0637ed66e2f",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

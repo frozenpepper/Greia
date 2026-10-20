@@ -164,7 +164,7 @@ class ManifestAndContentTests(unittest.TestCase):
                     self.assertTrue(strings[key].strip())
         self.assertNotEqual(bundles["it"]["victory.title"], bundles["en"]["victory.title"])
 
-    def test_playable_cards_are_recorded_pictured_and_approved(self) -> None:
+    def test_playable_cards_are_recorded_pictured_and_review_state_is_honest(self) -> None:
         for language in ("en", "it", "es", "fr"):
             cards = catch_catalogue(language)
             with self.subTest(language=language):
@@ -179,7 +179,9 @@ class ManifestAndContentTests(unittest.TestCase):
                         wav = folder / f"{stem}.wav"
                         self.assertTrue(wav.is_file(), wav)
                         receipt = json.loads((folder / f"{stem}.wav.receipt.json").read_text(encoding="utf-8"))
-                        self.assertEqual(receipt["human_review"], "APPROVED", wav)
+                        # Corpus v2 replacements stay pending; accepted older clips stay approved.
+                        expected_review = "PENDING" if "corpus_replacement" in receipt else "APPROVED"
+                        self.assertEqual(receipt["human_review"], expected_review, wav)
 
     def test_misleading_examples_are_never_played(self) -> None:
         letters = {card.letter for card in catch_catalogue("en")}

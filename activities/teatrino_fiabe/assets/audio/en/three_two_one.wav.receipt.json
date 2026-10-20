@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T08:24:49.889469+00:00",
+  "created_utc": "2026-10-20T17:13:08.137472+00:00",
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Three, two, one… action!",
     "cue_id": "greia.requested.three_two_one.en",
-    "output": "tmp/greia-four-languages-20261017/review/activities/teatrino_fiabe/assets/audio/en/three_two_one.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/teatrino_fiabe/assets/audio/en/three_two_one.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. An excited countdown before the show: each number a little bigger, then a joyful burst on the last word."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.lilli.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "en",
-    "model_load_count": 1
+    "job_id": "20261020-191251-b3f2e527",
+    "idempotency_key": "greia-3d7de316d9fa4b45b6e657605a51fd56",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2344319058,
+    "language_direction": "English",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. An excited countdown before the show: each number a little bigger, then a joyful burst on the last word.",
+    "effective_delivery": "Speak in English. Lilli, a sparkly, affectionate storybook unicorn. An excited countdown before the show: each number a little bigger, then a joyful burst on the last word.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3831343226,
+        "sha256": "7ccc58f5afbb3d083b5db1671bd8548f3a02948a63b70f3adceb103f3d55dfff",
+        "generation": {
+          "elapsed_seconds": 13.664676459040493,
+          "model_load_seconds": 0.0,
+          "rtf": 5.023470299261256,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "3, 2, 1, action.",
-    "score": 0.4531,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
-  "attempts": 2,
+  "attempts": 1,
   "output": {
     "path": "activities/teatrino_fiabe/assets/audio/en/three_two_one.wav",
-    "bytes": 119812,
-    "sha256": "a4590a3c7872fa66f5fe644956f5be21a0bb989f238ae4065b9996efdbbcafd8"
+    "bytes": 120038,
+    "sha256": "b7f192741a64dd576788f2c984cade8e520ef2877af1e819ea65fd1de81e3c58"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "a4590a3c7872fa66f5fe644956f5be21a0bb989f238ae4065b9996efdbbcafd8",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

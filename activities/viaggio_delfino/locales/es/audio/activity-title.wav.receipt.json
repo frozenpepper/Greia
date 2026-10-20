@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T04:58:27.605744+00:00",
+  "created_utc": "2026-10-20T17:55:31.921373+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "El viaje del delfín",
     "cue_id": "viaggio_delfino.title.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/es/activity-title.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/viaggio_delfino/locales/es/audio/activity-title.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-195518-eeac9ca2",
+    "idempotency_key": "greia-d14b3e22949c45aab176a59f2ed83431",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1454998612,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "effective_delivery": "Speak in Spanish. Tito, a cheeky, confident woodland explorer. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2385096156,
+        "sha256": "abf32aa368e05f40cb3a49b6878db03defa53458fbc73d5181aad5ab17c6db55",
+        "generation": {
+          "elapsed_seconds": 12.243900333996862,
+          "model_load_seconds": 0.0,
+          "rtf": 5.101270884242842,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "El Biache del Del Fín.",
-    "score": 0.7275,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/viaggio_delfino/locales/es/audio/activity-title.wav",
-    "bytes": 60276,
-    "sha256": "4ac53dda573a21f343429a7f41a8202dd1c15eeb56d83a68d05d972282e8c795"
+    "bytes": 105926,
+    "sha256": "c75bd03c01cf670130d2a8b0bf43c070a2246ec4af039bf6b748bcdf5c02f2c5"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "4ac53dda573a21f343429a7f41a8202dd1c15eeb56d83a68d05d972282e8c795",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

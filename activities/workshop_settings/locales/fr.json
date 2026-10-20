@@ -3,14 +3,14 @@
   "locale": "fr",
   "direction": "ltr",
   "strings": {
-    "activity.workshop_settings.title": "Mon Greia",
-    "activity.title": "Mon Greia",
+    "activity.workshop_settings.title": "Ma Greia",
+    "activity.title": "Ma Greia",
     "home.create": "Créer",
     "home.my_creations": "Mes créations",
     "home.play": "Jouer",
     "home.learn": "Apprendre",
     "home.explore": "Explorer",
-    "home.my_greia": "Mon Greia"
+    "home.my_greia": "Ma Greia"
   },
   "audio": {}
 }

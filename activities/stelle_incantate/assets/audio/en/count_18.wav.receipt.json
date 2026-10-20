@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T06:30:48.884564+00:00",
+  "created_utc": "2026-10-20T16:41:35.083675+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "en",
     "text": "Eighteen!",
     "cue_id": "greia.wired.count_18.en",
-    "output": "tmp/greia-four-languages-20261017/review/activities/stelle_incantate/assets/audio/en/count_18.wav",
+    "output": "activities/stelle_incantate/assets/audio/en/count_18.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Samantha",
-    "rate_wpm": 180,
-    "synthesis_text": "eighteen!"
+    "job_id": "20261020-184127-a0aeb941",
+    "idempotency_key": "greia-88b6fb35d51e48e2b9d5f85e6f043267",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1256171018,
+    "language_direction": "English",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3596571840,
+        "sha256": "399a692a4a361d91fc5cd01a839e331ba7835cf7bae3a2a83136d8ba6af33fd5",
+        "generation": {
+          "elapsed_seconds": 6.630111083039083,
+          "model_load_seconds": 0.0,
+          "rtf": 4.603710970748119,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/stelle_incantate/assets/audio/en/count_18.wav",
-    "bytes": 28596,
-    "sha256": "17864bd425a9eae99daf4146bc3003a7248372a259dfc5788eb23911d38d2a68"
+    "bytes": 63590,
+    "sha256": "316b98dacc287b18c4bb82a10fe517415028691ba0a47f4110f330d6dca68c74"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "17864bd425a9eae99daf4146bc3003a7248372a259dfc5788eb23911d38d2a68",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

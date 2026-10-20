@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T05:09:50.587340+00:00",
+  "created_utc": "2026-10-20T18:06:03.948017+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
     "locale": "en",
     "text": "Press start. Let's see how long it takes!",
     "cue_id": "tempo_di_greia.instruction.stopwatch",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/tempo_di_greia/en/instruction_stopwatch.wav",
+    "output": "activity_incubator/tempo_di_greia/locales/en/audio/instruction_stopwatch.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Samantha",
-    "rate_wpm": 190,
-    "synthesis_text": "Press start. Let's see how long it takes!"
+    "job_id": "20261020-200548-dd5d8f65",
+    "idempotency_key": "greia-4f9495e38dd742e1a1b143e93cbf3107",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1042839457,
+    "language_direction": "English",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in English. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 469176859,
+        "sha256": "719798d3ab319c3e3940c3814c152e49f2712ac5ccb99aae705a860a446fe081",
+        "generation": {
+          "elapsed_seconds": 15.01464012498036,
+          "model_load_seconds": 0.0,
+          "rtf": 4.938755591792235,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activity_incubator/tempo_di_greia/locales/en/audio/instruction_stopwatch.wav",
-    "bytes": 105048,
-    "sha256": "1bc26ce9466ce3ff07bfc40def6675521fbba0486c4b8b53a405e1b300591abe"
+    "bytes": 134150,
+    "sha256": "3e3d0996f656a83c4eb4002f2655bedcc93a8266e72f81f16b0cede58858a448"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "1bc26ce9466ce3ff07bfc40def6675521fbba0486c4b8b53a405e1b300591abe",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T06:46:06.695974+00:00",
+  "created_utc": "2026-10-20T18:39:39.503309+00:00",
   "request": {
     "speaker": "flash",
     "kind": "shared_character_utterance",
     "locale": "es",
     "text": "¡Hurra!",
     "cue_id": "greia.shared.flash__es__celebrate.success__02.es",
-    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/flash/es/flash__es__celebrate.success__02.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "assets/audio/characters/shared/v0.2/flash/es/flash__es__celebrate.success__02.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. A happy celebration with the child: joyful, proud and warm. Lively but clear."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.flash.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-203934-c6006dc8",
+    "idempotency_key": "greia-a643af6b4cee4fba820c2260e7a21f73",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1825339448,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "effective_delivery": "Speak in Spanish. Flash, a springy, eager little rabbit. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1766309228,
+        "sha256": "06b3830fd1d55ceb2b8d40cef1d47e419bd87a59cb65e4248be291a85f644b49",
+        "generation": {
+          "elapsed_seconds": 4.780906500003766,
+          "model_load_seconds": 0.0,
+          "rtf": 4.268031394141139,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/flash/es/flash__es__celebrate.success__02.wav",
-    "bytes": 93794,
-    "sha256": "ed1bbf4b8f7ec30cff4891cadbe2c526a014b12febb19ed11249182af6fe157b"
+    "bytes": 49478,
+    "sha256": "ab792c3dc769cc51f266be50927fd7d6989f7e1501469627ecf017f9e625a19c"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "ed1bbf4b8f7ec30cff4891cadbe2c526a014b12febb19ed11249182af6fe157b",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

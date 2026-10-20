@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T08:49:50.281456+00:00",
+  "created_utc": "2026-10-19T23:47:11.984683+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Dai da mangiare a Kiko",
     "cue_id": "greia.requested.feed_kiko.it",
-    "output": "tmp/greia-four-languages-20261017/review/activities/baia_delle_orche/assets/audio/it/feed_kiko.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/baia_delle_orche/assets/audio/it/feed_kiko.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "it",
-    "model_load_count": 1
+    "job_id": "20261020-014701-60d60c37",
+    "idempotency_key": "greia-67c99189b03c4d70aada57fc982376de",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2932615466,
+    "language_direction": "Italian",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak naturally in Italian. Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3218826686,
+        "sha256": "32443c89b33ed03135dca9e2ac432e63693c87314c64bcd573f8f39e70fa4c06",
+        "generation": {
+          "elapsed_seconds": 9.232584374956787,
+          "model_load_seconds": 0.0,
+          "rtf": 5.245289863624725,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Dai da mangiare a chiico.",
-    "score": 0.8452,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/it/feed_kiko.wav",
-    "bytes": 61818,
-    "sha256": "863c4fda49655449ec51449ddfacbdda020a188c8e3ea0c00268f4cf11ee2d42"
+    "bytes": 77702,
+    "sha256": "aa6cd159f9a1ec8ea04457d2709895dd782fe1693ae14f1e9704dcd96e320f51"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "25d215a96231d11f36799a70c8909b476a2fc98a356cf2ccfc3abab8950b3a64",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

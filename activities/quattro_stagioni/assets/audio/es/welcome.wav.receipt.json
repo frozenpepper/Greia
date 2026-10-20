@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T11:50:31.787058+00:00",
+  "created_utc": "2026-10-20T14:22:22.619453+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "es",
-    "text": "¡El gran árbol de las estaciones!",
+    "text": "¡Hola! ¡Mira mi gran árbol! ¿Jugamos?",
     "cue_id": "quattro_stagioni.welcome.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/quattro_stagioni/es/welcome.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/quattro_stagioni/assets/audio/es/welcome.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-162209-03e89aab",
+    "idempotency_key": "greia-69e2919742e44d6ea9ce1a0a13125309",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3853877976,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace.",
+    "effective_delivery": "Speak in Spanish. Tito, a cheeky, confident woodland explorer. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2972024980,
+        "sha256": "3afabc0f6f9847e41d24d247b1855f38ddca22607cc765009d3cf29901765be1",
+        "generation": {
+          "elapsed_seconds": 12.463922041992191,
+          "model_load_seconds": 0.0,
+          "rtf": 3.8947727853733216,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "El gran árbol de las estaciones.",
-    "score": 1.0,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/quattro_stagioni/assets/audio/es/welcome.wav",
-    "bytes": 107242,
-    "sha256": "0b31e4c9f10f40e9635e253cdad744990bbb477170843a1bc06ea83eff999a63"
+    "bytes": 141206,
+    "sha256": "2af26c5ad5b637deb0d792ccf600bed382c78da1ab5fe857d6122955dacc26a7"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "0b31e4c9f10f40e9635e253cdad744990bbb477170843a1bc06ea83eff999a63",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

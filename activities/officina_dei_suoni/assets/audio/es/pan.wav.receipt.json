@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:24:28.895160+00:00",
+  "created_utc": "2026-10-20T13:46:18.938781+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "es",
     "text": "Pan",
     "cue_id": "officina_dei_suoni.pan.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/officina_dei_suoni/es/pan.wav",
+    "output": "activities/officina_dei_suoni/assets/audio/es/pan.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Make the very first sound crisp and easy to hear."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Mónica",
-    "rate_wpm": 175,
-    "synthesis_text": "pan"
+    "job_id": "20261020-154612-195384f9",
+    "idempotency_key": "greia-8d31628b864844aa9f499c596de875e5",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 4271172060,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Make the very first sound crisp and easy to hear.",
+    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Make the very first sound crisp and easy to hear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 174614404,
+        "sha256": "029ae34050a3af3d97a3c98731235a1ab007e6af5698634a5ea3b26838bbbd60",
+        "generation": {
+          "elapsed_seconds": 5.071581041964237,
+          "model_load_seconds": 0.0,
+          "rtf": 5.281979908311998,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/officina_dei_suoni/assets/audio/es/pan.wav",
-    "bytes": 13022,
-    "sha256": "a668fedb9af09a1610bb2b2a5525b7b97c4a185339aeceea4c2370b1a6ee027f"
+    "bytes": 42422,
+    "sha256": "c1dd9ef68a1ca3e0aabe94a22d757eb31e1447f9afc8b341117761111e49b00d"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "a668fedb9af09a1610bb2b2a5525b7b97c4a185339aeceea4c2370b1a6ee027f",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

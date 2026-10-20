@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T19:21:54.733777+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "shared_character_utterance",
+    "locale": "en",
+    "text": "One more time!",
+    "cue_id": "shared.encourage.retry.03",
+    "output": "assets/audio/characters/shared/v0.2/tito/en/tito__en__encourage.retry__03.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "generation_parameters": {
+    "job_id": "20261020-212145-177c64de",
+    "idempotency_key": "greia-e2d95f9bf5be45b1a10fff52649abf11",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1447273434,
+    "language_direction": "English",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak in English. Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3808527248,
+        "sha256": "7e553dcd48c3b158b69a3f46821e43fd965da87b3f87eb9991b5618e83777115",
+        "generation": {
+          "elapsed_seconds": 8.845885291986633,
+          "model_load_seconds": 0.0,
+          "rtf": 4.606832024296485,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/tito/en/tito__en__encourage.retry__03.wav",
+    "bytes": 84758,
+    "sha256": "8de523b2925eeab9a2cef8944395e68fda6c3ddad2001c24afb8726191243675"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "b6c2e26ef6ef02d50400774bec3bbef0a7cd3370ac2020441c1cfd44a20a5a62",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

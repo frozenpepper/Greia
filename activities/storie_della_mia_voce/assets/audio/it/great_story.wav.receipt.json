@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T08:24:08.374395+00:00",
+  "created_utc": "2026-10-20T17:10:47.550626+00:00",
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Che bella storia!",
     "cue_id": "greia.requested.great_story.it",
-    "output": "tmp/greia-four-languages-20261017/review/activities/storie_della_mia_voce/assets/audio/it/great_story.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/storie_della_mia_voce/assets/audio/it/great_story.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A happy celebration with the child: joyful, proud and warm. Lively but clear."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.lilli.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "it",
-    "model_load_count": 1
+    "job_id": "20261020-191038-7b520916",
+    "idempotency_key": "greia-12cabbfcb0d9487bbb506ad06978b9ff",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2986556371,
+    "language_direction": "Italian",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "effective_delivery": "Speak in Italian. Lilli, a sparkly, affectionate storybook unicorn. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1771320226,
+        "sha256": "737f135fcaf6cde36d6232605f5e200e5215c226682bce54736c499558552e4f",
+        "generation": {
+          "elapsed_seconds": 8.696878375019878,
+          "model_load_seconds": 0.0,
+          "rtf": 4.940940275553382,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "che bella storia.",
-    "score": 1.0,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/storie_della_mia_voce/assets/audio/it/great_story.wav",
-    "bytes": 72624,
-    "sha256": "136d1b2c3c38cbdae0a3cc8188e2bf8596c15d8694c71e631fee188db100f2f1"
+    "bytes": 77702,
+    "sha256": "e7dde5fd3b2e12edeb9f13a8e848a8f7f2ea8332df81b0f193215cc41db8ce16"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "136d1b2c3c38cbdae0a3cc8188e2bf8596c15d8694c71e631fee188db100f2f1",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

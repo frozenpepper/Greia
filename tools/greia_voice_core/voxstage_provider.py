@@ -82,9 +82,15 @@ class VoxStageProvider(VoiceProvider):
         language = {"en": "English", "it": "Italian", "fr": "French", "es": "Spanish"}.get(request.language)
         if language is None:
             raise VoiceProviderError(f"VoxStage language direction is not configured for {request.language}")
-        voice_id = self._ensure_voice(profile)
         delivery_prompt = request.delivery_prompt or character_delivery()[profile.character]
-        delivery = f"Speak naturally in {language}. {delivery_prompt}"
+        # VoxStage limits each segment's delivery field to 300 characters. Keep
+        # the locale cue compact so the frozen per-recording direction remains
+        # intact, and reject oversize inputs locally instead of submitting a
+        # request the shared worker will reject.
+        delivery = f"Speak in {language}. {delivery_prompt}"
+        if len(delivery) > 300:
+            raise VoiceProviderError("VoxStage delivery direction exceeds the 300-character segment limit")
+        voice_id = self._ensure_voice(profile)
         payload = {
             "title": f"Greia {profile.character} {request.language}",
             "voice": voice_id,

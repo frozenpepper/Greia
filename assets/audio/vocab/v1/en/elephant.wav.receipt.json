@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:03:12.292098+00:00",
+  "created_utc": "2026-10-20T20:27:41.605219+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "en",
     "text": "Elephant",
     "cue_id": "foresta_parole.elephant",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/foresta_parole/en/elephant.wav",
+    "output": "assets/audio/vocab/v1/en/elephant.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Samantha",
-    "rate_wpm": 180,
-    "synthesis_text": "elephant"
+    "job_id": "20261020-222731-f8e7571b",
+    "idempotency_key": "greia-8faabd8145804b68b6ca9772a0b3f80f",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 4214357686,
+    "language_direction": "English",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2499237120,
+        "sha256": "6c5af824ff8dfb34539425d984dfacf5422f0bc299681890c88bb6d90b82c2f8",
+        "generation": {
+          "elapsed_seconds": 9.69258491601795,
+          "model_load_seconds": 0.0,
+          "rtf": 6.730182790893149,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -29,10 +69,14 @@
   },
   "attempts": 1,
   "output": {
-    "path": "activities/foresta_parole/assets/audio/en/elephant.wav",
-    "bytes": 25978,
-    "sha256": "2817d297ab53e57fdde9f50ec6b7b022780ea177ea095b27eab7e5b5772173ec"
+    "path": "assets/audio/vocab/v1/en/elephant.wav",
+    "bytes": 63590,
+    "sha256": "c613d2d3a1e253df52666b031abf0076b1bded8fcb36a2abf48b7598c8562dbc"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "2817d297ab53e57fdde9f50ec6b7b022780ea177ea095b27eab7e5b5772173ec",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

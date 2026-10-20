@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:58:31.040768+00:00",
+  "created_utc": "2026-10-20T14:04:40.300795+00:00",
   "request": {
     "speaker": "lilli",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Comptons ensemble.",
     "cue_id": "greia.requested.count_together.fr",
-    "output": "tmp/greia-four-languages-20261017/review/activities/pasticceria_magica/assets/audio/fr/count_together.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/pasticceria_magica/assets/audio/fr/count_together.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.lilli.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.lilli.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-160432-b744fdbf",
+    "idempotency_key": "greia-b6a7938546df467db2acc426450391f9",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-lilli-v2-03",
+    "reference_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2576509717,
+    "language_direction": "French",
+    "delivery_prompt": "Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "effective_delivery": "Speak in French. Lilli, a sparkly, affectionate storybook unicorn. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1209661284,
+        "sha256": "7db35ac88d121cdffcb4b4146547793438c5509f226ae4438fbf6eb16f2a6237",
+        "generation": {
+          "elapsed_seconds": 7.750470500031952,
+          "model_load_seconds": 0.0,
+          "rtf": 4.403259445146455,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Le comptal n'a pas de saurre.",
-    "score": 0.3178,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
-  "attempts": 2,
+  "attempts": 1,
   "output": {
     "path": "activities/pasticceria_magica/assets/audio/fr/count_together.wav",
-    "bytes": 63804,
-    "sha256": "c955c627f9f524ef900bb95259419f9007a71997f30bb52def76b86e607f778f"
+    "bytes": 77702,
+    "sha256": "7841ab8727b0305847d1832735be6a5cdbc1c138fe74be4e0a232344735e21be"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "c955c627f9f524ef900bb95259419f9007a71997f30bb52def76b86e607f778f",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

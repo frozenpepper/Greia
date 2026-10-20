@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T19:31:45.219645+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "shared_character_utterance",
+    "locale": "it",
+    "text": "Vai avanti!",
+    "cue_id": "shared.encourage.progress.03",
+    "output": "assets/audio/characters/shared/v0.2/tito/it/tito__it__encourage.progress__03.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. A short, lively reaction: expressive and clear, one breath, no extra words."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "generation_parameters": {
+    "job_id": "20261020-213135-f8f75a66",
+    "idempotency_key": "greia-166b854d5bf440f09c6bd9d5ad6083df",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1023931450,
+    "language_direction": "Italian",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "effective_delivery": "Speak in Italian. Tito, a cheeky, confident woodland explorer. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3991921096,
+        "sha256": "84078a15a43a2a3743b8212732ea4ba09443d9d6ce365d1ada5561fcc6afb180",
+        "generation": {
+          "elapsed_seconds": 8.663623499975074,
+          "model_load_seconds": 0.0,
+          "rtf": 7.734227198311329,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/tito/it/tito__it__encourage.progress__03.wav",
+    "bytes": 49478,
+    "sha256": "c7cab831ce465ead687e7508a7a889c3f5dc4d156ea17db29392d6a6a7fca52c"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "4f0d61c9b80cadb3b8113a9cdfd4372fc1e6edb6caf32f61d41d51ca700ce94d",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

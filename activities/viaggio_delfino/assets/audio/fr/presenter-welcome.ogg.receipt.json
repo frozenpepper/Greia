@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T05:01:35.559195+00:00",
+  "created_utc": "2026-10-20T17:46:37.584979+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Salut ! Moi, c'est Tito ! Bouge la souris ou utilise les flèches pour nager. Appuie sur la barre d'espace pour sauter hors de l'eau. Ramasse toutes les perles !",
     "cue_id": "presenter.welcome.voice",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/fr/presenter-welcome.ogg",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/viaggio_delfino/assets/audio/fr/presenter-welcome.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-194535-70b87854",
+    "idempotency_key": "greia-73f4a8db53dc4f9f81b89aff3ce61e45",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2917208716,
+    "language_direction": "French",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak in French. Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3554903255,
+        "sha256": "13bdf6c06e2661271ecf1b8a6971d063ef3e829202bfdc6851d38a6bebd59ef0",
+        "generation": {
+          "elapsed_seconds": 59.833415667002555,
+          "model_load_seconds": 0.0,
+          "rtf": 6.925030265658751,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Allez-o, moi c'estito ! Bouges la souris ou utilise les flèches pour nager. Appuyez sur la barre de spasse pour sauter hors de l'eau. Ramanz toutes les perles.",
-    "score": 0.8496,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/viaggio_delfino/assets/audio/fr/presenter-welcome.ogg",
-    "bytes": 73120,
-    "sha256": "8d27bef527e341d1711873664fa85eef1458fc743f474efe396ce7ed23a449d6"
+    "bytes": 54575,
+    "sha256": "b50d8a53341af8cc78f15f71f3f9d7f23eecd38384e15a9eed4e39565d8e3bf5"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "8d27bef527e341d1711873664fa85eef1458fc743f474efe396ce7ed23a449d6",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

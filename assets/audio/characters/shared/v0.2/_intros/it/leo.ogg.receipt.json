@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T18:26:28.927945+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Oh, ciao! Io sono Leo. Mi piacciono le storie, le parole e tutte quelle domande che cominciano con perché. Se c'è qualcosa da scoprire, io sono pronto!",
+    "cue_id": "character.intro.leo",
+    "output": "assets/audio/characters/shared/v0.2/_intros/it/leo.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+  "generation_parameters": {
+    "job_id": "20261020-202548-f6a48ea6",
+    "idempotency_key": "greia-4f0933a932d2426aaab68db6c0ee7c25",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1680801949,
+    "language_direction": "Italian",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3418170308,
+        "sha256": "eb7dd15ad5f6ff3aa1d1a7d88461d49d6cde03836ce8eb433da288f7ea9d51bc",
+        "generation": {
+          "elapsed_seconds": 40.23316354199778,
+          "model_load_seconds": 0.0,
+          "rtf": 4.055694313804988,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "assets/audio/characters/shared/v0.2/_intros/it/leo.ogg",
+    "bytes": 69800,
+    "sha256": "92cc4743a43dc6e92c24be7be6f807c325252f06e8f4e7becdb03aa9e6a0674e"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "5922359d21e75ad55e999764082215d36ad3217c6286e7a2f0e18abb9eb0cde1",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
+}

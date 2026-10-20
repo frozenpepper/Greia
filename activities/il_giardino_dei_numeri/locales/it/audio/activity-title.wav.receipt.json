@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T15:34:02.428995+00:00",
+  "created_utc": "2026-10-20T12:47:29.411775+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "it",
     "text": "Il giardino dei numeri",
-    "cue_id": null,
+    "cue_id": "activities/il_giardino_dei_numeri/locales/it/audio/activity-title.wav",
     "output": "activities/il_giardino_dei_numeri/locales/it/audio/activity-title.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "it",
-    "model_load_count": 1
+    "job_id": "20261020-144718-ce14f107",
+    "idempotency_key": "greia-356d81c899ba4031acb199c1410410cd",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3038754224,
+    "language_direction": "Italian",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2439065409,
+        "sha256": "6ebbf4da6f6477312f65d1c2e63335b95dbd6cc31791ee462fc7538c1433a68c",
+        "generation": {
+          "elapsed_seconds": 9.465914083993994,
+          "model_load_seconds": 0.0,
+          "rtf": 5.377851008802572,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/il_giardino_dei_numeri/locales/it/audio/activity-title.wav",
-    "bytes": 68434,
-    "sha256": "3fb289e2f063009094c9804b0083f6810565e9a53c4809e408b3e541587fad5e"
+    "bytes": 77702,
+    "sha256": "d696e486976a6f215da4fd253fa2252c74720801edd18caf71f0d479a865dc33"
   },
   "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "3fb289e2f063009094c9804b0083f6810565e9a53c4809e408b3e541587fad5e",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

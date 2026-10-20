@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:47:42.038488+00:00",
+  "created_utc": "2026-10-20T00:09:30.422558+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
     "locale": "en",
     "text": "Line up the blocks under the parcel. No gaps!",
     "cue_id": "greia.requested.line_up_blocks.en",
-    "output": "tmp/greia-four-languages-20261017/review/activities/bottega_delle_misure/assets/audio/en/line_up_blocks.wav",
+    "output": "activities/bottega_delle_misure/assets/audio/en/line_up_blocks.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Samantha",
-    "rate_wpm": 190,
-    "synthesis_text": "Line up the blocks under the parcel. No gaps!"
+    "job_id": "20261020-020917-ec39f69a",
+    "idempotency_key": "greia-b021f6b8e1fc43ce8f828354ec4b0264",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3606807113,
+    "language_direction": "English",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak naturally in English. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1069852858,
+        "sha256": "965a344d58e2e109ae46386c8330110a726ac0a12b37720cfc339b866b8668b0",
+        "generation": {
+          "elapsed_seconds": 12.502041917003226,
+          "model_load_seconds": 0.0,
+          "rtf": 4.340735576761724,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/bottega_delle_misure/assets/audio/en/line_up_blocks.wav",
-    "bytes": 114002,
-    "sha256": "1315f42394d3e85328cd808b855ac5164f2bd938f82819cf27a2f24367040474"
+    "bytes": 127094,
+    "sha256": "ff945c1ae07a7d0c5ac22663511d5629c18ca61ae7f74f401d26f1224e822d28"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "3c1ac21f0b99d364de0e4b964992f46a63db1eed8bd58d99968aae8b0e54d8cf",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

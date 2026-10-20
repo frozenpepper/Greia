@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:14:51.905252+00:00",
+  "created_utc": "2026-10-20T14:45:31.465066+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "it",
     "text": "luna",
     "cue_id": "sillabe_magiche.word_luna.it",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/word_luna.wav",
+    "output": "activities/sillabe_magiche/assets/audio/it/word_luna.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Alice",
-    "rate_wpm": 175,
-    "synthesis_text": "luna"
+    "job_id": "20261020-164525-08cb6021",
+    "idempotency_key": "greia-4ddbd523105548c3a556717711f04d9a",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1502087841,
+    "language_direction": "Italian",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm.",
+    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 566724351,
+        "sha256": "b583c211604ba5d69abb2ec00eff92aca1cb697dbec4ce9d868539c7f7b6f2b8",
+        "generation": {
+          "elapsed_seconds": 5.935328332998324,
+          "model_load_seconds": 0.0,
+          "rtf": 6.181560492621063,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/sillabe_magiche/assets/audio/it/word_luna.wav",
-    "bytes": 17356,
-    "sha256": "6e980afe36a24c6d1b6eae3f92eda646b9e4d43df296f7e55eafe67f3a18eecc"
+    "bytes": 42422,
+    "sha256": "7ab1ea2a46a93117d1654f333dfeb3327858c021031b97ffa2ec5ee7824dea69"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "6e980afe36a24c6d1b6eae3f92eda646b9e4d43df296f7e55eafe67f3a18eecc",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:07:36.449063+00:00",
+  "created_utc": "2026-10-20T18:17:15.255881+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "¡Oh, hola! Soy Leo. Me gustan los cuentos, las palabras y todas esas preguntas que empiezan con por qué. Si hay algo por descubrir, ¡estoy listo!",
     "cue_id": "greia.shared.leo.es",
-    "output": "tmp/greia-four-languages-20261017/review/assets/audio/characters/shared/v0.2/_intros/es/leo.ogg",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "assets/audio/characters/shared/v0.2/_intros/es/leo.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-201557-120f9e0f",
+    "idempotency_key": "greia-d07e81a852ab455ab1724f6abf94f7bb",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1424013437,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "effective_delivery": "Speak in Spanish. Leo, a warm, curious cartoon guide. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3000438134,
+        "sha256": "a5e2ac088748578526eff011bb97d572bca35709f51fafc1ec0f24072bbed0ff",
+        "generation": {
+          "elapsed_seconds": 76.21280729101272,
+          "model_load_seconds": 0.0,
+          "rtf": 7.217007997760078,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "¡Ay, wow, hola! Soy Leo! Me gustan los cuentos, las palabras y todas esas preguntas que empiezan con por qué. Si hay algo por descubrir, estoy listo.",
-    "score": 0.9653,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/_intros/es/leo.ogg",
-    "bytes": 88863,
-    "sha256": "e1a43e12b7db1e9a008e81b04583daad4190e38eedf648061541e80604b28d1f"
+    "bytes": 70299,
+    "sha256": "284f9d888f4669a4c04d3bf922c41c5e7020f760c6949ecea5a0cf4a58b56851"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "e1a43e12b7db1e9a008e81b04583daad4190e38eedf648061541e80604b28d1f",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

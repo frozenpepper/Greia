@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T21:41:19.248261+00:00",
+  "created_utc": "2026-10-20T11:51:20.315087+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -9,16 +9,56 @@
     "cue_id": "faccine_momo.game_prompt",
     "output": "activities/faccine_momo/locales/en/audio/game_prompt.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.momo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.momo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "en",
-    "model_load_count": 1
+    "job_id": "20261020-135058-b88c68c3",
+    "idempotency_key": "greia-48f0d5c707174f9caba686f7cf99842a",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
+    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2385616980,
+    "language_direction": "English",
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak naturally in English. Momo, a lovable, whimsical comic creature. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 608442446,
+        "sha256": "ecf89330805e257a31b2ebb31b8c9d6ec38432901831418164cb63354067cfd7",
+        "generation": {
+          "elapsed_seconds": 20.731001874955837,
+          "model_load_seconds": 0.0,
+          "rtf": 5.633169297121282,
+          "peak_memory_gb": 8.079945652
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/faccine_momo/locales/en/audio/game_prompt.wav",
-    "bytes": 159720,
-    "sha256": "c520da5db6fc1b34c158c735ecc2440836f761842d89701f2cd764873489bf0f"
+    "bytes": 162374,
+    "sha256": "ffba440fdda5935c31198d88d590bffe1ca91998c917c7401f4e804bcd9090b4"
   },
   "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "c520da5db6fc1b34c158c735ecc2440836f761842d89701f2cd764873489bf0f",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

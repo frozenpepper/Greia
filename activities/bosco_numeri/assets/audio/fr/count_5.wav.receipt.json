@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T11:39:15.410723+00:00",
+  "created_utc": "2026-10-20T00:03:08.063448+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Cinq",
     "cue_id": "bosco_numeri.count_5.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/fr/count_5.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/bosco_numeri/assets/audio/fr/count_5.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-020303-0b894940",
+    "idempotency_key": "greia-11c2f848637546deb63989ad7c713c04",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 958034271,
+    "language_direction": "French",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "effective_delivery": "Speak naturally in French. Tito, a cheeky, confident woodland explorer. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1979551155,
+        "sha256": "8e3dcf5f022b31cd5ef444a1a6d720735920f3fb64be4dd36186d5676ecf564e",
+        "generation": {
+          "elapsed_seconds": 3.8171412919764407,
+          "model_load_seconds": 0.0,
+          "rtf": 4.770432774809132,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/bosco_numeri/assets/audio/fr/count_5.wav",
-    "bytes": 36904,
-    "sha256": "c881a94ebbbcc3be42451ef14144bb0a03e482a9fd9eeb7070997a85fbcf38e1"
+    "bytes": 35366,
+    "sha256": "85facd45d87289cff1e9cc8e100b70e9be6c76a8a4e375e4ddda5da257f4e087"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "44c5c046611be126913f0ad5318833642cd8b0855e7a7fc05cd443de99209703",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

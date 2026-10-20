@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T14:05:08.840899+00:00",
+  "created_utc": "2026-10-20T08:01:48.326785+00:00",
   "request": {
     "speaker": "leo",
     "kind": "character_dialogue",
     "locale": "es",
     "text": "Neptuno",
     "cue_id": "encyclopedia.space.neptune.name.es",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/space/neptune_name.ogg",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/enciclopedia_greia/assets/audio/es/space/neptune_name.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "es",
-    "model_load_count": 1
+    "job_id": "20261020-100144-d5e92fa6",
+    "idempotency_key": "greia-87cf240fce2745c2935c668500d3012e",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 392228613,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried.",
+    "effective_delivery": "Speak naturally in Spanish. Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 786392673,
+        "sha256": "fac68b67e5b782fe3b225d5378d58cf37c51fa6346996d9517d07c0725f6ea28",
+        "generation": {
+          "elapsed_seconds": 3.819685957976617,
+          "model_load_seconds": 0.0,
+          "rtf": 3.978148888710242,
+          "peak_memory_gb": 7.648602244
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,22 @@
   "attempts": 1,
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/es/space/neptune_name.ogg",
-    "bytes": 10774,
-    "sha256": "e37609ad2d3cecac344f7af80988b13a3b6469d172a496366179c4c9ab5e5220"
+    "bytes": 7895,
+    "sha256": "7201263a8fb3c7d948721c679a51a16c143e585668bc562d3c214e207ebe670c"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "e37609ad2d3cecac344f7af80988b13a3b6469d172a496366179c4c9ab5e5220",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "fac68b67e5b782fe3b225d5378d58cf37c51fa6346996d9517d07c0725f6ea28",
+      "source_job_id": "20261020-100144-d5e92fa6",
+      "repackaged_utc": "2026-10-20T22:30:09Z"
+    }
+  }
 }

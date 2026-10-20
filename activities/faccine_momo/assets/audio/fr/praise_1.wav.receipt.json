@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T11:30:53.863288+00:00",
+  "created_utc": "2026-10-20T11:47:52.201353+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Bravo !",
     "cue_id": "faccine_momo.praise_1.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/faccine_momo/fr/praise_1.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/faccine_momo/assets/audio/fr/praise_1.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.momo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.momo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-134744-423390b9",
+    "idempotency_key": "greia-b042ae01ef3b435e8d946ae531cbc5d4",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
+    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 476634648,
+    "language_direction": "French",
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "effective_delivery": "Speak naturally in French. Momo, a lovable, whimsical comic creature. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 683302161,
+        "sha256": "bd26b7e8ab36e95eeb5d6ff54168208012c5a725e8d3dbecf91be2e4d370dc32",
+        "generation": {
+          "elapsed_seconds": 6.615547124994919,
+          "model_load_seconds": 0.0,
+          "rtf": 5.167723310762858,
+          "peak_memory_gb": 8.079945652
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/faccine_momo/assets/audio/fr/praise_1.wav",
-    "bytes": 63364,
-    "sha256": "9412c1309852ddbac80c749d5706b8f9a02804e9db47eb64772a50c90c02d0ae"
+    "bytes": 56534,
+    "sha256": "424b84cb87154c6d816777f91d49f659da594d5a4d5e7f3da369305c38177a9b"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "9412c1309852ddbac80c749d5706b8f9a02804e9db47eb64772a50c90c02d0ae",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:47:36.591950+00:00",
+  "created_utc": "2026-10-20T00:13:29.410127+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
     "locale": "es",
     "text": "¿Cuál pesa más?",
     "cue_id": "greia.requested.which_heavier.es",
-    "output": "tmp/greia-four-languages-20261017/review/activities/bottega_delle_misure/assets/audio/es/which_heavier.wav",
+    "output": "activities/bottega_delle_misure/assets/audio/es/which_heavier.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Mónica",
-    "rate_wpm": 185,
-    "synthesis_text": "¿Cuál pesa más?"
+    "job_id": "20261020-021322-6da1c90e",
+    "idempotency_key": "greia-78e18a7cb7f84a2791fd0c5090136598",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 868656039,
+    "language_direction": "Spanish",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "effective_delivery": "Speak naturally in Spanish. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1594202732,
+        "sha256": "ce5befcbe3831755911ad0d8890d2bf218ea0e334774035f100269552143fe46",
+        "generation": {
+          "elapsed_seconds": 6.586870166007429,
+          "model_load_seconds": 0.0,
+          "rtf": 5.880259038244989,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/bottega_delle_misure/assets/audio/es/which_heavier.wav",
-    "bytes": 33542,
-    "sha256": "a27c72646da64bfdf1a455fff0460f030990e9fe8663f7f809fc3edab5df6d2d"
+    "bytes": 49478,
+    "sha256": "331ab8e24021327b99b78bd71eb750e97adb5bdc422dae5f13b379a0eef9fbcd"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "32d5dd8b43da34e6895c036fb22d3514a994c168db592c68b2a3fef54cb5213a",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

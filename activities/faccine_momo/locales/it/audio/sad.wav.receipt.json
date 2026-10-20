@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T21:37:02.307652+00:00",
+  "created_utc": "2026-10-20T11:58:03.046212+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -9,16 +9,56 @@
     "cue_id": "faccine_momo.sad",
     "output": "activities/faccine_momo/locales/it/audio/sad.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A little sad: soft, slower and slightly droopy, still gentle and safe. Keep every word clear."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.momo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.momo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "it",
-    "model_load_count": 1
+    "job_id": "20261020-135731-b68bb00e",
+    "idempotency_key": "greia-1da7b5b8065d4c44aaf8d7fe0e50cd3e",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
+    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2959909626,
+    "language_direction": "Italian",
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A little sad: soft, slower and slightly droopy, still gentle and safe. Keep every word clear.",
+    "effective_delivery": "Speak naturally in Italian. Momo, a lovable, whimsical comic creature. A little sad: soft, slower and slightly droopy, still gentle and safe. Keep every word clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 495077452,
+        "sha256": "b185a5c86bdfed43bff19d48b32b1c37474df8c945aa61fdd718737cbcb43e44",
+        "generation": {
+          "elapsed_seconds": 30.903086708975025,
+          "model_load_seconds": 0.0,
+          "rtf": 4.491618910730121,
+          "peak_memory_gb": 8.079945652
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/faccine_momo/locales/it/audio/sad.wav",
-    "bytes": 174716,
-    "sha256": "c5fb5ac53edbda3ab28cec766a92f7b7694f4ea621f3c06dc90169917a2dc562"
+    "bytes": 303494,
+    "sha256": "2d3fd2f49412861d9b21d801987b9a810a7cf1ea6dbd423a001babdd8b73024e"
   },
   "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "c5fb5ac53edbda3ab28cec766a92f7b7694f4ea621f3c06dc90169917a2dc562",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

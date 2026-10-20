@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:47:22.922487+00:00",
+  "created_utc": "2026-10-20T00:28:54.244594+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
     "locale": "fr",
     "text": "Des amis arrivent ! Fais-les entrer.",
     "cue_id": "greia.requested.friends_coming.fr",
-    "output": "tmp/greia-four-languages-20261017/review/activities/casa_del_dieci/assets/audio/fr/friends_coming.wav",
+    "output": "activities/casa_del_dieci/assets/audio/fr/friends_coming.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Thomas",
-    "rate_wpm": 185,
-    "synthesis_text": "Des amis arrivent ! Fais-les entrer."
+    "job_id": "20261020-022841-031cb4cc",
+    "idempotency_key": "greia-a57258f8a7034e138d8b2983d955f0cf",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2377285422,
+    "language_direction": "French",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak naturally in French. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2057074951,
+        "sha256": "473241bbbcab0136cd46b664b1e872dd314a80a422ce4e8778e6315c6651b478",
+        "generation": {
+          "elapsed_seconds": 12.080744665989187,
+          "model_load_seconds": 0.0,
+          "rtf": 4.718733675928333,
+          "peak_memory_gb": 8.21220922
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/casa_del_dieci/assets/audio/fr/friends_coming.wav",
-    "bytes": 88650,
-    "sha256": "4adadd63fc2aa4caba08b9caa96c2fcbcc6757d79dde6b499374a952b159903e"
+    "bytes": 112982,
+    "sha256": "3e7072c72a90e021a1e04c91e49882976ab228bd367cc469a12cfc9727118a67"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "11c8c6a8e54ac77f1281a2520042cb89cecf559ecdbcb14da6dec3ea8ef45dab",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

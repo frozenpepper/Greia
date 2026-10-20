@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T08:59:50.211218+00:00",
+  "created_utc": "2026-10-20T17:37:24.653850+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
     "locale": "en",
     "text": "Swim to the finish and collect the pearls!",
     "cue_id": "greia.requested.swim_finish.en",
-    "output": "tmp/greia-four-languages-20261017/review/activities/viaggio_delfino/assets/audio/en/swim_finish.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/viaggio_delfino/assets/audio/en/swim_finish.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.tito.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.tito.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "en",
-    "model_load_count": 1
+    "job_id": "20261020-193710-34c5205f",
+    "idempotency_key": "greia-6b2015c8416248db9d8c35f5fffefa26",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
+    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 4112762770,
+    "language_direction": "English",
+    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in English. Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3666855812,
+        "sha256": "f27918d8b2af55d8f397db734cf640d4bbf3ae21895b768873669b2512c2d0f3",
+        "generation": {
+          "elapsed_seconds": 13.348275750002358,
+          "model_load_seconds": 0.0,
+          "rtf": 4.390639466038822,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "PASS",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "to enter the finish and collect the pearls.",
-    "score": 0.8639,
-    "detail": "transcript is plausibly aligned; human listening still required"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/viaggio_delfino/assets/audio/en/swim_finish.wav",
-    "bytes": 94894,
-    "sha256": "0f720b61a96588524c7797c48e582fed737a9c3c8b3a93ccb2e2fbfcd4b9f14a"
+    "bytes": 134150,
+    "sha256": "95fda89efc81e117379018c36ccf28e22d99f6d14dd8a3aaad917deea4d62022"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "0f720b61a96588524c7797c48e582fed737a9c3c8b3a93ccb2e2fbfcd4b9f14a",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

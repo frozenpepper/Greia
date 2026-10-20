@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:14:58.873387+00:00",
+  "created_utc": "2026-10-20T14:46:44.230457+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "it",
     "text": "vaso",
     "cue_id": "sillabe_magiche.word_vaso.it",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/word_vaso.wav",
+    "output": "activities/sillabe_magiche/assets/audio/it/word_vaso.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Alice",
-    "rate_wpm": 175,
-    "synthesis_text": "vaso"
+    "job_id": "20261020-164636-eb1670de",
+    "idempotency_key": "greia-ccb9bbdc103741f09c48317a190730dc",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1159898967,
+    "language_direction": "Italian",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm.",
+    "effective_delivery": "Speak in Italian. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3716923581,
+        "sha256": "08d278e4f01f041f3da592cde52a924874bcdfaa448b231d0aca578c52a2cea2",
+        "generation": {
+          "elapsed_seconds": 6.593073124997318,
+          "model_load_seconds": 0.0,
+          "rtf": 5.885796570448431,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/sillabe_magiche/assets/audio/it/word_vaso.wav",
-    "bytes": 20956,
-    "sha256": "621056d37b7700ba7e7a846aff279ce027accce23d5f91fbb61c7b12cabb6bef"
+    "bytes": 49478,
+    "sha256": "9d25b1a447e9da8e45243cf51e292719a50ee826cff87d2b0b0bdfeca21ab402"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "621056d37b7700ba7e7a846aff279ce027accce23d5f91fbb61c7b12cabb6bef",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

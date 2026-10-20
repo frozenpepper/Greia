@@ -53,6 +53,11 @@ Exact owners:
 - `providers.py`: retained Chatterbox and native adapters.
 - `engine.py`: semantic routing, availability, bounded ASR retries, packaging,
   pending-review receipts and temporary-file cleanup.
+- `audio.py`: bounded WAV validation and 22,050 Hz mono WAV/OGG packaging.
+  WAV is PCM16; OGG uses Vorbis quality 5 by default. An explicit
+  `AudioPipeline(ogg_quality=0..10)` can select a different bounded quality
+  for a corpus-specific package-footprint constraint without changing the
+  frozen speech request or human-review state.
 - `service.py`: localhost semantic service and client transport.
 - `direction.py` / `character_delivery.json`: editable six-character performance
   defaults; VoxStage stores the effective prompt in generation parameters.

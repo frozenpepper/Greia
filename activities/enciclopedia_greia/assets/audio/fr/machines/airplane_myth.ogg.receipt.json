@@ -1,38 +1,91 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T14:38:29.287666+00:00",
+  "created_utc": "2026-10-20T09:14:16.275456+00:00",
   "request": {
-    "speaker": "leo",
+    "speaker": "flash",
     "kind": "character_dialogue",
     "locale": "fr",
-    "text": "Commandes de vol : ailerons, gouvernail et profondeur aident à tourner, monter ou descendre.",
+    "text": "Une chose importante : l'air qui passe au-dessus et au-dessous d'une aile n'a pas besoin de se retrouver en même temps derrière elle. La fameuse histoire du chemin plus long n'explique pas correctement la portance.",
     "cue_id": "encyclopedia.machines.airplane.myth.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/machines/airplane_myth.ogg",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/enciclopedia_greia/assets/audio/fr/machines/airplane_myth.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.leo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-111339-fc1baf56",
+    "idempotency_key": "greia-6fd55340a34a4996bbacda99f9f551cd",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 4080163541,
+    "language_direction": "French",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "effective_delivery": "Speak naturally in French. Flash, a springy, eager little rabbit. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 418984447,
+        "sha256": "ba53dc933b451997623b0130948f3d48f3d3b84a1b460cf8ab2a22d490df5f33",
+        "generation": {
+          "elapsed_seconds": 35.59555333299795,
+          "model_load_seconds": 0.0,
+          "rtf": 3.3204290977750297,
+          "peak_memory_gb": 7.648602244
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Comment d'évoles, élron, Gouverneil et profondaire aid à tourner, montez ou dis-sandes.",
-    "score": 0.5778,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/fr/machines/airplane_myth.ogg",
-    "bytes": 50962,
-    "sha256": "2f60aa5d063ff5244bd020e32f31a3ae7dd36988ab89c6797c9391ce49e2131b"
+    "bytes": 56042,
+    "sha256": "5cc59072ef72df771094aa6e8b23f57dae48ba617a0f004a22e17422be80934d"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "2f60aa5d063ff5244bd020e32f31a3ae7dd36988ab89c6797c9391ce49e2131b",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "ba53dc933b451997623b0130948f3d48f3d3b84a1b460cf8ab2a22d490df5f33",
+      "source_job_id": "20261020-111339-fc1baf56",
+      "repackaged_utc": "2026-10-20T22:30:26Z"
+    }
+  }
 }

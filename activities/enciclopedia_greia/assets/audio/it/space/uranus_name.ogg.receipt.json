@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-20T11:39:48.206090+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "Urano",
+    "cue_id": "encyclopedia.space.uranus.name",
+    "output": "activities/enciclopedia_greia/assets/audio/it/space/uranus_name.ogg",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried."
+  },
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+  "generation_parameters": {
+    "job_id": "20261020-133940-b4abf1c9",
+    "idempotency_key": "greia-7589cd4d1725473aaa93ce5c13ae15a4",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 2559928499,
+    "language_direction": "Italian",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried.",
+    "effective_delivery": "Speak naturally in Italian. Leo, a warm, curious cartoon guide. Reveals the name of what we are looking at, like a friendly museum guide: clear, warm wonder, unhurried.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2474473495,
+        "sha256": "f8af28f0bbfe50bb335c7ad4369fbb794ef246b32e9fb5a45de61c8d72043b66",
+        "generation": {
+          "elapsed_seconds": 6.697321874962654,
+          "model_load_seconds": 0.0,
+          "rtf": 3.487885708686392,
+          "peak_memory_gb": 8.079945652
+        }
+      }
+    ]
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/enciclopedia_greia/assets/audio/it/space/uranus_name.ogg",
+    "bytes": 10498,
+    "sha256": "630c8c6dedf5a7999e0456b7d2a75aafa41873f85e8ed1e28d7996e5152bbf58"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "0e8c76f42848c2f4b3c47a66c9d1ad4a5d857c4f6f2c29c85efd141621c83d53",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
+    "audio_repackaging": {
+      "pipeline": "AudioPipeline",
+      "codec": "libvorbis",
+      "quality": 3,
+      "sample_rate_hz": 22050,
+      "source_mix_sha256": "f8af28f0bbfe50bb335c7ad4369fbb794ef246b32e9fb5a45de61c8d72043b66",
+      "source_job_id": "20261020-133940-b4abf1c9",
+      "repackaged_utc": "2026-10-20T22:31:01Z"
+    }
+  }
+}

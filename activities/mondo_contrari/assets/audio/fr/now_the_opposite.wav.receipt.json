@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T08:01:15.290165+00:00",
+  "created_utc": "2026-10-20T13:18:28.673245+00:00",
   "request": {
     "speaker": "flash",
     "kind": "character_dialogue",
     "locale": "fr",
     "text": "Et maintenant, le contraire !",
     "cue_id": "greia.requested.now_the_opposite.fr",
-    "output": "tmp/greia-four-languages-20261017/review/activities/mondo_contrari/assets/audio/fr/now_the_opposite.wav",
-    "verification": "auto",
-    "max_attempts": 2
+    "output": "activities/mondo_contrari/assets/audio/fr/now_the_opposite.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.flash.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.flash.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-151818-40564d25",
+    "idempotency_key": "greia-cc704e47e5ad453f9fb810e1c4ae4d08",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-flash-v1-02",
+    "reference_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1267856502,
+    "language_direction": "French",
+    "delivery_prompt": "Flash, a springy, eager little rabbit. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in French. Flash, a springy, eager little rabbit. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1521496595,
+        "sha256": "b62e641538d84bdff1d93287d320c18bdd418ed1a3ae24cd1bdf479458f3d198",
+        "generation": {
+          "elapsed_seconds": 9.701118957949802,
+          "model_load_seconds": 0.0,
+          "rtf": 4.6636258110487,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Et maintenant, on est content !",
-    "score": 0.6611,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
-  "attempts": 2,
+  "attempts": 1,
   "output": {
     "path": "activities/mondo_contrari/assets/audio/fr/now_the_opposite.wav",
-    "bytes": 98422,
-    "sha256": "51570dc3a8869e3677a72325c0044eb45b99ffba37183a9a4b38c6501bfe6f50"
+    "bytes": 91814,
+    "sha256": "05571da2192132878112cd4b94a9d19f9c9acd120c272f2d324c0c0ad541edc3"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "51570dc3a8869e3677a72325c0044eb45b99ffba37183a9a4b38c6501bfe6f50",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

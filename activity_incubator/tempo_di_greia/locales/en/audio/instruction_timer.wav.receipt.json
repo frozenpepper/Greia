@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T05:09:52.219045+00:00",
+  "created_utc": "2026-10-20T18:06:20.087979+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
     "locale": "en",
     "text": "Pick the minutes, then press start.",
     "cue_id": "tempo_di_greia.instruction.timer",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/tempo_di_greia/en/instruction_timer.wav",
+    "output": "activity_incubator/tempo_di_greia/locales/en/audio/instruction_timer.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Samantha",
-    "rate_wpm": 190,
-    "synthesis_text": "Pick the minutes, then press start."
+    "job_id": "20261020-200605-d17b7f4d",
+    "idempotency_key": "greia-a57862b4eed54bd18d7cdd6b1384c659",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3872094649,
+    "language_direction": "English",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in English. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1012830151,
+        "sha256": "fe5cd6028a486bcc81af011b0f11a97852af0cc000e4b20af8e008b3a3cc275c",
+        "generation": {
+          "elapsed_seconds": 14.057096749951597,
+          "model_load_seconds": 0.0,
+          "rtf": 5.856716929359737,
+          "peak_memory_gb": 8.843167284
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activity_incubator/tempo_di_greia/locales/en/audio/instruction_timer.wav",
-    "bytes": 79920,
-    "sha256": "1a1c60f1cabad6bb66e78c00a127528772ba07dbb93cf954a86ca551b1bf0592"
+    "bytes": 105926,
+    "sha256": "ff9c21d7eb15bb891fd4f24d0169fd2fc0a7d379e948a372adf47ed719c2b3bb"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "1a1c60f1cabad6bb66e78c00a127528772ba07dbb93cf954a86ca551b1bf0592",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

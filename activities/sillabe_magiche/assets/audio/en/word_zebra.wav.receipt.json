@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:18:21.948392+00:00",
+  "created_utc": "2026-10-20T14:40:19.067088+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "en",
     "text": "zebra",
     "cue_id": "sillabe_magiche.word_zebra.en",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/en/word_zebra.wav",
+    "output": "activities/sillabe_magiche/assets/audio/en/word_zebra.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Samantha",
-    "rate_wpm": 180,
-    "synthesis_text": "zebra"
+    "job_id": "20261020-164013-70a764aa",
+    "idempotency_key": "greia-52ca1aa12c894c3285a7c9d85350b4d4",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 4162891374,
+    "language_direction": "English",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm.",
+    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 1768004845,
+        "sha256": "9055f16d83ad27d688b8b7daa831c12be635f260b863ef6f0179a4c1c2319116",
+        "generation": {
+          "elapsed_seconds": 5.07056504196953,
+          "model_load_seconds": 0.0,
+          "rtf": 6.336886117854027,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/sillabe_magiche/assets/audio/en/word_zebra.wav",
-    "bytes": 20898,
-    "sha256": "fec4ded1abbd7502905417043516c56fbe8a460ff59aac0bdc4a02852f8917cb"
+    "bytes": 35366,
+    "sha256": "1f9ba8ce07d06d1ce3b19579e35435e0e2757acd58f6d2f9c9da70aa69c8413f"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "fec4ded1abbd7502905417043516c56fbe8a460ff59aac0bdc4a02852f8917cb",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

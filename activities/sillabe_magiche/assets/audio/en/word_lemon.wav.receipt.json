@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T16:18:08.858196+00:00",
+  "created_utc": "2026-10-20T14:39:36.874471+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "en",
     "text": "lemon",
     "cue_id": "sillabe_magiche.word_lemon.en",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/en/word_lemon.wav",
+    "output": "activities/sillabe_magiche/assets/audio/en/word_lemon.wav",
     "verification": "off",
-    "max_attempts": 1
+    "max_attempts": 1,
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.leo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
   "generation_parameters": {
-    "voice": "Samantha",
-    "rate_wpm": 180,
-    "synthesis_text": "lemon"
+    "job_id": "20261020-163930-599524e8",
+    "idempotency_key": "greia-9a9a99c70f3e44b0844324883e29f857",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-leo-v1-03",
+    "reference_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3427909097,
+    "language_direction": "English",
+    "delivery_prompt": "Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm.",
+    "effective_delivery": "Speak in English. Leo, a warm, curious cartoon guide. Names one picture word for a young learner: natural, careful pronunciation of every sound, friendly and calm, no extra drama. Say it naturally as one whole word, with a gentle steady rhythm.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 3330076248,
+        "sha256": "eb296e0e5b1b95fa2da1d03154fb15b7836eef11f115123624c224d5d8a6af56",
+        "generation": {
+          "elapsed_seconds": 5.225502667017281,
+          "model_load_seconds": 0.0,
+          "rtf": 5.442287103298678,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/sillabe_magiche/assets/audio/en/word_lemon.wav",
-    "bytes": 19726,
-    "sha256": "28649da7f4d46400cdadbd3af3a88e89f7395b6c2d258f69b9b287570daaf921"
+    "bytes": 42422,
+    "sha256": "7ace7d037c481a6839b1f91380938995c295690087cf16e4311607866a908d32"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "28649da7f4d46400cdadbd3af3a88e89f7395b6c2d258f69b9b287570daaf921",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

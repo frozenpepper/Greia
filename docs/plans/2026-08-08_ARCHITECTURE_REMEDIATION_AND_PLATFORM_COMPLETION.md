@@ -3384,3 +3384,19 @@ Motion games made playable on the Atom reference floor (per-pixel-alpha blit cos
 - Added semantic `delivery_prompt` support across CLI/batch/warm service, six editable character performance defaults and effective direction provenance. Explicit unsupported acting prompts are rejected by retained Chatterbox/native providers. Masters and child-runtime architecture remain unchanged.
 - Executed 52 focused voice tests PASS and a single external Lilli English/custom-direction provider smoke; persisted worker request/recording direction verified, output still listening-pending, worker unloaded. Final `make -k verify`: 5,468 tests, 1 failure/4 errors/8 skips, the same inherited ARM64/profile executable/macOS installer/MBR-message failures; project validation retains its ARM64 assumption failure. Shell/footprint steps ran. Full gate NOT GREEN. Detailed evidence: `docs/reviews/2026-10-19_VOICE_CORPUS_TOOL.md` and HANDOVER.
 - Read-only prepared inventory: 5,308 files; 4,543 ready, 167 metadata-blocked, 598 preserved (441 isolated teaching targets, 150 historical shared clips, six canonical references, boot chime). Full corpus replacement is UNEXECUTED. Next agent recovers exact legacy scripts, pilots tone/mood prompts, then launches/monitors/resumes the tool and retains listening gates. No remediation/lifecycle phase closed; no image/Simulator/physical acceptance claimed. Source documentation/skills and installed copies updated; unrelated video artifacts preserved.
+
+### 2026-10-21 — Voice corpus v2 recovery and bounded packaging footprint
+
+Completed the owner-authorized four-language corpus v2 replacement: 4,168 DONE,
+741 PRESERVED, and zero unresolved journal rows. All new receipts remain
+`human_review=PENDING`; no audio listening, ASR, GUI, Simulator, or physical
+acceptance is claimed. Strawberry's interrupted cue was correlated to the
+frozen plan and no prior submission before resuming; bean's uncertain runner
+result was correlated by exact idempotency key to a completed VoxStage job and
+installed offline without another inference. A package-footprint regression in
+Encyclopedia was corrected through the existing `AudioPipeline` at bounded
+Vorbis quality 3; the 50 MiB activity cap remains unchanged and the resulting
+activity validates under the cap. Focused voice tests passed. Final `make verify`
+ran 5,472 tests with 1 known MBR message mismatch, 4 host errors (missing
+`lsblk` in three installer tests and non-executable `tools/build_profile.py`),
+and 8 skips. No architecture-remediation phase is closed by this work.

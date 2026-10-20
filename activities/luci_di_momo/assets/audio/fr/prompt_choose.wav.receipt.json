@@ -1,38 +1,82 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-14T11:35:12.120191+00:00",
+  "created_utc": "2026-10-20T13:07:28.602472+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
     "locale": "fr",
-    "text": "Maintenant, touche les lumières dans l'ordre !",
+    "text": "Combien de lucioles as-tu vues ?",
     "cue_id": "luci_di_momo.prompt_choose.fr",
-    "output": "tmp/greia-all-app-voices-20261014-050339/review/luci_di_momo/fr/prompt_choose.wav",
-    "verification": "auto",
-    "max_attempts": 1
+    "output": "activities/luci_di_momo/assets/audio/fr/prompt_choose.wav",
+    "verification": "off",
+    "max_attempts": 1,
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
   },
-  "provider_id": "chatterbox-mlx-multilingual-v3",
-  "voice_id": "greia.momo.v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782",
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.momo.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
   "generation_parameters": {
-    "model_id": "mlx-community/chatterbox-multilingual-v3",
-    "lang_code": "fr",
-    "model_load_count": 1
+    "job_id": "20261020-150718-f9abf02c",
+    "idempotency_key": "greia-caf4ab0cc36e46249691ad4109dde212",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
+    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 1904057478,
+    "language_direction": "French",
+    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "effective_delivery": "Speak in French. Momo, a lovable, whimsical comic creature. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 2425403082,
+        "sha256": "8b33b484672c26470499ed4065e308147de109f85e3a6700437b51b5c8af3e76",
+        "generation": {
+          "elapsed_seconds": 9.695277791994158,
+          "model_load_seconds": 0.0,
+          "rtf": 3.7869713398844445,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
-    "disposition": "WARN",
+    "disposition": "NOT_APPLICABLE",
     "verifier_id": "mlx-whisper-tiny",
-    "transcript": "Maintenant, tu sais le mière de l'autre.",
-    "score": 0.5588,
-    "detail": "transcript mismatch; regenerate or inspect manually"
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
   },
   "attempts": 1,
   "output": {
     "path": "activities/luci_di_momo/assets/audio/fr/prompt_choose.wav",
-    "bytes": 128850,
-    "sha256": "cc0ce0d35127f6a042aed55eef24055e2609d7152573416037eee0b9ee4dbade"
+    "bytes": 112982,
+    "sha256": "3835fccb138f11681c5aea5c2af90eaec13b91cb878b4b38287b185d98a6a25b"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Approved by repository owner on 2026-10-15."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "cc0ce0d35127f6a042aed55eef24055e2609d7152573416037eee0b9ee4dbade",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }

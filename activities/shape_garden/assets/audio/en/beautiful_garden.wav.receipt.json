@@ -1,24 +1,64 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-17T07:48:06.134776+00:00",
+  "created_utc": "2026-10-20T14:36:20.319695+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
     "locale": "en",
     "text": "What a beautiful garden!",
     "cue_id": "greia.requested.beautiful_garden.en",
-    "output": "tmp/greia-four-languages-20261017/review/activities/shape_garden/assets/audio/en/beautiful_garden.wav",
+    "output": "activities/shape_garden/assets/audio/en/beautiful_garden.wav",
     "verification": "off",
-    "max_attempts": 2
+    "max_attempts": 1,
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear."
   },
-  "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
-  "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "provider_id": "voxstage-voxcpm2",
+  "voice_id": "greia.dani.v2",
+  "voice_registry_version": "v0.2",
+  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
   "generation_parameters": {
-    "voice": "Samantha",
-    "rate_wpm": 190,
-    "synthesis_text": "What a beautiful garden!"
+    "job_id": "20261020-163606-24d7a97a",
+    "idempotency_key": "greia-dae03a50716046b1880aebe3f2520c06",
+    "backend": {
+      "backend": "mlx",
+      "adapter_version": "0.1.0",
+      "model": "mlx-community/VoxCPM2-8bit",
+      "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+      "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+      "mlx": "0.32.1",
+      "tokenizer_loader": "PreTrainedTokenizerFast",
+      "mlx_audio": "0.5.0",
+      "quantization": "8bit",
+      "sample_rate": 48000,
+      "native_audio_streaming": false,
+      "reference_encoding_cache": 16,
+      "compiled_hot_paths": true
+    },
+    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
+    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 300
+    },
+    "script_seed": 3583596967,
+    "language_direction": "English",
+    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "effective_delivery": "Speak in English. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "mode": "reference",
+    "recordings": [
+      {
+        "file": "speech-001-take-01.wav",
+        "seed": 469082542,
+        "sha256": "1b63a4ebfd186353cde665644a7c0da25b2f2da08e54325c44dbe171e037c0b1",
+        "generation": {
+          "elapsed_seconds": 12.280206666968297,
+          "model_load_seconds": 0.0,
+          "rtf": 5.481827245131298,
+          "peak_memory_gb": 8.44494914
+        }
+      }
+    ]
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/shape_garden/assets/audio/en/beautiful_garden.wav",
-    "bytes": 48890,
-    "sha256": "5c50130c4ce15b80368009f7fc6191ea831c9e2a1c6f9d248b930a442f7f2e6e"
+    "bytes": 98870,
+    "sha256": "ae8c6a3d2ee5ce202b74557573b16af45f247dea9a980c67735b2c69200fa0d0"
   },
-  "human_review": "APPROVED",
-  "acceptance_note": "Owner pre-approved all missing lines on 2026-10-17 ('I approve all lines'); local Voice Studio take, programmatic listen-check only (no human listening yet)."
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
+  "corpus_replacement": {
+    "original_sha256": "5c50130c4ce15b80368009f7fc6191ea831c9e2a1c6f9d248b930a442f7f2e6e",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
+  }
 }
