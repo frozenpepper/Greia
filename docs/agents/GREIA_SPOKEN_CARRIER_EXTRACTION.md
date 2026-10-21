@@ -29,12 +29,14 @@ the corpus plan and target receipt. Prompt only for neutral acting/performance
 such as a brief pause; the selected master carries voice identity. Do not use
 the v2 persona prompts.
 
-Default corpus selection policy for the current Dani/Momo/Tito v0.3 scope is
-configurable as `max_words=3 OR (max_words=4 AND max_unicode_alnum=28)`. Count
-orthographic words with Unicode letters/digits and internal apostrophes; count
+Default corpus selection policy covers all six canonical actors and is
+configurable by speaker through `--carrier-speakers`:
+`max_words=3 OR (max_words=4 AND max_unicode_alnum=28)`. Count orthographic
+words with Unicode letters/digits and internal apostrophes; count
 letters/digits, excluding spaces and punctuation. Exclude pronunciation-
-authoritative isolated letters and syllables, which remain untouched. The
-inventory is a candidate list only: inspect exact cue meaning and cue kind
+authoritative isolated letters and syllables, which remain untouched. Use a
+speaker subset for a deliberately disjoint plan; the frozen plan records it.
+The inventory is a candidate list only: inspect exact cue meaning and cue kind
 before planning a generation. Never stretch or paraphrase the original target
 to fit the threshold.
 
@@ -118,7 +120,12 @@ WAV, then packages the target using the existing AudioPipeline for the corpus
 format. Its candidate receipt describes the original target and links both
 raw-provider and extraction evidence. Nonselected READY rows become
 PRESERVED in that explicit plan. A rejected cue remains FAILED until the
-existing provider-idle retry process archives the entire attempt.
+existing provider-idle retry process archives the entire attempt. The runner
+continues after safe boundary rejection only when invoked with
+`--continue-after-carrier-rejection`; uncertain provider failures stop. Fresh
+provider attempts are capped at three per cue, and every retry requires
+`--acknowledge-provider-idle`. Scope expansions must use a new external run
+folder and disjoint `--carrier-speakers` selection.
 
 ## Tests and gate
 
@@ -134,6 +141,5 @@ PYTHONPATH=src:tools "$voice_python" -m unittest \
 Before packaging or committing implementation changes, run `make verify` and
 record inherited failures without conflating source tests with provider
 generation or listening evidence. The parent performs the independent
-technical gate before using this for the bounded short-cue corpus scope. That
-gate does not accept speech; every generated or extracted clip remains
-listening-pending for the owner.
+technical boundary review does not accept speech; every generated or extracted
+clip remains listening-pending for owner review.

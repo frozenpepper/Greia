@@ -13,7 +13,7 @@ PREFIXES = {
     "fr": "Cette phrase est en français.",
     "es": "Escucha esta frase en español.",
 }
-SPEAKERS = frozenset({"dani", "momo", "tito"})
+SPEAKERS = frozenset({"dani", "momo", "tito", "lilli", "leo", "flash"})
 
 
 def eligible_text(text: str) -> bool:
@@ -23,9 +23,10 @@ def eligible_text(text: str) -> bool:
     return 1 <= len(words) <= 3 or (len(words) == 4 and letters_digits <= 28)
 
 
-def freeze_row(row: dict, target_verification: str = "required") -> dict | None:
+def freeze_row(row: dict, target_verification: str = "required",
+               speakers: frozenset[str] = SPEAKERS) -> dict | None:
     """Freeze an exact carrier request for an eligible, still-READY cue."""
-    if row.get("state") != "READY" or row.get("request", {}).get("speaker") not in SPEAKERS:
+    if row.get("state") != "READY" or row.get("request", {}).get("speaker") not in speakers:
         return None
     if target_verification not in {"required", "warn"}:
         raise ValueError("carrier target verification must be required or warn")

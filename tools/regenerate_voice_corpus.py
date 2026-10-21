@@ -40,11 +40,16 @@ def plan_command(args) -> int:
     overrides = json.loads(args.overrides.read_text(encoding="utf-8")) if args.overrides else {}
     plan = CorpusInventory(PROJECT_ROOT, args.delivery_file, overrides).build()
     if args.carrier_mode:
-        from greia_voice_corpus.carriers import CARRIER_MODE, freeze_row
+        from greia_voice_corpus.carriers import CARRIER_MODE, SPEAKERS, freeze_row
+
+        speakers = frozenset(item.strip().lower() for item in args.carrier_speakers.split(",") if item.strip())
+        unknown = speakers - SPEAKERS
+        if not speakers or unknown:
+            raise ValueError(f"carrier speakers must be selected from {', '.join(sorted(SPEAKERS))}; invalid={sorted(unknown)}")
 
         selected = 0
         for row in plan["rows"]:
-            carrier = freeze_row(row, args.carrier_target_verification)
+            carrier = freeze_row(row, args.carrier_target_verification, speakers)
             if carrier:
                 row["spoken_carrier"] = carrier
                 selected += 1
@@ -52,6 +57,7 @@ def plan_command(args) -> int:
                 row.update(state="PRESERVED", reason="outside explicitly selected spoken-short-v1 carrier policy")
         plan["spoken_carrier_mode"] = CARRIER_MODE
         plan["spoken_carrier_selected"] = selected
+        plan["spoken_carrier_speakers"] = sorted(speakers)
     store = RunStore.create(_external_work(args.work_dir), plan)
     try:
         blocked = [r for r in plan["rows"] if r["state"] == "BLOCKED_METADATA"]
@@ -193,6 +199,8 @@ def main(argv=None) -> int:
                                  help="explicitly freeze the native spoken-carrier policy for eligible short cues")
             command.add_argument("--carrier-target-verification", choices=("required", "warn"), default="required",
                                  help="required rejects target ASR mismatch; warn allows only mismatch after exact prefix and safe-boundary checks")
+            command.add_argument("--carrier-speakers", default="dani,momo,tito,lilli,leo,flash",
+                                 help="comma-separated eligible speakers; default is all six canonical actors")
             command.set_defaults(func=plan_command)
         elif name == "status":
             command.add_argument("--details", action="store_true")

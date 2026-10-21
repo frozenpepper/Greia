@@ -29,8 +29,9 @@ class SpokenCarrierPolicyTests(unittest.TestCase):
         self.assertEqual(frozen["target_word_count"], 2)
         self.assertEqual(frozen["composite_text"], f"{PREFIXES['fr']} Trouve Luna.")
 
-    def test_policy_does_not_select_other_speakers_or_blocked_rows(self):
-        self.assertIsNone(freeze_row(self.row(speaker="leo")))
+    def test_speaker_scope_is_configurable_and_defaults_to_all_six(self):
+        self.assertIsNotNone(freeze_row(self.row(speaker="leo")))
+        self.assertIsNone(freeze_row(self.row(speaker="leo"), speakers=frozenset({"dani", "momo", "tito"})))
         self.assertIsNone(freeze_row(self.row(state="BLOCKED_METADATA")))
         self.assertIsNone(freeze_row(self.row(locale="de")))
 

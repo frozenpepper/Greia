@@ -3542,3 +3542,15 @@ environment `make verify` ran 3,131 tests and failed with 31 failures, 241
 errors and 6 skips. Exact output is in `/tmp/greia-short-carrier-make-verify.log`;
 no failure is attributed without trace review. Generated clips remain
 listening-pending. This does not establish pronunciation or human acceptance.
+
+### 2026-10-21 — Owner expanded spoken-carrier scope to six actors
+
+Owner expanded the already-started bounded speech run to all short spoken cues
+across the six canonical actors. The original frozen DMT 642-cue run was active
+with a Tito/EN provider job in flight, so it continues without interruption.
+Added a configurable `--carrier-speakers` planner filter, defaulting to all six
+canonical actors. After the first run completes, a disjoint Lilli/Leo/Flash
+plan is expected to cover the remaining 1,968 cues; paths DONE or attempted in
+the first run must be excluded. Selector-focused tests pass 21/21. All new
+takes stay listening-pending; provider/ASR/cut evidence is not listening
+acceptance.

@@ -99,11 +99,20 @@ attempt forced Python 3.12 and is discarded as nonstandard. The final normal
 environment `make verify` used Python 3.14 and ran 3,131 tests: 31 failures,
 241 errors, 6 skips. It is NOT GREEN; see
 `/tmp/greia-short-carrier-make-verify.log` for exact output. Failures are not
-attributed to this change without individual traces. Next: checkpoint source,
-then run the already-authorized bounded 642-cue production with at most three
-fresh attempts per cue, continuing past safe extraction rejection and recording
-unresolved cases. Automated review follows; all output remains
-listening-pending.
+attributed to this change without individual traces. Owner expanded scope to all
+six canonical actors while the original 642-cue run was already active. It is
+continuing without interruption; the first in-flight cue is Tito/EN
+`feed_turtle.wav`, VoxStage job `20261021-164935-3a4e37c9`. After it completes,
+finish that frozen 642-row run with at most three fresh attempts per cue, then
+create a disjoint external plan for the remaining Lilli/Leo/Flash short cues
+(parent inventory estimate 1,968: Leo 1,628, Lilli 230, Flash 110). New
+`--carrier-speakers` defaults to all six and supports disjoint plans; confirm
+actual counts and exclude paths already DONE or attempted by the first run.
+Commands and no-duplicate rules are in
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/RUNBOOK.md`.
+Both runs continue past safe extraction rejections, cap attempts at three,
+preserve originals for unresolved cues, and keep every new take
+listening-pending. Automated review and one combined Takeboard batch follow.
 
 ## 2026-10-21 — v0.3 three-character replacement and automated screen complete
 
