@@ -146,6 +146,7 @@ _ITALIAN: dict[str, str] = {
     "Do not turn off the computer.": "Non spegnere il computer.",
     "Parent login": "Accesso genitore",
     "Some hardware could not be identified automatically. If Wi-Fi or sound do not work, check them in Greia Parents after first boot.": "Alcune parti del computer non sono state riconosciute automaticamente. Se Wi-Fi o audio non funzionano, controllali in Greia Parents dopo il primo avvio.",
+    "This computer's Wi-Fi chip needs firmware Greia cannot include. Use an Ethernet cable or a USB Wi-Fi adapter.": "Il chip Wi-Fi di questo computer richiede un firmware che Greia non può includere. Usa un cavo Ethernet o un adattatore Wi-Fi USB.",
     "After the computer turns off, remove the USB key, then turn the computer on again.": "Quando il computer si è spento, togli la chiavetta USB e poi riaccendilo.",
     "The power-off request could not be sent. Press the computer's power button to switch it off.": "La richiesta di spegnimento non è stata inviata. Premi il pulsante di accensione del computer per spegnerlo.",
     "very slow": "molto lenta",

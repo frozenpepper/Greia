@@ -381,6 +381,7 @@ def build_production_seam_pair(
         # at finalization, and pool-missing wants stay diagnostic-only as
         # before (they were never installable).
         detection_incomplete = False
+        wifi_firmware_unavailable = False
         try:
             from .hardware_enablement import InstallerHardwareEnablementPlanner
 
@@ -403,6 +404,7 @@ def build_production_seam_pair(
                     file=sys.stderr,
                     flush=True,
                 )
+            wifi_firmware_unavailable = enablement.wifi_firmware_unavailable
             firmware_packages = tuple(
                 dict.fromkeys((*enablement.required_firmware, *enablement.fallback_firmware))
             )
@@ -589,6 +591,7 @@ def build_production_seam_pair(
             payload_stream_factory=None,
             inventory_complete=inventory_complete,
             hardware_detection_incomplete=detection_incomplete,
+            wifi_firmware_unavailable=wifi_firmware_unavailable,
             post_layout_identity_observer=None,
         )
 

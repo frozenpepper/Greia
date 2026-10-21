@@ -4,6 +4,8 @@ Status: DESIGN SPEC / research. No source changed. Evidence labels: **VERIFIED-D
 page today; **FROM-KNOWLEDGE** = well-known but not re-verified today; **LAB** = must be confirmed on a
 real Mac before we promise anything. No Mac has been booted for this review.
 
+Plan status (2026-10-21, later the same day): source items done and UNPROVEN on real Macs: pool force-list, Broadcom/Radeon/NVIDIA ID rules with a b43 diagnostic (sections 2.2 items 1-3 and 7 partly), `hid_apple fnmode=1` (not the "2" suggested in section 3; 1 keeps media keys primary) and a `b43` blacklist. Still open: EFI boot media/installed EFI (largest blocker), wl prebuilt modules, hardware probe tool, LAB. See HANDOVER and the 2026-09-15 plan entry "Legacy Mac / netbook hardware support".
+
 ## 0. Headline findings
 
 1. **Every Greia image today is BIOS-only.** All `build/profiles/*.toml` use `layout = "bios-single-ext4"`

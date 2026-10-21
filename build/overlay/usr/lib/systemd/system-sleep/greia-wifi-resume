@@ -20,7 +20,12 @@
 set -u
 
 # Drivers known to fail Wi-Fi resume (module names, space separated).
-WIFI_RESUME_DRIVERS="iwl3945 iwl4965 b43 b43legacy brcmsmac ath5k"
+# Extended 2026-10-21 from docs/reviews/2026-10-21_LEGACY_X86_NETBOOK_HARDWARE_RISKS.md
+# 5.2 (UNPROVEN on hardware): iwlwifi (5100/5300/6000 series), ath9k (AR9285
+# lost association), Ralink rt2800pci, Realtek rtl8192ce / rtl8180 / rtl8187,
+# Intel ipw2100 / ipw2200. The hook only reloads when the interface or its
+# station is gone, so a longer list stays a no-op on healthy machines.
+WIFI_RESUME_DRIVERS="iwl3945 iwl4965 iwlwifi b43 b43legacy brcmsmac ath5k ath9k rt2800pci rtl8192ce rtl8180 rtl8187 ipw2100 ipw2200"
 
 # Test seams (defaults are the real system paths).
 SYS_NET="${GREIA_SYS_NET:-/sys/class/net}"

@@ -101,6 +101,17 @@ class InstallerPage(Enum):
     ERROR = auto()
 
 
+@dataclass(frozen=True, slots=True)
+class WifiAwareInstallResult(InstallResult):
+    """Install result that also carries the display-only Wi-Fi firmware note.
+
+    Subclasses the engine result (owned elsewhere) instead of widening it:
+    ``isinstance(result, InstallResult)`` keeps holding.
+    """
+
+    wifi_firmware_unavailable: bool = False
+
+
 @dataclass(slots=True)
 class InstallerState:
     page: InstallerPage
@@ -170,6 +181,12 @@ _SIGNATURE_MAX_ITEMS = 4
 #: logind itself (``nobody``, no session, NoNewPrivileges): the direct call was
 #: denied and the completion button did nothing (2026-10-18).
 POWEROFF_REQUEST_PATH = Path("/run/greia-installer/finish-request")
+#: Completion note when a known Wi-Fi chip needs firmware Greia cannot include
+#: (Broadcom b43 family, wl-only chips). Translated through ``i18n``.
+WIFI_FIRMWARE_UNAVAILABLE_NOTE = (
+    "This computer's Wi-Fi chip needs firmware Greia cannot include. "
+    "Use an Ethernet cable or a USB Wi-Fi adapter."
+)
 
 
 class InstallerApplication:
@@ -1526,10 +1543,13 @@ class InstallerApplication:
                     on_progress=lambda frame: self._events.put(_progress_from_frame(frame)),
                 )
                 self._events.put(
-                    InstallResult(
+                    WifiAwareInstallResult(
                         hardware_detection_incomplete=bool(
                             getattr(receipt, "hardware_detection_incomplete", False)
-                        )
+                        ),
+                        wifi_firmware_unavailable=bool(
+                            getattr(receipt, "wifi_firmware_unavailable", False)
+                        ),
                     )
                 )
             except Exception as exc:
@@ -2382,10 +2402,16 @@ class InstallerApplication:
         )
         y = box.bottom + 12
         if self.state.result is not None and self.state.result.hardware_detection_incomplete:
-            # Short and non-alarming: the install itself succeeded.
+            # Short and non-alarming: the install itself succeeded.  A known
+            # unsupported Wi-Fi chip gets its own, more precise sentence.
+            wifi_missing = bool(
+                getattr(self.state.result, "wifi_firmware_unavailable", False)
+            )
             y = self._paragraph(
                 screen,
-                "Some hardware could not be identified automatically. If Wi-Fi or sound do not work, check them in Greia Parents after first boot.",
+                WIFI_FIRMWARE_UNAVAILABLE_NOTE
+                if wifi_missing
+                else "Some hardware could not be identified automatically. If Wi-Fi or sound do not work, check them in Greia Parents after first boot.",
                 small_font,
                 COCOA,
                 pygame.Rect(main.left, y, main.width, 3 * small_font.get_linesize()),

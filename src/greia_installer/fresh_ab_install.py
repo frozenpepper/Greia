@@ -271,6 +271,8 @@ class FreshAbInstallSeams:
     #: Resolver detection was incomplete and fallback firmware was selected
     #: (display-only note for the completion page).
     hardware_detection_incomplete: bool = False
+    #: A Wi-Fi chip needs firmware/driver Greia cannot include (display-only).
+    wifi_firmware_unavailable: bool = False
     post_layout_identity_observer: PostLayoutIdentityObserver | None = None
 
     def __post_init__(self) -> None:
@@ -1082,6 +1084,7 @@ def build_ab_executor(
         return _InstallResultShim(
             release_id=result.release_id,
             hardware_detection_incomplete=seams.hardware_detection_incomplete,
+            wifi_firmware_unavailable=seams.wifi_firmware_unavailable,
         )
 
     # Read by InstallTransactionService.execute_ab_install: this executor
@@ -1096,6 +1099,7 @@ class _InstallResultShim:
 
     release_id: str
     hardware_detection_incomplete: bool = False
+    wifi_firmware_unavailable: bool = False
 
 
 # ---------------------------------------------------------------------------

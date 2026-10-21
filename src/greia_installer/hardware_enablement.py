@@ -25,6 +25,7 @@ from greia_platform.hardware_enablement import (
     X86MicrocodeResolver,
 )
 
+from .hardware_id_rules import DeviceIdRuleResult, evaluate_device_id_rules
 from .hardware_support import HardwareSupportPoolError, VerifiedHardwareSupportPool
 
 
@@ -102,6 +103,14 @@ class InstallerHardwareEnablementPlan:
     #: Pool-provided common network firmware added because detection was
     #: incomplete (empty for a complete plan).
     fallback_firmware: tuple[str, ...] = ()
+    #: Diagnostics for Wi-Fi chips whose firmware/driver Greia cannot include
+    #: (Broadcom b43 family, wl-only chips).  Display-only: the installation
+    #: succeeds, but the completion page and the install record say so.
+    unsupported_wifi: tuple[str, ...] = ()
+
+    @property
+    def wifi_firmware_unavailable(self) -> bool:
+        return bool(self.unsupported_wifi)
 
     @property
     def complete(self) -> bool:
@@ -129,11 +138,19 @@ class InstallerHardwareEnablementPlan:
     def detection_incomplete(self) -> bool:
         """True when detection was incomplete at any point (fallback applied)."""
 
-        return not self.complete or bool(self.fallback_firmware)
+        return (
+            not self.complete
+            or bool(self.fallback_firmware)
+            or self.wifi_firmware_unavailable
+        )
 
     @property
     def recorded_diagnostics(self) -> tuple[str, ...]:
-        return self.diagnostics[:MAX_RECORDED_DIAGNOSTICS]
+        # The unsupported-Wi-Fi diagnostic is the one the parent can act on,
+        # so it is never pushed out of the bounded record by resolver noise.
+        return tuple(
+            dict.fromkeys((*self.unsupported_wifi, *self.diagnostics))
+        )[:MAX_RECORDED_DIAGNOSTICS]
 
     @property
     def degraded(self) -> bool:
@@ -329,6 +346,17 @@ class InstallerHardwareEnablementPlanner:
                 + ", ".join(sorted(set(missing)))
             )
 
+        # Supplementary PCI/USB ID rules (hardware_id_rules.py): only names the
+        # verified pool provides are added, so an absent package is not "missing".
+        rule_result: DeviceIdRuleResult = evaluate_device_id_rules(
+            inventory, self._pool.provided_firmware
+        )
+        required_firmware.extend(rule_result.packages)
+        unsupported_wifi = tuple(
+            item.diagnostic
+            for item in rule_result.unsupported
+        ) if rule_result.wifi_firmware_unavailable else ()
+
         incomplete = not resolution.complete or bool(missing)
         fallback = (
             tuple(
@@ -347,6 +375,7 @@ class InstallerHardwareEnablementPlanner:
             missing_packages=tuple(sorted(set(missing))),
             diagnostics=tuple(diagnostics),
             fallback_firmware=fallback,
+            unsupported_wifi=unsupported_wifi,
         )
 
     @classmethod
@@ -414,6 +443,9 @@ def merge_hardware_enablement_plans(
         # The initial fallback stays installed: a later complete snapshot adds
         # to the pre-erase selection, it never removes it.
         fallback_firmware=initial.fallback_firmware,
+        unsupported_wifi=tuple(
+            dict.fromkeys((*initial.unsupported_wifi, *refreshed.unsupported_wifi))
+        ),
     )
 
 

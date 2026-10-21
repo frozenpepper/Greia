@@ -785,6 +785,9 @@ class InstallTransactionService:
             if getattr(result, "hardware_detection_incomplete", False) is True:
                 # Display-only note for the completion page; never an install fact.
                 installed["hardware_detection"] = "incomplete"
+            if getattr(result, "wifi_firmware_unavailable", False) is True:
+                # Display-only: Wi-Fi chip needs firmware Greia cannot include.
+                installed["wifi_firmware"] = "unavailable"
             return encode_response(transaction_id, op, installed)
         raise InstallTransactionError(f"unknown install-transaction op: {op}")
 

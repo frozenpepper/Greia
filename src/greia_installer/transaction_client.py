@@ -215,6 +215,8 @@ class ExecuteReceipt:
     target_identity: str
     #: Display-only: hardware detection was incomplete, fallback firmware used.
     hardware_detection_incomplete: bool = False
+    #: Display-only: a Wi-Fi chip needs firmware Greia cannot include.
+    wifi_firmware_unavailable: bool = False
 
 
 def _require_mapping(value: object, *, field_name: str) -> dict[str, object]:
@@ -355,6 +357,7 @@ class InstallTransactionClient:
             plan_digest=str(payload.get("plan_digest")),
             target_identity=str(payload.get("target_identity")),
             hardware_detection_incomplete=payload.get("hardware_detection") == "incomplete",
+            wifi_firmware_unavailable=payload.get("wifi_firmware") == "unavailable",
         )
         if receipt.transaction_nonce != transaction_nonce or not hmac.compare_digest(
             receipt.plan_digest, plan_digest

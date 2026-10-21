@@ -117,6 +117,10 @@ Scanning and connection work must not block the Pygame rendering/event loop.
 
 Late results from an abandoned scan or connection attempt must not overwrite a newer parent choice. The Wi-Fi setup controller therefore treats each asynchronous operation as a generation and ignores results from superseded generations.
 
+## Unsupported Wi-Fi firmware note
+
+Some adapters cannot work from an offline Greia install because their firmware or driver cannot be redistributed or compiled on the target: the Broadcom b43 family (BCM4311/4312/4318/4321/4322/4331 and relatives, firmware cut from Broadcom's proprietary driver) and Broadcom chips that only work with the out-of-tree `wl` driver (BCM4352/4360 and relatives). The installer recognizes these by PCI ID (`src/greia_installer/hardware_id_rules.py`), still completes the installation, records a diagnostic in the install record, and shows a localized completion note: the Wi-Fi chip needs firmware Greia cannot include; use an Ethernet cable or a USB Wi-Fi adapter. The target also blacklists `b43` so it cannot race `brcmsmac` (BCM4313/43224/43225, firmware `firmware-brcm80211` from the pool). Status: SOURCE, UNPROVEN on real Broadcom hardware; the ID table is extended from user reports.
+
 ## Acceptance criteria
 
 For every reference installer family, eventually prove on appropriate physical hardware that:

@@ -32,7 +32,8 @@ class SystemOverlayContractTests(unittest.TestCase):
         self.assertTrue(text.startswith("#!/bin/sh"))
         self.assertIn('[ "${1:-}" = "post" ]', text)
         self.assertIn(
-            'WIFI_RESUME_DRIVERS="iwl3945 iwl4965 b43 b43legacy brcmsmac ath5k"',
+            'WIFI_RESUME_DRIVERS="iwl3945 iwl4965 iwlwifi b43 b43legacy brcmsmac ath5k '
+            'ath9k rt2800pci rtl8192ce rtl8180 rtl8187 ipw2100 ipw2200"',
             text,
         )
         self.assertIn("/sys/class/net", text)

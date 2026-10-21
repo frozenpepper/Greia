@@ -5,6 +5,8 @@ Status: DESIGN SPEC / research. No source changed. Labels: **VERIFIED-DOC** = re
 we promise anything. No machine was booted for this review. Companion to
 `2026-10-21_PRE_M1_MAC_HARDWARE_SUPPORT.md` and `acer/2026-10-21_ASPIRE_1280X800_VIEWPORT_AND_TARGET_WIFI.md`.
 
+Plan status (2026-10-21, later the same day): source items done and UNPROVEN on real netbooks: section 5.1 force-include list (`FORCED_FIRMWARE_PACKAGES`, ipw2x00 best effort, SOF/intel-sound judged irrelevant to i686), the b43 "no firmware" completion note (5.1 c), a PCI/USB ID rule table, and the extended resume hook list (5.2, one test covering the list rather than one fixture per driver). Open: profile notes and About end-of-support string (5.3), supported-hardware docs page (5.4), all LAB items in section 7.
+
 ## 0. Headline: the i386 line is a bookworm line, and it has an end date
 
 1. **Suite and kernel (repo, read today).** Every i386 profile (`legacy-x86-i686*.toml`, `acer-aspire-one-i386*.toml`)
