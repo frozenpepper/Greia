@@ -6,11 +6,12 @@
 `build_utc=2026-10-19T08:10:13Z`, Intel `iwl3945` Wi-Fi. Remote work used the
 developer SSH account and `xdotool`/PIL captures; this is remote input, not a
 hands-on physical-input acceptance.  
-**Repository:** `main` `a3e70618` when this note was written; the fixes are in
-`0a0b4659` (viewport), `813b43d0` (installer firmware refresh) and `a8a64fdd`
-(executable `build_profile` CLI). The installed device was source-deployed at
-the pre-rebase equivalent `a2ac1386`; the rebuilt image was built from
-`fa15c88f`.  
+**Repository:** `main` `4fc0fee11` plus the suspend hook `9636e737` at the
+correction; the initial fixes are `0a0b4659` (viewport), `813b43d0`
+(complementary post-copy refresh) and `a8a64fdd` (executable `build_profile`
+CLI). The installed device was source-deployed at the pre-rebase equivalent
+`a2ac1386`; the rebuilt image in §2.6 was built from `fa15c88f` and predates
+`4fc0fee11`.  
 **Rebuilt image:** SHA-256
 `ff339ad76b65acd4c0f998c81da61577127400c4aee13a59963e68d2bcd4838e`,
 live media id `7b50ef65-a0a8-4427-afb3-667ef37a52d1`, payload accounted
@@ -30,11 +31,16 @@ live media id `7b50ef65-a0a8-4427-afb3-667ef37a52d1`, payload accounted
    `iwlwifi-3945-2.ucode`; `iwd` had a wiphy but no usable station, so the
    installed OS found no networks. The live installer worked because it carries
    the broad firmware cover. The device was repaired with
-   `firmware-iwlwifi`; the source now re-resolves target support after the
-   payload copy so a late-bound driver is not silently omitted.
-3. **The rebuilt LaCie includes both fixes** and passes artifact, USB read-back
-   and loop-hygiene gates. A clean install from this stick has **not** been run
-   yet; that is the next acceptance step.
+   `firmware-iwlwifi`. **The actual source cause was
+   `ProtectKernelModules=yes` hiding `/usr/lib/modules` from the install
+   service**, so `modinfo` reported every driver as unknown and no driver
+   firmware was selected. See §6; `4fc0fee11` fixes that. The post-copy refresh
+   from `813b43d0` remains a complementary late-binding guard, not the root
+   cause.
+3. **The LaCie image in §2.6 predates the real firmware fix and the
+   suspend/resume hook.** It includes the viewport fix and the initial
+   post-copy refresh, and its gates pass. Rebuild and clean-install again after
+   `4fc0fee11` + the resume hook; that is the next acceptance step.
 
 ---
 
@@ -175,6 +181,13 @@ network during installation from the live installer.
 
 ### 2.2 Root cause
 
+**Correction (see §6):** the primary source cause was
+`ProtectKernelModules=yes` on `greia-install-transaction.service` (and the
+system-update service), which hid the module tree from `modinfo`; the resolver
+treated the resulting exit 1 as a built-in driver. The late-binding refresh in
+§2.3 runs in the same sandbox and could not change that. The text below records
+the observed target state; §6 owns the corrected source cause.
+
 On the installed system:
 
 ```text
@@ -189,7 +202,12 @@ scan worked. The target's ordinary support plan recorded only
 `["intel-microcode"]` in `/etc/greia-os/install-record.json`, despite the
 bound `iwl3945` driver declaring `iwlwifi-3945-2.ucode`.
 
-### 2.3 Implementation
+### 2.3 Implementation (complementary late-binding refresh)
+
+**This was not the root-cause fix.** It remains useful for a genuinely
+late-binding driver, but it runs inside the same module-hiding sandbox and
+therefore could not install `firmware-iwlwifi` on the Aspire. The real fix is
+`4fc0fee11` (§6).
 
 The pre-erase plan remains the fail-closed safety authority. A second complete
 inventory now runs after the payload copy and before target configuration:
@@ -258,7 +276,12 @@ PYTHONPATH=src python3 -m unittest tests.test_installer_hardware_enablement -v
 PYTHONPATH=src python3 -m unittest tests.test_installer_engine -v
 ```
 
-### 2.6 Image rebuild and flash
+### 2.6 Image rebuild and flash (predates the real firmware fix)
+
+**This image was built from `fa15c88f`, before `4fc0fee11` and the suspend
+hook. It is not the final Wi-Fi acceptance image.** The data below is retained
+as the media/build evidence for the viewport + initial-refresh candidate.
+
 
 ```text
 source: fa15c88f (viewport + firmware refresh + executable build_profile + v0.3 masters)
@@ -411,6 +434,8 @@ sudo bash tools/build-and-flash-development-usb.sh \
 | `443044fc` | HANDOVER + lifecycle evidence for the Aspire fixes |
 | `fa15c88f` | Point evidence at rebased commit hashes |
 | `9271f0ac` | Record the rebuilt/flashed RC image |
+| `4fc0fee11` | **Real firmware-selection fix:** remove `ProtectKernelModules`, gate on `LinuxKernelModules`, refuse incomplete resolution |
+| `9636e737` | Suspend/resume `iwl3945` recovery hook and contract test |
 
 The device itself reports `.deployed-sha=a2ac13868028434e1ad4e84e5ea581fed1744000`
 (the pre-rebase equivalent of `0a0b4659`+`813b43d0`+`a8a64fdd`). A future source
@@ -420,12 +445,14 @@ deploy or clean install will move it to the current `main`.
 
 ## 5. Next exact steps
 
-1. Install from the rebuilt LaCie on a disposable/approved target (or on this
-   Aspire after owner approval) and confirm:
+1. Rebuild/flash with `4fc0fee11` plus the `iwl3945` resume hook (the current
+   LaCie predates both), then install on a disposable/approved target (or on
+   this Aspire after owner approval) and confirm:
    - the installed target contains `firmware-iwlwifi` (or the pool-selected
      package) and `iwd` connects without manual package installation;
+   - the install record lists the final support packages;
    - Activities fill the real panel and the pointer remains visible everywhere;
-   - the install record lists the final support packages.
+   - closing/opening the lid leaves Wi-Fi connected automatically.
 2. Run the Acer premortem §5 F1–F19 physical checklist, including the hidden
    `verbose` recovery path.
 3. Decide whether to add a post-install firmware verification/repair step and
