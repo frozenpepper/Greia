@@ -349,6 +349,26 @@ This is presentation, not resolution independence: a 1024x600 bitmap scaled
 1.25x is softer than art drawn at 1280x800. Native-resolution drawing is the
 follow-up that removes both the softness and the bands.
 
+### 9.3 High-resolution rendering (opt-in)
+
+`PygameReferenceCanvas(target, hires=True)` removes the softness described in
+§9.2 for an opted-in Activity. When the CONTAIN scale against 1024x600 is at
+least 1.2 (owner threshold, 2026-10-21), `canvas.surface` and every surface the
+Activity creates afterwards hold physical pixels while the Python API stays in
+logical 1024x600 units (`greia_platform.hires_surface`: `ScaledSurface`, plus
+patched `pygame.draw`, `pygame.transform`, `pygame.image` loaders and
+`pygame.font.Font` inside that process only). `present()` then becomes a 1:1
+copy. Below 1.2 the cheap path is kept: close to the reference the gain is
+small and the extra fill cost is not worth it. `canvas.render_scale` reports the
+scale used; `GREIA_ACTIVITY_HIRES=0` disables the layer for diagnosis.
+
+Known limits: `subsurface` of a scaled surface is a copy, not a pixel-sharing
+view; masks and surfarray see physical pixels; code that captured
+`pygame.Surface` or `pygame.draw` functions before activation keeps creating
+logical surfaces. Raster art is still logical-size PNG (resampled on load), so
+only drawn shapes, outlines and text get sharper until higher-resolution
+renditions exist.
+
 ---
 
 ## 10. Performance rules

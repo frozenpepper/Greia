@@ -234,6 +234,22 @@ error. `make verify` was not rerun on the merged head. The 72 focused voice
 tests passed before production. No runtime playback, release image, Simulator,
 physical-device or human listening acceptance is claimed.
 
+## 2026-10-21 — Transparent high-resolution Activity rendering (pilot)
+
+**Evidence class: SOURCE + TESTS + DESKTOP VISUAL REVIEW (headless captures at 1280x800). Not seen on the Aspire.**
+
+`greia_platform/hires_surface.py` plus `PygameReferenceCanvas(hires=True)` let an
+opted-in Activity render at physical resolution with unchanged 1024x600 logical
+code. Pilots: `alfabeto_leo`, `memory_meraviglie`. Threshold: CONTAIN scale >= 1.2
+(owner, 2026-10-21); below it the cheap path stays. `GREIA_ACTIVITY_HIRES=0` disables.
+Sharper now: drawn shapes, outlines, text. Not yet: PNG art (still logical-size,
+resampled on load). Regression tests in `tests/test_hires_surface.py`
+(channel-order swap on smoothscale, 1 px lines leaving empty rows at 1.25x).
+Design: `docs/design/GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md` §9.3.
+
+Next exact step: higher-resolution PNG renditions, then roll out to other
+Activities after owner review of the captures.
+
 ## 2026-10-21 — Scaled Activities: band glitches, jagged scaling and pointer cost fixed in the canvas
 
 **Evidence class: SOURCE + FOCUSED/ACTIVITY TESTS + DESKTOP VISUAL REVIEW (headless captures). Not seen on the Aspire (offline this session).**

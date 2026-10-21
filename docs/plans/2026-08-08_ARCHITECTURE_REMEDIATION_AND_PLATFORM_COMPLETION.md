@@ -3587,3 +3587,13 @@ human listening remains pending.
 
 Follow-up to the Aspire 1280x800 viewport fix (`0a0b4659`). `PygameReferenceCanvas` now owns its CONTAIN bands (repainted every full present with an edge smear or the `clear` colour, so no stale launch-card pixels or pointer trails), resamples non-integer scales smoothly (`smooth=None` default), and repairs pointer/region updates from a cached physical frame at any scale instead of re-scaling the frame on each mouse move. Tests: `tests/test_pygame_reference_canvas_presentation.py` (9) plus 1,524 Activity tests and the canvas/Simulator consumers PASS. Not yet observed on the physical Aspire. Native-resolution Activity rendering (no upscale softness, no bands) remains open and needs an owner decision.
 
+
+### 2026-10-21 — Transparent high-resolution Activity rendering, pilot (SOURCE + TESTS + DESKTOP VISUAL REVIEW)
+
+`greia_platform/hires_surface.py` and `PygameReferenceCanvas(hires=True)` render an
+opted-in Activity at physical resolution on displays at least 1.2x the 1024x600
+reference, with unchanged logical-unit Activity code (process-local pygame
+patching, no new authority; `GREIA_ACTIVITY_HIRES=0` disables). Pilots:
+`alfabeto_leo`, `memory_meraviglie`. `tests/test_hires_surface.py` covers scale
+threshold, logical/physical geometry, drawing, blit, channel order and canvas
+presentation. Not seen on the Aspire; PNG art is not yet higher resolution.
