@@ -102,7 +102,7 @@ Synthetic viewport is passed as trusted runtime-adapter/bootstrap plumbing, not 
 
 Fast developer loading may omit ordinary VCS/cache residue, but the managed copy must remain semantically equivalent to the accepted source.
 
-Before copying, the simulator performs a finite lstat-based safety snapshot bounded by the canonical `RuntimeCatalogue.maximum_activity_bytes`. Symlinks, special files, executable package files and canonical forbidden content are rejected rather than dereferenced or transformed. Source and simulator-managed state may not contain one another.
+Before copying, the simulator performs a finite lstat-based safety snapshot bounded by a fixed 512 MiB safety ceiling (the canonical `RuntimeCatalogue.maximum_activity_bytes` is a 64 MiB warn-only guideline since the 2026-10-21 owner decision). Symlinks, special files, executable package files and canonical forbidden content are rejected rather than dereferenced or transformed. Source and simulator-managed state may not contain one another.
 
 The bounded staged copy is then validated through the real `ActivityRegistry` together with built-in identity authority under `DEVELOPER_UNSIGNED` trust. Publication into `developer-activities/<activity-id>` is transactional: an existing last-known-good copy is retained until the replacement has passed final normal registry discovery, and is restored if final publication/validation fails.
 

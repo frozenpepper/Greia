@@ -391,6 +391,10 @@ Before the first frame, Atom launch time was dominated by pure-Python sound synt
 - **SDL environment is the platform's.** The runtime adapter sets `SDL_FRAMEBUFFER_ACCELERATION=0` (`greia_launcher.runtime_adapter`): window creation 0.03–0.15 s instead of 0.7–1.2 s and ~70 MB less RSS per process.
 - Validate with `tests/test_launch_startup_performance.py`; Acer claims follow the sweep method in `docs/reviews/acer/2026-10-16_ACER_ACTIVITY_SWEEP.md`.
 
+### 11.4A Package size guideline
+
+Per-Activity size: **64 MiB guideline** (`maximum_activity_bytes`, `runtime/child-runtime.toml`); `@2x` art counts normally. Larger Activities are allowed with a build-time warning (`tools/validate_activity.py` and registry logging) and an install-time size notice (`large_activity` / `size_notice` in the install receipt) - owner decision 2026-10-21. Every other footprint/safety rule stays fail-closed.
+
 ### 11.5 Performance is correctness
 
 The Acer-class floor (Atom N270, 2 logical CPUs, 1 GB RAM, no swap, 1024×600) is a design target, not a later optimization pass. Never on a frame path:

@@ -96,7 +96,7 @@ forbidden_file_names = [
 ]
 
 [validation]
-maximum_activity_bytes = 52428800
+maximum_activity_bytes = 67108864
 forbidden_path_names = [
   ".git",
   ".hg",

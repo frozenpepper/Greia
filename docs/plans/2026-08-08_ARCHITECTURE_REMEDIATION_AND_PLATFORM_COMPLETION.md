@@ -3597,3 +3597,7 @@ patching, no new authority; `GREIA_ACTIVITY_HIRES=0` disables). Pilots:
 `alfabeto_leo`, `memory_meraviglie`. `tests/test_hires_surface.py` covers scale
 threshold, logical/physical geometry, drawing, blit, channel order and canvas
 presentation. Not seen on the Aspire; PNG art is not yet higher resolution.
+
+### 2026-10-21 - High-resolution rollout to all Activities; size cap becomes a guideline
+
+All 44 Activities opted in to transparent high-resolution rendering with `@2x` renditions (SOURCE + TESTS + DESKTOP VISUAL REVIEW; no Aspire check). Owner decision: the per-Activity cap is a 64 MiB guideline with a build-time warning and an install-time size notice, not a refusal; extraction/snapshot keep a fixed 512 MiB safety ceiling. Image payload to be re-measured against the 1,300 MiB gate at the next build. Details and open items: HANDOVER.md.

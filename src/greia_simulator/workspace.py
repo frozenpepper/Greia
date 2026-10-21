@@ -24,6 +24,11 @@ _IGNORED_DEVELOPMENT_NAMES = frozenset(
 )
 
 
+# Safety bound for the source snapshot; the per-Activity size limit itself is a
+# warn-only guideline (owner decision 2026-10-21).
+_SOURCE_SAFETY_CEILING_BYTES = 512 * 1024 * 1024
+
+
 @dataclass(frozen=True, slots=True)
 class _TreeEntry:
     relative: Path
@@ -485,9 +490,9 @@ class SimulatorWorkspace:
                 if metadata.st_mode & 0o111:
                     raise ValueError(f"executable Activity files are forbidden: {path}")
                 total += metadata.st_size
-                if total > runtime.maximum_activity_bytes:
+                if total > _SOURCE_SAFETY_CEILING_BYTES:
                     raise ValueError(
-                        f"Activity source exceeds {runtime.maximum_activity_bytes} bytes"
+                        f"Activity source exceeds {_SOURCE_SAFETY_CEILING_BYTES} bytes"
                     )
                 digest = self._hash_source_file(path, metadata)
                 entries.append(
@@ -540,7 +545,7 @@ class SimulatorWorkspace:
                         sink.write(chunk)
                         copied += len(chunk)
                         remaining -= len(chunk)
-                        if copied > runtime.maximum_activity_bytes:
+                        if copied > _SOURCE_SAFETY_CEILING_BYTES:
                             raise ValueError(
                                 "Activity source exceeded platform size while staging"
                             )

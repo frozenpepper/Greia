@@ -67,7 +67,12 @@ def main() -> int:
     runtime = RuntimeCatalogue.load(args.runtime)
     source = validation_source(root, project_root)
     registry = ActivityRegistry([source], runtime)
-    manifest = registry.validate_registration(root, source).manifest
+    registration = registry.validate_registration(root, source)
+    manifest = registration.manifest
+    notice = registration.size_notice()
+    if notice is not None:
+        # Size is a guideline, not a gate (owner decision 2026-10-21).
+        print(f"WARNING {manifest.activity_id}: {notice}", file=sys.stderr)
     # Runtime package policy: the import allow/deny roots, forbidden files and
     # suffixes, dynamic imports and backend independence (RuntimeValidationError).
     runtime_adapters(args.runtime)[manifest.runtime_type].validate_package(manifest)
@@ -78,6 +83,8 @@ def main() -> int:
         # dedicated R7 migration wave removes it.
         assert_python_activity_backend_independent(root)
     print(f"PASS {manifest.activity_id} {manifest.version}")
+    if notice is not None:
+        print(f"warning size {registration.size_bytes} bytes: {notice}")
     print(f"sha256 {package_digest(root)}")
     return 0
 

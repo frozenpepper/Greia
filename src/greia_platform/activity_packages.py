@@ -34,6 +34,10 @@ from .trust import ActivitySource, PackageTrust
 
 MAX_ARCHIVE_ENTRIES = 512
 MAX_ARCHIVE_BYTES = 32 * 1024 * 1024
+# Zip-bomb guard for extraction only. The per-Activity size limit is a
+# guideline (warning + install-time notice, owner decision 2026-10-21); this
+# fixed ceiling is a safety bound, not a product rule.
+EXTRACTION_SAFETY_CEILING_BYTES = 512 * 1024 * 1024
 MAX_PATH_CHARACTERS = 220
 MAX_COMPRESSION_RATIO = 200
 _INSTALL_LOCK_NAME = ".install.lock"
@@ -64,14 +68,33 @@ class ActivityInstallReceipt:
     package_digest: str
     package_trust: PackageTrust
     source_id: str
+    size_bytes: int = 0
+    size_guideline_bytes: int = 0
 
-    def as_json_dict(self) -> dict[str, str]:
+    @property
+    def large_activity(self) -> bool:
+        """True when the installed size exceeds the guideline (notice only)."""
+        return bool(self.size_guideline_bytes) and self.size_bytes > self.size_guideline_bytes
+
+    def size_notice(self) -> str | None:
+        if not self.large_activity:
+            return None
+        return (
+            f"large Activity: {self.size_bytes / 1048576:.1f} MiB "
+            f"(over the {self.size_guideline_bytes / 1048576:g} MiB guideline)"
+        )
+
+    def as_json_dict(self) -> dict[str, str | int | bool | None]:
         return {
             "activity_id": self.activity_id,
             "version": self.version,
             "package_digest": self.package_digest,
             "package_trust": self.package_trust.value,
             "source_id": self.source_id,
+            "size_bytes": self.size_bytes,
+            "size_guideline_bytes": self.size_guideline_bytes,
+            "large_activity": self.large_activity,
+            "size_notice": self.size_notice(),
         }
 
 
@@ -624,7 +647,7 @@ class ActivityPackageService:
                 raise ActivityPackageError(
                     "Activity package must contain activity.toml at archive root"
                 )
-            manifest, digest = self._validate_staged(stage_parent, package_root)
+            manifest, digest, size_bytes = self._validate_staged(stage_parent, package_root)
             final_active = self.active_root / manifest.activity_id
             if final_active.exists():
                 raise ActivityPackageError(
@@ -664,6 +687,8 @@ class ActivityPackageService:
                 package_digest=digest,
                 package_trust=PackageTrust.PARENT_TRUSTED_UNSIGNED,
                 source_id=self.SOURCE_ID,
+                size_bytes=size_bytes,
+                size_guideline_bytes=self.runtime.maximum_activity_bytes,
             )
             try:
                 staged_generation = self._stage_generation(
@@ -871,9 +896,9 @@ class ActivityPackageService:
                     os.chmod(target, 0o755)
                     continue
                 total += info.file_size
-                if total > self.runtime.maximum_activity_bytes:
+                if total > EXTRACTION_SAFETY_CEILING_BYTES:
                     raise ActivityPackageError(
-                        "Activity package exceeds the platform uncompressed size limit"
+                        "Activity package exceeds the extraction safety ceiling"
                     )
                 if (
                     info.file_size > 1024 * 1024
@@ -925,7 +950,7 @@ class ActivityPackageService:
 
     def _validate_staged(
         self, stage_parent: Path, package_root: Path
-    ) -> tuple[ActivityManifest, str]:
+    ) -> tuple[ActivityManifest, str, int]:
         sources: list[ActivitySource] = []
         if self.built_in_root is not None:
             sources.append(
@@ -980,7 +1005,7 @@ class ActivityPackageService:
                 combined.discover_registrations()
             except ActivityValidationError as exc:
                 raise ActivityPackageError(str(exc)) from exc
-        return staged.manifest, staged.package_digest
+        return staged.manifest, staged.package_digest, staged.size_bytes
 
     @staticmethod
     def _make_tree_read_only(root: Path) -> None:

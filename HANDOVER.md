@@ -250,6 +250,18 @@ error. `make verify` was not rerun on the merged head. The 72 focused voice
 tests passed before production. No runtime playback, release image, Simulator,
 physical-device or human listening acceptance is claimed.
 
+## 2026-10-21 — High-resolution rollout to all Activities
+
+Evidence class: SOURCE + TESTS + DESKTOP VISUAL REVIEW (headless captures at 1280x800 vs `GREIA_ACTIVITY_HIRES=0`; not seen on the Aspire).
+
+- 807 shared + 175 Activity-private `@2x` renditions rendered from the same SVG masters (commit f22db8cb3). 13 Activity images were skipped because the shipped PNG no longer matches its SVG master (listed in the rollout notes).
+- All 44 Activities opted in to `hires=True` (commits 708ed84db, 53eb5d864, 1118ece58, fbcff6a6e).
+- `hires_surface` fixes found during rollout: near-opaque alpha snapped back to 255 after downscale (ghost shapes), colour-keyed surfaces survive copy/convert (sottomarino porthole), `pygame.mask.from_surface` returns logical-unit masks (teatrino puppets). Tests added.
+- Size: ~32 MiB of `@2x` art added. `enciclopedia_greia` is now 53,914,481 bytes (the figure that failed the old 50 MiB check; it is that one Activity, 4.2 MB of it `@2x`). The image payload must be re-measured against the 1,300 MiB gate at the next build.
+- Owner decision 2026-10-21: the per-Activity size limit is now a **64 MiB guideline; larger Activities are allowed with a build-time warning and an install-time size notice**. Implementation: `maximum_activity_bytes` = 67,108,864 (`runtime/child-runtime.toml`, `RuntimeCatalogue.default_safe`) no longer refuses; `ActivityRegistration.size_notice()` is logged and printed by `tools/validate_activity.py` (stderr `WARNING`), and the install receipt carries `size_bytes`, `large_activity`, `size_notice`. Archive extraction and simulator snapshot keep a fixed 512 MiB zip-bomb safety ceiling; the 32 MiB compressed upload cap is unchanged. Parent UI rendering of the install notice is pending (data is in the API response). Test: `tests/test_activity_size_guideline.py`.
+
+Open items: `writing` and `shape_garden` were captured only at 1024x768 where the layer does not engage (typed text, caret, painting strokes in hi-res unverified); `quattro_amici` / `teatrino_fiabe` modes beyond the first screen not captured; `corsa_bacche` audio TypeError in the capture harness (also with hires off, possibly harness-only); `baia_delle_orche` moon-pixel test fails on main independent of this work; physical Aspire check pending.
+
 ## 2026-10-21 — Transparent high-resolution Activity rendering (pilot)
 
 **Evidence class: SOURCE + TESTS + DESKTOP VISUAL REVIEW (headless captures at 1280x800). Not seen on the Aspire.**

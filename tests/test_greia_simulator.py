@@ -543,14 +543,14 @@ class GreiaSimulatorWorkspaceTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "symlinks are forbidden"):
                 workspace.load_activity(dir_source)
 
-    def test_oversize_source_is_rejected_before_staging_copy(self) -> None:
+    def test_beyond_safety_ceiling_source_is_rejected_before_staging_copy(self) -> None:
         runtime = RuntimeCatalogue.load(REPO / "runtime" / "child-runtime.toml")
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)
             workspace = SimulatorWorkspace(REPO, base / "state")
             source = _write_activity(base / "source")
             with (source / "huge.dat").open("wb") as handle:
-                handle.truncate(runtime.maximum_activity_bytes + 1)
+                handle.truncate(simulator_workspace._SOURCE_SAFETY_CEILING_BYTES + 1)
             with self.assertRaisesRegex(ValueError, "exceeds"):
                 workspace.load_activity(source)
             self.assertEqual(tuple(workspace.state_root.glob("greia-simulator-load-*")), ())

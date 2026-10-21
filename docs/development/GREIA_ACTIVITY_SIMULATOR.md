@@ -108,7 +108,7 @@ The loader treats source acquisition as a bounded transaction:
 3. VCS/cache residue explicitly owned by this workflow may be omitted;
 4. symlinks are rejected rather than followed;
 5. special files, executable Activity files and canonical forbidden content are rejected;
-6. source bytes are bounded by `RuntimeCatalogue.maximum_activity_bytes` before copying;
+6. source bytes are bounded by a fixed 512 MiB safety ceiling before copying (`RuntimeCatalogue.maximum_activity_bytes` is a 64 MiB warn-only guideline);
 7. each inspected file is content-fingerprinted and the copy rechecks inode/type/size/mtime plus the exact bytes copied, so a same-size/metadata source mutation is still rejected;
 8. staged content is validated by the real `ActivityRegistry` together with built-in identity authority;
 9. it receives `DEVELOPER_UNSIGNED` trust;

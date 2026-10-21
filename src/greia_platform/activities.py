@@ -82,6 +82,22 @@ class ActivityRegistration:
     package_digest: str
     package_trust: PackageTrust
     source_id: str
+    size_bytes: int = 0
+    size_guideline_bytes: int = 0
+
+    @property
+    def oversize(self) -> bool:
+        """True when the package exceeds the size guideline (warning only)."""
+        return bool(self.size_guideline_bytes) and self.size_bytes > self.size_guideline_bytes
+
+    def size_notice(self) -> str | None:
+        """Human-readable large-Activity notice, or None within the guideline."""
+        if not self.oversize:
+            return None
+        return (
+            f"large Activity: {self.size_bytes / 1048576:.1f} MiB "
+            f"(over the {self.size_guideline_bytes / 1048576:g} MiB guideline)"
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -259,7 +275,7 @@ class RuntimeCatalogue:
                 "profile.manage_own",
                 "removable_media.read",
             }),
-            maximum_activity_bytes=52428800,
+            maximum_activity_bytes=67108864,
         )
 
     @classmethod
@@ -456,17 +472,23 @@ class ActivityRegistry:
                 raise ActivityValidationError(
                     "Activity source is not the authoritative configured source for this package"
                 )
-        digest = self._validated_tree_digest(root)
+        digest, size_bytes = self._validated_tree_digest(root)
         manifest = self._parse_manifest(root)
         self._validate_manifest(manifest, configured)
-        return ActivityRegistration(
+        registration = ActivityRegistration(
             manifest=manifest,
             package_digest=digest,
             package_trust=configured.trust,
             source_id=configured.source_id,
+            size_bytes=size_bytes,
+            size_guideline_bytes=self._runtime.maximum_activity_bytes,
         )
+        notice = registration.size_notice()
+        if notice is not None:
+            logger.warning("%s: %s", manifest.activity_id, notice)
+        return registration
 
-    def _validated_tree_digest(self, root: Path) -> str:
+    def _validated_tree_digest(self, root: Path) -> tuple[str, int]:
         """Tree validation + package digest, reused while the tree is unchanged.
 
         Every discovery (Parent catalogue, policy, system status, launcher)
@@ -488,13 +510,15 @@ class ActivityRegistry:
         fingerprint = _tree_fingerprint(root)
         cached = _validated_tree_cache.get(key)
         if cached is not None and cached[0] == fingerprint:
-            return cached[1]
-        self._validate_tree(root)
+            return cached[1], cached[2]
+        total = self._validate_tree(root)
+        if not isinstance(total, int):
+            total = 0
         digest = package_digest(root)
         if key not in _validated_tree_cache and len(_validated_tree_cache) >= _VALIDATED_TREE_CACHE_LIMIT:
             _validated_tree_cache.pop(next(iter(_validated_tree_cache)))
-        _validated_tree_cache[key] = (fingerprint, digest)
-        return digest
+        _validated_tree_cache[key] = (fingerprint, digest, total)
+        return digest, total
 
     def _source_for(self, root: Path) -> ActivitySource:
         matches = [
@@ -505,7 +529,8 @@ class ActivityRegistry:
             raise ActivityValidationError(f"activity is outside configured roots: {root}")
         return max(matches, key=lambda item: len(item.root.parts))
 
-    def _validate_tree(self, root: Path) -> None:
+    def _validate_tree(self, root: Path) -> int:
+        """Validate the tree and return its byte total (size is advisory)."""
         total = 0
         for path in sorted(root.rglob("*")):
             if "__pycache__" in path.parts:
@@ -539,10 +564,9 @@ class ActivityRegistry:
                     raise ActivityValidationError(
                         f"cannot parse Python source {path}: {exc}"
                     ) from exc
-        if total > self._runtime.maximum_activity_bytes:
-            raise ActivityValidationError(
-                f"activity is {total} bytes; limit is {self._runtime.maximum_activity_bytes}"
-            )
+        # Owner decision 2026-10-21: the size limit is a guideline. Exceeding it
+        # is reported through ActivityRegistration.size_notice(), never refused.
+        return total
 
     def _parse_manifest(self, root: Path) -> ActivityManifest:
         path = root / "activity.toml"
@@ -763,7 +787,7 @@ class ActivityRegistry:
 
 
 _VALIDATED_TREE_CACHE_LIMIT = 256
-_validated_tree_cache: dict[tuple[str, tuple[object, ...]], tuple[tuple[tuple[object, ...], ...], str]] = {}
+_validated_tree_cache: dict[tuple[str, tuple[object, ...]], tuple[tuple[tuple[object, ...], ...], str, int]] = {}
 
 
 def clear_activity_validation_cache() -> None:
