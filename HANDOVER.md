@@ -74,6 +74,15 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-21 — Aspire 1280x800: full-surface Activities and missing target Wi-Fi firmware
+
+**Evidence class: SOURCE + FOCUSED TESTS + PHYSICAL/DEVICE (installed Acer Aspire, remote input).**
+
+- **Display:** Activities opened a fixed 1024x600 window on the 1280x800 panel, leaving stale Shell pixels and a hidden pointer around the surface. `81bfe10b` adds `greia_platform.activity_display`, installed by the Greia Activity entry: the requested `set_mode` size is replaced with the Shell's exact recorded viewport and the launch cover still owns the first-window card. Authoring design/skill docs updated. Deployed `a2ac1386` to the installed RC and opened `alfabeto_leo`: the Activity surface is `1280x800+0+0`, fills the panel, and trusted Home remains on top.
+- **Wi-Fi:** the installed target had no `firmware-iwlwifi`, so `iwl3945` could not load `iwlwifi-3945-2.ucode` and `iwd` found no station networks; the live installer's broad firmware cover worked. Installed `firmware-iwlwifi` on the device, reloaded the module and restarted `iwd`; the saved profile associated and `systemd-networkd` reached `192.168.68.112`, online/routable. Source hardening `d69dcf82` re-resolves target hardware support after the payload copy and merges late-bound verified packages into the pre-erase plan; focused tests pass. `a2ac1386` restores the executable `tools/build_profile.py` CLI.
+- **Verification:** focused display/launch-cover/supervisor/hardware-enablement/installer tests PASS. `make verify` fast lane ran 5,480 tests with the inherited ARM64-profile error, the known `morbidi_mostriciattoli` startup-budget flake and the stale MBR-message expectation; the `build_profile` executable-mode test error is fixed by `a2ac1386`. The aggregate gate is therefore NOT GREEN for inherited reasons only.
+- **Next exact step:** rebuild/flash the RC with these commits and verify a clean install; then run the Acer premortem §5 F1–F19 physical checklist and record the result.
+
 ## 2026-10-21 — v0.3 master promotion and three-character corpus run preparation
 
 Owner-approved immutable master selections are Dani
@@ -509,7 +518,6 @@ continue exact-script recovery and `resolve` only substantiated gaps, then repor
 final counts/retries, update this handover and the rollout progress ledger, and
 commit/push the clearly reviewable PENDING replacements with backups/journal
 retained externally. Human acceptance and release publication remain separate.
-
 
 ## 2026-10-19 — Corpus regeneration tool and per-recording performance direction
 
