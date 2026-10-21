@@ -33,6 +33,17 @@ from .disk import (
     default_install_target_policy,
     partition_one_path,
 )
+from .efi_boot import (
+    ESP_MOUNT_IN_TARGET,
+    FirmwareInterface,
+    SingleRootLayout,
+    SingleRootLayoutSelector,
+    SysfsFirmwareProbe,
+    bios_grub_install_command,
+    plan_efi_boot,
+    required_efi_binaries,
+    target_profile_supports_efi,
+)
 from .hardware_enablement import (
     HardwareEnablementPlanError,
     InstallerHardwareEnablementPlan,
@@ -166,6 +177,8 @@ class InstallationEngine:
         target_policy: InstallTargetPolicy | None = None,
         live_resolver: LiveMediaResolver | None = None,
         wifi_carryover: IwdProfileCarryover | None = None,
+        firmware_probe: SysfsFirmwareProbe | None = None,
+        target_profile_path: Path | None = None,
     ):
         self.project_root = project_root.resolve()
         self.wifi_carryover = wifi_carryover or IwdProfileCarryover()
@@ -175,6 +188,21 @@ class InstallationEngine:
         self.power_probe = power_probe or PowerSupplyProbe()
         self.target_policy = target_policy or default_install_target_policy()
         self.live_resolver = live_resolver or LiveMediaResolver()
+        self.firmware_probe = firmware_probe or SysfsFirmwareProbe()
+        self.target_profile_path = target_profile_path or Path(
+            os.environ.get(
+                "GREIA_TARGET_IMAGE_PROFILE", "/etc/greia-os/target-image-profile.json"
+            )
+        )
+
+    def _select_layout(self) -> tuple[SingleRootLayout, FirmwareInterface]:
+        """EFI layout only when the installer booted via EFI AND the target has GRUB EFI."""
+        firmware = self.firmware_probe.probe()
+        layout = SingleRootLayoutSelector().select(
+            firmware,
+            target_supports_efi=target_profile_supports_efi(self.target_profile_path),
+        )
+        return layout, firmware
 
     def install(
         self,
@@ -193,7 +221,8 @@ class InstallationEngine:
 
         target_mount = Path(tempfile.mkdtemp(prefix="pip-install-target."))
         mounted: list[Path] = []
-        partition = partition_one_path(request.target.path)
+        layout, firmware = self._select_layout()
+        partition = layout.root_partition(request.target.path)
         try:
             report(InstallProgress(0.03, "prepare", "Checking the selected disk"))
             self._verify_target(request.target)
@@ -205,22 +234,8 @@ class InstallationEngine:
 
             report(InstallProgress(0.10, "erase", "Preparing the internal disk"))
             self.runner.run(["wipefs", "--all", "--force", str(request.target.path)])
-            self.runner.run(["parted", "--script", str(request.target.path), "mklabel", "msdos"])
-            self.runner.run(
-                [
-                    "parted",
-                    "--script",
-                    str(request.target.path),
-                    "mkpart",
-                    "primary",
-                    "ext4",
-                    "1MiB",
-                    "100%",
-                ]
-            )
-            self.runner.run(
-                ["parted", "--script", str(request.target.path), "set", "1", "boot", "on"]
-            )
+            for command in layout.partition_commands(request.target.path):
+                self.runner.run(command)
             self.runner.run(["partprobe", str(request.target.path)], check=False)
             self.runner.run(["udevadm", "settle"])
             self._wait_for_partition(partition)
@@ -230,6 +245,8 @@ class InstallationEngine:
             self.runner.run(
                 ["mkfs.ext4", "-F", "-m", "1", "-L", "PIP_ROOT", str(partition)]
             )
+            for command in layout.format_commands(request.target.path):
+                self.runner.run(command)
             filesystem_uuid = self._read_filesystem_uuid(partition)
             self.runner.run(["mount", str(partition), str(target_mount)])
             mounted.append(target_mount)
@@ -252,6 +269,8 @@ class InstallationEngine:
                     str(request.payload),
                 ]
             )
+            if layout.uses_efi:
+                self._require_target_efi_grub(target_mount)
             self._write_root_fstab(target_mount, filesystem_uuid)
             self._write_grub_root_uuid(target_mount, filesystem_uuid)
 
@@ -317,17 +336,10 @@ class InstallationEngine:
             # reject it. Identity must still be rechecked immediately before GRUB
             # writes to the whole disk.
             self._verify_target_identity(request.target)
-            self.runner.run(
-                [
-                    "chroot",
-                    str(target_mount),
-                    "grub-install",
-                    "--target=i386-pc",
-                    "--boot-directory=/boot",
-                    "--recheck",
-                    str(request.target.path),
-                ]
-            )
+            if layout.uses_efi:
+                self._install_efi_boot(target_mount, request, layout, firmware, mounted)
+            else:
+                self.runner.run(self._in_target(bios_grub_install_command(request.target.path), target_mount))
 
             report(InstallProgress(0.94, "verify", "Checking the installed system"))
             required = (
@@ -524,6 +536,46 @@ class InstallationEngine:
             raise InstallationError("installation payload could not be read") from exc
         if not hmac.compare_digest(digest.hexdigest(), expected):
             raise InstallationError("installation payload is damaged; the disk was not changed")
+
+    @staticmethod
+    def _in_target(command: Sequence[str], target_root: Path) -> list[str]:
+        return [str(target_root) if part == "{root}" else part for part in command]
+
+    @staticmethod
+    def _require_target_efi_grub(target_root: Path) -> None:
+        """Fail before the boot step if the payload lacks the GRUB EFI modules."""
+        for module_dir in ("i386-efi", "x86_64-efi"):
+            if not (target_root / "usr/lib/grub" / module_dir).is_dir():
+                raise InstallationError(
+                    f"target image has no GRUB {module_dir} modules; cannot make an EFI disk"
+                )
+
+    def _install_efi_boot(
+        self,
+        target_root: Path,
+        request: InstallRequest,
+        layout: SingleRootLayout,
+        firmware: FirmwareInterface,
+        mounted: list[Path],
+    ) -> None:
+        """UNPROVEN / LAB: GRUB EFI (native + both removable fallbacks) and NVRAM."""
+        esp = layout.esp_partition(request.target.path)
+        esp_mount = target_root / ESP_MOUNT_IN_TARGET.lstrip("/")
+        esp_mount.mkdir(parents=True, exist_ok=True)
+        self.runner.run(["mount", str(esp), str(esp_mount)])
+        mounted.append(esp_mount)
+        plan = plan_efi_boot(firmware, request.target.path, layout.number_of("esp"))
+        # Same rule as BIOS: recheck the device identity right before GRUB writes.
+        self._verify_target_identity(request.target)
+        for command in plan.fatal:
+            self.runner.run(self._in_target(command, target_root))
+        for relative in required_efi_binaries(firmware):
+            if not (esp_mount / relative).is_file():
+                raise InstallationError(f"EFI boot file was not written: {relative}")
+        # Some Macs ignore NVRAM and early Apple EFI rejects efibootmgr; the
+        # removable-path copies above are what make the disk bootable.
+        for command in plan.best_effort:
+            self.runner.run(self._in_target(command, target_root), check=False)
 
     def _read_filesystem_uuid(self, partition: Path) -> str:
         completed = self.runner.run(
