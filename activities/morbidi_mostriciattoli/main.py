@@ -54,7 +54,7 @@ def build_app(screen: pygame.Surface, *, locale: str | None = None, rng: random.
         creations = None
     return MonsterActivity(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         typography=GreiaTypography(),
         resources=resources,
         storage=storage,

@@ -50,7 +50,7 @@ def build_app(screen: pygame.Surface, *, rng: random.Random | None = None) -> Fo
     locale, resources = _locale_and_resources()
     rng = rng if rng is not None else random.Random()
     typography = GreiaTypography()
-    canvas = PygameReferenceCanvas(screen)
+    canvas = PygameReferenceCanvas(screen, hires=True)
     art = ForestArt(REFERENCE_WIDTH, REFERENCE_HEIGHT, typography)
     audio = ForestAudio(Path(__file__).resolve().parent, locale=locale, resources=resources)
     progress_port = GreiaForestProgress()

@@ -39,7 +39,7 @@ def main() -> int:
     resources = _resources()
     pygame.display.set_caption(resources.text("activity.title"))
     typography = GreiaTypography()
-    canvas = PygameReferenceCanvas(screen)
+    canvas = PygameReferenceCanvas(screen, hires=True)
     progress = GreiaContrariProgress()
     saved = progress.load()
     rng = random.Random()

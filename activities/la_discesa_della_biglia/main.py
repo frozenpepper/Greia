@@ -47,7 +47,7 @@ def main() -> int:
     progress = GreiaRampProgress()
     app = MarbleRunActivity(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         visit=Visit(progress.load()),
         typography=GreiaTypography(),
         resources=resources,

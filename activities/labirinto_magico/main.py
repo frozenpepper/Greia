@@ -48,7 +48,7 @@ def main() -> int:
     visit = Visit(MazeGenerator(rng), progress.load())
     app = LabyrinthActivity(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         visit=visit,
         typography=GreiaTypography(),
         resources=resources,

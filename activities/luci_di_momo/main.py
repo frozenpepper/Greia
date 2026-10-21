@@ -38,7 +38,7 @@ def main() -> int:
 
     locale, resources = _locale_and_resources()
     typography = GreiaTypography()
-    canvas = PygameReferenceCanvas(screen)
+    canvas = PygameReferenceCanvas(screen, hires=True)
     progress = GreiaFireflyProgress()
     saved = progress.load()
     rng = random.Random()

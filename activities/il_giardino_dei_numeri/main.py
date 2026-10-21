@@ -37,7 +37,7 @@ def main() -> int:
 
     resources = _resources()
     typography = GreiaTypography()
-    canvas = PygameReferenceCanvas(screen)
+    canvas = PygameReferenceCanvas(screen, hires=True)
     rng = random.Random()
     progress = GreiaGardenProgress()
     session = GardenSession(RoundFactory(rng), progress.load())

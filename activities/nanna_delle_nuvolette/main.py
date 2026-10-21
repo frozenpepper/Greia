@@ -59,7 +59,7 @@ def main() -> int:
     rng = random.Random()
     app = CloudActivity(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         typography=GreiaTypography(),
         resources=resources,
         audio=CloudAudio(locale=locale, rng=rng),

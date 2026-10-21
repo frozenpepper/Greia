@@ -426,7 +426,7 @@ class ForestaApp:
 
     def _relayout(self) -> None:
         self.screen = pygame.display.get_surface() or self.screen
-        self.canvas = PygameReferenceCanvas(self.screen)
+        self.canvas = PygameReferenceCanvas(self.screen, hires=True)
         self.controls.relayout(ControlLayout.for_canvas(self.canvas, self.screen.get_size()))
         self.field.geometry = self.controls.geometry.field
         self.basket.geometry = self.controls.geometry.field

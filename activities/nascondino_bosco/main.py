@@ -63,7 +63,7 @@ def main() -> int:
     rng = random.Random()
     app = WoodlandApp(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         typography=GreiaTypography(),
         resources=resources,
         audio=WoodlandAudio(locale=locale, rng=rng),

@@ -240,7 +240,7 @@ class RhymeActivity:
             return
         if event.type == pygame.VIDEORESIZE:
             self.screen = pygame.display.get_surface() or self.screen
-            self.canvas = PygameReferenceCanvas(self.screen)
+            self.canvas = PygameReferenceCanvas(self.screen, hires=True)
             self.controls.relayout(ControlLayout.for_canvas(self.canvas, self.screen.get_size()))
             self._input = PygameControlInput(
                 to_logical=self.canvas.pointer,

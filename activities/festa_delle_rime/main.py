@@ -42,7 +42,7 @@ def main() -> int:
 
     locale, resources = _locale_and_resources()
     typography = GreiaTypography()
-    canvas = PygameReferenceCanvas(screen)
+    canvas = PygameReferenceCanvas(screen, hires=True)
     art = RhymeArt(REFERENCE_WIDTH, REFERENCE_HEIGHT)
     renderer = RhymeRenderer(art)
     progress = GreiaRhymeProgress()
