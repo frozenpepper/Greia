@@ -228,3 +228,15 @@ Do not spread backend selection through Activities, OS code or content producers
 FFmpeg are ready; otherwise it exits 2. Optional verifier/retained-alternative
 status is reported independently. `selected_character_provider` records the
 effective choice; `default_character_provider` records the built-in `voxstage` default.
+
+## Shared human listening review integration (2026-10-21)
+
+The project-neutral HTML listening desk is shared Takeboard, outside this
+repository. `tools/export_voice_review_batch.py` is Greia's thin evidence adapter:
+completed corpus reports + registry/receipt metadata → generic version-1 batch
+manifest with canonical reference paths. It never initializes human approval
+from machine scores. Takeboard owns file serving, players, review state/score/
+notes editing and save/export/reload. Neither layer changes Greia audio,
+production receipts or runtime acceptance; a later project workflow must own
+explicit consumption of saved human decisions. Exact operation: automated review
+procedure §6, shared Takeboard catalog/skill/README. No child-runtime dependency.

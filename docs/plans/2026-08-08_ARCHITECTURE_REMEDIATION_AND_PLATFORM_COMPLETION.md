@@ -3421,3 +3421,22 @@ in HANDOVER and the new procedure. No architecture or release phase closed.
 
 Final gate clarification: project validation also failed on the existing ARM64
 builder restriction; shell/footprint checks completed. No full-gate PASS claimed.
+
+### 2026-10-21 — Generic HTML human listening desk and Greia adapter
+
+Delivered owner-authorized shared Takeboard in `/Volumes/Test1/Works/takeboard`
+(private own repository/catalog/agent skill), with generic JSON import, generated/
+master players, bounded list, filters, state/score/notes, atomic saving and JSON
+export/reload. Greia owns only `tools/export_voice_review_batch.py`: full reports
+export to a 4,168-entry external listening batch, all human states unreviewed.
+No audio/receipt/acceptance/journal changed. The real batch is served on 8794.
+
+Executed standalone Python 19 checks and JS 2 tests PASS (including 20k-entry
+state/persistence), Greia exporter 3 tests PASS; actual browser small/large batch,
+save/reload/export/file-picker/keyboard proof on disposable decisions. Full
+`make -k verify`: 5,484 existing tests, same inherited 1 failure/4 errors/8 skips,
+ARM64 project validation failure; shell/footprint completed. Exporter tests ran
+separately after full-suite discovery. No full-gate green or listening/physical/
+release acceptance claimed. Exact evidence/next commands in HANDOVER and
+`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` §6. Shared core is project-neutral;
+application of human JSON decisions to Greia assets remains a separate workflow.

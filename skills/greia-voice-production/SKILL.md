@@ -281,6 +281,16 @@ remain unassessed. The legacy receipt-score audit does not run ASR or audio
 analysis. Generation complete, automated review and human listening are separate
 evidence states. Review exit 0 never accepts a recording.
 
+## Shared human listening tool (2026-10-21)
+
+After automated review, use shared `takeboard` (catalog/skill/README at
+`/Volumes/Test1/Works/takeboard`) for HTML generated/master comparison and
+save/export/reload of human state, 1–5 scores and notes. Greia's thin adapter
+is `tools/export_voice_review_batch.py`; exact commands are in
+`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` §6. Keep its manifests external.
+Machine findings never initialize human acceptance. Takeboard edits only its
+review JSON; importing decisions into Greia receipts/runtime is a separate task.
+
 ## Whisper screening policy
 
 Whisper is advisory for human acceptance, but warnings are actionable production evidence.

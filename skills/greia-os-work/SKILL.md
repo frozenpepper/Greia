@@ -10,6 +10,16 @@ description: Task router for substantive Greia OS/platform/Shell/Parent/installe
 
 This file tells an agent **what to read for the task**. It is deliberately not a second architecture manual.
 
+## Shared human listening tool (2026-10-21)
+
+After automated review, use shared `takeboard` (catalog/skill/README at
+`/Volumes/Test1/Works/takeboard`) for HTML generated/master comparison and
+save/export/reload of human state, 1–5 scores and notes. Greia's thin adapter
+is `tools/export_voice_review_batch.py`; exact commands are in
+`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` §6. Keep its manifests external.
+Machine findings never initialize human acceptance. Takeboard edits only its
+review JSON; importing decisions into Greia receipts/runtime is a separate task.
+
 ## Universal rules
 
 1. Work from current `main`; preserve concurrent changes. Read `AGENTS.md` and `HANDOVER.md` first.

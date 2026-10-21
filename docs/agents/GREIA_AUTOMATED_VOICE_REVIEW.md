@@ -188,3 +188,33 @@ automated speech review. The generation journal's DONE counters remain unchanged
 `tools/audit_voice_receipts.py` is still useful for auditing previously stored
 scores. It **does not run ASR or decode audio**. Its exit 0 for NOT_RUN/
 NOT_APPLICABLE receipts is not a replacement for this procedure.
+
+## 6. Listen and return structured decisions with shared Takeboard
+
+The owner-authorized shared listening tool is `/Volumes/Test1/Works/takeboard`
+(`takeboard` CLI, shared catalog and skill). It is generic; Greia owns only its
+manifest exporter, `tools/export_voice_review_batch.py`:
+
+```bash
+python3 tools/export_voice_review_batch.py \
+  --report-dir /Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-full-automated-review \
+  --output /Volumes/Test1/Works/Greia-voice-auditions/a-new-listening-batch.json
+takeboard check /Volumes/Test1/Works/Greia-voice-auditions/a-new-listening-batch.json
+takeboard serve /Volumes/Test1/Works/Greia-voice-auditions/a-new-listening-batch.json
+```
+
+The exporter refuses incomplete traversal or an existing output. Do not overwrite
+an existing listening manifest to refresh it. The prepared real batch is already
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-listening/batch.json`.
+Open http://127.0.0.1:8794/ while its server is running. It includes all 4,168
+recordings, canonical master players, exact words/direction, automated evidence
+and initially **unreviewed** human fields. Machine FAIL/WARN never prefill rejection.
+
+Use filters and players, then edit state, score, reviewer and notes. **Save reviews**
+writes sibling `batch.reviewed.json`; **Export JSON** downloads a full snapshot.
+Reopen source to resume its matching reviewed output or load exported JSON using
+Open batch. The generic README explains media paths, keyboard navigation and
+saving conflicts. Saves do not update Greia receipts, generation journal, source
+media or shared catalogue acceptance. Consuming human decisions for promotion or
+repair remains a separate explicitly scoped Greia operation; no automatic importer
+is introduced by this tool.

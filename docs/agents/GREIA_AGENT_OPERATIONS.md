@@ -41,6 +41,12 @@ user-profile access or Acer/installer operations.
 
 That router follows `HANDOVER.md`. Do not select a dated procedure merely because its filename looks newer or familiar.
 
+**Human listening follow-up (2026-10-21):** shared `takeboard` serves a local HTML
+review desk. Greia exports its completed automated batch through
+`tools/export_voice_review_batch.py`; see automated review procedure §6 for exact
+commands and save/export behavior. It never modifies canonical audio, receipts
+or acceptance automatically.
+
 **Automated review follow-up (2026-10-21):** after generation, execute
 `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` with the `review` command on
 `tools/regenerate_voice_corpus.py`. It writes external read-only screening reports

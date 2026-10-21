@@ -302,6 +302,13 @@ not portable dependency pins or child-device requirements.
 
 ### 7.6 Human review
 
+Shared `takeboard` provides the local HTML listening desk; see the shared tools
+catalog/skill and `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` §6. Greia supplies
+only `tools/export_voice_review_batch.py`. The tool needs Python/browser only,
+no model installation, and saves human states/scores/notes in external review JSON.
+It does not change Greia media/receipts or grant automatic acceptance.
+
+
 New generations begin with human review pending. Provider success, a valid WAV/OGG file or Whisper PASS is not acceptance.
 
 The accepted v0.2 shared/introduction set is an example of the complete flow: generation -> review receipts -> owner listening -> versioned accepted asset promotion.

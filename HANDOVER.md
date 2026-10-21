@@ -74,6 +74,53 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-21 — Shared Takeboard listening tool delivered; Greia exporter added
+
+The completed automated traversal (preceding entry) now has a loadable human
+listening batch at `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-listening/batch.json`:
+4,168 recordings, selected master comparisons, spoken text, direction/generation
+metadata and automated findings. All human fields start **unreviewed**; no receipt,
+audio, frozen plan, journal or runtime acceptance was changed. Read-only exporter:
+`tools/export_voice_review_batch.py`; it refuses partial reports and existing outputs.
+
+Owner-authorized shared tool **Takeboard** lives in its own project/repository,
+`/Volumes/Test1/Works/takeboard`, https://github.com/frozenpepper/takeboard (private).
+It has a versioned generic JSON contract, local HTML UI, bounded 50-row pages,
+filter/search, generated/reference players, keyboard navigation, human states,
+1–5 scores/notes/reviewer, atomic explicit saving and JSON export/reload. CLI is
+`takeboard`; source resumes matching `.reviewed.json`, and exported media_root
+is absolute so Downloads does not break playback. Setup, agent operations, voice
+and OS skills, architecture pointer, shared catalog and both agent skill links
+are updated. The shared core has no Greia imports, ASR, model or runtime coupling.
+Exact launch/usage and integration boundary: automated review procedure §6.
+
+**Verification executed:** standalone Python 19 checks PASS; JavaScript 2 tests
+PASS including 20,000-entry state/filtering and lossless roundtrip; Greia adapter
+3 focused tests PASS. Actual in-app browser loaded the 18 MiB/4,168-entry batch
+with exactly 50 rows and working WAV/reference metadata, zero narrow-panel
+horizontal overflow. Disposable two-row data exercised edit/save/page reload,
+actual downloaded JSON reload, file-picker import and keyboard J/1/0. No real
+batch decisions were fabricated. A startup input race was caught and fixed;
+server also rejects stale tabs after batch switching. Browser proof does not
+constitute listening or desktop-wide/physical acceptance.
+
+Full `make -k verify` ran 5,484 existing tests: 1 known MBR assertion failure,
+4 inherited errors (ARM64 builder expectation, build_profile executable permission,
+two missing-lsblk installer tests), 8 skips; project validation also failed on
+ARM64 restriction, shell/footprint steps completed. The three exporter tests
+were added after discovery started and ran separately; no false 5,487-test gate
+claim. Full gate remains NOT GREEN. External log:
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-takeboard-greia-verify.log`.
+Standalone exact evidence is in its `VERIFICATION.md` and external QA/log files.
+
+**Next:** open http://127.0.0.1:8794/ and listen/score, saving the sibling
+`batch.reviewed.json` or exporting. A detached local server is running; its PID,
+launch input and log are in the listening folder's `takeboard-process.json` and
+`takeboard-server.log`. To restart: `takeboard serve <absolute batch.json> --port 8794`.
+Saved JSON is portable review data; applying it to canonical Greia assets is
+separate work. Silent EN Bear and other findings remain unchanged. No phase,
+audio acceptance or image release is closed. Unrelated untracked artifacts remain.
+
 ## 2026-10-21 — Full V2 corpus automated review completed
 
 The unfiltered cached-Whisper review completed on the frozen V2 run with
