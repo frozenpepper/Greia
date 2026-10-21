@@ -102,10 +102,10 @@ class VoiceCarrierTests(unittest.TestCase):
         self.assertTrue(target_exact)
         self.assertEqual(timings[2].start, timings[2].end)
         observed["segments"][0]["words"][0]["end"] = .1
-        with self.assertRaisesRegex(ExtractionRejected, "known prefix contains a zero-duration"):
-            validate_transcript_and_boundary(
-                observed, "Find", "Luna the cat", 1, duration_seconds=1.2
-            )
+        # Disposable intro timings need not have nonzero duration.
+        validate_transcript_and_boundary(
+            observed, "Find", "Luna the cat", 1, duration_seconds=1.2
+        )
 
     def test_punctuation_timestamp_beyond_source_duration_rejects(self) -> None:
         observed = {
@@ -126,28 +126,33 @@ class VoiceCarrierTests(unittest.TestCase):
         with self.assertRaisesRegex(ExtractionRejected, "disagrees"):
             validate_transcript_and_boundary(observed, "Find.", "Luna.", 2)
 
-    def test_warn_target_policy_still_requires_exact_prefix_and_suffix(self) -> None:
-        observed = result(("Find", .1, .2), ("l'une", .5, .65), ("à", .66, .7))
-        timings, prefix_count, target_exact, _, _ = validate_transcript_and_boundary(
-            observed, "Find", "Luna", 1, target_verification="warn"
-        )
-        self.assertEqual(prefix_count, 1)
-        self.assertEqual(len(timings), 3)
-        self.assertFalse(target_exact)
-        with self.assertRaisesRegex(ExtractionRejected, "carrier prefix"):
-            validate_transcript_and_boundary(
-                result(("Fine", .1, .2), ("Luna", .5, .7)), "Find", "Luna", 1,
-                target_verification="warn",
-            )
-        with self.assertRaisesRegex(ExtractionRejected, "no recognized words"):
-            validate_transcript_and_boundary(
-                result(("Find", .1, .2)), "Find", "Luna", 1, target_verification="warn"
-            )
+    def test_target_suffix_ignores_corrupt_and_different_length_intro(self) -> None:
+        for intro in [[("garble", .1, .2)], [("uh", .1, .15), ("noise", .16, .2)]]:
+            observed = result(*intro, ("Trouve", .5, .7), ("Luna", .71, .9))
+            _, boundary, exact, _, _ = validate_transcript_and_boundary(
+                observed, "Cette phrase est en français", "Trouve Luna", 5)
+            self.assertEqual(boundary, len(intro))
+            self.assertTrue(exact)
 
-    def test_missing_repeated_or_changed_target_rejects(self) -> None:
+    def test_warn_target_policy_requires_identifiable_target_suffix(self) -> None:
+        _, boundary, exact, _, _ = validate_transcript_and_boundary(
+            result(("garble", .1, .2), ("Louna", .5, .7)),
+            "Find", "Luna", 1, target_verification="warn")
+        self.assertEqual(boundary, 1)
+        self.assertFalse(exact)
+        with self.assertRaisesRegex(ExtractionRejected, "no matching final target"):
+            validate_transcript_and_boundary(result(("garble", .1, .2), ("banana", .5, .7)),
+                "Find", "Luna", 1, target_verification="warn")
+
+    def test_final_target_ignores_same_words_in_discarded_intro(self):
+        _, boundary, exact, _, _ = validate_transcript_and_boundary(
+            result(("Luna", .1, .2), ("Luna", .6, .8)), "Find", "Luna", 1)
+        self.assertEqual(boundary, 1)
+        self.assertTrue(exact)
+
+    def test_missing_or_changed_target_rejects(self) -> None:
         for words in [
             (("Find", .1, .2),),
-            (("Find", .1, .2), ("Luna", .5, .7), ("Luna", .8, .9)),
             (("Find", .1, .2), ("Lina", .5, .7)),
         ]:
             with self.subTest(words=words), self.assertRaises(ExtractionRejected):
@@ -206,7 +211,7 @@ class VoiceCarrierTests(unittest.TestCase):
             self.assertEqual(receipt["boundary"]["cut_sample"], 4500)
             self.assertEqual(receipt["human_review"], "PENDING")
             self.assertTrue(receipt["raw_word_alignment"])
-            self.assertEqual(receipt["algorithm_version"], "greia-spoken-carrier-extractor-v4")
+            self.assertEqual(receipt["algorithm_version"], "greia-spoken-carrier-extractor-v5")
             self.assertGreaterEqual(receipt["extracted_voiced_seconds"], 0.08)
 
     def test_warn_policy_extracts_exact_prefix_with_unresolved_target_asr(self) -> None:
@@ -222,8 +227,8 @@ class VoiceCarrierTests(unittest.TestCase):
                 handle.setnchannels(1); handle.setsampwidth(2); handle.setframerate(10000)
                 import struct
                 handle.writeframes(struct.pack(f"<{len(samples)}h", *samples))
-            raw = result(("Find", .1, .3), ("l'une", .6, .7), ("à", .71, .8))
-            extracted = result(("l'une", .1, .2), ("à", .21, .3))
+            raw = result(("Find", .1, .3), ("Louna", .6, .8))
+            extracted = result(("Louna", .1, .3))
 
             def fake_transcribe(path: Path, _locale: str) -> dict:
                 return raw if path == source else extracted
@@ -237,7 +242,7 @@ class VoiceCarrierTests(unittest.TestCase):
             self.assertTrue(evidence["raw_prefix_exact_match"])
             self.assertFalse(evidence["raw_target_exact_match"])
             self.assertFalse(evidence["extracted_target_exact_match"])
-            self.assertEqual(evidence["unremoved_raw_target_tokens"], ["l'une", "à"])
+            self.assertEqual(evidence["unremoved_raw_target_tokens"], ["louna"])
             self.assertEqual(evidence["target_verification_policy"], "warn")
 
     def test_warn_policy_rejects_asr_hallucination_on_near_silent_extracted_clip(self) -> None:
@@ -402,15 +407,15 @@ class CoincidentBoundaryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             receipt = self.exercise(Path(temp))
             self.assertEqual(receipt["boundary"]["search_strategy"],
-                             "coincident-first-target-span-dual-transcript")
-            self.assertEqual(receipt["removed_prefix_transcript"], "Find")
+                             "target-suffix-expanded-boundary")
+            self.assertIsNone(receipt["removed_prefix_transcript"])
             self.assertEqual(receipt["boundary"]["cut_sample"], 8000)
 
-    def test_recovery_rejects_cut_removing_a_piece_of_target(self):
+    def test_discarded_intro_is_not_transcribed_or_verified(self):
         with tempfile.TemporaryDirectory() as temp:
-            with self.assertRaisesRegex(ExtractionRejected, "beyond the exact prefix"):
-                self.exercise(Path(temp), removed_text="Find lu")
-            self.assertFalse((Path(temp) / "target.wav").exists())
+            receipt = self.exercise(Path(temp), removed_text="garbled unimportant noise")
+            self.assertTrue((Path(temp) / "target.wav").exists())
+            self.assertEqual(receipt["intro_verification_policy"], "ignored-disposable-intro")
 
     def test_warn_mode_cannot_waive_recovery_target_check(self):
         with tempfile.TemporaryDirectory() as temp:

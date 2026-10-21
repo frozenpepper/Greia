@@ -323,14 +323,13 @@ evidence states. Review exit 0 never accepts a recording.
 Use `tools/voice_carrier.py` through the bounded short-cue pipeline documented in
 `docs/agents/GREIA_SPOKEN_CARRIER_EXTRACTION.md`. Generate carrier plus target
 as one VoiceEngine request; preserve the raw carrier WAV and provider receipt.
-The extractor accepts mono PCM16 WAV up to 120 seconds, requires the exact raw
-carrier prefix and valid word timings, then requires one independently measured
+The extractor accepts mono PCM16 WAV up to 120 seconds, ignores disposable intro wording, locates the final target suffix with valid word timings, then requires one independently measured
 low-energy PCM gap before making a deterministic sample cut. The default target
 policy is `required` and checks exact target transcripts. The explicit corpus
-policy `warn` still requires exact prefix, timing, unique-gap and at least 80 ms
+policy `warn` still requires an identifiable target suffix, timing, unique-gap and at least 80 ms
 of voiced signal, while preserving target transcript mismatches as a visible
 machine WARN. Whisper transcript/alignment and waveform checks do not prove
-pronunciation or replace human listening. Missing/repeated prefix, malformed
+pronunciation or replace human listening. An unidentifiable/ambiguous target, malformed
 timing, no clean pause, ambiguous boundary or insufficient voiced duration must
 reject. Generated/extracted clips remain listening-pending. Isolated
 pedagogical letters/syllables remain outside the method.
@@ -433,7 +432,7 @@ Existing owner-accepted audio does not need regeneration merely because its hist
 
 New synthesis systems implement the provider contract behind `VoiceEngine`. Never spread model/backend conditionals back into Activities, content projects, OS/shared-library scripts or skills.
 
-## Extractor v4 recovery and priority retries (2026-10-21)
+## Historical paused extractor v4 retries (2026-10-21; superseded below)
 
 Use the current corpus work order and HANDOVER for the scoped priority run.
 Version 4 handles coincident word-boundary timestamps with a unique quiet run
@@ -444,3 +443,13 @@ resume a frozen v2/v3 extraction plan with a changed algorithm. New retries
 freeze v4 plus an explicit roughly one-second pause and retain the cumulative
 three-generation limit. Primary owns diagnosis; batch monitoring must not
 change thresholds, masters, transcripts, selection or code.
+
+## Target-suffix cutter v5 (2026-10-22 correction)
+
+Discarded intro spelling and recognized word count do not gate extraction. The
+final expected target anchors the cut; the declared prefix/count are provenance
+only. See the current extraction contract for exact/warn suffix matching and
+adjacent-span PCM search with mandatory exact retained-target verification.
+Never transcribe the removed intro to accept a cut. Historical v4 plans/receipts
+remain immutable and cannot silently run under v5. Bulk priority generation is
+STOPPED; saved-audio replay and human comparison do not authorize restarting it.

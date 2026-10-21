@@ -498,3 +498,15 @@ target words with explicit pause direction and at most three cumulative fresh
 generations. Completed uncertain provider jobs must be found by idempotency-key
 metadata, not by treating the key as a job ID. No clipping or score warnings
 may be relabelled human acceptance. Exact current evidence is in HANDOVER.
+
+### 2026-10-22 correction: target-suffix v5; bulk stopped
+
+The owner clarified that the disposable intro may be noisy or mispronounced.
+`voice_carrier.py` now locates the final target without requiring exact intro
+recognition or an exact number of recognized intro words. Adjacent-span search
+requires exact independent retained-target verification, never removed-intro
+verification. See `GREIA_SPOKEN_CARRIER_EXTRACTION.md`. Frozen v4 plans deliberately
+fail the algorithm-version gate under v5. The 266-priority retry and queued
+sunhat follow-up remain stopped. Do not resume them or synthesize replacements
+merely because a saved recording fails ASR. Stage v5 saved-audio replays externally
+and distinguish CUT_CREATED, target warning, and human listening acceptance.

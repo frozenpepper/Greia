@@ -137,6 +137,34 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — disposable-intro correction; target-suffix extractor v5
+
+Owner requested implementation after identifying that exact intro recognition
+contradicted the carrier's purpose. `tools/voice_carrier.py` now anchors to the
+final expected target suffix and ignores introductory wording/recognized count.
+If the inter-word interval is inadequate, adjacent boundary spans may be searched;
+that path requires exact independent retained-target transcription, never exact
+removed-intro transcription. PCM thresholds and source preservation stay intact.
+Algorithm version is v5; existing frozen v4 plans intentionally cannot execute.
+
+Saved-audio replay of the 24 pause experiments: **22 cuts / 2 target-ASR
+rejections**, zero new synthesis or runtime installs; 5 of 6 prior rejections
+recovered, one previously cut French take now rejected because fresh full-clip
+ASR garbled its target. This is not a controlled same-ASR superiority claim or
+human listening approval. Source/raw/provider receipts and earlier reviews were
+preserved. Evidence: `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-target-suffix-v5/`;
+Takeboard `http://127.0.0.1:8803/` explicitly separates cut target and uncut source.
+Final focused carrier/policy/generation/corpus tests: **48 PASS**. Full `make verify
+PYTHON=/opt/anaconda3/bin/python3` attempted but test subprocess **aborted with
+signal 6**, so the full gate is NOT GREEN; log retained externally. Do not infer
+hardware/runtime/listening acceptance from these checks.
+
+Bulk priority producer, Luna monitor and queued sunhat follow-up remain STOPPED.
+Next: owner listens to staged cuts; resolve remaining target uncertainty using
+saved audio, then freeze a separate v5 corpus plan only after an explicit bulk
+restart decision. Do not resume the paused v4 plans or regenerate solely for ASR.
+
+
 ### 2026-10-21 — Priority short-carrier first pass paused for offline recovery
 
 The frozen priority continuation finished with 389 DONE and 274 FAILED, no

@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 from array import array
 import hashlib
+from difflib import SequenceMatcher
 import importlib.metadata
 import json
 import math
@@ -25,7 +26,7 @@ from pathlib import Path
 from typing import Any, Callable, Sequence
 
 
-ALGORITHM_VERSION = "greia-spoken-carrier-extractor-v4"
+ALGORITHM_VERSION = "greia-spoken-carrier-extractor-v5"
 MAX_CLIP_SECONDS = 120
 GAP_POLICY = {
     "minimum_run_seconds": 0.20,
@@ -186,7 +187,7 @@ def validate_transcript_and_boundary(
     target_verification: str = "required",
     duration_seconds: float | None = None,
 ) -> tuple[list[WordTiming], int, bool, list[str], list[str]]:
-    """Require exact prefix+target transcription and a caller-consistent N."""
+    """Locate the final target suffix; the disposable intro is never text-verified."""
     prefix_words = spoken_words(prefix)
     target_words = spoken_words(target)
     if not prefix_words or not target_words:
@@ -199,54 +200,36 @@ def validate_transcript_and_boundary(
         )
     recognized_text, timings = parse_word_timings(result, duration_seconds=duration_seconds)
     recognized_words = spoken_words(recognized_text)
-    recognized_transcript_words = spoken_words(str(result.get("text", "")))
-    expected_words = prefix_words + target_words
-    transcript_prefix_exact = recognized_transcript_words[:len(prefix_words)] == prefix_words
-    aligned_prefix_exact = recognized_words[:len(prefix_words)] == prefix_words
-    if not transcript_prefix_exact or not aligned_prefix_exact:
-        raise ExtractionRejected(
-            "ASR transcript or timestamped words do not exactly match the known carrier prefix",
-            evidence={
-                "raw_transcript": result.get("text", ""),
-                "recognized_words": recognized_words,
-                "recognized_transcript_words": recognized_transcript_words,
-                "raw_word_alignment": [
-                    {"word": word.token, "start_seconds": word.start, "end_seconds": word.end}
-                    for word in timings
-                ],
-            },
-        )
-    if len(recognized_words) <= len(prefix_words) or len(recognized_transcript_words) <= len(prefix_words):
-        raise ExtractionRejected("raw ASR has no recognized words after the carrier prefix")
-    if any(words[index:index + len(prefix_words)] == prefix_words
-           for words in (recognized_words, recognized_transcript_words)
-           for index in range(len(prefix_words), len(words) - len(prefix_words) + 1)):
-        raise ExtractionRejected("raw ASR indicates a repeated carrier prefix after the cut boundary")
-    target_match = recognized_words == expected_words and recognized_transcript_words == expected_words
-    if not target_match and target_verification == "required":
-        raise ExtractionRejected(
-            "full-clip ASR does not exactly match the target after the known prefix",
-            evidence={
-                "raw_transcript": result.get("text", ""),
-                "raw_word_alignment": [
-                    {"word": word.token, "start_seconds": word.start, "end_seconds": word.end}
-                    for word in timings
-                ],
-                "expected_words": expected_words,
-                "recognized_words": recognized_words,
-                "recognized_transcript_words": recognized_transcript_words,
-            },
-        )
-    if len(timings) != len(recognized_words):
-        raise ExtractionRejected("word-timestamp count does not match recognized transcript")
-    if any(timing.end <= timing.start for timing in timings[:len(prefix_words)]):
-        raise ExtractionRejected("known prefix contains a zero-duration aligned word")
-    prefix_count = len(prefix_words)
-    if timings[prefix_count - 1].span_id == timings[prefix_count].span_id:
-        raise ExtractionRejected("known prefix boundary falls inside one timestamped ASR span")
-    if timings[prefix_count].end <= timings[prefix_count].start:
+    transcript_words = spoken_words(str(result.get("text", "")))
+    # Locate the intended suffix, never count recognized introductory words.
+    # Introductory speech can be corrupt, omitted or hallucinated by ASR.
+    candidates = []
+    expected = " ".join(target_words)
+    for count in range(max(1, len(target_words) - 1), len(target_words) + 2):
+        boundary = len(timings) - count
+        if boundary < 1:
+            continue
+        suffix = recognized_words[boundary:]
+        score = SequenceMatcher(None, expected, " ".join(suffix), autojunk=False).ratio()
+        exact = suffix == target_words
+        if exact or (target_verification == "warn" and len(expected) >= 4 and score >= .8):
+            candidates.append((score, boundary, exact))
+    candidates.sort(reverse=True)
+    if not candidates:
+        raise ExtractionRejected("no matching final target suffix in timestamped ASR",
+                                 evidence={"raw_transcript": result.get("text", ""),
+                                           "recognized_words": recognized_words})
+    score, boundary, aligned_exact = candidates[0]
+    if len(candidates) > 1 and abs(score - candidates[1][0]) < .03:
+        raise ExtractionRejected("ambiguous final target suffix alignment")
+    if timings[boundary - 1].span_id == timings[boundary].span_id:
+        raise ExtractionRejected("target boundary falls inside one timestamped ASR span")
+    if timings[boundary].end <= timings[boundary].start:
         raise ExtractionRejected("first target word has no usable ASR boundary timestamp")
-    return timings, len(prefix_words), target_match, recognized_transcript_words, recognized_words
+    # The full transcript may tokenize the discarded intro differently. Only
+    # its final target words matter, and no prefix spelling check is performed.
+    transcript_exact = transcript_words[-len(target_words):] == target_words
+    return timings, boundary, aligned_exact and transcript_exact, transcript_words, recognized_words
 
 
 def _read_pcm16(path: Path) -> tuple[int, int, list[int]]:
@@ -437,26 +420,26 @@ def extract(
         raise ExtractionRejected("ASR word timestamp extends beyond raw WAV duration")
     prefix_end = timings[prefix_count - 1].end
     target_start = timings[prefix_count].start
-    # Whisper sometimes assigns the pause to its first target-word span rather
-    # than leaving an inter-word gap. Only this specific representation permits
-    # an extended search, with stronger checks on BOTH resulting audio pieces.
-    coincident_boundary = round(prefix_end * rate) == round(target_start * rate)
-    search_end = timings[prefix_count].end if coincident_boundary else target_start
+    # First try the inter-word interval. If Whisper attributes the real pause
+    # to an adjacent word, search both boundary spans, then demand an exact
+    # independent retained-target transcript. Never verify discarded speech.
+    expanded_boundary = False
+    search_start, search_end = prefix_end, target_start
     try:
-        gap = measure_gap(samples, rate, prefix_end, search_end)
-    except ExtractionRejected as exc:
-        exc.evidence.update({
-            "raw_transcript": raw_result.get("text", ""),
-            "raw_word_alignment": [
-                {"word": item.token, "start_seconds": item.start, "end_seconds": item.end}
-                for item in timings
-            ],
-            "prefix_last_word_end_seconds": prefix_end,
-            "target_first_word_start_seconds": target_start,
-        })
-        raise
+        gap = measure_gap(samples, rate, search_start, search_end)
+    except ExtractionRejected:
+        expanded_boundary = True
+        search_start = timings[prefix_count - 1].start
+        search_end = timings[prefix_count].end
+        try:
+            gap = measure_gap(samples, rate, search_start, search_end)
+        except ExtractionRejected as exc:
+            exc.evidence.update({"raw_transcript": raw_result.get("text", ""),
+                                 "raw_word_alignment": _raw_word_alignment_evidence(raw_result),
+                                 "target_boundary_index": prefix_count})
+            raise
     cut_time = (gap.run_start_seconds + gap.run_end_seconds) / 2
-    if cut_time <= prefix_end or cut_time >= search_end or min(
+    if cut_time <= search_start or cut_time >= search_end or min(
         cut_time - gap.run_start_seconds, gap.run_end_seconds - cut_time
     ) < padding_seconds:
         raise ExtractionRejected("safe deterministic cut point is outside the verified gap")
@@ -469,8 +452,6 @@ def extract(
     )
     os.close(descriptor)
     temporary_output = Path(temporary_name)
-    removed_output: Path | None = None
-    removed_result: dict[str, Any] | None = None
     try:
         # Exact PCM sample slice: stable and auditable; FFmpeg is not involved.
         with wave.open(str(temporary_output), "wb") as output:
@@ -488,34 +469,11 @@ def extract(
             raise ExtractionRejected("extracted clip has no word-level ASR timestamps")
         extracted_target_match = (spoken_words(extracted_text) == spoken_words(target)
                                   and extracted_transcript_words == spoken_words(target))
-        if coincident_boundary:
-            # A silence inside a target-word span could instead be an internal
-            # pause in that word. Warn mode cannot waive this stronger proof.
-            if not extracted_target_match:
-                raise ExtractionRejected(
-                    "coincident-boundary recovery requires an exact extracted target",
-                    evidence={"extracted_transcript": extracted_result.get("text", "")},
-                )
-            descriptor, removed_name = tempfile.mkstemp(
-                prefix=f".{destination.name}.removed-", suffix=".wav", dir=destination.parent
+        if expanded_boundary and not extracted_target_match:
+            raise ExtractionRejected(
+                "expanded boundary search requires an exact extracted target",
+                evidence={"extracted_transcript": extracted_result.get("text", "")},
             )
-            os.close(descriptor)
-            removed_output = Path(removed_name)
-            with wave.open(str(removed_output), "wb") as removed:
-                removed.setnchannels(channels)
-                removed.setsampwidth(2)
-                removed.setframerate(rate)
-                removed.writeframes(_pcm16_bytes(samples[:cut_sample]))
-            removed_result = transcriber(removed_output, locale)
-            removed_text, _ = parse_word_timings(
-                removed_result, duration_seconds=cut_sample / rate
-            )
-            if (spoken_words(removed_text) != spoken_words(prefix)
-                    or spoken_words(str(removed_result.get("text", ""))) != spoken_words(prefix)):
-                raise ExtractionRejected(
-                    "coincident-boundary recovery would remove speech beyond the exact prefix",
-                    evidence={"removed_transcript": removed_result.get("text", "")},
-                )
         if not extracted_target_match and target_verification == "required":
             raise ExtractionRejected("extracted-clip ASR does not exactly match the target")
         frame = max(1, round(extracted_rate * 0.01))
@@ -539,9 +497,6 @@ def extract(
     except BaseException:
         temporary_output.unlink(missing_ok=True)
         raise
-    finally:
-        if removed_output is not None:
-            removed_output.unlink(missing_ok=True)
     whisper_version = _package_version("mlx-whisper")
     model_revision = _cached_model_revision()
     return {
@@ -581,8 +536,8 @@ def extract(
         "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
         "model_source": "installed-code-and-cached-weights-only;offline",
         "raw_transcript": raw_result.get("text", ""),
-        "removed_prefix_transcript": removed_result.get("text", "") if removed_result else None,
-        "removed_prefix_word_alignment": _raw_word_alignment_evidence(removed_result) if removed_result else None,
+        "removed_prefix_transcript": None,
+        "removed_prefix_word_alignment": None,
         "extracted_transcript": extracted_result.get("text", ""),
         "raw_word_alignment": [
             {"word": item.token, "start_seconds": item.start, "end_seconds": item.end}
@@ -594,19 +549,23 @@ def extract(
         ],
         "raw_asr_scores": _asr_score_evidence(raw_result),
         "extracted_asr_scores": _asr_score_evidence(extracted_result),
-        "raw_prefix_exact_match": True,
+        "raw_prefix_exact_match": raw_aligned_words[:prefix_count] == spoken_words(prefix),
+        "intro_verification_policy": "ignored-disposable-intro",
+        "target_alignment_policy": "final-suffix-exact-or-warn-similarity-at-least-0.8",
+        "recognized_intro_word_count": prefix_count,
         "raw_target_exact_match": raw_target_match,
         "extracted_target_exact_match": extracted_target_match,
         "target_verification_warning": not (raw_target_match and extracted_target_match),
         "extracted_voiced_frames": voiced_frames,
         "extracted_voiced_seconds": round(voiced_seconds, 3),
-        "unremoved_raw_target_tokens": raw_transcript_words[prefix_count:],
+        "unremoved_raw_target_tokens": raw_transcript_words[-len(spoken_words(target)):],
         "unremoved_raw_aligned_tokens": raw_aligned_words[prefix_count:],
-        "raw_transcript_alignment_suffix_match": raw_transcript_words[prefix_count:] == raw_aligned_words[prefix_count:],
+        "raw_transcript_alignment_suffix_match": raw_transcript_words[-len(spoken_words(target)):] == raw_aligned_words[prefix_count:],
         "duration_seconds": duration,
         "sample_rate": rate,
         "boundary": {
-            "search_strategy": "coincident-first-target-span-dual-transcript" if coincident_boundary else "inter-word-gap",
+            "search_strategy": "target-suffix-expanded-boundary" if expanded_boundary else "target-suffix-inter-word-gap",
+            "search_start_seconds": search_start,
             "search_end_seconds": search_end,
             "prefix_last_word_end_seconds": prefix_end,
             "target_first_word_start_seconds": target_start,

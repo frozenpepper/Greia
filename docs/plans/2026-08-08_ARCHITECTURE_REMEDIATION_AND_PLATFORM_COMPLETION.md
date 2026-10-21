@@ -3613,3 +3613,18 @@ Primary agent took over root-cause investigation and implemented carrier-extract
 ### 2026-10-21 — Scoped voice repair execution resumed
 
 Extractor v4 source verified with 46 focused tests and full Python 3.12.7 gate (5,645 tests; 1 failure, 3 errors, 8 skips; not green, exact details in HANDOVER). Installed seven saved-audio recoveries via journaled transactions without synthesis. Restarted only 266 unresolved priority retakes using explicit pause direction and existing accepted masters. No platform phase or human listening acceptance claimed; deferred clips preserved.
+
+
+### 2026-10-22 — scoped voice correction: ignore disposable intro, target-suffix v5
+
+Implemented owner-requested target-suffix location in `tools/voice_carrier.py`;
+intro spelling/recognized length and removed-intro transcription no longer gate
+extraction. Existing PCM gap thresholds remain, with adjacent timing-span search
+requiring exact retained-target transcription. Frozen v4 plans fail version checks.
+48 final focused carrier/corpus tests PASS; 24 saved recordings replayed externally: 22 cuts,
+2 target-ASR rejections, no new generation/runtime installation. Five formerly
+rejected cuts recovered, one former cut now blocked by fresh target ASR; no claim
+of listening acceptance or controlled same-ASR comparison. Full make verify was
+attempted and aborted with signal 6 in the test subprocess; gate NOT GREEN.
+Evidence and comparison: external `2026-10-22-target-suffix-v5`, Takeboard 8803.
+Bulk generation remains STOPPED; architecture/lifecycle closure unchanged.

@@ -48,35 +48,34 @@ the existing Greia `AudioPipeline` first. Inputs are bounded to 120 seconds and
 `mlx-community/whisper-tiny` model in offline mode; it does not download models
 or pass the expected wording as a transcription prompt.
 
-Extraction succeeds only when all of these hold:
+Extraction v5 locates the target from the **end of the recording**. Introductory
+words are disposable: their spelling, recognized length and full-transcript
+agreement are never acceptance gates. `--prefix` and `--remove-first-words`
+retain the intended script/count for provenance and compatibility; the count
+must agree with the supplied prefix, but does not choose the cut boundary.
 
-1. `--remove-first-words` equals the exact Unicode-aware word count in
-   `--prefix`.
-2. Raw ASR word timestamps are finite, ordered, complete and within clip
-   duration. The known prefix must match exactly and there must be a recognized
-   suffix after it. Repeated prefix words in the suffix reject.
-3. Inside the timestamped gap between final prefix word and first target word,
-   one unique PCM run of at least 200 ms is at or below the versioned −42 dBFS
-   frame RMS and −30 dBFS frame peak thresholds. The run must have 50 ms guards
-   from both Whisper word boundaries. Missing or multiple runs reject.
-4. A deterministic sample cut is made at the midpoint of that quiet run,
-   leaving at least 100 ms low-energy padding on both sides. The cut is first written to a temporary
-   file; the final path changes only after extracted audio has valid word
-   timestamps and at least 80 ms of cumulative 10 ms frames whose RMS exceeds
-   the −42 dBFS voiced-signal floor. A single noise spike or ASR hallucination
-   cannot satisfy this guard.
-5. A source/output alias, malformed timestamps, merged words without a clear
-   gap, unexpected speech, or any extraction error rejects without replacing an
-   existing output. There is no guessed boundary or automatic retry.
+1. Parse finite, ordered word timings within the WAV duration. Find the final
+   target suffix, preferring exact normalized target tokens. Explicit `warn`
+   mode allows suffix character similarity at least 0.8 for targets of at least
+   four characters, considering target word count plus/minus one. Unidentifiable or
+   ambiguous suffixes reject; the intro need not transcribe correctly.
+2. Search for the existing unique guarded PCM quiet run before that target.
+   Keep the 200 ms minimum, 50 ms guards, −42 dBFS RMS / −30 dBFS peak ceilings
+   and 100 ms cut padding. If the inter-word interval fails, search the adjacent
+   last-intro/first-target timing spans. This handles pauses attributed to words.
+3. Cut the exact PCM suffix at the quiet run midpoint. Independently transcribe
+   the retained phrase. Expanded boundary searches require the **exact target**
+   even in warn mode; discarded introductory speech is never transcribed again.
+   Ordinary boundary searches retain the explicit required/warn target policy.
+4. Require at least 80 ms voiced signal; preserve sources/existing outputs on
+   any error. No fallback to a guessed timestamp, automatic regeneration or
+   replacement of runtime files occurs in the standalone cutter.
 
-`--target-verification required` is the default for the standalone CLI and
-requires exact raw and extracted target transcripts. Explicit
-`--target-verification warn` keeps the exact prefix, timing, unique-gap and
-voiced-duration gates, but records target-text mismatches as
-`EXTRACTED_TARGET_WARN_PENDING_LISTENING`; it never turns them into a machine
-pass. The receipt retains raw and extracted transcripts, target tokens,
-confidence fields when available, policy and exact-match flags. Use warn mode
-only through an explicit frozen corpus plan.
+Receipts identify v5, target-suffix boundary strategy, recognized intro length,
+raw/extracted transcripts, target checks, PCM metrics and the actual cut sample.
+Intro exact-match is diagnostic only. An extraction result does not establish
+speech correctness or human acceptance. Frozen v4 corpus plans cannot run under
+v5; prepare an explicitly reviewed new plan before any bulk restart.
 
 ASR text and word alignment are probabilistic evidence. The PCM gap measurement
 and sample-index calculation are separate technical checks; neither establishes
@@ -144,14 +143,11 @@ generation or listening evidence. The parent performs the independent
 technical boundary review does not accept speech; every generated or extracted
 clip remains listening-pending for owner review.
 
-## v4: coincident ASR boundaries
+## Historical v4 behavior (superseded by v5)
 
-Whisper may assign a real pause to the first target-word span while prefix-end
-and target-start coincide. Version 4 distinguishes this from an out-of-WAV
-timestamp. For this case only, it searches from prefix-end through the first
-target span's end using the same unique 200 ms quiet-run and padding guards.
-Both removed audio and retained audio must independently transcribe to exactly
-the known prefix and target; `warn` cannot waive these recovery checks. Evidence
-records the search strategy, search extent, removed transcript and word spans.
-No new synthesis is needed to test captured raw recordings. Matching ASR is
-technical evidence, not pronunciation or human listening acceptance.
+Version 4 required exact introductory transcription and, for coincident
+boundaries, exact removed-intro transcription. The owner corrected this on
+2026-10-22: the intro exists to absorb synthesis instability, so errors in it
+must not prevent extraction of a good final target. Version 5 replaces both
+intro checks with target-suffix location and retained-target verification.
+Historical v4 receipts and experiments remain unchanged.
