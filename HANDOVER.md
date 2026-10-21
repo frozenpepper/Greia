@@ -131,6 +131,14 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+## 2026-10-21 — Acer Parent panel lock-up during Wi-Fi connect
+
+**Evidence class: DEVICE (Acer, remote) + SOURCE + FOCUSED TESTS.**
+
+The HTML Parent app showed Wi-Fi networks, but pressing Connect froze the whole panel. The production Parent API was a single-threaded `HTTPServer`; `connect_wifi` first ran a scan (about 3 s) and then a connection attempt (about 7 s for a rejected network, up to 35 s worst case), so every other panel request queued behind it. Fixed with a bounded `ThreadingHTTPServer` for `ProductionParentApiHTTPServer` (four slots, daemon threads, `block_on_close=False`), a 15 s scan-result cache in `ProductionParentApiApplication.connect_wifi`, and a `connected_ssid()` fast path that returns immediately when the selected SSID is already the connected one. Focused tests PASS (`tests/test_parent_wifi_responsiveness.py`, parent auth/production suites).
+
+Deployed `ea0ab12f4` (pre-rebase equivalent of current `a20dac652`) to the Acer. Verified: current-network connect `200` in **0.07 s**; during a deliberately failing connect (`400`, 7.07 s) a parallel `/api/v1/devices` request returned in **0.0036 s**; Wi-Fi remained `Wireless Pendente`, `192.168.68.112`, HTTPS 200. The temporary diagnostic device credential was revoked. The LaCie image `96abaccf…fb07` was built from `37d06316e` before this parent fix; a reinstall needs a rebuild to include it.
+
 ## 2026-10-21 — Aspire Wi-Fi follow-up: suspend/resume hook
 
 **Evidence class: DEVICE (remote) + SOURCE + FOCUSED TEST.**

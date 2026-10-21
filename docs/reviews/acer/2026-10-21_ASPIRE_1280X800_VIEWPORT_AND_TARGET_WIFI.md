@@ -376,6 +376,38 @@ observed to resume (with the `wiphy_resume` failure). Do not use `rtcwake` as
 an unattended acceptance step on this hardware without first proving its RTC
 alarm wake.
 
+### 2.9 Parent panel freeze during Wi-Fi connect
+
+After the suspend/resume recovery, the HTML Parent app listed Wi-Fi networks but
+froze when Connect was pressed. The installed Parent API was a single-threaded
+`HTTPServer`: `connect_wifi` ran a fresh scan (~3 s) and then an association
+(measured 7.07 s for a rejected network; 35 s worst case), so every other panel
+request waited behind it.
+
+Targeted fix, deployed to the Acer:
+
+- `ProductionParentApiHTTPServer` is now a bounded `ThreadingHTTPServer`
+  (`max_concurrent_requests = 4`, daemon threads, `block_on_close=False`).
+- `ProductionParentApiApplication.connect_wifi` reuses the last scan for 15 s
+  (the app has just fetched it) and returns immediately when
+  `IwdWifiBackend.connected_ssid()` matches the requested SSID.
+- `IwdWifiBackend.connected_ssid()` reads the iwd station state without
+  triggering a scan.
+
+Verification on the device:
+
+```text
+POST /network/wifi/connect (already connected "Wireless Pendente")
+  200 in 0.07 s
+POST /network/wifi/connect (rejected network)
+  400 in 7.07 s
+GET /devices while that POST was in flight
+  200 in 0.0036 s
+```
+
+The panel remains responsive during a slow/rejected association. The temporary
+diagnostic device credential was revoked.
+
 ## 3. Commands for other agents
 
 Check source state and focused tests:

@@ -2817,3 +2817,10 @@ rebuilt image; it was installed in place. **Caution:** an unattended
 suspended and needs the power button; do not use that as an unattended test.
 Next: wake the device, close/open the lid, confirm automatic reconnect, then
 rebuild/flash with the hook.
+
+
+### 2026-10-21 — Acer Parent panel Wi-Fi connect responsiveness (DEVICE + SOURCE)
+
+The HTML Parent app froze while connecting Wi-Fi because the installed Parent API was single-threaded: each connect ran a scan and an association attempt before any other request could be served. `ProductionParentApiHTTPServer` is now a bounded `ThreadingHTTPServer` (four slots, daemon threads), `connect_wifi` reuses a 15 s scan cache, and a new `IwdWifiBackend.connected_ssid()` fast path returns immediately for the already-connected network. Focused tests pass.
+
+Deployed `ea0ab12f4` to the Acer and verified: already-connected connect 0.07 s; `/api/v1/devices` responded in 0.0036 s while a failing connect took 7.07 s; Wi-Fi stayed on `Wireless Pendente` at 192.168.68.112 with HTTPS 200. The diagnostic device credential was revoked. The current LaCie image (`96abaccf…`, built from `37d06316e`) predates this fix; rebuild before a reinstall.
