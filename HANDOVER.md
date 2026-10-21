@@ -137,6 +137,23 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — executed Tiny/Base comparison; default unchanged
+
+Owner authorized downloading multilingual Base and comparing saved recordings.
+Pinned `mlx-community/whisper-base-mlx` revision
+`1e3e249fb8d01c655324bd6841b1deadffd6d04c` is now cached in the prepared voice
+environment; no dependency changes. Same 24 fixed target clips: Tiny 16/24 versus
+Base 19/24 score passes (>0.8); exact matches 13 versus 16. Median warm target ASR
+0.307 versus 0.408 seconds. Base improves the aggregate but both manually recovered
+French examples still fail scoring. Automatic v5 replay created 22 versus 24 cuts,
+with 16 versus 18 final score passes. No default change, synthesis or runtime
+installation. Full report: `docs/reviews/2026-10-22_WHISPER_TINY_BASE_COMPARISON.md`;
+raw evidence external under `2026-10-22-whisper-tiny-base-comparison-v1`.
+This small one-voice/one-translated-phrase sample does not establish corpus-wide
+accuracy or concurrent GPU resource safety. Proposed queue pipeline remains
+unimplemented, and bulk corpus production remains STOPPED.
+
+
 ### 2026-10-22 — proposed shared verified-production architecture (planning only)
 
 Owner requested automatic short-phrase carriers, up to three total takes until
