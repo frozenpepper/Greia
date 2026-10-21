@@ -296,6 +296,40 @@ class InstallerHardwareEnablementPlanner:
         )
 
 
+def merge_hardware_enablement_plans(
+    initial: InstallerHardwareEnablementPlan,
+    refreshed: InstallerHardwareEnablementPlan,
+) -> InstallerHardwareEnablementPlan:
+    """Add late-discovered support to a complete pre-erase hardware plan.
+
+    The pre-erase plan remains the safety authority.  A second inventory taken
+    just before target configuration may see a driver that bound later (for
+    example a wireless module whose firmware/interface was still coming up
+    while the installer copied the payload).  Its extra verified packages are
+    merged into the initial list; an incomplete refresh can only leave the
+    initial decision unchanged.
+    """
+
+    if not refreshed.complete:
+        return initial
+    return InstallerHardwareEnablementPlan(
+        inventory=refreshed.inventory,
+        resolver_plan=refreshed.resolver_plan,
+        required_firmware=tuple(
+            sorted(set(initial.required_firmware) | set(refreshed.required_firmware))
+        ),
+        required_microcode=tuple(
+            sorted(set(initial.required_microcode) | set(refreshed.required_microcode))
+        ),
+        missing_packages=tuple(
+            sorted(set(initial.missing_packages) | set(refreshed.missing_packages))
+        ),
+        diagnostics=tuple(
+            dict.fromkeys((*initial.diagnostics, *refreshed.diagnostics))
+        ),
+    )
+
+
 def _firmware_declarations(output: str) -> tuple[str, ...]:
     declarations: list[str] = []
     for raw_line in output.splitlines():

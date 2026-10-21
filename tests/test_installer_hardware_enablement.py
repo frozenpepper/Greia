@@ -5,7 +5,9 @@ from pathlib import Path
 
 from greia_installer.hardware_enablement import (
     BoundDriverFirmwareResolver,
+    InstallerHardwareEnablementPlan,
     InstallerHardwareEnablementPlanner,
+    merge_hardware_enablement_plans,
 )
 from greia_installer.hardware_support import VerifiedHardwareSupportPool
 from greia_platform.hardware_enablement import (
@@ -241,6 +243,56 @@ class InstallerHardwareEnablementPlannerTests(unittest.TestCase):
         self.assertFalse(result.complete)
         self.assertEqual(result.target_packages, ())
         self.assertTrue(any("suppressed" in item for item in result.diagnostics))
+
+
+def _enablement_plan(
+    *,
+    firmware: tuple[str, ...] = (),
+    microcode: tuple[str, ...] = (),
+    complete: bool = True,
+) -> InstallerHardwareEnablementPlan:
+    return InstallerHardwareEnablementPlan(
+        inventory=StaticInventory().snapshot(),
+        resolver_plan=HardwareSupportPlan("token", (), complete),
+        required_firmware=firmware,
+        required_microcode=microcode,
+        missing_packages=(),
+        diagnostics=(),
+    )
+
+
+class HardwarePlanRefreshTests(unittest.TestCase):
+    def test_late_bound_firmware_is_merged_into_the_pre_erase_plan(self) -> None:
+        initial = _enablement_plan(microcode=("intel-microcode",))
+        refreshed = _enablement_plan(
+            firmware=("firmware-iwlwifi",),
+            microcode=("intel-microcode",),
+        )
+        merged = merge_hardware_enablement_plans(initial, refreshed)
+        self.assertTrue(merged.complete)
+        self.assertEqual(
+            merged.target_packages,
+            ("firmware-iwlwifi", "intel-microcode"),
+        )
+
+    def test_incomplete_refresh_never_weakens_the_initial_decision(self) -> None:
+        initial = _enablement_plan(microcode=("intel-microcode",))
+        refreshed = _enablement_plan(
+            firmware=("firmware-iwlwifi",),
+            complete=False,
+        )
+        self.assertIs(merge_hardware_enablement_plans(initial, refreshed), initial)
+
+    def test_duplicate_packages_are_deduplicated_and_sorted(self) -> None:
+        initial = _enablement_plan(firmware=("firmware-realtek",))
+        refreshed = _enablement_plan(
+            firmware=("firmware-realtek", "firmware-iwlwifi"),
+        )
+        merged = merge_hardware_enablement_plans(initial, refreshed)
+        self.assertEqual(
+            merged.target_packages,
+            ("firmware-iwlwifi", "firmware-realtek"),
+        )
 
 
 if __name__ == "__main__":

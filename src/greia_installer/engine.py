@@ -38,6 +38,7 @@ from .hardware_enablement import (
     InstallerHardwareEnablementPlan,
     InstallerHardwareEnablementPlanner,
     TargetImageHardwareIdentity,
+    merge_hardware_enablement_plans,
 )
 from .hardware_support import HardwareSupportPoolError, VerifiedHardwareSupportPool
 from .hardware_support_install import (
@@ -250,6 +251,14 @@ class InstallationEngine:
             self._write_root_fstab(target_mount, filesystem_uuid)
             self._write_grub_root_uuid(target_mount, filesystem_uuid)
 
+            # A driver that only finished binding while the payload was being
+            # copied must still add its firmware to this target.  The initial
+            # pre-erase plan stays authoritative; this refresh can only merge
+            # packages that the same verified pool accepts.
+            hardware_support = self._refresh_hardware_support(
+                request, hardware_support, report
+            )
+
             report(InstallProgress(0.70, "configure", "Applying parent choices"))
             self._write_initial_configuration(
                 target_mount,
@@ -371,6 +380,57 @@ class InstallationEngine:
                 "hardware support could not be resolved safely before disk changes: " + detail
             )
         return PreparedHardwareSupport(identity, plan)
+
+    def _refresh_hardware_support(
+        self,
+        request: InstallRequest,
+        prepared: PreparedHardwareSupport | None,
+        report: Callable[[InstallProgress], None],
+    ) -> PreparedHardwareSupport | None:
+        """Re-resolve target support after the payload copy.
+
+        Module binding is not guaranteed to have settled when the pre-erase
+        plan is taken (the reference 802.11 driver is a concrete case: the
+        live installer can scan networks before the target package plan is
+        frozen, but a late-binding driver must not silently leave the installed
+        system without its firmware).  This second complete snapshot runs after
+        the long copy, before target configuration; it only adds verified pool
+        packages to the initial decision.
+        """
+
+        if prepared is None:
+            return None
+        report(InstallProgress(0.68, "hardware", "Confirming hardware support"))
+        try:
+            pool = self._load_hardware_support_pool(request, prepared.identity)
+            refreshed = InstallerHardwareEnablementPlanner.linux_default(pool=pool).plan()
+        except (HardwareEnablementPlanError, HardwareSupportPoolError) as exc:
+            print(
+                "greia-install-tx: hardware refresh unavailable; keeping pre-erase plan: "
+                + exc.__class__.__name__,
+                file=sys.stderr,
+                flush=True,
+            )
+            return prepared
+        if not refreshed.complete:
+            print(
+                "greia-install-tx: hardware refresh incomplete; keeping pre-erase plan",
+                file=sys.stderr,
+                flush=True,
+            )
+            return prepared
+        merged = merge_hardware_enablement_plans(prepared.plan, refreshed)
+        added = sorted(
+            set(merged.target_packages) - set(prepared.plan.target_packages)
+        )
+        if added:
+            print(
+                "greia-install-tx: hardware refresh added target support: "
+                + ",".join(added),
+                file=sys.stderr,
+                flush=True,
+            )
+        return PreparedHardwareSupport(prepared.identity, merged)
 
     @staticmethod
     def _load_hardware_support_pool(

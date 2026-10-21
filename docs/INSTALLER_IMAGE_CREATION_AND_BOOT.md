@@ -116,6 +116,19 @@ The target keeps:
 
 Always reason about the **regenerated installed initramfs**, not only the initramfs that happened to exist inside the original payload.
 
+### Target hardware support is re-confirmed after the copy
+
+The pre-erase hardware plan remains the fail-closed authority, but module
+binding can still settle while the payload is copied. The engine therefore
+takes one second complete inventory immediately before target configuration
+and merges only verified packages from the same frozen support pool into the
+initial plan. A late-binding driver (the reference `iwl3945` Wi-Fi case) then
+adds its firmware to the target instead of leaving the installed system unable
+to scan networks while the live installer could. An incomplete refresh never
+weakens the initial decision. `install-record.json` records the final merged
+package list; the ordinary record still contains package names only, never raw
+inventory.
+
 ## 6. Development SSH is a hard invariant
 
 For explicit developer profiles (`*-dev`, and the release candidate `legacy-x86-i686-rc`), both the live installer and installed OS must expose:
