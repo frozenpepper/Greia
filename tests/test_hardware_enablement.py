@@ -11,6 +11,7 @@ from greia_platform.hardware_enablement import (
     HardwareDevice,
     HardwareInventory,
     IsenkramHardwareSupportResolver,
+    LinuxKernelModules,
     LinuxSysfsHardwareInventory,
     SupportDisposition,
     SupportKind,
@@ -216,6 +217,77 @@ class HardwareResolverTests(unittest.TestCase):
             {"firmware-realtek", "amd64-microcode"},
         )
         self.assertEqual(plan.advisory_packages, ("bluez",))
+
+
+def fake_kernel_tree(root: Path, *, release: str = "6.1.0-test", readable: bool = True) -> LinuxKernelModules:
+    """Lay out a minimal /sys + /lib/modules tree under ``root``."""
+
+    modules = root / "lib" / "modules"
+    if readable:
+        (modules / release).mkdir(parents=True)
+        (modules / release / "modules.dep").write_text("kernel/x.ko:\n", encoding="utf-8")
+    return LinuxKernelModules(
+        sysfs_root=root / "sys",
+        modules_root=modules,
+        release=release,
+    )
+
+
+def bind_driver(root: Path, subsystem: str, driver: str, module: str, *, loadable: bool) -> None:
+    driver_dir = root / "sys" / "bus" / subsystem / "drivers" / driver
+    driver_dir.mkdir(parents=True)
+    module_dir = root / "sys" / "module" / module
+    module_dir.mkdir(parents=True)
+    if loadable:
+        (module_dir / "initstate").write_text("live\n", encoding="utf-8")
+    os.symlink(f"../../../../module/{module}", driver_dir / "module")
+
+
+class LinuxKernelModulesTests(unittest.TestCase):
+    def test_readable_module_index_has_no_problem(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            self.assertIsNone(fake_kernel_tree(Path(raw)).metadata_problem())
+
+    def test_hidden_module_tree_is_reported(self) -> None:
+        # systemd ProtectKernelModules=yes makes /usr/lib/modules inaccessible.
+        with tempfile.TemporaryDirectory() as raw:
+            problem = fake_kernel_tree(Path(raw), readable=False).metadata_problem()
+        self.assertIsNotNone(problem)
+        self.assertIn("kernel module metadata is unreadable", problem)
+
+    def test_module_name_comes_from_sysfs_not_the_driver_name(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            kernel = fake_kernel_tree(root)
+            bind_driver(root, "pci", "rtw_8822ce", "rtw88_8822ce", loadable=True)
+            identity = kernel.module_for_driver("pci", "rtw_8822ce")
+        self.assertEqual(identity.name, "rtw88_8822ce")
+        self.assertTrue(identity.loadable)
+
+    def test_builtin_and_unknown_drivers_are_not_loadable(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            kernel = fake_kernel_tree(root)
+            bind_driver(root, "platform", "serial8250", "8250", loadable=False)
+            builtin = kernel.module_for_driver("platform", "serial8250")
+            unknown = kernel.module_for_driver("acpi", "ec")
+        self.assertEqual((builtin.name, builtin.loadable), ("8250", False))
+        self.assertEqual((unknown.name, unknown.loadable), ("ec", False))
+
+
+class IsenkramKernelModuleGateTests(unittest.TestCase):
+    def test_hidden_module_tree_makes_resolution_incomplete_without_running_isenkram(self) -> None:
+        runner = FakeRunner({})
+        with tempfile.TemporaryDirectory() as raw:
+            resolver = IsenkramHardwareSupportResolver(
+                runner=runner,
+                kernel_modules=fake_kernel_tree(Path(raw), readable=False),
+            )
+            plan = resolver.resolve(inventory())
+        self.assertFalse(plan.complete)
+        self.assertEqual(plan.automatic_packages, ())
+        self.assertEqual(runner.commands, [])
+        self.assertTrue(any("unreadable" in item for item in plan.diagnostics))
 
 
 if __name__ == "__main__":

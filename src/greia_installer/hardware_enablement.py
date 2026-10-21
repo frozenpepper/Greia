@@ -16,7 +16,9 @@ from greia_platform.hardware_enablement import (
     HardwareSupportRecommendation,
     HardwareSupportResolver,
     IsenkramHardwareSupportResolver,
+    LinuxKernelModules,
     LinuxSysfsHardwareInventory,
+    LoadedModuleIdentity,
     SubprocessCommandRunner,
     SupportDisposition,
     SupportKind,
@@ -109,6 +111,10 @@ class BoundDriverFirmwareResolver:
     runner: CommandRunner = SubprocessCommandRunner()
     modinfo_command: str = "/sbin/modinfo"
     timeout_seconds: float = 5.0
+    #: Production compositions wire this so a hidden module tree, and a
+    #: loaded module that ``modinfo`` cannot describe, make the resolution
+    #: incomplete instead of silently "no firmware needed".
+    kernel_modules: LinuxKernelModules | None = None
 
     def __post_init__(self) -> None:
         if not 1.0 <= self.timeout_seconds <= 30.0:
@@ -117,38 +123,58 @@ class BoundDriverFirmwareResolver:
     def resolve(self, inventory: HardwareInventory) -> HardwareSupportPlan:
         diagnostics: list[str] = []
         recommendations: dict[str, HardwareSupportRecommendation] = {}
-        drivers = tuple(
-            sorted(
-                {
-                    device.driver
-                    for device in inventory.devices
-                    if device.driver and _DRIVER_RE.fullmatch(device.driver)
-                }
-            )
-        )
-        if len(drivers) > _MAX_BOUND_DRIVERS:
-            diagnostics.append("bound driver inventory exceeded firmware resolver bound")
-            drivers = drivers[:_MAX_BOUND_DRIVERS]
+        complete = not inventory.truncated and inventory.scan_errors == 0
+        if self.kernel_modules is not None:
+            problem = self.kernel_modules.metadata_problem()
+            if problem is not None:
+                return HardwareSupportPlan(inventory.token, (), False, (problem,))
 
-        for driver in drivers:
+        bound = sorted(
+            {
+                (device.subsystem, device.driver)
+                for device in inventory.devices
+                if device.driver and _DRIVER_RE.fullmatch(device.driver)
+            }
+        )
+        if len(bound) > _MAX_BOUND_DRIVERS:
+            diagnostics.append("bound driver inventory exceeded firmware resolver bound")
+            bound = bound[:_MAX_BOUND_DRIVERS]
+        modules: dict[str, tuple[str, bool]] = {}
+        for subsystem, driver in bound:
+            if self.kernel_modules is None or not subsystem:
+                identity = LoadedModuleIdentity(driver, False)
+            else:
+                identity = self.kernel_modules.module_for_driver(subsystem, driver)
+            known = modules.get(identity.name)
+            modules[identity.name] = (
+                known[0] if known else driver,
+                identity.loadable or (known[1] if known else False),
+            )
+
+        for module, (driver, loadable) in modules.items():
+            label = driver if module == driver else f"{driver} (module {module})"
             try:
                 result = self.runner.run(
-                    (self.modinfo_command, "-F", "firmware", driver),
+                    (self.modinfo_command, "-F", "firmware", module),
                     timeout_seconds=self.timeout_seconds,
                 )
             except (OSError, subprocess.TimeoutExpired) as exc:
+                complete = False
                 diagnostics.append(
-                    f"firmware metadata unavailable for bound driver {driver}: {exc.__class__.__name__}"
+                    f"firmware metadata unavailable for bound driver {label}: {exc.__class__.__name__}"
                 )
                 continue
             if result.returncode != 0:
                 # Built-in platform drivers (acpi-wmi, ec, serial8250, ...) are
-                # not loadable modules, so modinfo cannot describe their
-                # firmware. That is expected, not a resolution failure.
-                if result.returncode != 1:
-                    diagnostics.append(
-                        f"firmware metadata lookup failed for bound driver {driver}: exit {result.returncode}"
-                    )
+                # not loadable modules, so modinfo may not know them. That is
+                # expected. A *loaded* module that modinfo cannot describe is
+                # not: its firmware would silently be left out of the target.
+                if result.returncode == 1 and not loadable:
+                    continue
+                complete = False
+                diagnostics.append(
+                    f"firmware metadata lookup failed for bound driver {label}: exit {result.returncode}"
+                )
                 continue
             declarations = _firmware_declarations(result.stdout)
             for declaration in declarations:
@@ -156,12 +182,12 @@ class BoundDriverFirmwareResolver:
                     providers = self.pool.packages_for_firmware(declaration)
                 except HardwareSupportPoolError:
                     diagnostics.append(
-                        f"bound driver {driver} exposed an invalid firmware declaration"
+                        f"bound driver {label} exposed an invalid firmware declaration"
                     )
                     continue
                 if not providers:
                     diagnostics.append(
-                        f"no frozen Debian firmware provider matched {driver}:{declaration}"
+                        f"no frozen Debian firmware provider matched {label}:{declaration}"
                     )
                     continue
                 for package in providers:
@@ -175,7 +201,7 @@ class BoundDriverFirmwareResolver:
         return HardwareSupportPlan(
             inventory.token,
             tuple(sorted(recommendations.values(), key=lambda item: item.package)),
-            complete=not inventory.truncated and inventory.scan_errors == 0,
+            complete=complete,
             diagnostics=tuple(diagnostics),
         )
 
@@ -277,9 +303,10 @@ class InstallerHardwareEnablementPlanner:
         inventory_snapshot: HardwareInventory | None = None,
     ) -> "InstallerHardwareEnablementPlanner":
         machine_id = (machine or platform.machine() or "unknown").lower()
+        kernel_modules = LinuxKernelModules(sysfs_root=sysfs_devices.parent)
         resolvers: list[HardwareSupportResolver] = [
-            BoundDriverFirmwareResolver(pool),
-            IsenkramHardwareSupportResolver(),
+            BoundDriverFirmwareResolver(pool, kernel_modules=kernel_modules),
+            IsenkramHardwareSupportResolver(kernel_modules=kernel_modules),
         ]
         if machine_id in {"i386", "i486", "i586", "i686", "x86_64", "amd64"}:
             resolvers.append(X86MicrocodeResolver(cpuinfo))

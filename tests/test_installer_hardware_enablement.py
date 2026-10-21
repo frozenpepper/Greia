@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -16,6 +19,7 @@ from greia_platform.hardware_enablement import (
     HardwareInventory,
     HardwareSupportPlan,
     HardwareSupportRecommendation,
+    LinuxKernelModules,
     SupportDisposition,
     SupportKind,
 )
@@ -293,6 +297,167 @@ class HardwarePlanRefreshTests(unittest.TestCase):
             merged.target_packages,
             ("firmware-iwlwifi", "firmware-realtek"),
         )
+
+
+def aspire_inventory() -> HardwareInventory:
+    return HardwareInventory(
+        (
+            HardwareDevice(
+                "/pci0000:00/0000:00:1c.1/0000:03:00.0",
+                "pci",
+                "pci:v00008086d00004222",
+                "iwl3945",
+            ),
+        )
+    )
+
+
+def kernel_tree(root: Path, *, readable: bool = True) -> LinuxKernelModules:
+    modules = root / "lib" / "modules"
+    if readable:
+        (modules / "6.1.0-test").mkdir(parents=True)
+        (modules / "6.1.0-test" / "modules.dep").write_text("", encoding="utf-8")
+    return LinuxKernelModules(
+        sysfs_root=root / "sys", modules_root=modules, release="6.1.0-test"
+    )
+
+
+def bind(root: Path, subsystem: str, driver: str, module: str) -> None:
+    driver_dir = root / "sys" / "bus" / subsystem / "drivers" / driver
+    driver_dir.mkdir(parents=True)
+    (root / "sys" / "module" / module).mkdir(parents=True)
+    (root / "sys" / "module" / module / "initstate").write_text("live\n", encoding="utf-8")
+    os.symlink(f"../../../../module/{module}", driver_dir / "module")
+
+
+def iwlwifi_pool() -> VerifiedHardwareSupportPool:
+    return pool(
+        firmware=frozenset({"firmware-iwlwifi"}),
+        providers=(("iwlwifi-3945-2.ucode", ("firmware-iwlwifi",)),),
+    )
+
+
+class RaisingRunner:
+    def __init__(self, exc: BaseException) -> None:
+        self.exc = exc
+
+    def run(self, command, *, timeout_seconds: float) -> CommandResult:
+        raise self.exc
+
+
+class BoundDriverModuleMetadataTests(unittest.TestCase):
+    """Driver firmware must never resolve to "none" because metadata was unreadable."""
+
+    def test_hidden_module_tree_is_incomplete_not_empty(self) -> None:
+        # The installed reference Aspire lost firmware-iwlwifi exactly this way:
+        # ProtectKernelModules=yes hid /usr/lib/modules from the install service.
+        runner = FakeRunner(CommandResult(1, "modinfo: ERROR: Module iwl3945 not found.\n", ""))
+        with tempfile.TemporaryDirectory() as raw:
+            result = BoundDriverFirmwareResolver(
+                iwlwifi_pool(),
+                runner=runner,
+                modinfo_command="/modinfo",
+                kernel_modules=kernel_tree(Path(raw), readable=False),
+            ).resolve(aspire_inventory())
+        self.assertFalse(result.complete)
+        self.assertEqual(runner.commands, [])
+        self.assertIn("kernel module metadata is unreadable", result.diagnostics[0])
+
+    def test_hidden_module_tree_stops_the_install_plan_before_disk_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            resolver = BoundDriverFirmwareResolver(
+                iwlwifi_pool(),
+                runner=FakeRunner(CommandResult(1, "", "")),
+                kernel_modules=kernel_tree(Path(raw), readable=False),
+            )
+            decision = InstallerHardwareEnablementPlanner(
+                inventory_provider=StaticInventory(),
+                resolver=resolver,
+                pool=iwlwifi_pool(),
+            ).plan()
+        self.assertFalse(decision.complete)
+        self.assertEqual(decision.target_packages, ())
+        self.assertTrue(any("unreadable" in item for item in decision.diagnostics))
+
+    def test_loaded_module_firmware_is_selected(self) -> None:
+        runner = FakeRunner(CommandResult(0, "iwlwifi-3945-2.ucode\n", ""))
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            bind(root, "pci", "iwl3945", "iwl3945")
+            result = BoundDriverFirmwareResolver(
+                iwlwifi_pool(),
+                runner=runner,
+                modinfo_command="/modinfo",
+                kernel_modules=kernel_tree(root),
+            ).resolve(aspire_inventory())
+        self.assertTrue(result.complete)
+        self.assertEqual(
+            tuple(item.package for item in result.recommendations),
+            ("firmware-iwlwifi",),
+        )
+
+    def test_loaded_module_unknown_to_modinfo_fails_loudly(self) -> None:
+        runner = FakeRunner(CommandResult(1, "modinfo: ERROR: Module iwl3945 not found.\n", ""))
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            bind(root, "pci", "iwl3945", "iwl3945")
+            result = BoundDriverFirmwareResolver(
+                iwlwifi_pool(),
+                runner=runner,
+                modinfo_command="/modinfo",
+                kernel_modules=kernel_tree(root),
+            ).resolve(aspire_inventory())
+        self.assertFalse(result.complete)
+        self.assertTrue(
+            any("lookup failed for bound driver iwl3945: exit 1" in item for item in result.diagnostics)
+        )
+
+    def test_modinfo_is_asked_for_the_module_behind_the_driver(self) -> None:
+        inventory = HardwareInventory(
+            (HardwareDevice("/pci0000:00/wifi", "pci", "pci:v000010ECd0000C822", "rtw_8822ce"),)
+        )
+        runner = FakeRunner(CommandResult(0, "", ""))
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            bind(root, "pci", "rtw_8822ce", "rtw88_8822ce")
+            result = BoundDriverFirmwareResolver(
+                pool(),
+                runner=runner,
+                modinfo_command="/modinfo",
+                kernel_modules=kernel_tree(root),
+            ).resolve(inventory)
+        self.assertTrue(result.complete)
+        self.assertEqual(runner.commands, [("/modinfo", "-F", "firmware", "rtw88_8822ce")])
+
+    def test_builtin_driver_exit_one_stays_benign_with_module_metadata(self) -> None:
+        runner = FakeRunner(CommandResult(1, "modinfo: ERROR: Module ec not found.\n", ""))
+        inventory = HardwareInventory((HardwareDevice("/LNXSYSTM:00/ec", "acpi", "acpi:PNP0C09:", "ec"),))
+        with tempfile.TemporaryDirectory() as raw:
+            result = BoundDriverFirmwareResolver(
+                pool(),
+                runner=runner,
+                modinfo_command="/modinfo",
+                kernel_modules=kernel_tree(Path(raw)),
+            ).resolve(inventory)
+        self.assertTrue(result.complete)
+        self.assertEqual(result.diagnostics, ())
+
+    def test_missing_or_hung_modinfo_is_incomplete(self) -> None:
+        for exc in (FileNotFoundError("/modinfo"), subprocess.TimeoutExpired("/modinfo", 5)):
+            with self.subTest(exc=exc.__class__.__name__):
+                result = BoundDriverFirmwareResolver(
+                    pool(), runner=RaisingRunner(exc), modinfo_command="/modinfo"
+                ).resolve(StaticInventory().snapshot())
+                self.assertFalse(result.complete)
+
+    def test_production_planner_wires_module_metadata_into_both_resolvers(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            planner = InstallerHardwareEnablementPlanner.linux_default(
+                pool=pool(), machine="aarch64", sysfs_devices=Path(raw) / "sys" / "devices"
+            )
+        resolvers = planner._resolver.resolvers
+        self.assertTrue(all(getattr(item, "kernel_modules", None) is not None for item in resolvers))
+        self.assertEqual(resolvers[0].kernel_modules.sysfs_root, Path(raw) / "sys")
 
 
 if __name__ == "__main__":

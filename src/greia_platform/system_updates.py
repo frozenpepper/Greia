@@ -3420,6 +3420,7 @@ def _production_selection_factory(
         from .hardware_enablement import (
             CompositeHardwareSupportResolver,
             IsenkramHardwareSupportResolver,
+            LinuxKernelModules,
             LinuxSysfsHardwareInventory,
             X86MicrocodeResolver,
         )
@@ -3443,7 +3444,11 @@ def _production_selection_factory(
             )
         plan = CompositeHardwareSupportResolver(
             resolvers=(
-                IsenkramHardwareSupportResolver(),
+                IsenkramHardwareSupportResolver(
+                    kernel_modules=LinuxKernelModules(
+                        sysfs_root=context.paths.sysfs_devices.parent
+                    )
+                ),
                 X86MicrocodeResolver(),
             )
         ).resolve(snapshot)

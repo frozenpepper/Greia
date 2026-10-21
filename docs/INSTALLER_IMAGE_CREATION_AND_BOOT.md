@@ -129,6 +129,16 @@ weakens the initial decision. `install-record.json` records the final merged
 package list; the ordinary record still contains package names only, never raw
 inventory.
 
+The refresh only helps when the inventory actually changed. Driver firmware is
+found through `modinfo`, so the install-transaction and system-update services
+must be able to read `/usr/lib/modules`: they do not set
+`ProtectKernelModules=yes` (it hid that tree, made every driver look built-in
+and left every installed target without driver firmware) and deny module
+loading with the capability bounding set plus `SystemCallFilter=~@module`
+instead. An unreadable module tree, a loaded module that `modinfo` cannot
+describe, or a missing `modinfo` makes the hardware plan incomplete, and the
+installer refuses before erasing anything with the cause in its message.
+
 ## 6. Development SSH is a hard invariant
 
 For explicit developer profiles (`*-dev`, and the release candidate `legacy-x86-i686-rc`), both the live installer and installed OS must expose:

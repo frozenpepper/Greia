@@ -387,11 +387,21 @@ def build_production_seam_pair(
                 pool=pool,
                 inventory_snapshot=snapshot,
             ).plan()
+            if not enablement.resolver_plan.complete:
+                # An incomplete resolution selects no firmware at all; going
+                # ahead would install a target that silently lacks drivers'
+                # firmware (e.g. Wi-Fi) that the live installer had.
+                detail = "; ".join(enablement.diagnostics[:3]) or "resolution incomplete"
+                raise FreshAbInstallError(
+                    "machine hardware selection is incomplete: " + detail
+                )
             firmware_packages = tuple(enablement.required_firmware)
             microcode_packages = tuple(enablement.required_microcode)
             selected_installed_bound = pool.selected_installed_bytes(
                 firmware_packages, microcode_packages
             )
+        except FreshAbInstallError:
+            raise
         except Exception as exc:
             raise FreshAbInstallError(
                 f"machine hardware selection is not authoritative: {exc}"

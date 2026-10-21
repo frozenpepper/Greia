@@ -224,6 +224,16 @@ error. `make verify` was not rerun on the merged head. The 72 focused voice
 tests passed before production. No runtime playback, release image, Simulator,
 physical-device or human listening acceptance is claimed.
 
+## 2026-10-21 — Installer firmware selection was blind inside its own sandbox (fix)
+
+**Evidence class: SOURCE + FOCUSED TESTS + REAL SYSTEMD SANDBOX (build host `orbiter`, not the Aspire, not a clean install).**
+
+- **Root cause (corrects the 2026-10-21 Aspire entry below):** `greia-install-transaction.service` and `greia-system-update.service` ran with `ProtectKernelModules=yes`, which hides `/usr/lib/modules`. Inside them `modinfo` (directly and via `isenkram-autoinstall-firmware`) answered "module not found" (exit 1) for every driver; the resolver treated exit 1 as "built-in driver" and selected **no driver firmware on any machine**, only CPU microcode. The Wi-Fi was joined before the install, so `iwl3945` was already bound: the "late binding" explanation behind `813b43d0` was wrong and its 68% refresh runs in the same sandbox, so it could not help. Reproduced on the build host: `systemd-run -p ProtectKernelModules=yes modinfo -F firmware iwlwifi` → `Module iwlwifi not found`, exit 1.
+- **Fix:** both units drop `ProtectKernelModules=yes`; module loading stays denied by the capability bounding set (no `CAP_SYS_MODULE`) plus explicit `SystemCallFilter=~@module`. New `greia_platform.hardware_enablement.LinuxKernelModules` (production-wired into `BoundDriverFirmwareResolver`, `IsenkramHardwareSupportResolver` and the update selection) makes an unreadable module tree an **incomplete** resolution, which the single-root engine already turns into a pre-erase refusal naming the cause. The bound-driver resolver now asks `modinfo` for the module behind the driver (sysfs `module` link: `rtw_8822ce` → `rtw88_8822ce`, `b43-pci-bridge` → `ssb`), and a loaded module `modinfo` cannot describe, a missing/hung `modinfo`, or any other failing exit is incomplete instead of a diagnostic. The A/B fresh-install seam now refuses an incomplete resolution instead of installing an empty firmware set.
+- **Verification:** new `tests/test_firmware_resolution_unit_contract.py` plus resolver/module-view tests; focused suites PASS (hardware enablement 16, installer hardware enablement 21, installer engine 21, fresh A/B 29, installer unit contract 30, system-update service 35 + orchestration/composition/overlay/staging/activation/L7 guards). Real systemd sandbox on the build host with the unit's capability set: old setting → planner refuses with "kernel module metadata is unreadable"; new setting → bound-driver resolver complete, selects `firmware-misc-nonfree` for its `tg3` NIC; `modprobe dummy` denied under the new filter. `make verify` not run.
+- **Not proven:** a clean install on the Aspire. The LaCie image `ff339ad7…` predates this fix and will still install without Wi-Fi firmware.
+- **Next exact step:** rebuild/flash the RC from this commit, clean-install the Aspire, confirm `install-record.json` lists `firmware-iwlwifi` and `iwd` connects without manual packages.
+
 ## 2026-10-21 — Aspire 1280x800: full-surface Activities and missing target Wi-Fi firmware
 
 **Evidence class: SOURCE + FOCUSED TESTS + PHYSICAL/DEVICE (installed Acer Aspire, remote input).**

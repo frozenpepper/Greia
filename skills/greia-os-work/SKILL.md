@@ -57,6 +57,10 @@ For current evidence/test routing use:
 docs/testing/LOCAL_AGENT_START_HERE.md
 ```
 
+## Hardware firmware resolution and service sandboxes
+
+Driver firmware for the installed target is found with `modinfo` (directly and through isenkram), so any service that resolves it (`greia-install-transaction`, `greia-system-update`) must keep `/usr/lib/modules` readable: never add `ProtectKernelModules=yes` there; deny module loading with the capability bounding set and `SystemCallFilter=~@module` (pinned by `tests/test_firmware_resolution_unit_contract.py`). Production compositions pass `LinuxKernelModules` to the resolvers so unreadable metadata is an incomplete plan (pre-erase refusal), never "no firmware needed". Fixture tests with fake `modinfo` cannot prove this; check a hardening change in a real `systemd-run` sandbox.
+
 ## Pi 400/500 source-only adapter (owner-authorized, 2026-10-19)
 
 For Pi A/B release work, read `docs/reviews/2026-10-19_RASPBERRY_PI_RESEARCH_LED_VERIFICATION.md` before changing the firmware path. The `greia_platform.pi_boot_observation` module is read-only and **not** a boot-health verifier or production boot transaction: big-endian chosen-firmware values and a root= hint cannot establish the actual mounted root or boot-device ancestry. Pi kernel, DTB, EEPROM partition walk and FAT A/B success all need real-board proof. Preserve the no-erase Pi installer gate.

@@ -68,7 +68,14 @@ ReadWritePaths=/var/lib/greia-os /run/greia-os
 # /run/greia-os tree. Everything else stays read-only.
 ReadWritePaths=/etc/greia-os /boot/grub
 ProtectKernelTunables=yes
-ProtectKernelModules=yes
+# ProtectKernelModules=yes is deliberately NOT set: besides denying module
+# loading it hides /usr/lib/modules, so `modinfo` (directly and through
+# isenkram) reports every driver as "module not found" and firmware selection
+# for the target resolved to nothing. The reference Aspire's installed system
+# shipped without firmware-iwlwifi that way. Module loading stays denied:
+# CAP_SYS_MODULE is outside the capability bounding set and the module
+# syscalls are filtered explicitly below.
+SystemCallFilter=~@module
 ProtectControlGroups=yes
 RestrictSUIDSGID=yes
 LockPersonality=yes

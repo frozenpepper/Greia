@@ -379,3 +379,20 @@ deploy or clean install will move it to the current `main`.
    `verbose` recovery path.
 3. Decide whether to add a post-install firmware verification/repair step and
    whether `iproute2`/NTP provisioning belong in the target package set.
+
+---
+
+## 6. Correction (2026-10-21, later the same day): the real firmware root cause
+
+§2.2/§2.3 attributed the missing `firmware-iwlwifi` to a driver that bound
+late. That does not fit: the installer had already joined Wi-Fi, so
+`iwl3945` was bound when the pre-erase plan ran. The actual cause was the
+install service's own sandbox: `ProtectKernelModules=yes` hides
+`/usr/lib/modules`, `modinfo -F firmware <driver>` exits 1 ("module not
+found"), and the resolver treated exit 1 as a built-in driver. No driver
+firmware was selected on any machine; the `813b43d0` refresh runs inside the
+same sandbox and returns the same empty result. The fix, tests and sandbox
+evidence are recorded in `HANDOVER.md` and the lifecycle plan under
+"Firmware selection unblocked inside the install/update sandboxes". The image
+in §2.6 predates that fix.
+

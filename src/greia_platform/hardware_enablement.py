@@ -236,6 +236,70 @@ class SubprocessCommandRunner:
         return CommandResult(completed.returncode, completed.stdout, completed.stderr)
 
 
+_MODULE_NAME_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+
+
+@dataclass(frozen=True, slots=True)
+class LoadedModuleIdentity:
+    """Kernel module that backs one bound driver, as sysfs reports it."""
+
+    name: str
+    loadable: bool
+
+
+@dataclass(frozen=True, slots=True)
+class LinuxKernelModules:
+    """Read-only view of the running kernel's module metadata.
+
+    Firmware resolution asks ``modinfo`` (directly, or through isenkram) which
+    firmware files each bound module declares.  Both read
+    ``/lib/modules/<release>``.  When that tree is hidden — systemd's
+    ``ProtectKernelModules=yes`` does exactly that — ``modinfo`` reports
+    "module not found", which is indistinguishable from a built-in driver and
+    used to resolve to "no firmware needed".  Callers therefore check
+    :meth:`metadata_problem` first and treat a problem as an incomplete
+    resolution, never as an empty one.
+    """
+
+    sysfs_root: Path = Path("/sys")
+    modules_root: Path = Path("/lib/modules")
+    release: str | None = None
+
+    def metadata_problem(self) -> str | None:
+        """Return why module metadata is unreadable, or None when it is usable."""
+
+        release = self.release or os.uname().release
+        index = self.modules_root / release / "modules.dep"
+        try:
+            with index.open("rb") as handle:
+                handle.read(1)
+        except OSError as exc:
+            return (
+                f"kernel module metadata is unreadable ({index}: "
+                f"{exc.__class__.__name__}); driver firmware cannot be resolved"
+            )
+        return None
+
+    def module_for_driver(self, subsystem: str, driver: str) -> LoadedModuleIdentity:
+        """Name the module behind ``driver`` and whether it is a loadable module.
+
+        The driver name is not always the module name (``rtw_8822ce`` is
+        provided by ``rtw88_8822ce``), so sysfs' ``module`` link wins.  Only
+        loadable modules have ``/sys/module/<name>/initstate``; built-in
+        drivers may legitimately be unknown to ``modinfo``.
+        """
+
+        link = self.sysfs_root / "bus" / subsystem / "drivers" / driver / "module"
+        try:
+            name = os.path.basename(os.readlink(link))
+        except (OSError, ValueError):
+            return LoadedModuleIdentity(driver, False)
+        if not _MODULE_NAME_RE.fullmatch(name):
+            return LoadedModuleIdentity(driver, False)
+        loadable = (self.sysfs_root / "module" / name / "initstate").is_file()
+        return LoadedModuleIdentity(name, loadable)
+
+
 @dataclass(frozen=True, slots=True)
 class IsenkramHardwareSupportResolver:
     """Use Debian's hardware metadata without granting it package-install authority.
@@ -243,6 +307,10 @@ class IsenkramHardwareSupportResolver:
     ``isenkram-autoinstall-firmware -l`` is treated as the automatic firmware
     source. General ``isenkram-lookup -l`` results are diagnostic/advisory only
     because that command can recommend unrelated user-space hardware utilities.
+
+    ``kernel_modules`` is wired by production compositions: isenkram reads
+    module metadata through ``modinfo`` and its "found nothing" exit is
+    otherwise indistinguishable from a sandbox that hides the module tree.
     """
 
     runner: CommandRunner = SubprocessCommandRunner()
@@ -250,6 +318,7 @@ class IsenkramHardwareSupportResolver:
     firmware_command: str = "/usr/sbin/isenkram-autoinstall-firmware"
     timeout_seconds: float = 12.0
     max_recommendations: int = 128
+    kernel_modules: LinuxKernelModules | None = None
 
     def __post_init__(self) -> None:
         if not 1.0 <= self.timeout_seconds <= 60.0:
@@ -261,6 +330,14 @@ class IsenkramHardwareSupportResolver:
         diagnostics: list[str] = []
         recommendations: dict[str, HardwareSupportRecommendation] = {}
         complete = not inventory.truncated and inventory.scan_errors == 0
+
+        problem = (
+            self.kernel_modules.metadata_problem()
+            if self.kernel_modules is not None
+            else None
+        )
+        if problem is not None:
+            return HardwareSupportPlan(inventory.token, (), False, (problem,))
 
         firmware_result = self._run(
             (self.firmware_command, "-l"),

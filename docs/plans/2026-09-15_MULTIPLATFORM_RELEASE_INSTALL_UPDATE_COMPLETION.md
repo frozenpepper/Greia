@@ -2789,3 +2789,13 @@ Rebuilt `legacy-x86-i686-rc` from `fa15c88f` (viewport normalization, post-copy 
 - Image SHA-256 `ff339ad76b65acd4c0f998c81da61577127400c4aee13a59963e68d2bcd4838e`; live media id `7b50ef65-a0a8-4427-afb3-667ef37a52d1`; payload accounted **1,257 MiB** (< 1,300 owner gate); target payload 518,950,912 bytes; `boot_console_policy=quiet`.
 - `Developer installer artifact verification: PASS`, `Greia live USB read-only verification: PASS`, `usb_readback_verification=PASS`, `loop_hygiene_verification=PASS`; an independent verifier re-run PASSed; no Greia loop devices remain.
 - **Evidence scope:** build/artifact/media read-back. The installed Aspire was fixed in place with the earlier source deploy and the manual firmware package; a **clean install from this new stick** and the Acer premortem §5 F1–F19 physical checklist remain the next acceptance step.
+
+### 2026-10-21 — Firmware selection unblocked inside the install/update sandboxes (SOURCE + REAL SYSTEMD SANDBOX)
+
+Correction to the Aspire Wi-Fi entry above: the installed target lacked `firmware-iwlwifi` because `ProtectKernelModules=yes` hid `/usr/lib/modules` from `greia-install-transaction.service` (and `greia-system-update.service`). `modinfo`/isenkram reported every driver as unknown (exit 1), which the bound-driver resolver accepted as "built-in", so no driver firmware was ever selected on any machine. `813b43d0`'s post-copy refresh runs in the same sandbox and does not change that outcome.
+
+- Units: `ProtectKernelModules=yes` removed; `SystemCallFilter=~@module` added; `CAP_SYS_MODULE` stays outside both bounding sets (`tests/test_firmware_resolution_unit_contract.py`).
+- Resolution: `LinuxKernelModules` gates both resolvers and the update selection (unreadable module tree → incomplete → single-root pre-erase refusal / A/B seam refusal / update selection None); `modinfo` uses the sysfs module name; loaded-module, missing-`modinfo`, timeout and other failing exits are incomplete, not diagnostics.
+- Evidence: focused suites PASS; build host `systemd-run` with the unit capability set: old → refusal "kernel module metadata is unreadable", new → complete, `firmware-misc-nonfree` selected for `tg3`, `modprobe dummy` denied. Not a clean install; the current LaCie image predates the fix.
+- Next: rebuild/flash the RC and clean-install the Aspire; accept only when `install-record.json` lists `firmware-iwlwifi` and `iwd` connects with no manual package.
+
