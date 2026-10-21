@@ -465,3 +465,16 @@ to final verification, target location, extraction safety and saved review scori
 Extractor v6 freezes the model/accent policy; review screen v3 prevents stale
 cache reuse. Reassessment preserves original verifier provenance. No old corpus
 plan or human review is rewritten, and bulk generation remains stopped.
+
+
+### 2026-10-22 owner-authorized priority continuation
+
+The latest owner request resumes only the previously frozen 667 problematic short
+cues through `tools/finish_voice_priority.py`; the older STOPPED entries remain
+historical. Read the corpus regeneration manual for exact continuation flags and
+crash recovery. Saved provider sources are tried first, prior cumulative budgets
+carry by maximum, and three fresh generations per cue remains the total limit.
+Carrier raw synthesis verification is OFF because the intro is disposable;
+required Base verification checks the delivered extracted target before install.
+Keep master identity, deferred scope and human acceptance separate. Do not launch
+an old v4 producer or the unimplemented shared two-queue plan.

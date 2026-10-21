@@ -72,6 +72,41 @@ installer/first-boot/lifecycle test gates or the Creations/Activity
 audit programme. Do not invent a second language registry or silently
 promote unvoiced locales.
 
+## 2026-10-22 — Owner resumed priority completion with Base
+
+The owner explicitly requested finishing the problematic Greia recordings,
+superseding the historical bulk-stop instructions only for the frozen **667
+priority paths**. Deferred/missing-review short lists remain outside this run.
+`tools/finish_voice_priority.py` reuses VoiceEngine and CorpusRunner: it reconciles
+current installed hashes against prior DONE transactions, checks retained takes
+with pinned Base/accent-insensitive scoring, re-extracts saved immutable provider
+takes before generating, and carries cumulative attempt counts by maximum (never
+sum). Fresh takes use the previously compared ellipsis/blank-line introduction
+and two-second pause direction; actual silence still must satisfy the cutter.
+Maximum three cumulative fresh generations per cue. No masters change.
+
+Carrier synthesis now disables ASR on the disposable introductory recording;
+required verification scores the packaged target, strictly above 0.8 with no
+signal warnings, before the normal recoverable installation transaction.
+Lossy delivery is decoded and independently checked. Human review remains PENDING.
+The interrupted Italian ask_R provider job completed as
+`20261021-225637-ef097ad1`; recover that output rather than resubmit its take.
+The whale cue differs from its prior DONE candidate but primary verification
+confirmed its exact original audio AND receipt were restored. A one-cue follow-up
+after the main pass repairs that original priority path, preserving its budget. Live continuation: `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-base-v6-production/`
+(`progress.json`, `production.log`, pass journals); PID 87089 at launch.
+The source gate `make verify PYTHON=/opt/anaconda3/bin/python3` executed locally
+and aborted in the test stage with `Abort trap: 6`; full log
+`/tmp/greia-priority-completion-make-verify.log`. It is NOT GREEN. Focused carrier
+32/32, corpus 18/18 and continuation 4/4 PASS in the prepared voice environment.
+The first corpus discovery without PYTHONPATH failed to import greia_platform;
+the corrected `PYTHONPATH=src` invocation is the 18/18 result. Initial orchestration
+startup rejected one legacy manifest receipt, then caught a missing decode-output
+directory before any synthesis/install; both were corrected, old logs preserved,
+and the active pass completed the delivered-audio audit: 167 kept, followed by
+saved-take recovery before fresh production. The combined focused run passed
+92 tests before the extra restoration positive/negative test (which passed).
+
 ## 2026-10-21 — Owner reprioritized spoken-carrier retakes
 
 The owner superseded blanket short-phrase production with review-led retakes for

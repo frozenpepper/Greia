@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from greia_voice_core.audio import AudioPipeline
 from greia_voice_core.models import GenerationDisposition, GenerationResult, SpeechKind, VerificationResult, VerificationDisposition
-from greia_voice_corpus.carrier_generation import generate_candidate
+from greia_voice_corpus.carrier_generation import generate_candidate, prepare_saved_candidate, CarrierExtractionFailure
 from greia_voice_corpus.carriers import freeze_row
 from greia_voice_corpus.inventory import digest, receipt_path
 from greia_voice_corpus.store import write_json
@@ -114,6 +114,37 @@ class CarrierGenerationIntegrationTests(unittest.TestCase):
         self.assertTrue(receipt_path(raw).exists())
         self.assertFalse((self.work / "candidates" / row["path"]).exists())
         self.assertTrue((self.work / "carrier-evidence" / f"{row['path']}.failure.json").exists())
+
+    def test_required_scores_only_cut_target_and_raw_verification_is_off(self):
+        row = self.row("wav")
+        engine = FakeEngine(self.work)
+        store = SimpleNamespace(work=self.work)
+        profile = SimpleNamespace(voice_id="greia.dani.v3", anchor_sha256="master-hash")
+        raw = self.work / "carrier-raw" / (row["path"] + ".raw.wav")
+        calls = []
+        def transcribe(path, locale):
+            calls.append(path)
+            return synthetic_result([("garbled", .1, 1.45), ("Trouve", 2., 2.3), ("Luna", 2.31, 2.8)]) if path == raw else synthetic_result([("Trouve", .1, .4), ("Luna", .41, .9)])
+        candidate = generate_candidate(engine, store, row, profile, "required", transcriber=transcribe)
+        receipt = __import__("json").loads(receipt_path(candidate).read_text())
+        self.assertEqual(engine.calls[0].verification.value, "off")
+        self.assertEqual(receipt["verification"]["disposition"], "PASS")
+        self.assertEqual(receipt["verification"]["score"], 1.)
+        self.assertEqual(len(calls), 2, "identical delivered WAV should reuse target ASR")
+
+    def test_saved_recovery_checks_quality_without_synthesizing(self):
+        row = self.row("wav")
+        engine = FakeEngine(self.work)
+        store = SimpleNamespace(work=self.work)
+        profile = SimpleNamespace(voice_id="greia.dani.v3", anchor_sha256="master-hash")
+        raw = self.work / "carrier-raw" / (row["path"] + ".raw.wav")
+        generate_candidate(engine, store, row, profile, "off", transcriber=self.transcriber(raw))
+        for path in (self.work / "candidates" / row["path"], receipt_path(self.work / "candidates" / row["path"]),
+                     self.work / "carrier-extracted" / (row["path"] + ".extracted.wav")):
+            path.unlink()
+        with self.assertRaises(CarrierExtractionFailure):
+            prepare_saved_candidate(engine, store, row, profile, "required", transcriber=self.transcriber(raw))
+        self.assertEqual(len(engine.calls), 1)
 
 
 if __name__ == "__main__":

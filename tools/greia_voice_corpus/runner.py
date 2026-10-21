@@ -2,6 +2,7 @@
 from contextlib import AbstractContextManager
 import fnmatch
 import json
+import math
 from pathlib import Path
 import threading
 import time
@@ -65,6 +66,13 @@ class CorpusRunner:
                     receipt.get("reference_sha256") != profile.anchor_sha256 or
                     receipt.get("human_review") != "PENDING"):
                 raise ValueError("spoken-carrier candidate evidence/master/review differs from frozen plan")
+            if self.verification is VerificationMode.REQUIRED:
+                from greia_voice_core.review_policy import ASR_PASS_THRESHOLD
+                checked = receipt.get("verification", {})
+                if (checked.get("disposition") != "PASS" or type(checked.get("score")) not in (int, float)
+                        or not math.isfinite(checked["score"])
+                        or checked["score"] <= ASR_PASS_THRESHOLD or checked.get("flags")):
+                    raise ValueError("staged carrier candidate has no passing final-target quality check")
             if digest(candidate) != receipt["output"]["sha256"] or candidate.stat().st_size != receipt["output"]["bytes"]:
                 raise ValueError("incomplete extracted candidate/receipt pair")
             raw = self.store.work / receipt["raw_audio"]["path"]

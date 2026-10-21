@@ -773,3 +773,13 @@ source key parity alone cannot certify translated runtime behavior.
 ## Installer single-root layout and EFI seam (2026-10-21, UNPROVEN)
 
 The whole-disk installer no longer hard-codes its partition commands: `src/greia_installer/efi_boot.py` defines `SingleRootLayout` (`bios-single-ext4`, `uefi-or-bios-gpt-ext4`), `SysfsFirmwareProbe` and `plan_efi_boot`. `InstallationEngine._select_layout` picks the EFI layout only if the live installer booted via EFI and the target profile composed `boot-grub-efi`; BIOS machines keep the old command arrays. Add new firmware/boot variants as new layout classes or command plans there, not as `if` branches in `engine.install`. Target images carry only the `-bin` GRUB EFI packages (the non-bin ones conflict with `grub-pc`). Evidence is source and fake-runner tests only; see `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` section 14.
+
+
+### 2026-10-22 voice priority continuation
+
+The owner resumed the existing frozen 667 problematic short recordings through
+`tools/finish_voice_priority.py`, wrapping VoiceEngine/CorpusRunner. It checks
+installed takes and recovers saved providers before fresh, carries three-take
+cumulative budgets and requires Base target score >0.8 with no signal warnings.
+Read the voice-production skill and corpus manual for execution/recovery;
+this does not authorize deferred retakes or accept new audio as human-reviewed.

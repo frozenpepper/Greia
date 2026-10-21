@@ -754,3 +754,16 @@ carrier extraction and corpus plan/review/reassess for strict comparison. New
 carrier plans use v6; do not resume old frozen plans under new code. Saved-evidence
 reassessment preserves the original recognizer identity; it is not a new Base run.
 The proposed shared asynchronous queue is not implemented by this policy change.
+
+
+## Frozen priority voice completion (2026-10-22)
+
+For the owner-authorized 667 problematic short cues use
+`tools/finish_voice_priority.py` with the frozen priority JSON, historical priority
+root and a new external work directory. Exact usage/recovery is in
+`GREIA_VOICE_CORPUS_REGENERATION.md`. It reuses the existing engine, selected masters,
+Base/accent policy and transaction journal; deferred scope stays separate.
+Monitor `progress.json`, `production.log`, pass `state.sqlite3`, and the shared
+VoxStage queue. A failed extraction/target check may spend remaining cumulative
+takes (three total); infrastructure or uncertain external jobs stop. Reconcile
+completed outputs by actual provider job/idempotency metadata before continuing.

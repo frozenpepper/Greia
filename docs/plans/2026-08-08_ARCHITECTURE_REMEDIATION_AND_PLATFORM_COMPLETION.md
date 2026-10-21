@@ -3650,3 +3650,17 @@ repository discovery; fixed and confirmed with Anaconda discovery (8 PASS).
 Remaining reported failures/errors are build/installer cases recorded in HANDOVER.
 Final focused 111-test suite is distinct; full gate remains NOT GREEN and was not
 rerun after the test import fix. No broader platform closure is claimed.
+
+
+### 2026-10-22 — Scoped problematic-voice completion resumed
+
+Owner requested finishing the existing problematic Greia audio. Added a bounded
+priority continuation over the existing VoiceEngine/CorpusRunner, preserving
+667-path scope, source transactions, immutable masters and cumulative three-take
+budgets. Saved provider sources precede new production; installed prior takes
+are checked against current bytes and pinned Base. Required carrier generation
+now verifies the packaged target rather than the disposable intro, and rejects
+score <=0.8 or signal warnings before installation. Focused carrier tests 32/32
+and continuation invariants 3/3 PASS in the prepared voice venv. Long-run state
+and final source verification are tracked in HANDOVER; no hardware/release or
+human-listening acceptance is asserted. Shared two-queue plan remains proposed.

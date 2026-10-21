@@ -226,7 +226,7 @@ def main(argv=None) -> int:
             if name == "run":
                 command.add_argument("--limit", type=int, default=0, help="maximum cues this pass; zero means all remaining")
                 command.add_argument("--match", default="*", help="repository-relative path glob, quoted")
-                command.add_argument("--verification", choices=("off", "auto", "required"), default="off", help="off is explicit: host Whisper is currently unavailable; listening still required")
+                command.add_argument("--verification", choices=("off", "auto", "required"), default="off", help="required gates the packaged target; off explicitly disables final ASR scoring; human listening remains pending")
                 command.add_argument("--continue-after-carrier-rejection", action="store_true",
                                      help="continue after a fail-closed carrier transcript/boundary rejection; uncertain provider failures still stop")
             elif name == "retry":

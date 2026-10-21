@@ -519,3 +519,31 @@ the same override. Stored script/ASR text remains verbatim. Exact target checks
 use the selected normalization policy; unrelated errors remain actionable.
 Old paused plans are not mutated or resumed. New reviews use policy v3 and fresh
 report directories; saved-evidence reassessment preserves its source model ID.
+
+### 2026-10-22 — bounded priority completion authorized
+
+The later owner request to finish problematic audio authorizes
+`tools/finish_voice_priority.py` for the existing 667-path priority JSON only.
+It wraps the existing VoiceEngine/CorpusRunner, preserves prior receipts and
+backups, audits installed priority takes, tries saved sources before fresh
+production, and combines cumulative attempt ledgers by maximum. It never resets
+the three-take budget. Unknown destination changes are blocked. Exact restored original audio/receipt
+pairs can be reconciled as the still-authorized original priority repair. Deferred lists
+are not selected. `--fresh` explicitly enables remaining fresh attempts.
+
+Use the prepared voice-production interpreter and an external new `--work-dir`
+under the historical priority root, with `--priority-file` naming the frozen
+`triage/priority-retakes.json` and `--history-root` naming the priority history.
+Watch its `progress.json`, pass `state.sqlite3` journals and redirected console
+log. One process owns the generation lock for audit/recovery/production. A saved
+run refuses a blind restart: reconcile any GENERATING/INSTALLING/external jobs,
+then create a new continuation directory under the same history root so all
+prior pass ledgers remain visible. Never duplicate an uncertain provider job.
+
+Required carrier checks score only the actual delivered target with pinned Base,
+ignore accents by default, require similarity strictly above 0.8 and no signal
+warnings, and install only through the ordinary recoverable transaction. Raw
+intro mistakes are irrelevant to this score. A failed cut/target check retains
+its source and evidence; another generation uses the remaining cumulative budget.
+Provider/infrastructure/installation failures stop instead of consuming retries.
+This does not implement the proposed general two-queue VoxStage architecture.
