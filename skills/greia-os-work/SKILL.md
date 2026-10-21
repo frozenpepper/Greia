@@ -10,6 +10,14 @@ description: Task router for substantive Greia OS/platform/Shell/Parent/installe
 
 This file tells an agent **what to read for the task**. It is deliberately not a second architecture manual.
 
+## Current voice screening and direction correction (2026-10-21)
+
+Screening policy v2 requires ASR >0.8; tail/internal pauses below 1.5s do not warn.
+Reassess matching saved reports without another model run; see automated review
+procedure §3a. Master design owns identity/register/timbre; per-cue prompts own
+only performance. Defaults are neutral for all six characters. Do not revive
+v2's persona-prefixed frozen overrides for the next Dani/Momo/Tito replacement.
+
 ## Shared human listening tool (2026-10-21)
 
 After automated review, use shared `takeboard` (catalog/skill/README at

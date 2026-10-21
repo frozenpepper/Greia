@@ -12,7 +12,7 @@ from .audio import AudioPipeline
 from .models import VerificationMode
 from .verification import asr_eligible, normalize_transcript
 
-POLICY_VERSION = "greia-audio-screen-v1"
+from .review_policy import POLICY_VERSION, MAX_TRAILING_SILENCE, MAX_INTERNAL_PAUSE, reassess_result
 
 
 def probe_cached_asr(verifier) -> tuple[bool, str]:
@@ -60,8 +60,8 @@ def signal_metrics(path: Path) -> tuple[dict, list[str]]:
     clipped = sum(abs(x) >= 32760 for x in samples) / len(samples)
     flags = []
     for predicate, label in ((dbfs < -40, "LOW_LEVEL"), (clipped >= .001, "POSSIBLE_CLIPPING"),
-                             (leading >= .4, "LONG_LEADING_SILENCE"), (trailing >= .4, "LONG_TRAILING_SILENCE"),
-                             (longest * .02 >= .8, "LONG_INTERNAL_PAUSE")):
+                             (leading >= .4, "LONG_LEADING_SILENCE"), (trailing >= MAX_TRAILING_SILENCE, "LONG_TRAILING_SILENCE"),
+                             (longest * .02 >= MAX_INTERNAL_PAUSE, "LONG_INTERNAL_PAUSE")):
         if predicate:
             flags.append(label)
     return {"duration_seconds": duration, "rms_dbfs": round(dbfs, 2), "peak": round(peak, 5),
@@ -84,7 +84,7 @@ class AudioReviewer:
             result = {"metrics": metrics, "flags": flags, "asr": {"status": "DISABLED"}, "status": "WARN" if flags else "PASS"}
             screening_request = replace(request, verification=VerificationMode.REQUIRED)
             if not self.asr:
-                return result
+                return reassess_result(result)
             if not asr_eligible(screening_request):
                 result["asr"] = {"status": "NOT_APPLICABLE_POLICY", "detail": "Existing verifier eligibility excludes Dani, short teaching targets/utterances and scripts over 500 characters"}
             elif not self.asr_ready[0]:
@@ -115,4 +115,4 @@ class AudioReviewer:
                 if len({w for w in extra if len(w) >= 5} & direction_words) >= 2:
                     result["flags"].append("POSSIBLE_PROMPT_LEAKAGE")
                     result["status"] = "WARN"
-            return result
+            return reassess_result(result)

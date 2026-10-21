@@ -97,9 +97,10 @@ This proves working transcription, not all-corpus coverage or listening approval
 | Bounded decode to temporary mono PCM16 at 22,050 Hz | FAIL if undecodable, empty or duration outside 0.12–120 seconds |
 | Signal RMS | FAIL at ≤−65 dBFS (effectively silent); WARN below −40 dBFS |
 | PCM saturation | WARN when ≥0.1% samples have absolute amplitude ≥32,760 |
-| Leading/trailing silence | WARN at ≥0.4 seconds each |
-| Internal pause | WARN at ≥0.8 seconds |
-| Eligible ASR transcript against exact expected text | Existing canonical scorer, threshold 0.72; WARN below threshold |
+| Leading silence | WARN at ≥0.4 seconds (unchanged) |
+| Trailing silence | WARN at ≥1.5 seconds |
+| Internal pause | WARN at ≥1.5 seconds |
+| Eligible ASR transcript against exact expected text | Existing canonical scorer; PASS strictly above 0.8, WARN at or below 0.8 |
 | Unexpected ASR tokens matching direction vocabulary | Possible prompt leakage WARN when at least two extra words of ≥5 characters match the acting prompt |
 
 Signal analysis uses 20ms RMS frames with activity threshold approximately
@@ -122,7 +123,44 @@ small-speaker intelligibility judge; these remain explicitly unassessed.
 The leakage check is a suspicion flag, not proof. It can miss leakage in another
 language or ASR transcription errors. Inspect the raw transcript alongside the
 expected words, direction and actual recording. Repetitions, omissions and wrong
-numbers can also require listening even when the aggregate score exceeds 0.72.
+numbers can also require listening even when the aggregate score exceeds 0.8.
+
+## 3a. Owner policy v2 and saved-evidence reassessment (2026-10-21)
+
+`greia-audio-screen-v2` ignores internal pauses and trailing silence below
+1.5 seconds; exactly 1.5 seconds warns. ASR scores must be **strictly greater
+than 0.8**. A high score plus clean applicable signal checks yields automated
+PASS. Metadata/decode/silence failures, clipping, low level, leading-silence and
+prompt-leakage checks still count. PASS is separate from voice preference and
+human acceptance. ASR exclusions remain visible; a signal-only PASS is not
+transcript verification. Shared thresholds live in `review_policy.py` and are
+also the default for new VoiceEngine Whisper verification.
+
+To change policy without running ASR again, reuse a finished report:
+
+```bash
+"$voice_python" -u tools/regenerate_voice_corpus.py reassess \
+  --work-dir "$voice_run" \
+  --evidence-dir /Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-full-automated-review \
+  --report-dir /Volumes/Test1/Works/Greia-voice-auditions/a-fresh-policy-v2-report \
+  --asr auto
+```
+
+This checks current plan/master metadata and audio/receipt fingerprints against
+saved evidence, then applies the new policy to saved metrics/transcripts. It
+never calls ASR or edits the source report; changed/missing evidence fails
+instead of being reused. Run a fresh live review for those files. The new report
+configuration identifies the evidence source and `REASSESSED_SAVED_EVIDENCE`.
+This is a threshold reassessment, not fresh acoustic or ASR measurement.
+
+Executed full v2 reassessment: **3,073 PASS / 1,094 WARN / 1 FAIL**.
+ASR dispositions: 1,611 PASS / 863 WARN / 1,693 policy exclusions / 1 unrun
+because the silent Bear failed first. Original measurements remain intact.
+Current listening batch: `2026-10-21-listening-policy-v2/batch.json` under the
+external auditions root, served at http://127.0.0.1:8796/. The original 8794 tab
+is retained; its 104 unsaved owner decisions were exported and copied exactly
+into the v2 batch (82 approved, 22 rejected), with a separate draft backup.
+Do not reinterpret these human states as a machine-generated approval.
 
 ## 4. Reports, progress and resume
 

@@ -3440,3 +3440,27 @@ separately after full-suite discovery. No full-gate green or listening/physical/
 release acceptance claimed. Exact evidence/next commands in HANDOVER and
 `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` §6. Shared core is project-neutral;
 application of human JSON decisions to Greia assets remains a separate workflow.
+
+### 2026-10-21 — Owner policy v2 and voice identity/performance separation
+
+Live and saved-evidence reviews share policy v2: ASR >0.8, trailing/internal
+silence WARN at ≥1.5s; other checks retained. Full fingerprint-checked reassessment
+(no ASR rerun) yielded 3073 PASS/1094 WARN/1 FAIL. 104 unsaved owner decisions
+were backed up and copied exactly into the new listening batch on 8796; original
+8794 tab preserved. Human JSON decisions are not automatic receipt promotion.
+
+Removed fixed persona traits from default per-recording prompts (all six neutral).
+Pitch/register/timbre/voice age belong in masters, acting only per cue. Historical
+v2 explicit PERSONA overrides remain untouched but must not be reused. Owner
+rejects current Dani/Momo/Tito voices; six new unselected immutable master
+auditions generated (two each, 11.84–16.00s), listener on 8795. Shared worker
+unloaded after jobs finished. Source research/trace/job evidence is in
+`docs/reviews/2026-10-21_VOICE_DIRECTION_AND_REFERENCE_REVIEW.md`; 5–30s is
+practical guidance, not proof that old refs were invalid. New master selection
+and cloned-line checks precede the draft 1340-file replacement (392/284/664).
+No master/runtime file changed; no new corpus regeneration launched.
+
+72 focused tests PASS; full `make -k verify` 5491 tests, same inherited 1 failure/
+4 errors/8 skips, ARM64 validation failure, shell/footprint completed. Full gate
+NOT GREEN; no phase/runtime/physical/release acceptance. Exact paths and source
+constraints are in HANDOVER and automated review procedure §3a.

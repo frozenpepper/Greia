@@ -7,6 +7,8 @@ import re
 from pathlib import Path
 from typing import Protocol
 
+from .review_policy import ASR_PASS_THRESHOLD
+
 from .models import (
     SpeechKind,
     VerificationDisposition,
@@ -89,7 +91,7 @@ def _release_mlx_transient_memory() -> None:
 @dataclass
 class WhisperVerifier:
     model_id: str = "mlx-community/whisper-tiny"
-    pass_threshold: float = 0.72
+    pass_threshold: float = ASR_PASS_THRESHOLD
     verifier_id: str = "mlx-whisper-tiny"
 
     def probe(self) -> tuple[bool, str]:
@@ -150,7 +152,7 @@ class WhisperVerifier:
         score = transcript_similarity(request.text, transcript)
         disposition = (
             VerificationDisposition.PASS
-            if score >= self.pass_threshold
+            if score > self.pass_threshold
             else VerificationDisposition.WARN
         )
         return VerificationResult(

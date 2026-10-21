@@ -47,6 +47,14 @@ review desk. Greia exports its completed automated batch through
 commands and save/export behavior. It never modifies canonical audio, receipts
 or acceptance automatically.
 
+**Owner review/direction correction (2026-10-21):** policy v2 uses ASR >0.8
+and tail/internal silence warnings at ≥1.5s. `reassess` can reuse matching saved
+evidence with no ASR call; see automated procedure §3a. Voice identity traits
+belong in masters; defaults are now neutral performance only. Old frozen v2
+PERSONA-prefixed overrides are historical, not the next recording instructions.
+New policy results/owner-draft copy are served on 8796, auditions on 8795;
+original 8794 tab with unsaved owner edits was kept intact.
+
 **Automated review follow-up (2026-10-21):** after generation, execute
 `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` with the `review` command on
 `tools/regenerate_voice_corpus.py`. It writes external read-only screening reports

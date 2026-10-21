@@ -54,6 +54,15 @@ speech review). Exit 0 means full applicable automated coverage without flags;
 2 means findings/error, 3 incomplete/blocked, 130 interrupted. Human listening
 and the unassessed identity/acting/pronunciation properties remain separate.
 
+Current policy: automated transcript PASS requires similarity >0.8; internal
+pauses and trailing silence below 1.5s do not warn. Other checks still apply.
+`reassess --evidence-dir /absolute/finished-report` reapplies these thresholds
+without ASR, only when source measurements still match audio/receipt fingerprints.
+See the automated review procedure §3a; use a fresh output report directory.
+
+Identity belongs in master design. Defaults contain only neutral delivery;
+per-cue delivery_prompt adds line-specific acting, not pitch/timbre/voice-age traits.
+
 ## Speech routing
 
 VoxStage uses editable acting defaults from `character_delivery.json` for all six

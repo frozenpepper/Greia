@@ -23,10 +23,13 @@ from greia_voice_corpus.store import RunStore, write_json
 from greia_voice_corpus.inventory import digest, receipt_path
 
 
-def tone(path, *, silence=False, lead=0, tail=0):
+def tone(path, *, silence=False, lead=0, tail=0, gap=0):
     path.parent.mkdir(parents=True, exist_ok=True)
     values = [0] * int(22050 * lead)
     values += [0 if silence else int(6000 * math.sin(i * 2 * math.pi * 220 / 22050)) for i in range(22050)]
+    if gap:
+        at = int(22050 * lead) + 11025
+        values[at:at] = [0] * int(22050 * gap)
     values += [0] * int(22050 * tail)
     data = array("h", values)
     if sys.byteorder != "little":
@@ -45,7 +48,7 @@ class ReviewTests(unittest.TestCase):
         self.audio = self.base / "audio.wav"
         tone(self.audio)
         self.request = VoiceRequest("leo", SpeechKind.CHARACTER_DIALOGUE, "en", "Hello my friend", delivery_prompt="Warm curious playful smile")
-        self.verifier = Mock(verifier_id="test-verifier", model_id="cached-test", pass_threshold=.72)
+        self.verifier = Mock(verifier_id="test-verifier", model_id="cached-test", pass_threshold=.8)
         self.verifier.verify.return_value = VerificationResult(VerificationDisposition.PASS, "test", "Hello my friend", 1.0)
         self.pipeline = Mock()
         self.pipeline.decode_for_review.side_effect = lambda source, output: shutil.copyfile(source, output)
@@ -65,10 +68,57 @@ class ReviewTests(unittest.TestCase):
             signal_metrics(self.audio)
 
     def test_long_silence_is_flagged(self):
-        tone(self.audio, lead=.6, tail=.6)
+        tone(self.audio, lead=.6, tail=1.6)
         _, flags = signal_metrics(self.audio)
         self.assertIn("LONG_LEADING_SILENCE", flags)
         self.assertIn("LONG_TRAILING_SILENCE", flags)
+
+    def test_pause_and_tail_boundaries(self):
+        for seconds, warned in ((1.48, False), (1.5, True), (1.52, True)):
+            tone(self.audio, tail=seconds, gap=seconds)
+            _, flags = signal_metrics(self.audio)
+            self.assertEqual('LONG_TRAILING_SILENCE' in flags, warned)
+            self.assertEqual('LONG_INTERNAL_PAUSE' in flags, warned)
+
+    def test_saved_scores_and_old_pause_flags_follow_current_policy(self):
+        from greia_voice_core.review_policy import reassess_result
+        record = {'status':'WARN', 'flags':['LONG_TRAILING_SILENCE','LONG_INTERNAL_PAUSE'],
+                  'metrics':{'trailing_silence_seconds':1.0,'longest_internal_pause_seconds':1.48},
+                  'asr':{'status':'PASS','disposition':'PASS','score':.81}}
+        self.assertEqual(reassess_result(record)['status'], 'PASS')
+        self.assertEqual(record['status'], 'WARN')
+        for score in (.79, .8):
+            record['asr']['score'] = score
+            self.assertEqual(reassess_result(record)['status'], 'WARN')
+        record['asr']['score'] = 1.0
+        record['flags'].append('POSSIBLE_PROMPT_LEAKAGE')
+        self.assertEqual(reassess_result(record)['status'], 'WARN')
+
+    def test_saved_reassessment_never_runs_asr_and_rejects_changed_audio(self):
+        target, _ = self.corpus()
+        reviewer = self.reviewer()
+        source, dest = self.base / 'source-report', self.base / 'reassessed'
+        with patch('builtins.print'):
+            CorpusReview(self.base / 'run', reviewer).run(source)
+            old = (source / 'review.jsonl').read_bytes()
+            self.assertEqual(CorpusReview(self.base / 'run', reviewer).run(dest, evidence=source), 0)
+            self.assertEqual(self.verifier.verify.call_count, 1)
+            self.assertEqual((source / 'review.jsonl').read_bytes(), old)
+            # Keep the current receipt internally valid while invalidating old evidence.
+            target.write_bytes(target.read_bytes() + b'changed')
+            receipt = json.loads(receipt_path(target).read_text())
+            receipt['output'] = {'sha256':digest(target),'bytes':target.stat().st_size}
+            write_json(receipt_path(target), receipt)
+            self.assertEqual(CorpusReview(self.base / 'run', reviewer).run(self.base / 'stale', evidence=source), 2)
+            self.assertEqual(self.verifier.verify.call_count, 1)
+
+    def test_defaults_are_performance_only(self):
+        from greia_voice_core.direction import character_delivery
+        defaults = character_delivery()
+        self.assertEqual(len(set(defaults.values())), 1)
+        for value in defaults.values():
+            for identity in ('robot','unicorn','fox','monster','pitch','nasal','baritone'):
+                self.assertNotIn(identity, value.lower())
 
     def test_signal_failure_never_invokes_asr(self):
         self.audio.write_bytes(b"invalid audio")

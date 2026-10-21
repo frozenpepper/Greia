@@ -186,6 +186,13 @@ pedagogical_speech
 dani_system_speech
 ```
 
+**Owner direction correction (2026-10-21):** voice-defining pitch/register,
+timbre, age and texture belong in master design only. All six fallback delivery
+entries now use neutral conversational performance; explicit per-cue directions
+must be acting/emotion/pace, not repeated persona definitions. Completed v2
+receipts retain their actual historic prompts. Dani/Momo/Tito have two new
+unselected auditions each on 8795; no master replacement occurred yet.
+
 ### 7.1 Base engine and default character production
 
 Python 3.11+ runs the Greia CLI. All six characters, including Dani, now use the

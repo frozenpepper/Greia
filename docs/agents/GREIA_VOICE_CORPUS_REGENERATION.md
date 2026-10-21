@@ -337,3 +337,27 @@ clearly reviewable source/assets to `main`, preserving unrelated work. Keep the
 external journal/backups and logs; no candidates, models or caches in Git.
 Finish with `voxstage unload` once the shared worker is idle and this production
 session is finished. Record remaining human-review work separately.
+
+## 2026-10-21 correction: next three-character replacement
+
+The owner rejected Dani/Momo/Tito's current sound: overly high/excited, inconsistent
+Momo, aged/hyperactive Tito. Master identity controls pitch/register, age, timbre and
+texture; recording prompts control only line-specific performance. Six neutral
+default entries now replace the old recurring persona/acting descriptions.
+The external v2 builder's PERSONA prefix and exaggerated generic praise are
+confirmed contributors in prompt evidence, not proof of the sole acoustic cause.
+Do not reuse those overrides for a new run or edit their frozen old receipts.
+
+Two new master auditions per character are at external
+`2026-10-21-calm-masters-v3/auditions.json`, served by Takeboard on 8795.
+Dani 16.00/14.88s; Momo 14.24/14.88s; Tito 11.84/12.32s. They are new immutable
+voice IDs, unselected and not installed. Current accepted registry bytes remain.
+Master selection requires owner listening, then multilingual cloned-line checks
+before bulk replacement. The draft scope is 1,340 DONE cues (392 Dani, 284 Momo,
+664 Tito); deterministic isolated targets and other characters remain preserved.
+`replacement-overrides.DRAFT.json` strips identity prefixes and tones down generic
+performance. It is not a new frozen plan or authority to run with old masters.
+
+Model reference guidance/research and job evidence:
+`docs/reviews/2026-10-21_VOICE_DIRECTION_AND_REFERENCE_REVIEW.md`. The engine now
+uses policy v2 screening; see automated review procedure §3a for reassessment.

@@ -74,6 +74,63 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-21 — Owner review policy v2; voice identity separated from acting
+
+**Owner direction:** tail/internal pauses below 1.5s should not warn; automated
+transcript PASS requires similarity strictly above 0.8 and other checks clear.
+Added shared `review_policy.py`, aligned live Whisper default and review, and
+added corpus `reassess --evidence-dir` to check unchanged saved evidence then
+apply policy without another ASR run. Metadata/real silence and unrelated flags
+remain; ASR exclusions never become transcript verification. Original reports
+and receipts are untouched. Executed full reassessment: **3,073 PASS / 1,094 WARN /
+1 FAIL**. ASR 1,611 PASS / 863 WARN / 1,693 excluded / 1 unrun (silent Bear).
+Reports: external `2026-10-21-full-review-policy-v2/`; new listening batch/URL:
+`2026-10-21-listening-policy-v2/batch.json`, http://127.0.0.1:8796/.
+
+**Human decisions protected:** browser had 104 unsaved owner reviews. Exported
+that exact draft, preserved its separate backup, and copied reviews by matching
+ID/audio into the new batch: **82 approved / 22 rejected / 4,064 unreviewed**.
+These are the owner's JSON decisions, not machine approvals or promoted receipts.
+The original tab/server on 8794 remains intact with its 104 dirty records. Backup:
+new listening folder `owner-draft-before-policy-v2.json`; no drafts were discarded.
+
+**Owner diagnosis:** Dani/Momo/Tito are too high/excited; Momo inconsistent; Tito
+aged/hyperactive. Investigation confirmed duplicated persona + generic excitement
+in old default/explicit corpus prompts. It is a plausible contributor, not proof
+of the sole acoustic cause. Owner clarified fixed register/pitch, timbre, age and
+texture belong only in master design. All six default entries now use neutral,
+unhurried delivery; per-cue overrides should contain only line-specific acting.
+VoxStage clone wiring was traced and does not automatically repeat saved master
+descriptions. Frozen v2 overrides/receipts remain historical evidence, not inputs
+to reuse for the new run.
+
+**New master auditions executed:** two seeds each for Dani/Momo/Tito, using the
+existing shared worker. Six new immutable candidate IDs, natural common 46-word
+script, requested grounded registers and restrained reference acting. Dani
+16.00/14.88s, Momo 14.24/14.88s, Tito 11.84/12.32s. Candidate WAVs, requests/jobs,
+Takeboard batch and a replacement draft live at external
+`2026-10-21-calm-masters-v3/`, http://127.0.0.1:8795/. No canonical master or
+runtime recording was replaced. Listening/transcript completeness remain pending.
+Shared queue emptied, model unloaded, server retained. Reference research says
+5–30s is practical; old 7–10s refs are within range, not shown to be token-capped.
+See `docs/reviews/2026-10-21_VOICE_DIRECTION_AND_REFERENCE_REVIEW.md` for primary
+links, actual backend trace and job evidence.
+
+**Verification:** 72 focused voice tests PASS (1.48/1.5/1.52s, 0.8 boundary,
+reassessment without ASR, stale evidence rejection, neutral defaults). Full
+`make -k verify`: 5,491 tests, inherited 1 MBR diagnostic failure, 4 errors
+(ARM64 builder expectation, profile executable permission, two missing lsblk
+installer tests), 8 skips. Project validation retains ARM64 restriction;
+shell/footprint completed. Gate NOT GREEN. External logs:
+`2026-10-21-review-policy-v2-tests.log`, `2026-10-21-review-policy-v2-verify.log`.
+
+**Next:** owner listens/selects one new candidate per character, then multilingual
+cloned-line checks before a new frozen replacement plan. Draft scope is 1,340 DONE
+files: Dani 392 / Momo 284 / Tito 664; neutral/line-specific performance overrides
+prepared, other characters and deterministic targets preserved. Draft is NOT run
+or ready to freeze against old references. It needs the selected new masters.
+No architecture/lifecycle/runtime/physical release gate closes here.
+
 ## 2026-10-21 — Shared Takeboard listening tool delivered; Greia exporter added
 
 The completed automated traversal (preceding entry) now has a loadable human

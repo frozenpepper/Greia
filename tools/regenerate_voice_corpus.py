@@ -137,18 +137,19 @@ def review_command(args) -> int:
 
     with InterprocessGenerationLock(voice_home() / "generation.lock"):
         verifier = WhisperVerifier()
-        readiness = probe_cached_asr(verifier) if args.asr == "auto" else (False, "ASR explicitly disabled")
+        readiness = ((True, f'Reusing saved ASR evidence from {args.evidence_dir}') if args.command == 'reassess'
+                     else probe_cached_asr(verifier) if args.asr == "auto" else (False, "ASR explicitly disabled"))
         reviewer = AudioReviewer(verifier, asr=args.asr == "auto", asr_ready=readiness)
         corpus = CorpusReview(_external_work(args.work_dir), reviewer)
         if corpus.root.resolve() != PROJECT_ROOT.resolve():
             raise ValueError("review plan belongs to another checkout")
-        return corpus.run(args.report_dir, limit=args.limit, match=args.match)
+        return corpus.run(args.report_dir, limit=args.limit, match=args.match, evidence=getattr(args, "evidence_dir", None))
 
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    for name in ("plan", "run", "status", "restore", "retry", "resolve", "review"):
+    for name in ("plan", "run", "status", "restore", "retry", "resolve", "review", "reassess"):
         command = commands.add_parser(name)
         command.add_argument("--work-dir", type=Path, required=True)
         if name == "plan":
@@ -159,7 +160,9 @@ def main(argv=None) -> int:
             command.add_argument("--details", action="store_true")
             command.add_argument("--watch", action="store_true", help="refresh every ten seconds; Ctrl-C to leave")
             command.set_defaults(func=status_command)
-        elif name == "review":
+        elif name in {"review", "reassess"}:
+            if name == "reassess":
+                command.add_argument("--evidence-dir", type=Path, required=True)
             command.add_argument("--report-dir", type=Path, required=True)
             command.add_argument("--asr", choices=("auto", "off"), default="auto", help="use installed cached Whisper only; never download models")
             command.add_argument("--limit", type=int, default=0)
@@ -183,7 +186,7 @@ def main(argv=None) -> int:
         return args.func(args)
     except KeyboardInterrupt:
         message = ("Review interrupted; cached reports retained. Repeat the same review command to resume."
-                   if args.command == "review" else "Interrupted; journal retained. Inspect the provider job before retrying an in-flight cue.")
+                   if args.command in {"review", "reassess"} else "Interrupted; journal retained. Inspect the provider job before retrying an in-flight cue.")
         print(message, file=sys.stderr)
         return 130
     except Exception as exc:

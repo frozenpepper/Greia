@@ -118,6 +118,18 @@ backups/recovery and pending-review receipts. Do not use the add-only approved
 asset importer for new unlistened takes. Full production has not been launched
 by the tool-preparation session.
 
+**Owner clarification 2026-10-21 — identity versus acting:** pitch/register,
+voice age, timbre/texture and permanent character vocal traits belong only in
+master voice design. Do not repeat these in each recording's delivery_prompt.
+Defaults for all six characters are now the same neutral, natural, unhurried
+performance. Only add line-specific intention/emotion/pace when needed. The
+completed v2 corpus's frozen prompts and receipts remain historical evidence;
+its old PERSONA-prefixed overrides must not be reused for the next replacement.
+Dani/Momo/Tito are pending reselection after owner rejection for high pitch,
+inconsistent Momo, overexcited delivery and hyperactive/aged Tito. New auditions
+and a draft 1,340-file scope are external; selection and cloned-line listening
+precede a new frozen replacement plan. No canonical master has changed yet.
+
 Character performance defaults live in
 `tools/greia_voice_core/character_delivery.json`; VoxStage applies them to normal
 generation too. `VoiceRequest.delivery_prompt`, CLI `--delivery-prompt`, and the
@@ -290,6 +302,14 @@ is `tools/export_voice_review_batch.py`; exact commands are in
 `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` §6. Keep its manifests external.
 Machine findings never initialize human acceptance. Takeboard edits only its
 review JSON; importing decisions into Greia receipts/runtime is a separate task.
+
+## Current automated review policy (2026-10-21)
+
+Policy v2: trailing silence/internal pauses warn at ≥1.5s; ASR transcript PASS
+requires similarity >0.8 and other applicable checks clear. Other quality flags
+remain. `reassess --evidence-dir <finished-report>` reapplies policy to matching
+saved evidence without another ASR run; use a fresh report directory. Human
+judgments stay separate. Exact commands/boundaries: automated review procedure §3a.
 
 ## Whisper screening policy
 

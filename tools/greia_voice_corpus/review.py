@@ -10,7 +10,7 @@ import sqlite3
 
 from greia_voice_core.models import VoiceRequest, SpeechKind
 from greia_voice_core.registry import VoiceRegistry
-from greia_voice_core.review import POLICY_VERSION
+from greia_voice_core.review_policy import POLICY_VERSION, ASR_PASS_THRESHOLD, reassess_result
 from .inventory import digest, receipt_path, safe_target
 from .runner import Heartbeat
 from .store import write_json, atomic_bytes
@@ -42,7 +42,7 @@ class CorpusReview:
             problems.append("AUDIO_RECEIPT_MISMATCH")
         return receipt, problems
 
-    def run(self, report: Path, *, limit: int = 0, match: str = "*") -> int:
+    def run(self, report: Path, *, limit: int = 0, match: str = "*", evidence: Path | None = None) -> int:
         if limit < 0:
             raise ValueError("review limit must be nonnegative")
         report = report.resolve()
@@ -53,7 +53,23 @@ class CorpusReview:
                          "registry": {name: {"voice_id": p.voice_id, "anchor_sha256": p.anchor_sha256} for name, p in self.registry.profiles.items()},
                          "asr": self.reviewer.asr, "verifier": self.reviewer.verifier.verifier_id,
                          "model": getattr(self.reviewer.verifier, "model_id", "injected"),
-                         "threshold": getattr(self.reviewer.verifier, "pass_threshold", .72)}
+                         "threshold": getattr(self.reviewer.verifier, "pass_threshold", ASR_PASS_THRESHOLD)}
+        source_rows, source_config = {}, None
+        if evidence:
+            evidence = evidence.resolve()
+            if evidence == report:
+                raise ValueError('reassessment requires a fresh report directory')
+            source_config = json.loads((evidence / 'configuration.json').read_text())
+            summary = json.loads((evidence / 'summary.json').read_text())
+            if not summary.get('complete') or not summary.get('full_corpus_coverage'):
+                raise ValueError('reassessment requires completed full-corpus evidence')
+            for key in ('plan_sha256', 'registry'):
+                if source_config.get(key) != configuration[key]:
+                    raise ValueError(f'saved evidence differs from current {key}')
+            source_rows = {r['path']: r for r in
+                           map(json.loads, (evidence / 'review.jsonl').read_text().splitlines())}
+            configuration['evidence_source'] = str(evidence)
+            configuration['execution'] = 'REASSESSED_SAVED_EVIDENCE'
         config_path = report / "configuration.json"
         if config_path.exists() and json.loads(config_path.read_text()) != configuration:
             raise ValueError("report configuration differs; choose a new directory")
@@ -88,8 +104,16 @@ class CorpusReview:
                     result = {"status": "FAIL", "flags": flags, "asr": {"status": "NOT_RUN_METADATA_FAILURE"}}
                 else:
                     request = VoiceRequest(**{k: v for k, v in row["request"].items() if k != "kind"}, kind=SpeechKind(row["request"]["kind"]))
-                    with Heartbeat(f"review {relative}"):
-                        result = self.reviewer.review(request, path)
+                    if evidence:
+                        old = source_rows.get(relative)
+                        old_fingerprint = hashlib.sha256(json.dumps([source_config, row['request'], before], sort_keys=True).encode()).hexdigest()
+                        if not old or old.get('fingerprint') != old_fingerprint:
+                            raise ValueError('saved evidence is absent or audio/receipt changed; run a fresh live review')
+                        result = reassess_result(old)
+                        result['source_reviewed_at_utc'] = old.get('reviewed_at_utc')
+                    else:
+                        with Heartbeat(f"review {relative}"):
+                            result = self.reviewer.review(request, path)
                 if before != (digest(path), digest(receipt_path(path))):
                     raise ValueError("audio/receipt changed during review; run after production is idle")
                 result["human_review_unchanged"] = receipt.get("human_review", "UNKNOWN")

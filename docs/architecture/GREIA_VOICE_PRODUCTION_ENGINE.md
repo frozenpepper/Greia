@@ -23,6 +23,14 @@ Speech kinds remain `character_dialogue`, `shared_character_utterance`,
 static library assets; children resolve those assets rather than synthesize.
 Pedagogical means the sound itself is the pronunciation truth being taught.
 
+**Owner correction 2026-10-21:** permanent voice attributes (register/pitch,
+timbre, vocal age/texture and characteristic identity) are master-design inputs.
+Per-recording direction owns only the line's delivery/acting and locale cue.
+The six default delivery entries now share a neutral natural/unhurried direction;
+callers must not prepend a fixed persona to every recording. V2 frozen requests
+retain their original prompts as provenance. A new replacement plan is required
+for selected new masters and corrected per-cue acting.
+
 ## 2. Composition and source owners
 
 ```text
@@ -53,6 +61,7 @@ Exact owners:
 - `providers.py`: retained Chatterbox and native adapters.
 - `engine.py`: semantic routing, availability, bounded ASR retries, packaging,
   pending-review receipts and temporary-file cleanup.
+- `review_policy.py`: owner-selected v2 thresholds shared by live and saved-evidence screening (ASR >0.8; tail/internal pause warnings ≥1.5s).
 - `audio.py`: bounded WAV validation and 22,050 Hz mono WAV/OGG packaging.
   WAV is PCM16; OGG uses Vorbis quality 5 by default. An explicit
   `AudioPipeline(ogg_quality=0..10)` can select a different bounded quality
