@@ -126,6 +126,9 @@ class InstallResult:
     #: network-firmware fallback was installed; the completion page then
     #: shows a short, non-alarming note.
     hardware_detection_incomplete: bool = False
+    #: True when a Wi-Fi chip needs firmware/driver Greia cannot include
+    #: (display-only; the completion page shows the Wi-Fi-specific note).
+    wifi_firmware_unavailable: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -374,7 +377,11 @@ class InstallationEngine:
             hardware_detection_incomplete=bool(
                 hardware_support is not None
                 and hardware_support.plan.detection_incomplete
-            )
+            ),
+            wifi_firmware_unavailable=bool(
+                hardware_support is not None
+                and hardware_support.plan.wifi_firmware_unavailable
+            ),
         )
 
     def _prepare_hardware_support(
@@ -824,6 +831,8 @@ class InstallationEngine:
             record["hardware_detection_diagnostics"] = list(
                 hardware_plan.recorded_diagnostics
             )
+        if hardware_plan is not None and hardware_plan.wifi_firmware_unavailable:
+            record["wifi_firmware"] = "unavailable"
         (record_dir / "install-record.json").write_text(
             json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n",
             encoding="utf-8",

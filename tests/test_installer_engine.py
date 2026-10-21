@@ -498,6 +498,33 @@ class InstallerEngineTests(unittest.TestCase):
                 ["intel-microcode", "firmware-iwlwifi", "firmware-realtek"],
             )
 
+    def test_wifi_firmware_unavailable_is_recorded_for_legacy_engine_path(self) -> None:
+        import json
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            defaults = root / "opt/greia-os/runtime/hardware-settings.toml"
+            defaults.parent.mkdir(parents=True)
+            defaults.write_bytes((PROJECT_ROOT / "runtime/hardware-settings.toml").read_bytes())
+            inventory = HardwareInventory(())
+            hardware_plan = InstallerHardwareEnablementPlan(
+                inventory,
+                HardwareSupportPlan(inventory.token, (), True),
+                (), (), (), (),
+                unsupported_wifi=("Broadcom b43 Wi-Fi needs firmware Greia cannot include",),
+            )
+            self.assertTrue(hardware_plan.wifi_firmware_unavailable)
+            engine = InstallationEngine(project_root=PROJECT_ROOT, runner=RecordingRunner())
+            engine._write_initial_configuration(
+                root, InstallRequest(target(), root / "unused", settings()), hardware_plan
+            )
+            record = json.loads((root / "etc/greia-os/install-record.json").read_text())
+            self.assertEqual(record["wifi_firmware"], "unavailable")
+            self.assertEqual(record["hardware_detection"], "incomplete")
+            self.assertIn("b43", " ".join(record["hardware_detection_diagnostics"]))
+            self.assertTrue(InstallResult(wifi_firmware_unavailable=True).wifi_firmware_unavailable)
+            self.assertFalse(InstallResult().wifi_firmware_unavailable)
+
     def test_complete_detection_record_has_no_fallback_flag(self) -> None:
         import json
 
