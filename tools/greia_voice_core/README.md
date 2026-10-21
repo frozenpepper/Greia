@@ -257,3 +257,28 @@ Do not add another Activity-specific VoxStage/Chatterbox/system-TTS/Whisper impl
 FFmpeg are ready; otherwise it exits 2. Optional verifier/retained-alternative
 status is reported independently. `selected_character_provider` records the
 effective choice; `default_character_provider` records the built-in `voxstage` default.
+
+## Current ASR default and accent comparison (2026-10-22)
+
+`WhisperVerifier` and the carrier cutter use multilingual
+`mlx-community/whisper-base-mlx`, revision
+`1e3e249fb8d01c655324bd6841b1deadffd6d04c`, resolved from cached weights only.
+No generation/review operation downloads a model. Shared configuration and
+comparison-only Unicode folding live in `asr_policy.py`.
+
+`VoiceRequest.ignore_accents=True` is the default. NFC/NFD-equivalent spelling
+and differences in combining diacritics compare equally: `trovò`/`trovo`,
+`été`/`ete`, `está`/`esta`. Supplied scripts/transcripts/receipts retain their
+original spelling. Other spelling, missing words and apostrophe differences
+retain the existing comparison rules; this is not arbitrary phonetic matching.
+
+Override in Python with `VoiceRequest(..., ignore_accents=False)`, in batch/service
+JSON with `"ignore_accents": false`, or on `generate`/`request` with
+`--strict-accents`. Corpus `plan`, `review` and `reassess`, plus the standalone
+carrier CLI, expose the same flag. New carrier plans freeze this choice and the
+ASR identity (extractor v6). Old frozen plans cannot silently change algorithms.
+Saved-evidence reassessment can recompute scores with the new comparison policy;
+it preserves the actual original ASR model identity and does not run Base on old
+clips merely because Base is now the default. Use a new report directory.
+
+The proposed asynchronous shared queue implementation remains separate work.

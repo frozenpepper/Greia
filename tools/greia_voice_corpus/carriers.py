@@ -4,6 +4,7 @@ from __future__ import annotations
 import unicodedata
 
 from voice_carrier import ALGORITHM_VERSION, GAP_POLICY, spoken_words
+from greia_voice_core.asr_policy import DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION
 
 
 CARRIER_MODE = "spoken-short-v1"
@@ -43,7 +44,10 @@ def freeze_row(row: dict, target_verification: str = "required",
         "target_verification": target_verification,
         "composite_text": f"{PREFIXES[locale]} {target}",
         "composite_delivery_prompt": carrier_delivery(request.get("delivery_prompt", ""), locale, row["path"]),
-        "normalization": "NFC/casefold/apostrophe-normalized Unicode word tokens; accents preserved",
+        "normalization": "NFC/casefold/apostrophe word tokens; " + ("comparison diacritics ignored" if request.get("ignore_accents", True) else "strict accents"),
+        "ignore_accents": request.get("ignore_accents", True),
+        "asr_model": DEFAULT_ASR_MODEL,
+        "asr_revision": DEFAULT_ASR_REVISION,
         "extractor_version": ALGORITHM_VERSION,
         "gap_policy": GAP_POLICY.copy(),
     }

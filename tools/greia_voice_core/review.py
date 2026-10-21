@@ -22,7 +22,12 @@ def probe_cached_asr(verifier) -> tuple[bool, str]:
         return False, detail
     try:
         from huggingface_hub import snapshot_download
-        snapshot_download(verifier.model_id, local_files_only=True)
+        from .asr_policy import DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION
+        options = {"local_files_only": True}
+        if verifier.model_id == DEFAULT_ASR_MODEL:
+            options["revision"] = DEFAULT_ASR_REVISION
+            options["allow_patterns"] = ["config.json", "weights.npz", "weights.safetensors"]
+        snapshot_download(verifier.model_id, **options)
         return True, f"cached {verifier.model_id}"
     except Exception as exc:
         return False, f"ASR weights are not locally ready: {exc}"
@@ -72,16 +77,19 @@ def signal_metrics(path: Path) -> tuple[dict, list[str]]:
 class AudioReviewer:
     """Compose bounded signal analysis and the existing semantic SpeechVerifier."""
 
-    def __init__(self, verifier, *, asr: bool, asr_ready: tuple[bool, str], pipeline=None) -> None:
+    def __init__(self, verifier, *, asr: bool, asr_ready: tuple[bool, str], pipeline=None, ignore_accents: bool | None = None) -> None:
         self.verifier, self.asr, self.asr_ready = verifier, asr, asr_ready
+        self.ignore_accents = ignore_accents
         self.pipeline = pipeline or AudioPipeline()
 
     def review(self, request, audio: Path) -> dict:
+        if self.ignore_accents is not None:
+            request = replace(request, ignore_accents=self.ignore_accents)
         with tempfile.TemporaryDirectory(prefix="greia-audio-review-") as temporary:
             decoded = Path(temporary) / "decoded.wav"
             self.pipeline.decode_for_review(audio, decoded)
             metrics, flags = signal_metrics(decoded)
-            result = {"metrics": metrics, "flags": flags, "asr": {"status": "DISABLED"}, "status": "WARN" if flags else "PASS"}
+            result = {"expected_text": request.text, "ignore_accents": request.ignore_accents, "metrics": metrics, "flags": flags, "asr": {"status": "DISABLED"}, "status": "WARN" if flags else "PASS"}
             screening_request = replace(request, verification=VerificationMode.REQUIRED)
             if not self.asr:
                 return reassess_result(result)
@@ -108,10 +116,10 @@ class AudioReviewer:
                 if verification.disposition.value == "WARN" and verification.score is None:
                     result.update(status="BLOCKED")
                     result["asr"]["status"] = "ERROR"
-                expected = set(normalize_transcript(request.text).split())
-                extra = sorted(set(normalize_transcript(verification.transcript or "").split()) - expected)
+                expected = set(normalize_transcript(request.text, ignore_accents=request.ignore_accents).split())
+                extra = sorted(set(normalize_transcript(verification.transcript or "", ignore_accents=request.ignore_accents).split()) - expected)
                 result["asr"]["unexpected_tokens"] = extra
-                direction_words = set(normalize_transcript(request.delivery_prompt).split())
+                direction_words = set(normalize_transcript(request.delivery_prompt, ignore_accents=request.ignore_accents).split())
                 if len({w for w in extra if len(w) >= 5} & direction_words) >= 2:
                     result["flags"].append("POSSIBLE_PROMPT_LEAKAGE")
                     result["status"] = "WARN"

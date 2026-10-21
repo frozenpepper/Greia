@@ -211,7 +211,7 @@ class VoiceCarrierTests(unittest.TestCase):
             self.assertEqual(receipt["boundary"]["cut_sample"], 4500)
             self.assertEqual(receipt["human_review"], "PENDING")
             self.assertTrue(receipt["raw_word_alignment"])
-            self.assertEqual(receipt["algorithm_version"], "greia-spoken-carrier-extractor-v5")
+            self.assertEqual(receipt["algorithm_version"], "greia-spoken-carrier-extractor-v6")
             self.assertGreaterEqual(receipt["extracted_voiced_seconds"], 0.08)
 
     def test_warn_policy_extracts_exact_prefix_with_unresolved_target_asr(self) -> None:

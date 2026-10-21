@@ -1,6 +1,7 @@
 """Resumable sidecar review of installed DONE cues; source and journal are read-only."""
 from collections import Counter
 from datetime import datetime, timezone
+from dataclasses import replace
 import csv
 import fnmatch
 import hashlib
@@ -10,6 +11,7 @@ import sqlite3
 
 from greia_voice_core.models import VoiceRequest, SpeechKind
 from greia_voice_core.registry import VoiceRegistry
+from greia_voice_core.asr_policy import DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION
 from greia_voice_core.review_policy import POLICY_VERSION, ASR_PASS_THRESHOLD, reassess_result
 from .inventory import digest, receipt_path, safe_target
 from .runner import Heartbeat
@@ -49,6 +51,17 @@ class CorpusReview:
         """Keep a target transcription warning visible through automated review."""
         extraction = receipt.get("extraction", {})
         if row.get("spoken_carrier") and extraction.get("target_verification_warning"):
+            from greia_voice_core.verification import normalize_transcript
+            target = row["request"]["text"]
+            ignore_accents = result.get("ignore_accents", row["request"].get("ignore_accents", True))
+            kept = extraction.get("extracted_transcript")
+            raw_suffix = extraction.get("unremoved_raw_aligned_tokens")
+            if (ignore_accents and isinstance(kept, str) and isinstance(raw_suffix, list)
+                    and normalize_transcript(kept) == normalize_transcript(target)
+                    and normalize_transcript(" ".join(raw_suffix)) == normalize_transcript(target)):
+                result["carrier_accent_only_warning_ignored"] = True
+                result["flags"] = [f for f in result.get("flags", []) if f != "CARRIER_TARGET_TRANSCRIPT_MISMATCH"]
+                return reassess_result(result)
             flags = result.setdefault("flags", [])
             if "CARRIER_TARGET_TRANSCRIPT_MISMATCH" not in flags:
                 flags.append("CARRIER_TARGET_TRANSCRIPT_MISMATCH")
@@ -67,7 +80,9 @@ class CorpusReview:
                          "registry": {name: {"voice_id": p.voice_id, "anchor_sha256": p.anchor_sha256} for name, p in self.registry.profiles.items()},
                          "asr": self.reviewer.asr, "verifier": self.reviewer.verifier.verifier_id,
                          "model": getattr(self.reviewer.verifier, "model_id", "injected"),
-                         "threshold": getattr(self.reviewer.verifier, "pass_threshold", ASR_PASS_THRESHOLD)}
+                         "model_revision": DEFAULT_ASR_REVISION if getattr(self.reviewer.verifier, "model_id", None) == DEFAULT_ASR_MODEL else None,
+                         "threshold": getattr(self.reviewer.verifier, "pass_threshold", ASR_PASS_THRESHOLD),
+                         "ignore_accents_override": getattr(self.reviewer, "ignore_accents", None)}
         source_rows, source_config = {}, None
         if evidence:
             evidence = evidence.resolve()
@@ -84,6 +99,9 @@ class CorpusReview:
                            map(json.loads, (evidence / 'review.jsonl').read_text().splitlines())}
             configuration['evidence_source'] = str(evidence)
             configuration['execution'] = 'REASSESSED_SAVED_EVIDENCE'
+            configuration['source_asr_model'] = source_config.get('model')
+            configuration['source_asr_verifier'] = source_config.get('verifier')
+            configuration['source_asr_model_revision'] = source_config.get('model_revision')
         config_path = report / "configuration.json"
         if config_path.exists() and json.loads(config_path.read_text()) != configuration:
             raise ValueError("report configuration differs; choose a new directory")
@@ -123,7 +141,9 @@ class CorpusReview:
                         old_fingerprint = hashlib.sha256(json.dumps([source_config, row['request'], before], sort_keys=True).encode()).hexdigest()
                         if not old or old.get('fingerprint') != old_fingerprint:
                             raise ValueError('saved evidence is absent or audio/receipt changed; run a fresh live review')
-                        result = reassess_result(old)
+                        result = reassess_result(old, expected_text=request.text,
+                                                 ignore_accents=(self.reviewer.ignore_accents if self.reviewer.ignore_accents is not None
+                                                                 else request.ignore_accents))
                         result['source_reviewed_at_utc'] = old.get('reviewed_at_utc')
                     else:
                         with Heartbeat(f"review {relative}"):

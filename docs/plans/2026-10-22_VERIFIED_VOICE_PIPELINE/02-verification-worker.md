@@ -47,6 +47,11 @@ The immutable French evidence is external in the 2026-10-22-target-suffix-v5 run
 
 ## Exact implementation
 
+Adopted owner defaults: pinned cached multilingual Base and ignore_accents=true;
+false explicitly restores strict comparison. Carry this flag through request,
+policy, cache key, target location and retained-target/quality scoring. Preserve
+the original script and recognizer text. Reuse the current asr_policy.py semantics.
+
 Implement SpeechVerifier protocol, cached-model Whisper adapter, bounded subprocess transport and QualityVerdict. Probe configured VOXSTAGE_ASR_PYTHON and cached model revision without downloading; missing dependency/weights is BLOCKED_VERIFIER. Child worker loads only one Whisper model, uses offline environment and frozen language/temperature/settings, and accepts bounded JSON messages carrying request token and audio path/hash. Save raw recognizer result before parsing. Never pass expected text/initial_prompt into recognition. Use the existing normalized weighted char/token similarity policy, strict >0.8, plus final-target signal checks. Short extracted targets also require normalized token-count equality; expected repetitions stay valid. Apply internal/tail silence failure at >=1.5 seconds to final target only, not the deliberate intro pause; allow explicit per-request policy for intentional pauses. Reuse extraction target ASR for scoring; normal take gets one ASR call. Explicit off emits UNVERIFIED, not PASS. Distinguish mismatch from worker crash, timeout and model-unavailable faults. Keep one child process; terminate/reap on shutdown and retain candidate on fault. No live child/model invocation during this session; fake child transport only.
 
 ## Tests

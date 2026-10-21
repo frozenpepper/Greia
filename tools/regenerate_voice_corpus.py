@@ -39,6 +39,10 @@ def _interrupt(*_args) -> None:
 def plan_command(args) -> int:
     overrides = json.loads(args.overrides.read_text(encoding="utf-8")) if args.overrides else {}
     plan = CorpusInventory(PROJECT_ROOT, args.delivery_file, overrides).build()
+    if args.strict_accents:
+        for row in plan["rows"]:
+            if "request" in row:
+                row["request"]["ignore_accents"] = False
     if args.carrier_mode:
         from greia_voice_corpus.carriers import CARRIER_MODE, SPEAKERS, freeze_row
 
@@ -179,7 +183,8 @@ def review_command(args) -> int:
         verifier = WhisperVerifier()
         readiness = ((True, f'Reusing saved ASR evidence from {args.evidence_dir}') if args.command == 'reassess'
                      else probe_cached_asr(verifier) if args.asr == "auto" else (False, "ASR explicitly disabled"))
-        reviewer = AudioReviewer(verifier, asr=args.asr == "auto", asr_ready=readiness)
+        reviewer = AudioReviewer(verifier, asr=args.asr == "auto", asr_ready=readiness,
+                                 ignore_accents=False if args.strict_accents else None)
         corpus = CorpusReview(_external_work(args.work_dir), reviewer)
         if corpus.root.resolve() != PROJECT_ROOT.resolve():
             raise ValueError("review plan belongs to another checkout")
@@ -194,11 +199,12 @@ def main(argv=None) -> int:
         command.add_argument("--work-dir", type=Path, required=True)
         if name == "plan":
             command.add_argument("--overrides", type=Path)
+            command.add_argument("--strict-accents", action="store_true", help="freeze accent-sensitive ASR comparisons")
             command.add_argument("--delivery-file", type=Path, default=DEFAULT_DELIVERY_FILE)
             command.add_argument("--carrier-mode", choices=("spoken-short-v1",),
                                  help="explicitly freeze the native spoken-carrier policy for eligible short cues")
             command.add_argument("--carrier-target-verification", choices=("required", "warn"), default="required",
-                                 help="required rejects target ASR mismatch; warn allows only mismatch after exact prefix and safe-boundary checks")
+                                 help="required rejects target ASR mismatch; warn preserves target uncertainty after target-suffix and safe-boundary checks")
             command.add_argument("--carrier-speakers", default="dani,momo,tito,lilli,leo,flash",
                                  help="comma-separated eligible speakers; default is all six canonical actors")
             command.set_defaults(func=plan_command)
@@ -209,6 +215,7 @@ def main(argv=None) -> int:
         elif name in {"review", "reassess"}:
             if name == "reassess":
                 command.add_argument("--evidence-dir", type=Path, required=True)
+            command.add_argument("--strict-accents", action="store_true", help="treat diacritic differences as ASR mismatches")
             command.add_argument("--report-dir", type=Path, required=True)
             command.add_argument("--asr", choices=("auto", "off"), default="auto", help="use installed cached Whisper only; never download models")
             command.add_argument("--limit", type=int, default=0)

@@ -24,9 +24,11 @@ import wave
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Sequence
+from greia_voice_core.asr_policy import (DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION,
+    DEFAULT_ASR_VERIFIER, cached_asr_model, comparison_text)
 
 
-ALGORITHM_VERSION = "greia-spoken-carrier-extractor-v5"
+ALGORITHM_VERSION = "greia-spoken-carrier-extractor-v6"
 MAX_CLIP_SECONDS = 120
 GAP_POLICY = {
     "minimum_run_seconds": 0.20,
@@ -69,10 +71,12 @@ def _package_version(name: str) -> str:
 
 
 def _cached_model_revision() -> str:
-    try:
-        return (Path.home() / ".cache/huggingface/hub/models--mlx-community--whisper-tiny/refs/main").read_text().strip()
-    except OSError:
-        return "cached-model-revision-unresolved"
+    return DEFAULT_ASR_REVISION
+
+
+def comparison_words(text: str, *, ignore_accents: bool = True) -> list[str]:
+    """Recognition tokens only; authored text and recorded tokens remain intact."""
+    return spoken_words(comparison_text(text, ignore_accents=ignore_accents))
 
 
 def _asr_score_evidence(result: dict[str, Any]) -> list[dict[str, Any]]:
@@ -186,6 +190,7 @@ def validate_transcript_and_boundary(
     result: dict[str, Any], prefix: str, target: str, remove_first_words: int,
     target_verification: str = "required",
     duration_seconds: float | None = None,
+    ignore_accents: bool = True,
 ) -> tuple[list[WordTiming], int, bool, list[str], list[str]]:
     """Locate the final target suffix; the disposable intro is never text-verified."""
     prefix_words = spoken_words(prefix)
@@ -204,14 +209,16 @@ def validate_transcript_and_boundary(
     # Locate the intended suffix, never count recognized introductory words.
     # Introductory speech can be corrupt, omitted or hallucinated by ASR.
     candidates = []
-    expected = " ".join(target_words)
+    target_comparison = comparison_words(target, ignore_accents=ignore_accents)
+    aligned_comparison = comparison_words(recognized_text, ignore_accents=ignore_accents)
+    expected = " ".join(target_comparison)
     for count in range(max(1, len(target_words) - 1), len(target_words) + 2):
         boundary = len(timings) - count
         if boundary < 1:
             continue
-        suffix = recognized_words[boundary:]
+        suffix = aligned_comparison[boundary:]
         score = SequenceMatcher(None, expected, " ".join(suffix), autojunk=False).ratio()
-        exact = suffix == target_words
+        exact = suffix == target_comparison
         if exact or (target_verification == "warn" and len(expected) >= 4 and score >= .8):
             candidates.append((score, boundary, exact))
     candidates.sort(reverse=True)
@@ -228,7 +235,7 @@ def validate_transcript_and_boundary(
         raise ExtractionRejected("first target word has no usable ASR boundary timestamp")
     # The full transcript may tokenize the discarded intro differently. Only
     # its final target words matter, and no prefix spelling check is performed.
-    transcript_exact = transcript_words[-len(target_words):] == target_words
+    transcript_exact = comparison_words(str(result.get("text", "")), ignore_accents=ignore_accents)[-len(target_words):] == target_comparison
     return timings, boundary, aligned_exact and transcript_exact, transcript_words, recognized_words
 
 
@@ -366,7 +373,7 @@ def _whisper_transcribe(path: Path, locale: str) -> dict[str, Any]:
     try:
         import mlx_whisper
         return mlx_whisper.transcribe(
-            str(path), path_or_hf_repo="mlx-community/whisper-tiny", language=locale,
+            str(path), path_or_hf_repo=str(cached_asr_model()), language=locale,
             word_timestamps=True, initial_prompt=None, temperature=0.0,
             condition_on_previous_text=False, verbose=False,
         )
@@ -378,9 +385,11 @@ def extract(
     source: Path, destination: Path, *, locale: str, prefix: str, target: str,
     remove_first_words: int, transcriber: Callable[[Path, str], dict[str, Any]] = _whisper_transcribe,
     padding_seconds: float = 0.10, source_receipt_path: Path | None = None,
-    target_verification: str = "required",
+    target_verification: str = "required", ignore_accents: bool = True,
 ) -> dict[str, Any]:
     """Analyze, fail closed, cut deterministically, and verify extracted target."""
+    if not isinstance(ignore_accents, bool):
+        raise ExtractionRejected("ignore_accents must be a boolean")
     if locale not in {"en", "it", "fr", "es"}:
         raise ExtractionRejected("locale must be one of en, it, fr, es")
     if not 0 <= padding_seconds <= 0.15:
@@ -410,7 +419,7 @@ def extract(
     try:
         timings, prefix_count, raw_target_match, raw_transcript_words, raw_aligned_words = validate_transcript_and_boundary(
             raw_result, prefix, target, remove_first_words, target_verification,
-            duration_seconds=duration,
+            duration_seconds=duration, ignore_accents=ignore_accents,
         )
     except ExtractionRejected as exc:
         exc.evidence.setdefault("raw_transcript", raw_result.get("text", ""))
@@ -467,8 +476,9 @@ def extract(
         extracted_transcript_words = spoken_words(str(extracted_result.get("text", "")))
         if not extracted_timings:
             raise ExtractionRejected("extracted clip has no word-level ASR timestamps")
-        extracted_target_match = (spoken_words(extracted_text) == spoken_words(target)
-                                  and extracted_transcript_words == spoken_words(target))
+        expected_comparison = comparison_words(target, ignore_accents=ignore_accents)
+        extracted_target_match = (comparison_words(extracted_text, ignore_accents=ignore_accents) == expected_comparison
+                                  and comparison_words(str(extracted_result.get("text", "")), ignore_accents=ignore_accents) == expected_comparison)
         if expanded_boundary and not extracted_target_match:
             raise ExtractionRejected(
                 "expanded boundary search requires an exact extracted target",
@@ -523,9 +533,9 @@ def extract(
         "target": target,
         "remove_first_words": remove_first_words,
         "target_verification_policy": target_verification,
-        "recognizer": "mlx-whisper-tiny-word-timestamps",
+        "recognizer": DEFAULT_ASR_VERIFIER + "-word-timestamps",
         "recognizer_version": whisper_version,
-        "model_id": "mlx-community/whisper-tiny",
+        "model_id": DEFAULT_ASR_MODEL,
         "model_revision": model_revision,
         "transcription_settings": {
             "word_timestamps": True,
@@ -533,7 +543,8 @@ def extract(
             "temperature": 0.0,
             "condition_on_previous_text": False,
         },
-        "normalization_policy": "NFC, casefold, curly apostrophes mapped to straight; Unicode alphanumeric words and internal apostrophes retained; accents preserved",
+        "ignore_accents": ignore_accents,
+        "normalization_policy": "NFC/casefold/apostrophe word tokens; " + ("comparison diacritics ignored" if ignore_accents else "strict accents"),
         "model_source": "installed-code-and-cached-weights-only;offline",
         "raw_transcript": raw_result.get("text", ""),
         "removed_prefix_transcript": None,
@@ -599,6 +610,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--target-verification", choices=("required", "warn"), default="required",
                         help="warn records ASR target mismatch while retaining strict prefix and acoustic-boundary gates")
     parser.add_argument("--receipt", type=Path, help="Extraction evidence JSON path; defaults beside output")
+    parser.add_argument("--strict-accents", action="store_true", help="require matching ASR diacritics")
     parser.add_argument("--source-receipt", type=Path, help="Optional original VoiceEngine receipt path")
     args = parser.parse_args(argv)
     receipt_path = args.receipt or args.output.with_suffix(args.output.suffix + ".receipt.json")
@@ -633,7 +645,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 args.source, staged_output, locale=args.locale, prefix=args.prefix,
                 target=args.target, remove_first_words=args.remove_first_words,
                 source_receipt_path=args.source_receipt,
-                target_verification=args.target_verification,
+                target_verification=args.target_verification, ignore_accents=not args.strict_accents,
             )
             receipt["output"] = str(args.output)
             receipt["output_sha256"] = sha256(staged_output)
@@ -664,9 +676,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             "prefix": args.prefix,
             "target": args.target,
             "remove_first_words": args.remove_first_words,
-            "recognizer": "mlx-whisper-tiny-word-timestamps",
+            "recognizer": DEFAULT_ASR_VERIFIER + "-word-timestamps",
+            "ignore_accents": not args.strict_accents,
             "recognizer_version": _package_version("mlx-whisper"),
-            "model_id": "mlx-community/whisper-tiny",
+            "model_id": DEFAULT_ASR_MODEL,
             "model_revision": _cached_model_revision(),
             "transcription_settings": {
                 "word_timestamps": True,

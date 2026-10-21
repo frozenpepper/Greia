@@ -24,6 +24,7 @@ def request_from_mapping(payload: dict) -> VoiceRequest:
         verification=VerificationMode(str(payload.get("verification", "auto"))),
         max_attempts=int(payload.get("max_attempts", 2)),
         delivery_prompt=payload.get("delivery_prompt", ""),
+        ignore_accents=payload.get("ignore_accents", True),
     )
 
 

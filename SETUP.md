@@ -321,11 +321,14 @@ Use the explicit interpreter for all pilot/full review commands in
 shared synthesis environment repair is needed. These are workstation facts,
 not portable dependency pins or child-device requirements.
 
-Additional cached verifier (owner-authorized comparison, 2026-10-22):
+Current default verifier (owner decision, 2026-10-22):
 `mlx-community/whisper-base-mlx`, pinned revision
 `1e3e249fb8d01c655324bd6841b1deadffd6d04c`, with 143,724,204-byte weights.
 It runs in the same prepared environment; no package changes were required.
-This is an available optional model, **not a change to the current Tiny default**.
+Base replaces Tiny for new verification/extraction. Weights resolve offline using
+the pinned revision and required model files only. ASR comparisons ignore Unicode
+diacritics by default; `ignore_accents=False` / `--strict-accents` restores strict
+comparison without changing the supplied script. Old reports remain historical.
 Matched saved-audio results and limitations:
 `docs/reviews/2026-10-22_WHISPER_TINY_BASE_COMPARISON.md`.
 

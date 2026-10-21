@@ -1,6 +1,6 @@
 # Automated review of generated Greia speech
 
-**Status:** current post-generation procedure, 2026-10-21.
+**Status:** current post-generation procedure, 2026-10-22.
 **Entry point:** `tools/regenerate_voice_corpus.py review`.
 **Owner:** Voice Production Engine; no Activity-owned ASR/FFmpeg scripts.
 
@@ -8,6 +8,17 @@ Generation DONE means the file was produced and installed. Follow generation
 with this separate automated review, then listening review. Automated reports
 never change `human_review`, approve assets, regenerate speech or replace files.
 An automated PASS is a screening result, not audible/product acceptance.
+
+## Current model and comparison defaults (2026-10-22)
+
+New review/verification uses cached multilingual Whisper Base,
+`mlx-community/whisper-base-mlx` revision
+`1e3e249fb8d01c655324bd6841b1deadffd6d04c`. Screen policy v3 ignores accent/diacritic
+errors by default. `--strict-accents` on review/reassess restores strict comparison;
+per-request JSON/Python uses ignore_accents=false. Authored text stays unchanged.
+Use a fresh report directory after changing model/comparison configuration.
+Reassessment reads saved transcripts and re-scores them; it does not relabel old
+Tiny recognition as Base recognition or alter audio/human reviews.
 
 ## 1. Prepare
 
@@ -68,7 +79,7 @@ so ASR setup does not conceal corrupt audio. Use `--asr off` with a **different
 report directory** for an intentionally technical-only pass; its speech screen
 is incomplete and the command cannot return complete-review success.
 
-**Verified environment correction (2026-10-21):** use the explicit
+**Historical environment recovery (2026-10-21; Tiny evidence):** use the explicit
 `voice_python` above. The prepared Greia environment imports Whisper with
 NumPy 2.5.2 and Numba 0.67.0 and resolves the cached model
 `mlx-community/whisper-tiny` revision
@@ -125,9 +136,10 @@ language or ASR transcription errors. Inspect the raw transcript alongside the
 expected words, direction and actual recording. Repetitions, omissions and wrong
 numbers can also require listening even when the aggregate score exceeds 0.8.
 
-## 3a. Owner policy v2 and saved-evidence reassessment (2026-10-21)
+## 3a. Owner policy v3 and saved-evidence reassessment (updated 2026-10-22)
 
-`greia-audio-screen-v2` ignores internal pauses and trailing silence below
+`greia-audio-screen-v3` retains v2 silence/score thresholds and ignores diacritics
+by default. It ignores internal pauses and trailing silence below
 1.5 seconds; exactly 1.5 seconds warns. ASR scores must be **strictly greater
 than 0.8**. A high score plus clean applicable signal checks yields automated
 PASS. Metadata/decode/silence failures, clipping, low level, leading-silence and

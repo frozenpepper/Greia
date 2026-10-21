@@ -53,6 +53,7 @@ def _request_from_args(args: argparse.Namespace) -> VoiceRequest:
         verification=VerificationMode(args.verification),
         max_attempts=args.max_attempts,
         delivery_prompt=args.delivery_prompt,
+        ignore_accents=not args.strict_accents,
     )
 
 
@@ -174,6 +175,8 @@ def add_request_arguments(parser: argparse.ArgumentParser) -> None:
         choices=[mode.value for mode in VerificationMode],
     )
     parser.add_argument("--max-attempts", type=int, default=2)
+    parser.add_argument("--strict-accents", action="store_true",
+                        help="treat ASR diacritic differences as errors (default ignores them)")
 
 
 def build_parser() -> argparse.ArgumentParser:

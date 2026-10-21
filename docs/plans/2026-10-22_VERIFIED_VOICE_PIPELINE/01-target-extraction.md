@@ -44,7 +44,12 @@ The immutable French evidence is external in the 2026-10-22-target-suffix-v5 run
 
 ## Exact implementation
 
-Port the generic PCM reader/tokenizer/parser/gap/target-suffix algorithm from Greia tools/voice_carrier.py into production/extraction.py with injected Transcriber protocol. No Greia imports, actor names, paths or installation. Return ExtractionResult with PCM path/hash, original target, raw/target ASR evidence, target-verification result and boundary metrics. Preserve exact PCM suffix and original WAV. Discarded intro text is not a gate. Keep v5 suffix threshold/ambiguity and expanded-search exact-target safety initially; ASR failures become typed per-attempt quality rejection, not manual boundary substitution. Split analysis from retained-target scoring so the target transcription can be reused in session 02. Do not automatically regenerate here. Standard library PCM operations; installed transcriber injected only.
+Adopted owner defaults: pinned cached multilingual Base and ignore_accents=true;
+false explicitly restores strict comparison. Carry this flag through request,
+policy, cache key, target location and retained-target/quality scoring. Preserve
+the original script and recognizer text. Reuse the current asr_policy.py semantics.
+
+Port the generic PCM reader/tokenizer/parser/gap/target-suffix algorithm from current Greia tools/voice_carrier.py into production/extraction.py with injected Transcriber protocol. No Greia imports, actor names, paths or installation. Return ExtractionResult with PCM path/hash, original target, raw/target ASR evidence, target-verification result and boundary metrics. Preserve exact PCM suffix and original WAV. Discarded intro text is not a gate. Keep v6 suffix threshold/ambiguity and expanded-search exact-target safety initially; ASR failures become typed per-attempt quality rejection, not manual boundary substitution. Split analysis from retained-target scoring so the target transcription can be reused in session 02. Do not automatically regenerate here. Standard library PCM operations; installed transcriber injected only.
 
 ## Tests
 

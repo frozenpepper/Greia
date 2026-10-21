@@ -59,6 +59,7 @@ class CorpusRunner:
                     receipt.get("extraction", {}).get("prefix") != carrier["prefix"] or
                     receipt.get("extraction", {}).get("target") != carrier["target"] or
                     receipt.get("extraction", {}).get("target_verification_policy") != carrier["target_verification"] or
+                    receipt.get("extraction", {}).get("ignore_accents", True) != carrier.get("ignore_accents", True) or
                     receipt.get("provider_id") != "voxstage-voxcpm2" or
                     receipt.get("voice_id") != profile.voice_id or
                     receipt.get("reference_sha256") != profile.anchor_sha256 or

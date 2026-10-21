@@ -742,3 +742,15 @@ On single-root profiles, `greia-boot-observer.service` is not expected to be
 enabled; it is A/B semantic-slot infrastructure. Developer `status` and
 `logs` should work even if the display endpoint is unavailable; screenshots
 and input remain display-dependent.
+
+
+## Voice ASR comparison defaults (2026-10-22)
+
+New authoring verification/extraction uses pinned cached multilingual Whisper Base;
+see SETUP §7.5 and `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`. ASR comparison
+ignores diacritics by default, preserving exact scripts/audio. Use
+`ignore_accents=false` in request JSON/Python or `--strict-accents` on generation,
+carrier extraction and corpus plan/review/reassess for strict comparison. New
+carrier plans use v6; do not resume old frozen plans under new code. Saved-evidence
+reassessment preserves the original recognizer identity; it is not a new Base run.
+The proposed shared asynchronous queue is not implemented by this policy change.

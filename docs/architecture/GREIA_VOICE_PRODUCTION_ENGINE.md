@@ -250,3 +250,14 @@ notes editing and save/export/reload. Neither layer changes Greia audio,
 production receipts or runtime acceptance; a later project workflow must own
 explicit consumption of saved human decisions. Exact operation: automated review
 procedure §6, shared Takeboard catalog/skill/README. No child-runtime dependency.
+
+## Current ASR comparison policy — 2026-10-22
+
+`tools/greia_voice_core/asr_policy.py` owns the pinned multilingual Whisper Base
+model/revision and comparison-only diacritic folding. Generation verification,
+carrier extraction and review use it. VoiceRequest.ignore_accents defaults true;
+false is an explicit per-request strict override carried through CLI/JSON/service.
+No authored script or audio is normalized or rewritten. Screen policy v3 can
+rescore saved transcripts while retaining their original verifier provenance.
+Carrier v6 freezes the model and accent policy; historical plans stay immutable.
+This change does not implement the separately proposed shared asynchronous queue.

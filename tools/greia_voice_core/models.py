@@ -44,8 +44,11 @@ class VoiceRequest:
     verification: VerificationMode = VerificationMode.AUTO
     max_attempts: int = 2
     delivery_prompt: str = ""
+    ignore_accents: bool = True
 
     def __post_init__(self) -> None:
+        if not isinstance(self.ignore_accents, bool):
+            raise ValueError("ignore_accents must be a boolean")
         speaker = self.speaker.strip().lower()
         locale = self.locale.strip().lower().replace("_", "-")
         text = self.text.strip()
@@ -108,6 +111,9 @@ class VerificationResult:
     transcript: str | None = None
     score: float | None = None
     detail: str = ""
+    model_id: str | None = None
+    model_revision: str | None = None
+    ignore_accents: bool | None = None
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)

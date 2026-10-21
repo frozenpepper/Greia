@@ -45,10 +45,10 @@ to fit the threshold.
 The command accepts mono PCM16 WAV only. Other formats must be converted through
 the existing Greia `AudioPipeline` first. Inputs are bounded to 120 seconds and
 192 kHz. It uses installed `mlx-whisper` with the already-cached
-`mlx-community/whisper-tiny` model in offline mode; it does not download models
+pinned `mlx-community/whisper-base-mlx` model in offline mode; it does not download models
 or pass the expected wording as a transcription prompt.
 
-Extraction v5 locates the target from the **end of the recording**. Introductory
+Extraction v6 locates the target from the **end of the recording**. Introductory
 words are disposable: their spelling, recognized length and full-transcript
 agreement are never acceptance gates. `--prefix` and `--remove-first-words`
 retain the intended script/count for provenance and compatibility; the count
@@ -71,11 +71,11 @@ must agree with the supplied prefix, but does not choose the cut boundary.
    any error. No fallback to a guessed timestamp, automatic regeneration or
    replacement of runtime files occurs in the standalone cutter.
 
-Receipts identify v5, target-suffix boundary strategy, recognized intro length,
+Receipts identify v6, target-suffix boundary strategy, recognized intro length,
 raw/extracted transcripts, target checks, PCM metrics and the actual cut sample.
 Intro exact-match is diagnostic only. An extraction result does not establish
 speech correctness or human acceptance. Frozen v4 corpus plans cannot run under
-v5; prepare an explicitly reviewed new plan before any bulk restart.
+v6; prepare an explicitly reviewed new plan before any bulk restart.
 
 ASR text and word alignment are probabilistic evidence. The PCM gap measurement
 and sample-index calculation are separate technical checks; neither establishes
@@ -151,3 +151,14 @@ boundaries, exact removed-intro transcription. The owner corrected this on
 must not prevent extraction of a good final target. Version 5 replaces both
 intro checks with target-suffix location and retained-target verification.
 Historical v4 receipts and experiments remain unchanged.
+
+## Base and diacritic policy (2026-10-22)
+
+Version 6 retains target-suffix selection and PCM safety from v5. Recognition
+uses cached multilingual Base revision `1e3e249fb8d01c655324bd6841b1deadffd6d04c`.
+Comparison ignores combining diacritics by default, including exact retained-target
+checks after expanded boundary search. `extract(..., ignore_accents=False)` or
+`--strict-accents` restores accent sensitivity. The original prefix/target and
+recognized text remain unchanged in receipts. This does not waive missing/extra
+words or unrelated spelling differences. Frozen carrier plans include
+ignore_accents, asr_model and asr_revision; v5 experiments remain historical.

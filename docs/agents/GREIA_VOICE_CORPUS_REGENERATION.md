@@ -510,3 +510,12 @@ fail the algorithm-version gate under v5. The 266-priority retry and queued
 sunhat follow-up remain stopped. Do not resume them or synthesize replacements
 merely because a saved recording fails ASR. Stage v5 saved-audio replays externally
 and distinguish CUT_CREATED, target warning, and human listening acceptance.
+
+### 2026-10-22 — selected Base / accent-insensitive comparison
+
+New carrier plans use extractor v6, pinned cached multilingual Whisper Base and
+ignore_accents=true. `plan --strict-accents` freezes false; review/reassess expose
+the same override. Stored script/ASR text remains verbatim. Exact target checks
+use the selected normalization policy; unrelated errors remain actionable.
+Old paused plans are not mutated or resumed. New reviews use policy v3 and fresh
+report directories; saved-evidence reassessment preserves its source model ID.

@@ -6,6 +6,7 @@ from pathlib import Path
 
 from greia_voice_core.models import GenerationDisposition, SpeechKind, VerificationMode, VoiceRequest
 from voice_carrier import ALGORITHM_VERSION, GAP_POLICY, ExtractionRejected, extract
+from greia_voice_core.asr_policy import DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION
 from .inventory import digest, receipt_path
 from .store import write_json
 
@@ -21,6 +22,8 @@ def generate_candidate(engine, store, row: dict, profile, verification: str, *, 
     carrier = row["spoken_carrier"]
     if carrier.get("extractor_version") != ALGORITHM_VERSION or carrier.get("gap_policy") != GAP_POLICY:
         raise ValueError("frozen carrier extraction policy differs from the executable algorithm")
+    if (carrier.get("asr_model") != DEFAULT_ASR_MODEL or carrier.get("asr_revision") != DEFAULT_ASR_REVISION):
+        raise ValueError("frozen carrier ASR model differs from the configured default")
     raw = store.work / "carrier-raw" / (relative + ".raw.wav")
     extracted = store.work / "carrier-extracted" / (relative + ".extracted.wav")
     candidate = store.work / "candidates" / relative
@@ -50,6 +53,7 @@ def generate_candidate(engine, store, row: dict, profile, verification: str, *, 
             padding_seconds=carrier["gap_policy"]["cut_padding_seconds"],
             source_receipt_path=receipt_path(raw),
             target_verification=carrier["target_verification"],
+            ignore_accents=carrier.get("ignore_accents", True),
             **extraction_args,
         )
     except ExtractionRejected as exc:

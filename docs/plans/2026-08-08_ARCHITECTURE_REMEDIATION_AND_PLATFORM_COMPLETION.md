@@ -3628,3 +3628,25 @@ of listening acceptance or controlled same-ASR comparison. Full make verify was
 attempted and aborted with signal 6 in the test subprocess; gate NOT GREEN.
 Evidence and comparison: external `2026-10-22-target-suffix-v5`, Takeboard 8803.
 Bulk generation remains STOPPED; architecture/lifecycle closure unchanged.
+
+
+### 2026-10-22 — scoped voice policy: Base and configurable diacritic tolerance
+
+Implemented owner-selected pinned cached multilingual Whisper Base for normal ASR
+and target-suffix extraction. Comparison ignores combining diacritics by default,
+with typed request/JSON and --strict-accents overrides. Original text/audio remain
+unchanged. Carrier v6 freezes model and normalization; screen v3 rescores saved
+transcripts without relabeling their source recognizer. Frozen previous plans are
+not silently resumed. Source defaults, setup/readiness, voice manuals and proposed
+shared-queue contract are aligned. 111 focused tests PASS; saved-audio live smoke
+and doctor confirm Base readiness. Evidence external in 2026-10-22-base-accent-policy.
+Full make verify was attempted; see current HANDOVER for its exact separate result.
+No synthesis/runtime installs, no master changes, no corpus restart. Shared
+asynchronous pipeline remains proposed; architecture/lifecycle closure unchanged.
+
+Verification correction for this tranche: the full run executed 5,648 tests with
+1 failure / 4 errors / 8 skips. The new ASR test's package import failed under
+repository discovery; fixed and confirmed with Anaconda discovery (8 PASS).
+Remaining reported failures/errors are build/installer cases recorded in HANDOVER.
+Final focused 111-test suite is distinct; full gate remains NOT GREEN and was not
+rerun after the test import fix. No broader platform closure is claimed.

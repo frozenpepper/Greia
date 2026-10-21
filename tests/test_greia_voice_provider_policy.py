@@ -48,7 +48,9 @@ class WhisperMemoryPolicyTests(unittest.TestCase):
             "it",
             "Ottimo lavoro!",
         )
-        with patch.dict(sys.modules, {"mlx_whisper": fake_whisper}):
+        with patch.dict(sys.modules, {"mlx_whisper": fake_whisper}), patch(
+            "greia_voice_core.verification.cached_asr_model", return_value=Path("/fake/cached-base")
+        ):
             with patch(
                 "greia_voice_core.verification._release_mlx_transient_memory"
             ) as cleanup:

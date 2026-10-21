@@ -304,7 +304,8 @@ Do not reintroduce a guessed word-count token table in callers or providers.
 Follow `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` after corpus generation.
 Use the explicit prepared Greia venv interpreter from SETUP §7.5; the global
 Anaconda Python has an unrelated NumPy/Numba ABI mismatch. Whisper and cached
-tiny weights are available in the prepared environment (2026-10-21).
+multilingual Base weights are cached in the prepared environment (default since
+2026-10-22); Tiny is retained for historical comparisons.
 Use `tools/regenerate_voice_corpus.py review --work-dir <external-run>
 --report-dir <separate-external-reports> --asr auto`. It reads installed files
 and the frozen plan, checks metadata/decoding/signal metrics, runs existing
@@ -346,7 +347,7 @@ review JSON; importing decisions into Greia receipts/runtime is a separate task.
 
 ## Current automated review policy (2026-10-21)
 
-Policy v2: trailing silence/internal pauses warn at ≥1.5s; ASR transcript PASS
+Policy v3 (same silence/score thresholds; diacritics ignored by default): trailing silence/internal pauses warn at ≥1.5s; ASR transcript PASS
 requires similarity >0.8 and other applicable checks clear. Other quality flags
 remain. `reassess --evidence-dir <finished-report>` reapplies policy to matching
 saved evidence without another ASR run; use a fresh report directory. Human
@@ -444,7 +445,7 @@ freeze v4 plus an explicit roughly one-second pause and retain the cumulative
 three-generation limit. Primary owns diagnosis; batch monitoring must not
 change thresholds, masters, transcripts, selection or code.
 
-## Target-suffix cutter v5 (2026-10-22 correction)
+## Historical target-suffix cutter v5 (2026-10-22; superseded by v6 below)
 
 Discarded intro spelling and recognized word count do not gate extraction. The
 final expected target anchors the cut; the declared prefix/count are provenance
@@ -453,3 +454,14 @@ adjacent-span PCM search with mandatory exact retained-target verification.
 Never transcribe the removed intro to accept a cut. Historical v4 plans/receipts
 remain immutable and cannot silently run under v5. Bulk priority generation is
 STOPPED; saved-audio replay and human comparison do not authorize restarting it.
+
+## ASR default / accent override (2026-10-22)
+
+Use pinned cached multilingual Whisper Base from asr_policy.py for new checking.
+Diacritics are ignored only during ASR comparison by default; exact authored
+scripts and audio are preserved. `VoiceRequest(ignore_accents=False)`, JSON
+ignore_accents=false or `--strict-accents` select strict comparison. This applies
+to final verification, target location, extraction safety and saved review scoring.
+Extractor v6 freezes the model/accent policy; review screen v3 prevents stale
+cache reuse. Reassessment preserves original verifier provenance. No old corpus
+plan or human review is rewritten, and bulk generation remains stopped.

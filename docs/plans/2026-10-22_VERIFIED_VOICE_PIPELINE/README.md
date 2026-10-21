@@ -41,6 +41,15 @@ failure does not authorize another investigation, a model download or bulk work.
 | 06 | [06-greia-adoption.md](06-greia-adoption.md) | One Greia route, pipelined batches, no nested retry/wrapper |
 | 07 | [07-live-acceptance.md](07-live-acceptance.md) | Measured local resource/latency and multilingual evidence |
 
+## Adopted default update — 2026-10-22
+
+The owner selected Base and default accent-insensitive comparison after the matched
+Tiny/Base experiment. This default-policy change is implemented in the current
+Greia engine/cutter; the shared queued pipeline below remains proposed. Carry
+ignore_accents=true through policy schemas and freeze it per job; explicit false
+restores strict comparison. Fold only ASR comparison text, never source scripts.
+The original evidence baseline remains a dated snapshot, not current defaults.
+
 ## Design contract
 
 ### Public caller experience
@@ -166,7 +175,7 @@ backend is a future explicit adapter, not an assumed capability or new download.
 Move the generic target-suffix extraction implementation into shared VoxStage;
 leave the Greia CLI as a compatibility adapter. Shared code never imports Greia.
 Align the final target, ignore discarded intro content, locate a measured PCM
-pause, then cut. Use the existing v5 suffix/PCM safety policy initially.
+pause, then cut. Use the current v6 suffix/PCM safety policy and shared diacritic normalization.
 
 One full-clip word-timestamp transcription plus one extracted-target transcription
 is the maximum normal short-take path. Reuse the latter for both boundary safety
@@ -179,7 +188,9 @@ settings. Never reuse source ASR for a different cut/hash.
 
 Warm subprocess uses an explicitly configured installed interpreter and cached
 Whisper model. Probe model weights and imports before accepting verified jobs;
-no installation/download. Initial configured model is installed Whisper-tiny,
+no installation/download. Owner-selected configured model is installed multilingual Whisper Base
+(`mlx-community/whisper-base-mlx`, pinned revision
+`1e3e249fb8d01c655324bd6841b1deadffd6d04c`),
 with deterministic decoding settings frozen per job. Model is configurable only
 to an already cached revision. A stronger model is not silently downloaded.
 

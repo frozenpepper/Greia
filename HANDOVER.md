@@ -137,6 +137,44 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — Base selected; configurable accent-insensitive ASR implemented
+
+Owner selected multilingual Base and requested that accent differences not count
+as recognition errors by default. `tools/greia_voice_core/asr_policy.py` now owns
+Base model/revision (`1e3e249fb8d01c655324bd6841b1deadffd6d04c`), offline resolution
+of required cached model files, and comparison-only Unicode diacritic folding.
+Normal verification and carrier recognition share that default. Exact scripts,
+raw transcripts/audio and human decisions are preserved. Normal verifier decoding
+uses temperature 0 and no expected-text prompt/previous-text conditioning.
+
+VoiceRequest.ignore_accents defaults true; false is a typed request/service/batch
+JSON override. CLI generate/request, standalone extraction and corpus
+plan/review/reassess expose `--strict-accents`. Target location and retained-target
+verification use the same normalization; no arbitrary spelling-error exemption.
+Carrier extractor v6 and screen policy v3 prevent silent reuse of frozen old
+plans/cached results. New carrier plans freeze ASR identity and accent policy.
+Saved-evidence reassessment recomputes scores and can clear accent-only carrier
+warnings while preserving original Tiny/Base recognizer provenance and receipts.
+
+Final focused voice suite: **111 PASS**; live saved-audio smoke confirms Base in
+both normal verification and carrier recognition, with PASS/score 1 for Find Luna.
+`trovò` versus `trovo`: comparison score 1.0 by default, 0.52 with strict accents.
+Doctor reports mlx-whisper-base available. Evidence outside source:
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-base-accent-policy/`.
+Full `make verify PYTHON=/opt/anaconda3/bin/python3` ran 5,648 tests and reported
+1 failure / 4 errors / 8 skips. One error was this tranche's test-discovery import;
+fixed by removing the cross-test package import, then verified with the same
+Anaconda discovery command (8/8 PASS). The other findings concern ARM64 build
+profile resolution, two macOS-missing lsblk installer cases, and an MBR diagnostic
+assertion. Full gate NOT GREEN and was not rerun after the discovery fix; final
+111-test focused rerun is separate evidence. Logs retained externally.
+
+Documentation/setup/voice operations and the proposed shared-queue plan now use
+these defaults. No fresh synthesis, audio installation, master changes or bulk
+restart. Shared asynchronous queues remain proposed, not implemented. Bulk remains
+STOPPED; old frozen carrier plans cannot run under v6 without a new plan.
+
+
 ### 2026-10-22 — executed Tiny/Base comparison; default unchanged
 
 Owner authorized downloading multilingual Base and comparing saved recordings.

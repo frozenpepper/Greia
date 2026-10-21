@@ -47,6 +47,11 @@ The immutable French evidence is external in the 2026-10-22-target-suffix-v5 run
 
 ## Exact implementation
 
+Adopted owner defaults: pinned cached multilingual Base and ignore_accents=true;
+false explicitly restores strict comparison. Carry this flag through request,
+policy, cache key, target location and retained-target/quality scoring. Preserve
+the original script and recognizer text. Reuse the current asr_policy.py semantics.
+
 Add immutable ProductionPolicy, ShortTextPolicy, VerificationPolicy and RecordingRequest/RecordingResult types in the named modules. Defaults: required verification, max_attempts=3 (range 1–3), max_words=4, max_alnum=None, short mode auto. Define all README states and retryable codes as enums. Define normalize_words with NFC/casefold/internal apostrophes and keep supplied accents. Freeze resolved prefixes, composite text, language, direction and settings before attempt allocation. Exclude no character ID. Explicit missing locale, empty text, unsupported locale, invalid policy or oversize composite are pre-generation errors. Policy resolution must be pure. Store small JSON transcript/timing fixtures from the two French v5 rejections, with external source paths/hashes; do not copy WAVs into Git. Keep new modules unreferenced by public production routes until session 05.
 
 ## Tests

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Protocol
 
 from .review_policy import ASR_PASS_THRESHOLD
+from .asr_policy import DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION, DEFAULT_ASR_VERIFIER, cached_asr_model, comparison_text
 
 from .models import (
     SpeechKind,
@@ -26,13 +27,13 @@ class SpeechVerifier(Protocol):
     def probe(self) -> tuple[bool, str]: ...
 
 
-def normalize_transcript(text: str) -> str:
-    return " ".join(re.findall(r"\w+", text.casefold(), flags=re.UNICODE))
+def normalize_transcript(text: str, *, ignore_accents: bool = True) -> str:
+    return " ".join(re.findall(r"\w+", comparison_text(text, ignore_accents=ignore_accents), flags=re.UNICODE))
 
 
-def transcript_similarity(expected: str, actual: str) -> float:
-    expected_norm = normalize_transcript(expected)
-    actual_norm = normalize_transcript(actual)
+def transcript_similarity(expected: str, actual: str, *, ignore_accents: bool = True) -> float:
+    expected_norm = normalize_transcript(expected, ignore_accents=ignore_accents)
+    actual_norm = normalize_transcript(actual, ignore_accents=ignore_accents)
     if not expected_norm or not actual_norm:
         return 0.0
     char_score = SequenceMatcher(None, expected_norm, actual_norm).ratio()
@@ -90,13 +91,14 @@ def _release_mlx_transient_memory() -> None:
 
 @dataclass
 class WhisperVerifier:
-    model_id: str = "mlx-community/whisper-tiny"
+    model_id: str = DEFAULT_ASR_MODEL
     pass_threshold: float = ASR_PASS_THRESHOLD
-    verifier_id: str = "mlx-whisper-tiny"
+    verifier_id: str = DEFAULT_ASR_VERIFIER
 
     def probe(self) -> tuple[bool, str]:
         try:
             import mlx_whisper  # noqa: F401
+            cached_asr_model(self.model_id)
         except BaseException as exc:
             return False, f"mlx_whisper unavailable: {exc}"
         return True, self.model_id
@@ -131,8 +133,9 @@ class WhisperVerifier:
             _release_mlx_transient_memory()
             result = mlx_whisper.transcribe(
                 str(wav_path),
-                path_or_hf_repo=self.model_id,
+                path_or_hf_repo=str(cached_asr_model(self.model_id)),
                 language=request.language,
+                temperature=0.0, condition_on_previous_text=False, initial_prompt=None,
             )
             transcript = str(result.get("text", "")).strip()
         except Exception as exc:
@@ -149,7 +152,7 @@ class WhisperVerifier:
             result = None
             _release_mlx_transient_memory()
 
-        score = transcript_similarity(request.text, transcript)
+        score = transcript_similarity(request.text, transcript, ignore_accents=request.ignore_accents)
         disposition = (
             VerificationDisposition.PASS
             if score > self.pass_threshold
@@ -160,6 +163,9 @@ class WhisperVerifier:
             verifier_id=self.verifier_id,
             transcript=transcript,
             score=score,
+            model_id=self.model_id,
+            model_revision=DEFAULT_ASR_REVISION if self.model_id == DEFAULT_ASR_MODEL else None,
+            ignore_accents=request.ignore_accents,
             detail=(
                 "transcript is plausibly aligned; human listening still required"
                 if disposition is VerificationDisposition.PASS
