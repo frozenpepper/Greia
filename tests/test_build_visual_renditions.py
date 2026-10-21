@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import importlib.util
 import stat
 import struct
@@ -97,6 +98,42 @@ open(output, "wb").write(data)
         self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
         self.assertEqual(struct.unpack(">II", data[16:24]), (64, 32))
         self.assertFalse(any(output.parent.glob(".*.tmp-*")))
+
+    def test_hires_sibling_is_written_at_double_size(self) -> None:
+        temporary, assets, _source_spec, visuals = self.make_spec()
+        self.addCleanup(temporary.cleanup)
+        rasterizer = self.make_rasterizer(Path(temporary.name))
+
+        builder.render_all(visuals, rasterizer)
+
+        sibling = assets / "visual" / "runtime" / "panel@2x.png"
+        data = sibling.read_bytes()
+        self.assertEqual(struct.unpack(">II", data[16:24]), (128, 64))
+        self.assertFalse(any(sibling.parent.glob(".*.tmp-*")))
+
+    def test_no_hires_skips_the_sibling(self) -> None:
+        temporary, assets, _source_spec, visuals = self.make_spec()
+        self.addCleanup(temporary.cleanup)
+        rasterizer = self.make_rasterizer(Path(temporary.name))
+
+        builder.render_all(visuals, rasterizer, hires=False)
+
+        runtime = assets / "visual" / "runtime"
+        self.assertTrue((runtime / "panel.png").is_file())
+        self.assertFalse((runtime / "panel@2x.png").exists())
+
+    def test_hires_dimension_limit_is_4096(self) -> None:
+        temporary, _assets, _source_spec, visuals = self.make_spec()
+        self.addCleanup(temporary.cleanup)
+        rasterizer = self.make_rasterizer(Path(temporary.name))
+        variant = visuals[0].variants[0]
+        big = dataclasses.replace(variant, width=2048)
+        spec = dataclasses.replace(visuals[0], variants=(big,))
+        builder.render_all((spec,), rasterizer)  # 4096 is allowed
+        self.assertEqual(
+            struct.unpack(">II", variant.output.with_name("panel@2x.png").read_bytes()[16:24]),
+            (4096, 64),
+        )
 
     def test_failed_rasterizer_preserves_previous_output(self) -> None:
         temporary, assets, _source_spec, visuals = self.make_spec()

@@ -215,6 +215,22 @@ class ScaledSurface(pygame.Surface, metaclass=_SurfaceMeta):
         _copy_format_state(new, raw)
         return new
 
+    @classmethod
+    def downscale(cls, raw: pygame.Surface, source_scale: float, scale: float | None = None) -> "ScaledSurface":
+        """Wrap a rendition drawn at ``source_scale`` x its logical size."""
+
+        factor = float(scale if scale is not None else _state.scale)
+        w, h = RAW.get_size(raw)
+        logical = (max(1, round(w / source_scale)), max(1, round(h / source_scale)))
+        source = raw if raw.get_bitsize() in (24, 32) else RAW.convert_alpha(raw) if raw.get_flags() & pygame.SRCALPHA else RAW.convert(raw)
+        new = cls(logical, source.get_flags() & pygame.SRCALPHA, source, scale=factor)
+        if RAW.get_size(new) == (w, h):
+            _copy_pixels(new, source)
+        else:
+            RAW.transform.smoothscale(_matching(source, new), RAW.get_size(new), new)
+        _copy_format_state(new, raw)
+        return new
+
     # -- logical geometry ---------------------------------------------------
     def get_size(self) -> tuple[int, int]:
         return self._logical()
@@ -469,7 +485,28 @@ def _chop(surface, rect):
     return ScaledSurface.adopt(raw, (max(1, round(w / s)), max(1, round(h / s))), s)
 
 
+#: Sibling rendition rendered from the same SVG at twice the 1x pixel size.
+HIRES_SUFFIX = "@2x"
+
+
+def _hires_sibling(source: Any) -> str | None:
+    if not isinstance(source, (str, os.PathLike)):
+        return None
+    path = os.fspath(source)
+    stem, extension = os.path.splitext(path)
+    if not extension or stem.endswith(HIRES_SUFFIX):
+        return None
+    sibling = f"{stem}{HIRES_SUFFIX}{extension}"
+    return sibling if os.path.isfile(sibling) else None
+
+
 def _image_load(*args, **kwargs):
+    sibling = _hires_sibling(args[0]) if args and _state.scale > 1.0 else None
+    if sibling is not None:
+        try:
+            return ScaledSurface.downscale(RAW.image_load(sibling), 2.0)
+        except (pygame.error, OSError, ValueError):
+            pass  # a damaged rendition falls back to the 1x file
     return ScaledSurface.upscale(RAW.image_load(*args, **kwargs))
 
 
@@ -573,6 +610,7 @@ def deactivate() -> None:
 __all__ = [
     "HIRES_ENVIRONMENT",
     "HIRES_MIN_SCALE",
+    "HIRES_SUFFIX",
     "RAW",
     "ScaledFont",
     "ScaledSurface",

@@ -104,7 +104,8 @@ class ContentTests(unittest.TestCase):
 
     def test_activity_pictures_have_svg_masters(self) -> None:
         runtime = ACTIVITY_ROOT / "assets" / "runtime"
-        names = {path.stem for path in runtime.glob("*.png")}
+        # ``name@2x.png`` is the high-resolution rendition of the same master.
+        names = {path.stem for path in runtime.glob("*.png") if not path.stem.endswith("@2x")}
         self.assertTrue(names)
         for name in names:
             source = ACTIVITY_ROOT / "assets" / "source" / f"{name}.svg"

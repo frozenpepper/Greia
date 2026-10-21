@@ -88,7 +88,33 @@ class SharedVisualLibraryTests(unittest.TestCase):
             for family in ("bg", "props", "creatures", "hud", "fx")
             for path in (ASSETS / "visual" / "runtime" / "v1" / family).rglob("*.png")
         }
+        # An ``X@2x.png`` sibling is implied by a declared ``X.png``.
+        shipped = {
+            path.with_name(path.name.replace("@2x.png", ".png"))
+            if path.name.endswith("@2x.png") else path
+            for path in shipped
+        }
         self.assertEqual(sorted(shipped - declared), [])
+
+    def test_shipped_hires_siblings_are_exactly_double_size(self) -> None:
+        import struct
+
+        checked = 0
+        for visual in _visuals().values():
+            for variant in visual["variants"]:
+                output = ASSETS / variant["output"]
+                sibling = output.with_name(output.stem + "@2x" + output.suffix)
+                if not sibling.is_file():
+                    continue
+                data = sibling.read_bytes()
+                self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n", sibling)
+                self.assertEqual(
+                    struct.unpack(">II", data[16:24]),
+                    (variant["width"] * 2, variant["height"] * 2),
+                    sibling,
+                )
+                checked += 1
+        self.assertGreater(checked, 0)
 
     def test_animal_vocabulary_aliases_share_the_creature_drawing(self) -> None:
         visuals = _visuals()

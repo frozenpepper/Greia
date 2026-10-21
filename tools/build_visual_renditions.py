@@ -55,6 +55,8 @@ _ALLOWED_KINDS = frozenset(
     }
 )
 _MAX_RENDITION_DIMENSION = 2048
+_MAX_HIRES_DIMENSION = 4096
+_HIRES_SUFFIX = "@2x"
 _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 
@@ -81,6 +83,11 @@ def main(argv: list[str] | None = None) -> int:
         default=os.environ.get("GREIA_RSVG_CONVERT", "rsvg-convert"),
         help="build-host SVG rasterizer; defaults to rsvg-convert",
     )
+    parser.add_argument(
+        "--no-hires",
+        action="store_true",
+        help="skip the sibling <name>@2x.png renditions (exactly 2x size)",
+    )
     args = parser.parse_args(argv)
 
     assets_root = args.assets_root.resolve(strict=True)
@@ -91,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
 
     rasterizer = _resolve_rasterizer(args.rasterizer)
     metadata, visuals = load_source_spec(source_spec, assets_root)
-    render_all(visuals, rasterizer)
+    render_all(visuals, rasterizer, hires=not args.no_hires)
     write_runtime_catalog(output_catalog, source_spec, metadata, visuals)
     return 0
 
@@ -186,36 +193,69 @@ def load_source_spec(
     return raw, tuple(visuals)
 
 
-def render_all(visuals: tuple[VisualSpec, ...], rasterizer: Path) -> None:
+def render_all(
+    visuals: tuple[VisualSpec, ...], rasterizer: Path, *, hires: bool = True
+) -> None:
+    """Render every declared output and, unless ``hires`` is false, its ``@2x`` sibling."""
     rendered: set[Path] = set()
     for visual in visuals:
         for variant in visual.variants:
             if variant.output in rendered:
                 continue  # alias of an already rendered rendition
             rendered.add(variant.output)
-            variant.output.parent.mkdir(parents=True, exist_ok=True)
-            temporary = _temporary_sibling(variant.output)
-            temporary.unlink(missing_ok=True)
-            command = [
-                str(rasterizer),
-                "--width",
-                str(variant.width),
-                "--height",
-                str(variant.height),
-                "--output",
-                str(temporary),
-                str(variant.source),
-            ]
-            try:
-                subprocess.run(command, check=True)
-                _verify_png(temporary, variant.width, variant.height)
-                os.replace(temporary, variant.output)
-            except subprocess.CalledProcessError as exc:
-                raise VisualRenditionError(
-                    f"rasterizer failed for {visual.asset_id!r}/{variant.name!r}"
-                ) from exc
-            finally:
-                temporary.unlink(missing_ok=True)
+            label = f"{visual.asset_id!r}/{variant.name!r}"
+            _render_png(
+                rasterizer, variant.source, variant.output,
+                variant.width, variant.height, label,
+            )
+            if hires:
+                _render_png(
+                    rasterizer, variant.source, hires_sibling(variant.output),
+                    variant.width * 2, variant.height * 2, f"{label} @2x",
+                    limit=_MAX_HIRES_DIMENSION,
+                )
+
+
+def hires_sibling(output: Path) -> Path:
+    """Return the implied ``<stem>@2x.png`` sibling of a declared output."""
+    return output.with_name(f"{output.stem}{_HIRES_SUFFIX}{output.suffix}")
+
+
+def _render_png(
+    rasterizer: Path,
+    source: Path,
+    output: Path,
+    width: int,
+    height: int,
+    label: str,
+    *,
+    limit: int = _MAX_RENDITION_DIMENSION,
+) -> None:
+    if width > limit or height > limit:
+        raise VisualRenditionError(
+            f"rendition for {label} exceeds {limit}px: {width}x{height}"
+        )
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = _temporary_sibling(output)
+    temporary.unlink(missing_ok=True)
+    command = [
+        str(rasterizer),
+        "--width",
+        str(width),
+        "--height",
+        str(height),
+        "--output",
+        str(temporary),
+        str(source),
+    ]
+    try:
+        subprocess.run(command, check=True)
+        _verify_png(temporary, width, height)
+        os.replace(temporary, output)
+    except subprocess.CalledProcessError as exc:
+        raise VisualRenditionError(f"rasterizer failed for {label}") from exc
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def write_runtime_catalog(

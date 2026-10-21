@@ -155,5 +155,40 @@ class HiresSurfaceTests(unittest.TestCase):
         self.assertEqual(RAW.get_size(canvas.surface), (1024, 600))
 
 
+class HiresSiblingLoadTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        pygame.display.init()
+        pygame.display.set_mode((1, 1))
+
+    def tearDown(self) -> None:
+        hires_surface.deactivate()
+
+    def test_loader_prefers_the_2x_rendition_and_keeps_the_1x_logical_size(self) -> None:
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as raw_dir:
+            base = os.path.join(raw_dir, "thing.png")
+            small = hires_surface.RAW.Surface((10, 6)); small.fill((255, 0, 0))
+            big = hires_surface.RAW.Surface((20, 12)); big.fill((0, 0, 255))
+            pygame.image.save(small, base)
+            pygame.image.save(big, os.path.join(raw_dir, "thing@2x.png"))
+            hires_surface.activate(1.25)
+            loaded = pygame.image.load(base)
+            self.assertEqual(loaded.get_size(), (10, 6))
+            self.assertEqual(hires_surface.RAW.get_size(loaded), (round(10 * 1.25), round(6 * 1.25)))
+            colour = loaded.get_at((5, 3))
+            self.assertGreater(colour.b, 200)
+            self.assertLess(colour.r, 50)
+
+    def test_loader_uses_the_1x_file_below_the_threshold(self) -> None:
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as raw_dir:
+            base = os.path.join(raw_dir, "thing.png")
+            small = hires_surface.RAW.Surface((10, 6)); small.fill((255, 0, 0))
+            pygame.image.save(small, base)
+            pygame.image.save(hires_surface.RAW.Surface((20, 12)), os.path.join(raw_dir, "thing@2x.png"))
+            self.assertEqual(pygame.image.load(base).get_at((5, 3))[:3], (255, 0, 0))
+
+
 if __name__ == "__main__":
     unittest.main()
