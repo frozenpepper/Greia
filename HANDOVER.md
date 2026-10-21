@@ -72,6 +72,43 @@ installer/first-boot/lifecycle test gates or the Creations/Activity
 audit programme. Do not invent a second language registry or silently
 promote unvoiced locales.
 
+## 2026-10-21 — Owner reprioritized spoken-carrier retakes
+
+The owner superseded blanket short-phrase production with review-led retakes for
+low scores and strong warnings/uncertainty. The original 642-row producer was
+stopped at a safe point; no additional 1,968/2,111 actor plan was launched. Its
+latest journal at stop was 16 DONE, 12 extraction FAILED, 1 GENERATING, 613
+READY, and 4,273 PRESERVED. The raced Tito/IT Oskar provider job completed; raw
+WAV SHA-256 `172be7d5ea3e95b22d8e5c17c2a774b01622f8461a89fffff8c0384a321858b7`
+and the original VoxStage `job.json` were preserved externally, not installed.
+The run journal now records that cue as FAILED/pending targeted triage.
+
+The current all-actor short set has 2,753 plan paths: 2,610 match the merged
+v2/v3 automated review set and 143 have no historical review evidence. The
+143 are isolated in the needs-review list (Foresta Parole 56, Sillabe Magiche
+39, vocab 48) and are not treated as quality failures. External triage lists
+are under `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/triage/`. They include 667 priority retakes (Tito 67, Leo 412,
+Momo 67, Dani 4, Lilli 95, Flash 22), 1,927 deferred reviewed cues, 16 completed
+listening-pending takes, and the 143 evidence-gap rows. Human review evidence
+qualifies only when its saved audio SHA matches the frozen source; historical
+ratings are retained with stale/match state.
+
+A new priority-only frozen plan is at
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/run/plan.json`; its exact SHA is in `priority-freeze.json`. It has exactly 667 READY
+rows and all remaining rows PRESERVED. Previous attempts are carried forward
+for the three-generation per-cue maximum. The single VoiceEngine/VoxStage worker started this targeted queue at 17:06
+Europe/Rome. Its first provider job is 20261021-170600-f39bc05c for Tito/FR
+find_octopus.wav; initial journal is 1 GENERATING, 666 READY, 4,248 PRESERVED.
+Safe cut rejection preserves originals and continues, while provider failures
+stop for inspection. All outputs remain listening-pending. Details and the exact
+command are in the external RUNBOOK.
+
+The normal-environment `make verify` evidence remains 3,131 tests with 31
+failures, 241 errors, 6 skips; see `/tmp/greia-short-carrier-make-verify.log`.
+Focused carrier/policy/generation/corpus tests passed 38/38 before the later
+actor-selection change; selector/corpus tests passed 21/21 after it. No full
+verification was rerun for this triage-only change.
+
 ## Recent entries
 
 ## 2026-10-21 — Short spoken-carrier extraction and v0.3 pilot

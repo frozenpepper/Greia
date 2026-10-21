@@ -3554,3 +3554,17 @@ plan is expected to cover the remaining 1,968 cues; paths DONE or attempted in
 the first run must be excluded. Selector-focused tests pass 21/21. All new
 takes stay listening-pending; provider/ASR/cut evidence is not listening
 acceptance.
+
+### 2026-10-21 — Short spoken-carrier owner scope correction and targeted run
+
+Owner superseded the blanket short-cue retake scope with review-led priorities.
+The in-flight producer was stopped; its completed Oskar raw provider take and
+true job receipt were preserved externally and not installed. Exact review-set
+comparison yielded 2,610 covered short paths and 143 review-evidence gaps. The
+priority-only frozen plan contains 667 READY cues and preserves all others;
+human rejection is used only when its audio SHA matches the frozen source.
+The serial targeted producer started with VoxStage job
+20261021-170600-f39bc05c (Tito/FR find_octopus.wav). Outputs stay
+listening-pending. The normal make verify gate for the source change ran 3,131
+tests and failed with 31 failures, 241 errors, and 6 skips; details remain in
+/tmp/greia-short-carrier-make-verify.log.
