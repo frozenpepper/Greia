@@ -870,3 +870,9 @@ All generated voice candidates and receipts produced under the 2026-10-14 four-l
 - `RECORDING_LEDGER.csv` and `app-progress.csv` updated to `ACCEPTED`.
 - Unit tests verified clean: `test_*voice*.py` (29 tests), `test_staged_syllable*.py` (7 tests), `test_four_language_activity_runtime_text.py` (10 tests).
 - Updated `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` for GLA-010 (PASS), GLA-014 (PASS), and GLA-015 (AUDIO INTEGRATED).
+
+## 2026-10-21 — Dani v5 character-grounded auditions (listening pending)
+
+Owner requested correction after Dani v4 explored generic adult vocal registers without a fresh character-note check. Three seeds now use one description grounded in `GREIA_CANONICAL_CAST_SYSTEM.md` (friendly toy robot, cute/friendly first and robotic second, logic/patterns) and the voice-authoring guidance (robotic presenter). Comfortable middle-low pitch, subtle electronic resonance and restrained energy are proposed acoustic interpretations incorporating owner feedback, not quoted canon.
+
+Completed job `20261021-091129-56d12d64`: 13.76/12.64/10.08s. Requests, design rationale, WAV copies and Takeboard manifest: `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-dani-v5/`; listening page `http://127.0.0.1:8798/`. All three remain unreviewed. Momo/Tito approved v3 references and active runtime registry unchanged. No corpus regeneration, implementation changes or new tests. Next: owner listens/selects Dani, then selected-master clone checks before replacement.
