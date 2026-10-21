@@ -3582,3 +3582,8 @@ takes, carries per-cue attempt counts, and stages this recovered candidate
 for normal journaled installation. It contains 663 READY priority rows and
 preserves all deferred/evidence-gap rows. The continuation producer is active;
 human listening remains pending.
+
+### 2026-10-21 — Reference-canvas presentation on non-reference displays (SOURCE + TESTS + DESKTOP VISUAL REVIEW)
+
+Follow-up to the Aspire 1280x800 viewport fix (`0a0b4659`). `PygameReferenceCanvas` now owns its CONTAIN bands (repainted every full present with an edge smear or the `clear` colour, so no stale launch-card pixels or pointer trails), resamples non-integer scales smoothly (`smooth=None` default), and repairs pointer/region updates from a cached physical frame at any scale instead of re-scaling the frame on each mouse move. Tests: `tests/test_pygame_reference_canvas_presentation.py` (9) plus 1,524 Activity tests and the canvas/Simulator consumers PASS. Not yet observed on the physical Aspire. Native-resolution Activity rendering (no upscale softness, no bands) remains open and needs an owner decision.
+

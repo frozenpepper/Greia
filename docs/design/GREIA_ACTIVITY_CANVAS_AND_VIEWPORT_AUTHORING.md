@@ -329,6 +329,25 @@ Consequences for authors:
   the requested size is left untouched; do not depend on the normalization for
   test fixtures.
 
+### 9.2 What `PygameReferenceCanvas` does on a non-reference display
+
+On a display whose aspect ratio differs from 1024x600 the CONTAIN fit leaves
+bands (25 px above and below at 1280x800, 137 px at 1280x1024, side bands at
+16:9). The canvas owns them:
+
+- every full `present()` repaints the bands. Without `clear` they get a
+  blurred smear of the outermost scene pixels, shaded darker toward the screen
+  edge, so no card or character is repeated where a child might tap it. With
+  `clear` the whole target, bands included, takes that colour;
+- non-integer scales are resampled smoothly by default (`smooth=None`); exact
+  whole-number scales stay crisp. Pass `smooth=True`/`False` only to force it;
+- `present_pointer()` and `present_regions()` repair from the cached physical
+  frame and bands at any scale, so a pointer move never re-scales the scene.
+
+This is presentation, not resolution independence: a 1024x600 bitmap scaled
+1.25x is softer than art drawn at 1280x800. Native-resolution drawing is the
+follow-up that removes both the softness and the bands.
+
 ---
 
 ## 10. Performance rules

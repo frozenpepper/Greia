@@ -234,6 +234,17 @@ error. `make verify` was not rerun on the merged head. The 72 focused voice
 tests passed before production. No runtime playback, release image, Simulator,
 physical-device or human listening acceptance is claimed.
 
+## 2026-10-21 — Scaled Activities: band glitches, jagged scaling and pointer cost fixed in the canvas
+
+**Evidence class: SOURCE + FOCUSED/ACTIVITY TESTS + DESKTOP VISUAL REVIEW (headless captures). Not seen on the Aspire (offline this session).**
+
+- **Owner report:** on the 1280x800 Aspire, Activities looked zoomed and ugly, with glitching bands above and below.
+- **Causes (all in `greia_platform.pygame_canvas.PygameReferenceCanvas`):** (1) the CONTAIN bands (25 px at 1280x800) were never repainted by the 40 Activities that call `present()` without `clear`, so they kept the launch card and every Greia pointer position as a trail; (2) the 1.25x upscale used nearest-neighbour, doubling every fourth pixel row/column (jagged outlines); (3) when scaled, `present_pointer()` (used by 44 Activities) re-scaled and flipped the whole frame on every mouse move.
+- **Fix:** every full present repaints the bands with a blurred, edge-shaded smear of the scene's outermost pixels (or the `clear` colour); `smooth=None` resamples non-integer scales smoothly and keeps whole-number scales crisp; the canvas caches the presented physical frame and bands so pointer refreshes and `present_regions` (now resampling only the dirty regions) work at any scale. No Activity code changed.
+- **Verification:** new `tests/test_pygame_reference_canvas_presentation.py` (9: no stale band pixels at 1280x800/1366x768/1920x1080/1280x1024/800x480, no pointer trail, no re-scale on pointer refresh, smooth vs crisp choice, region update matches a full present). Activity suites 1,524 PASS; Simulator, writing/shape-garden/canvas consumers PASS. Desktop timing (M-series Mac): 1280x800 full present 1.1 → 3.1 ms, pointer refresh 1.04 → 0.003 ms. Before/after captures of the same logical frame (alfabeto_leo 1280x800, memory_meraviglie 1280x1024, bosco_numeri 1920x1080) show the trail/stale band gone and outlines no longer stair-stepped.
+- **Remaining (not fixed here):** the image is still a 1.25x upscale of 1024x600 art, so it is softer than native and the bands still exist. Removing both needs native-resolution drawing (reference canvas rendered at physical size with assets/fonts rendered at the real scale); that is a per-Activity migration through the shared kit. Full-frame smoothscale cost on old laptop CPUs and the Pi at 1080p is unmeasured.
+- **Next exact step:** source-deploy to the Aspire and look at `alfabeto_leo`/`memory_meraviglie` with real pointer movement; then decide the native-resolution migration.
+
 ## 2026-10-21 — Installer firmware selection was blind inside its own sandbox (fix)
 
 **Evidence class: SOURCE + FOCUSED TESTS + REAL SYSTEMD SANDBOX (build host `orbiter`, not the Aspire, not a clean install).**

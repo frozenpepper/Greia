@@ -172,6 +172,14 @@ class PygameReferenceCanvas:
     The author draws onto one logical surface (1024x600 by default).  `present`
     maps it to the actual display with uniform CONTAIN or COVER behavior.
 
+    When the display's aspect ratio differs from the reference, CONTAIN leaves
+    bands (25 px above and below on a 1280x800 panel).  The canvas owns those
+    bands: every full present repaints them, by default with a blurred smear
+    of the adjacent scene edge, so they never keep stale Shell/launch-card
+    pixels or Greia pointer trails.  At non-integer scales the frame is
+    resampled smoothly; nearest-neighbour duplication of every Nth pixel row is
+    what made scaled Activities look jagged.
+
     This helper intentionally does not support EXPAND: a finite reference bitmap
     cannot invent the additional logical world that EXPAND reveals.  Use
     `PygameCanvasMapper.world` and render visible world objects instead.
@@ -181,6 +189,13 @@ class PygameReferenceCanvas:
     legacy ``system_chrome`` keyword remains accepted temporarily during the R7
     catalogue migration, but it is ignored and must not be used by new code.
     """
+
+    #: Scene pixels sampled at each edge for the band smear.
+    _BAND_EDGE = 4
+    #: The smear is blurred along the edge by shrinking it by this factor.
+    _BAND_BLUR = 24
+    #: Multiplicative shade next to the scene and at the screen edge.
+    _BAND_SHADE = (236, 176)
 
     def __init__(
         self,
@@ -204,10 +219,17 @@ class PygameReferenceCanvas:
         flags = pygame.SRCALPHA if alpha else 0
         self.surface = pygame.Surface((spec.width, spec.height), flags)
         # Last presented state, so a pointer-only refresh can repair the old
-        # pointer area from ``surface`` instead of re-rendering the scene.
+        # pointer area without re-rendering or re-scaling the scene.
         self._last_clear: tuple[int, ...] | None = None
-        self._last_smooth = False
+        self._last_smooth: bool | None = None
         self._pointer_rect: pygame.Rect | None = None
+        # Physical pieces of the last presented frame: the (possibly scaled)
+        # scene and the band fills.  Bounded: one display-sized frame at most.
+        self._frame: pygame.Surface | None = None
+        self._frame_rect: pygame.Rect | None = None
+        self._bands: list[tuple[pygame.Rect, pygame.Surface]] = []
+        # One shade per band geometry; a canvas has at most two bands.
+        self._shades: dict[tuple[str, tuple[int, int]], pygame.Surface] = {}
 
     def pointer(
         self,
@@ -215,14 +237,59 @@ class PygameReferenceCanvas:
     ) -> tuple[float, float] | None:
         return self.mapper.pointer(position)
 
+    @property
+    def _scaled_size(self) -> tuple[int, int]:
+        scale = self.mapper.transform.scale
+        return (
+            max(1, int(round(self.spec.width * scale))),
+            max(1, int(round(self.spec.height * scale))),
+        )
+
+    @property
+    def _unscaled(self) -> bool:
+        return self._scaled_size == (self.spec.width, self.spec.height)
+
+    def _smooth(self, smooth: bool | None) -> bool:
+        """Resample smoothly unless the scale is an exact whole number."""
+
+        if smooth is not None:
+            return bool(smooth)
+        scale = self.mapper.transform.scale
+        return abs(scale - round(scale)) > 1e-6
+
+    def _resample(
+        self, source: pygame.Surface, size: tuple[int, int], smooth: bool
+    ) -> pygame.Surface:
+        if source.get_size() == size:
+            return source
+        if smooth and source.get_bitsize() in (24, 32):
+            return pygame.transform.smoothscale(source, size)
+        return pygame.transform.scale(source, size)
+
+    def _origin(self) -> tuple[int, int]:
+        x, y = self.mapper.transform.logical_to_physical((0.0, 0.0))
+        return int(round(x)), int(round(y))
+
+    def _target_rect(self) -> pygame.Rect:
+        target = self.mapper.transform.target
+        return pygame.Rect(target.x, target.y, target.width, target.height)
+
     def present(
         self,
         *,
         clear: tuple[int, int, int] | tuple[int, int, int, int] | None = None,
-        smooth: bool = False,
+        smooth: bool | None = None,
         system_chrome: bool = False,
         pointer: bool = True,
     ) -> None:
+        """Draw the logical frame onto the display surface, bands included.
+
+        ``clear`` paints the whole target (bands included) with one colour;
+        without it the bands continue the scene edge.  ``smooth`` forces or
+        disables smooth resampling; the default chooses it for non-integer
+        scales.
+        """
+
         # R7 compatibility only: trusted Home/Back is no longer an Activity
         # rendering option.  Retain the keyword until first-party callers have
         # migrated so this authority correction does not become an API break.
@@ -233,37 +300,22 @@ class PygameReferenceCanvas:
         if clear is not None:
             self.target.fill(clear)
 
-        transform = self.mapper.transform
-        logical_origin = transform.logical_to_physical((0.0, 0.0))
-        scaled_width = max(1, int(round(self.spec.width * transform.scale)))
-        scaled_height = max(1, int(round(self.spec.height * transform.scale)))
-
-        if (
-            scaled_width == self.spec.width
-            and scaled_height == self.spec.height
-        ):
-            rendered = self.surface
-        elif smooth:
-            rendered = pygame.transform.smoothscale(
-                self.surface,
-                (scaled_width, scaled_height),
-            )
-        else:
-            rendered = pygame.transform.scale(
-                self.surface,
-                (scaled_width, scaled_height),
-            )
-
+        rendered = self._resample(self.surface, self._scaled_size, self._smooth(smooth))
+        area = self._target_rect()
+        frame_rect = pygame.Rect(self._origin(), rendered.get_size())
         previous_clip: Any = self.target.get_clip()
-        target = transform.target
-        self.target.set_clip(pygame.Rect(target.x, target.y, target.width, target.height))
+        self.target.set_clip(area)
         try:
-            self.target.blit(
-                rendered,
-                (int(round(logical_origin[0])), int(round(logical_origin[1]))),
-            )
+            self.target.blit(rendered, frame_rect.topleft)
+            self._bands = []
+            if clear is None:
+                self._bands = self._band_fills(rendered, frame_rect, area)
+                for rect, fill in self._bands:
+                    self.target.blit(fill, rect.topleft)
         finally:
             self.target.set_clip(previous_clip)
+        self._frame = rendered
+        self._frame_rect = frame_rect
 
         self._pointer_rect = None
         if pointer:
@@ -271,29 +323,112 @@ class PygameReferenceCanvas:
 
             self._pointer_rect = draw_activity_pointer(self.target)
 
-    @property
-    def _unscaled(self) -> bool:
-        transform = self.mapper.transform
-        return (
-            int(round(self.spec.width * transform.scale)) == self.spec.width
-            and int(round(self.spec.height * transform.scale)) == self.spec.height
+    def _band_fills(
+        self,
+        rendered: pygame.Surface,
+        frame: pygame.Rect,
+        area: pygame.Rect,
+    ) -> list[tuple[pygame.Rect, pygame.Surface]]:
+        """Soft mirrored continuations of the scene into the CONTAIN bands."""
+
+        visible = frame.clip(area)
+        if visible.width <= 0 or visible.height <= 0:
+            return []
+        fills: list[tuple[pygame.Rect, pygame.Surface]] = []
+        sides = (
+            ("top", pygame.Rect(visible.x, area.y, visible.width, visible.y - area.y)),
+            ("bottom", pygame.Rect(visible.x, visible.bottom, visible.width, area.bottom - visible.bottom)),
+            ("left", pygame.Rect(area.x, area.y, visible.x - area.x, area.height)),
+            ("right", pygame.Rect(visible.right, area.y, area.right - visible.right, area.height)),
         )
+        for side, band in sides:
+            if band.width <= 0 or band.height <= 0:
+                continue
+            fills.append((band, self._band_fill(rendered, frame, visible, side, band.size)))
+        return fills
+
+    def _band_fill(
+        self,
+        rendered: pygame.Surface,
+        frame: pygame.Rect,
+        visible: pygame.Rect,
+        side: str,
+        size: tuple[int, int],
+    ) -> pygame.Surface:
+        """Smear the scene's outermost pixels across one band.
+
+        Only a few edge pixels are used and they are blurred along the edge,
+        so no recognisable object (a card, a character) is ever repeated in
+        the band where a child might try to touch it.  A shade that deepens
+        toward the screen edge makes the band read as a frame.
+        """
+
+        width, height = size
+        local = visible.move(-frame.x, -frame.y)
+        horizontal = side in ("top", "bottom")
+        if horizontal:
+            depth = min(self._BAND_EDGE, local.height)
+            y = local.y if side == "top" else local.bottom - depth
+            strip = rendered.subsurface((local.x, y, local.width, depth))
+            small_size = (max(1, local.width // self._BAND_BLUR), 1)
+        else:
+            depth = min(self._BAND_EDGE, local.width)
+            x = local.x if side == "left" else local.right - depth
+            strip = rendered.subsurface((x, local.y, depth, local.height))
+            small_size = (1, max(1, local.height // self._BAND_BLUR))
+        smooth = strip.get_bitsize() in (24, 32)
+        small = self._resample(strip, small_size, smooth)
+        fill = self._resample(small, (width, height), smooth)
+        if fill is small or fill is strip:
+            fill = fill.copy()
+        fill.blit(
+            self._band_shade(side, size),
+            (0, 0),
+            special_flags=pygame.BLEND_RGB_MULT,
+        )
+        return fill
+
+    def _band_shade(self, side: str, size: tuple[int, int]) -> pygame.Surface:
+        """Multiplicative shade, lightest next to the scene (cached per band)."""
+
+        key = (side, size)
+        cached = self._shades.get(key)
+        if cached is not None:
+            return cached
+        width, height = size
+        horizontal = side in ("top", "bottom")
+        steps = max(1, height if horizontal else width)
+        line = pygame.Surface((1, steps) if horizontal else (steps, 1))
+        near, far = self._BAND_SHADE
+        for index in range(steps):
+            # 0 next to the scene, 1 at the screen edge.
+            distance = index / max(1, steps - 1)
+            if side in ("top", "left"):
+                distance = 1.0 - distance
+            value = int(round(near + (far - near) * distance))
+            position = (0, index) if horizontal else (index, 0)
+            line.set_at(position, (value, value, value))
+        shade = pygame.transform.scale(line, size)
+        if len(self._shades) >= 4:  # a resize changed the band geometry
+            self._shades.clear()
+        self._shades[key] = shade
+        return shade
 
     def present_pointer(self) -> bool:
         """Refresh only Greia's pointer after ``FrameKind.POINTER``.
 
-        Repairs the previous pointer rectangle from the last rendered logical
-        frame, draws the pointer at the current mouse position and pushes just
-        those two small rectangles with ``pygame.display.update``.  Returns
-        False when the cheap path does not apply (scaled presentation): it
-        then re-presents the unchanged logical frame and flips instead, which
-        still avoids re-rendering the scene.
+        Repairs the previous pointer rectangle from the last presented
+        physical frame (scene and bands), draws the pointer at the current
+        mouse position and pushes just those two small rectangles with
+        ``pygame.display.update``.  This works at any scale: the scene is
+        never re-rendered or re-scaled for a pointer move.  Returns False only
+        when nothing was presented yet; it then presents and flips instead.
         """
 
         from .activity_ui import draw_activity_pointer
 
         on_display = self.target is pygame.display.get_surface()
-        if not self._unscaled:
+        if self._frame is None:
             self.present(clear=self._last_clear, smooth=self._last_smooth)
             if on_display:
                 pygame.display.flip()
@@ -358,31 +493,37 @@ class PygameReferenceCanvas:
         """Push only logical ``regions`` (and Greia's pointer) to the display.
 
         The dirty-rectangle counterpart of ``present`` + ``flip`` for small
-        sprites moving over a cached background: copies just those regions
-        of the logical surface to the target and calls
-        ``pygame.display.update`` with them.  Returns False when the cheap
-        path does not apply (scaled presentation); it then presents and flips
-        the whole frame instead.
+        sprites moving over a cached background.  When the frame is scaled
+        only the dirty regions are resampled (with a small logical margin so
+        smooth filtering matches the full frame at their edges), and the
+        cached physical frame is patched so later pointer repairs stay
+        correct.  Returns False when nothing was presented yet; it then
+        presents and flips the whole frame instead.
         """
 
         from .activity_ui import draw_activity_pointer
 
         on_display = self.target is pygame.display.get_surface()
-        if not self._unscaled:
+        if self._frame is None or self._frame_rect is None:
             self.present(clear=self._last_clear, smooth=self._last_smooth)
             if on_display:
                 pygame.display.flip()
             return False
-        origin = self.mapper.transform.logical_to_physical((0.0, 0.0))
-        ox, oy = int(round(origin[0])), int(round(origin[1]))
         bounds = self.surface.get_rect()
         dirty: list[pygame.Rect] = []
-        for region in regions:
-            area = region.clip(bounds)
-            if area.width <= 0 or area.height <= 0:
-                continue
-            self.target.blit(self.surface, (area.x + ox, area.y + oy), area)
-            dirty.append(area.move(ox, oy))
+        if self._unscaled:
+            ox, oy = self._frame_rect.topleft
+            for region in regions:
+                area = region.clip(bounds)
+                if area.width <= 0 or area.height <= 0:
+                    continue
+                self.target.blit(self.surface, (area.x + ox, area.y + oy), area)
+                dirty.append(area.move(ox, oy))
+        else:
+            for region in regions:
+                patch = self._present_scaled_region(region, bounds)
+                if patch is not None:
+                    dirty.append(patch)
         old = self._pointer_rect
         if old is not None:
             self._repair(old)
@@ -394,6 +535,58 @@ class PygameReferenceCanvas:
             pygame.display.update(dirty)
         return True
 
+    def _present_scaled_region(
+        self, region: pygame.Rect, bounds: pygame.Rect
+    ) -> pygame.Rect | None:
+        """Resample one logical region into the cached frame and the target."""
+
+        assert self._frame is not None and self._frame_rect is not None
+        area = region.clip(bounds)
+        if area.width <= 0 or area.height <= 0:
+            return None
+        frame_w, frame_h = self._frame.get_size()
+        sx = frame_w / self.spec.width
+        sy = frame_h / self.spec.height
+        # Resample a padded source so the filter sees the same neighbours as
+        # the full-frame resample, then keep only the exact inner pixels.
+        padded = area.inflate(4, 4).clip(bounds)
+        left = int(padded.x * sx)
+        top = int(padded.y * sy)
+        right = min(frame_w, int(round(padded.right * sx)))
+        bottom = min(frame_h, int(round(padded.bottom * sy)))
+        if right <= left or bottom <= top:
+            return None
+        scaled = self._resample(
+            self.surface.subsurface(padded),
+            (right - left, bottom - top),
+            self._smooth(self._last_smooth),
+        )
+        inner = pygame.Rect(
+            int(area.x * sx),
+            int(area.y * sy),
+            0,
+            0,
+        )
+        inner.width = min(frame_w, int(round(area.right * sx)) + 1) - inner.x
+        inner.height = min(frame_h, int(round(area.bottom * sy)) + 1) - inner.y
+        inner = inner.clip(pygame.Rect(left, top, right - left, bottom - top))
+        if inner.width <= 0 or inner.height <= 0:
+            return None
+        source = inner.move(-left, -top)
+        if self._frame is self.surface:
+            self._frame = self._frame.copy()
+        self._frame.blit(scaled, inner.topleft, source)
+        physical = inner.move(self._frame_rect.topleft)
+        visible = physical.clip(self._target_rect())
+        if visible.width <= 0 or visible.height <= 0:
+            return None
+        self.target.blit(
+            self._frame,
+            visible.topleft,
+            visible.move(-self._frame_rect.x, -self._frame_rect.y),
+        )
+        return visible
+
     def _repair(self, rect: pygame.Rect) -> None:
         """Restore ``rect`` of the target from the last presented frame."""
 
@@ -402,14 +595,21 @@ class PygameReferenceCanvas:
             return
         if self._last_clear is not None:
             self.target.fill(self._last_clear, area)
-        transform = self.mapper.transform
-        target = transform.target
-        visible = area.clip(pygame.Rect(target.x, target.y, target.width, target.height))
+        target_area = self._target_rect()
+        for band, fill in self._bands:
+            piece = area.clip(band).clip(target_area)
+            if piece.width > 0 and piece.height > 0:
+                self.target.blit(fill, piece.topleft, piece.move(-band.x, -band.y))
+        if self._frame is None or self._frame_rect is None:
+            return
+        visible = area.clip(self._frame_rect).clip(target_area)
         if visible.width <= 0 or visible.height <= 0:
             return
-        origin = transform.logical_to_physical((0.0, 0.0))
-        ox, oy = int(round(origin[0])), int(round(origin[1]))
-        self.target.blit(self.surface, visible.topleft, visible.move(-ox, -oy))
+        self.target.blit(
+            self._frame,
+            visible.topleft,
+            visible.move(-self._frame_rect.x, -self._frame_rect.y),
+        )
 
 
 def merge_regions(
