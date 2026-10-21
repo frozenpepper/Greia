@@ -39,6 +39,19 @@ def _interrupt(*_args) -> None:
 def plan_command(args) -> int:
     overrides = json.loads(args.overrides.read_text(encoding="utf-8")) if args.overrides else {}
     plan = CorpusInventory(PROJECT_ROOT, args.delivery_file, overrides).build()
+    if args.carrier_mode:
+        from greia_voice_corpus.carriers import CARRIER_MODE, freeze_row
+
+        selected = 0
+        for row in plan["rows"]:
+            carrier = freeze_row(row, args.carrier_target_verification)
+            if carrier:
+                row["spoken_carrier"] = carrier
+                selected += 1
+            elif row.get("state") == "READY":
+                row.update(state="PRESERVED", reason="outside explicitly selected spoken-short-v1 carrier policy")
+        plan["spoken_carrier_mode"] = CARRIER_MODE
+        plan["spoken_carrier_selected"] = selected
     store = RunStore.create(_external_work(args.work_dir), plan)
     try:
         blocked = [r for r in plan["rows"] if r["state"] == "BLOCKED_METADATA"]
@@ -111,6 +124,11 @@ def mutate_command(args) -> int:
                 row = next((r for r in store.plan["rows"] if r["path"] == args.path), None)
                 if not row or store.state(args.path) not in {"FAILED", "NEEDS_RECOVERY", "GENERATING"}:
                     raise ValueError("retry requires one FAILED/NEEDS_RECOVERY/GENERATING cue")
+                if row.get("spoken_carrier"):
+                    counts_path = store.work / "carrier-attempt-counts.json"
+                    counts = json.loads(counts_path.read_text()) if counts_path.exists() else {}
+                    if int(counts.get(args.path, 0)) >= 3:
+                        raise ValueError("spoken-carrier cue has reached the limit of 3 fresh generations")
                 target = safe_target(store.root, args.path)
                 if digest(target) != row["original_sha256"] or digest(receipt_path(target)) != row["original_receipt_sha256"]:
                     raise ValueError("destination changed; recover transaction or create a new plan")
@@ -120,12 +138,28 @@ def mutate_command(args) -> int:
                         archive = store.work / "failed-candidates" / str(time.time_ns()) / path.relative_to(store.work / "candidates")
                         archive.parent.mkdir(parents=True, exist_ok=True)
                         path.replace(archive)
+                # Preserve every failed carrier attempt before a fresh provider job.
+                carrier_archive = store.work / "failed-carrier-attempts" / str(time.time_ns())
+                for family, suffixes in (
+                    ("carrier-raw", (".raw.wav", ".raw.wav.receipt.json", ".raw.wav.result.json")),
+                    ("carrier-extracted", (".extracted.wav", ".validation.wav")),
+                    ("carrier-evidence", (".failure.json",)),
+                ):
+                    for suffix in suffixes:
+                        path = store.work / family / f"{args.path}{suffix}"
+                        if path.exists():
+                            archive = carrier_archive / family / f"{args.path}{suffix}"
+                            archive.parent.mkdir(parents=True, exist_ok=True)
+                            path.replace(archive)
                 store.set_state(args.path, "READY", "operator inspected provider and authorized a fresh attempt")
                 return 0
             if args.limit < 0:
                 raise ValueError("--limit must be zero (all) or positive")
             with build_engine(generation_lock=NullGenerationLock(), character_provider="voxstage") as engine:
-                return CorpusRunner(store, engine, args.verification).run(limit=args.limit, match=args.match)
+                return CorpusRunner(store, engine, args.verification).run(
+                    limit=args.limit, match=args.match,
+                    continue_after_carrier_rejection=getattr(args, "continue_after_carrier_rejection", False),
+                )
         finally:
             store.close()
 
@@ -155,6 +189,10 @@ def main(argv=None) -> int:
         if name == "plan":
             command.add_argument("--overrides", type=Path)
             command.add_argument("--delivery-file", type=Path, default=DEFAULT_DELIVERY_FILE)
+            command.add_argument("--carrier-mode", choices=("spoken-short-v1",),
+                                 help="explicitly freeze the native spoken-carrier policy for eligible short cues")
+            command.add_argument("--carrier-target-verification", choices=("required", "warn"), default="required",
+                                 help="required rejects target ASR mismatch; warn allows only mismatch after exact prefix and safe-boundary checks")
             command.set_defaults(func=plan_command)
         elif name == "status":
             command.add_argument("--details", action="store_true")
@@ -174,6 +212,8 @@ def main(argv=None) -> int:
                 command.add_argument("--limit", type=int, default=0, help="maximum cues this pass; zero means all remaining")
                 command.add_argument("--match", default="*", help="repository-relative path glob, quoted")
                 command.add_argument("--verification", choices=("off", "auto", "required"), default="off", help="off is explicit: host Whisper is currently unavailable; listening still required")
+                command.add_argument("--continue-after-carrier-rejection", action="store_true",
+                                     help="continue after a fail-closed carrier transcript/boundary rejection; uncertain provider failures still stop")
             elif name == "retry":
                 command.add_argument("--path", required=True, help="one repository-relative cue path")
                 command.add_argument("--acknowledge-provider-idle", action="store_true")

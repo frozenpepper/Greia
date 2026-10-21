@@ -6,9 +6,10 @@ from pathlib import Path
 import threading
 import time
 
-from greia_voice_core.models import GenerationDisposition, VerificationMode, VoiceRequest, SpeechKind
+from greia_voice_core.models import VerificationMode, VoiceRequest, SpeechKind
 from greia_voice_core.registry import CANONICAL_MANIFEST, VoiceRegistry
 from .catalogues import derived_replacements
+from .carrier_generation import CarrierExtractionFailure, generate_candidate
 from .inventory import digest, receipt_path, safe_target
 from .store import RunStore, write_json
 
@@ -44,6 +45,35 @@ class CorpusRunner:
 
     def _validate_candidate(self, row: dict, candidate: Path) -> dict:
         receipt = json.loads(receipt_path(candidate).read_text(encoding="utf-8"))
+        if row.get("spoken_carrier"):
+            carrier = row["spoken_carrier"]
+            profile = VoiceRegistry.load(self.store.root).get(row["request"]["speaker"])
+            if (receipt.get("kind") != "greia-spoken-carrier-target" or
+                    receipt.get("mode") != carrier["mode"] or
+                    receipt.get("carrier_plan") != carrier or
+                    receipt.get("target_request") != row["request"] or
+                    receipt.get("extraction", {}).get("status") != (
+                        "EXTRACTED_PENDING_LISTENING" if carrier["target_verification"] == "required"
+                        else "EXTRACTED_PENDING_LISTENING" if not receipt.get("extraction", {}).get("target_verification_warning")
+                        else "EXTRACTED_TARGET_WARN_PENDING_LISTENING") or
+                    receipt.get("extraction", {}).get("prefix") != carrier["prefix"] or
+                    receipt.get("extraction", {}).get("target") != carrier["target"] or
+                    receipt.get("extraction", {}).get("target_verification_policy") != carrier["target_verification"] or
+                    receipt.get("provider_id") != "voxstage-voxcpm2" or
+                    receipt.get("voice_id") != profile.voice_id or
+                    receipt.get("reference_sha256") != profile.anchor_sha256 or
+                    receipt.get("human_review") != "PENDING"):
+                raise ValueError("spoken-carrier candidate evidence/master/review differs from frozen plan")
+            if digest(candidate) != receipt["output"]["sha256"] or candidate.stat().st_size != receipt["output"]["bytes"]:
+                raise ValueError("incomplete extracted candidate/receipt pair")
+            raw = self.store.work / receipt["raw_audio"]["path"]
+            raw_receipt = receipt_path(raw)
+            if digest(raw) != receipt["raw_audio"]["sha256"] or digest(raw_receipt) != receipt["raw_audio"]["receipt_sha256"]:
+                raise ValueError("spoken-carrier raw source or provider receipt changed")
+            extracted = self.store.work / receipt["extracted_pcm"]["path"]
+            if digest(extracted) != receipt["extracted_pcm"]["sha256"]:
+                raise ValueError("spoken-carrier extracted PCM source changed")
+            return receipt
         for key in ("speaker", "kind", "locale", "text", "delivery_prompt"):
             if receipt["request"].get(key) != row["request"][key]:
                 raise ValueError(f"candidate {key} differs from plan: {row['path']}")
@@ -61,7 +91,7 @@ class CorpusRunner:
             raise ValueError("incomplete candidate audio/receipt pair")
         return receipt
 
-    def run(self, *, limit: int = 0, match: str = "*") -> int:
+    def run(self, *, limit: int = 0, match: str = "*", continue_after_carrier_rejection: bool = False) -> int:
         store = self.store
         if digest(store.root / CANONICAL_MANIFEST) != store.plan["registry_manifest_sha256"]:
             raise ValueError("canonical registry changed since planning; create a new plan")
@@ -100,16 +130,31 @@ class CorpusRunner:
                     if candidate.exists() or receipt_path(candidate).exists():
                         raise ValueError("partial candidate; inspect before retry")
                     store.set_state(relative, "GENERATING", "provider call in progress; interruption requires job inspection")
-                    request = VoiceRequest(**{k: v for k, v in row["request"].items() if k != "kind"},
-                                           kind=SpeechKind(row["request"]["kind"]), output=candidate,
-                                           verification=self.verification, max_attempts=1)
-                    with Heartbeat(relative):
-                        result = self.engine.generate(request)
-                    write_json(candidate.with_name(candidate.name + ".result.json"), result.to_dict())
-                    if result.disposition is not GenerationDisposition.REVIEW_REQUIRED:
-                        raise ValueError(f"{result.disposition.value}: {result.detail}")
+                    if row.get("spoken_carrier"):
+                        profile = registry.get(row["request"]["speaker"])
+                        attempts_path = store.work / "carrier-attempt-counts.json"
+                        attempts = json.loads(attempts_path.read_text()) if attempts_path.exists() else {}
+                        count = int(attempts.get(relative, 0))
+                        if count >= 3:
+                            raise ValueError("spoken-carrier fresh-generation limit of 3 reached for this cue")
+                        attempts[relative] = count + 1
+                        write_json(attempts_path, attempts)
+                        with Heartbeat(relative):
+                            generate_candidate(self.engine, store, row, profile, self.verification.value)
+                    else:
+                        request = VoiceRequest(**{k: v for k, v in row["request"].items() if k != "kind"},
+                                               kind=SpeechKind(row["request"]["kind"]), output=candidate,
+                                               verification=self.verification, max_attempts=1)
+                        with Heartbeat(relative):
+                            result = self.engine.generate(request)
+                        write_json(candidate.with_name(candidate.name + ".result.json"), result.to_dict())
+                        if result.disposition.value != "REVIEW_REQUIRED":
+                            raise ValueError(f"{result.disposition.value}: {result.detail}")
                 receipt = self._validate_candidate(row, candidate)
-                receipt["request"]["output"] = relative
+                if row.get("spoken_carrier"):
+                    receipt["output"]["path"] = relative
+                else:
+                    receipt["request"]["output"] = relative
                 receipt["output"]["path"] = relative
                 receipt["corpus_replacement"] = {"original_sha256": row["original_sha256"], "owner_authorization": "2026-10-19 corpus regeneration; listening pending"}
                 write_json(receipt_path(candidate), receipt)
@@ -124,6 +169,9 @@ class CorpusRunner:
                 # retry an uncertain synthesis automatically under another job ID.
                 store.set_state(relative, "INSTALLING" if store.state(relative) == "INSTALLING" else "FAILED", str(exc))
                 print(f"  FAILED | {relative} | {exc}", flush=True)
+                if continue_after_carrier_rejection and isinstance(exc, CarrierExtractionFailure):
+                    print("  Continuing after fail-closed carrier rejection; original and raw evidence retained.", flush=True)
+                    continue
                 # Stop the producer on provider or installation failure. A worker
                 # may still be busy after a timeout; submitting the next cue can
                 # create a growing queue and conceal the first broken boundary.

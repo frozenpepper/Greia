@@ -36,11 +36,25 @@ class CorpusReview:
             problems.append("RECEIPT_MASTER_MISMATCH")
         if receipt.get("provider_id") != "voxstage-voxcpm2":
             problems.append("RECEIPT_PROVIDER_MISMATCH")
-        if receipt.get("generation_parameters", {}).get("delivery_prompt") != row["request"]["delivery_prompt"]:
+        expected_delivery = (row.get("spoken_carrier", {}).get("composite_delivery_prompt")
+                             if row.get("spoken_carrier") else row["request"]["delivery_prompt"])
+        if receipt.get("generation_parameters", {}).get("delivery_prompt") != expected_delivery:
             problems.append("RECEIPT_PERFORMANCE_MISMATCH")
         if receipt["output"].get("sha256") != digest(path) or receipt["output"].get("bytes") != path.stat().st_size:
             problems.append("AUDIO_RECEIPT_MISMATCH")
         return receipt, problems
+
+    @staticmethod
+    def _apply_carrier_review_flags(result: dict, row: dict, receipt: dict) -> dict:
+        """Keep a target transcription warning visible through automated review."""
+        extraction = receipt.get("extraction", {})
+        if row.get("spoken_carrier") and extraction.get("target_verification_warning"):
+            flags = result.setdefault("flags", [])
+            if "CARRIER_TARGET_TRANSCRIPT_MISMATCH" not in flags:
+                flags.append("CARRIER_TARGET_TRANSCRIPT_MISMATCH")
+            if result.get("status") == "PASS":
+                result["status"] = "WARN"
+        return result
 
     def run(self, report: Path, *, limit: int = 0, match: str = "*", evidence: Path | None = None) -> int:
         if limit < 0:
@@ -114,6 +128,7 @@ class CorpusReview:
                     else:
                         with Heartbeat(f"review {relative}"):
                             result = self.reviewer.review(request, path)
+                    result = self._apply_carrier_review_flags(result, row, receipt)
                 if before != (digest(path), digest(receipt_path(path))):
                     raise ValueError("audio/receipt changed during review; run after production is idle")
                 result["human_review_unchanged"] = receipt.get("human_review", "UNKNOWN")

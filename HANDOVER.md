@@ -74,6 +74,37 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-21 — Short spoken-carrier extraction and v0.3 pilot
+
+Implemented a reusable deterministic remove-first-N-word PCM16 WAV tool and an
+explicit `spoken-short-v1` VoiceEngine path. Raw carrier audio and true provider
+receipts are retained; exact prefix recognition, bounded word timing, one
+guarded low-energy PCM run, deterministic midpoint cut, and at least 80 ms
+cumulative frames above the −42 dBFS RMS floor are required. Standalone target
+verification defaults to exact; the frozen corpus uses explicit `warn` so
+uncertain target ASR remains visible and can never become machine PASS.
+
+Frozen external plan:
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/run/plan.json`
+(642 READY / 4,273 PRESERVED; Dani 182, Momo 214, Tito 246; EN 170, IT 171,
+ES 156, FR 145). After the voiced-duration guard, its plan SHA-256 is
+`880ef780e72ae319e2de2cbedd3a1efabda24d7a3052dd0d4b01c0124a77c7c6`.
+Four-language bounded pilots exercised the prefix/gap method. The Takeboard
+pilot has 26 rows, all unreviewed, at `http://127.0.0.1:8800/`; its external
+manifest is in the pilot-v2 folder. Parent independently reviewed technical
+boundary evidence; this is not pronunciation or human acceptance.
+
+Focused carrier/policy/generation/corpus suite: 38/38 PASS. An initial gate
+attempt forced Python 3.12 and is discarded as nonstandard. The final normal
+environment `make verify` used Python 3.14 and ran 3,131 tests: 31 failures,
+241 errors, 6 skips. It is NOT GREEN; see
+`/tmp/greia-short-carrier-make-verify.log` for exact output. Failures are not
+attributed to this change without individual traces. Next: checkpoint source,
+then run the already-authorized bounded 642-cue production with at most three
+fresh attempts per cue, continuing past safe extraction rejection and recording
+unresolved cases. Automated review follows; all output remains
+listening-pending.
+
 ## 2026-10-21 — v0.3 three-character replacement and automated screen complete
 
 The selected immutable masters remain Dani

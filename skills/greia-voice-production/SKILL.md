@@ -318,6 +318,23 @@ remain unassessed. The legacy receipt-score audit does not run ASR or audio
 analysis. Generation complete, automated review and human listening are separate
 evidence states. Review exit 0 never accepts a recording.
 
+## Short spoken-carrier extraction experiment (2026-10-21)
+
+Use `tools/voice_carrier.py` through the bounded short-cue pipeline documented in
+`docs/agents/GREIA_SPOKEN_CARRIER_EXTRACTION.md`. Generate carrier plus target
+as one VoiceEngine request; preserve the raw carrier WAV and provider receipt.
+The extractor accepts mono PCM16 WAV up to 120 seconds, requires the exact raw
+carrier prefix and valid word timings, then requires one independently measured
+low-energy PCM gap before making a deterministic sample cut. The default target
+policy is `required` and checks exact target transcripts. The explicit corpus
+policy `warn` still requires exact prefix, timing, unique-gap and at least 80 ms
+of voiced signal, while preserving target transcript mismatches as a visible
+machine WARN. Whisper transcript/alignment and waveform checks do not prove
+pronunciation or replace human listening. Missing/repeated prefix, malformed
+timing, no clean pause, ambiguous boundary or insufficient voiced duration must
+reject. Generated/extracted clips remain listening-pending. Isolated
+pedagogical letters/syllables remain outside the method.
+
 ## Shared human listening tool (2026-10-21)
 
 After automated review, use shared `takeboard` (catalog/skill/README at

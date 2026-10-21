@@ -154,6 +154,18 @@ and syllables, and reports progress/recovery. Character acting defaults are in
 `tools/greia_voice_core/character_delivery.json`, with a `delivery_prompt`
 semantic override per recording. New takes remain listening-pending.
 
+For the bounded 2026-10-21 short-cue carrier extraction experiment, use
+`tools/voice_carrier.py` through the workflow in
+`docs/agents/GREIA_SPOKEN_CARRIER_EXTRACTION.md`. It consumes mono PCM16
+VoiceEngine WAVs, preserves raw provider receipts, and only extracts after an
+exact raw carrier-prefix check, valid timing, one separate low-energy-gap check
+and an extracted-signal floor of 80 ms cumulative voiced frames. Standalone CLI
+target verification defaults to exact matches; an explicitly frozen corpus
+`warn` policy keeps target-transcript mismatches visible for human review. Its
+ASR/alignment and sample-cut evidence are technical screening, not acceptance.
+The tool uses the prepared Whisper authoring venv described in §7.5 and cached
+model weights only.
+
 Canonical entry point:
 
 ```text

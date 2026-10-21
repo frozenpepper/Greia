@@ -3519,3 +3519,26 @@ for the build-profile executable-mode error; `make verify` was not rerun at that
 merged head. Focused voice tests were 72/72 PASS before production. Evidence
 and logs are under
 `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/`.
+
+### 2026-10-21 — Short spoken-carrier extraction tooling
+
+Added reusable standalone `tools/voice_carrier.py` remove-first-N-word CLI and
+an explicit `spoken-short-v1` VoiceEngine corpus path. Raw carrier audio,
+provider receipt, exact prefix/target, ASR transcripts and timestamps, boundary
+metrics, sample cut, hashes, and target-verification policy are retained.
+Extraction requires exact carrier prefix, bounded word timings, one guarded
+quiet run, and at least 80 ms cumulative extracted frames above the −42 dBFS
+RMS floor. Strict target verification is the default; explicit corpus `warn`
+preserves transcript mismatches as a visible review warning. Isolated
+letters/syllables remain preserved.
+
+Four-language pilots established repeatable PCM cuts and exposed ASR target
+mismatches; the separate Takeboard pilot remains entirely unreviewed. Frozen
+production plan is exactly 642 READY / 4,273 PRESERVED for Dani 182, Momo 214,
+Tito 246, with 170 EN / 171 IT / 156 ES / 145 FR. Production retains raw
+attempts and continues after safe extraction rejection with at most three
+fresh provider generations per cue. Focused suite passed 38/38; normal
+environment `make verify` ran 3,131 tests and failed with 31 failures, 241
+errors and 6 skips. Exact output is in `/tmp/greia-short-carrier-make-verify.log`;
+no failure is attributed without trace review. Generated clips remain
+listening-pending. This does not establish pronunciation or human acceptance.

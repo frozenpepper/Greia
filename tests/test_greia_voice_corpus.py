@@ -23,6 +23,7 @@ from greia_voice_corpus.inventory import CorpusInventory, digest, preserved_reas
 from greia_voice_corpus.runner import CorpusRunner
 from greia_voice_corpus.store import RunStore, write_json, atomic_bytes
 from greia_voice_corpus.catalogues import derived_replacements
+from greia_voice_corpus.review import CorpusReview
 
 
 class FakeEngine:
@@ -254,6 +255,19 @@ class CorpusTests(unittest.TestCase):
         row = next(r for r in plan["rows"] if r["path"] == "assets/audio/system/unknown.wav")
         self.assertEqual(row["state"], "BLOCKED_METADATA")
         self.assertIn("text", row["reason"])
+
+    def test_carrier_target_asr_warning_cannot_become_automated_pass(self):
+        row = {"path": self.relative, "request": self.row["request"],
+               "spoken_carrier": {"mode": "spoken-short-v1", "target_verification": "warn"}}
+        receipt = {"extraction": {"target_verification_warning": True,
+                                   "raw_target_exact_match": False,
+                                   "extracted_target_exact_match": False}}
+        result = CorpusReview._apply_carrier_review_flags(
+            {"status": "PASS", "flags": [], "asr": {"status": "PASS", "score": 0.99}}, row, receipt
+        )
+        self.assertEqual(result["status"], "WARN")
+        self.assertIn("CARRIER_TARGET_TRANSCRIPT_MISMATCH", result["flags"])
+        self.assertEqual(result["asr"]["score"], 0.99)
 
 
 if __name__ == "__main__":
