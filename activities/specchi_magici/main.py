@@ -58,7 +58,7 @@ def main() -> int:
     rng = random.Random()
     app = MirrorActivity(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         typography=GreiaTypography(),
         resources=resources,
         audio=MirrorAudio(locale=locale, resources=resources, rng=rng),

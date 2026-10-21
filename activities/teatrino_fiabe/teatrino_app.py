@@ -234,7 +234,7 @@ class TeatrinoApp:
             if screen is None:
                 screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
         self.screen = screen
-        self.canvas = PygameReferenceCanvas(screen)
+        self.canvas = PygameReferenceCanvas(screen, hires=True)
         self.clock = clock
         self.storage = storage
         self._emit = emit_event if emit_event is not None else emit_activity_event
@@ -480,7 +480,7 @@ class TeatrinoApp:
 
     def _on_resize(self) -> None:
         self.screen = pygame.display.get_surface() or self.screen
-        self.canvas = PygameReferenceCanvas(self.screen)
+        self.canvas = PygameReferenceCanvas(self.screen, hires=True)
         self._input = self._make_input()
         self.layout = TheatreLayout.build(ControlLayout.for_canvas(self.canvas, self.screen.get_size()))
         self.renderer.relayout(self.layout)

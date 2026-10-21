@@ -56,7 +56,7 @@ def build_app(screen: pygame.Surface, *, locale: str | None = None, rng: random.
     draft, picture = restored if restored is not None else (None, None)
     return PostcardActivity(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         typography=GreiaTypography(),
         resources=resources,
         storage=storage,

@@ -383,7 +383,7 @@ class StoryApp:
 
     def _resize(self) -> None:
         self.screen = pygame.display.get_surface() or self.screen
-        self.canvas = PygameReferenceCanvas(self.screen)
+        self.canvas = PygameReferenceCanvas(self.screen, hires=True)
         self._input = PygameControlInput(to_logical=self.canvas.pointer, is_safe=lambda pos: _safe_point(self.screen, pos))
         self._layout_source = ControlLayout.for_canvas(self.canvas, self.screen.get_size())
         self._reshow()

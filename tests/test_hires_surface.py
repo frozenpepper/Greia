@@ -202,6 +202,27 @@ class HiresSiblingLoadTests(unittest.TestCase):
             pygame.image.save(hires_surface.RAW.Surface((20, 12)), os.path.join(raw_dir, "thing@2x.png"))
             self.assertEqual(pygame.image.load(base).get_at((5, 3))[:3], (255, 0, 0))
 
+    def test_copy_and_convert_keep_keyed_pixels_and_the_colour_key(self) -> None:
+        hires_surface.activate(1.25)
+        keyed = pygame.Surface((20, 10))
+        keyed.fill((255, 0, 255))
+        keyed.set_colorkey((255, 0, 255))
+        for derived in (keyed.copy(), keyed.convert()):
+            self.assertEqual(tuple(derived.get_colorkey())[:3], (255, 0, 255))
+            target = pygame.Surface((20, 10))
+            target.fill((1, 2, 3))
+            target.blit(derived, (0, 0))
+            self.assertEqual(raw_rgb(target, (5, 5)), (1, 2, 3))
+
+
+    def test_masks_are_built_in_logical_units(self) -> None:
+        hires_surface.activate(2.0)
+        sprite = pygame.Surface((40, 30), pygame.SRCALPHA)
+        pygame.draw.rect(sprite, (255, 0, 0, 255), (10, 5, 20, 10))
+        mask = pygame.mask.from_surface(sprite)
+        self.assertEqual(mask.get_size(), (40, 30))
+        self.assertEqual(mask.get_bounding_rects()[0].size, (20, 10))
+
 
 if __name__ == "__main__":
     unittest.main()

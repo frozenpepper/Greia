@@ -79,7 +79,7 @@ def main() -> int:
     storage = _storage()
     app = PasticceriaApp(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         typography=GreiaTypography(),
         resources=resources,
         audio=BakeryAudio(locale=locale, rng=rng),

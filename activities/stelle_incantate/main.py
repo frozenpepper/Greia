@@ -44,7 +44,7 @@ def main() -> int:
 
     resources = _resources()
     typography = GreiaTypography()
-    canvas = PygameReferenceCanvas(screen)
+    canvas = PygameReferenceCanvas(screen, hires=True)
     progress = GreiaSkyProgress()
     night = Night(RoundFactory(random.Random()), progress.load())
     app = SkyActivity(

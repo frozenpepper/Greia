@@ -78,7 +78,7 @@ def build_app(screen: pygame.Surface, *, locale: str | None = None, rng: random.
     rng = rng if rng is not None else random.Random()
     return StoryApp(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         typography=GreiaTypography(),
         resources=resources,
         audio=StoryAudio(locale=language, host=HOST, rng=rng),

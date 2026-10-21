@@ -470,7 +470,7 @@ class QuattroApp:
 
     def _resize(self) -> None:
         self.screen = pygame.display.get_surface() or self.screen
-        self.canvas = PygameReferenceCanvas(self.screen)
+        self.canvas = PygameReferenceCanvas(self.screen, hires=True)
         self._input = PygameControlInput(
             to_logical=self.canvas.pointer, is_safe=lambda pos: _is_safe_pointer(self.screen, pos)
         )
@@ -895,7 +895,7 @@ def build_app(
     """Construct the Activity with injected canvas, kit, art, audio and services."""
 
     root = package_root or Path(__file__).resolve().parent
-    canvas = PygameReferenceCanvas(screen)
+    canvas = PygameReferenceCanvas(screen, hires=True)
     typography = GreiaTypography()
     # UI and spoken character voices use the SAME effective Activity language.
     resources = activity_resources(root, requested_locale=locale)

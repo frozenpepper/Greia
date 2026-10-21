@@ -180,7 +180,7 @@ class SubmarineApp:
             pygame.init()
             screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.NOFRAME)
         self.screen = screen
-        self.canvas = PygameReferenceCanvas(screen)
+        self.canvas = PygameReferenceCanvas(screen, hires=True)
         # Opaque (no alpha channel) so colour-keyed layers blit solidly, in the
         # display's own format: a 24-bit canvas forced SDL's slowest blit and
         # conversion paths (~65 ms a frame on the Atom reference floor).
@@ -511,7 +511,7 @@ class SubmarineApp:
             return
         self.screen = new_screen
         surface = self.canvas.surface
-        self.canvas = PygameReferenceCanvas(new_screen)
+        self.canvas = PygameReferenceCanvas(new_screen, hires=True)
         self.canvas.surface = surface
         self._input = self._make_input()
         self.controls.relayout(ControlLayout.for_canvas(self.canvas, new_screen.get_size()))

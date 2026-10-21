@@ -23,7 +23,8 @@ the Activity's own process, like the display-request policy in
 :mod:`greia_platform.activity_display`; it grants nothing.
 
 Known limits (documented, not hidden): ``subsurface`` of a scaled surface is a
-copy rather than a pixel-sharing view; masks/surfarray see physical pixels;
+copy rather than a pixel-sharing view; ``surfarray`` sees physical pixels
+(``pygame.mask.from_surface`` is mapped back to logical units);
 code that captured ``pygame.Surface``/``pygame.draw`` functions before
 activation keeps creating logical surfaces.
 """
@@ -73,6 +74,7 @@ RAW = SimpleNamespace(
     image_fromstring=getattr(pygame.image, "fromstring", None),
     image_frombytes=getattr(pygame.image, "frombytes", None),
     Font=pygame.font.Font,
+    mask_from_surface=pygame.mask.from_surface,
 )
 
 _state = SimpleNamespace(active=False, scale=1.0)
@@ -338,7 +340,7 @@ def _snap_opaque_alpha(surface: pygame.Surface) -> None:
     full opacity without touching their colour.
     """
 
-    mask = pygame.mask.from_surface(surface, 245)
+    mask = RAW.mask_from_surface(surface, 245)
     solid = mask.to_surface(setcolor=(0, 0, 0, 255), unsetcolor=(0, 0, 0, 0))
     RAW.blit(surface, solid, (0, 0), None, pygame.BLEND_RGBA_MAX)
 
@@ -346,11 +348,25 @@ def _snap_opaque_alpha(surface: pygame.Surface) -> None:
 def _copy_pixels(target: pygame.Surface, source: pygame.Surface) -> None:
     """Exact pixel copy, alpha included (a normal blit would blend it)."""
 
-    if target.get_flags() & pygame.SRCALPHA:
-        RAW.fill(target, (0, 0, 0, 0))
-        RAW.blit(target, source, (0, 0), None, pygame.BLEND_RGBA_MAX)
-    else:
-        RAW.blit(target, source, (0, 0))
+    # A colour key or per-surface alpha on the source would make the blit skip
+    # or fade the very pixels being copied (a keyed hole would come out black).
+    key = source.get_colorkey()
+    alpha = source.get_alpha()
+    if key is not None:
+        source.set_colorkey(None)
+    if alpha is not None and alpha != 255:
+        source.set_alpha(255)
+    try:
+        if target.get_flags() & pygame.SRCALPHA:
+            RAW.fill(target, (0, 0, 0, 0))
+            RAW.blit(target, source, (0, 0), None, pygame.BLEND_RGBA_MAX)
+        else:
+            RAW.blit(target, source, (0, 0))
+    finally:
+        if key is not None:
+            source.set_colorkey(key)
+        if alpha is not None and alpha != 255:
+            source.set_alpha(alpha)
     _copy_format_state(target, source)
 
 
@@ -568,6 +584,23 @@ class ScaledFont(RAW.Font):
         return [None if m is None else tuple(round(v / s) for v in m) for m in super().metrics(text)]
 
 
+def _mask_from_surface(surface: Any, threshold: int = 127) -> pygame.mask.Mask:
+    """``pygame.mask.from_surface`` in logical units for a scaled surface.
+
+    Activities use masks for opaque bounds and hit tests in the coordinates
+    they lay out in; a physical-resolution mask would silently change every
+    derived size.
+    """
+
+    scale = scale_of(surface)
+    if scale == 1.0:
+        return RAW.mask_from_surface(surface, threshold)
+    source = surface if surface.get_bitsize() in (24, 32) else RAW.convert_alpha(surface)
+    logical = surface.get_size()
+    reduced = RAW.transform.smoothscale(source, logical)
+    return RAW.mask_from_surface(reduced, threshold)
+
+
 def activate(scale: float) -> None:
     """Install the layer for this process (idempotent; updates the scale)."""
 
@@ -601,6 +634,7 @@ def activate(scale: float) -> None:
     if RAW.image_frombytes is not None:
         pygame.image.frombytes = _image_from(RAW.image_frombytes)
     pygame.font.Font = ScaledFont  # type: ignore[misc]
+    pygame.mask.from_surface = _mask_from_surface
 
 
 def deactivate() -> None:
@@ -622,6 +656,7 @@ def deactivate() -> None:
     if RAW.image_frombytes is not None:
         pygame.image.frombytes = RAW.image_frombytes
     pygame.font.Font = RAW.Font  # type: ignore[misc]
+    pygame.mask.from_surface = RAW.mask_from_surface
 
 
 __all__ = [
