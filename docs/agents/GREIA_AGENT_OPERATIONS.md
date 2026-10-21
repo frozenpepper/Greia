@@ -436,6 +436,12 @@ a text-free transition or available Wi-Fi/SSH on a particular image.
 - Release-candidate build (quiet boot, SSH on, optional operator public key):
   profile `legacy-x86-i686-rc`, runbook `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md`
   §13 (pre-build gates, USB identification, required PASS lines).
+- Installer media since 2026-10-21 also needs `grub-efi-ia32-bin` and
+  `grub-efi-amd64-bin` on the build host; the builder fails fast if
+  `/usr/lib/grub/i386-efi` or `x86_64-efi` is missing. The image is now
+  p1 = FAT32 ESP, p2 = ext4 root: the SD finalizer, live-USB writer and both
+  verifiers resolve the ext4 root by type through
+  `build/lib/installer-image-root.sh`, never by partition number.
 - Detach a long build+flash properly: `setsid nohup sudo -n bash
   tools/build-and-flash-development-usb.sh <profile> /dev/sdX > <log> 2>&1
   < /dev/null &`. A plain `nohup ... &` launched from an agent tool call is

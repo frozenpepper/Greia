@@ -180,7 +180,6 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
-
 ### 2026-10-22 — Voice documentation consistency audit
 
 Reworked `tools/greia_voice_core/README.md` as the practical usage reference;
@@ -201,6 +200,17 @@ and JSONL examples passed the real request parser. No synthesis or tests were
 launched by this documentation audit; the existing production process continues.
 Evidence: `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-voice-documentation-audit/report.json`.
 Review record: `docs/reviews/2026-10-22_VOICE_DOCUMENTATION_CONSISTENCY.md`.
+### 2026-10-22 — RC rebuilt/flashed on the 1,500 MiB ceiling; installer root resolution fixed
+
+**Evidence class: SOURCE + BUILD/MEDIA READ-BACK. No QEMU boot and no physical install in this turn.**
+
+- **Owner decision:** the single-root installed-core ceiling is now **1,500 MiB** (was 1,300 MiB), official for future builds. Rationale: the shipped four-language `@2x` art (~34 MiB) plus the new UEFI/BIOS boot payload (`grub-efi-ia32-bin`, `grub-efi-amd64-bin`, `efibootmgr`; ~34 MiB) put the RC at 1,323 MiB. 1,500 keeps one image with all art and both boot paths while remaining comfortably inside the reference Acer's 7 GB storage target. The ≤800 MiB preferred core and the 1 GiB A/B slot limit (A/B profile stays at 1,000 MiB) are unchanged; >1,500 MiB still needs architecture review. Landed in `398a6ca4a` (all single-root profiles, `AGENTS.md` contract 6, RC runbook, profiles README, gate comment, tests, hardware reviews).
+- **Build blockers fixed while producing the image:** (1) the build host lacked `grub-efi-ia32-bin`, so ESP assembly failed after the full composition; installed it and added a pre-build check for both GRUB EFI module dirs plus the package names in runbook §13.2 (`696122e6f`). (2) The new MBR layout is p1 = FAT32 ESP, p2 = ext4 root, but the SD finalizer, live-USB writer and both verifiers still assumed p1; `c6744c78a` adds `build/lib/installer-image-root.sh` (first ext4 partition) and uses it everywhere, with a source contract test.
+- **Pulled/flashed:** `main` `97c2392a7` → `c6744c78a`; built `legacy-x86-i686-rc` through the documented front door inside `sudo -n unshare --mount --propagation private`, operator key `SHA256:0oRmaFqZpIYFsGj0N2++I6oma2kHtqdOQMQjXITYVXU`. Flashed the authorized 8 GB LaCie `/dev/sdc` (`iamaKey`, serial `eca3505216d7d3`, 7.5 GiB, `TRAN=usb RM=1 TYPE=disk`), unmounted before writing. Log `out/rc-build13-c6744c78.log`.
+- **Artifact:** image SHA-256 `09c1c9ad4a8abe861fc96027f9165beb99bba47858e535b8f2efde15784a4acf`; live media id `ab395c7f-e2dd-45cd-8d0d-ed4be6e39b2a`; payload accounted **1,323 MiB** (<1,500); target payload 555,003,904 bytes, SHA-256 `babfe052e2cf9e3e8df3aef1c7b8ee96b71f8f94abb0518c1af338869aae2aba`; `installer_image_mib=1510`; `boot_console_policy=quiet`; `live_security_support_state=no-alerts`.
+- **Gates:** `Developer installer artifact verification: PASS`, `Greia live USB read-only verification: PASS`, `usb_readback_verification=PASS`, `source_artifact_verification=PASS`, `usb_flash_readback_verification=PASS`, `loop_hygiene_verification=PASS`; no Greia loop devices remain. Focused profile/verifier/root-partition tests PASS. `make verify` before the change still showed only the three inherited failures (ARM64 profile guard, `morbidi_mostriciattoli` 0.265 s budget flake, stale MBR message); `make validate` still stops at the inherited ARM64 guard.
+- **Evidence scope / limitations:** BIOS Syslinux media read-back only. The EFI boot path remains **UNPROVEN** (no Mac/UEFI machine booted); the installed-target EFI layout is still LAB. No QEMU boot of this media and no physical Acer install were run.
+- **Next exact step:** clean-install the reference Aspire from this LaCie through the graphical installer, confirm `install-record.json` lists `firmware-iwlwifi` and `iwd` connects without manual packages, then run the premortem §5 F1–F19 checklist. Keep the EFI path labelled UNPROVEN until a real Mac/UEFI machine boots it.
 
 ### 2026-10-22 — Base selected; configurable accent-insensitive ASR implemented
 
