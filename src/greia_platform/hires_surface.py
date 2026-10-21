@@ -212,6 +212,8 @@ class ScaledSurface(pygame.Surface, metaclass=_SurfaceMeta):
             _copy_pixels(new, source)
         else:
             RAW.transform.smoothscale(_matching(source, new), RAW.get_size(new), new)
+            if new.get_flags() & pygame.SRCALPHA:
+                _snap_opaque_alpha(new)
         _copy_format_state(new, raw)
         return new
 
@@ -228,6 +230,8 @@ class ScaledSurface(pygame.Surface, metaclass=_SurfaceMeta):
             _copy_pixels(new, source)
         else:
             RAW.transform.smoothscale(_matching(source, new), RAW.get_size(new), new)
+            if new.get_flags() & pygame.SRCALPHA:
+                _snap_opaque_alpha(new)
         _copy_format_state(new, raw)
         return new
 
@@ -324,6 +328,19 @@ def _matching(source: pygame.Surface, target: pygame.Surface) -> pygame.Surface:
     if source.get_bitsize() == target.get_bitsize() and source.get_masks() == target.get_masks():
         return source
     return RAW.convert(source, target)
+
+
+def _snap_opaque_alpha(surface: pygame.Surface) -> None:
+    """Undo smoothscale's alpha rounding (255 becomes 250-254) on solid areas.
+
+    Left alone, a solid panel lets the layer behind it show through by a few
+    levels, visible as faint ghost shapes.  Nearly-opaque pixels are restored to
+    full opacity without touching their colour.
+    """
+
+    mask = pygame.mask.from_surface(surface, 245)
+    solid = mask.to_surface(setcolor=(0, 0, 0, 255), unsetcolor=(0, 0, 0, 0))
+    RAW.blit(surface, solid, (0, 0), None, pygame.BLEND_RGBA_MAX)
 
 
 def _copy_pixels(target: pygame.Surface, source: pygame.Surface) -> None:

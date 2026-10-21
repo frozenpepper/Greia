@@ -47,7 +47,7 @@ def main() -> int:
         renderer = OrcaRenderer(GreiaTypography(), resources)
         app = OrcaBayActivity(
             screen=screen,
-            canvas=PygameReferenceCanvas(screen),
+            canvas=PygameReferenceCanvas(screen, hires=True),
             pod=pod,
             renderer=renderer,
             audio=PygameOrcaAudio(resources=resources),

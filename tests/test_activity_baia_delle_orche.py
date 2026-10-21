@@ -249,7 +249,7 @@ class BaiaDelleOrcheArtTests(unittest.TestCase):
         self.assertEqual(widths, sorted(widths))
 
     def test_private_runtime_art_has_a_source_and_old_sourceless_pngs_are_gone(self) -> None:
-        runtime = sorted(path.stem for path in ASSETS_DIR.glob("*.png"))
+        runtime = sorted(path.stem for path in ASSETS_DIR.glob("*.png") if not path.stem.endswith("@2x"))
         for stem in runtime:
             self.assertTrue((ACTIVITY_DIR / "assets" / "source" / f"{stem}.svg").is_file(), stem)
         for art in FOOD_ART.values():

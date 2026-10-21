@@ -38,7 +38,7 @@ def main() -> int:
 
     resources = _resources()
     typography = GreiaTypography()
-    canvas = PygameReferenceCanvas(screen)
+    canvas = PygameReferenceCanvas(screen, hires=True)
     progress = GreiaTenHouseProgress()
     saved = progress.load()
     rng = random.Random()

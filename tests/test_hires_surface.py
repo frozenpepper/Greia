@@ -180,6 +180,19 @@ class HiresSiblingLoadTests(unittest.TestCase):
             self.assertGreater(colour.b, 200)
             self.assertLess(colour.r, 50)
 
+    def test_downscaled_rendition_keeps_solid_pixels_fully_opaque(self) -> None:
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as raw_dir:
+            base = os.path.join(raw_dir, "panel.png")
+            small = hires_surface.RAW.Surface((50, 50), pygame.SRCALPHA); small.fill((255, 251, 235, 255))
+            big = hires_surface.RAW.Surface((100, 100), pygame.SRCALPHA); big.fill((255, 251, 235, 255))
+            pygame.image.save(small, base)
+            pygame.image.save(big, os.path.join(raw_dir, "panel@2x.png"))
+            hires_surface.activate(1.25)
+            loaded = pygame.image.load(base)
+            for point in ((5, 5), (25, 25), (44, 30)):
+                self.assertEqual(loaded.get_at(point).a, 255)
+
     def test_loader_uses_the_1x_file_below_the_threshold(self) -> None:
         import tempfile, os
         with tempfile.TemporaryDirectory() as raw_dir:

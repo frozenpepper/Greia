@@ -43,7 +43,7 @@ def main() -> int:
 
     locale, resources = _locale_and_resources()
     typography = GreiaTypography()
-    canvas = PygameReferenceCanvas(screen)
+    canvas = PygameReferenceCanvas(screen, hires=True)
     art = BoscoArt(REFERENCE_WIDTH, REFERENCE_HEIGHT)
     renderer = BoscoRenderer(art)
     progress_port = GreiaBoscoProgress()

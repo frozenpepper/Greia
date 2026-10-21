@@ -563,7 +563,7 @@ class OrcaBayActivity:
         if new_screen is None:
             return
         self.screen = new_screen
-        self.canvas = PygameReferenceCanvas(new_screen)
+        self.canvas = PygameReferenceCanvas(new_screen, hires=True)
         self._input = self._make_input()
         self._controls.relayout(ControlLayout.for_canvas(self.canvas, new_screen.get_size()))
 

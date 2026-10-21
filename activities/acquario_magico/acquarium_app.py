@@ -313,7 +313,7 @@ class AquariumApp:
             return
         self.screen = new_screen
         self.metrics = ChildUiMetrics.for_size(*new_screen.get_size())
-        self.canvas = PygameReferenceCanvas(new_screen)
+        self.canvas = PygameReferenceCanvas(new_screen, hires=True)
         if self._input is not None:
             self._input = PygameControlInput(
                 to_logical=self.canvas.pointer,
@@ -790,7 +790,7 @@ def build_app(
         audio = AquariumAudio(locale=resources.context.selected.value)
     return AquariumApp(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         metrics=ChildUiMetrics.for_size(*screen.get_size()),
         typography=GreiaTypography(),
         resources=resources,

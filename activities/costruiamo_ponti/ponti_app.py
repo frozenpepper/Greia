@@ -488,7 +488,7 @@ class BridgeActivity:
 
     def _relayout(self) -> None:
         self.screen = pygame.display.get_surface() or self.screen
-        self.canvas = PygameReferenceCanvas(self.screen)
+        self.canvas = PygameReferenceCanvas(self.screen, hires=True)
         self._input = self._make_input()
         self._cancel_pointer()
         self.controls.relayout(ControlLayout.for_canvas(self.canvas, self.screen.get_size()))

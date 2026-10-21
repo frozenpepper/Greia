@@ -52,7 +52,7 @@ def build_app(screen: pygame.Surface, *, locale: str | None = None, rng: random.
     vocab = tuple(sorted({species.vocab for species in SPECIES.values() if species.vocab}))
     return ClinicActivity(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         day=ClinicDay(factory.build(saved.level), level=saved.level),
         factory=factory,
         typography=GreiaTypography(),

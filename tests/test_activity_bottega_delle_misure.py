@@ -127,7 +127,7 @@ class ManifestTests(unittest.TestCase):
         for name in names:
             self.assertTrue((ACTIVITY_ROOT / "assets" / "source" / f"{name}.svg").is_file(), name)
             self.assertTrue((ACTIVITY_ROOT / "assets" / "runtime" / f"{name}.png").is_file(), name)
-        leftovers = {path.stem for path in (ACTIVITY_ROOT / "assets" / "runtime").glob("*.png")} - set(names)
+        leftovers = {path.stem for path in (ACTIVITY_ROOT / "assets" / "runtime").glob("*.png") if not path.stem.endswith("@2x")} - set(names)
         self.assertEqual(leftovers, set())  # no private Dani redraws
         lint = ("<image", "data:", "<text", "<filter", "<mask", "<style", "<script", "#000000")
         for svg in (ACTIVITY_ROOT / "assets" / "source").glob("*.svg"):

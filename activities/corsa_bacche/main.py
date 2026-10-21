@@ -57,7 +57,7 @@ def main() -> int:
     visit = Visit(progress.load(), random.Random())
     app = CorsaActivity(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         visit=visit,
         typography=GreiaTypography(),
         resources=resources,

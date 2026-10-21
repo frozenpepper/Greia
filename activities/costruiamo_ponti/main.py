@@ -47,7 +47,7 @@ def main() -> int:
     progress = GreiaPontiProgress()
     app = BridgeActivity(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         visit=Visit(progress.load()),
         typography=GreiaTypography(),
         resources=resources,

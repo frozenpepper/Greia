@@ -63,7 +63,7 @@ def main() -> int:
     rng = random.Random()
     app = CuccioloApp(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         typography=GreiaTypography(),
         resources=resources,
         audio=CuccioloAudio(locale=locale, rng=rng),

@@ -44,7 +44,7 @@ def main() -> int:
 
     resources = _resources()
     typography = GreiaTypography()
-    canvas = PygameReferenceCanvas(screen)
+    canvas = PygameReferenceCanvas(screen, hires=True)
     rng = random.Random()
     progress = GreiaMeasureProgress()
     delivery = Delivery(TaskFactory(rng), progress.load())

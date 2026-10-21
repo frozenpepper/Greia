@@ -70,7 +70,7 @@ class EncyclopediaApp:
         registry: PageRegistry,
     ) -> None:
         self.screen = screen
-        self.canvas = PygameReferenceCanvas(screen)
+        self.canvas = PygameReferenceCanvas(screen, hires=True)
         self._running = True
         self._ready_published = False
         self._translator = PygameInputTranslator(get_input_profile())
@@ -164,7 +164,7 @@ class EncyclopediaApp:
             return
         if event.type == pygame.VIDEORESIZE:
             self.screen = pygame.display.get_surface() or self.screen
-            self.canvas = PygameReferenceCanvas(self.screen)
+            self.canvas = PygameReferenceCanvas(self.screen, hires=True)
             return
 
         if event.type == pygame.MOUSEMOTION:

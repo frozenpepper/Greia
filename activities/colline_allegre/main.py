@@ -60,7 +60,7 @@ def main() -> int:
     rng = random.Random()
     app = CollineActivity(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         typography=GreiaTypography(),
         resources=resources,
         audio=CollineAudio(locale=locale, rng=rng),
