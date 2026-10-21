@@ -1,26 +1,35 @@
 #!/bin/sh
-# Greia target resume hook for the Intel PRO/Wireless 3945 (iwl3945).
+# Greia target resume hook for Wi-Fi drivers known to fail system resume.
 #
-# The reference Aspire laptop can fail the kernel's wiphy_resume callback
-# with -110 after system sleep:
+# The reference Aspire laptop (Intel PRO/Wireless 3945, iwl3945) can fail the
+# kernel's wiphy_resume callback with -110 after system sleep:
 #
 #   iwl3945 0000:06:00.0: Unable to change power state from D3hot to D0,
 #   device inaccessible
 #   iwl3945 0000:06:00.0: Wait for START_ALIVE timeout after 2000ms.
 #   ieee80211 phy1: PM: failed to resume async: error -110
 #
-# The PCI function can be recovered by re-probing the driver, which also
-# recreates wlan0. iwd then re-associates with the saved profile and
-# systemd-networkd renews DHCP. The first resume after this failure left
-# wlan0 down and iwctl reported "No station on device: 'wlan0'"; the module
-# reload below restored it without a reboot.
+# Re-probing the driver recreates wlan0; iwd then re-associates with the saved
+# profile and systemd-networkd renews DHCP. A resume that worked must NOT be
+# disturbed, so the hook waits briefly for the interface and its iwd station
+# and reloads a driver only when the interface is missing or its station is
+# gone afterwards.
 #
-# Scope: this is a target-side hardware workaround, not an Activity or
-# network-policy abstraction. It is a no-op on machines without iwl3945.
+# Scope: target-side hardware workaround, not network policy. It is a no-op on
+# machines without one of the listed drivers loaded.
 set -u
 
+# Drivers known to fail Wi-Fi resume (module names, space separated).
+WIFI_RESUME_DRIVERS="iwl3945 iwl4965 b43 b43legacy brcmsmac ath5k"
+
+# Test seams (defaults are the real system paths).
+SYS_NET="${GREIA_SYS_NET:-/sys/class/net}"
+PROC_MODULES="${GREIA_PROC_MODULES:-/proc/modules}"
+MODPROBE="${GREIA_MODPROBE:-/sbin/modprobe}"
+IWCTL="${GREIA_IWCTL:-/usr/bin/iwctl}"
+WAIT_SECONDS="${GREIA_WIFI_RESUME_WAIT:-8}"
+
 [ "${1:-}" = "post" ] || exit 0
-grep -q '^iwl3945 ' /proc/modules 2>/dev/null || exit 0
 
 run_bounded() {
     if [ -x /usr/bin/timeout ]; then
@@ -30,11 +39,51 @@ run_bounded() {
     fi
 }
 
-# Reloading is what repairs the failed D3hot -> D0 transition. The post-resume
-# callback runs after the kernel has resumed all devices, so re-probing here
-# is safe; a failure leaves the existing interface state untouched.
-run_bounded /sbin/modprobe -r iwl3945 2>/dev/null || true
-run_bounded /sbin/modprobe iwl3945 2>/dev/null || true
-/usr/bin/systemctl try-restart iwd.service 2>/dev/null || true
+driver_loaded() {
+    grep -q "^$1 " "$PROC_MODULES" 2>/dev/null
+}
+
+# Succeeds when a wireless interface bound to driver $1 exists and iwd sees
+# a station for it (or the kernel reports operstate up/dormant).
+driver_interface_ready() {
+    for iface_path in "$SYS_NET"/*; do
+        [ -e "$iface_path/wireless" ] || continue
+        [ -e "$iface_path/device/driver" ] || continue
+        bound=$(basename "$(readlink "$iface_path/device/driver" 2>/dev/null)")
+        [ "$bound" = "$1" ] || continue
+        name=$(basename "$iface_path")
+        if run_bounded "$IWCTL" station list 2>/dev/null | grep -q "$name"; then
+            return 0
+        fi
+        state=$(cat "$iface_path/operstate" 2>/dev/null || true)
+        case "$state" in
+            up|dormant) return 0 ;;
+        esac
+    done
+    return 1
+}
+
+reloaded=0
+for driver in $WIFI_RESUME_DRIVERS; do
+    driver_loaded "$driver" || continue
+    waited=0
+    while ! driver_interface_ready "$driver"; do
+        if [ "$waited" -ge "$WAIT_SECONDS" ]; then
+            # Reloading repairs the failed D3hot -> D0 transition. The post
+            # callback runs after the kernel resumed all devices, so
+            # re-probing is safe; a failure leaves interface state untouched.
+            run_bounded "$MODPROBE" -r "$driver" 2>/dev/null || true
+            run_bounded "$MODPROBE" "$driver" 2>/dev/null || true
+            reloaded=1
+            break
+        fi
+        sleep 1
+        waited=$((waited + 1))
+    done
+done
+
+if [ "$reloaded" -eq 1 ]; then
+    /usr/bin/systemctl try-restart iwd.service 2>/dev/null || true
+fi
 
 exit 0

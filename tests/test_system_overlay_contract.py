@@ -21,7 +21,7 @@ class SystemOverlayContractTests(unittest.TestCase):
         self.assertIn("d /var/lib/greia-profiles 2770 greiakid pipprofiles -", config)
         self.assertIn("d /run/greia-os 0770 greiakid pipprofiles -", config)
 
-    def test_iwl3945_resume_hook_is_installed_executable_and_bounded(self) -> None:
+    def test_wifi_resume_hook_is_installed_executable_and_bounded(self) -> None:
         hook = (
             PROJECT_ROOT
             / "build/overlay/usr/lib/systemd/system-sleep/greia-wifi-resume"
@@ -29,13 +29,64 @@ class SystemOverlayContractTests(unittest.TestCase):
         self.assertTrue(hook.is_file())
         self.assertTrue(os.access(hook, os.X_OK))
         text = hook.read_text()
+        self.assertTrue(text.startswith("#!/bin/sh"))
         self.assertIn('[ "${1:-}" = "post" ]', text)
-        self.assertIn("grep -q '^iwl3945 ' /proc/modules", text)
-        self.assertIn("/sbin/modprobe -r iwl3945", text)
-        self.assertIn("/sbin/modprobe iwl3945", text)
+        self.assertIn(
+            'WIFI_RESUME_DRIVERS="iwl3945 iwl4965 b43 b43legacy brcmsmac ath5k"',
+            text,
+        )
+        self.assertIn("/sys/class/net", text)
+        self.assertIn("station list", text)
+        self.assertIn('-r "$driver"', text)
         self.assertIn("systemctl try-restart iwd.service", text)
         self.assertIn("/usr/bin/timeout 20", text)
         self.assertIn("exit 0", text)
+
+    def _run_wifi_hook(self, *, interface: bool, station: bool) -> list[str]:
+        import subprocess
+        import tempfile
+
+        hook = (
+            PROJECT_ROOT
+            / "build/overlay/usr/lib/systemd/system-sleep/greia-wifi-resume"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "modules").write_text("iwl3945 100 0 - Live 0x0\n")
+            net = root / "net"
+            net.mkdir()
+            if interface:
+                wlan = net / "wlan0"
+                (wlan / "wireless").mkdir(parents=True)
+                (wlan / "device").mkdir()
+                (root / "drivers" / "iwl3945").mkdir(parents=True)
+                (wlan / "device" / "driver").symlink_to(root / "drivers" / "iwl3945")
+                (wlan / "operstate").write_text("down\n")
+            log = root / "modprobe.log"
+            modprobe = root / "modprobe"
+            modprobe.write_text(f'#!/bin/sh\necho "$@" >> {log}\n')
+            iwctl = root / "iwctl"
+            iwctl.write_text("#!/bin/sh\n" + ("echo wlan0\n" if station else ""))
+            for tool in (modprobe, iwctl):
+                tool.chmod(0o755)
+            env = {
+                "PATH": os.environ.get("PATH", ""),
+                "GREIA_SYS_NET": str(net),
+                "GREIA_PROC_MODULES": str(root / "modules"),
+                "GREIA_MODPROBE": str(modprobe),
+                "GREIA_IWCTL": str(iwctl),
+                "GREIA_WIFI_RESUME_WAIT": "1",
+            }
+            subprocess.run(["/bin/sh", str(hook), "post"], env=env, check=True)
+            return log.read_text().splitlines() if log.exists() else []
+
+    def test_wifi_resume_hook_leaves_a_healthy_resume_alone(self) -> None:
+        self.assertEqual(self._run_wifi_hook(interface=True, station=True), [])
+
+    def test_wifi_resume_hook_reloads_when_station_or_interface_is_gone(self) -> None:
+        reload_log = ["-r iwl3945", "iwl3945"]
+        self.assertEqual(self._run_wifi_hook(interface=True, station=False), reload_log)
+        self.assertEqual(self._run_wifi_hook(interface=False, station=False), reload_log)
 
     def test_installed_x_session_starts_hardware_controller_before_launcher(self) -> None:
         session = (
