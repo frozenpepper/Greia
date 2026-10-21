@@ -3568,3 +3568,17 @@ The serial targeted producer started with VoxStage job
 listening-pending. The normal make verify gate for the source change ran 3,131
 tests and failed with 31 failures, 241 errors, and 6 skips; details remain in
 /tmp/greia-short-carrier-make-verify.log.
+
+### 2026-10-21 — Recover captured priority provider output and resume
+
+During priority-only production, an in-flight Leo/EN D as Duck provider job
+completed as the producer was stopped for job inspection. Its real VoxStage
+job receipt and raw WAV were preserved externally. Cached Whisper confirmed
+the exact carrier prefix/target and a unique guarded 0.34-second PCM gap;
+the extracted target was packaged with the existing AudioPipeline and passed
+CorpusRunner candidate validation. No provider re-generation was needed for
+this cue. A continuation plan excludes the four already-installed priority
+takes, carries per-cue attempt counts, and stages this recovered candidate
+for normal journaled installation. It contains 663 READY priority rows and
+preserves all deferred/evidence-gap rows. The continuation producer is active;
+human listening remains pending.

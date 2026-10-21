@@ -109,6 +109,26 @@ Focused carrier/policy/generation/corpus tests passed 38/38 before the later
 actor-selection change; selector/corpus tests passed 21/21 after it. No full
 verification was rerun for this triage-only change.
 
+## 2026-10-21 — Priority-run continuation after provider-job inspection
+
+The first priority-only producer was stopped after 4 DONE, 3 safe extraction
+FAILED, 660 READY, and 4,248 PRESERVED. Its third in-flight provider job for
+Leo/EN D as Duck completed; the exact raw WAV (SHA starts e75a57cf and ends
+bd50e) and VoxStage job receipt were preserved externally, not installed.
+Cached Whisper extraction then passed exact prefix/target and the unique
+low-energy gap gate (0.34 s verified gap, cut sample 82,560). The candidate was
+packaged with the existing AudioPipeline and passed the production CorpusRunner
+candidate validator.
+
+The remaining 663 priority rows are frozen in the continuation workdir:
+ /Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/continuation-02/run/.
+Plan SHA-256 is 88d22f6e744f8bc3c181666901ccc7fe1360f0c12883d72225455c8afb8a349c.
+It carries forward per-cue attempt counts and stages the recovered D candidate,
+so it will use the already completed provider output rather than submit it again.
+This serial continuation started with 1 GENERATING, 662 READY, and 4,252
+PRESERVED; the 4 first-run DONE, all 16 earlier retakes, and all 143 evidence-gap
+rows remain out of its queue. Outputs remain listening-pending.
+
 ## Recent entries
 
 ## 2026-10-21 — Short spoken-carrier extraction and v0.3 pilot
