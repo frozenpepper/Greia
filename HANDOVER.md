@@ -1190,3 +1190,7 @@ two installer completion tests whose host environment has no `lsblk`. Full log:
 `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/source-check-verify.log`.
 Focused voice suite remains 72/72 PASS; `git diff --check` passed. No voice corpus
 run was included in this source gate. This checkout is not full-gate green.
+
+## 2026-10-21 — Intel Mac / UEFI boot for the i686 image (SOURCE, UNPROVEN / LAB)
+
+Implemented the EFI path for `legacy-x86-i686*` without touching BIOS behaviour: `src/greia_installer/efi_boot.py` (layout adapters, EFI bitness probe, GRUB ia32/x64 + removable fallbacks, non-fatal efibootmgr), engine wiring, `build/package-sets/boot-grub-efi.txt` (`-bin` packages only) and an MBR+ESP installer USB. Details and open LAB questions: `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` section 14. Verification: `tests/test_installer_efi_boot.py` 22 tests OK; installer/layout/boot suites pass except known pre-existing failures (ARM64 build profile, `lsblk` on macOS, `greia_parent.update_api` import). No image was built and no hardware booted. Next exact step: build the i686 installer on the Debian host, boot it in QEMU with OVMF (32 and 64) and then on a 2006-2007 and a 2010+ Mac.
