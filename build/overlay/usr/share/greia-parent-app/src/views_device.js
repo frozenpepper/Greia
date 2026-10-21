@@ -57,6 +57,15 @@ export function installDeviceViews(proto) {
       return card;
     }
 
+    const connectedSsid = String(snapshot.wifi?.connected_ssid || "");
+    card.append(
+      el(
+        "div",
+        connectedSsid ? "wifi-connection on" : "wifi-connection",
+        connectedSsid ? `Connected to ${connectedSsid}` : "Not connected to Wi-Fi",
+      ),
+    );
+
     const list = el("div", "wifi-list");
     for (const net of snapshot.wifi?.networks || []) {
       const row = el("div", "wifi-network");
@@ -72,10 +81,13 @@ export function installDeviceViews(proto) {
         el("strong", "", net.ssid),
         el("span", "", net.security === "open" ? "Open network" : "Password protected"),
       );
-      const connect = button("Connect", {
-        className: "button small secondary",
-        onClick: () => this._connectWifi(net),
-      });
+      const isConnected = Boolean(connectedSsid) && net.ssid === connectedSsid;
+      const connect = isConnected
+        ? el("span", "pill ok", "Connected")
+        : button("Connect", {
+            className: "button small secondary",
+            onClick: () => this._connectWifi(net),
+          });
       row.append(signal, copy, connect);
       list.append(row);
     }

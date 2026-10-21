@@ -213,8 +213,16 @@ class ParentApiApplication(ParentStatusApplication):
         return {"changed": True}
 
     def wifi_payload(self) -> dict[str, object]:
+        connected = getattr(self.wifi_backend, "connected_ssid", None)
+        connected_ssid = ""
+        if callable(connected):
+            try:
+                connected_ssid = str(connected())
+            except WifiError:
+                pass
         return {
             "available": self.wifi_backend.available(),
+            "connected_ssid": connected_ssid,
             "networks": [
                 {
                     "ssid": net.ssid,

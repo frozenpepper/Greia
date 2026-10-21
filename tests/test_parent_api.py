@@ -351,6 +351,7 @@ class ParentApiTests(unittest.TestCase):
             wifi_data = app.wifi_payload()
             self.assertTrue(wifi_data["available"])
             self.assertIsInstance(wifi_data["networks"], list)
+            self.assertIn("connected_ssid", wifi_data)
 
             conn = app.connect_wifi("Greia Family Wi-Fi", "testpassphrase")
             self.assertTrue(conn["connected"])

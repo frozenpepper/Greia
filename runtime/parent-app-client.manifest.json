@@ -33,8 +33,8 @@
       "sha256": "f458a5c3cb4a7f21692cefb79e07039d277e14ebb8b27e49441d5ea6e8ec3c02"
     },
     "src/views_device.js": {
-      "bytes": 20808,
-      "sha256": "5d422a0832a806e3d52d65ca6ed4e77a44684f2680052f1ae1ea751b055fd1eb"
+      "bytes": 21247,
+      "sha256": "c39aae47c4d063b0e92532bf3ae7c33fb6910ab193c116d54ef5999e81156325"
     },
     "src/views_device_layout.js": {
       "bytes": 3807,
@@ -53,8 +53,8 @@
       "sha256": "a12fc6e67ae657e0f71f7e63ba2e0e4f4d0c5dbcafa66151b4096e0f2565a58f"
     },
     "styles/app.css": {
-      "bytes": 25629,
-      "sha256": "108193fcbefbfac58a459e250960028aa178816cc5a07d48f6b5ba0304438295"
+      "bytes": 25945,
+      "sha256": "ab7c3c60ea304b1d0f41740d18d3b2d40dc851b05cc6b58baf2984ca4af74f37"
     },
     "styles/management.css": {
       "bytes": 3107,

@@ -26,6 +26,12 @@ class ParentClientImageIntegrationTests(unittest.TestCase):
         contract.verify(VENDORED)
         contract.verify(IMAGE_OVERLAY)
 
+    def test_parent_app_renders_the_connected_wifi_state(self) -> None:
+        js = (IMAGE_OVERLAY / "src" / "views_device.js").read_text(encoding="utf-8")
+        self.assertIn("connected_ssid", js)
+        self.assertIn("Connected to", js)
+        self.assertIn("Not connected to Wi-Fi", js)
+
     def test_production_manifest_excludes_demo_fixtures(self) -> None:
         manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
         self.assertFalse(any(path.startswith("src/demo") for path in manifest["files"]))

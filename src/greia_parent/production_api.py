@@ -68,9 +68,17 @@ class ProductionParentApiApplication(UpdateParentApiApplication):
 
     def wifi_payload(self) -> dict[str, object]:
         if not self._wifi_management_available():
-            return {"available": False, "networks": []}
+            return {"available": False, "connected_ssid": "", "networks": []}
+        connected = getattr(self.wifi_backend, "connected_ssid", None)
+        connected_ssid = ""
+        if callable(connected):
+            try:
+                connected_ssid = str(connected())
+            except WifiError:
+                pass
         return {
             "available": True,
+            "connected_ssid": connected_ssid,
             "networks": [
                 {
                     "ssid": net.ssid,
