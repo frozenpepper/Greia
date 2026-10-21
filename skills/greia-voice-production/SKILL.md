@@ -74,15 +74,17 @@ surface is `tools/greia_voice.py` (`generate`, `batch`,
 `serve`/`request`); do not build another Activity-owned speech
 producer because an instruction uses the term “studio”.
 
-Before generating shared voice speech, audit the accepted
-`assets/audio/characters/shared/v0.2/` catalogue, its
-`manifest.toml` and `review.csv`: **192 owner-approved EN/IT
-recordings (180 reactions and 12 introductions)** are DONE.
-Reusing accepted bytes, missing playback wiring and actually missing
-voice audio are separate ledger states. See
-`docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md`.
-The 2026-10-14 all-app agent work order explicitly respects this
-distinction.
+Before generating shared voice speech, audit the current
+`assets/audio/characters/shared/v0.2/` catalogue, its `manifest.toml` and
+`review.csv`; do not infer current acceptance from historical counts. Before the
+v3 corpus replacement, 192 shared EN/IT recordings (180 reactions and 12
+introductions) had owner-approved state. The owner-authorized v3 scope replaced
+the Dani/Momo/Tito entries selected by its frozen 1,340-cue plan, and those new
+receipts are PENDING; Lilli/Leo/Flash entries remain unchanged. The external v3
+run backups retain the overwritten bytes and receipts. Reusing currently
+accepted bytes, missing playback wiring and actually missing voice audio are
+separate ledger states. See
+`docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md` and HANDOVER.
 
 ## Current selected provider and masters — v0.3 promotion on 2026-10-21
 
@@ -103,20 +105,23 @@ VoxStage model before switching to it on the same host.
 
 Active registry: `assets/audio/characters/canonical/v0.3/manifest.toml`.
 Active source masters/provenance: `assets/source/audio/character-voice-masters/v0.3/`.
-The v0.2 registry and localized comparison evidence remain historical. No v0.3
-multilingual cloned-line comparison is claimed as accepted. Master selection
-does not accept future generations; new corpus takes remain listening-pending.
+The v0.2 canonical master registry and localized comparison evidence remain
+historical. No v0.3 multilingual cloned-line comparison is claimed as accepted.
+Master selection does not accept future generations; new corpus takes remain
+listening-pending.
 
-**Subsequent scoped owner authorization (2026-10-19):** the owner explicitly
-requested replacement of existing Activity/system recordings using these new
-masters, except deterministic isolated letters/syllables, and a tone/mood prompt
+**Scoped owner authorization (2026-10-19; v0.3 continuation 2026-10-21):**
+the owner explicitly requested replacement of existing Activity/system
+recordings using these new masters, except deterministic isolated
+letters/syllables, and a tone/mood prompt
 for every recording. Execute `tools/regenerate_voice_corpus.py` under
 `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`. This is the authorized exception
 to older preservation instructions for this corpus operation. It uses the same
 VoiceEngine, serial production, frozen requests, explicit metadata blockers,
 backups/recovery and pending-review receipts. Do not use the add-only approved
-asset importer for new unlistened takes. Full production has not been launched
-by the tool-preparation session.
+asset importer for new unlistened takes. The v2 run used its selected v0.2
+masters; the separately frozen v3 run used the exact owner-selected v0.3
+masters documented below.
 
 **Owner clarification 2026-10-21 — identity versus acting:** pitch/register,
 voice age, timbre/texture and permanent character vocal traits belong only in
@@ -136,10 +141,19 @@ are `greia-audition-20261021-momo-v3-01`,
 and provenance are archived under `assets/source/audio/character-voice-masters/v0.3/`;
 active semantic IDs are `greia.momo.v3`, `greia.tito.v3` and `greia.dani.v3`.
 Lilli, Leo and Flash remain byte-for-byte and ID-for-ID unchanged from v0.2.
-Dani v5 candidates 01/03 are rejected. The active registry is
-`assets/audio/characters/canonical/v0.3/manifest.toml`; v0.2 remains intact.
+Dani v5 candidates 01/03 are rejected. The active canonical master registry is
+`assets/audio/characters/canonical/v0.3/manifest.toml`; the v0.2 master registry
+remains intact. Existing shared utterance paths retain their `shared/v0.2`
+filenames; selected rows included in the frozen v3 scope now carry v3 recordings
+with pending receipts, while original bytes/receipts remain in external backups.
 Source-master approval does not approve fresh runtime generations or localized
-cloned lines.
+cloned lines. The scoped v3 replacement then completed 1,340 DONE / 3,575
+PRESERVED with no unresolved rows. Its full policy-v2 automated screen covered
+all 1,340 (1,115 PASS / 225 WARN / no FAIL or BLOCKED; 533 ASR policy
+exclusions); every new receipt remains `human_review=PENDING`. Full report and
+Takeboard batch are external in
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/`. Owner
+listening is still required across the entire batch.
 
 Character performance defaults live in
 `tools/greia_voice_core/character_delivery.json`; VoxStage applies them to normal

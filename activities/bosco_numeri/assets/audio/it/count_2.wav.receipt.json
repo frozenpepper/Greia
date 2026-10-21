@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T00:06:03.817586+00:00",
+  "created_utc": "2026-10-21T08:18:20.968331+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/bosco_numeri/assets/audio/it/count_2.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
+    "delivery_prompt": "Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-020559-5766174c",
-    "idempotency_key": "greia-48a5d29a09044290b718612f2f24ffeb",
+    "job_id": "20261021-101816-35edda50",
+    "idempotency_key": "greia-764f9e1923514142a5488b691f2ae81b",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1214396796,
+    "script_seed": 3414394623,
     "language_direction": "Italian",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
-    "effective_delivery": "Speak naturally in Italian. Tito, a cheeky, confident woodland explorer. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "delivery_prompt": "Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "effective_delivery": "Speak in Italian. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 410242512,
-        "sha256": "062cd6dbfbc1c96b457da5fd07bc818b893e8edcbc9174c3234aa81ff977617c",
+        "seed": 390508934,
+        "sha256": "2f106a24948687dec60d9f6a881b2fc5c070a57d5297322fe491c54d8682b5b7",
         "generation": {
-          "elapsed_seconds": 3.797636582981795,
+          "elapsed_seconds": 3.660802625003271,
           "model_load_seconds": 0.0,
-          "rtf": 5.932262300934853,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.8126741451171022,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/bosco_numeri/assets/audio/it/count_2.wav",
-    "bytes": 28310,
-    "sha256": "8824736bc41998389671c3143ab036c4125932a44d94c380d1973156fce46838"
+    "bytes": 42422,
+    "sha256": "aaac7b9b9c6d8e913b28feeb037ebca55dd0d5e80e9a7eb338142b397ad79d62"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "7a48b43a140dcba4d548e9c8ceee6b882e8776a6acd7960b52904354b023fb98",
+    "original_sha256": "8824736bc41998389671c3143ab036c4125932a44d94c380d1973156fce46838",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

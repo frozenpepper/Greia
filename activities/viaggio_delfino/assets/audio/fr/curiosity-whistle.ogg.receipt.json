@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T17:45:33.589985+00:00",
+  "created_utc": "2026-10-21T12:43:12.193275+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/viaggio_delfino/assets/audio/fr/curiosity-whistle.ogg",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
+    "delivery_prompt": "Calm, interested explanation. Unhurried phrasing, clear words and natural pauses."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-194458-45b33201",
-    "idempotency_key": "greia-537a3133471c4d93a2d0a17e8337b549",
+    "job_id": "20261021-144254-9a57aed3",
+    "idempotency_key": "greia-a33ebbcd7fb14f70a7c2798b782b7189",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 910164408,
+    "script_seed": 1384905953,
     "language_direction": "French",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
-    "effective_delivery": "Speak in French. Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "delivery_prompt": "Calm, interested explanation. Unhurried phrasing, clear words and natural pauses.",
+    "effective_delivery": "Speak in French. Calm, interested explanation. Unhurried phrasing, clear words and natural pauses.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1480557230,
-        "sha256": "35a68c8e79beafbad477976eef9fbcb10c8bbd09911f4b23070e51b668d043e0",
+        "seed": 488956160,
+        "sha256": "96dc4a8b1d2ce80473b3331c639fea5928b436c519c75b1761d5c15284df3feb",
         "generation": {
-          "elapsed_seconds": 32.30452904099366,
+          "elapsed_seconds": 17.159633542003576,
           "model_load_seconds": 0.0,
-          "rtf": 5.4566924986898435,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.3513818317119055,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/viaggio_delfino/assets/audio/fr/curiosity-whistle.ogg",
-    "bytes": 44541,
-    "sha256": "d83008d358a09a959e7abea60a2b388d0f07127f9bcad2421553d5b1856f1c28"
+    "bytes": 40218,
+    "sha256": "5255738dec8d75b3d1cc7435303091bc49e916dbb26cf3fb91c2e79e1f82522f"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "5dabdc5e07b38634ad8e4c1644fbe255f245bda77f3d5b0fca4854b04c710c1d",
+    "original_sha256": "d83008d358a09a959e7abea60a2b388d0f07127f9bcad2421553d5b1856f1c28",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

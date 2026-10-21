@@ -74,6 +74,59 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-21 — v0.3 three-character replacement and automated screen complete
+
+The selected immutable masters remain Dani
+`greia-audition-20261021-dani-v5-02` (SHA-256
+`f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34`), Momo
+`greia-audition-20261021-momo-v3-01` (`3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f`),
+and Tito `greia-audition-20261021-tito-v3-01`
+(`ebb6ec64dedb146745e7e2bea0643e242669f1dae090133dbc810a532da0a8`). Their
+active semantic IDs are `greia.dani.v3`, `greia.momo.v3`, `greia.tito.v3`.
+Lilli, Leo and Flash retain their exact v0.2 master IDs/bytes; the v0.2 canonical
+master registry remains unchanged. Versioned shared-utterance filenames in the
+frozen scope were replaced in place; their original audio and receipts are
+preserved in the external v3 run backups, and the external frozen v2 plan/journal
+remain unchanged.
+
+Serial v3 generation through VoiceEngine completed with exit 0: **1,340 DONE,
+3,575 PRESERVED, zero READY/FAILED/NEEDS_RECOVERY/BLOCKED**. Counts are Dani 392
+(EN/IT 102 each, ES/FR 94 each), Momo 284 (71 per locale) and Tito 664 (166 per
+locale). All replacement receipts remain `human_review=PENDING`. One Dani/EN
+`Toot toot!` attempt (`20261021-143034-b8c58196`) failed as effectively silent,
+with no output; the producer stopped at 1,073 DONE. The failed job was inspected,
+the original hash was unchanged, and the VoxStage running list and queue were
+empty before the documented acknowledged retry. Fresh retry job
+`20261021-143155-c79f82e8` succeeded, and the resumed full pass exited 0.
+Recovery evidence: external `run-v1/recovery-002.md` and the resume log/exit
+record.
+
+Full automated policy-v2 review used the prepared Greia Python and cached
+`mlx-community/whisper-tiny`. Coverage and eligible ASR are complete:
+**1,115 PASS / 225 WARN / 0 FAIL / 0 BLOCKED**. ASR: 608 PASS, 199 WARN,
+533 policy exclusions. Warning flags: 199 ASR mismatch/error, 13 trailing
+silence ≥1.5s, 11 leading silence, 6 low level, 1 internal pause. Review command
+exit 2 reflects retained warnings. Speaker identity, acting/mood, pronunciation
+truth, independent language identification and small-speaker intelligibility
+remain unassessed. No automated or technical result grants human acceptance.
+
+Takeboard batch: `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/takeboard/batch.json`;
+validated 1,340 recordings with all human states `unreviewed`. Fresh local
+server is `http://127.0.0.1:8799/` (PID/log beside the batch). Existing ports
+8794–8798 were left untouched. The full report, queue and log are under
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/`.
+
+**Next:** owner listening across all 1,340 replacements. Prioritize the 225
+machine WARN rows and 533 ASR policy exclusions, then cover every character ×
+language pair, long narration, numbers/words, identity and acting. Keep every
+receipt pending until individual human decisions are explicitly supplied.
+The source gate ran at pre-production commit `11f1c799b` and was NOT GREEN
+(2 failures, 4 errors, 8 skipped); the owner remote advanced `main` six commits
+to `9271f0ac3` during production, including a fix for the build-profile mode
+error. `make verify` was not rerun on the merged head. The 72 focused voice
+tests passed before production. No runtime playback, release image, Simulator,
+physical-device or human listening acceptance is claimed.
+
 ## 2026-10-21 — Aspire 1280x800: full-surface Activities and missing target Wi-Fi firmware
 
 **Evidence class: SOURCE + FOCUSED TESTS + PHYSICAL/DEVICE (installed Acer Aspire, remote input).**

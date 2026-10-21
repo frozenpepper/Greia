@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T11:56:05.004856+00:00",
+  "created_utc": "2026-10-21T11:38:30.399442+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/faccine_momo/locales/it/audio/comfort.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Comforted and grateful: warm, soft, relieved smile. Keep every word clear."
+    "delivery_prompt": "Comforted and grateful: warm, soft, relieved smile. Keep every word clear."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-135544-655526b2",
-    "idempotency_key": "greia-fbb14c3cb8304392957c9813de701a9c",
+    "job_id": "20261021-133819-0c00c667",
+    "idempotency_key": "greia-1ccd152c2bc94985849c3ced3cbf2763",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 331224281,
+    "script_seed": 3525868546,
     "language_direction": "Italian",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Comforted and grateful: warm, soft, relieved smile. Keep every word clear.",
-    "effective_delivery": "Speak naturally in Italian. Momo, a lovable, whimsical comic creature. Comforted and grateful: warm, soft, relieved smile. Keep every word clear.",
+    "delivery_prompt": "Comforted and grateful: warm, soft, relieved smile. Keep every word clear.",
+    "effective_delivery": "Speak in Italian. Comforted and grateful: warm, soft, relieved smile. Keep every word clear.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3776338611,
-        "sha256": "6427031fc64f9a2897c757aad24e548e25568116c4c34daaca33e4ff8322db6c",
+        "seed": 492156672,
+        "sha256": "c22f80d3f82c8a668890fb7d68627e7558f6eccf82e1910abff344c2170d9522",
         "generation": {
-          "elapsed_seconds": 19.098995374981314,
+          "elapsed_seconds": 10.43862045899732,
           "model_load_seconds": 0.0,
-          "rtf": 5.683942872371801,
-          "peak_memory_gb": 8.079945652
+          "rtf": 3.433568486047033,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/faccine_momo/locales/it/audio/comfort.wav",
-    "bytes": 148262,
-    "sha256": "81acab0465e60c1a017d6e0fd402dfbcf53807a5ac844f7e50d698f1d1133c78"
+    "bytes": 134150,
+    "sha256": "f44ae93e68bb0c20bf9bde6fe556a8f7da92d0e6bd8fc55ef8ca7283843670ed"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "285e7b9e685c7a9f8a13b873d519d59a1b38a65a3612974f3bc2e967c97bbb9a",
+    "original_sha256": "81acab0465e60c1a017d6e0fd402dfbcf53807a5ac844f7e50d698f1d1133c78",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:23:58.891043+00:00",
+  "created_utc": "2026-10-21T12:18:38.274439+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/quattro_stagioni/assets/audio/fr/praise_2.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
+    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-162351-f319b140",
-    "idempotency_key": "greia-7f4d2b0d13a04b1696dc8b00ce81cc27",
+    "job_id": "20261021-141830-64766074",
+    "idempotency_key": "greia-bf7ba142326d4217885a5aa9b0eb70ae",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 60890366,
+    "script_seed": 3900100737,
     "language_direction": "French",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
-    "effective_delivery": "Speak in French. Tito, a cheeky, confident woodland explorer. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
+    "effective_delivery": "Speak in French. Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2984099772,
-        "sha256": "3100d6b85d59fd6ebc4012d32278f653328d9e0028c9fb4247b74e13b2cc217a",
+        "seed": 3813221162,
+        "sha256": "c874b1d4acbfd033298485ab8242c815bb83cdbbcc49e86c719fcc4d324fb4ad",
         "generation": {
-          "elapsed_seconds": 6.255530374997761,
+          "elapsed_seconds": 7.148414249997586,
           "model_load_seconds": 0.0,
-          "rtf": 4.343615582685635,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.4364622626380514,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/quattro_stagioni/assets/audio/fr/praise_2.wav",
-    "bytes": 63590,
-    "sha256": "568df57cab1facb3074b5f58e6c0d2ce08061e94499abeb1faf12da2df36e4dd"
+    "bytes": 91814,
+    "sha256": "70aaf5b4155e15d195d84dc40544ae11d9d8b3ac6252a7b34aae1ace4e88e1ff"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "7772d9f02fd170ee629ba6f570d6301c375fa4c2f0f14b61ca17c0f32e800400",
+    "original_sha256": "568df57cab1facb3074b5f58e6c0d2ce08061e94499abeb1faf12da2df36e4dd",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

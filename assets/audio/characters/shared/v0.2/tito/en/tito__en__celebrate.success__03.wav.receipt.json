@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:20:32.627555+00:00",
+  "created_utc": "2026-10-21T13:11:08.028064+00:00",
   "request": {
     "speaker": "tito",
     "kind": "shared_character_utterance",
@@ -10,15 +10,15 @@
     "output": "assets/audio/characters/shared/v0.2/tito/en/tito__en__celebrate.success__03.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-212026-5179469c",
-    "idempotency_key": "greia-b406f785540a4116a58479fcb2d03039",
+    "job_id": "20261021-151103-1229f8a1",
+    "idempotency_key": "greia-5103739e763d4bb7b00146bdf694682f",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3074310174,
+    "script_seed": 3543261347,
     "language_direction": "English",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
-    "effective_delivery": "Speak in English. Tito, a cheeky, confident woodland explorer. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
+    "effective_delivery": "Speak in English. Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1878428755,
-        "sha256": "b16244dd35db940d4d3fed4b17d7e06e1d0cbeb3ba971d2ba3c09003844ebb4b",
+        "seed": 3175172454,
+        "sha256": "27f7d614fb1b49c9e038c4532508353b423d53b8076ad84e0689ed9949622935",
         "generation": {
-          "elapsed_seconds": 5.324941334023606,
+          "elapsed_seconds": 3.6645355419968837,
           "model_load_seconds": 0.0,
-          "rtf": 5.545851068241909,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.816561925356935,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -71,12 +71,12 @@
   "output": {
     "path": "assets/audio/characters/shared/v0.2/tito/en/tito__en__celebrate.success__03.wav",
     "bytes": 42422,
-    "sha256": "88c2b485bbf6023528625b9c393c6a45bd409e09d101da9e56b51dd16025f952"
+    "sha256": "1bdfacc224675ac66f37b87cdcc87c49df34633955271d17c869082e1e1f1ae1"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "1872df821932338c4f4e00777bbec2f90dd3b3011c8362deb673a90131d274f1",
+    "original_sha256": "88c2b485bbf6023528625b9c393c6a45bd409e09d101da9e56b51dd16025f952",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

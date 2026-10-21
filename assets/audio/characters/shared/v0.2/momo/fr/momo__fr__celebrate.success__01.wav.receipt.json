@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:15:15.046680+00:00",
+  "created_utc": "2026-10-21T13:07:48.425934+00:00",
   "request": {
     "speaker": "momo",
     "kind": "shared_character_utterance",
@@ -10,15 +10,15 @@
     "output": "assets/audio/characters/shared/v0.2/momo/fr/momo__fr__celebrate.success__01.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "delivery_prompt": "Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-211504-8ec96536",
-    "idempotency_key": "greia-efe5584bb8e24b25bb16d8aba568b9b7",
+    "job_id": "20261021-150742-5ac887eb",
+    "idempotency_key": "greia-4ec2815d41a542f8951921e9864379de",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3411824801,
+    "script_seed": 3048273760,
     "language_direction": "French",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in French. Momo, a lovable, whimsical comic creature. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "effective_delivery": "Speak in French. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1236755470,
-        "sha256": "da0e83d53905d2db1e8f8af9cf45393d170340ffc2ad58e1cd2c7e6b15a0889c",
+        "seed": 1836457014,
+        "sha256": "44e4f4a74949e89eba3dfbe13ccaac953ac12056ecf33caac9dc34c55c15f8a2",
         "generation": {
-          "elapsed_seconds": 9.415842125017662,
+          "elapsed_seconds": 5.226083499997912,
           "model_load_seconds": 0.0,
-          "rtf": 4.2031882114504855,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.628804652237875,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/momo/fr/momo__fr__celebrate.success__01.wav",
-    "bytes": 98870,
-    "sha256": "adcde118140c555f1d1daab1d76deec9fa551964ff25f5a4188339e69a345bf6"
+    "bytes": 63590,
+    "sha256": "861005e61ed9ab1d8d1d6935678461d78d3a7c231e716b930d10d293e2cdda8d"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "d4cdf7d28319265290122ed7910bacefd00585055a86f5dc712e815743e8cdb5",
+    "original_sha256": "adcde118140c555f1d1daab1d76deec9fa551964ff25f5a4188339e69a345bf6",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:24:00.403887+00:00",
+  "created_utc": "2026-10-21T13:12:25.700750+00:00",
   "request": {
     "speaker": "tito",
     "kind": "shared_character_utterance",
@@ -10,15 +10,15 @@
     "output": "assets/audio/characters/shared/v0.2/tito/en/tito__en__ready.go__03.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-212351-c50b2f9b",
-    "idempotency_key": "greia-22ac88637c9544caa75b8e7e2c1d6432",
+    "job_id": "20261021-151221-b6132eab",
+    "idempotency_key": "greia-41a202e277e7484e971e211a5d5c4663",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 970491577,
+    "script_seed": 3680132965,
     "language_direction": "English",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in English. Tito, a cheeky, confident woodland explorer. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in English. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1245379393,
-        "sha256": "a5a24c0677cebc4c7481a7db24a124c56c07d5982ea9d2c779d2262285f5228d",
+        "seed": 2072614861,
+        "sha256": "83da194aebfc8f16b850cbaaf7cd6fa8987b613bde16016f7f5170a0475b8fbd",
         "generation": {
-          "elapsed_seconds": 8.371954749978613,
+          "elapsed_seconds": 3.242123750002065,
           "model_load_seconds": 0.0,
-          "rtf": 6.539738120019747,
-          "peak_memory_gb": 8.843167284
+          "rtf": 4.051810560302519,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/tito/en/tito__en__ready.go__03.wav",
-    "bytes": 56534,
-    "sha256": "71c4ad2484c3c4e5a3dfeee2f405bfdacbe4684e8c2b03b6f63448087c3a83a5"
+    "bytes": 35366,
+    "sha256": "8cde0959e9b0138ef66a28158e2d2a828588111b631858967aa7beab3a1cbf89"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "2e6ff767b9d3d2a01d22d9222f2e9407187f6ae2681bd3b5b445321362579aa8",
+    "original_sha256": "71c4ad2484c3c4e5a3dfeee2f405bfdacbe4684e8c2b03b6f63448087c3a83a5",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

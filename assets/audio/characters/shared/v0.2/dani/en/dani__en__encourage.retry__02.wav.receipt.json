@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:29:49.290460+00:00",
+  "created_utc": "2026-10-21T12:58:01.111581+00:00",
   "request": {
     "speaker": "dani",
     "kind": "shared_character_utterance",
@@ -10,15 +10,15 @@
     "output": "assets/audio/characters/shared/v0.2/dani/en/dani__en__encourage.retry__02.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.dani.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "voice_id": "greia.dani.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
   "generation_parameters": {
-    "job_id": "20261020-202939-f1d76d1d",
-    "idempotency_key": "greia-69cc5c7bbac54a96bc377ab900a1ad13",
+    "job_id": "20261021-145752-ecc00f76",
+    "idempotency_key": "greia-127c9304ca1046ddbcbd8fdaf4261879",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
-    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "voxstage_voice_id": "greia-audition-20261021-dani-v5-02",
+    "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3500811134,
+    "script_seed": 2049393636,
     "language_direction": "English",
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak in English. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak in English. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1657881952,
-        "sha256": "db818bab9f541342fb17eeaf3a5089df7fde62bba87ead1da4e8a72364f3adbf",
+        "seed": 1110023871,
+        "sha256": "fa6fe4ab7114f1c99bcb2c31b5dfa22d8bf3fa64909037afe2502d0aa33733e2",
         "generation": {
-          "elapsed_seconds": 8.79615112504689,
+          "elapsed_seconds": 7.789819041994633,
           "model_load_seconds": 0.0,
-          "rtf": 3.9265610259862616,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.4773390560202215,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -71,12 +71,12 @@
   "output": {
     "path": "assets/audio/characters/shared/v0.2/dani/en/dani__en__encourage.retry__02.wav",
     "bytes": 98870,
-    "sha256": "ed8c721d2299cdd6eed396fac3c3b67dfabcbca2def577eb949b4984467f9e16"
+    "sha256": "811c8ba9364425eda43c368c19d9366ecf0f0bc2ddb663da08fc91e715229cb7"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "7c7215f20120baacb70a35b89f2b15ecb5d7bbb9c10324c0e49e46895a3cacf9",
+    "original_sha256": "ed8c721d2299cdd6eed396fac3c3b67dfabcbca2def577eb949b4984467f9e16",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T03:20:29.763215+00:00",
+  "created_utc": "2026-10-21T08:48:37.128265+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/corsa_bacche/assets/audio/it/hedgehog_sleeping.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm."
+    "delivery_prompt": "Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-052008-56e22dc6",
-    "idempotency_key": "greia-847f966d33fb4cbc80958fdc5a6a299a",
+    "job_id": "20261021-104824-118b9bce",
+    "idempotency_key": "greia-a9e87fe8aff0472c84d14a35d31db5ed",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3294684935,
+    "script_seed": 3576407857,
     "language_direction": "Italian",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm.",
-    "effective_delivery": "Speak naturally in Italian. Momo, a lovable, whimsical comic creature. Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm.",
+    "delivery_prompt": "Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm.",
+    "effective_delivery": "Speak in Italian. Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3848919843,
-        "sha256": "c77e0a7b45cd4561540e6f3ba7ebff8801abef7dd186134bec58413dc4cb8920",
+        "seed": 1533145713,
+        "sha256": "47ca84b588120218ebba0676ba4e329f7fafdbfccebaec21848ebaa6ae21150f",
         "generation": {
-          "elapsed_seconds": 18.798755583004095,
+          "elapsed_seconds": 11.824251999998523,
           "model_load_seconds": 0.0,
-          "rtf": 4.895296796928283,
-          "peak_memory_gb": 6.61593154
+          "rtf": 3.51894806805174,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/corsa_bacche/assets/audio/it/hedgehog_sleeping.wav",
-    "bytes": 169430,
-    "sha256": "d2e101b085ef1591e5cb07c88fb9aa57260848ff95430e800488881245089d0d"
+    "bytes": 148262,
+    "sha256": "e8f3b4101216b7e62e30e722d36c9aa92ae57b37582f42cbfac4461cc7fa643d"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "76d9c0f2aea7751740fed66683eaafcb6fd39f299727c5abbbbf15074e21f273",
+    "original_sha256": "d2e101b085ef1591e5cb07c88fb9aa57260848ff95430e800488881245089d0d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:35:06.328503+00:00",
+  "created_utc": "2026-10-21T07:51:31.358132+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/baia_delle_orche/assets/audio/en/tito_fact_pod.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
+    "delivery_prompt": "Calm, interested explanation. Unhurried phrasing, clear words and natural pauses."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-013434-3a968d0a",
-    "idempotency_key": "greia-156077ee4b3240659ec165148fc79726",
+    "job_id": "20261021-095110-22b02227",
+    "idempotency_key": "greia-8de6ecaf520a41d98d5e0992a0207013",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 839077051,
+    "script_seed": 4257651671,
     "language_direction": "English",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
-    "effective_delivery": "Speak naturally in English. Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "delivery_prompt": "Calm, interested explanation. Unhurried phrasing, clear words and natural pauses.",
+    "effective_delivery": "Speak in English. Calm, interested explanation. Unhurried phrasing, clear words and natural pauses.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 245299378,
-        "sha256": "34d93e250193f1237d0275936199a207793cb83147b49508977ee5500b4aea78",
+        "seed": 3083591297,
+        "sha256": "ba4280b5231e6d570f24a2821c857fffe4248270c93cc37c82fe6c7372f64b8f",
         "generation": {
-          "elapsed_seconds": 28.311734582995996,
+          "elapsed_seconds": 16.281333833001554,
           "model_load_seconds": 0.0,
-          "rtf": 5.707819209635965,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.6340911051675655,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/en/tito_fact_pod.wav",
-    "bytes": 218822,
-    "sha256": "1c45939f18ef80fe7d2ca27e6d732798ac6729707f1a1e00696380be927a5ae5"
+    "bytes": 197654,
+    "sha256": "effed876ed9e95832d6dd487c1082c422d90b11968f2aba468798c966dc9b024"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "20eece72493d4d025348d05ab726d27871d0a81e13b254297c95be2b36ce7fa1",
+    "original_sha256": "1c45939f18ef80fe7d2ca27e6d732798ac6729707f1a1e00696380be927a5ae5",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

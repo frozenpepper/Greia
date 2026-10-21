@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T23:51:06.078926+00:00",
+  "created_utc": "2026-10-21T08:06:10.706973+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/baia_delle_orche/assets/audio/it/tito_fact_sleep.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm."
+    "delivery_prompt": "Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-015038-f42d5358",
-    "idempotency_key": "greia-e109c9434a824ca983f7921412ea7293",
+    "job_id": "20261021-100541-07c8d546",
+    "idempotency_key": "greia-761c48dfcf564b3282bec92fb001d5df",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4028328986,
+    "script_seed": 104713784,
     "language_direction": "Italian",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm.",
-    "effective_delivery": "Speak naturally in Italian. Tito, a cheeky, confident woodland explorer. Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm.",
+    "delivery_prompt": "Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm.",
+    "effective_delivery": "Speak in Italian. Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2536534351,
-        "sha256": "4037e3c9697a5c1c52e8a4339664ed77c2a61495010fc633a2ad0922fda2bdae",
+        "seed": 1612748293,
+        "sha256": "0116654cc20dac32d53a7bd9db95a91ecd058aa5a9f401bf86973deba2c6e82d",
         "generation": {
-          "elapsed_seconds": 27.321460624982137,
+          "elapsed_seconds": 26.041881624994858,
           "model_load_seconds": 0.0,
-          "rtf": 4.1647509908257625,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.9696981720476905,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -71,12 +71,12 @@
   "output": {
     "path": "activities/baia_delle_orche/assets/audio/it/tito_fact_sleep.wav",
     "bytes": 289382,
-    "sha256": "f2c8a9f2073758fcadb05be98ebb7a96d39760232218f453926f133f888a34ce"
+    "sha256": "9eca253a8cecb68276fa3ed9ecd397b1dd747122b35aec622d6ed8bde2c331cd"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "e92df4436cb50f16429e3fcbe7a9c7a24ab7350e33bdf4138ac4d4f540527054",
+    "original_sha256": "f2c8a9f2073758fcadb05be98ebb7a96d39760232218f453926f133f888a34ce",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

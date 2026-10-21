@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:49:46.075172+00:00",
+  "created_utc": "2026-10-21T11:46:50.673595+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/la_discesa_della_biglia/assets/audio/it/into_basket.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-144938-1059fc1a",
-    "idempotency_key": "greia-b40b58a6978541e4a40e3a1368d492c0",
+    "job_id": "20261021-134645-db91f2c8",
+    "idempotency_key": "greia-8e7103a860104389bd470c05bc244d4d",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3913182592,
+    "script_seed": 3784864748,
     "language_direction": "Italian",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak in Italian. Tito, a cheeky, confident woodland explorer. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words.",
+    "effective_delivery": "Speak in Italian. Brief, natural conversational reaction; relaxed pace and clear words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1735820975,
-        "sha256": "d1a3a9877f0adc099f99bd3028b7d83bbaff7770abe0d3cac7fd4d136a65092f",
+        "seed": 2864041958,
+        "sha256": "d6953cc2237a40e9abb9b281836615f47a015b0d7119989446e6aed2540fbbda",
         "generation": {
-          "elapsed_seconds": 6.783089707954787,
+          "elapsed_seconds": 4.1384793749966775,
           "model_load_seconds": 0.0,
-          "rtf": 5.2985989126062645,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.69452109060855,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/la_discesa_della_biglia/assets/audio/it/into_basket.wav",
-    "bytes": 56534,
-    "sha256": "c199db0d2d753d00853836e4af2ef0de5099f45f18a3e59371c81511ad311fe9"
+    "bytes": 49478,
+    "sha256": "c926c71b5e8ff0240144bdadf61afbbb2eb0c9d7a5bb795ff4d98c45772fe659"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "cccefa72f4fb59e0aa5be20ecb6402c7639f5a2f0772ae02bab984ede82db863",
+    "original_sha256": "c199db0d2d753d00853836e4af2ef0de5099f45f18a3e59371c81511ad311fe9",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

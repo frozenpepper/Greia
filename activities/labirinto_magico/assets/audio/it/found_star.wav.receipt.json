@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:54:39.143629+00:00",
+  "created_utc": "2026-10-21T11:49:19.168105+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/labirinto_magico/assets/audio/it/found_star.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
+    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-145429-01d43c3f",
-    "idempotency_key": "greia-5b628381bbf542c68fd774e433c893fc",
+    "job_id": "20261021-134912-52bb457a",
+    "idempotency_key": "greia-a9fbd9174e1648e192d927e3167fb0f8",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1999054425,
+    "script_seed": 234079395,
     "language_direction": "Italian",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
-    "effective_delivery": "Speak in Italian. Tito, a cheeky, confident woodland explorer. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
+    "effective_delivery": "Speak in Italian. Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1698959214,
-        "sha256": "76bf2fe43776a831a5d0390d5c83f518b16da07572f4913f4e500f07441e6871",
+        "seed": 1832481282,
+        "sha256": "96f3bc384d7c42f720dbd6e468913564879295ec7ba80f737b8763ba70414a92",
         "generation": {
-          "elapsed_seconds": 9.1913027499686,
+          "elapsed_seconds": 5.110182958000223,
           "model_load_seconds": 0.0,
-          "rtf": 5.743965888950275,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.5483274792270962,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/labirinto_magico/assets/audio/it/found_star.wav",
-    "bytes": 70646,
-    "sha256": "acf912d8abfdeccbca9abe4f246d42ea9de8da71d74d00b21a504b6362750694"
+    "bytes": 63590,
+    "sha256": "fa20408c6eb88caeff37b010f295b9915093628eaefa04efa02b81ac19d70dff"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "24a3d30d5d9df5521575614608e1d7f89492674ee851f7ec499941bbd0657fcf",
+    "original_sha256": "acf912d8abfdeccbca9abe4f246d42ea9de8da71d74d00b21a504b6362750694",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:14:05.314090+00:00",
+  "created_utc": "2026-10-21T12:51:55.360816+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "assets/audio/characters/shared/v0.2/_intros/en/tito.ogg",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses."
+    "delivery_prompt": "Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-201306-288bd777",
-    "idempotency_key": "greia-9758ac06d82645edbe0f648a9ba1ab7d",
+    "job_id": "20261021-145125-19d4b51a",
+    "idempotency_key": "greia-09cac07046d34cd5984968883ff2fa75",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 339324787,
+    "script_seed": 216650231,
     "language_direction": "English",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
-    "effective_delivery": "Speak in English. Tito, a cheeky, confident woodland explorer. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "delivery_prompt": "Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "effective_delivery": "Speak in English. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 4161450432,
-        "sha256": "8771cd921e2d9a9d3eea4949f4793b140678de8125e32d2462ddc649fce38fbd",
+        "seed": 807750982,
+        "sha256": "ec81c6bb6b5854eb4bf43457e52c85577d64a06d72fe44739668257685b19a36",
         "generation": {
-          "elapsed_seconds": 58.01554658298846,
+          "elapsed_seconds": 28.621266458998434,
           "model_load_seconds": 0.0,
-          "rtf": 7.251792243868477,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.375083012401301,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/_intros/en/tito.ogg",
-    "bytes": 53596,
-    "sha256": "548a7390acb235c0854026e577e1c53f640797834385b31c98dd16e10b3d4ee3"
+    "bytes": 59838,
+    "sha256": "2817c276655c6b778db178445c9e0971f0d248f3aac997cfa8853ce549e56aba"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "2e9a3bc43dc5b2ab2b1411c98047e4c870fd885e606897992b72dfc59936358c",
+    "original_sha256": "548a7390acb235c0854026e577e1c53f640797834385b31c98dd16e10b3d4ee3",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

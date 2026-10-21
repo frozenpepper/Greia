@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:13:16.119516+00:00",
+  "created_utc": "2026-10-21T13:06:26.993004+00:00",
   "request": {
     "speaker": "momo",
     "kind": "shared_character_utterance",
@@ -10,15 +10,15 @@
     "output": "assets/audio/characters/shared/v0.2/momo/es/momo__es__encourage.progress__01.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-211307-d192df71",
-    "idempotency_key": "greia-8f6a2ae0b9a0470e88e74efb0148515a",
+    "job_id": "20261021-150621-1c2b4cb6",
+    "idempotency_key": "greia-e9d23ab172f34db3a7d96f6a3eca2b13",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1365193564,
+    "script_seed": 3000485184,
     "language_direction": "Spanish",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak in Spanish. Momo, a lovable, whimsical comic creature. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words.",
+    "effective_delivery": "Speak in Spanish. Brief, natural conversational reaction; relaxed pace and clear words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 669774092,
-        "sha256": "28578a4bc2a29551ee79918873c6249efa084718c66275f146ff3f9b4ae8c5be",
+        "seed": 195149421,
+        "sha256": "7feb8fc6f5e0cffb67bd765f2d100a7bd6f08933fd965db032fcaa3468fb649a",
         "generation": {
-          "elapsed_seconds": 7.138827042013872,
+          "elapsed_seconds": 4.143851374996302,
           "model_load_seconds": 0.0,
-          "rtf": 4.956945058683397,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.699316805531589,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/momo/es/momo__es__encourage.progress__01.wav",
-    "bytes": 63590,
-    "sha256": "c0fd5996ba32feb4e04cc1ab4e9ced006772f3c15c534f3825faf0a414235032"
+    "bytes": 49478,
+    "sha256": "c0623cf6e6cbf0abf66d2cd23bca0cafd1e76e1c1ebd6b6999e57f1a6df73f21"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "cc9148d479f2fec7f5da49bc03b5b30f79d0fe3611d189295dfb8e124b8af2c7",
+    "original_sha256": "c0fd5996ba32feb4e04cc1ab4e9ced006772f3c15c534f3825faf0a414235032",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

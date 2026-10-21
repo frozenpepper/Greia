@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:02:25.896748+00:00",
+  "created_utc": "2026-10-21T11:54:21.025235+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/luci_di_momo/assets/audio/es/count_together.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-150217-5135e2dd",
-    "idempotency_key": "greia-9114a55795db43188402cb4f485d9fad",
+    "job_id": "20261021-135415-c160ce5f",
+    "idempotency_key": "greia-4e2569dd030544fc93bcc67123c37077",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 924964521,
+    "script_seed": 2405914397,
     "language_direction": "Spanish",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Spanish. Momo, a lovable, whimsical comic creature. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in Spanish. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 26251853,
-        "sha256": "8a65f06b4e20924af174abc99d9ef42be87982ee4eabf3cdf713b75488a8fda7",
+        "seed": 3710530074,
+        "sha256": "412ea78905337779afe5cc409830e8d58b137ffd3e21cd5420725d5505f73c1b",
         "generation": {
-          "elapsed_seconds": 7.533995499950834,
+          "elapsed_seconds": 4.695770457998151,
           "model_load_seconds": 0.0,
-          "rtf": 5.231335840725032,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.668093054027979,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/luci_di_momo/assets/audio/es/count_together.wav",
-    "bytes": 63590,
-    "sha256": "14c764d974a225b3d3258e893a4ac8c86c415bf0b7c3d31a2486899247f1a86b"
+    "bytes": 56534,
+    "sha256": "d1042ce9d93c61677d531313f0e64ef631616c0e0f95ba7a83719bc5b2e410fa"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "f85497a150029bd47b46eb9641fa1392bbbc56cf11ddff616f23bc4b6cc4e6c5",
+    "original_sha256": "14c764d974a225b3d3258e893a4ac8c86c415bf0b7c3d31a2486899247f1a86b",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

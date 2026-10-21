@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:19:30.084780+00:00",
+  "created_utc": "2026-10-21T12:53:17.109838+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "assets/audio/characters/shared/v0.2/_intros/es/momo.ogg",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses."
+    "delivery_prompt": "Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-201826-cb1965ef",
-    "idempotency_key": "greia-d1caeb0e07c24460abd180d18e3eeff8",
+    "job_id": "20261021-145239-1f1daa6e",
+    "idempotency_key": "greia-173b6d5967a849d3a34098e9b1cd0464",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3077193813,
+    "script_seed": 3040257871,
     "language_direction": "Spanish",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
-    "effective_delivery": "Speak in Spanish. Momo, a lovable, whimsical comic creature. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "delivery_prompt": "Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "effective_delivery": "Speak in Spanish. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 4157160321,
-        "sha256": "c37f0f1a69f6da7c882fa78fa3374a791860c312c6d1e657e046dd817ea42f47",
+        "seed": 1107052080,
+        "sha256": "e8b35416344328fcd60298e90ace623b0ea39af62fde2baefb1731e71ddf62d1",
         "generation": {
-          "elapsed_seconds": 62.94669020798756,
+          "elapsed_seconds": 37.03063966699847,
           "model_load_seconds": 0.0,
-          "rtf": 4.979894005194095,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.354173970833635,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/_intros/es/momo.ogg",
-    "bytes": 93272,
-    "sha256": "a69080cdc6de25e629f9dc8f73fa5f165215b887cf20ab778e6ca24610245444"
+    "bytes": 74995,
+    "sha256": "f49b86d17a27f4af1753d82e8650de3ba1b223acd277fe68e1f34ae77a4c723f"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "cbcc4e0943e66ceef38f8132560a2fc1b4bf303c343546ec981fb794ce94eb1c",
+    "original_sha256": "a69080cdc6de25e629f9dc8f73fa5f165215b887cf20ab778e6ca24610245444",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

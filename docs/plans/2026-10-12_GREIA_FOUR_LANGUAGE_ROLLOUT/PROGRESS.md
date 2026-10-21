@@ -3,7 +3,44 @@
 **Product authority:** [PLAN.md](./PLAN.md)  
 **Local voice execution:** [LOCAL_AGENT_VOICE_PRODUCTION.md](./LOCAL_AGENT_VOICE_PRODUCTION.md)  
 **Single local task queue:** `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`  
-**Evidence status:** The 2026-10-21 V2 corpus replacement completed with pending-review receipts. Full `make verify` ran but remains NOT GREEN on known host-only failures; no ASR, human listening, GUI, Simulator or physical-install acceptance is claimed.
+**Evidence status:** The separately authorized 2026-10-21 V3 replacement completed with 1,340 pending-review receipts and full policy-v2 automated screening (1,115 PASS / 225 WARN). Human listening remains open. The prior source `make verify` remains NOT GREEN on recorded host/source failures; no GUI, Simulator or physical-install acceptance is claimed.
+
+## 2026-10-21 — V3 selected-master corpus replacement and automated review complete
+
+The owner-selected Dani v5-02, Momo v3-01 and Tito v3-01 masters were promoted
+to semantic IDs `greia.dani.v3`, `greia.momo.v3` and `greia.tito.v3`; the prior
+v0.2 canonical master set for Lilli, Leo and Flash is unchanged. The separately
+frozen v3 scope completed serially through VoiceEngine with exit 0: **1,340 DONE,
+3,575 PRESERVED, and zero READY/FAILED/NEEDS_RECOVERY/BLOCKED**. Counts: Dani 392
+(EN/IT 102 each, ES/FR 94 each), Momo 284 (71 per locale), Tito 664 (166 per
+locale). The 1,340 selected scripts/locales matched the completed v2 plan; the
+new plan retained every prior row/path and six canonical-reference rows. Original
+bytes and receipts are recoverable from the external v3 run backups; the frozen
+v2 plan/journal remain unchanged. One effectively-silent Dani/EN provider job
+was inspected and retried once only after terminal failure and empty queue; the
+retry completed and remains PENDING. Exact evidence is in external
+`run-v1/recovery-002.md` and the run journal/log.
+
+The full local automated review used cached `mlx-community/whisper-tiny` and
+policy `greia-audio-screen-v2`; `full_corpus_coverage=true`,
+`eligible_asr_complete=true`: **1,115 PASS / 225 WARN / 0 FAIL / 0 BLOCKED**.
+ASR counts: 608 PASS, 199 WARN, 533 `NOT_APPLICABLE_POLICY`; warning flags are
+199 ASR mismatch/error, 13 trailing silence ≥1.5s, 11 leading silence, 6 low
+level and 1 internal pause. The command exits 2 because warnings are retained;
+full traversal and eligible ASR are complete. Identity, acting/mood,
+pronunciation truth, independent language identification and small-speaker
+intelligibility remain unassessed. All new receipts remain `human_review=PENDING`.
+
+Validated external Takeboard batch contains all 1,340 entries, each human state
+`unreviewed`; it is served on fresh port 8799 at
+`http://127.0.0.1:8799/`. Existing 8794–8798 review servers were untouched.
+Batch and full report/log remain external under
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/`. Continue with
+human listening across all character/language combinations, emphasizing the
+225 machine warnings, 533 ASR policy exclusions, long narration, numbers/words,
+identity and acting. The prior `make verify` fast lane is NOT GREEN (2 failures,
+4 errors, 8 skipped); the voice source suite was 72/72 PASS. No runtime playback,
+image, release, Simulator, physical or human listening acceptance is claimed.
 
 ## 2026-10-21 — V2 corpus replacement completed
 

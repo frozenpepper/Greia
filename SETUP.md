@@ -440,8 +440,8 @@ Do not add destructive disk/removable-media writes to a generic setup helper.
 | Character production (all six) | shared local VoxStage/VoxCPM2 default behind VoiceEngine; Chatterbox explicitly selectable |
 | Pedagogical production | independent macOS native provider; Dani now uses the cloned-character route |
 | Whisper verification | optional advisory verifier; never acceptance authority |
-| Shared reactions | **180 generated + owner-accepted in `shared/v0.2`** |
-| Character introductions | **12 generated + owner-accepted in `shared/v0.2/_intros`**; product placement separate |
+| Shared reactions | **180 EN/IT recordings were owner-accepted in the v0.2 baseline**; selected Dani/Momo/Tito rows included in the 2026-10-21 v3 corpus replacement are now pending fresh listening, with prior bytes/receipts backed up externally |
+| Character introductions | **12 EN/IT introductions were owner-accepted in the v0.2 baseline**; selected Dani/Momo/Tito introductions included in the 2026-10-21 v3 replacement are now pending fresh listening; product placement separate |
 | Shared runtime resolver | separate integration task where still pending |
 | Public-source legal/provenance gate | root entry points added 2026-10-16 (`LICENSE`, `NOTICE.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`); audit still pending, see `NOTICE.md` |
 

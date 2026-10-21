@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T11:51:47.029013+00:00",
+  "created_utc": "2026-10-21T11:35:30.616378+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/faccine_momo/locales/en/audio/happy.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Bursting with happiness: bright, bouncy, giggly joy. Keep every word clear."
+    "delivery_prompt": "Gently happy and content, with a relaxed smile and natural emphasis. Keep every word clear."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-135121-f68d49e4",
-    "idempotency_key": "greia-64ac95a7d9db47e0af0cc3ab017ca55d",
+    "job_id": "20261021-133516-192f6d16",
+    "idempotency_key": "greia-baf4ea06b4e24ead82ba35783391cc6c",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4054826466,
+    "script_seed": 3961652633,
     "language_direction": "English",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Bursting with happiness: bright, bouncy, giggly joy. Keep every word clear.",
-    "effective_delivery": "Speak naturally in English. Momo, a lovable, whimsical comic creature. Bursting with happiness: bright, bouncy, giggly joy. Keep every word clear.",
+    "delivery_prompt": "Gently happy and content, with a relaxed smile and natural emphasis. Keep every word clear.",
+    "effective_delivery": "Speak in English. Gently happy and content, with a relaxed smile and natural emphasis. Keep every word clear.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2660462752,
-        "sha256": "ebbb309c43fed2c9a802c4906249b98e8f2fbab02c64d97ee89ef9206f6468b4",
+        "seed": 1670997287,
+        "sha256": "f240c16e0f6027ca0732a680cbfb710d26865b2f402a0145880e083088db5600",
         "generation": {
-          "elapsed_seconds": 24.945261624990962,
+          "elapsed_seconds": 13.630808292000438,
           "model_load_seconds": 0.0,
-          "rtf": 5.196749062530668,
-          "peak_memory_gb": 8.079945652
+          "rtf": 3.4075600913296373,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/faccine_momo/locales/en/audio/happy.wav",
-    "bytes": 211766,
-    "sha256": "20d4dd600ce6a578e5655f4c961bbb34a6bcc7e44616952a47d4170fe7cc2e1d"
+    "bytes": 176486,
+    "sha256": "e4cce01a9ca85a6f722ee02273363633a64398a5d62847121a228654d23daaea"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "715324c48a7d42a630812de6f605767ee922da76c1db43e6f083999fa89565e5",
+    "original_sha256": "20d4dd600ce6a578e5655f4c961bbb34a6bcc7e44616952a47d4170fe7cc2e1d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

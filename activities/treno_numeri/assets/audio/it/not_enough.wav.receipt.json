@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T17:32:11.640896+00:00",
+  "created_utc": "2026-10-21T12:34:21.908851+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
@@ -10,15 +10,15 @@
     "output": "activities/treno_numeri/assets/audio/it/not_enough.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.dani.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "voice_id": "greia.dani.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
   "generation_parameters": {
-    "job_id": "20261020-193202-e35e2a68",
-    "idempotency_key": "greia-1480f26cd147432f8c606ae89fdbe98b",
+    "job_id": "20261021-143416-ac53d502",
+    "idempotency_key": "greia-451885d8b6764337b070522ddb21df9a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
-    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "voxstage_voice_id": "greia-audition-20261021-dani-v5-02",
+    "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 446572810,
+    "script_seed": 29458450,
     "language_direction": "Italian",
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak in Italian. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak in Italian. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 29760555,
-        "sha256": "89e2a95c61f8f56a607484e0f9c97dc36c8d9989169310a9fe5e6b9fa6a7f409",
+        "seed": 1803879278,
+        "sha256": "ce09ca973049edda6db24b882f34d075215ca40278cb7c5eb1f187b9d2c5b1ef",
         "generation": {
-          "elapsed_seconds": 8.203549208003096,
+          "elapsed_seconds": 4.681832875001419,
           "model_load_seconds": 0.0,
-          "rtf": 5.126684225395123,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.657205734931456,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/treno_numeri/assets/audio/it/not_enough.wav",
-    "bytes": 70646,
-    "sha256": "560073ab70760bc77f821857273404f9b1a26dd69aef6e96bd8c279efd9edd74"
+    "bytes": 56534,
+    "sha256": "d619af8b0674fd297d3edd78fc0613aada7dc8c06f828fdb9b30f62e120c2408"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "7032f3705e7ecf40a25a34d57c13e4eefa08a0c34c67e6bcd8ec1aab42cd22f9",
+    "original_sha256": "560073ab70760bc77f821857273404f9b1a26dd69aef6e96bd8c279efd9edd74",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

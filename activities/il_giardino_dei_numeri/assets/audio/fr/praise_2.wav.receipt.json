@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:43:21.833601+00:00",
+  "created_utc": "2026-10-21T11:44:07.761450+00:00",
   "request": {
     "speaker": "dani",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/il_giardino_dei_numeri/assets/audio/fr/praise_2.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
+    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.dani.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "voice_id": "greia.dani.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
   "generation_parameters": {
-    "job_id": "20261020-144315-6ebbe957",
-    "idempotency_key": "greia-8424edbb63054d88b9edb3567c76754a",
+    "job_id": "20261021-134403-e73179c4",
+    "idempotency_key": "greia-c3b33c77e6f347e793b9a1c774f1e045",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
-    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "voxstage_voice_id": "greia-audition-20261021-dani-v5-02",
+    "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3568614937,
+    "script_seed": 2448796249,
     "language_direction": "French",
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
-    "effective_delivery": "Speak in French. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
+    "effective_delivery": "Speak in French. Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1170489901,
-        "sha256": "f0e3a9b179283a61e9f76f71faeae82d02614954490929a3083ca6f48806318c",
+        "seed": 1220295916,
+        "sha256": "d47eefe5c1b1c27d32a523c2221f7c6048e5d28842fc7212935cc5c2dd18a617",
         "generation": {
-          "elapsed_seconds": 5.352086917031556,
+          "elapsed_seconds": 3.1372601659968495,
           "model_load_seconds": 0.0,
-          "rtf": 5.574122808920212,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.9207583828329717,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/il_giardino_dei_numeri/assets/audio/fr/praise_2.wav",
-    "bytes": 42422,
-    "sha256": "b714fba7db38c263dc42ff2f721d6ec46defae38f8ba01874403c9bc6b3268bb"
+    "bytes": 35366,
+    "sha256": "3ea423f0ac73f69d035f64e5342ee88af362029bcafcb37c2cf8c6542475b8cc"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "fb3790d2b6479fccfb634431d5b122d26a03441b9c961c5885142967d3390c06",
+    "original_sha256": "b714fba7db38c263dc42ff2f721d6ec46defae38f8ba01874403c9bc6b3268bb",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:39:28.758818+00:00",
+  "created_utc": "2026-10-21T12:27:44.034261+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
@@ -10,15 +10,15 @@
     "output": "activities/sillabe_magiche/assets/audio/en/word_complete.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.dani.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "voice_id": "greia.dani.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
   "generation_parameters": {
-    "job_id": "20261020-163921-e83fe85f",
-    "idempotency_key": "greia-a73001d927d04f1e929cabecbcd154fb",
+    "job_id": "20261021-142737-acabeedb",
+    "idempotency_key": "greia-f10bbd964eb74f7ca8d772a9d163799d",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
-    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "voxstage_voice_id": "greia-audition-20261021-dani-v5-02",
+    "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3574352760,
+    "script_seed": 1330952513,
     "language_direction": "English",
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
-    "effective_delivery": "Speak in English. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
+    "effective_delivery": "Speak in English. Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3243737803,
-        "sha256": "6703a390f1e777cf77538124fffcd34da6658b50aa0ecb08891b2f1dddf43824",
+        "seed": 3773467364,
+        "sha256": "90693522d79017038f314c7c4792026fa9dea5a275cd01278477bd75c5b45730",
         "generation": {
-          "elapsed_seconds": 6.155648374988232,
+          "elapsed_seconds": 5.650084374996368,
           "model_load_seconds": 0.0,
-          "rtf": 4.808474189549458,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.5309349286509955,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/sillabe_magiche/assets/audio/en/word_complete.wav",
-    "bytes": 56534,
-    "sha256": "c9e78ad5bc8805f9d6dc6fbf45dfd29b573e1b4dcc12b7df2648d624ac45e997"
+    "bytes": 70646,
+    "sha256": "88a261623de95d3be0f9ccad5cf7aa62829e33e8ea4dbfb53ec83c127b76d615"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "d1272e472d993e01d6bd85a17f4a0a6e48fbe1544380169e5f5f922ddb6333e6",
+    "original_sha256": "c9e78ad5bc8805f9d6dc6fbf45dfd29b573e1b4dcc12b7df2648d624ac45e997",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:08:43.489071+00:00",
+  "created_utc": "2026-10-21T12:50:15.844764+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
@@ -10,15 +10,15 @@
     "output": "activity_incubator/tempo_di_greia/locales/it/audio/presenter_welcome.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace."
+    "delivery_prompt": "Warmly welcoming, calm and conversational, with an unhurried pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.dani.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "voice_id": "greia.dani.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
   "generation_parameters": {
-    "job_id": "20261020-200830-e380ccf5",
-    "idempotency_key": "greia-637f48a735694e7d8850f24fe2a7f262",
+    "job_id": "20261021-145006-a70a5e65",
+    "idempotency_key": "greia-ceb2d7f0a92d43f189ce552ac30f18bc",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
-    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "voxstage_voice_id": "greia-audition-20261021-dani-v5-02",
+    "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1877363815,
+    "script_seed": 2342077639,
     "language_direction": "Italian",
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace.",
-    "effective_delivery": "Speak in Italian. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace.",
+    "delivery_prompt": "Warmly welcoming, calm and conversational, with an unhurried pace.",
+    "effective_delivery": "Speak in Italian. Warmly welcoming, calm and conversational, with an unhurried pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 70058776,
-        "sha256": "c7d9ab9c932f403419fbf694bd2f889ed8008de8899a2b74c7b066c19c3efa1c",
+        "seed": 2841667399,
+        "sha256": "8b976d41ed49a6e09d0850738459c57d43aaf819bf6e2f3253e01696d9615c05",
         "generation": {
-          "elapsed_seconds": 11.384175292041618,
+          "elapsed_seconds": 8.41953545800061,
           "model_load_seconds": 0.0,
-          "rtf": 5.081842999200187,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.5078961702662075,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activity_incubator/tempo_di_greia/locales/it/audio/presenter_welcome.wav",
-    "bytes": 98870,
-    "sha256": "87404129bdba12efcdb3942c8e718ea59f6ab4f39d93c1186e29a981e84bcd63"
+    "bytes": 105926,
+    "sha256": "00e1cc054dd0e7e899176e14394c8c61b93805c577d4a196359183e5462f31be"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "795e4e9ee2f24654279cf42c381ca669086506e80e61a1a7fbae516bbc08a33c",
+    "original_sha256": "87404129bdba12efcdb3942c8e718ea59f6ab4f39d93c1186e29a981e84bcd63",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

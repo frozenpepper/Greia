@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:47:58.303418+00:00",
+  "created_utc": "2026-10-21T11:45:32.516093+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/la_discesa_della_biglia/assets/audio/en/oops_stopped.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-144743-e127ecb0",
-    "idempotency_key": "greia-d35dadb164b9456a8af2b7cd4f0f17e3",
+    "job_id": "20261021-134526-9ddb6e79",
+    "idempotency_key": "greia-602717ecdccf4a1cb5fd6cf37868c43a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4237972673,
+    "script_seed": 2077638515,
     "language_direction": "English",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak in English. Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak in English. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3319153347,
-        "sha256": "c4d6177b2e0ba5d0c27b4c747f4ac0d89b66c57f921545c0d2a6255350a441ec",
+        "seed": 3633655565,
+        "sha256": "89665c058fb46f460d6042bd40585710086215a999cdd4b4fe8e940d3c5341cc",
         "generation": {
-          "elapsed_seconds": 14.112902917026076,
+          "elapsed_seconds": 5.624212750000879,
           "model_load_seconds": 0.0,
-          "rtf": 4.900029946308457,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.5147668472039655,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/la_discesa_della_biglia/assets/audio/en/oops_stopped.wav",
-    "bytes": 127094,
-    "sha256": "ae1c06fc9432442317a444a5b09b4677178c12eb1dc8af061e1467bab7cfa7fa"
+    "bytes": 70646,
+    "sha256": "ee74a2774249400d2d06e30c65963d96f7bb581e2adb5cdc1de0244bb0835772"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "df164c596579bb77c8fe7e09c7f1507041503d60dd69bbfa77be433263249254",
+    "original_sha256": "ae1c06fc9432442317a444a5b09b4677178c12eb1dc8af061e1467bab7cfa7fa",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

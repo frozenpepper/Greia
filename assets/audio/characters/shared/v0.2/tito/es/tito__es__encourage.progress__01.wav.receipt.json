@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:24:43.931747+00:00",
+  "created_utc": "2026-10-21T13:12:51.809259+00:00",
   "request": {
     "speaker": "tito",
     "kind": "shared_character_utterance",
@@ -10,15 +10,15 @@
     "output": "assets/audio/characters/shared/v0.2/tito/es/tito__es__encourage.progress__01.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-212434-372633fd",
-    "idempotency_key": "greia-24e02a558e9b4d038c855225d56497e1",
+    "job_id": "20261021-151243-443d46e6",
+    "idempotency_key": "greia-51810b9096d145b28beccd5f0dd6160b",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3816544892,
+    "script_seed": 2441626494,
     "language_direction": "Spanish",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak in Spanish. Tito, a cheeky, confident woodland explorer. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words.",
+    "effective_delivery": "Speak in Spanish. Brief, natural conversational reaction; relaxed pace and clear words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2884952735,
-        "sha256": "58d842f787ee7c43978c868cee7adccff6823655e25511324f0728cdea574c65",
+        "seed": 4140557961,
+        "sha256": "d309a0923fd697c1dbb7d959dedb31910468ff98ded85c59d0a586dd00d3f1c8",
         "generation": {
-          "elapsed_seconds": 8.527318791951984,
+          "elapsed_seconds": 7.395130624994636,
           "model_load_seconds": 0.0,
-          "rtf": 5.921063852761475,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.555066400926834,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/tito/es/tito__es__encourage.progress__01.wav",
-    "bytes": 63590,
-    "sha256": "a60a9a2d1678677e4a9df3b3bccec1a9c978e0f5536a0e68684374dd4bceb7c3"
+    "bytes": 91814,
+    "sha256": "73384f22006a599c4c6ede13ccea91af34a190540b6a03a050adbee2dfad3728"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "4052377197e492bd1e52df1b1ae52e31f98da28b1fb56abd9c692c045dc3763e",
+    "original_sha256": "a60a9a2d1678677e4a9df3b3bccec1a9c978e0f5536a0e68684374dd4bceb7c3",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

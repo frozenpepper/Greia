@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:14:17.297406+00:00",
+  "created_utc": "2026-10-21T13:07:06.734395+00:00",
   "request": {
     "speaker": "momo",
     "kind": "shared_character_utterance",
@@ -10,15 +10,15 @@
     "output": "assets/audio/characters/shared/v0.2/momo/es/momo__es__praise.general__01.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
+    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-211410-408ab030",
-    "idempotency_key": "greia-ec2b7135860a4ef4b12241db0dc3c8b5",
+    "job_id": "20261021-150701-460a368b",
+    "idempotency_key": "greia-bea8e9677952480583ad52c09bb088b1",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2991102698,
+    "script_seed": 732068624,
     "language_direction": "Spanish",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
-    "effective_delivery": "Speak in Spanish. Momo, a lovable, whimsical comic creature. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
+    "effective_delivery": "Speak in Spanish. Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3990367163,
-        "sha256": "01054c44791a535f891230d875cb7a3e5cf6fbc10f1cbe9d71a62ad08c2267af",
+        "seed": 422177884,
+        "sha256": "2cceb1ad4c208857c4088c92c8e7e2792b7f3a9d2ef139bfd862b1ef6788523a",
         "generation": {
-          "elapsed_seconds": 6.547387833008543,
+          "elapsed_seconds": 4.1717043750031735,
           "model_load_seconds": 0.0,
-          "rtf": 4.091691177799318,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.7241818553814965,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/momo/es/momo__es__praise.general__01.wav",
-    "bytes": 70646,
-    "sha256": "146a4175718e9ffea97030ead79eacf396e0d188d553385cc22f330daf00ced0"
+    "bytes": 49478,
+    "sha256": "62556c0123fd15ad1fc2cfd569b72916cec05150505a6852ef8448ad30ee1651"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "29c2e2963c025e6e83f8ebe7b96b607fd54c7cf8ab5e7f0842712e52cfa090ee",
+    "original_sha256": "146a4175718e9ffea97030ead79eacf396e0d188d553385cc22f330daf00ced0",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:55:53.252567+00:00",
+  "created_utc": "2026-10-21T12:09:43.648587+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/orchestra_animali/assets/audio/es/listen.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Acts out the word for a child. Hushed and expectant, drawing the child in to listen. Playful, clear words."
+    "delivery_prompt": "Acts out the word for a child. Hushed and expectant, drawing the child in to listen. Playful, clear words."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-155544-45cb7060",
-    "idempotency_key": "greia-1351f76712d14f6bb7b6d016261d87c9",
+    "job_id": "20261021-140826-217da449",
+    "idempotency_key": "greia-2632c29d8f704e03a84e3ffab3939bf8",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3555338408,
+    "script_seed": 921978674,
     "language_direction": "Spanish",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Acts out the word for a child. Hushed and expectant, drawing the child in to listen. Playful, clear words.",
-    "effective_delivery": "Speak in Spanish. Momo, a lovable, whimsical comic creature. Acts out the word for a child. Hushed and expectant, drawing the child in to listen. Playful, clear words.",
+    "delivery_prompt": "Acts out the word for a child. Hushed and expectant, drawing the child in to listen. Playful, clear words.",
+    "effective_delivery": "Speak in Spanish. Acts out the word for a child. Hushed and expectant, drawing the child in to listen. Playful, clear words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1774542037,
-        "sha256": "ce2d34d6e6998734b69d9c754a5225d3f09f41cf0369b0cc1be9d5c537d57022",
+        "seed": 3664645771,
+        "sha256": "708a8b431b95b088fbb7d11f61d033718b6f8c0da4378f8a9bd1470dd99215b6",
         "generation": {
-          "elapsed_seconds": 7.3249324999633245,
+          "elapsed_seconds": 75.39250695899682,
           "model_load_seconds": 0.0,
-          "rtf": 4.1614993845071435,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.2722205550739716,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/orchestra_animali/assets/audio/es/listen.wav",
-    "bytes": 77702,
-    "sha256": "c0cc6fab37948a5806727d8d5598eebdad5a8036b79cb9282562e145cc4c780b"
+    "bytes": 1016150,
+    "sha256": "9e04e57b75b30ec5a27c1f29a557f8de44b8d7ebcae775954933c701ac773f4f"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "43cfdb6a999fc49bc4d8bc0d3d7dcff57cab9040cfc70d1a660b62d859df4120",
+    "original_sha256": "c0cc6fab37948a5806727d8d5598eebdad5a8036b79cb9282562e145cc4c780b",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

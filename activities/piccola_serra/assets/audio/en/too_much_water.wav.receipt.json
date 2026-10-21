@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:07:14.293459+00:00",
+  "created_utc": "2026-10-21T12:12:31.846232+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/piccola_serra/assets/audio/en/too_much_water.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-160705-4b71e295",
-    "idempotency_key": "greia-dc5fbd48403e4b419ca2e8645aa21f22",
+    "job_id": "20261021-141223-b4b827c1",
+    "idempotency_key": "greia-9132b12a184f4f01b71f183532205cfe",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3681719329,
+    "script_seed": 2794923679,
     "language_direction": "English",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak in English. Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak in English. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1813061303,
-        "sha256": "4739197585d82e1190764c5d7f44ef6e795d7030602173d2bf179631cbf96e07",
+        "seed": 2323264798,
+        "sha256": "dae4b02723961f3ed5119875643b6f33fa4d460fd82485b8506be0ee7c3ad044",
         "generation": {
-          "elapsed_seconds": 8.544434167037252,
+          "elapsed_seconds": 7.337838291998196,
           "model_load_seconds": 0.0,
-          "rtf": 4.449839857844243,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.527524216968927,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/piccola_serra/assets/audio/en/too_much_water.wav",
-    "bytes": 84758,
-    "sha256": "735f7deb92f2cf702541d8921f176f2b5f6aa3e6d13bfec283bf94c87684df46"
+    "bytes": 91814,
+    "sha256": "c218d908f3fae03fbb140cfd5ba7d9af1344159a202facf3d78112bb9ff03e97"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "c9d19d5f4d80f04d89279c5182f4de0cd02f717710768566335593843e861a22",
+    "original_sha256": "735f7deb92f2cf702541d8921f176f2b5f6aa3e6d13bfec283bf94c87684df46",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

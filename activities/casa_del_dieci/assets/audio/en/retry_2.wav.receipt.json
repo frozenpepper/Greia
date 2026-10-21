@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T00:23:37.781435+00:00",
+  "created_utc": "2026-10-21T08:31:54.477405+00:00",
   "request": {
     "speaker": "dani",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/casa_del_dieci/assets/audio/en/retry_2.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.dani.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "voice_id": "greia.dani.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
   "generation_parameters": {
-    "job_id": "20261020-022327-f680db8a",
-    "idempotency_key": "greia-5f8ab39396694d59b5b4a8fd2f2180be",
+    "job_id": "20261021-103147-62782f3b",
+    "idempotency_key": "greia-74c65b4d4caa4e47bf9f2158adc813ab",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
-    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "voxstage_voice_id": "greia-audition-20261021-dani-v5-02",
+    "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4115229020,
+    "script_seed": 3457500447,
     "language_direction": "English",
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak naturally in English. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak in English. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 819992144,
-        "sha256": "dddad11d5f86669fd333528ee3448a0967b5cf95568153242119b3471b034660",
+        "seed": 2286278156,
+        "sha256": "92fae3cc304cf36e44bde69ef5229159bd5fbe3b36b9c4fccca88183557abb65",
         "generation": {
-          "elapsed_seconds": 9.223236792022362,
+          "elapsed_seconds": 6.723711333004758,
           "model_load_seconds": 0.0,
-          "rtf": 3.602592328112374,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.501629025087106,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/casa_del_dieci/assets/audio/en/retry_2.wav",
-    "bytes": 112982,
-    "sha256": "8769b5fd9e2b71e0566b1c80e8f84f34dbc7e21f4451880942751a003cc04cd1"
+    "bytes": 84758,
+    "sha256": "997ebbefc3b49684895925d4246890be26c57681e4a949f8d14abfba4ba3c781"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "eabdc4cc86278a2101c9d3c50871d3c3087dc9bf6b001a027fce710ce8e9091e",
+    "original_sha256": "8769b5fd9e2b71e0566b1c80e8f84f34dbc7e21f4451880942751a003cc04cd1",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:41:40.866158+00:00",
+  "created_utc": "2026-10-21T11:43:32.356618+00:00",
   "request": {
     "speaker": "dani",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/il_giardino_dei_numeri/assets/audio/fr/basket_full.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.dani.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "voice_id": "greia.dani.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
   "generation_parameters": {
-    "job_id": "20261020-144130-83230fff",
-    "idempotency_key": "greia-a8dbaea5343a44b9bdfcc107c7cceb49",
+    "job_id": "20261021-134327-82d228f6",
+    "idempotency_key": "greia-dfddfede296942858416793fd59499dd",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
-    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "voxstage_voice_id": "greia-audition-20261021-dani-v5-02",
+    "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1161013682,
+    "script_seed": 3661482195,
     "language_direction": "French",
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
-    "effective_delivery": "Speak in French. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
+    "effective_delivery": "Speak in French. Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1326744420,
-        "sha256": "b9a7cf7c6377fe9d41690223e205bff13b8d6a03e1a713f8f1c107a91d324dd6",
+        "seed": 3140754685,
+        "sha256": "ac3c29ce360af3eddc8a39517e3a8c312c8fbf5cec1c5741e8dd90440528064d",
         "generation": {
-          "elapsed_seconds": 9.63543079199735,
+          "elapsed_seconds": 4.142434416993638,
           "model_load_seconds": 0.0,
-          "rtf": 5.018017945663059,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.6980518526948107,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/il_giardino_dei_numeri/assets/audio/fr/basket_full.wav",
-    "bytes": 84758,
-    "sha256": "284f05bba4955e09cf2d742a05f5fc8dff493a32b2c58a69376d1f66dac83240"
+    "bytes": 49478,
+    "sha256": "6dd2da3f0920eb658294a5e2d9196e81b7d77f3909e41d3c59365939a8d535ce"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "1a9eca855a312902fabc4a634a4b67b18f1c0afd57ca745624ab52356bc33985",
+    "original_sha256": "284f05bba4955e09cf2d742a05f5fc8dff493a32b2c58a69376d1f66dac83240",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

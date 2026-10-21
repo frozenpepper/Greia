@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T00:16:22.044652+00:00",
+  "created_utc": "2026-10-21T08:26:50.119273+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
@@ -10,15 +10,15 @@
     "output": "activities/bottega_delle_misure/assets/audio/fr/which_heavier.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.dani.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "voice_id": "greia.dani.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
   "generation_parameters": {
-    "job_id": "20261020-021608-8ac3364f",
-    "idempotency_key": "greia-fe0f96cd06864318922a83368226d980",
+    "job_id": "20261021-102643-e408956a",
+    "idempotency_key": "greia-9e9d6fdd319f43c985701b5d4b4bae29",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
-    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "voxstage_voice_id": "greia-audition-20261021-dani-v5-02",
+    "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3278566349,
+    "script_seed": 1458392832,
     "language_direction": "French",
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak naturally in French. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "effective_delivery": "Speak in French. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1093243081,
-        "sha256": "46817716455ddc74ff5167a25336a6c5d9c1d81070adb3cce226851fdb89b915",
+        "seed": 348051122,
+        "sha256": "e9f096ca2db764c206c3bdf58d7c244dbc30f6f17faa9fb4d430bb6d47601f13",
         "generation": {
-          "elapsed_seconds": 12.293441459012683,
+          "elapsed_seconds": 5.2713861250013,
           "model_load_seconds": 0.0,
-          "rtf": 5.487735194857235,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.6602611676898276,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/bottega_delle_misure/assets/audio/fr/which_heavier.wav",
-    "bytes": 98870,
-    "sha256": "8057de7da0ec7f59225b7a311c375a6fe86bd96d9e8a0fa216147926348eeaf2"
+    "bytes": 63590,
+    "sha256": "fa9dcc04238a1eaf03669dc800defd6401fe59a4627ffad7b004f9ffaeb2d48b"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "8c5a160cfd14909c36c37571f6cfd1b4d3b16670630be9060a453bf2375bdc88",
+    "original_sha256": "8057de7da0ec7f59225b7a311c375a6fe86bd96d9e8a0fa216147926348eeaf2",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:00:25.173151+00:00",
+  "created_utc": "2026-10-21T11:53:01.469431+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/luci_di_momo/assets/audio/es/correct_3.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
+    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-150018-6c018211",
-    "idempotency_key": "greia-1402caff82a341d8974225a607d30f40",
+    "job_id": "20261021-135256-21fd547e",
+    "idempotency_key": "greia-00813d2cb077433db10deb64d6502851",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2650291690,
+    "script_seed": 1772774980,
     "language_direction": "Spanish",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
-    "effective_delivery": "Speak in Spanish. Momo, a lovable, whimsical comic creature. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
+    "effective_delivery": "Speak in Spanish. Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3950917922,
-        "sha256": "1d2070b09dff5b8d7c47e6e31aa52f1a246bed6266958757ffd90c05fd81d846",
+        "seed": 834611067,
+        "sha256": "4a75f7c026537f59e0874fc4f2246c4e3cf521bd8c02846913407063926fcb87",
         "generation": {
-          "elapsed_seconds": 5.393711749988142,
+          "elapsed_seconds": 4.1791370829960215,
           "model_load_seconds": 0.0,
-          "rtf": 4.815097530118859,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.7308172143990666,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -71,12 +71,12 @@
   "output": {
     "path": "activities/luci_di_momo/assets/audio/es/correct_3.wav",
     "bytes": 49478,
-    "sha256": "0fcb5cd6f8718b6037f3f0cbdbeb2ccf8d84a472478ce836323f5650f9235967"
+    "sha256": "916de6750a867a590583692f769ff0838510e2f1a412c449ae90c4c5daf5c77a"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "abb9e963125f744057f36f35165eb6b1db5568e369cc7e1598192677163322ae",
+    "original_sha256": "0fcb5cd6f8718b6037f3f0cbdbeb2ccf8d84a472478ce836323f5650f9235967",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

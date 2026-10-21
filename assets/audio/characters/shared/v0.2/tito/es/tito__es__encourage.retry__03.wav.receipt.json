@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:25:43.411046+00:00",
+  "created_utc": "2026-10-21T13:13:29.118612+00:00",
   "request": {
     "speaker": "tito",
     "kind": "shared_character_utterance",
@@ -10,15 +10,15 @@
     "output": "assets/audio/characters/shared/v0.2/tito/es/tito__es__encourage.retry__03.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-212534-923b0c42",
-    "idempotency_key": "greia-31b5e849d2a94b62804a5b4c7c47ac35",
+    "job_id": "20261021-151321-a2dc0301",
+    "idempotency_key": "greia-bdb3cee04e17460aba8d2b20cb01ab15",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3431273863,
+    "script_seed": 1612282087,
     "language_direction": "Spanish",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak in Spanish. Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak in Spanish. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1006771891,
-        "sha256": "57a3b35d69b187b72be89b415d83b97ccda02c94b79155efb113ca6860deed47",
+        "seed": 3625315087,
+        "sha256": "5336bf544ff769e9364b2c035d9babd724a8a54a194795fa2e3e3c00d21ee6d1",
         "generation": {
-          "elapsed_seconds": 8.924778083048295,
+          "elapsed_seconds": 6.242289499998151,
           "model_load_seconds": 0.0,
-          "rtf": 4.6479184531108215,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.5464195625403754,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/tito/es/tito__es__encourage.retry__03.wav",
-    "bytes": 84758,
-    "sha256": "9c562fcd883c4c224ae3a6e53c8ed312ed755fdf2940de2914500212e8427f7a"
+    "bytes": 77702,
+    "sha256": "eb60456d26198c4c215f8a7d4d9ea5e07992f9c6989978c6ffa26946181dd1b3"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "e58c273f73dbb5a619d066ed03cbf7ab836c60038fc15199eb028eea1b6964ee",
+    "original_sha256": "9c562fcd883c4c224ae3a6e53c8ed312ed755fdf2940de2914500212e8427f7a",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T03:08:31.784814+00:00",
+  "created_utc": "2026-10-21T08:43:30.968328+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/clinica_cuccioli/assets/audio/fr/all_better.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-050821-e035cd2c",
-    "idempotency_key": "greia-d6d42185fec440d4bfa7745d84b13b64",
+    "job_id": "20261021-104324-505726c6",
+    "idempotency_key": "greia-120fefb696624b688621caa8ecd758c2",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 149611822,
+    "script_seed": 2918218289,
     "language_direction": "French",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
-    "effective_delivery": "Speak naturally in French. Momo, a lovable, whimsical comic creature. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
+    "effective_delivery": "Speak in French. Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2419927689,
-        "sha256": "a6d0291aca3031b3ca354ff9d07143ac87f3e86b3d7e38ccedff5fca427ee6f2",
+        "seed": 782863816,
+        "sha256": "15b5b10323b4eee14ae777aa7a5e2fe12d94ff75b4e871cb6aefae250ba2e8da",
         "generation": {
-          "elapsed_seconds": 10.138895959011279,
+          "elapsed_seconds": 5.920208291994641,
           "model_load_seconds": 0.0,
-          "rtf": 5.28021662651399,
-          "peak_memory_gb": 6.61593154
+          "rtf": 3.699744792414107,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/clinica_cuccioli/assets/audio/fr/all_better.wav",
-    "bytes": 84758,
-    "sha256": "553e54c0f6e32f36f9926d33cd9fd30f1e5674d1842c03b25a695a41ba5f2768"
+    "bytes": 70646,
+    "sha256": "a0e2fb6121bf04aba28e557dd25c0cb7ccdb1dfa0e1638269301e51a6e5b2ff9"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "074db20d88d1d06ed60fa96dafa645e5bd4115a14435cf24cea5dc73a015c3d6",
+    "original_sha256": "553e54c0f6e32f36f9926d33cd9fd30f1e5674d1842c03b25a695a41ba5f2768",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

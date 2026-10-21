@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:09:30.649145+00:00",
+  "created_utc": "2026-10-21T12:50:44.876358+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
@@ -10,15 +10,15 @@
     "output": "assets/audio/characters/shared/v0.2/_intros/en/dani.ogg",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses."
+    "delivery_prompt": "Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.dani.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "voice_id": "greia.dani.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
   "generation_parameters": {
-    "job_id": "20261020-200845-bd29c6ee",
-    "idempotency_key": "greia-1863ed498876407798e1448ad51fe78c",
+    "job_id": "20261021-145016-d715bd6e",
+    "idempotency_key": "greia-3a2120224af0437eb66ee99bfcc9f39b",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
-    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "voxstage_voice_id": "greia-audition-20261021-dani-v5-02",
+    "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 624106001,
+    "script_seed": 1975713477,
     "language_direction": "English",
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
-    "effective_delivery": "Speak in English. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "delivery_prompt": "Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
+    "effective_delivery": "Speak in English. Introduces themself to a brand-new friend: open, delighted and personal, relaxed conversational pace with natural pauses.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 128844180,
-        "sha256": "5884ebf80ad6d5e46ba99a6a3e4d86f4ff39fbbd81fd466240c5b7da0129aadd",
+        "seed": 3491548360,
+        "sha256": "8cc7412f52935d7e29c79292587f581693ae777ba0ddd3da67113d137fb952ae",
         "generation": {
-          "elapsed_seconds": 44.07698920799885,
+          "elapsed_seconds": 27.657437249996292,
           "model_load_seconds": 0.0,
-          "rtf": 4.372644884310661,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.3241446184967796,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/_intros/en/dani.ogg",
-    "bytes": 69309,
-    "sha256": "e77c0a3d1577aae740aed3902cc944f5edaeccb9eecc524918a7b9d25cc0bbe7"
+    "bytes": 55461,
+    "sha256": "19718b0752c8e0b9c9564d9aa8da048b749d86e4d6cc7fccdd503568e3830fdf"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "911a36f11d9d93edb39e26a9ef971c0134925c1efe044d0c8fa55645d754e573",
+    "original_sha256": "e77c0a3d1577aae740aed3902cc944f5edaeccb9eecc524918a7b9d25cc0bbe7",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

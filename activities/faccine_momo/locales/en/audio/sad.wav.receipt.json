@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T11:52:40.535217+00:00",
+  "created_utc": "2026-10-21T11:36:11.980756+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/faccine_momo/locales/en/audio/sad.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A little sad: soft, slower and slightly droopy, still gentle and safe. Keep every word clear."
+    "delivery_prompt": "A little sad: soft, slower and slightly droopy, still gentle and safe. Keep every word clear."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-135215-d5cc23ea",
-    "idempotency_key": "greia-f95fd2afa591422597ef5f0099fc658e",
+    "job_id": "20261021-133552-4331d079",
+    "idempotency_key": "greia-26baa97e44594cff95d369e509025eb6",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3874185774,
+    "script_seed": 3042512119,
     "language_direction": "English",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A little sad: soft, slower and slightly droopy, still gentle and safe. Keep every word clear.",
-    "effective_delivery": "Speak naturally in English. Momo, a lovable, whimsical comic creature. A little sad: soft, slower and slightly droopy, still gentle and safe. Keep every word clear.",
+    "delivery_prompt": "A little sad: soft, slower and slightly droopy, still gentle and safe. Keep every word clear.",
+    "effective_delivery": "Speak in English. A little sad: soft, slower and slightly droopy, still gentle and safe. Keep every word clear.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1946900175,
-        "sha256": "d5ecd27e502e8537e4ece26f055aa60cba98de078cc68c7f82ec6b8c3a554973",
+        "seed": 4134300528,
+        "sha256": "73978df4680a4516e2962cc89b7401b0c697ac8ebe3c1bb6d6d65a71663a7cb4",
         "generation": {
-          "elapsed_seconds": 24.129952749994118,
+          "elapsed_seconds": 18.435970416998316,
           "model_load_seconds": 0.0,
-          "rtf": 4.86474636268824,
-          "peak_memory_gb": 8.079945652
+          "rtf": 3.3888613247752795,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/faccine_momo/locales/en/audio/sad.wav",
-    "bytes": 218822,
-    "sha256": "0933455f9e49bfc7180af8fd59314e89bf83ba2a9caafd1c8a42f258ea588b5a"
+    "bytes": 239990,
+    "sha256": "945a659c8b6496c8ccb5c0dde5bfae58a35b3b1a0e14d56013f788143b4022a4"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "aa23a3c538ee3e56eeee70f6d62f762ce1efa3f2f2cbf00d45feec2703929f50",
+    "original_sha256": "0933455f9e49bfc7180af8fd59314e89bf83ba2a9caafd1c8a42f258ea588b5a",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

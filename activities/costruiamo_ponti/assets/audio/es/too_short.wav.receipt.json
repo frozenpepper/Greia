@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T03:24:12.468201+00:00",
+  "created_utc": "2026-10-21T08:50:45.640879+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/costruiamo_ponti/assets/audio/es/too_short.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-052404-6f6b7f09",
-    "idempotency_key": "greia-4a0fb77cf6324da2a028a3818d6f2356",
+    "job_id": "20261021-105040-3f63729a",
+    "idempotency_key": "greia-e0fa2e2324f2450ead82ad7922be27ae",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1187890083,
+    "script_seed": 2521460995,
     "language_direction": "Spanish",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak naturally in Spanish. Tito, a cheeky, confident woodland explorer. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak in Spanish. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1924487817,
-        "sha256": "325eb7342e144568c818d2fe68b4b25566714509bf8b66a9f5b287789f84b827",
+        "seed": 2008906416,
+        "sha256": "4f4b28e4831659c6f8c701e9cbec6eef5edfe22e8d117f4aeae61f773732da07",
         "generation": {
-          "elapsed_seconds": 7.218497166992165,
+          "elapsed_seconds": 4.100711457998841,
           "model_load_seconds": 0.0,
-          "rtf": 4.511090824075929,
-          "peak_memory_gb": 6.61593154
+          "rtf": 3.660804753458272,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/costruiamo_ponti/assets/audio/es/too_short.wav",
-    "bytes": 70646,
-    "sha256": "23e3507b74865d46048d5e7c12006dca292ce6ce4d7cf4cc3a16a2609114420c"
+    "bytes": 49478,
+    "sha256": "983cff07a1d17ed5d1410ffd08bce5f09e643a581652cb1ed1e6c9a56915fd13"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "0ca256f4c70f7ec55e16bb46e5033924a1d314b65b5ce9cf4fd5182ad91471c9",
+    "original_sha256": "23e3507b74865d46048d5e7c12006dca292ce6ce4d7cf4cc3a16a2609114420c",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

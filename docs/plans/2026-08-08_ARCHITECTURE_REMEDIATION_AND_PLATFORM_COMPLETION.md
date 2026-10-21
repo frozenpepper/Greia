@@ -3495,3 +3495,27 @@ The v0.3 voice preparation's focused suite passed (72 tests). Required local
 8 skips; see the dated HANDOVER entry and external log for exact inherited
 failures/errors. This does not close or weaken any remediation gate. Voice
 corpus generation is a separate owner-authorized local production operation.
+
+### 2026-10-21 — Owner-authorized v0.3 corpus production and automated screen
+
+The selected v0.3 Dani/Momo/Tito master promotion was followed by the separately
+authorized frozen 1,340-cue runtime-speech replacement. VoiceEngine serial
+production exited 0 with **1,340 DONE, 3,575 PRESERVED, no unresolved rows**;
+originals and receipts remain in the external v3 run backups and the previous
+frozen v2 plan/run history was not edited. A terminal silent Dani/EN job was
+inspected and retried once only after the provider was confirmed idle; the retry
+completed and remains listening-pending.
+
+Full policy-v2 automated screening covered all 1,340 installed outputs with
+eligible ASR complete: 1,115 PASS / 225 WARN / 0 FAIL / 0 BLOCKED; 533 ASR
+policy exclusions are visible. No voice identity, performance, pronunciation,
+human listening or release acceptance is inferred. A complete external
+Takeboard batch was exported with all rows unreviewed and is served on fresh
+loopback port 8799. Continue the owner listening gate without treating this
+voice workstream as closing the active architecture-remediation plan. The source `make verify` result above was at pre-production commit
+`11f1c799b` (NOT GREEN: 2 failures, 4 errors, 8 skipped). During production,
+`main` fast-forwarded six owner commits to `9271f0ac3`, including a remote fix
+for the build-profile executable-mode error; `make verify` was not rerun at that
+merged head. Focused voice tests were 72/72 PASS before production. Evidence
+and logs are under
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/`.

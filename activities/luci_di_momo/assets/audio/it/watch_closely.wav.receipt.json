@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:12:16.274155+00:00",
+  "created_utc": "2026-10-21T12:01:45.938253+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/luci_di_momo/assets/audio/it/watch_closely.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-151210-928bd054",
-    "idempotency_key": "greia-17e1f9efcb3a40029d853937da0b3a0f",
+    "job_id": "20261021-140140-ecd6dec3",
+    "idempotency_key": "greia-e35099e7d36b4b1a9a464799c1297aaa",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 327612654,
+    "script_seed": 672859702,
     "language_direction": "Italian",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak in Italian. Momo, a lovable, whimsical comic creature. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words.",
+    "effective_delivery": "Speak in Italian. Brief, natural conversational reaction; relaxed pace and clear words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1694223089,
-        "sha256": "1b534d6e90652354125510e14b32a5764b7e2df421bf4389096e80f516fce523",
+        "seed": 60820199,
+        "sha256": "9941e4651d45224e1b4298a68ad92868e5c064dd101ca7f2c48d360a78b22bcf",
         "generation": {
-          "elapsed_seconds": 5.309899333980866,
+          "elapsed_seconds": 4.607385750001413,
           "model_load_seconds": 0.0,
-          "rtf": 4.147818774103007,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.59905149069242,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -71,12 +71,12 @@
   "output": {
     "path": "activities/luci_di_momo/assets/audio/it/watch_closely.wav",
     "bytes": 56534,
-    "sha256": "3549b7f98c9305a85d532e354e088d1cc62227d36dd3ee668f2e4e44a31f6d09"
+    "sha256": "3b5eafb2f8bf0fbc881325694b8785d4ba8619508e3980a8f0b9e898fa43be2d"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "294aaa64946832513c185adde4ae3a749a328e7e68bf5343f7855faa37a642f3",
+    "original_sha256": "3549b7f98c9305a85d532e354e088d1cc62227d36dd3ee668f2e4e44a31f6d09",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

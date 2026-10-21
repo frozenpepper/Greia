@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:51:33.283089+00:00",
+  "created_utc": "2026-10-21T12:07:14.946553+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
@@ -10,15 +10,15 @@
     "output": "activities/officina_dei_suoni/assets/audio/it/find_another_sound.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
+    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.dani.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "voice_id": "greia.dani.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
   "generation_parameters": {
-    "job_id": "20261020-155120-8c7238c0",
-    "idempotency_key": "greia-2d0831ca5c8d4d508d9a38c7a9e3b920",
+    "job_id": "20261021-140705-21af0ec8",
+    "idempotency_key": "greia-c07cd7cb9f1e469a8d59c57423a5e851",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
-    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "voxstage_voice_id": "greia-audition-20261021-dani-v5-02",
+    "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3877076241,
+    "script_seed": 653738447,
     "language_direction": "Italian",
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
-    "effective_delivery": "Speak in Italian. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "delivery_prompt": "Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
+    "effective_delivery": "Speak in Italian. Gives a short instruction to a young child: clear, friendly and encouraging, stress the key action word, calm steady pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1268858165,
-        "sha256": "8dff520bd11462258ef834f01c84d0f8f54127b9c75a64ee1c316666f1e8427b",
+        "seed": 1998327407,
+        "sha256": "2186fad0a0fabc984319f7ef9915efe1959065376165b8bd40a9ce07c21ac04c",
         "generation": {
-          "elapsed_seconds": 11.748187459015753,
+          "elapsed_seconds": 8.887702041996818,
           "model_load_seconds": 0.0,
-          "rtf": 3.864323488520066,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.4715325989180985,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/officina_dei_suoni/assets/audio/it/find_another_sound.wav",
-    "bytes": 134150,
-    "sha256": "dd30aef2220247e5577d5b7f65832282828d7c1de23a914263e5e75f2d7be2c7"
+    "bytes": 112982,
+    "sha256": "aa3a7e513fee7df4bd24bacc57cb2a903f018884ed1443c62e322c73f89af1ed"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "831f111a09be37121bd74b5f856d6e23d7544bea88bab4ab47f442c27ba0d774",
+    "original_sha256": "dd30aef2220247e5577d5b7f65832282828d7c1de23a914263e5e75f2d7be2c7",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

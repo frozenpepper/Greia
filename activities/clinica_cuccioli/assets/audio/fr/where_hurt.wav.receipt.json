@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T03:09:09.226863+00:00",
+  "created_utc": "2026-10-21T08:43:53.727607+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/clinica_cuccioli/assets/audio/fr/where_hurt.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-050856-82cfe32c",
-    "idempotency_key": "greia-83cd21ab6f0443fdb01471e28df9dd27",
+    "job_id": "20261021-104345-b4793d47",
+    "idempotency_key": "greia-a7e9ef7142ad4d8986b70ebd3e36cf27",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1276195576,
+    "script_seed": 134761137,
     "language_direction": "French",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak naturally in French. Momo, a lovable, whimsical comic creature. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "effective_delivery": "Speak in French. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1997559607,
-        "sha256": "95af18345a112a542e2aca61a557ef9e61611da4cd4dfec19a0b5329123524b7",
+        "seed": 3176799341,
+        "sha256": "52db4b91e98217cf85e6fff43baf316d867ce9920e10ca7da0fce1240595f6c1",
         "generation": {
-          "elapsed_seconds": 11.729877082980238,
+          "elapsed_seconds": 7.035932042002969,
           "model_load_seconds": 0.0,
-          "rtf": 8.144805288494553,
-          "peak_memory_gb": 6.61593154
+          "rtf": 3.664229863034269,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/clinica_cuccioli/assets/audio/fr/where_hurt.wav",
-    "bytes": 63590,
-    "sha256": "b19e65f01067e718e6d74ff452b3ae2dc19b3549498f72e558aebbd955188e86"
+    "bytes": 84758,
+    "sha256": "d2f4b500a56823b60718c2f7a2cd26cabb733eb2c4b75eca4704931f7973948b"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "3bc321bfcb58c84a7eb276a95386179eaecda12736507f17177b5ff67c098824",
+    "original_sha256": "b19e65f01067e718e6d74ff452b3ae2dc19b3549498f72e558aebbd955188e86",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

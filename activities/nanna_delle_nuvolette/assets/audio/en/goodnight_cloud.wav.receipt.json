@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:28:46.703499+00:00",
+  "created_utc": "2026-10-21T12:03:43.560305+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/nanna_delle_nuvolette/assets/audio/en/goodnight_cloud.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm."
+    "delivery_prompt": "Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-152836-2bf1b99a",
-    "idempotency_key": "greia-ef2f7d88251649488a227d487e6b0220",
+    "job_id": "20261021-140330-fbe6877e",
+    "idempotency_key": "greia-ebc9f3e27ab645699ba03cd7a7b26468",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1354318713,
+    "script_seed": 3618400934,
     "language_direction": "English",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm.",
-    "effective_delivery": "Speak in English. Momo, a lovable, whimsical comic creature. Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm.",
+    "delivery_prompt": "Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm.",
+    "effective_delivery": "Speak in English. Bedtime-quiet: soft, slow and soothing, almost a whisper, warm and calm.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3127715475,
-        "sha256": "69e4d96f886d1b74c8cf67bd93f538756763bd9bf9663752ee017d9d46276295",
+        "seed": 53206560,
+        "sha256": "a66faf69ecbf4bbb7cd28eb4651549c5d7dba4008781d789eca1e6a52ec29674",
         "generation": {
-          "elapsed_seconds": 9.694060041976627,
+          "elapsed_seconds": 12.895696291001514,
           "model_load_seconds": 0.0,
-          "rtf": 4.327383397951028,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.358108491211713,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/nanna_delle_nuvolette/assets/audio/en/goodnight_cloud.wav",
-    "bytes": 98870,
-    "sha256": "69adb4597f3aed6de1feeca380bc45b27b78db9a3b0995223460c340619e1419"
+    "bytes": 169430,
+    "sha256": "762f5fda6fec75e5ac38a11dafd2ebd015c63277eb0ecf04a70dc333238f60df"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "155fc6b538a357348030f750b2c7a5229a241c146c38ab76a568778c7341d6a7",
+    "original_sha256": "69adb4597f3aed6de1feeca380bc45b27b78db9a3b0995223460c340619e1419",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

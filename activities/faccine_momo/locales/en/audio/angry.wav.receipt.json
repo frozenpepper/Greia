@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T11:50:37.230844+00:00",
+  "created_utc": "2026-10-21T11:34:46.946263+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/faccine_momo/locales/en/audio/angry.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Comically grumpy, then calming down with a big slow breath; never scary. Keep every word clear."
+    "delivery_prompt": "Comically grumpy, then calming down with a big slow breath; never scary. Keep every word clear."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-135008-bd98a81d",
-    "idempotency_key": "greia-ce7d12909e4740619be13716cabc19de",
+    "job_id": "20261021-133425-d005d8a4",
+    "idempotency_key": "greia-c253a36e14b54e58b9af758ce3c86212",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2738038530,
+    "script_seed": 1111263399,
     "language_direction": "English",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Comically grumpy, then calming down with a big slow breath; never scary. Keep every word clear.",
-    "effective_delivery": "Speak naturally in English. Momo, a lovable, whimsical comic creature. Comically grumpy, then calming down with a big slow breath; never scary. Keep every word clear.",
+    "delivery_prompt": "Comically grumpy, then calming down with a big slow breath; never scary. Keep every word clear.",
+    "effective_delivery": "Speak in English. Comically grumpy, then calming down with a big slow breath; never scary. Keep every word clear.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 802153633,
-        "sha256": "df94ac302857a0bc40075e619578beb3514907a2b6ec15cdc8774af7cdafe047",
+        "seed": 3642352224,
+        "sha256": "4635b9c95e7bcbd3eca0cd7fbc5a20bf10abbb3d10960db882dc14dbe40f21dc",
         "generation": {
-          "elapsed_seconds": 27.533330374979414,
+          "elapsed_seconds": 20.56419158299832,
           "model_load_seconds": 0.0,
-          "rtf": 5.3774285423611365,
-          "peak_memory_gb": 8.079945652
+          "rtf": 3.382175639318821,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/faccine_momo/locales/en/audio/angry.wav",
-    "bytes": 225878,
-    "sha256": "c0848a030fa0dd9be90c289c8c819d610680ce2dfeb4d549e8c5f8112ec3c6a0"
+    "bytes": 268214,
+    "sha256": "2ff4893959fc079a1aa123c6b244c2332e4cd3eb73db0470efc1e4f08bc85a47"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "08005255d9ff124bf02240981b27479e5cfa44a3db0019eaf690500a72077425",
+    "original_sha256": "c0848a030fa0dd9be90c289c8c819d610680ce2dfeb4d549e8c5f8112ec3c6a0",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

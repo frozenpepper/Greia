@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-19T20:33:59.903226+00:00",
+  "created_utc": "2026-10-21T11:28:42.629357+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/faccine_momo/assets/audio/es/angry.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Comically grumpy, then calming down with a big slow breath; never scary. Keep every word clear."
+    "delivery_prompt": "Comically grumpy, then calming down with a big slow breath; never scary. Keep every word clear."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261019-223324-c25bed43",
-    "idempotency_key": "greia-cc659047335741d3abf468df80a10b48",
+    "job_id": "20261021-132819-04f0d153",
+    "idempotency_key": "greia-4ab7ffb1c49a4f41842c84bc85be97b2",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1185776089,
+    "script_seed": 2947832685,
     "language_direction": "Spanish",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Comically grumpy, then calming down with a big slow breath; never scary. Keep every word clear.",
-    "effective_delivery": "Speak naturally in Spanish. Momo, a lovable, whimsical comic creature. Comically grumpy, then calming down with a big slow breath; never scary. Keep every word clear.",
+    "delivery_prompt": "Comically grumpy, then calming down with a big slow breath; never scary. Keep every word clear.",
+    "effective_delivery": "Speak in Spanish. Comically grumpy, then calming down with a big slow breath; never scary. Keep every word clear.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1198519118,
-        "sha256": "d587fc8ca88518ac198f29914c3630f74adbbe49635db088e34f15655f494e35",
+        "seed": 2632350431,
+        "sha256": "a2bb7f2448555f86a40d1decee915cc6907b91c95382d374c1798ef0e265d129",
         "generation": {
-          "elapsed_seconds": 22.948635083972476,
-          "model_load_seconds": 11.563380707986653,
-          "rtf": 4.346195211762093,
-          "peak_memory_gb": 8.21220922
+          "elapsed_seconds": 22.367030749999685,
+          "model_load_seconds": 0.0,
+          "rtf": 3.328344646710104,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/faccine_momo/assets/audio/es/angry.wav",
-    "bytes": 232934,
-    "sha256": "205c85282248ed5bb1d22094893b595ac3021a02d83795e028b46a35fea045cd"
+    "bytes": 296438,
+    "sha256": "8c464f7d62ed865e11d3ed9d7d4cfbd246e95655ab0c53aafd5dc35785928f17"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "676da2c663fe2f7551f7a7635eb7b2a3965001a2c8bb22ba7d3e2eb3849c9461",
+    "original_sha256": "205c85282248ed5bb1d22094893b595ac3021a02d83795e028b46a35fea045cd",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

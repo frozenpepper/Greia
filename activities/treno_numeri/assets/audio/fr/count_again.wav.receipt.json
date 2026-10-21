@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T17:29:14.794266+00:00",
+  "created_utc": "2026-10-21T12:33:30.102235+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
@@ -10,15 +10,15 @@
     "output": "activities/treno_numeri/assets/audio/fr/count_again.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.dani.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "voice_id": "greia.dani.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
   "generation_parameters": {
-    "job_id": "20261020-192908-96ad5721",
-    "idempotency_key": "greia-273c4f0c72c24e67a9b7364abea78fce",
+    "job_id": "20261021-143324-2c328290",
+    "idempotency_key": "greia-917e3257d3544d57b09fbde1a9bcf72a",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
-    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "voxstage_voice_id": "greia-audition-20261021-dani-v5-02",
+    "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3023397733,
+    "script_seed": 2499226260,
     "language_direction": "French",
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak in French. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words.",
+    "effective_delivery": "Speak in French. Brief, natural conversational reaction; relaxed pace and clear words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1449243999,
-        "sha256": "9a81e024e385d6a0d7ff2e7907e555c5be53a013681c89919567d4fb1c95635e",
+        "seed": 3525596503,
+        "sha256": "265d6b438d9185da26feefcfb8bf13036b87f0f27d38d3947ab0f045b76d6caf",
         "generation": {
-          "elapsed_seconds": 5.919756083982065,
+          "elapsed_seconds": 4.282976875001623,
           "model_load_seconds": 0.0,
-          "rtf": 6.165342215568893,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.8235175197157765,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/treno_numeri/assets/audio/fr/count_again.wav",
-    "bytes": 42422,
-    "sha256": "52dd6b1907733655a37c5066eeee66ab7b2015e7d4e9126161e99dbdbba635e1"
+    "bytes": 49478,
+    "sha256": "6a672eec3d2c0c46b80fc06df0001b7de340bebfe7bcfa2cb3a3be526f51e1b1"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "446e6dce9fefca35550cc320380d7ad52a32658055516bcc273526a5ab4c5ac7",
+    "original_sha256": "52dd6b1907733655a37c5066eeee66ab7b2015e7d4e9126161e99dbdbba635e1",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:57:51.714956+00:00",
+  "created_utc": "2026-10-21T12:11:20.277483+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/orchestra_animali/assets/audio/fr/your_turn.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-155746-56f1ab73",
-    "idempotency_key": "greia-4d84f7a5bec64e1a9a75e21e849878d2",
+    "job_id": "20261021-141112-b4ec42e5",
+    "idempotency_key": "greia-c00f5bdcd8c14d6b9b3880698df40473",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4029735469,
+    "script_seed": 1909501304,
     "language_direction": "French",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak in French. Momo, a lovable, whimsical comic creature. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words.",
+    "effective_delivery": "Speak in French. Brief, natural conversational reaction; relaxed pace and clear words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1684210581,
-        "sha256": "29eb9e1ef33d417417b5aff8c41f41056a60a1fb8e12e6a45b9a25c0eba02c4f",
+        "seed": 914764860,
+        "sha256": "e3dddbd91427753e4e267d938fedd3a69ecefc74c2277122cfb1f7ec002d224b",
         "generation": {
-          "elapsed_seconds": 4.66352108301362,
+          "elapsed_seconds": 7.1628437920007855,
           "model_load_seconds": 0.0,
-          "rtf": 4.163238580282952,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.4433989866200396,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/orchestra_animali/assets/audio/fr/your_turn.wav",
-    "bytes": 49478,
-    "sha256": "6321c823c693773a9f88902df7bb9bef3791947b2c1ac46d0b63418ec47fb88d"
+    "bytes": 91814,
+    "sha256": "b6a7121beae951323c6741a5f3a39f5799e4b2168581a5a5115a8d666ec89d49"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "dc4066e3d96c3e41190a352de79f7f4da2d53d72c573f2c1915190573a73718d",
+    "original_sha256": "6321c823c693773a9f88902df7bb9bef3791947b2c1ac46d0b63418ec47fb88d",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:10:53.605416+00:00",
+  "created_utc": "2026-10-21T12:00:34.850271+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/luci_di_momo/assets/audio/it/count_9.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
+    "delivery_prompt": "Counts aloud with a child: one crisp, clear number, bright and steady, no extra words."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-151049-1281f57f",
-    "idempotency_key": "greia-d079d66a8b724161a642cb12d63117b0",
+    "job_id": "20261021-140030-092d379a",
+    "idempotency_key": "greia-2a0e802494be4e45b79e5fa86dfe2510",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2652902736,
+    "script_seed": 4084189031,
     "language_direction": "Italian",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
-    "effective_delivery": "Speak in Italian. Momo, a lovable, whimsical comic creature. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "delivery_prompt": "Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
+    "effective_delivery": "Speak in Italian. Counts aloud with a child: one crisp, clear number, bright and steady, no extra words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2467474298,
-        "sha256": "8d637c5505580ac42e942ebc68e56790c651d67ef03e266494fc7fe8e08539a3",
+        "seed": 1520291413,
+        "sha256": "85ccf0d821a6cdbb201664a0704a3f191ef0535e8fa9d64a0d612d6867ec08bf",
         "generation": {
-          "elapsed_seconds": 3.6974607500014827,
+          "elapsed_seconds": 3.094036916998448,
           "model_load_seconds": 0.0,
-          "rtf": 4.6208632576565085,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.866740575294873,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -71,12 +71,12 @@
   "output": {
     "path": "activities/luci_di_momo/assets/audio/it/count_9.wav",
     "bytes": 35366,
-    "sha256": "ff5837fcb2957110320d888dcadbabb0392f230563a35de89215979e291792c8"
+    "sha256": "4eb79e3fa71a67a11851b02a8f92ebf91343d8cd0190e783b3aa4b578e4cc13f"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "5e3ef31732a7c381853b05483100f2347de0e7d096e1d39894b340faecd2b397",
+    "original_sha256": "ff5837fcb2957110320d888dcadbabb0392f230563a35de89215979e291792c8",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

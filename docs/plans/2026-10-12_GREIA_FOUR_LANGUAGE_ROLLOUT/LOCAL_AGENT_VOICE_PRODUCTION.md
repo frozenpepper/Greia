@@ -1,14 +1,19 @@
 # Greia — Local Agent: Four-Language Audio Production and Gap Closure
 
-**Current existing-corpus replacement order (2026-10-19):**
+**Existing-corpus replacement order (2026-10-19; v0.3 continuation 2026-10-21):**
 `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md` and
 `tools/regenerate_voice_corpus.py` implement the owner's subsequent request to
-replace existing speech using v0.2 masters and explicit acting prompts, except
+replace existing speech using the selected masters for each frozen run and
+explicit acting prompts, except
 deterministic isolated letters/syllables. This scoped permission supersedes
 older preservation/add-only instructions below for that operation. Missing
 scripts stay blocked, originals are backed up and fresh takes require listening.
+The v2 run used selected v0.2 masters. The separately authorized v3 run used
+the exact selected v0.3 masters and completed 1,340 cues (3,575 preserved);
+full policy-v2 screening found 1,115 PASS and 225 WARN, no FAIL/BLOCKED. All new
+receipts remain pending human listening. See HANDOVER for full counts and paths.
 
-**Current routing override — owner decision 2026-10-19:** new character production uses the six accepted v0.2 masters through shared local VoxStage/VoxCPM2 by default, including Dani. Chatterbox is explicitly selectable; pedagogical pronunciation retains its native route. Any older provider/reference descriptions below describe the earlier recording programme and do not select the current backend. Use `tools/greia_voice.py` and current `SETUP.md` §7; existing accepted audio remains unchanged.
+**Current routing override — owner decision 2026-10-21:** new character production uses the selected canonical masters through shared local VoxStage/VoxCPM2 by default (v0.3 Dani/Momo/Tito and v0.2 Lilli/Leo/Flash). Chatterbox is explicitly selectable; pedagogical pronunciation retains its native route. Any older provider/reference descriptions below describe the earlier recording programme and do not select the current backend. Use `tools/greia_voice.py` and current `SETUP.md` §7 for ordinary additions; the separately authorized corpus operation is governed by the frozen plan, backups and pending-review receipts.
 
 **Owner request:** record *all* missing spoken content across Greia OS,
 installer (if any spoken UX), launcher and Parent surfaces, every built-in

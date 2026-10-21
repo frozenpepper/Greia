@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T11:45:59.613846+00:00",
+  "created_utc": "2026-10-21T11:30:34.871092+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/faccine_momo/assets/audio/es/sleepy.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Very sleepy: slow, soft, with a little yawn in the voice. Keep every word clear."
+    "delivery_prompt": "Very sleepy: slow, soft, with a little yawn in the voice. Keep every word clear."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-134535-6273fde7",
-    "idempotency_key": "greia-391f1c3509954b9292f36588e3a6934f",
+    "job_id": "20261021-133018-1ad65896",
+    "idempotency_key": "greia-e58e230e42134c6e9b759a65cfad2ea0",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2583268344,
+    "script_seed": 3622269657,
     "language_direction": "Spanish",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Very sleepy: slow, soft, with a little yawn in the voice. Keep every word clear.",
-    "effective_delivery": "Speak naturally in Spanish. Momo, a lovable, whimsical comic creature. Very sleepy: slow, soft, with a little yawn in the voice. Keep every word clear.",
+    "delivery_prompt": "Very sleepy: slow, soft, with a little yawn in the voice. Keep every word clear.",
+    "effective_delivery": "Speak in Spanish. Very sleepy: slow, soft, with a little yawn in the voice. Keep every word clear.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 27937774,
-        "sha256": "43a93a02bac681610b8c7ed6f4e71fd67983ea89c06d8517cc0ca4c5b3c88749",
+        "seed": 1881609247,
+        "sha256": "d622ff1ae28d7bac2afa1076041c16950127e251a1c80b3b9f056236f0033b07",
         "generation": {
-          "elapsed_seconds": 23.760379041952547,
+          "elapsed_seconds": 15.71452041700104,
           "model_load_seconds": 0.0,
-          "rtf": 3.6219169800491677,
-          "peak_memory_gb": 8.079945652
+          "rtf": 3.3866284437342857,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/faccine_momo/assets/audio/es/sleepy.wav",
-    "bytes": 289382,
-    "sha256": "646b6e8f2fad4a99bce38109f27bb1236fad51c465f7c6d64fff7e0fe19e7792"
+    "bytes": 204710,
+    "sha256": "7fcac0a10fa78663abaff20f252733e0cc094b90226afa7780389ff85254219c"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "c1b5f04e662595e6177d7cf51ff704bc2b29f555eab52acbd907d02fa7a9d4f2",
+    "original_sha256": "646b6e8f2fad4a99bce38109f27bb1236fad51c465f7c6d64fff7e0fe19e7792",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

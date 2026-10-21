@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:27:03.677381+00:00",
+  "created_utc": "2026-10-21T13:14:16.113558+00:00",
   "request": {
     "speaker": "tito",
     "kind": "shared_character_utterance",
@@ -10,15 +10,15 @@
     "output": "assets/audio/characters/shared/v0.2/tito/fr/tito__fr__celebrate.success__01.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
+    "delivery_prompt": "Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-212652-4f2b6427",
-    "idempotency_key": "greia-bf071bed40e04311b705ce019000f636",
+    "job_id": "20261021-151410-a1726730",
+    "idempotency_key": "greia-d1d6e1245dda4084ada386e350e44dca",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 4266791487,
+    "script_seed": 2181973567,
     "language_direction": "French",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
-    "effective_delivery": "Speak in French. Tito, a cheeky, confident woodland explorer. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "delivery_prompt": "Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
+    "effective_delivery": "Speak in French. Teaches a letter: say the letter name clearly, a tiny pause, then the example word with a warm smile. Slow and very clear.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 843408800,
-        "sha256": "40ed637180ff7eae1f5d7bb1916525dc02cf64267d4d8919dbfd9240b6990a78",
+        "seed": 1287760175,
+        "sha256": "61b8a1012d9cee4a81e77965d9c62a4716311d1e7f76b17f54d6380b50e886cd",
         "generation": {
-          "elapsed_seconds": 11.061324166948907,
+          "elapsed_seconds": 4.722984332998749,
           "model_load_seconds": 0.0,
-          "rtf": 5.760606284323709,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.6893511258940883,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/tito/fr/tito__fr__celebrate.success__01.wav",
-    "bytes": 84758,
-    "sha256": "e0ebef1ac483d12c50f3b82e0241a3d5234c63d8371e667a7b256e1e85957b5e"
+    "bytes": 56534,
+    "sha256": "b1fcecd4a87d2b1c0397d18e470d109f6bf68d6ec8eab836188359eac6f718d5"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "db431f075b20471312a1d760cbce24e8d6de5ebba720ad0f3bb9ab1e1f779243",
+    "original_sha256": "e0ebef1ac483d12c50f3b82e0241a3d5234c63d8371e667a7b256e1e85957b5e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:07:24.677951+00:00",
+  "created_utc": "2026-10-21T12:12:37.441595+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/piccola_serra/assets/audio/en/what_comes_first.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-160715-d5221cf6",
-    "idempotency_key": "greia-1cc0f1dc4e5b4d808bb7fa9e8676c554",
+    "job_id": "20261021-141232-25475a44",
+    "idempotency_key": "greia-cda54e875b11446e989a9d2f385a3c62",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3950812852,
+    "script_seed": 1551575742,
     "language_direction": "English",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak in English. Tito, a cheeky, confident woodland explorer. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "effective_delivery": "Speak in English. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1117142457,
-        "sha256": "671ee394c5c172e5d28d4e65667a9feab8ca5b490158730645b742f387662a00",
+        "seed": 539069561,
+        "sha256": "3d72dd573754d5dce2a6100365041e8f91518c09ba0b71acf5c2b46288f69702",
         "generation": {
-          "elapsed_seconds": 8.555879749997985,
+          "elapsed_seconds": 4.599910541001009,
           "model_load_seconds": 0.0,
-          "rtf": 4.860835006153575,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.5932122439794365,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/piccola_serra/assets/audio/en/what_comes_first.wav",
-    "bytes": 77702,
-    "sha256": "367168f62e18f5db98c04c6df8201e0cccaa7b246d667181139d4de80b80f8bb"
+    "bytes": 56534,
+    "sha256": "8084c1294694aa1840e1a492f8e51a127a10cc817aa2718fd4479e0a3ecaffaf"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "9675c28ef11f1dd2cb372659daffbbb30c8a3877559010952c1410c3c156caf3",
+    "original_sha256": "367168f62e18f5db98c04c6df8201e0cccaa7b246d667181139d4de80b80f8bb",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:19:03.864827+00:00",
+  "created_utc": "2026-10-21T13:10:16.240127+00:00",
   "request": {
     "speaker": "momo",
     "kind": "shared_character_utterance",
@@ -10,15 +10,15 @@
     "output": "assets/audio/characters/shared/v0.2/momo/it/momo__it__encourage.retry__03.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-211853-c27f6d05",
-    "idempotency_key": "greia-22a1954fb91748a49fd3bdae927bfc90",
+    "job_id": "20261021-151011-34e5d01d",
+    "idempotency_key": "greia-7cfeb033fb6942ffb8c89c56eb8e7553",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3531342993,
+    "script_seed": 1187827532,
     "language_direction": "Italian",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak in Italian. Momo, a lovable, whimsical comic creature. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak in Italian. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1686320587,
-        "sha256": "7f980f849cbd38262618d1851e547e692dedd1beff8693ce397eadfa3d5dd46f",
+        "seed": 3599689964,
+        "sha256": "060f1a025300a626d2ec18fcff02b9355acf0c9c0c019442ad887226fde092b9",
         "generation": {
-          "elapsed_seconds": 9.21583716594614,
+          "elapsed_seconds": 4.683622083000955,
           "model_load_seconds": 0.0,
-          "rtf": 4.430335950298602,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.65860337169714,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/momo/it/momo__it__encourage.retry__03.wav",
-    "bytes": 91814,
-    "sha256": "ecea68af73c2bf26eb9a6b8eed815921a0e488866dd6923aee46c50fd1d3a7a7"
+    "bytes": 56534,
+    "sha256": "1ff4fc427c28ae53113fea00b6dc494ca4f11bdd1a41b386e0e5080f70ee9404"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "2575dd81249f3b4bc3e73bc92f1c9d904db0cd5ef6ce8f13fb1ddbc3248281ec",
+    "original_sha256": "ecea68af73c2bf26eb9a6b8eed815921a0e488866dd6923aee46c50fd1d3a7a7",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

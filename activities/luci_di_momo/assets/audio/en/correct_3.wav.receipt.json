@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T12:56:16.979730+00:00",
+  "created_utc": "2026-10-21T11:49:53.202074+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/luci_di_momo/assets/audio/en/correct_3.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed."
+    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-145607-5e26c1da",
-    "idempotency_key": "greia-e3c11bd0b104495d922033b103444ab9",
+    "job_id": "20261021-134946-72f91122",
+    "idempotency_key": "greia-209fdbd9e15744fcb403f5c751849ae9",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1508904108,
+    "script_seed": 782443276,
     "language_direction": "English",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
-    "effective_delivery": "Speak in English. Momo, a lovable, whimsical comic creature. Praises the child's success: genuinely proud and delighted, bright smile, a little bounce on the key word, not rushed.",
+    "delivery_prompt": "Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
+    "effective_delivery": "Speak in English. Warm, measured encouragement. Emphasize the successful action gently, at a relaxed conversational pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1831093423,
-        "sha256": "6b15cb171edb5c78bdcae148922559bf248d2e72454845ff152a7cec01b2d930",
+        "seed": 2647095657,
+        "sha256": "5b4cb6e19d64b0be422b040b7e375fb1e770b9d1e2ab58a9f6671579eb7c978c",
         "generation": {
-          "elapsed_seconds": 8.154148083005566,
+          "elapsed_seconds": 6.192254749999847,
           "model_load_seconds": 0.0,
-          "rtf": 5.095811738155754,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.5179934191837026,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/luci_di_momo/assets/audio/en/correct_3.wav",
-    "bytes": 70646,
-    "sha256": "0d8f1d7c4554bcda40b560290cb89e9840728792cddf3be6277437c9494c791e"
+    "bytes": 77702,
+    "sha256": "a55e654e0df2e16ccd34fd38c51964b0f58acad0dab0270436d38fea908a6b59"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "405651f619a778230aa7759022b2c6755ee0188f99f738d04a3db9224b74a195",
+    "original_sha256": "0d8f1d7c4554bcda40b560290cb89e9840728792cddf3be6277437c9494c791e",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

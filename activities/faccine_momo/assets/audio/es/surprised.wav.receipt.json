@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T11:46:16.849325+00:00",
+  "created_utc": "2026-10-21T11:30:53.068761+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/faccine_momo/assets/audio/es/surprised.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Wide-eyed surprise: a quick gasp, then delighted wonder. Keep every word clear."
+    "delivery_prompt": "Wide-eyed surprise: a quick gasp, then delighted wonder. Keep every word clear."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-134600-9238e7ff",
-    "idempotency_key": "greia-3ee335e346fc41d0b445e0c15846c615",
+    "job_id": "20261021-133036-0c20d0e5",
+    "idempotency_key": "greia-5d10aff5a91c4c78a4cbc30a8d8e313d",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2812689802,
+    "script_seed": 2468709735,
     "language_direction": "Spanish",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Wide-eyed surprise: a quick gasp, then delighted wonder. Keep every word clear.",
-    "effective_delivery": "Speak naturally in Spanish. Momo, a lovable, whimsical comic creature. Wide-eyed surprise: a quick gasp, then delighted wonder. Keep every word clear.",
+    "delivery_prompt": "Wide-eyed surprise: a quick gasp, then delighted wonder. Keep every word clear.",
+    "effective_delivery": "Speak in Spanish. Wide-eyed surprise: a quick gasp, then delighted wonder. Keep every word clear.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3846313543,
-        "sha256": "5a7ecfd4521f0d5b3d527831c03adc9067697920ae6153d7ce56298bce1a428f",
+        "seed": 3696591894,
+        "sha256": "6fc9db5b3752886114dc785e49bfe4ecfb54f14fda496addbef9f2dcf3cf0ace",
         "generation": {
-          "elapsed_seconds": 15.694180749997031,
+          "elapsed_seconds": 15.615397334004228,
           "model_load_seconds": 0.0,
-          "rtf": 3.5030350247380007,
-          "peak_memory_gb": 8.079945652
+          "rtf": 3.365266477641801,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/faccine_momo/assets/audio/es/surprised.wav",
-    "bytes": 197654,
-    "sha256": "0ecf10f379570f7d9f5aafdf682da62c0e647cc0b5a4ab6677af11d195b045fe"
+    "bytes": 204710,
+    "sha256": "01c48eff0fb6dde24b88ba7c35cc3b375c9cb7130e5c38b7314c806ffe2f0361"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "1021bf0463a6d50432b40b75683c25a39130070acdfce3214b82937cf034cb9f",
+    "original_sha256": "0ecf10f379570f7d9f5aafdf682da62c0e647cc0b5a4ab6677af11d195b045fe",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

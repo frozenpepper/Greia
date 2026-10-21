@@ -194,12 +194,15 @@ does not decode audio or create a Pygame mixer; the Activity sound
 owner handles only cache/channels/playback and procedural effects.
 
 Previously committed recordings are **personally owner-approved**. Preserve
-them during ordinary Activity work. The explicit 2026-10-19 corpus replacement
-request is a scoped exception: use `tools/regenerate_voice_corpus.py` and
+them during ordinary Activity work. The explicit 2026-10-19 corpus replacement,
+continued by the exact v0.3 master selection and frozen scope on 2026-10-21, is a
+scoped exception: use `tools/regenerate_voice_corpus.py` and
 `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`, preserving deterministic
-isolated letters/syllables and marking fresh output pending listening. New recordings continue to
-require owner listening approval. No source/signature tamper checking
-is required: users are allowed to modify installed media.
+isolated letters/syllables and marking fresh output pending listening. That
+1,340-cue run is complete; all replacements remain pending until individually
+heard. New recordings continue to require owner listening approval. No
+source/signature tamper checking is required: users are allowed to modify
+installed media.
 
 VoxStage character acting defaults are editable in
 `tools/greia_voice_core/character_delivery.json`. Use the semantic

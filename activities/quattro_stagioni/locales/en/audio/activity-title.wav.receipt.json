@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:26:51.467599+00:00",
+  "created_utc": "2026-10-21T12:21:05.202325+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/quattro_stagioni/locales/en/audio/activity-title.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-162640-f0310662",
-    "idempotency_key": "greia-4878f1a8abbc4a1fb278fe33359e3e5e",
+    "job_id": "20261021-142057-2087acbb",
+    "idempotency_key": "greia-5fed1d0661bf420e9cd4fec9775df982",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1685483787,
+    "script_seed": 4201989117,
     "language_direction": "English",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in English. Tito, a cheeky, confident woodland explorer. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "effective_delivery": "Speak in English. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3270358898,
-        "sha256": "4c14af932b50a594a1b21b9746667f840e00abacdc651a33c0a053ae21cc1334",
+        "seed": 2256535840,
+        "sha256": "6543a08fdffbbac3675949cdbc7f1440d92c3a25a3f775148a11585f91e42668",
         "generation": {
-          "elapsed_seconds": 10.5355547919753,
+          "elapsed_seconds": 6.31123008299619,
           "model_load_seconds": 0.0,
-          "rtf": 3.8731284082992343,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.5855866393312317,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/quattro_stagioni/locales/en/audio/activity-title.wav",
-    "bytes": 120038,
-    "sha256": "8dde01b814710b39302260b26a9caeb2dd2c5f1599476515cd8ff951fb1cd262"
+    "bytes": 77702,
+    "sha256": "3d4e6ede19ab0564276aff58099459e333f97281e2ac5180f48e16a478ca26ed"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "61762460619e0e9c1b0b54a516e36bc15dd03c5039bd8e45ac9c349206475175",
+    "original_sha256": "8dde01b814710b39302260b26a9caeb2dd2c5f1599476515cd8ff951fb1cd262",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

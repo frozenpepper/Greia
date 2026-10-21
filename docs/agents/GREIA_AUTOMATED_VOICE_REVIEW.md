@@ -156,8 +156,8 @@ This is a threshold reassessment, not fresh acoustic or ASR measurement.
 Executed full v2 reassessment: **3,073 PASS / 1,094 WARN / 1 FAIL**.
 ASR dispositions: 1,611 PASS / 863 WARN / 1,693 policy exclusions / 1 unrun
 because the silent Bear failed first. Original measurements remain intact.
-Current listening batch: `2026-10-21-listening-policy-v2/batch.json` under the
-external auditions root, served at http://127.0.0.1:8796/. The original 8794 tab
+At the v2 reassessment checkpoint, `2026-10-21-listening-policy-v2/batch.json`
+under the external auditions root was served at http://127.0.0.1:8796/. The original 8794 tab
 is retained; its 104 unsaved owner decisions were exported and copied exactly
 into the v2 batch (82 approved, 22 rejected), with a separate draft backup.
 Do not reinterpret these human states as a machine-generated approval.
@@ -256,3 +256,16 @@ saving conflicts. Saves do not update Greia receipts, generation journal, source
 media or shared catalogue acceptance. Consuming human decisions for promotion or
 repair remains a separate explicitly scoped Greia operation; no automatic importer
 is introduced by this tool.
+
+### 2026-10-21 — Current v3 listening batch
+
+After the separately authorized v3 corpus replacement, the complete fresh batch
+is `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/takeboard/batch.json`.
+It contains 1,340 recordings, all initially unreviewed, from Dani (392), Momo
+(284) and Tito (664) across EN/IT/ES/FR. Takeboard validated it and serves it at
+`http://127.0.0.1:8799/`; existing review ports 8794–8798 were left untouched.
+The full automated report and prioritized 1,340-row listening queue are in
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/full-automated-review/`.
+Results were 1,115 PASS / 225 WARN / no FAIL/BLOCKED; all receipt states remain
+`human_review=PENDING`. The batch's saved `.reviewed.json`, if created by the
+owner, will contain decisions only and does not automatically modify Greia.

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:55:58.781777+00:00",
+  "created_utc": "2026-10-21T12:09:51.831276+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/orchestra_animali/assets/audio/es/loud.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Acts out the word for a child. Loud and proud, strong but never shouting. Playful, clear words."
+    "delivery_prompt": "Acts out the word for a child. Loud and proud, strong but never shouting. Playful, clear words."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-155553-c139c755",
-    "idempotency_key": "greia-622457d0139e46c3b981141f11f46f6d",
+    "job_id": "20261021-140945-d530bfe0",
+    "idempotency_key": "greia-3630d62d13924e47be93091295428616",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 41903330,
+    "script_seed": 1403338255,
     "language_direction": "Spanish",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Acts out the word for a child. Loud and proud, strong but never shouting. Playful, clear words.",
-    "effective_delivery": "Speak in Spanish. Momo, a lovable, whimsical comic creature. Acts out the word for a child. Loud and proud, strong but never shouting. Playful, clear words.",
+    "delivery_prompt": "Acts out the word for a child. Loud and proud, strong but never shouting. Playful, clear words.",
+    "effective_delivery": "Speak in Spanish. Acts out the word for a child. Loud and proud, strong but never shouting. Playful, clear words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1084866320,
-        "sha256": "79c356b7c43b49b989392747fe8d0554e12f2787b116cd828100ca578678f0fc",
+        "seed": 276881942,
+        "sha256": "35010f97a33231553e526893bacc2548a5accfee474bfe580895e3746e6cd37e",
         "generation": {
-          "elapsed_seconds": 4.939238750026561,
+          "elapsed_seconds": 5.216929125002935,
           "model_load_seconds": 0.0,
-          "rtf": 4.409378440731939,
-          "peak_memory_gb": 8.44494914
+          "rtf": 4.0751952545264425,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/orchestra_animali/assets/audio/es/loud.wav",
-    "bytes": 49478,
-    "sha256": "59c3ca1c57946e4d9afa71470fc4ac0895ff4b69a1e2eb7cff3b8b94be911de2"
+    "bytes": 56534,
+    "sha256": "2fc2cd2493ac1a20e4020e22c5c2f03a276c3bf1c84e1d4f2a00f2ddce34222c"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "c9359015b096830bba6c6df8d1e52e7bc5985dc6978f32c8383e5397c505a2f5",
+    "original_sha256": "59c3ca1c57946e4d9afa71470fc4ac0895ff4b69a1e2eb7cff3b8b94be911de2",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

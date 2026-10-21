@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:06:47.256968+00:00",
+  "created_utc": "2026-10-21T12:49:03.897601+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
@@ -10,15 +10,15 @@
     "output": "activity_incubator/tempo_di_greia/locales/it/audio/activity_title.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.dani.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "voice_id": "greia.dani.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
   "generation_parameters": {
-    "job_id": "20261020-200638-8669329a",
-    "idempotency_key": "greia-75270471817d4aeb9fa5158ae4043bd8",
+    "job_id": "20261021-144858-23d21f01",
+    "idempotency_key": "greia-bcc37923fb6a4766bf6196bc0141f768",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
-    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "voxstage_voice_id": "greia-audition-20261021-dani-v5-02",
+    "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1661021256,
+    "script_seed": 1335018079,
     "language_direction": "Italian",
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak in Italian. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "effective_delivery": "Speak in Italian. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2531961119,
-        "sha256": "b5f1d2a2c2d65dde131f9fd7407f13f1f27503ba793ef1eecc54b4964e2997bb",
+        "seed": 1175626257,
+        "sha256": "2b8825034076dc2692960fa9f31c079763584f430e6bc4884314cba38944b098",
         "generation": {
-          "elapsed_seconds": 8.025259708985686,
+          "elapsed_seconds": 4.706007750006393,
           "model_load_seconds": 0.0,
-          "rtf": 5.572452060399736,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.676089897153802,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activity_incubator/tempo_di_greia/locales/it/audio/activity_title.wav",
-    "bytes": 63590,
-    "sha256": "ae9c9a5a9faac975e732f081a84ecbdd13ef5cb59dcc9a29e4a00a2a80acbeb6"
+    "bytes": 56534,
+    "sha256": "f8cadc24d3b1ba4113c0eedfe5b02a45c254304e6c8c284d17e19b8813e5e527"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "54602d18fd27dc8fe6b119b068a94158858fd897d620913176285ced534d6ce5",
+    "original_sha256": "ae9c9a5a9faac975e732f081a84ecbdd13ef5cb59dcc9a29e4a00a2a80acbeb6",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

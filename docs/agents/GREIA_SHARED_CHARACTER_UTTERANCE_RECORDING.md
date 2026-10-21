@@ -5,6 +5,15 @@
 **Characters:** Lilli, Leo, Flash, Tito, Momo and Dani  
 **Canonical engine:** `tools/greia_voice.py`
 
+**Owner-scoped corpus replacement update (2026-10-21):** the prior v0.2
+owner-accepted state above is historical for rows selected by the separate
+three-character v3 corpus plan. Those Dani/Momo/Tito files now carry replacement
+audio with `human_review=PENDING`; their old bytes and receipts are in the
+external corpus-run backups. The authorized bulk operation used
+`tools/regenerate_voice_corpus.py` and the dedicated corpus work order, not this
+additive shared-library producer. Future incremental additions still use this
+runbook and remain in the existing v0.2 catalogue after individual listening.
+
 ## 1. Canonical rule
 
 Generate the shared reaction library with:
@@ -32,12 +41,13 @@ For installation/readiness:
 docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
 ```
 
-## 2. Current state
+## 2. Historical accepted baseline and current exceptions
 
 Do not infer content completion from the existence of the producer — confirm against the
 catalogue, not the script.
 
-Current state (post 2026-08-28):
+Accepted baseline as of 2026-08-28, before the separately authorized 2026-10-21
+corpus replacement:
 
 ```text
 shared reaction candidates: 180 generated, 180 OWNER_ACCEPTED; published to assets/audio/characters/shared/v0.2/

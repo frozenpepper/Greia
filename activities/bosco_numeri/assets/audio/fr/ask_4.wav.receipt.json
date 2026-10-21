@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T00:01:19.448325+00:00",
+  "created_utc": "2026-10-21T08:14:38.506543+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/bosco_numeri/assets/audio/fr/ask_4.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-020113-154377ae",
-    "idempotency_key": "greia-26f5601cb62b42fba45f63f83f7045c9",
+    "job_id": "20261021-101433-bdcaec04",
+    "idempotency_key": "greia-00665f3ef9684903ac98c64b7862c27e",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1705004212,
+    "script_seed": 2816458261,
     "language_direction": "French",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak naturally in French. Tito, a cheeky, confident woodland explorer. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "effective_delivery": "Speak in French. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3497441469,
-        "sha256": "99ab8b2ee752c8e6b460c48ba9f99652f92652e2288ab3d2b6ec114165c4ac22",
+        "seed": 2267946184,
+        "sha256": "489b3b06e815997e619eec2137792339acfccae2854f2bcc2d0fe06302a89013",
         "generation": {
-          "elapsed_seconds": 6.036191833030898,
+          "elapsed_seconds": 4.6748224170005415,
           "model_load_seconds": 0.0,
-          "rtf": 5.388655110576608,
-          "peak_memory_gb": 8.21220922
+          "rtf": 3.6517295276660913,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/bosco_numeri/assets/audio/fr/ask_4.wav",
-    "bytes": 49478,
-    "sha256": "5eb147b10d5760e96b106779acb27e3ccaf18e82745d3c5e953e28bd9e5eee56"
+    "bytes": 56534,
+    "sha256": "86e406ee3cdfdec17fc015e7c51fe4ff278fb0d0b51b20fe0d590ef57f80eaa5"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "9b0af8a49e43b02329a398801aa336ff69966e5fa7f9dd2168199e0d9500690c",
+    "original_sha256": "5eb147b10d5760e96b106779acb27e3ccaf18e82745d3c5e953e28bd9e5eee56",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

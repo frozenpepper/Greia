@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T11:13:02.406521+00:00",
+  "created_utc": "2026-10-21T11:26:17.074661+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
@@ -10,15 +10,15 @@
     "output": "activities/enciclopedia_greia/assets/audio/it/machines/magnet_field.ogg",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
+    "delivery_prompt": "Calm, interested explanation. Unhurried phrasing, clear words and natural pauses."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.dani.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "voice_id": "greia.dani.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
   "generation_parameters": {
-    "job_id": "20261020-131226-514449bc",
-    "idempotency_key": "greia-c228168cf2c641128597524009c6d88c",
+    "job_id": "20261021-132544-5e0a2cbc",
+    "idempotency_key": "greia-7844bd016fb34ec1a8f1494df5d740ca",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
-    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "voxstage_voice_id": "greia-audition-20261021-dani-v5-02",
+    "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 129721572,
+    "script_seed": 3570059972,
     "language_direction": "Italian",
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
-    "effective_delivery": "Speak naturally in Italian. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "delivery_prompt": "Calm, interested explanation. Unhurried phrasing, clear words and natural pauses.",
+    "effective_delivery": "Speak in Italian. Calm, interested explanation. Unhurried phrasing, clear words and natural pauses.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1991028310,
-        "sha256": "b133d9684e8f2d4176f103efd35967fbea92f3f8899dbd689f9f6621bacf5b4c",
+        "seed": 1969442658,
+        "sha256": "56e23e6e3e0e7f0ead7795fbe2fd7afc355d515695321e083599d6db6cdb926f",
         "generation": {
-          "elapsed_seconds": 34.59726020897506,
+          "elapsed_seconds": 31.74074537499837,
           "model_load_seconds": 0.0,
-          "rtf": 4.412822032989315,
-          "peak_memory_gb": 8.079945652
+          "rtf": 3.30627024270395,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,22 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/it/machines/magnet_field.ogg",
-    "bytes": 50359,
-    "sha256": "7dc732b2c66ef0f6d57dd560a1f7c1039a0bfdf5eca582846c2366fcc68d41ce"
+    "bytes": 69947,
+    "sha256": "16e0f7e27fbc3fde6ed211c0fcfd83e243188948fbcf02190ff8ce0f7ab966d2"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "d4310980510d304e6f04ff7ce20b18dc70fb0b096b5afd5e8e671a206f65227e",
-    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
-    "audio_repackaging": {
-      "pipeline": "AudioPipeline",
-      "codec": "libvorbis",
-      "quality": 3,
-      "sample_rate_hz": 22050,
-      "source_mix_sha256": "b133d9684e8f2d4176f103efd35967fbea92f3f8899dbd689f9f6621bacf5b4c",
-      "source_job_id": "20261020-131226-514449bc",
-      "repackaged_utc": "2026-10-20T22:30:52Z"
-    }
+    "original_sha256": "7dc732b2c66ef0f6d57dd560a1f7c1039a0bfdf5eca582846c2366fcc68d41ce",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

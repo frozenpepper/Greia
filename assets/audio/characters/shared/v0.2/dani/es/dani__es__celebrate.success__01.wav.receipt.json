@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T18:31:03.085772+00:00",
+  "created_utc": "2026-10-21T12:58:58.248813+00:00",
   "request": {
     "speaker": "dani",
     "kind": "shared_character_utterance",
@@ -10,15 +10,15 @@
     "output": "assets/audio/characters/shared/v0.2/dani/es/dani__es__celebrate.success__01.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.dani.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "voice_id": "greia.dani.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
   "generation_parameters": {
-    "job_id": "20261020-203054-f45aa07c",
-    "idempotency_key": "greia-8b2fae0b85a047a3937cf0f1c0f83266",
+    "job_id": "20261021-145853-d6ade31e",
+    "idempotency_key": "greia-895b8bd53c1f4bea9fd68034a26f1940",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
-    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "voxstage_voice_id": "greia-audition-20261021-dani-v5-02",
+    "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3964768257,
+    "script_seed": 452549423,
     "language_direction": "Spanish",
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
-    "effective_delivery": "Speak in Spanish. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
+    "effective_delivery": "Speak in Spanish. Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 774452586,
-        "sha256": "2e088992fd4c099dae962b59a1a8db2e8b8ef5871431c773c05969edbe4c3442",
+        "seed": 1813257864,
+        "sha256": "e230f7765c4c91db77fcb0046eb60a3b678b24b2b60eea7d992e579300eb7b8e",
         "generation": {
-          "elapsed_seconds": 8.063142667000648,
+          "elapsed_seconds": 4.312204791996919,
           "model_load_seconds": 0.0,
-          "rtf": 4.580897263706456,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.849609991367581,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/dani/es/dani__es__celebrate.success__01.wav",
-    "bytes": 77702,
-    "sha256": "dbf72bdc45f8ea19214236e7acb366f34a89b89c75dd8b78a06d735448275371"
+    "bytes": 49478,
+    "sha256": "adf49e2118fc452ea681ec2d85ae6d1301aba07bacd0fbfc7c4b5eccbcbe5c45"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "ae8d6164ae560ecf9168b651637b65bbe50885db8f1d77d1c7964effff2f3215",
+    "original_sha256": "dbf72bdc45f8ea19214236e7acb366f34a89b89c75dd8b78a06d735448275371",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

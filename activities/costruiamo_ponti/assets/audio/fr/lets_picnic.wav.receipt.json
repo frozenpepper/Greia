@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T03:24:43.243302+00:00",
+  "created_utc": "2026-10-21T08:50:56.884623+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/costruiamo_ponti/assets/audio/fr/lets_picnic.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. A short, lively reaction: expressive and clear, one breath, no extra words."
+    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-052426-94a56289",
-    "idempotency_key": "greia-b87e10cdb2f64db18e8bd42e26cef4a4",
+    "job_id": "20261021-105051-07b1a9f9",
+    "idempotency_key": "greia-ef79945b4366463fb30e595b31fcd8ae",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2729243785,
+    "script_seed": 182935215,
     "language_direction": "French",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. A short, lively reaction: expressive and clear, one breath, no extra words.",
-    "effective_delivery": "Speak naturally in French. Tito, a cheeky, confident woodland explorer. A short, lively reaction: expressive and clear, one breath, no extra words.",
+    "delivery_prompt": "Brief, natural conversational reaction; relaxed pace and clear words.",
+    "effective_delivery": "Speak in French. Brief, natural conversational reaction; relaxed pace and clear words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1104346196,
-        "sha256": "fec943514ca8d82ad7eba894c9ae27a677e64f042563fc10b7d7e338ef994bae",
+        "seed": 2296343644,
+        "sha256": "901aba30aa369edb56683fc8ce8032f338a1ad66c86fc5d6833eb41b2efcb72f",
         "generation": {
-          "elapsed_seconds": 14.555284624977503,
+          "elapsed_seconds": 4.126129249998485,
           "model_load_seconds": 0.0,
-          "rtf": 6.497411483510529,
-          "peak_memory_gb": 6.61593154
+          "rtf": 3.6834958339519277,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/costruiamo_ponti/assets/audio/fr/lets_picnic.wav",
-    "bytes": 98870,
-    "sha256": "28e0a9a78dec93f1d6c3260dc49aaec0b109a5ca7569d4ec1fbf0e73b4becf21"
+    "bytes": 49478,
+    "sha256": "0d69d1a0db726447fccde2d00d3e61fbb10e6d74cd627e72bf3f83f066958c73"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "1ab25e813c63e36e29a8cd2c88226067ec21424b79881109c774de9e2f3be0b8",
+    "original_sha256": "28e0a9a78dec93f1d6c3260dc49aaec0b109a5ca7569d4ec1fbf0e73b4becf21",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T14:25:39.226526+00:00",
+  "created_utc": "2026-10-21T12:20:03.821526+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/quattro_stagioni/assets/audio/fr/welcome.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace."
+    "delivery_prompt": "Warmly welcoming, calm and conversational, with an unhurried pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-162522-54698a74",
-    "idempotency_key": "greia-03b4554863c841a79ba56a51cba23e55",
+    "job_id": "20261021-141951-094a992c",
+    "idempotency_key": "greia-ab0f22cd9e9b4fd99c560bab5155165f",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1920716775,
+    "script_seed": 1495175207,
     "language_direction": "French",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace.",
-    "effective_delivery": "Speak in French. Tito, a cheeky, confident woodland explorer. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace.",
+    "delivery_prompt": "Warmly welcoming, calm and conversational, with an unhurried pace.",
+    "effective_delivery": "Speak in French. Warmly welcoming, calm and conversational, with an unhurried pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3985756068,
-        "sha256": "ce338d75aec5142bf537cbfa50b9f87386ab80a0b89359a720caced20b8cc810",
+        "seed": 1973059740,
+        "sha256": "b86c50d5dd9bf0528d4e9e8b474c18ceebfb249a6e56947603c743deaa3ac5f8",
         "generation": {
-          "elapsed_seconds": 15.759321083023679,
+          "elapsed_seconds": 11.388067457999568,
           "model_load_seconds": 0.0,
-          "rtf": 3.788146568572656,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.3891376790832504,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/quattro_stagioni/assets/audio/fr/welcome.wav",
-    "bytes": 183542,
-    "sha256": "87e55d97eff5b0c465da58a86bafe3b04f84cdd73d2dc47a097e23441c8512c2"
+    "bytes": 148262,
+    "sha256": "76cf4c1e4f90b8f76ccf8e917e5a2028b6df3c743d731990d1b23a68c8ca85b0"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "ac548af1bba66bf752cd584cf4f0fbb2e5fd1840f04e929273c47cc8832f1017",
+    "original_sha256": "87e55d97eff5b0c465da58a86bafe3b04f84cdd73d2dc47a097e23441c8512c2",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

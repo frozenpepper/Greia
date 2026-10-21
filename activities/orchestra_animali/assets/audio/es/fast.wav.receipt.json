@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:55:44.522579+00:00",
+  "created_utc": "2026-10-21T12:08:26.245669+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/orchestra_animali/assets/audio/es/fast.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Acts out the word for a child. Say it quickly and zippy, full of speed. Playful, clear words."
+    "delivery_prompt": "Acts out the word for a child. Say it quickly and zippy, full of speed. Playful, clear words."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-155538-bc8776d4",
-    "idempotency_key": "greia-e6b9d99cf8f748f7b0829c5809a87578",
+    "job_id": "20261021-140818-05a1c2d8",
+    "idempotency_key": "greia-85679920d9a74e3bbb8eaadf31fa1c62",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 3978465202,
+    "script_seed": 1226257055,
     "language_direction": "Spanish",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Acts out the word for a child. Say it quickly and zippy, full of speed. Playful, clear words.",
-    "effective_delivery": "Speak in Spanish. Momo, a lovable, whimsical comic creature. Acts out the word for a child. Say it quickly and zippy, full of speed. Playful, clear words.",
+    "delivery_prompt": "Acts out the word for a child. Say it quickly and zippy, full of speed. Playful, clear words.",
+    "effective_delivery": "Speak in Spanish. Acts out the word for a child. Say it quickly and zippy, full of speed. Playful, clear words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2610673017,
-        "sha256": "6796cd863910c1aadc4db994f100815dc55136da5656f0a574bc1972077fe07a",
+        "seed": 229811301,
+        "sha256": "2bdb045e74eee39a7394fce327c20ca1a71131cd92202c738a848055a2c79423",
         "generation": {
-          "elapsed_seconds": 5.647412958031055,
+          "elapsed_seconds": 6.798447542001668,
           "model_load_seconds": 0.0,
-          "rtf": 4.411466963700863,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.5405507553172475,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/orchestra_animali/assets/audio/es/fast.wav",
-    "bytes": 56534,
-    "sha256": "3ec19932e9e7ef5a61125b397e40bb8b19ba9f9c70b24184b1ae2fcc10456b5b"
+    "bytes": 84758,
+    "sha256": "aef30b80f333fc461c91ba298aa5d1d9c4386406f0bde0488a71e5cbb9812196"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "1428a216c7cf94f4f96d65eeaaeb3a685f133b0079db6d774024590d7d89552d",
+    "original_sha256": "3ec19932e9e7ef5a61125b397e40bb8b19ba9f9c70b24184b1ae2fcc10456b5b",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

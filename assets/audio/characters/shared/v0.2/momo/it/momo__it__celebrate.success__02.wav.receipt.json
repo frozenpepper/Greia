@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T19:17:40.164905+00:00",
+  "created_utc": "2026-10-21T13:09:31.652505+00:00",
   "request": {
     "speaker": "momo",
     "kind": "shared_character_utterance",
@@ -10,15 +10,15 @@
     "output": "assets/audio/characters/shared/v0.2/momo/it/momo__it__celebrate.success__02.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A happy celebration with the child: joyful, proud and warm. Lively but clear."
+    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-211731-98a08718",
-    "idempotency_key": "greia-031e4d8ca56047edb10d186b8902e917",
+    "job_id": "20261021-150926-8cefbc53",
+    "idempotency_key": "greia-823391912d534ee28a593f0486e1da7b",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1863331117,
+    "script_seed": 3998624381,
     "language_direction": "Italian",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
-    "effective_delivery": "Speak in Italian. Momo, a lovable, whimsical comic creature. A happy celebration with the child: joyful, proud and warm. Lively but clear.",
+    "delivery_prompt": "Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
+    "effective_delivery": "Speak in Italian. Quietly pleased and reassuring. A gentle sense of achievement, clear words at an easy pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2378650937,
-        "sha256": "34c21ab66504a0a93691d76f9c95aaa5515741e013699e82913f338db5a138db",
+        "seed": 2494166663,
+        "sha256": "4fdf428f274131cbcc587b1f910f5285d9be7e425d81d7752e1cea41243c5350",
         "generation": {
-          "elapsed_seconds": 7.748818708001636,
+          "elapsed_seconds": 4.6295302500002435,
           "model_load_seconds": 0.0,
-          "rtf": 4.035492773892008,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.6163496289547536,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "assets/audio/characters/shared/v0.2/momo/it/momo__it__celebrate.success__02.wav",
-    "bytes": 84758,
-    "sha256": "c18fb8adc28a85525c53ee3b9d0080dd250f933d0c988154e2ffab8ae74e60b7"
+    "bytes": 56534,
+    "sha256": "ee7624342d5f6a13d987858408961c94ca589612fe00de349eebfe478e4764a9"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "0b0aeb461dc033d962a6b5dfc3f57aa145d95880bacea99007ff7612cd4d4d45",
+    "original_sha256": "c18fb8adc28a85525c53ee3b9d0080dd250f933d0c988154e2ffab8ae74e60b7",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

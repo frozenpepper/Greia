@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:12:41.811561+00:00",
+  "created_utc": "2026-10-21T12:02:06.829052+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/luci_di_momo/assets/audio/it/welcome.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace."
+    "delivery_prompt": "Warmly welcoming, calm and conversational, with an unhurried pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-151217-f0e9ecb8",
-    "idempotency_key": "greia-d57ba57fa13147509b8b4bc5bcb8c390",
+    "job_id": "20261021-140146-bd50b1bc",
+    "idempotency_key": "greia-94e51cf1ce9049d3a218f75af822d0c9",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1788585176,
+    "script_seed": 2057586531,
     "language_direction": "Italian",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace.",
-    "effective_delivery": "Speak in Italian. Momo, a lovable, whimsical comic creature. Welcomes the child into the activity: warm, inviting and excited to begin, relaxed pace.",
+    "delivery_prompt": "Warmly welcoming, calm and conversational, with an unhurried pace.",
+    "effective_delivery": "Speak in Italian. Warmly welcoming, calm and conversational, with an unhurried pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 4114755846,
-        "sha256": "1f4a1aded989476646f19c6b49661285c6c672294ec7a82c6bf171e815988665",
+        "seed": 1153324217,
+        "sha256": "2b6ce027834d2fef45571eff80be50dee8bbf844a5f07bcab214708874a657f0",
         "generation": {
-          "elapsed_seconds": 23.55571470898576,
+          "elapsed_seconds": 19.852839125000173,
           "model_load_seconds": 0.0,
-          "rtf": 3.680484577326491,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.3534257129585607,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/luci_di_momo/assets/audio/it/welcome.wav",
-    "bytes": 282326,
-    "sha256": "6c346ae8b9d9c9cf8b649d609b1d9ff5a50dcc306cb5aa2c4c634ed5bf2dd48a"
+    "bytes": 261158,
+    "sha256": "753ff268048a30c69ea3fef7151ae90c8bd11e85f571b00582e78a6da4956a4e"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "e5edab11cf62f8cb33ea8c517cf7b74da2643fcdd804572977839fed22c1ea0a",
+    "original_sha256": "6c346ae8b9d9c9cf8b649d609b1d9ff5a50dcc306cb5aa2c4c634ed5bf2dd48a",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

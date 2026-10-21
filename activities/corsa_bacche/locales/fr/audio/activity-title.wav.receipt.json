@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T03:21:18.059257+00:00",
+  "created_utc": "2026-10-21T08:49:15.872677+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/corsa_bacche/locales/fr/audio/activity-title.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
+    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-052107-53a319fd",
-    "idempotency_key": "greia-bff2d91cecbb4c76920c6cfb06f20a99",
+    "job_id": "20261021-104910-4d55ac22",
+    "idempotency_key": "greia-b583c51011ff43198aabcba67c8947a3",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 916434810,
+    "script_seed": 1383902672,
     "language_direction": "French",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
-    "effective_delivery": "Speak naturally in French. Momo, a lovable, whimsical comic creature. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "delivery_prompt": "Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
+    "effective_delivery": "Speak in French. Announces the activity's name like the cover of a picture book: inviting and proud, medium pace, a small lift on the last word.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 3589060225,
-        "sha256": "c8133bee1b0c063ae197d7e6bb224d30598981143dbea80636245f48c7767ff1",
+        "seed": 562632104,
+        "sha256": "9a1ec167124180f6d5b9df15f93900011640e64d48c67f2e0e9739ea7e456d4f",
         "generation": {
-          "elapsed_seconds": 9.829751333978493,
+          "elapsed_seconds": 4.406676041995524,
           "model_load_seconds": 0.0,
-          "rtf": 6.825426224264664,
-          "peak_memory_gb": 6.61593154
+          "rtf": 3.9339467716073715,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/corsa_bacche/locales/fr/audio/activity-title.wav",
-    "bytes": 63590,
-    "sha256": "036ecb0098ebe1e004617bfe81b3b42c88fa62c71ff67a44872a47648e720466"
+    "bytes": 49478,
+    "sha256": "9fb2e4b126730252fea9245678616dd58dbd82380207d57eaf28c2fc9e0a8635"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "79cc90ea027a3c68762d529c08223249afbfba695b60a1d996a9c9f646a0535d",
+    "original_sha256": "036ecb0098ebe1e004617bfe81b3b42c88fa62c71ff67a44872a47648e720466",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

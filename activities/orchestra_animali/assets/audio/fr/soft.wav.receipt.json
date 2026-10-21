@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T13:57:45.416639+00:00",
+  "created_utc": "2026-10-21T12:11:11.635973+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/orchestra_animali/assets/audio/fr/soft.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Acts out the word for a child. Very soft and hushed. Playful, clear words."
+    "delivery_prompt": "Acts out the word for a child. Very soft and hushed. Playful, clear words."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-155718-8e1722d2",
-    "idempotency_key": "greia-f493e2492eed4e1d829b47ed1838ec57",
+    "job_id": "20261021-141106-cdcccf05",
+    "idempotency_key": "greia-151aa7588c834b248a05b566291d06f7",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1888565225,
+    "script_seed": 2737265072,
     "language_direction": "French",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Acts out the word for a child. Very soft and hushed. Playful, clear words.",
-    "effective_delivery": "Speak in French. Momo, a lovable, whimsical comic creature. Acts out the word for a child. Very soft and hushed. Playful, clear words.",
+    "delivery_prompt": "Acts out the word for a child. Very soft and hushed. Playful, clear words.",
+    "effective_delivery": "Speak in French. Acts out the word for a child. Very soft and hushed. Playful, clear words.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1509475056,
-        "sha256": "22f3aa6b7b9a0ef2bb38f94d5436d426cbd44bccaef9b5e2a5c2e934a556449c",
+        "seed": 124469729,
+        "sha256": "1d48dd683cbd2e7e845ecd7dee54149421ee3562649402ccf30cd0a967b212d4",
         "generation": {
-          "elapsed_seconds": 25.86796050000703,
+          "elapsed_seconds": 4.125386790998164,
           "model_load_seconds": 0.0,
-          "rtf": 3.4398121273917286,
-          "peak_memory_gb": 8.44494914
+          "rtf": 3.68283302276283,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/orchestra_animali/assets/audio/fr/soft.wav",
-    "bytes": 331718,
-    "sha256": "d57b0403e0592226531a34e5a17da6a07c2401f9a68ae602e1a856f53475ceb4"
+    "bytes": 49478,
+    "sha256": "2060bf28f9401e2d1e47643fe64510368651d8ad6194f662fc1c4dd59e269097"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "4a259464aaf930d98fc5b5331b1a4541aede595f474b37894a21276f4eb14672",
+    "original_sha256": "d57b0403e0592226531a34e5a17da6a07c2401f9a68ae602e1a856f53475ceb4",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

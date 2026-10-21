@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T17:29:50.505244+00:00",
+  "created_utc": "2026-10-21T12:33:48.904414+00:00",
   "request": {
     "speaker": "dani",
     "kind": "dani_system_speech",
@@ -10,15 +10,15 @@
     "output": "activities/treno_numeri/assets/audio/fr/too_many.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.dani.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+  "voice_id": "greia.dani.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
   "generation_parameters": {
-    "job_id": "20261020-192940-3e14f3bb",
-    "idempotency_key": "greia-64d0573f32ac43d1bf1a195e9f0fde40",
+    "job_id": "20261021-143341-175e726a",
+    "idempotency_key": "greia-343c71b0d6864b118a27ea6204f594ba",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-dani-v2-03",
-    "reference_sha256": "fa9c99a4827bd7c6592399b7a89d270ce1c7e02a846c6cdeb3a0a28355203967",
+    "voxstage_voice_id": "greia-audition-20261021-dani-v5-02",
+    "reference_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1524964900,
+    "script_seed": 504725248,
     "language_direction": "French",
-    "delivery_prompt": "Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
-    "effective_delivery": "Speak in French. Dani, a cheerful, earnest little robot with neat, lightly staccato phrasing. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "delivery_prompt": "Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
+    "effective_delivery": "Speak in French. Gently encourages another try: kind and reassuring, never disappointed. Calm, unhurried pace.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2177248592,
-        "sha256": "778a672c2e9ac633bfb78045b16e1e44b3b987b6104804007619e4a198158a82",
+        "seed": 3056284289,
+        "sha256": "6a43f13d2acc59997e3e043d2dd94c30fe593fce1909ae7a6771d716c4317ad7",
         "generation": {
-          "elapsed_seconds": 9.604421583993826,
+          "elapsed_seconds": 6.850241082996945,
           "model_load_seconds": 0.0,
-          "rtf": 5.001868718337207,
-          "peak_memory_gb": 8.843167284
+          "rtf": 3.5675242164726737,
+          "peak_memory_gb": 9.453068756
         }
       }
     ]
@@ -71,12 +71,12 @@
   "output": {
     "path": "activities/treno_numeri/assets/audio/fr/too_many.wav",
     "bytes": 84758,
-    "sha256": "c1b301866d3ab43311e6570152f43355213b53ee12ee5b51ce7354365ca314b6"
+    "sha256": "e3c4c47966a190e224d7fbed745d73030e9c9e9a1ac57996e907c618202c375a"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "15a4c0f1638aa67833252a36e43400a9a9096837e0b60dd497f1db17e2b3c79b",
+    "original_sha256": "c1b301866d3ab43311e6570152f43355213b53ee12ee5b51ce7354365ca314b6",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

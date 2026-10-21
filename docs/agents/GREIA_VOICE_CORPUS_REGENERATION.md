@@ -6,17 +6,18 @@ master set by owner direction on 2026-10-21.
 **Scope:** replace existing Activity and system speech with fresh VoxCPM2
 recordings, using the selected character masters and an explicit performance
 prompt per recording. Preserve deterministic isolated letters and syllables.
-**Current state (2026-10-21):** the v2 generation and automated policy-v2
-reassessment are complete. The v3 replacement is separately frozen against the
-active v0.3 registry; see HANDOVER and its external run journal for live state.
-Earlier preparation counts below are historical snapshots.
+**Current state (2026-10-21):** the owner-authorized v3 replacement is complete:
+1,340 DONE, 3,575 PRESERVED, with no unresolved journal states. Its full policy-v2
+automated review covered every replacement and all eligible ASR work; see the
+completion entry below, HANDOVER and the external run/report directories.
+Earlier preparation counts and v2 review evidence are historical snapshots.
 
-**Current post-generation follow-up (2026-10-21):** v2 generation subsequently
-completed (see HANDOVER). Run the read-only automated review in
-`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` using the new `review` command
-before declaring automated screening complete. Generation DONE and a stored
-receipt score are not audio review. ASR unavailability/disabled coverage must
-remain explicit; new human review stays PENDING.
+**Current post-generation follow-up (2026-10-21):** automated screening is
+complete for v3, with 1,115 PASS and 225 WARN; there are no FAIL or BLOCKED rows.
+The full report and prioritized queue are external. Human acceptance remains
+PENDING for all 1,340 replacements; the separate Takeboard batch is served on
+the fresh local port recorded below. Generation DONE and automated PASS are not
+audible/product acceptance.
 
 This is the current executable **replacement** work order within the existing
 four-language rollout. It supersedes the older add-only/no-regeneration
@@ -384,8 +385,10 @@ grounded v3 candidate 01. Exact immutable VoxStage IDs are
 saved review. Their hashes, approval evidence and exact source bytes are archived
 in `assets/source/audio/character-voice-masters/v0.3/`. Active semantic IDs are
 `greia.dani.v3`, `greia.momo.v3`, and `greia.tito.v3`; Lilli, Leo and Flash retain
-their v0.2 IDs and source bytes. The v0.2 registry, masters, plans, receipts and
-runs are historical evidence and were not rewritten.
+their v0.2 IDs and source bytes. The v0.2 canonical master registry/source
+masters and prior v2 frozen plan/run journal remain unchanged. Runtime audio and
+receipts selected in the v3 frozen scope were replaced in place; their original
+bytes and receipts are retained in the v3 external run backups.
 
 No v0.3 multilingual cloned-line comparison has been owner-accepted. A 12-output
 VoiceEngine batch (one selected character × EN/IT/ES/FR) is a technical route and
@@ -401,6 +404,47 @@ neutral `character_delivery.json`. Reconciled READY scope: Dani 392 (EN 102, IT
 only selected-master identity and acting direction change. The new plan preserves
 3,575 rows, including every row/path from v2 and six additional canonical v0.3
 references; no old path was dropped. Other characters, deterministic isolated
-letters/syllables, historical libraries and unrelated user files remain outside
-the generated scope. See the external run's `plan.json` and status journal for
-exact live execution state.
+letters/syllables, historical master/source libraries and unrelated user files
+remain outside the generated scope. See the external run's `plan.json` and
+status journal for the frozen scope and reconciliation.
+
+## 2026-10-21 completion: v0.3 corpus production and automated screen
+
+Serial VoiceEngine production completed with exit 0: **1,340 DONE, 3,575
+PRESERVED, zero READY/FAILED/NEEDS_RECOVERY/BLOCKED**. Counts: Dani 392 (EN/IT
+102 each, ES/FR 94 each), Momo 284 (71 per locale), and Tito 664 (166 per
+locale). Deterministic isolated letters/syllables and unrelated preserved rows
+were not replaced. The previous frozen v2 plan/run journal remains unchanged;
+original in-scope installed bytes and receipts are recoverable from the v3
+external run backups.
+
+One Dani/EN `Toot toot!` request was rejected because VoxStage job
+`20261021-143034-b8c58196` produced effectively silent audio with no result.
+The producer exited 2, the failed job was inspected, no candidate WAV existed,
+the original hash was unchanged, and the provider running list/queue were empty.
+The documented idle-confirmed one-cue retry succeeded as job
+`20261021-143155-c79f82e8`; that cue remains PENDING human review. The resumed
+full pass completed with exit 0. Details are in external `run-v1/recovery-002.md`
+and the resume log/exit record.
+
+The required prepared-local-Python review used policy `greia-audio-screen-v2`
+and cached `mlx-community/whisper-tiny`; full coverage and eligible ASR are
+complete. Results: **1,115 PASS / 225 WARN / 0 FAIL / 0 BLOCKED**. ASR was 608
+PASS, 199 WARN and 533 `NOT_APPLICABLE_POLICY`; WARN flags comprise 199 ASR
+mismatch/error, 13 trailing silence ≥1.5s, 11 leading silence, 6 low level and
+1 internal pause. Exit 2 represents retained warnings, not incomplete traversal.
+No report changed audio or acceptance. Speaker identity, acting/mood,
+pronunciation truth, independent language identification and small-speaker
+intelligibility remain unassessed.
+
+Full report and per-cue evidence are at
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/full-automated-review/`;
+the log is `full-automated-review.log`. Exported and validated Takeboard batch
+`takeboard/batch.json` contains all 1,340 rows, all `unreviewed`, with character
+counts Dani 392 / Momo 284 / Tito 664 and locale counts EN 339 / IT 339 / ES
+331 / FR 331. It is served at `http://127.0.0.1:8799/`; the PID/log are beside
+the batch and existing ports 8794–8798 were left untouched. All new receipt
+`human_review=PENDING` states remain open. Prioritize the 225 machine warnings
+and 533 ASR-policy exclusions, then listen across every character/language
+combination, long narration, numbers/words, identity and acting. Machine results
+never establish owner acceptance.

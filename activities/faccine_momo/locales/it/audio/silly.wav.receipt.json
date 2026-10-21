@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T11:58:27.759253+00:00",
+  "created_utc": "2026-10-21T11:39:53.468598+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/faccine_momo/locales/it/audio/silly.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Silly and goofy: playful wobbly pitch, close to giggling. Keep every word clear."
+    "delivery_prompt": "Silly and goofy: lightly playful phrasing, with a small amused smile. Keep every word clear."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-135804-cdd6f0ef",
-    "idempotency_key": "greia-0c36f4dd4f8149feab4ae18e286a7709",
+    "job_id": "20261021-133939-da02b025",
+    "idempotency_key": "greia-496b25439558446796b1defb2da324a0",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1782170340,
+    "script_seed": 226274564,
     "language_direction": "Italian",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Silly and goofy: playful wobbly pitch, close to giggling. Keep every word clear.",
-    "effective_delivery": "Speak naturally in Italian. Momo, a lovable, whimsical comic creature. Silly and goofy: playful wobbly pitch, close to giggling. Keep every word clear.",
+    "delivery_prompt": "Silly and goofy: lightly playful phrasing, with a small amused smile. Keep every word clear.",
+    "effective_delivery": "Speak in Italian. Silly and goofy: lightly playful phrasing, with a small amused smile. Keep every word clear.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 2694947502,
-        "sha256": "b58419b02fe585c93e8920e8ad9342f3ee4d0ffdeb20501b61bb61f653ecea22",
+        "seed": 4020042232,
+        "sha256": "6da69633e021067e677204177baae150c5060f8c3f98a2701a554a0b1566e57e",
         "generation": {
-          "elapsed_seconds": 22.69104399997741,
+          "elapsed_seconds": 13.25026145800075,
           "model_load_seconds": 0.0,
-          "rtf": 4.890135555470869,
-          "peak_memory_gb": 8.079945652
+          "rtf": 3.450439162710147,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,13 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/faccine_momo/locales/it/audio/silly.wav",
-    "bytes": 204710,
-    "sha256": "4856be4f7f4d342d3c63503222bff485d51aaae30456f3e483f42f358c420daa"
+    "bytes": 169430,
+    "sha256": "f7a1ab9f322c2fd82040e5f132c57beebcf0cb24e4d880d00348501e57a3ff9a"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "7b366a2b40657cc8437cb750b3dd8b845dc993bb0489d8375290c688e63c2604",
+    "original_sha256": "4856be4f7f4d342d3c63503222bff485d51aaae30456f3e483f42f358c420daa",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

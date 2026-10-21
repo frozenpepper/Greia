@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T09:57:30.152474+00:00",
+  "created_utc": "2026-10-21T10:53:34.546846+00:00",
   "request": {
     "speaker": "tito",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/enciclopedia_greia/assets/audio/it/animals/frog_cycle.ogg",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail."
+    "delivery_prompt": "Calm, interested explanation. Unhurried phrasing, clear words and natural pauses."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.tito.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+  "voice_id": "greia.tito.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
   "generation_parameters": {
-    "job_id": "20261020-115658-aae4fae9",
-    "idempotency_key": "greia-8085d2b291ea4641a0878fecaa795462",
+    "job_id": "20261021-125305-2a0f1097",
+    "idempotency_key": "greia-a3fa547b893e435cac2c2999e37a7cd6",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-tito-v2-01",
-    "reference_sha256": "76df5a8c0a70781750cd3a26ed2867fd20977cf82c49a2ec0b41f469fb8c6eef",
+    "voxstage_voice_id": "greia-audition-20261021-tito-v3-01",
+    "reference_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 2578988473,
+    "script_seed": 2291754566,
     "language_direction": "Italian",
-    "delivery_prompt": "Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
-    "effective_delivery": "Speak naturally in Italian. Tito, a cheeky, confident woodland explorer. Shares an amazing fact like a storybook narrator: wonder and gentle enthusiasm, unhurried pace with natural pauses at commas, highlight the surprising detail.",
+    "delivery_prompt": "Calm, interested explanation. Unhurried phrasing, clear words and natural pauses.",
+    "effective_delivery": "Speak in Italian. Calm, interested explanation. Unhurried phrasing, clear words and natural pauses.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 4023671052,
-        "sha256": "111cb66bd51e579492bbe2b0f54d51fc1c33f281b7a5aa96f6bc48541c4ff9b5",
+        "seed": 1933853651,
+        "sha256": "552f90bf0f382c8d8fb9a8adfa9f0ed6b30d15f5cb220d6dcea0096ed47b7038",
         "generation": {
-          "elapsed_seconds": 31.514789499982726,
+          "elapsed_seconds": 26.868252749998646,
           "model_load_seconds": 0.0,
-          "rtf": 3.5172101895406778,
-          "peak_memory_gb": 8.079945652
+          "rtf": 3.3584616257992934,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -70,22 +70,13 @@
   "attempts": 1,
   "output": {
     "path": "activities/enciclopedia_greia/assets/audio/it/animals/frog_cycle.ogg",
-    "bytes": 53614,
-    "sha256": "f33135a274410a3ea03fb8b5ef9978ead3c524087ad6e07854205f45e944c8cd"
+    "bytes": 58796,
+    "sha256": "db649c6f1cb7f16766f6f7c98d887527442f14dab716ef4d6ebab4796290fb77"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "b784803d8316733cf1863be71f3b7a6686cb3151207f21b67f3227d2ced9a635",
-    "owner_authorization": "2026-10-19 corpus regeneration; listening pending",
-    "audio_repackaging": {
-      "pipeline": "AudioPipeline",
-      "codec": "libvorbis",
-      "quality": 3,
-      "sample_rate_hz": 22050,
-      "source_mix_sha256": "111cb66bd51e579492bbe2b0f54d51fc1c33f281b7a5aa96f6bc48541c4ff9b5",
-      "source_job_id": "20261020-115658-aae4fae9",
-      "repackaged_utc": "2026-10-20T22:30:37Z"
-    }
+    "original_sha256": "f33135a274410a3ea03fb8b5ef9978ead3c524087ad6e07854205f45e944c8cd",
+    "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }

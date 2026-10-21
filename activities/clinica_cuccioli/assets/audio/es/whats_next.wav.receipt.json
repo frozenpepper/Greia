@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-20T03:08:12.847011+00:00",
+  "created_utc": "2026-10-21T08:43:15.263026+00:00",
   "request": {
     "speaker": "momo",
     "kind": "character_dialogue",
@@ -10,15 +10,15 @@
     "output": "activities/clinica_cuccioli/assets/audio/es/whats_next.wav",
     "verification": "off",
     "max_attempts": 1,
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
+    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think."
   },
   "provider_id": "voxstage-voxcpm2",
-  "voice_id": "greia.momo.v2",
-  "voice_registry_version": "v0.2",
-  "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+  "voice_id": "greia.momo.v3",
+  "voice_registry_version": "v0.3",
+  "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
   "generation_parameters": {
-    "job_id": "20261020-050759-2b85e72d",
-    "idempotency_key": "greia-f89ab15ccac546fc8bdb1d28566a4dbe",
+    "job_id": "20261021-104308-334a98b3",
+    "idempotency_key": "greia-d738a05665e445d8b694ab0f503458b1",
     "backend": {
       "backend": "mlx",
       "adapter_version": "0.1.0",
@@ -34,28 +34,28 @@
       "reference_encoding_cache": 16,
       "compiled_hot_paths": true
     },
-    "voxstage_voice_id": "greia-audition-20261019-momo-v2-03",
-    "reference_sha256": "4bfff2c2e3eda0063864a343776510df8c9f50abfd12c86c9023df3a63f22aea",
+    "voxstage_voice_id": "greia-audition-20261021-momo-v3-01",
+    "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
     "settings": {
       "steps": 10,
       "cfg": 2.0,
       "max_tokens": 300
     },
-    "script_seed": 1704239165,
+    "script_seed": 3995537293,
     "language_direction": "Spanish",
-    "delivery_prompt": "Momo, a lovable, whimsical comic creature. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
-    "effective_delivery": "Speak naturally in Spanish. Momo, a lovable, whimsical comic creature. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "delivery_prompt": "Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
+    "effective_delivery": "Speak in Spanish. Asks the child a friendly question: curious and inviting, natural rising intonation at the end, unhurried, leaving room to think.",
     "mode": "reference",
     "recordings": [
       {
         "file": "speech-001-take-01.wav",
-        "seed": 1800450000,
-        "sha256": "b5dbdad21953a8b0ca66e2c53a7937a12872054c6ae35bfe6c9eb34685a7cf20",
+        "seed": 4011162421,
+        "sha256": "5d113f674669e0aa41f4ba6b6877f05041342e5a10e492982251b5881712c5e8",
         "generation": {
-          "elapsed_seconds": 12.693386166996788,
+          "elapsed_seconds": 6.417645042005461,
           "model_load_seconds": 0.0,
-          "rtf": 7.211468327050538,
-          "peak_memory_gb": 6.61593154
+          "rtf": 3.6460439590978853,
+          "peak_memory_gb": 7.648166916
         }
       }
     ]
@@ -71,12 +71,12 @@
   "output": {
     "path": "activities/clinica_cuccioli/assets/audio/es/whats_next.wav",
     "bytes": 77702,
-    "sha256": "4260c57cf062190d361eb67ffe45b5b9371ca86493ac72fae4d0ec68b28cf006"
+    "sha256": "e1fc91fc8bd41aee0b4579be3f2bc19e76963f81e5360271e204fde134262e53"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required.",
   "corpus_replacement": {
-    "original_sha256": "7160d284f9c87f07faf3dceffcc601949ea3daf173c36fde7433b78fd772bc90",
+    "original_sha256": "4260c57cf062190d361eb67ffe45b5b9371ca86493ac72fae4d0ec68b28cf006",
     "owner_authorization": "2026-10-19 corpus regeneration; listening pending"
   }
 }
