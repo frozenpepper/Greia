@@ -335,10 +335,11 @@ On a display whose aspect ratio differs from 1024x600 the CONTAIN fit leaves
 bands (25 px above and below at 1280x800, 137 px at 1280x1024, side bands at
 16:9). The canvas owns them:
 
-- every full `present()` repaints the bands. Without `clear` they get a
-  blurred smear of the outermost scene pixels, shaded darker toward the screen
-  edge, so no card or character is repeated where a child might tap it. With
-  `clear` the whole target, bands included, takes that colour;
+- every full `present()` repaints the bands with one solid colour: the
+  average of the scene's outermost pixels on that side, slightly darkened, or
+  the `clear` colour when given. The colour only changes when the edge
+  average moves clearly (a backdrop change such as day to night), never
+  because a sprite passes the edge;
 - non-integer scales are resampled smoothly by default (`smooth=None`); exact
   whole-number scales stay crisp. Pass `smooth=True`/`False` only to force it;
 - `present_pointer()` and `present_regions()` repair from the cached physical

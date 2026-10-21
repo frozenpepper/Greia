@@ -80,14 +80,27 @@ class ReferenceCanvasPresentationTests(unittest.TestCase):
                 )
                 self.assertEqual(stale, 0)
 
-    def test_band_continues_the_scene_edge_slightly_shaded(self) -> None:
+    def test_band_is_one_solid_colour_matching_the_scene_edge(self) -> None:
+        target, canvas = self.canvas((1280, 800))
+        canvas.surface.fill((200, 120, 40), pygame.Rect(0, 0, 1024, 40))
+        canvas.present(pointer=False)
+        colours = {target.get_at((x, y))[:3] for x in range(0, 1280, 37) for y in range(0, 25, 6)}
+        self.assertEqual(len(colours), 1)
+        (band,) = colours
+        for channel, scene in zip(band, (200, 120, 40)):
+            self.assertLess(channel, scene)
+            self.assertGreater(channel, scene * 0.7)
+
+    def test_band_colour_ignores_a_sprite_but_follows_a_backdrop_change(self) -> None:
         target, canvas = self.canvas((1280, 800))
         canvas.present(pointer=False)
-        band = target.get_at((640, 10))[:3]
-        self.assertNotEqual(band, STALE)
-        for channel, scene in zip(band, SCENE):
-            self.assertLessEqual(channel, scene)
-            self.assertGreater(channel, scene * 0.7)
+        first = target.get_at((640, 5))[:3]
+        canvas.surface.fill((255, 255, 255), pygame.Rect(500, 0, 40, 4))  # small sprite at the edge
+        canvas.present(pointer=False)
+        self.assertEqual(target.get_at((640, 5))[:3], first)
+        canvas.surface.fill((20, 20, 60))  # night backdrop
+        canvas.present(pointer=False)
+        self.assertNotEqual(target.get_at((640, 5))[:3], first)
 
     def test_explicit_clear_colours_the_bands(self) -> None:
         target, canvas = self.canvas((1280, 800))

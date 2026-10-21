@@ -174,9 +174,9 @@ class PygameReferenceCanvas:
 
     When the display's aspect ratio differs from the reference, CONTAIN leaves
     bands (25 px above and below on a 1280x800 panel).  The canvas owns those
-    bands: every full present repaints them, by default with a blurred smear
-    of the adjacent scene edge, so they never keep stale Shell/launch-card
-    pixels or Greia pointer trails.  At non-integer scales the frame is
+    bands: every full present repaints them with one solid colour (the
+    adjacent scene edge, slightly darkened, or the ``clear`` colour), so they
+    never keep stale Shell/launch-card pixels or Greia pointer trails.  At non-integer scales the frame is
     resampled smoothly; nearest-neighbour duplication of every Nth pixel row is
     what made scaled Activities look jagged.
 
@@ -190,12 +190,15 @@ class PygameReferenceCanvas:
     catalogue migration, but it is ignored and must not be used by new code.
     """
 
-    #: Scene pixels sampled at each edge for the band smear.
+    #: Scene pixels sampled at each edge to choose the band colour.
     _BAND_EDGE = 4
-    #: The smear is blurred along the edge by shrinking it by this factor.
-    _BAND_BLUR = 24
-    #: Multiplicative shade next to the scene and at the screen edge.
-    _BAND_SHADE = (236, 176)
+    #: The band colour is the edge average darkened by this factor, so the
+    #: band reads as a frame that belongs to the scene.
+    _BAND_SHADE = 0.82
+    #: A band keeps its colour until the edge average moves by more than
+    #: this (any channel): a sprite passing the edge must not make it flicker,
+    #: a real backdrop change (day to night) must recolour it.
+    _BAND_HYSTERESIS = 28
 
     def __init__(
         self,
@@ -227,9 +230,9 @@ class PygameReferenceCanvas:
         # scene and the band fills.  Bounded: one display-sized frame at most.
         self._frame: pygame.Surface | None = None
         self._frame_rect: pygame.Rect | None = None
-        self._bands: list[tuple[pygame.Rect, pygame.Surface]] = []
-        # One shade per band geometry; a canvas has at most two bands.
-        self._shades: dict[tuple[str, tuple[int, int]], pygame.Surface] = {}
+        self._bands: list[tuple[pygame.Rect, tuple[int, int, int]]] = []
+        # Edge average behind each side's current band colour (hysteresis).
+        self._band_edges: dict[str, tuple[int, int, int]] = {}
 
     def pointer(
         self,
@@ -285,7 +288,7 @@ class PygameReferenceCanvas:
         """Draw the logical frame onto the display surface, bands included.
 
         ``clear`` paints the whole target (bands included) with one colour;
-        without it the bands continue the scene edge.  ``smooth`` forces or
+        without it each band is one solid colour taken from the scene edge.  ``smooth`` forces or
         disables smooth resampling; the default chooses it for non-integer
         scales.
         """
@@ -310,8 +313,8 @@ class PygameReferenceCanvas:
             self._bands = []
             if clear is None:
                 self._bands = self._band_fills(rendered, frame_rect, area)
-                for rect, fill in self._bands:
-                    self.target.blit(fill, rect.topleft)
+                for rect, colour in self._bands:
+                    self.target.fill(colour, rect)
         finally:
             self.target.set_clip(previous_clip)
         self._frame = rendered
@@ -328,91 +331,44 @@ class PygameReferenceCanvas:
         rendered: pygame.Surface,
         frame: pygame.Rect,
         area: pygame.Rect,
-    ) -> list[tuple[pygame.Rect, pygame.Surface]]:
-        """Soft mirrored continuations of the scene into the CONTAIN bands."""
+    ) -> list[tuple[pygame.Rect, tuple[int, int, int]]]:
+        """Solid colours for the CONTAIN bands, taken from the adjacent scene edge."""
 
         visible = frame.clip(area)
         if visible.width <= 0 or visible.height <= 0:
             return []
-        fills: list[tuple[pygame.Rect, pygame.Surface]] = []
+        local = visible.move(-frame.x, -frame.y)
         sides = (
             ("top", pygame.Rect(visible.x, area.y, visible.width, visible.y - area.y)),
             ("bottom", pygame.Rect(visible.x, visible.bottom, visible.width, area.bottom - visible.bottom)),
             ("left", pygame.Rect(area.x, area.y, visible.x - area.x, area.height)),
             ("right", pygame.Rect(visible.right, area.y, area.right - visible.right, area.height)),
         )
+        bands: list[tuple[pygame.Rect, tuple[int, int, int]]] = []
         for side, band in sides:
             if band.width <= 0 or band.height <= 0:
                 continue
-            fills.append((band, self._band_fill(rendered, frame, visible, side, band.size)))
-        return fills
+            bands.append((band, self._band_colour(rendered, local, side)))
+        return bands
 
-    def _band_fill(
-        self,
-        rendered: pygame.Surface,
-        frame: pygame.Rect,
-        visible: pygame.Rect,
-        side: str,
-        size: tuple[int, int],
-    ) -> pygame.Surface:
-        """Smear the scene's outermost pixels across one band.
-
-        Only a few edge pixels are used and they are blurred along the edge,
-        so no recognisable object (a card, a character) is ever repeated in
-        the band where a child might try to touch it.  A shade that deepens
-        toward the screen edge makes the band read as a frame.
-        """
-
-        width, height = size
-        local = visible.move(-frame.x, -frame.y)
-        horizontal = side in ("top", "bottom")
-        if horizontal:
-            depth = min(self._BAND_EDGE, local.height)
-            y = local.y if side == "top" else local.bottom - depth
-            strip = rendered.subsurface((local.x, y, local.width, depth))
-            small_size = (max(1, local.width // self._BAND_BLUR), 1)
+    def _band_colour(
+        self, rendered: pygame.Surface, local: pygame.Rect, side: str
+    ) -> tuple[int, int, int]:
+        depth_y = min(self._BAND_EDGE, local.height)
+        depth_x = min(self._BAND_EDGE, local.width)
+        edge = {
+            "top": pygame.Rect(local.x, local.y, local.width, depth_y),
+            "bottom": pygame.Rect(local.x, local.bottom - depth_y, local.width, depth_y),
+            "left": pygame.Rect(local.x, local.y, depth_x, local.height),
+            "right": pygame.Rect(local.right - depth_x, local.y, depth_x, local.height),
+        }[side]
+        average = tuple(int(v) for v in pygame.transform.average_color(rendered, edge)[:3])
+        previous = self._band_edges.get(side)
+        if previous is not None and max(abs(a - b) for a, b in zip(average, previous)) <= self._BAND_HYSTERESIS:
+            average = previous
         else:
-            depth = min(self._BAND_EDGE, local.width)
-            x = local.x if side == "left" else local.right - depth
-            strip = rendered.subsurface((x, local.y, depth, local.height))
-            small_size = (1, max(1, local.height // self._BAND_BLUR))
-        smooth = strip.get_bitsize() in (24, 32)
-        small = self._resample(strip, small_size, smooth)
-        fill = self._resample(small, (width, height), smooth)
-        if fill is small or fill is strip:
-            fill = fill.copy()
-        fill.blit(
-            self._band_shade(side, size),
-            (0, 0),
-            special_flags=pygame.BLEND_RGB_MULT,
-        )
-        return fill
-
-    def _band_shade(self, side: str, size: tuple[int, int]) -> pygame.Surface:
-        """Multiplicative shade, lightest next to the scene (cached per band)."""
-
-        key = (side, size)
-        cached = self._shades.get(key)
-        if cached is not None:
-            return cached
-        width, height = size
-        horizontal = side in ("top", "bottom")
-        steps = max(1, height if horizontal else width)
-        line = pygame.Surface((1, steps) if horizontal else (steps, 1))
-        near, far = self._BAND_SHADE
-        for index in range(steps):
-            # 0 next to the scene, 1 at the screen edge.
-            distance = index / max(1, steps - 1)
-            if side in ("top", "left"):
-                distance = 1.0 - distance
-            value = int(round(near + (far - near) * distance))
-            position = (0, index) if horizontal else (index, 0)
-            line.set_at(position, (value, value, value))
-        shade = pygame.transform.scale(line, size)
-        if len(self._shades) >= 4:  # a resize changed the band geometry
-            self._shades.clear()
-        self._shades[key] = shade
-        return shade
+            self._band_edges[side] = average
+        return tuple(int(round(v * self._BAND_SHADE)) for v in average)  # type: ignore[return-value]
 
     def present_pointer(self) -> bool:
         """Refresh only Greia's pointer after ``FrameKind.POINTER``.
@@ -596,10 +552,10 @@ class PygameReferenceCanvas:
         if self._last_clear is not None:
             self.target.fill(self._last_clear, area)
         target_area = self._target_rect()
-        for band, fill in self._bands:
+        for band, colour in self._bands:
             piece = area.clip(band).clip(target_area)
             if piece.width > 0 and piece.height > 0:
-                self.target.blit(fill, piece.topleft, piece.move(-band.x, -band.y))
+                self.target.fill(colour, piece)
         if self._frame is None or self._frame_rect is None:
             return
         visible = area.clip(self._frame_rect).clip(target_area)
