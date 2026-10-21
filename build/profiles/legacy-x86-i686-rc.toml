@@ -51,6 +51,7 @@ target_sets = [
   "network-basic",
   "removable-media-common",
   "parent-recovery",
+  "boot-grub-efi",
   "developer-remote",
 ]
 installer_sets = [

@@ -152,6 +152,7 @@ TARGET_OUT="$BUILD_DIR/target-out"
 TARGET_MOUNT="$BUILD_DIR/target-root"
 LIVE_ROOT="$BUILD_DIR/live-root"
 USB_MOUNT="$BUILD_DIR/usb"
+USB_ESP_MOUNT="$BUILD_DIR/usb-esp"
 TARGET_LOOP=""
 USB_LOOP=""
 MOUNTS=()
@@ -173,11 +174,11 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-required=(debootstrap parted partx blockdev losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt udevadm rsync mksquashfs python3 dpkg-deb)
+required=(debootstrap parted partx blockdev losetup mkfs.ext4 blkid mkfs.vfat grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt udevadm rsync mksquashfs python3 dpkg-deb)
 for command_name in "${required[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing build dependency: $command_name" >&2
-    echo "Install: debootstrap parted e2fsprogs grub-pc-bin grub-common rsync squashfs-tools" >&2
+    echo "Install: debootstrap parted e2fsprogs dosfstools grub-pc-bin grub-efi-ia32-bin grub-efi-amd64-bin grub-common rsync squashfs-tools" >&2
     exit 1
   }
 done
@@ -425,15 +426,29 @@ if [[ "$STORAGE_LAYOUT_ADAPTER" == *-ab-v1 ]]; then
   }
   payload_mib="$(( payload_mib + ($(stat -c %s "$AB_RELEASE_SRC") + 1048575) / 1048576 ))"
 fi
-image_mib="$(( payload_mib + 256 ))"
+# + the 64 MiB EFI System Partition (Intel Mac / UEFI boot, UNPROVEN / LAB).
+image_mib="$(( payload_mib + 256 + 64 ))"
 (( image_mib < 1024 )) && image_mib=1024
 rm -f "$OUTPUT_IMAGE" "$REPORT"
 truncate -s "${image_mib}M" "$OUTPUT_IMAGE"
+# One MBR table serves both firmware families (UNPROVEN / LAB on real Macs):
+#   p1 64 MiB FAT32 type 0xEF (EFI System Partition) - read by EFI firmware
+#   p2 ext4 root, active (boot flag)                 - read by BIOS grub-pc
+# The BIOS path is exactly what it was (msdos, active root partition, GRUB
+# embedded in the 1 MiB gap); the ESP only adds the EFI path. A pure GPT or a
+# sgdisk hybrid MBR was rejected: it would change how legacy BIOSes (the Acer
+# reference) see the stick.
 parted -s "$OUTPUT_IMAGE" mklabel msdos
-parted -s "$OUTPUT_IMAGE" mkpart primary ext4 1MiB 100%
-parted -s "$OUTPUT_IMAGE" set 1 boot on
+parted -s "$OUTPUT_IMAGE" mkpart primary fat32 1MiB 65MiB
+parted -s "$OUTPUT_IMAGE" set 1 esp on
+parted -s "$OUTPUT_IMAGE" mkpart primary ext4 65MiB 100%
+parted -s "$OUTPUT_IMAGE" set 2 boot on
 USB_LOOP="$(losetup --find --show --partscan "$OUTPUT_IMAGE")"
-USB_PART="${USB_LOOP}p1"
+USB_ESP_PART="${USB_LOOP}p1"
+USB_PART="${USB_LOOP}p2"
+for _ in {1..20}; do [[ -b "$USB_ESP_PART" ]] && break; sleep 0.2; done
+[[ -b "$USB_ESP_PART" ]] || { echo "Installer image EFI partition did not appear." >&2; exit 1; }
+mkfs.vfat -F 32 -n GREIA_EFI "$USB_ESP_PART"
 for _ in {1..20}; do [[ -b "$USB_PART" ]] && break; sleep 0.2; done
 [[ -b "$USB_PART" ]] || { echo "Installer image partition did not appear." >&2; exit 1; }
 mkfs.ext4 -q -F -m 0 -L PIP_INSTALL "$USB_PART"
@@ -480,6 +495,10 @@ PYTHONPATH="$PROJECT_ROOT/src" python3 -m greia_platform.grub_security \
 installer_grub_hash="$(cat "$INSTALLER_GRUB_SECURITY_ROOT/etc/greia-os/grub-recovery.pbkdf2")"
 install -m 0644 "$PROJECT_ROOT/assets/boot/static/greia-boot-logo.png" \
   "$USB_MOUNT/boot/grub/greia-boot-logo.png"
+# Single source of the live kernel command line. The BIOS and EFI GRUB images
+# both read this one grub.cfg (EFI images are built with --boot-directory on
+# the ext4 root), so the two boot paths cannot drift apart.
+LIVE_KERNEL_CMDLINE="boot=live components live-media-path=/live live-media-timeout=15 nopersistence noeject nonetworking silent overlay-size=128M greia.live_media_id=$live_media_id quiet splash loglevel=0 console=tty1 panic=0 systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0"
 cat > "$USB_MOUNT/boot/grub/grub.cfg" <<GRUB
 set timeout=0
 set timeout_style=hidden
@@ -498,15 +517,30 @@ export superusers
 password_pbkdf2 greia $installer_grub_hash
 menuentry "Install Greia OS" --unrestricted --id greia-installer {
   search --no-floppy --fs-uuid --set=root $usb_root_uuid
-  linux /live/vmlinuz boot=live components live-media-path=/live live-media-timeout=15 nopersistence noeject nonetworking silent overlay-size=128M greia.live_media_id=$live_media_id quiet splash loglevel=0 console=tty1 panic=0 systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0
+  linux /live/vmlinuz $LIVE_KERNEL_CMDLINE
   initrd /live/initrd.img
 }
 GRUB
 grub-script-check "$USB_MOUNT/boot/grub/grub.cfg"
 PYTHONPATH="$PROJECT_ROOT/src" python3 -m greia_platform.boot_contract --live-installer "$USB_MOUNT/boot/grub/grub.cfg"
 grub-install --target=i386-pc --boot-directory="$USB_MOUNT/boot" --recheck "$USB_LOOP"
+# EFI: removable-path images on the ESP, no NVRAM writes (build host firmware
+# must stay untouched). 32-bit EFI Macs (2006-2007) read BOOTIA32.EFI, 64-bit
+# EFI machines BOOTX64.EFI. LAB question: whether x64 EFI GRUB can start the
+# i686 kernel on 2008+ Macs; the fallback is Option -> "Windows" (CSM/BIOS).
+install -d "$USB_ESP_MOUNT"
+mount "$USB_ESP_PART" "$USB_ESP_MOUNT"
+MOUNTS+=("$USB_ESP_MOUNT")
+for efi_target in i386-efi x86_64-efi; do
+  grub-install --target="$efi_target" --removable --no-nvram --efi-directory="$USB_ESP_MOUNT" \
+    --boot-directory="$USB_MOUNT/boot" --no-uefi-secure-boot
+done
+[[ -s "$USB_ESP_MOUNT/EFI/BOOT/BOOTIA32.EFI" && -s "$USB_ESP_MOUNT/EFI/BOOT/BOOTX64.EFI" ]] || {
+  echo "Installer EFI images were not written to the EFI System Partition." >&2
+  exit 1
+}
 sync
-safe_unmount_paths "$USB_MOUNT" || { echo "Cannot detach completed installer filesystem." >&2; exit 1; }
+safe_unmount_paths "$USB_ESP_MOUNT" "$USB_MOUNT" || { echo "Cannot detach completed installer filesystem." >&2; exit 1; }
 MOUNTS=()
 safe_detach_loop "$USB_LOOP" || { echo "Cannot detach completed installer loop device." >&2; exit 1; }
 USB_LOOP=""

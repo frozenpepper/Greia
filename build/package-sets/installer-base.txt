@@ -2,6 +2,7 @@ alsa-utils
 ca-certificates
 dbus
 debian-security-support
+dosfstools
 e2fsprogs
 fonts-noto-color-emoji
 isenkram-cli

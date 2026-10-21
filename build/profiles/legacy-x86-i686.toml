@@ -43,6 +43,7 @@ target_sets = [
   "network-basic",
   "removable-media-common",
   "parent-recovery",
+  "boot-grub-efi",
 ]
 installer_sets = ["installer-base"]
 extra_packages = ["xserver-xorg-legacy"]
