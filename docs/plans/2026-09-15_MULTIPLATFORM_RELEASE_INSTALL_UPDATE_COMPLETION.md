@@ -2824,3 +2824,8 @@ rebuild/flash with the hook.
 The HTML Parent app froze while connecting Wi-Fi because the installed Parent API was single-threaded: each connect ran a scan and an association attempt before any other request could be served. `ProductionParentApiHTTPServer` is now a bounded `ThreadingHTTPServer` (four slots, daemon threads), `connect_wifi` reuses a 15 s scan cache, and a new `IwdWifiBackend.connected_ssid()` fast path returns immediately for the already-connected network. Focused tests pass.
 
 Deployed `ea0ab12f4` to the Acer and verified: already-connected connect 0.07 s; `/api/v1/devices` responded in 0.0036 s while a failing connect took 7.07 s; Wi-Fi stayed on `Wireless Pendente` at 192.168.68.112 with HTTPS 200. The diagnostic device credential was revoked. The current LaCie image (`96abaccf…`, built from `37d06316e`) predates this fix; rebuild before a reinstall.
+
+
+### 2026-10-21 — Parents app connected-Wi-Fi feedback (DEVICE + SOURCE)
+
+The Acer's Parents app listed networks but did not say which one was connected. Added `connected_ssid` to `/api/v1/network/wifi` and a green `Connected to <SSID>` / `Not connected to Wi-Fi` status plus a `Connected` row badge to the vendored Parent app; updated the integrity manifest. The pin revision is unchanged (Greia-side visual patch; upstream sync pending). The Acer's installed app files and backend were patched directly because the source-deploy stage is blocked by a concurrent oversized Activity (53.95 MB > 50 MB) from the 2x-art commit. Verified: payload `connected_ssid="Wireless Pendente"`, served JS contains the status, `greia-parent` integrity OK, Wi-Fi `192.168.68.112`, HTTPS 200. The LaCie image predates this patch.

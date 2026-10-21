@@ -408,6 +408,25 @@ GET /devices while that POST was in flight
 The panel remains responsive during a slow/rejected association. The temporary
 diagnostic device credential was revoked.
 
+### 2.10 Connected-Wi-Fi feedback in the Parents app
+
+The app listed networks but gave no indication that the Acer was already on
+`Wireless Pendente`. `/api/v1/network/wifi` now includes `connected_ssid`
+(from `IwdWifiBackend.connected_ssid()`), and `views_device.js` renders:
+
+```text
+Connected to Wireless Pendente      (green status line)
+Wireless Pendente       Connected   (green row badge)
+```
+
+The vendored and overlay Parent app plus `runtime/parent-app-client.manifest.json`
+were updated; focused integrity/API tests pass. The pin revision is unchanged:
+this is a Greia-side visual patch to the pinned client, pending the separate
+Parent App upstream. On the Acer the four files were installed directly because
+`tools/dev_source_deploy.py stage` currently rejects a concurrent oversized
+Activity (53,952,202 bytes vs 52,428,800); `greia-parent` was restarted and its
+integrity check passed. The current LaCie image predates this patch.
+
 ## 3. Commands for other agents
 
 Check source state and focused tests:

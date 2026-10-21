@@ -131,6 +131,14 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+## 2026-10-21 — Parents app shows the connected Wi-Fi network
+
+**Evidence class: DEVICE (Acer, remote) + SOURCE + FOCUSED TESTS.**
+
+The Acer is connected to `Wireless Pendente` at `192.168.68.112` (online, HTTPS 200), but the Parents app only listed networks. `/api/v1/network/wifi` now returns `connected_ssid`, and the Wi-Fi card renders `Connected to <SSID>` (green) or `Not connected to Wi-Fi`, with a green `Connected` badge on the active row. Changes are in `src/greia_parent/api_server.py`, `src/greia_parent/production_api.py`, the vendored/overlay Parent app (`src/views_device.js`, `styles/app.css`) and the integrity manifest. The pin revision is unchanged; this is a Greia-side visual patch to the pinned client, pending upstream sync.
+
+On the Acer the four files were installed directly and `greia-parent` restarted (integrity OK). Verified payload `connected_ssid="Wireless Pendente"`, served JS contains the status, and a temporary diagnostic credential was revoked. A clean `dev_source_deploy.py stage` is currently blocked by a concurrent oversized Activity (`53,952,202` bytes > `52,428,800` limit) from the 2x-art commit, so this used the direct file path; the next image rebuild also needs that Activity-size issue resolved. The current LaCie `96abaccf…` predates this visual patch.
+
 ## 2026-10-21 — Acer Parent panel lock-up during Wi-Fi connect
 
 **Evidence class: DEVICE (Acer, remote) + SOURCE + FOCUSED TESTS.**
