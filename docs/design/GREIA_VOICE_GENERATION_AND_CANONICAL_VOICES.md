@@ -1,6 +1,6 @@
 # Greia Voice Generation and Canonical Character Voices
 
-**Status:** accepted voice policy + v0.3 canonical authoring Voice Production Engine + owner-accepted shared/introduction v0.2 assets
+**Status:** accepted voice policy + v0.3 canonical authoring Voice Production Engine; shared/introduction catalogue acceptance is per current cue after authorized replacements
 **Reviewed:** 2026-10-19
 **Scope:** presenter speech, researched narration, shared reactions, pedagogical speech, Dani system speech, character introductions, multilingual static audio and human review  
 **Canonical production tool:** `tools/greia_voice.py`
@@ -258,7 +258,7 @@ Provider-specific spellings/accent workarounds are private engine details. A flu
 
 Do not use pedagogical speech merely because a launcher label/title is short.
 
-## 10. Shared character reaction library — v0.2 accepted assets
+## 10. Shared character reaction library — v0.2 catalogue and acceptance
 
 Semantic families:
 
@@ -276,7 +276,7 @@ Matrix:
 6 characters × 5 families × 3 variants × 2 locales = 180 shared clips
 ```
 
-Current authoritative state:
+Original owner-accepted baseline (2026-08-28; not current replacement acceptance):
 
 ```text
 accepted library:       assets/audio/characters/shared/v0.2/
@@ -302,11 +302,15 @@ Production/review authority:
 docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
 ```
 
-Asset acceptance and runtime resolver completion are different gates. The v0.2 files are accepted; consumers still need to prove correct resolver/fail-soft behavior where integration remains open.
+Current catalogue rows selected by the v3 corpus and subsequent priority retakes
+contain new listening-pending audio; inspect their receipts and manifest. The
+v0.2 library directory is distinct from v0.3 **master registry** identity and does
+not establish acceptance. Backups retain the original accepted bytes. Asset
+acceptance and runtime resolver completion remain different gates.
 
-## 11. Character introductions — accepted assets, UX placement separate
+## 11. Character introductions — original baseline, UX placement separate
 
-The accepted v0.2 set includes:
+The original owner-accepted v0.2 baseline includes:
 
 ```text
 6 characters × 2 locales = 12 intro clips
@@ -331,7 +335,9 @@ Lilli/Leo/Flash/Tito/Momo -> character_dialogue
 Dani                       -> dani_system_speech
 ```
 
-The reviewed scripts are the canonical character-introduction copy. The asset-production/listening gate is complete; **final product placement is not**.
+The reviewed scripts are the canonical character-introduction copy. The original
+listening gate was complete; replacement takes need fresh listening. **Final
+product placement is separate**.
 
 Candidate product uses include an optional first-run meet-the-cast moment, tappable/wandering Home characters or a future gallery.
 
@@ -462,7 +468,7 @@ Implemented authoring infrastructure:
 - `doctor` readiness probe;
 - repository setup/production runbooks.
 
-Accepted content currently includes:
+Historical accepted content baseline (current replacements must be checked per cue):
 
 ```text
 shared reactions:       180 v0.2 owner-accepted clips

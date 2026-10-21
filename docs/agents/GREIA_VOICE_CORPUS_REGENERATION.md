@@ -6,18 +6,26 @@ master set by owner direction on 2026-10-21.
 **Scope:** replace existing Activity and system speech with fresh VoxCPM2
 recordings, using the selected character masters and an explicit performance
 prompt per recording. Preserve deterministic isolated letters and syllables.
-**Current state (2026-10-21):** the owner-authorized v3 replacement is complete:
+**Historical v3 completion snapshot (2026-10-21):** the owner-authorized v3 replacement is complete:
 1,340 DONE, 3,575 PRESERVED, with no unresolved journal states. Its full policy-v2
 automated review covered every replacement and all eligible ASR work; see the
 completion entry below, HANDOVER and the external run/report directories.
 Earlier preparation counts and v2 review evidence are historical snapshots.
 
-**Current post-generation follow-up (2026-10-21):** automated screening is
+**Historical v3 review snapshot (2026-10-21):** automated screening is
 complete for v3, with 1,115 PASS and 225 WARN; there are no FAIL or BLOCKED rows.
 The full report and prioritized queue are external. Human acceptance remains
 PENDING for all 1,340 replacements; the separate Takeboard batch is served on
 the fresh local port recorded below. Generation DONE and automated PASS are not
 audible/product acceptance.
+
+**Current operation (2026-10-22):** the owner requested completion of the frozen
+667 problematic short cues with pinned Base and accent-insensitive checks.
+`tools/finish_voice_priority.py` is its coordinator. Read the
+[priority completion instructions](#priority-completion-commands-and-return-states)
+below; do not launch the historical whole-corpus examples to continue that task.
+New speech/one-line API usage is documented in
+[the VoiceEngine README](../../tools/greia_voice_core/README.md).
 
 This is the current executable **replacement** work order within the existing
 four-language rollout. It supersedes the older add-only/no-regeneration
@@ -547,3 +555,109 @@ intro mistakes are irrelevant to this score. A failed cut/target check retains
 its source and evidence; another generation uses the remaining cumulative budget.
 Provider/infrastructure/installation failures stop instead of consuming retries.
 This does not implement the proposed general two-queue VoxStage architecture.
+
+
+## Priority completion commands and return states
+
+This coordinator consumes an already authorized selection, not a new inventory:
+
+- `--priority-file`: JSON object with `records`, each containing a unique exact
+  repository-relative audio `path`. Other triage findings remain contextual.
+- `--history-root`: the historical priority directory whose `run/plan.json`
+  supplies the frozen semantic requests. Its root must match this checkout.
+- `--work-dir`: a **new** external directory, normally a child of that history
+  root so later continuations can discover all earlier journals and counters.
+- `--fresh`: enable remaining fresh attempts after saved recovery. Omit it for
+  saved-only work; that does not mean all unresolved cues have been repaired.
+
+Use the frozen original selection; a different subset/scope requires an explicit
+owner work order. The coordinator does not infer scripts from filenames, accept
+arbitrary replacement text from triage, or repair metadata gaps by guessing.
+Current short eligibility is 1–3 words or 4 words with ≤28 Unicode alphanumerics,
+not a configurable public “under five words” parameter. Finisher checks force
+Base, ignore_accents=true and required final-target scoring; ordinary requests
+and explicit carrier planning retain the documented strict-accent override.
+
+**Template for a new authorized continuation, not a command to duplicate the live
+run:** set `completion_run` to a previously unused directory. The history and
+priority paths below identify this workstream; consult HANDOVER for current state.
+
+```bash
+voice_python="$HOME/Library/Application Support/Greia/voice-production/venv/bin/python"
+priority_history='/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1'
+priority_file='/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-corpus-v1/triage/priority-retakes.json'
+completion_run="$priority_history/NEW-AUTHORIZED-CONTINUATION"
+"$voice_python" tools/finish_voice_priority.py \
+  --priority-file "$priority_file" --history-root "$priority_history" \
+  --work-dir "$completion_run" --fresh > "$completion_run.log" 2>&1
+```
+
+The process owns the generation lock through audit, recovery and synthesis.
+Do not start a second Greia service/batch/producer alongside it. Outputs:
+
+| File/folder | Meaning |
+|---|---|
+| `producer.pid` | actual coordinator process ID; confirm liveness, not just file existence |
+| redirected console log | cue, elapsed heartbeat, recovery, cut/ASR rejection, installation |
+| `progress.json` | scope, kept/installed paths, counts, blocked/unresolved and terminal status |
+| `current-checks/`, `asr-cache/` | actual audio/model-specific Base observations; same bytes are not re-transcribed for a lucky result |
+| `recovery-NN/` | immutable saved-take plans and normal corpus journal/evidence/transactions |
+| `fresh-NN/` | immutable fresh-pass plans and the same corpus journal/evidence/transactions |
+
+`progress.json` publishes installed totals at **pass boundaries**. During a long
+fresh pass inspect its SQLite status for live DONE counts; READY includes
+unvisited rows and may include staged recovery candidates. Count only successful
+candidate receipt pairs as prepared, never all READY rows as success. For example,
+from another shell once that pass exists:
+
+```bash
+"$voice_python" tools/regenerate_voice_corpus.py status \
+  --work-dir "$completion_run/fresh-01" --details
+```
+
+Kept means an existing known installed retake passed delivered-audio checking.
+Installed means a successful replacement transaction, still human-review PENDING.
+`PRESERVED` inside a recovery pass can mean that saved take was rejected and the
+original retained; consult its detail/evidence, not the label alone. Final outcomes:
+
+| Coordinator status | Exit | Meaning |
+|---|---:|---|
+| `COMPLETE` | 0 | selected scope resolved; listening remains pending |
+| `FINISHED_WITH_UNRESOLVED` | 2 | normal traversal ended with exhausted/rejected/blocked cues; list them explicitly |
+| `STOPPED_ERROR` | nonzero | infrastructure/provider/transaction error; inspect before resuming |
+| `RUNNING` with dead PID | interrupted | reconcile active pass/external job; not complete |
+
+A preflight failure can occur before progress is written; inspect stderr/log too.
+A hard kill can leave RUNNING. Ordinary `greia_voice.py` exit 0 semantics are
+weaker and must not be substituted for this coordinator's completion contract.
+
+### Recovery and budget invariants
+
+Combine historical cumulative `carrier-attempt-counts.json` values by **maximum**,
+never sum. Distinct validated saved raw hashes provide a further lower bound.
+Fresh submission consumes a budget slot before the provider call; no restart,
+new directory or saved-source replay resets the three-generation maximum.
+Saved sources are deduplicated and checked against their real provider receipt,
+selected master and frozen semantic identity. A recovery plan records the actual
+source composite/delivery, not the newer prompt intended for fresh synthesis.
+Keep every prior raw source, receipt and rejected extraction.
+
+Unknown destination changes are blocked. If both current audio **and receipt**
+match the exact original pair in the frozen priority plan, an apparent restoration
+can be reconciled as that same authorized original repair; log it. Do not treat
+one matching hash or a clean Git status as enough to erase a different recording.
+
+For interrupted GENERATING, find the actual completed/running provider job using
+its job ID and idempotency metadata. Recover a completed mix once, with faithful
+source provenance; do not pretend a provider job manifest is a VoiceEngine
+receipt or manufacture a successful verification. For INSTALLING, normal RunStore
+recovery completes its recorded transaction/backups. Unknown provider outcomes
+must not consume another take. The finisher refuses an existing `progress.json`;
+a continuation uses a new directory only after this reconciliation. Keep that
+new directory under the same history root so prior counts remain visible.
+
+The coordinator advances automatically only after typed extraction/final-target
+rejections whose provider take is known complete. It stops for uncertain jobs,
+corrupt provenance, decode/packaging infrastructure or installation errors.
+Exhausted takes become a remaining list; do not quietly relax thresholds, alter
+words/masters, add retries or relabel a machine failure as human acceptance.

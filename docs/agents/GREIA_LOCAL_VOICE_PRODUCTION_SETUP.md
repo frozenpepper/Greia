@@ -1,7 +1,7 @@
 # Greia Local Voice Production Setup for Agents
 
 **Status:** canonical authoring-workstation setup / Voice Studio
-**Reviewed:** 2026-10-19
+**Reviewed:** 2026-10-22
 **Not shipped to:** child devices or Activity packages
 
 ## 1. Readiness and canonical boundary
@@ -69,7 +69,8 @@ finished, the operator frees its memory with:
 voxstage unload
 ```
 
-`voxstage stop` drains/stops the service. Do not run another raw model worker
+`voxstage stop` finishes the current recording and stops, preserving the other
+queued jobs for next start; it does not drain them. Do not run another raw model worker
 beside it. `GREIA_VOXSTAGE_TIMEOUT` bounds a Greia wait for a shared job (default
 1,800 seconds; 1–7,200). A timeout/uncertain response does not cancel the external
 job. Inspect the reported VoxStage job ID before resubmitting; Greia does not
@@ -151,9 +152,15 @@ source "${GREIA_VOICE_HOME}/venv/bin/activate"
 python3 tools/greia_voice.py doctor
 ```
 
-For full natural-character production, expect the cloning references, FFmpeg, Chatterbox provider and native macOS provider to be available. Whisper is optional but recommended.
+For default cloned-character production, require the selected VoxStage provider,
+active references and FFmpeg. Chatterbox is an explicit alternative; native macOS
+is needed for pedagogical pronunciation. Base ASR needs the prepared verifier
+environment and cached model, independently of synthesis readiness.
 
-The first actual natural-character generation may download the Chatterbox model; the first eligible verification may download Whisper. `doctor` itself should not be treated as permission to trigger those downloads.
+Whisper generation/review/cutting resolves cached weights offline and cannot
+bootstrap a missing model. Configure any missing verifier or alternate-provider
+model separately with owner authorization; normal production is not an install
+step. `doctor` is not permission to trigger downloads.
 
 ### Existing Whisper review environment (verified 2026-10-21)
 
@@ -163,7 +170,7 @@ Use it explicitly for `regenerate_voice_corpus.py review`; do not use the global
 Anaconda Python, whose installed NumPy/Numba combination fails Whisper import.
 The prepared environment has working mlx-whisper and cached Base weights (current
 default as of 2026-10-22); Tiny remains cached for historical comparisons.
-no packages or weights need installing. Follow the exact pilot/full commands in
+No packages or weights need installing. Follow the exact pilot/full commands in
 `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`. Availability in one interpreter
 does not describe other environments on the machine.
 
@@ -202,11 +209,12 @@ New output remains `human_review=PENDING`. Listen for words, locale, character,
 pronunciation, clipping/tails, delivery and small-speaker intelligibility. The
 selected reference's acceptance never accepts a future recording.
 
-The historical shared v0.2 library's 180 reactions and 12 introductions are
-already owner-accepted. Preserve and reuse them; provider migration is not an
-instruction to regenerate them. Runtime resolver/product integration and new
-missing cues remain separate work. Existing Activity/launcher recordings and
-receipts are likewise not replaced by the new master registry.
+The original v0.2 baseline contained 180 accepted reactions and 12 introductions.
+The owner-authorized v3 corpus and priority retakes subsequently replaced selected
+rows with listening-pending audio in the same catalogue. Consult current per-cue
+receipts/manifest; do not infer acceptance from the v0.2 directory name. A registry
+change alone does not authorize replacing other accepted recordings. Runtime
+resolver/product integration and new missing cues remain separate work.
 
 Report source SHA, doctor statuses, exact input, review paths, provider/job/voice
 receipts, result counts, ASR scope, human acceptance and remaining blockers.

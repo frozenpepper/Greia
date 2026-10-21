@@ -1,7 +1,7 @@
 # Greia Voice Production Engine
 
 **Status:** canonical authoring-time subsystem; VoxStage/VoxCPM2 selected default
-**Reviewed:** 2026-10-19
+**Reviewed:** 2026-10-22
 **Runtime boundary:** no synthesis model, worker, reference master or authoring dependency ships to the child device.
 
 ## 1. Ownership and semantic boundary
@@ -61,7 +61,7 @@ Exact owners:
 - `providers.py`: retained Chatterbox and native adapters.
 - `engine.py`: semantic routing, availability, bounded ASR retries, packaging,
   pending-review receipts and temporary-file cleanup.
-- `review_policy.py`: owner-selected v2 thresholds shared by live and saved-evidence screening (ASR >0.8; tail/internal pause warnings ≥1.5s).
+- `review_policy.py`: owner-selected v3 comparison policy and thresholds shared by live and saved-evidence screening (ASR >0.8; tail/internal pause warnings ≥1.5s).
 - `audio.py`: bounded WAV validation and 22,050 Hz mono WAV/OGG packaging.
   WAV is PCM16; OGG uses Vorbis quality 5 by default. An explicit
   `AudioPipeline(ogg_quality=0..10)` can select a different bounded quality
@@ -128,9 +128,11 @@ never silently substitutes Chatterbox, another character or native Dani speech.
 VoxStage is the existing shared local tool. It owns the serialized inference
 worker, installed VoxCPM2/MLX model, immutable saved voice library and job records.
 Greia uses standard-library HTTP and never imports or loads a second MLX model
-for this default route. `VoxStageProvider.close()` does not unload or shut down a
+for this default synthesis route. Optional Base ASR can run in the Greia
+verification process. `VoxStageProvider.close()` does not unload or shut down a
 service used by other projects. The operator uses `voxstage unload` after
-production to free model memory, or `voxstage stop` to drain/stop the service.
+production to free model memory, or `voxstage stop` to finish the current recording and preserve queued jobs
+for the next start. Do not stop a shared worker needed by another project.
 
 Default origin: `http://127.0.0.1:8791`. `GREIA_VOXSTAGE_URL` accepts only a loopback
 HTTP origin; proxies and redirects are not used. An optional `VOXSTAGE_API_KEY`
@@ -178,10 +180,33 @@ are authoring-host adapters; no host command belongs in an Activity.
 
 ## 7. Verification, receipts and acceptance
 
-Optional Whisper remains advisory for suitable multi-word character lines.
-Dani keeps the existing human-review-only ASR policy, and letters/syllables are
-never accepted through ASR. Unavailable optional Whisper is reported; it does not
-change the selected synthesis backend. `--verification off` performs no ASR.
+The [usage README](../../tools/greia_voice_core/README.md) provides practical request,
+CLI, result and recovery examples. Ordinary requests default to verification
+`auto`, two total takes (configurable 1–4) and accent-insensitive comparison.
+Pinned cached multilingual Base is the default ASR. The ordinary verifier keeps
+its eligibility exclusions: Dani, pedagogical/other excluded kinds, single-word
+utterances and text over 500 characters. `required` does not override eligibility;
+it changes unavailable eligible ASR to WARN. `off` performs no ASR.
+
+Ordinary generation checks the temporary provider WAV before packaging and
+retries only WARN. Exhaustion still returns the last take with
+REVIEW_REQUIRED_ASR_WARNING; CLI exit 0 means output exists, not ASR acceptance.
+It has no corpus waveform gate or automatic short-text carrier routing.
+
+The owner-scoped carrier corpus workflow differs: raw synthesis verification is
+OFF because intro mistakes are disposable. It locates/cuts the expected target,
+then checks the actual delivered target with Base for every selected actor,
+including Dani. Required mode gates installation on score >0.8 and no signal
+flags; lossy packages are decoded and checked. Saved sources precede fresh
+attempts, capped at three cumulative provider generations per cue in the priority
+finisher. `prepare_saved_candidate` packages preserved sources without synthesis;
+CorpusRunner owns the normal recoverable installation transaction. Defaults and
+strict-accent overrides are frozen in the carrier plan.
+
+`tools/finish_voice_priority.py` wraps existing components for the frozen priority
+selection; it does not create a general synthesis service. Current generation
+and verification are serial. Separate durable generation/verification queues and
+automatic configurable short-request routing remain proposed, not implemented.
 
 Every successful result contains pending-review audio and a `.receipt.json` with
 semantic input, provider ID, canonical voice/registry version, reference identity,

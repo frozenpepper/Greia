@@ -1,6 +1,6 @@
 # Greia Shared Character Utterances
 
-**Status:** accepted design + historical owner-accepted v0.2 baseline; the selected Dani/Momo/Tito rows replaced by the 2026-10-21 v3 corpus run are listening-pending; runtime resolver integration remains separate
+**Status:** accepted design + historical owner-accepted v0.2 baseline; rows replaced by the 2026-10-21 v3 corpus and subsequent all-actor priority retakes are listening-pending; runtime resolver integration remains separate
 **Reviewed:** 2026-09-02  
 **Scope:** small OS-owned multilingual character reactions shared across Activities  
 **Production authority:** `tools/greia_voice.py` / `tools/record_shared_character_utterances.py`

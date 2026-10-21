@@ -1,6 +1,6 @@
 # Greia spoken-carrier extraction
 
-**Status:** bounded local authoring experiment; output remains listening-pending.
+**Status:** implemented local cutter and scoped corpus integration; output remains listening-pending.
 **Implementation:** `tools/voice_carrier.py`.
 
 This tool extracts a short target from one VoiceEngine recording that begins
@@ -122,8 +122,10 @@ PRESERVED in that explicit plan. A rejected cue remains FAILED until the
 existing provider-idle retry process archives the entire attempt. The runner
 continues after safe boundary rejection only when invoked with
 `--continue-after-carrier-rejection`; uncertain provider failures stop. Fresh
-provider attempts are capped at three per cue, and every retry requires
-`--acknowledge-provider-idle`. Scope expansions must use a new external run
+provider attempts are capped at three per cue. Manual `retry` requires
+`--acknowledge-provider-idle`; the priority finisher advances only after a known
+completed provider take and typed acoustic/ASR rejection, preserving cumulative
+counts across its immutable pass journals. Scope expansions must use a new external run
 folder and disjoint `--carrier-speakers` selection.
 
 ## Tests and gate
@@ -132,9 +134,10 @@ Focused tests:
 
 ```bash
 voice_python="$HOME/Library/Application Support/Greia/voice-production/venv/bin/python"
-PYTHONPATH=src:tools "$voice_python" -m unittest \
-  tests.test_voice_carrier tests.test_voice_carrier_policy \
-  tests.test_voice_carrier_generation tests.test_greia_voice_corpus -v
+PYTHONPATH=src:tools "$voice_python" -m unittest discover \
+  -s tests -p 'test_voice_carrier*.py' -v
+PYTHONPATH=src:tools "$voice_python" -m unittest discover \
+  -s tests -p test_greia_voice_corpus.py -v
 ```
 
 Before packaging or committing implementation changes, run `make verify` and
@@ -162,3 +165,22 @@ checks after expanded boundary search. `extract(..., ignore_accents=False)` or
 recognized text remain unchanged in receipts. This does not waive missing/extra
 words or unrelated spelling differences. Frozen carrier plans include
 ignore_accents, asr_model and asr_revision; v5 experiments remain historical.
+
+
+## Strict corpus completion versus standalone cutting
+
+Ordinary `greia_voice.py generate/batch/request` do not automatically add a
+carrier. Explicit corpus plans use this cutter; their target-match policy and
+`run --verification` are distinct controls. `target_verification=warn` allows
+bounded target-ASR uncertainty at extraction; `run --verification required` still
+requires a packaged target score >0.8 and no signal flags before installation.
+The priority finisher always uses that final required gate, including Dani and
+short targets. Raw synthesis verification is OFF so intro errors cannot reject
+a good target before cutting. An unchanged WAV can reuse its retained-target
+transcript; changed/OGG delivery is checked from decoded packaged audio.
+
+`finish_voice_priority.py` freezes the tested ellipsis + blank-line composite and
+two-second pause direction for fresh takes. Existing saved sources keep their
+actual original composite/direction in recovery plans. A requested two-second
+pause is not a measured guarantee. See the corpus manual for exact commands,
+three-take history reconciliation, crash recovery and progress semantics.

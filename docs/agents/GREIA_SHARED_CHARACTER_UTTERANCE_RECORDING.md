@@ -1,7 +1,9 @@
 # Greia Shared Character Utterances — Production & Review
 
-**Status:** production runbook; v0.2 shared library and 12-intro pack are **OWNER_ACCEPTED** (2026-08-28) and live in `assets/audio/characters/shared/v0.2/`. v0.1 (2026-08-23) is **RETIRED** — see `assets/audio/characters/shared/v0.1/RETIRED.md`. Future regenerations of any cue land in the same v0.2 catalogue (incremental promotion), not in a new v0.3.  
-**Languages:** Italian (`it`) and English (`en`)  
+**Status:** production runbook; original v0.2 shared library and 12-intro baseline were **OWNER_ACCEPTED** (2026-08-28) and live in `assets/audio/characters/shared/v0.2/`. v0.1 (2026-08-23) is **RETIRED** — see `assets/audio/characters/shared/v0.1/RETIRED.md`. Future regenerations of any cue land in the same v0.2 catalogue (incremental promotion), not in a new v0.3.
+
+**Languages:** original accepted baseline Italian (`it`) and English (`en`); current released corpus also includes French (`fr`) and Spanish (`es`), with per-cue status
+
 **Characters:** Lilli, Leo, Flash, Tito, Momo and Dani  
 **Canonical engine:** `tools/greia_voice.py`
 
@@ -13,6 +15,11 @@ external corpus-run backups. The authorized bulk operation used
 `tools/regenerate_voice_corpus.py` and the dedicated corpus work order, not this
 additive shared-library producer. Future incremental additions still use this
 runbook and remain in the existing v0.2 catalogue after individual listening.
+
+**2026-10-22 priority continuation:** selected short rows across all six actors
+may now be replaced by `finish_voice_priority.py`. The directory remains v0.2;
+current acceptance belongs to each receipt/manifest, not the baseline above.
+See the corpus runbook and HANDOVER.
 
 ## 1. Canonical rule
 

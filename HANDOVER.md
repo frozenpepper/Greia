@@ -180,6 +180,28 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+
+### 2026-10-22 — Voice documentation consistency audit
+
+Reworked `tools/greia_voice_core/README.md` as the practical usage reference;
+root README links it. Examples cover single/JSONL/Python/service requests, fields,
+Base/accent defaults, output/warning handling, retry budgets, carrier scope,
+status/journals, crash recovery, and listening. Cross-checked architecture,
+setup, corpus/cutter guides, shared-library acceptance and agent skills against
+source. Ordinary API remains serial/auto/two-take with eligibility exclusions
+and warning outputs; the scoped finisher uses required all-actor delivered-target
+checks and three cumulative generations. Proposed general short routing and
+separate verification queues are explicitly not claimed implemented.
+
+Corrected stale Whisper download instructions, VoxStage stop/drain semantics,
+and blanket acceptance claims for replaced v0.2 catalogue rows. Documentation
+validation: 39 command/example checks PASS, local links resolved, bash syntax and
+Python/JSON examples parsed, 15 actual read-only CLI help invocations succeeded,
+and JSONL examples passed the real request parser. No synthesis or tests were
+launched by this documentation audit; the existing production process continues.
+Evidence: `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-voice-documentation-audit/report.json`.
+Review record: `docs/reviews/2026-10-22_VOICE_DOCUMENTATION_CONSISTENCY.md`.
+
 ### 2026-10-22 — Base selected; configurable accent-insensitive ASR implemented
 
 Owner selected multilingual Base and requested that accent differences not count

@@ -6,7 +6,7 @@ description: Canonical Greia authoring skill for producing prerecorded character
 # Greia Voice Production
 
 **Status:** canonical authoring-time voice-production contract  
-**Reviewed:** 2026-10-21
+**Reviewed:** 2026-10-22
 
 ## One rule
 
@@ -464,7 +464,8 @@ ignore_accents=false or `--strict-accents` select strict comparison. This applie
 to final verification, target location, extraction safety and saved review scoring.
 Extractor v6 freezes the model/accent policy; review screen v3 prevents stale
 cache reuse. Reassessment preserves original verifier provenance. No old corpus
-plan or human review is rewritten, and bulk generation remains stopped.
+plan or human review is rewritten. Current owner-authorized continuation is
+described below and in HANDOVER; older paused plans remain historical.
 
 
 ### 2026-10-22 owner-authorized priority continuation
@@ -478,3 +479,14 @@ Carrier raw synthesis verification is OFF because the intro is disposable;
 required Base verification checks the delivered extracted target before install.
 Keep master identity, deferred scope and human acceptance separate. Do not launch
 an old v4 producer or the unimplemented shared two-queue plan.
+
+
+### Usage/reference consistency
+
+`tools/greia_voice_core/README.md` is the practical entry point for current CLI,
+JSON/Python fields, defaults, return statuses, service ports and recovery. Ordinary
+requests use auto verification/two total takes and preserve Dani/short eligibility
+exclusions; warning output can still exit 0. Only the scoped carrier corpus path
+currently implements final packaged-target fail-closed checks for every actor and
+three cumulative takes. Automatic short routing and the separate verification
+queue remain proposed. Never describe them as shipped ordinary API behavior.

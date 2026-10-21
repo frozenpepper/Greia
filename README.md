@@ -119,7 +119,7 @@ tests/                 the unittest suite
 | Writing an Activity | [skills/greia-activity-authoring/SKILL.md](skills/greia-activity-authoring/SKILL.md) |
 | OS, Shell, Parent and installer work | [skills/greia-os-work/SKILL.md](skills/greia-os-work/SKILL.md) |
 | Art and visual assets | [skills/greia-visual-authoring/SKILL.md](skills/greia-visual-authoring/SKILL.md) |
-| Recorded speech | [skills/greia-voice-production/SKILL.md](skills/greia-voice-production/SKILL.md) |
+| Recorded speech | [VoiceEngine usage](tools/greia_voice_core/README.md) · [agent skill](skills/greia-voice-production/SKILL.md) |
 | The Simulator | [docs/development/GREIA_ACTIVITY_SIMULATOR.md](docs/development/GREIA_ACTIVITY_SIMULATOR.md) |
 | Current work and next steps | [HANDOVER.md](HANDOVER.md) |
 | Lessons from earlier work | [docs/archive/README.md](docs/archive/README.md) |
