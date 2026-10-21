@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from http.server import HTTPServer
+from http.server import ThreadingHTTPServer
+import threading
+import time
 from urllib.parse import urlparse
 
 from greia_parent.credentials import ParentCredentialError
@@ -13,7 +15,7 @@ from greia_parent.update_api import (
     UpdateParentApiRequestHandler,
 )
 from greia_parent.web_client import render_parent_web_app
-from greia_platform.wifi import IwdWifiBackend, WifiBackend, WifiError
+from greia_platform.wifi import IwdWifiBackend, WifiBackend, WifiError, WifiNetwork
 
 
 class ProductionParentApiApplication(UpdateParentApiApplication):
@@ -36,6 +38,8 @@ class ProductionParentApiApplication(UpdateParentApiApplication):
         )
         super().__init__(*args, **kwargs)
         self.password_attempts = ParentPasswordAttemptLimiter()
+        self._wifi_scan_at = 0.0
+        self._wifi_scan_results: tuple[WifiNetwork, ...] = ()
 
     def _wifi_management_available(self) -> bool:
         # Joining a network no longer requires writing into iwd's root-owned
@@ -56,15 +60,50 @@ class ProductionParentApiApplication(UpdateParentApiApplication):
         payload["capabilities"] = capabilities
         return payload
 
+    def _scan_wifi(self) -> tuple[WifiNetwork, ...]:
+        results = tuple(self.wifi_backend.scan())
+        self._wifi_scan_results = results
+        self._wifi_scan_at = time.monotonic()
+        return results
+
     def wifi_payload(self) -> dict[str, object]:
         if not self._wifi_management_available():
             return {"available": False, "networks": []}
-        return super().wifi_payload()
+        return {
+            "available": True,
+            "networks": [
+                {
+                    "ssid": net.ssid,
+                    "security": net.security.value,
+                    "signal_dbm": net.signal_dbm,
+                }
+                for net in self._scan_wifi()
+            ],
+        }
 
     def connect_wifi(self, ssid: str, passphrase: str = "") -> dict[str, object]:
         if not self._wifi_management_available():
             raise WifiError("Wi-Fi management is unavailable on this Greia")
-        candidates = tuple(network for network in self.wifi_backend.scan() if network.ssid == ssid)
+
+        # Clicking the network the device already uses must not start another
+        # association. That was both slow and, on the single-threaded Parent
+        # server, able to freeze every other panel request.
+        connected = getattr(self.wifi_backend, "connected_ssid", None)
+        if callable(connected):
+            try:
+                if connected() == ssid:
+                    return {"connected": True, "ssid": ssid}
+            except WifiError:
+                pass
+
+        now = time.monotonic()
+        candidates = (
+            tuple(n for n in self._wifi_scan_results if n.ssid == ssid)
+            if now - self._wifi_scan_at <= 15.0
+            else ()
+        )
+        if not candidates:
+            candidates = tuple(network for network in self._scan_wifi() if network.ssid == ssid)
         if not candidates:
             raise WifiError("Selected Wi-Fi network is no longer available; scan again")
         connection = self.wifi_backend.connect(candidates[0], passphrase)
@@ -119,8 +158,18 @@ class ProductionParentApiRequestHandler(UpdateParentApiRequestHandler):
         self._send_json(201, payload)
 
 
-class ProductionParentApiHTTPServer(HTTPServer):
-    """Bind the production request policy without changing reusable API servers."""
+class ProductionParentApiHTTPServer(ThreadingHTTPServer):
+    """Parent API with bounded concurrent requests.
+
+    The stock server handled one request at a time. A Wi-Fi association can
+    take seconds; while it ran, every panel poll queued behind it and the
+    Parent app appeared frozen. Four worker slots keep the panel responsive
+    without turning the 768 MB reference floor into an unbounded thread server.
+    """
+
+    daemon_threads = True
+    block_on_close = False
+    max_concurrent_requests = 4
 
     def __init__(
         self,
@@ -131,7 +180,22 @@ class ProductionParentApiHTTPServer(HTTPServer):
     ) -> None:
         self.app = app
         self.static_client = static_client or ParentStaticClient.from_environment()
-        HTTPServer.__init__(self, address, ProductionParentApiRequestHandler)
+        self._request_slots = threading.BoundedSemaphore(self.max_concurrent_requests)
+        ThreadingHTTPServer.__init__(self, address, ProductionParentApiRequestHandler)
+
+    def process_request(self, request, client_address):  # type: ignore[no-untyped-def]
+        self._request_slots.acquire()
+        try:
+            super().process_request(request, client_address)
+        except BaseException:
+            self._request_slots.release()
+            raise
+
+    def process_request_thread(self, request, client_address):  # type: ignore[no-untyped-def]
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self._request_slots.release()
 
 
 def main() -> int:

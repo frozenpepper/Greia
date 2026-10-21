@@ -259,6 +259,26 @@ class IwdWifiBackend:
             self._connect_network(network)
         return WifiConnection(network, profile)
 
+    def connected_ssid(self) -> str:
+        """Return the station's current SSID, or ``""`` when disconnected.
+
+        This is the same iwd state the UI already displays, read without
+        triggering a scan. The Parent API uses it to make a click on the
+        network the device is already using return immediately instead of
+        opening a redundant connection (and blocking the panel meanwhile).
+        """
+
+        objects = self._managed_objects()
+        station_path = self._station_path(objects)
+        if station_path is None:
+            return ""
+        station = objects.get(station_path, {}).get(STATION_INTERFACE, {})
+        if str(station.get("State", "")) != "connected":
+            return ""
+        network_path = str(station.get("ConnectedNetwork", ""))
+        network = objects.get(network_path, {}).get(NETWORK_INTERFACE, {})
+        return str(network.get("Name", ""))
+
     def _connect_network(self, network: WifiNetwork) -> None:
         interface = self._interface(network.object_path, NETWORK_INTERFACE)
         error: Exception | None = None
