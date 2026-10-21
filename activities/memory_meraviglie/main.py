@@ -60,7 +60,7 @@ def main() -> int:
     rng = random.Random()
     app = MemoryApp(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         typography=GreiaTypography(),
         resources=resources,
         audio=MemoryAudio(resources, locale=locale, rng=rng),

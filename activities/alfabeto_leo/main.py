@@ -43,7 +43,7 @@ def main() -> int:
 
     locale, resources = _locale_and_resources()
     typography = GreiaTypography()
-    canvas = PygameReferenceCanvas(screen)
+    canvas = PygameReferenceCanvas(screen, hires=True)
     art = AlfabetoArt(REFERENCE_WIDTH, REFERENCE_HEIGHT)
     renderer = AlfabetoRenderer(art)
     progress_port = GreiaAlfabetoProgress()

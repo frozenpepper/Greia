@@ -18,6 +18,7 @@ os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 import pygame
 
 from greia_platform import activity_ui
+from greia_platform.hires_surface import RAW
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 
 STALE = (255, 0, 255)
@@ -123,8 +124,8 @@ class ReferenceCanvasPresentationTests(unittest.TestCase):
         positions = [(500, 400)] * 6
         with mock.patch.object(activity_ui, "draw_activity_pointer", scripted_pointer(positions)):
             canvas.present()
-            with mock.patch.object(pygame.transform, "smoothscale") as smooth, mock.patch.object(
-                pygame.transform, "scale"
+            with mock.patch.object(RAW.transform, "smoothscale") as smooth, mock.patch.object(
+                RAW.transform, "scale"
             ) as nearest:
                 for _ in range(5):
                     canvas.present_pointer()
@@ -134,14 +135,14 @@ class ReferenceCanvasPresentationTests(unittest.TestCase):
     def test_non_integer_scale_resamples_smoothly(self) -> None:
         target, canvas = self.canvas((1280, 800))
         with mock.patch.object(
-            pygame.transform, "smoothscale", wraps=pygame.transform.smoothscale
+            RAW.transform, "smoothscale", wraps=RAW.transform.smoothscale
         ) as smooth:
             canvas.present(pointer=False)
         self.assertIn(((canvas.surface, (1280, 750)), {}), [tuple(c) for c in smooth.call_args_list])
 
     def test_whole_number_scale_keeps_crisp_pixels(self) -> None:
         target, canvas = self.canvas((2048, 1200))
-        with mock.patch.object(pygame.transform, "scale", wraps=pygame.transform.scale) as nearest:
+        with mock.patch.object(RAW.transform, "scale", wraps=RAW.transform.scale) as nearest:
             canvas.present(pointer=False)
         self.assertTrue(any(call.args[1] == (2048, 1200) for call in nearest.call_args_list))
 
@@ -162,7 +163,7 @@ class ReferenceCanvasPresentationTests(unittest.TestCase):
 
     def test_reference_display_is_untouched_by_band_logic(self) -> None:
         target, canvas = self.canvas((1024, 600))
-        with mock.patch.object(pygame.transform, "smoothscale") as smooth:
+        with mock.patch.object(RAW.transform, "smoothscale") as smooth:
             canvas.present(pointer=False)
         smooth.assert_not_called()
         self.assertEqual(target.get_at((0, 0))[:3], SCENE)

@@ -21,6 +21,8 @@ from .activity_viewport import (
     LogicalRect,
     ReferenceCanvasSpec,
 )
+from . import hires_surface
+from .hires_surface import RAW
 from .responsive_layout import UiRect
 from .system_chrome import ActivitySystemChromeLayout
 
@@ -208,6 +210,7 @@ class PygameReferenceCanvas:
         safe_ui: bool = False,
         margin: int = 0,
         alpha: bool = False,
+        hires: bool = False,
     ) -> None:
         if spec.fit is CanvasFitMode.EXPAND:
             raise ValueError("PygameReferenceCanvas does not support EXPAND fit")
@@ -220,7 +223,28 @@ class PygameReferenceCanvas:
             margin=margin,
         )
         flags = pygame.SRCALPHA if alpha else 0
-        self.surface = pygame.Surface((spec.width, spec.height), flags)
+        # ``hires`` opts this Activity into the transparent high-resolution
+        # layer: on a display clearly larger than the reference the logical
+        # surface holds physical pixels, so drawing is sharp and present() is
+        # a 1:1 copy.  Close to the reference the cheap path stays.
+        render_scale = (
+            hires_surface.hires_scale_for(self.mapper.transform.scale)
+            if hires
+            else None
+        )
+        if render_scale is not None:
+            hires_surface.activate(render_scale)
+        elif hires_surface.is_active():
+            # A resize below the threshold: new surfaces go back to 1:1, and
+            # this canvas still converts any older high-resolution sprite.
+            hires_surface.activate(1.0)
+        self.render_scale = render_scale or 1.0
+        if hires_surface.is_active():
+            self.surface = hires_surface.ScaledSurface(
+                (spec.width, spec.height), flags, scale=self.render_scale
+            )
+        else:
+            self.surface = RAW.Surface((spec.width, spec.height), flags)
         # Last presented state, so a pointer-only refresh can repair the old
         # pointer area without re-rendering or re-scaling the scene.
         self._last_clear: tuple[int, ...] | None = None
@@ -250,7 +274,9 @@ class PygameReferenceCanvas:
 
     @property
     def _unscaled(self) -> bool:
-        return self._scaled_size == (self.spec.width, self.spec.height)
+        """True when the logical surface already holds the presented pixels."""
+
+        return self._scaled_size == RAW.get_size(self.surface)
 
     def _smooth(self, smooth: bool | None) -> bool:
         """Resample smoothly unless the scale is an exact whole number."""
@@ -263,11 +289,11 @@ class PygameReferenceCanvas:
     def _resample(
         self, source: pygame.Surface, size: tuple[int, int], smooth: bool
     ) -> pygame.Surface:
-        if source.get_size() == size:
+        if RAW.get_size(source) == size:
             return source
         if smooth and source.get_bitsize() in (24, 32):
-            return pygame.transform.smoothscale(source, size)
-        return pygame.transform.scale(source, size)
+            return RAW.transform.smoothscale(source, size)
+        return RAW.transform.scale(source, size)
 
     def _origin(self) -> tuple[int, int]:
         x, y = self.mapper.transform.logical_to_physical((0.0, 0.0))
@@ -305,7 +331,7 @@ class PygameReferenceCanvas:
 
         rendered = self._resample(self.surface, self._scaled_size, self._smooth(smooth))
         area = self._target_rect()
-        frame_rect = pygame.Rect(self._origin(), rendered.get_size())
+        frame_rect = pygame.Rect(self._origin(), RAW.get_size(rendered))
         previous_clip: Any = self.target.get_clip()
         self.target.set_clip(area)
         try:
@@ -362,7 +388,7 @@ class PygameReferenceCanvas:
             "left": pygame.Rect(local.x, local.y, depth_x, local.height),
             "right": pygame.Rect(local.right - depth_x, local.y, depth_x, local.height),
         }[side]
-        average = tuple(int(v) for v in pygame.transform.average_color(rendered, edge)[:3])
+        average = tuple(int(v) for v in RAW.transform.average_color(rendered, edge)[:3])
         previous = self._band_edges.get(side)
         if previous is not None and max(abs(a - b) for a, b in zip(average, previous)) <= self._BAND_HYSTERESIS:
             average = previous
@@ -469,12 +495,15 @@ class PygameReferenceCanvas:
         dirty: list[pygame.Rect] = []
         if self._unscaled:
             ox, oy = self._frame_rect.topleft
+            scale = hires_surface.scale_of(self.surface)
             for region in regions:
                 area = region.clip(bounds)
                 if area.width <= 0 or area.height <= 0:
                     continue
-                self.target.blit(self.surface, (area.x + ox, area.y + oy), area)
-                dirty.append(area.move(ox, oy))
+                physical = hires_surface.physical_rect(area, scale)
+                # The target is a plain display surface: a raw, physical blit.
+                self.target.blit(self.surface, (physical.x + ox, physical.y + oy), physical)
+                dirty.append(physical.move(ox, oy))
         else:
             for region in regions:
                 patch = self._present_scaled_region(region, bounds)
@@ -500,7 +529,7 @@ class PygameReferenceCanvas:
         area = region.clip(bounds)
         if area.width <= 0 or area.height <= 0:
             return None
-        frame_w, frame_h = self._frame.get_size()
+        frame_w, frame_h = RAW.get_size(self._frame)
         sx = frame_w / self.spec.width
         sy = frame_h / self.spec.height
         # Resample a padded source so the filter sees the same neighbours as
