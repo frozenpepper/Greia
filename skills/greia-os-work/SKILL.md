@@ -566,6 +566,12 @@ Preserve the platform-owned on-demand route, Parent-owned settings, honest raw f
 
 ## Prerecorded voice/speech production
 
+After generation, use `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` and
+`tools/regenerate_voice_corpus.py review` for installed-file signal/receipt and
+eligible ASR screening. Reports live externally; generation DONE, automated
+coverage and human acceptance are separate. This command neither synthesizes,
+changes files nor grants approval, and cannot download models.
+
 For the owner-authorized 2026-10-19 existing-corpus replacement, use
 `tools/regenerate_voice_corpus.py` and
 `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`. This scoped exception permits

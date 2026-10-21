@@ -5,7 +5,16 @@
 **Scope:** replace existing Activity and system speech with fresh VoxCPM2
 recordings, using the selected character masters and an explicit performance
 prompt per recording. Preserve deterministic isolated letters and syllables.
-**Current state:** tool prepared; full replacement run NOT launched.
+**Current state (2026-10-21):** v2 generation complete; automated screening and
+human listening are separate follow-up stages. Earlier preparation counts below
+are historical; use HANDOVER and the actual selected run journal for current state.
+
+**Current post-generation follow-up (2026-10-21):** v2 generation subsequently
+completed (see HANDOVER). Run the read-only automated review in
+`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` using the new `review` command
+before declaring automated screening complete. Generation DONE and a stored
+receipt score are not audio review. ASR unavailability/disabled coverage must
+remain explicit; new human review stays PENDING.
 
 This is the current executable **replacement** work order within the existing
 four-language rollout. It supersedes the older add-only/no-regeneration
@@ -288,6 +297,11 @@ profile/installer host failures. Report the exact current gate result; do not
 claim a prior PASS or fix unrelated Pi/installer work as part of voice repair.
 
 ## 7. Restore and completion
+
+After generation, execute the automated review procedure:
+`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`. Its reports check installed audio
+and exact frozen requests without changing this run or acceptance. Resolve or
+document FAIL/WARN/BLOCKED results, and retain the separate listening gate.
 
 To undo this entire run (including a partially installed pair), while no other
 producer is running:

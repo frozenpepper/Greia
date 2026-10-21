@@ -59,6 +59,10 @@ Exact owners:
   for a corpus-specific package-footprint constraint without changing the
   frozen speech request or human-review state.
 - `service.py`: localhost semantic service and client transport.
+- `review.py`: bounded installed-audio signal screening and the existing
+  `SpeechVerifier`, including offline/cached-weight-only ASR readiness.
+- `greia_voice_corpus/review.py`: frozen-request/receipt consistency, external
+  resumable review records, coverage and listening queue; journal opened read-only.
 - `direction.py` / `character_delivery.json`: editable six-character performance
   defaults; VoxStage stores the effective prompt in generation parameters.
 - `tools/greia_voice_corpus/`: inventory, serial runner, replacement/restore
@@ -174,6 +178,17 @@ semantic input, provider ID, canonical voice/registry version, reference identit
 backend job/model/settings/seeds, optional verifier result, attempts and output
 hash. VoxStage job records retain the complete per-chunk history. Machine success,
 ASR PASS and the previous reference's acceptance never accept a new recording.
+
+The post-generation automated procedure is
+`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`, exposed by
+`tools/regenerate_voice_corpus.py review`. It screens installed renditions,
+including final OGG packaging, without changing audio/receipts, plan or generation
+state. It uses existing verifier eligibility and canonical transcript scoring;
+unavailable ASR is blocked, excluded semantic classes are explicit, and waveform
+thresholds are advisory versioned heuristics. Complete selected traversal,
+full-corpus coverage and applicable-ASR completion are distinct report fields.
+No voice-identity/acting/independent-language judge is claimed. Machine reports
+and human listening remain separate from generation DONE and release authority.
 
 Human listening verifies exact words and locale, character identity, pronunciation,
 clipping/tails, delivery and small-speaker intelligibility. Only the owning workflow

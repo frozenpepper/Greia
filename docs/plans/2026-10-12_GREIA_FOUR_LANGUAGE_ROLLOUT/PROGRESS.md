@@ -1475,3 +1475,24 @@ The modular tool inventories exact scripts/identities, resolves blocked metadata
 Prepared inventory outside Git: `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-prepared/`: **5,308 files; 4,543 READY; 167 BLOCKED_METADATA; 598 PRESERVED**, including 441 isolated teaching targets, 150 historical shared clips, six canonical references and boot chime. All READY requests have an explicit prompt. Scripts missing from the older eight Activity corpora require recovery, not guessing. `resolve` can fill those gaps while retaining completed work. Full corpus replacement was **NOT launched**, and no existing runtime audio or accepted master was replaced during tool preparation.
 
 Evidence: 52 focused voice tests PASS; one real external Lilli English/custom-prompt smoke completed (job `20261019-100927-df5c3cf4`), exact prompt visible in persisted worker request and recording direction, receipt PENDING; worker unloaded. Final `make -k verify`: 5,468 tests, 1 failure/4 errors/8 skips, same inherited profile/executable/macOS installer/MBR failures; global validator still blocks on ARM64 builder assumption. Shell/footprint ran; aggregate NOT GREEN. See `docs/reviews/2026-10-19_VOICE_CORPUS_TOOL.md` and HANDOVER. No new human listening, Simulator/physical playback or release-image acceptance. The next local agent follows the new runbook, resolves legacy script gaps, pilots and runs/monitors the corpus operation, fixing owning modules as needed.
+
+### 2026-10-21 — Automated review after corpus production
+
+Added the read-only `review` subcommand and agent procedure
+`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`. Existing engine audio/verifier
+owners handle bounded installed-rendition signal analysis and cached-only eligible
+ASR; corpus review adds frozen metadata checks, resumable external reports,
+coverage fields and a prioritized listening queue. No media, receipt acceptance,
+master or generation state is changed. Missing ASR cannot pass speech screening.
+
+Executed 68 focused voice tests PASS; eight installed technical pilot cues PASS
+(ASR off), two eligible ASR pilot cues BLOCKED by the host NumPy/Whisper import.
+Full automated corpus review and human acceptance remain unexecuted.
+`make -k verify`: 5,484 tests, 1 inherited MBR assertion failure, 4 inherited
+errors (ARM64 builder expectation, profile executable permission, two missing
+lsblk installer tests), 8 skips; full gate NOT GREEN. This corrects the preceding
+entry's error attribution where applicable. Exact logs and next commands are
+in HANDOVER and the new procedure. No architecture or release phase closed.
+
+Final gate clarification: project validation also failed on the existing ARM64
+builder restriction; shell/footprint checks completed. No full-gate PASS claimed.

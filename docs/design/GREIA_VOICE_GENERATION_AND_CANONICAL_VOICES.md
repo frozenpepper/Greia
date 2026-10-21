@@ -106,7 +106,12 @@ syllables. Use `tools/regenerate_voice_corpus.py` under
 `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`. This scoped operation revoices
 whole words/numbers too, retains original backups and installs fresh takes as
 human-review pending. It supersedes older no-overwrite/add-only instructions for
-this operation only. The preparation session has not launched the full corpus.
+this operation only. V2 production completed on 2026-10-21 (4,168 DONE,
+741 PRESERVED); all new takes remain listening-pending. Follow
+`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` and the corpus tool
+`review` command for read-only installed-audio screening, cached-only eligible
+ASR and prioritized listening reports. Generation completion, automated coverage
+and human acceptance are separate; unavailable ASR is incomplete review.
 
 Owner decision 2026-10-19: replace the active masters with the six selected local
 VoxStage voice designs and make VoxCPM2 the default character provider. The owner

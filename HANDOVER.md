@@ -37,7 +37,9 @@ isolated letters/syllables and backups. V2 production has completed: 4,168 DONE,
 741 PRESERVED, zero blocked or unresolved rows. Every new take remains
 listening-pending. Source fixes needed to operate the tool and packaging are
 authorized by this work order; ordinary queue-only restrictions do not block
-that requested task.
+that requested task. Post-generation screening follows
+`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`; automatic coverage and human
+acceptance are separate from generation DONE.
 **Earlier add-only voice-production work order:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md`
 (owner instruction 2026-10-14; archived full-run instruction). The owner approved
 every **currently authored** EN/IT/ES/FR text translation, and personally
@@ -71,6 +73,43 @@ audit programme. Do not invent a second language registry or silently
 promote unvoiced locales.
 
 ## Recent entries
+
+## 2026-10-21 — Automated voice review command and agent procedure
+
+Implemented `tools/regenerate_voice_corpus.py review` and
+`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`: installed WAV/OGG decode/signal
+screening, frozen request/receipt consistency, cached-only eligible Whisper ASR,
+possible prompt leakage flags, resumable external reports and a prioritized
+listening CSV. Review holds the existing generation lock and reads the journal
+read-only; it never synthesizes, changes audio/receipts or grants acceptance.
+Partial traversal, ASR off/unavailable and policy exclusions are explicit.
+Source collaborators belong to `greia_voice_core` and `greia_voice_corpus`;
+setup, engine/design docs and all affected living skills/manuals now route here.
+
+**Executed evidence:** 68 focused voice tests PASS, including known silence,
+prompt leakage, unavailable/runtime-failing ASR, unchanged-input resume and
+source/journal preservation. Installed v2 pilot: eight signal/metadata PASS
+with ASR off; separate two-clip ASR pilot BLOCKED because host Whisper cannot
+import (`numpy.core.multiarray failed to import`). Reports/logs are external at
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-automated-review-smoke/`
+and `2026-10-21-voice-review-tests.log`. These bounded pilots are not full
+4,168-clip review or human acceptance. No downloads or generation occurred.
+
+`make -k verify` ran 5,484 tests: 1 known MBR diagnostic assertion failure,
+4 errors (unsupported ARM64 builder assumption, non-executable build_profile.py,
+and two installer tests requiring missing lsblk), 8 skips. Full gate is NOT
+GREEN; these are outside this voice change. Project validation also fails
+on the existing ARM64 builder restriction; shell and footprint steps completed.
+Full log:
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-voice-review-make-verify.log`.
+This also corrects the preceding entry's attribution of all four errors to
+three lsblk tests plus permissions: the actual split includes the ARM64 test.
+
+**Next exact step:** select the existing prepared ASR environment per SETUP,
+resolve its readiness without modifying the shared synthesis stack, then run
+pilot/full commands in the new procedure with fresh external reports. Automated
+flags require investigation; all replacement takes remain human-review PENDING.
+No remediation phase, runtime, physical or release acceptance is closed.
 
 ## 2026-10-21 — V2 corpus replacement completed; verification recorded
 

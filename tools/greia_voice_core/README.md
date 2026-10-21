@@ -36,6 +36,23 @@ All four released languages (English, Italian, French and Spanish) use native
 text plus language direction. There is no hard VoxCPM2 language selector, so
 pronunciation and identity still need listening review.
 
+## Automated review after generation
+
+```bash
+python3 tools/regenerate_voice_corpus.py review --work-dir /absolute/corpus-run \
+  --report-dir /absolute/separate-review-reports --asr auto
+```
+
+Read `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`. The read-only reviewer uses
+installed files, exact frozen requests, bounded signal analysis and existing
+eligible Whisper verification with cached weights only. Reports include flags,
+transcripts, coverage and a prioritized listening CSV. Resume by repeating the
+same command; source audio, receipts and generation journal are untouched.
+No generation or acceptance occurs. `--asr off` is technical-only (incomplete
+speech review). Exit 0 means full applicable automated coverage without flags;
+2 means findings/error, 3 incomplete/blocked, 130 interrupted. Human listening
+and the unassessed identity/acting/pronunciation properties remain separate.
+
 ## Speech routing
 
 VoxStage uses editable acting defaults from `character_delivery.json` for all six

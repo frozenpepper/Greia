@@ -211,6 +211,13 @@ explicit acting prompts and reject them.
 
 ## 6. Semantic cue IDs and localization
 
+For post-generation automated review, follow
+`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`. The corpus `review` command screens
+installed audio and eligible ASR through engine collaborators, producing external
+reports and a prioritized listening queue. It never modifies recordings/receipts
+or acceptance. ASR exclusions/unavailability remain explicit. Keep this authoring
+analysis out of Activity runtime packages; human listening is still required.
+
 Gameplay code chooses semantic meaning, not filenames or sentences.
 
 Prefer IDs such as:

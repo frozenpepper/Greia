@@ -84,6 +84,21 @@ class AudioPipeline:
             sha256=hashlib.sha256(wav_path.read_bytes()).hexdigest(),
         )
 
+    def decode_for_review(self, source: Path, output: Path) -> None:
+        """Decode a bounded temporary signal for analysis without changing source audio.
+
+        Cap decoding at 121 seconds so malformed/very long compressed inputs cannot
+        fill the review workspace; the review policy rejects anything above 120s.
+        """
+        try:
+            subprocess.run([
+                "ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
+                "-i", str(source), "-t", "121", "-ar", "22050", "-ac", "1",
+                "-c:a", "pcm_s16le", str(output),
+            ], check=True, capture_output=True, text=True, timeout=120)
+        except (subprocess.SubprocessError, OSError) as exc:
+            raise AudioPipelineError(f"review decode failed: {getattr(exc, 'stderr', '') or exc}") from exc
+
     def validate_review_wav(self, wav_path: Path) -> AudioInspection:
         inspection = self.inspect_wav(wav_path)
         if inspection.bytes < 1000:

@@ -3400,3 +3400,24 @@ activity validates under the cap. Focused voice tests passed. Final `make verify
 ran 5,472 tests with 1 known MBR message mismatch, 4 host errors (missing
 `lsblk` in three installer tests and non-executable `tools/build_profile.py`),
 and 8 skips. No architecture-remediation phase is closed by this work.
+
+### 2026-10-21 — Automated review after corpus production
+
+Added the read-only `review` subcommand and agent procedure
+`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`. Existing engine audio/verifier
+owners handle bounded installed-rendition signal analysis and cached-only eligible
+ASR; corpus review adds frozen metadata checks, resumable external reports,
+coverage fields and a prioritized listening queue. No media, receipt acceptance,
+master or generation state is changed. Missing ASR cannot pass speech screening.
+
+Executed 68 focused voice tests PASS; eight installed technical pilot cues PASS
+(ASR off), two eligible ASR pilot cues BLOCKED by the host NumPy/Whisper import.
+Full automated corpus review and human acceptance remain unexecuted.
+`make -k verify`: 5,484 tests, 1 inherited MBR assertion failure, 4 inherited
+errors (ARM64 builder expectation, profile executable permission, two missing
+lsblk installer tests), 8 skips; full gate NOT GREEN. This corrects the preceding
+entry's error attribution where applicable. Exact logs and next commands are
+in HANDOVER and the new procedure. No architecture or release phase closed.
+
+Final gate clarification: project validation also failed on the existing ARM64
+builder restriction; shell/footprint checks completed. No full-gate PASS claimed.

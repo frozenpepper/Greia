@@ -14,6 +14,9 @@ serial production, progress, restore and pending listening. Deterministic
 isolated letters/syllables stay unchanged. Normal authoring still uses
 VoiceEngine. Its `delivery_prompt` field now supports per-cue tone/mood direction
 through VoxStage; six editable character defaults apply when omitted.
+After generation, follow `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` for
+read-only screening and a prioritized listening queue. Missing ASR is incomplete
+review; machine results never grant human acceptance.
 
 **Status:** living Activity-authoring contract  
 **Reviewed:** 2026-10-17

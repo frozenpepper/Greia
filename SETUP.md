@@ -140,6 +140,12 @@ Do not infer physical readability/performance from desktop rendering alone.
 
 ## 7. Voice Production Engine / authoring Voice Studio
 
+**Post-generation review:** follow `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`.
+`tools/regenerate_voice_corpus.py review` checks installed audio/receipts and
+produces external resumable reports. Optional ASR uses existing cached weights
+only; disabled/unavailable ASR is incomplete screening. This does not grant
+human acceptance or install anything. Generation DONE is a separate state.
+
 For the explicit owner-requested 2026-10-19 corpus regeneration/replacement,
 use `tools/regenerate_voice_corpus.py` with
 `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`. It reuses this installed stack,

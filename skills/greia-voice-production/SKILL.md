@@ -6,7 +6,7 @@ description: Canonical Greia authoring skill for producing prerecorded character
 # Greia Voice Production
 
 **Status:** canonical authoring-time voice-production contract  
-**Reviewed:** 2026-10-19
+**Reviewed:** 2026-10-21
 
 ## One rule
 
@@ -262,7 +262,23 @@ Letters/syllables/phonics do not justify such a cap because they route through `
 
 Do not reintroduce a guessed word-count token table in callers or providers.
 
-## Whisper
+## Post-generation automated review (2026-10-21)
+
+Follow `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` after corpus generation.
+Use `tools/regenerate_voice_corpus.py review --work-dir <external-run>
+--report-dir <separate-external-reports> --asr auto`. It reads installed files
+and the frozen plan, checks metadata/decoding/signal metrics, runs existing
+eligible ASR only with already installed/cached dependencies, and creates
+resumable reports plus a prioritized listening queue. It never changes audio,
+receipts, plan, generation state or acceptance, and never downloads models.
+Missing ASR is BLOCKED; `--asr off` is incomplete speech review, not PASS.
+Dani/short utterances/teaching targets/long scripts retain explicit eligibility
+exclusions. Identity, acting, pronunciation and independent language recognition
+remain unassessed. The legacy receipt-score audit does not run ASR or audio
+analysis. Generation complete, automated review and human listening are separate
+evidence states. Review exit 0 never accepts a recording.
+
+## Whisper screening policy
 
 Whisper is advisory for human acceptance, but warnings are actionable production evidence.
 

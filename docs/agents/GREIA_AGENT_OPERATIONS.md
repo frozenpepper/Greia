@@ -41,6 +41,13 @@ user-profile access or Acer/installer operations.
 
 That router follows `HANDOVER.md`. Do not select a dated procedure merely because its filename looks newer or familiar.
 
+**Automated review follow-up (2026-10-21):** after generation, execute
+`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` with the `review` command on
+`tools/regenerate_voice_corpus.py`. It writes external read-only screening reports
+and a prioritized listening queue, never approvals or replacement audio. Missing
+or disabled ASR remains incomplete; no model downloads are performed. Report
+generation, automated screening and human acceptance separately.
+
 **Corpus replacement follow-up (2026-10-19):** the owner authorized the existing
 Activity/system corpus regeneration, except deterministic isolated letters and
 syllables, with per-recording tone/mood prompts. Its executable work order is
