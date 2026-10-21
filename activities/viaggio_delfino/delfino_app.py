@@ -172,7 +172,7 @@ class DelfinoJourneyApp:
             pygame.init()
             screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.FULLSCREEN)
         self.screen = screen
-        self.canvas = PygameReferenceCanvas(screen)
+        self.canvas = PygameReferenceCanvas(screen, hires=True)
         # The OS cursor is hidden; ``canvas.present()`` draws Greia's pointer.
         pygame.mouse.set_visible(False)
         self._clock = clock
@@ -753,7 +753,7 @@ class DelfinoJourneyApp:
         if new_screen is None:
             return
         self.screen = new_screen
-        self.canvas = PygameReferenceCanvas(new_screen)
+        self.canvas = PygameReferenceCanvas(new_screen, hires=True)
         self._nav_input = self._make_nav_input()
         self.layout = ControlLayout.for_canvas(self.canvas, new_screen.get_size())
         self.hud.relayout(self.layout)

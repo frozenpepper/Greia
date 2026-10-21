@@ -232,7 +232,7 @@ class GardenApp:
         self.screen = screen
         self.theme = get_theme()
         self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
-        self.canvas = PygameReferenceCanvas(self.screen)
+        self.canvas = PygameReferenceCanvas(self.screen, hires=True)
         self.repository = repository
         self.creations = creations
         self._clock = clock
@@ -492,7 +492,7 @@ class GardenApp:
     def _resize(self) -> None:
         self.screen = pygame.display.get_surface() or self.screen
         self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
-        self.canvas = PygameReferenceCanvas(self.screen)
+        self.canvas = PygameReferenceCanvas(self.screen, hires=True)
         self.layout = ControlLayout.for_canvas(self.canvas, self.screen.get_size())
         self.renderer.set_top_bar(self._top_bar())
         self.controls.relayout()

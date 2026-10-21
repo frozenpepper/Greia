@@ -59,7 +59,7 @@ def main() -> int:
     rng = random.Random()
     app = TorreActivity(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         typography=GreiaTypography(),
         resources=resources,
         audio=TorreAudio(locale=locale, rng=rng),

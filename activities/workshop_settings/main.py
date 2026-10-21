@@ -62,7 +62,7 @@ def main() -> int:
         typography = GreiaTypography()
         app = MyGreiaApp(
             screen=screen,
-            canvas=PygameReferenceCanvas(screen),
+            canvas=PygameReferenceCanvas(screen, hires=True),
             typography=typography,
             resources=resources,
             services=GreiaCustomization(),

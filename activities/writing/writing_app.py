@@ -541,7 +541,7 @@ class WritingApp:
         self.small_font_size = self.metrics.px(CARD_TEXT_SIZE)
         if self.canvas is not None:
             try:
-                self.canvas = PygameReferenceCanvas(self.screen)
+                self.canvas = PygameReferenceCanvas(self.screen, hires=True)
             except Exception:
                 pass
         self._close_sheet()

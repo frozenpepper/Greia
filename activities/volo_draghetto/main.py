@@ -40,7 +40,7 @@ def main() -> int:
     rng = random.Random()
     app = DragonFlightActivity(
         screen=screen,
-        canvas=PygameReferenceCanvas(screen),
+        canvas=PygameReferenceCanvas(screen, hires=True),
         typography=GreiaTypography(),
         resources=resources,
         progress=GreiaFlightProgress(),

@@ -446,7 +446,7 @@ class DragonFlightActivity:
 
     def _relayout(self) -> None:
         self.screen = pygame.display.get_surface() or self.screen
-        self.canvas = PygameReferenceCanvas(self.screen)
+        self.canvas = PygameReferenceCanvas(self.screen, hires=True)
         self._input = self._make_input()
         layout = self._layout()
         self.map.relayout(layout)
