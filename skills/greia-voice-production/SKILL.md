@@ -125,10 +125,19 @@ Defaults for all six characters are now the same neutral, natural, unhurried
 performance. Only add line-specific intention/emotion/pace when needed. The
 completed v2 corpus's frozen prompts and receipts remain historical evidence;
 its old PERSONA-prefixed overrides must not be reused for the next replacement.
-Dani/Momo/Tito are pending reselection after owner rejection for high pitch,
-inconsistent Momo, overexcited delivery and hyperactive/aged Tito. New auditions
+The original Dani/Momo/Tito voices were rejected for high pitch, inconsistent
+Momo, overexcited delivery and hyperactive/aged Tito. New Momo/Tito candidate 1
+masters are now selected; Dani remains pending (see follow-up below). New auditions
 and a draft 1,340-file scope are external; selection and cloned-line listening
 precede a new frozen replacement plan. No canonical master has changed yet.
+
+**Owner selection follow-up 2026-10-21:** Momo v3 candidate 1 and Tito v3
+candidate 1 are approved. Exact sources/provenance are archived in
+`assets/source/audio/character-voice-masters/v0.3/`; do not redesign/substitute
+these selected voices. Both Dani v3 candidates were rejected; Dani v4 has three
+sound-only directions without robot/buzzy/nasal cues. Active production registry
+remains v0.2 pending the replacement set and cloned-line checks. Source-master
+approval does not approve fresh runtime generations.
 
 Character performance defaults live in
 `tools/greia_voice_core/character_delivery.json`; VoxStage applies them to normal

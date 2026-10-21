@@ -1,0 +1,76 @@
+{
+  "version": "v0.3-selected-partial",
+  "status": "Momo and Tito owner-selected; Dani remains pending. Active registry unchanged.",
+  "selected": [
+    {
+      "character": "momo",
+      "source_master": "momo-source-v3.wav",
+      "voice_id": "greia-audition-20261021-momo-v3-01",
+      "sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
+      "owner_review": "approved",
+      "expected_transcript": "Good morning, my friend. There is a small blue box beside the window, and a yellow feather on the floor. Let us look carefully and find where they belong. We can take our time. What do you notice first? I will stay here while you try.",
+      "generation": {
+        "job_id": "20261021-062708-2e6a6186",
+        "voice_id": "greia-audition-20261021-momo-v3-01",
+        "voice_description": "Lovable large fluffy cartoon creature with a stable warm rounded baritone voice. Gentle soft chest resonance, relaxed clear vowels, comfortable middle-low pitch. Kind, quietly amused and reassuring, patient conversational pace and restrained natural intonation. Clear English, consistent grounded character voice.",
+        "seed": 63100,
+        "settings": {
+          "character": "momo",
+          "id": "greia-audition-20261021-momo-v3",
+          "description": "Lovable large fluffy cartoon creature with a stable warm rounded baritone voice. Gentle soft chest resonance, relaxed clear vowels, comfortable middle-low pitch. Kind, quietly amused and reassuring, patient conversational pace and restrained natural intonation. Clear English, consistent grounded character voice.",
+          "text": "Good morning, my friend. There is a small blue box beside the window, and a yellow feather on the floor. Let us look carefully and find where they belong. We can take our time. What do you notice first? I will stay here while you try.",
+          "seed": 63100,
+          "candidates": 2,
+          "steps": 10,
+          "cfg": 2.0,
+          "max_tokens": 240
+        },
+        "duration_seconds": 14.240166666666667,
+        "reference_role": "Current v0.2 master, supplied for old/new comparison; owner has rejected these three voice identities",
+        "notes": "New voice-design audition. Not selected, installed or human-approved. Exact transcript and pitch/delivery require listening."
+      },
+      "review": {
+        "state": "approved",
+        "score": null,
+        "notes": "",
+        "reviewer": "",
+        "updated_at": "2026-10-21T04:45:59.281992+00:00"
+      }
+    },
+    {
+      "character": "tito",
+      "source_master": "tito-source-v3.wav",
+      "voice_id": "greia-audition-20261021-tito-v3-01",
+      "sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
+      "owner_review": "approved",
+      "expected_transcript": "Good morning, my friend. There is a small blue box beside the window, and a yellow feather on the floor. Let us look carefully and find where they belong. We can take our time. What do you notice first? I will stay here while you try.",
+      "generation": {
+        "job_id": "20261021-062709-40733336",
+        "voice_id": "greia-audition-20261021-tito-v3-01",
+        "voice_description": "Young adult male cartoon fox explorer, warm relaxed middle-low register, smooth clear youthful tone. Thoughtful curiosity, understated playful confidence, easy conversational rhythm, measured pace and gentle natural emphasis. Clear English with grounded storybook acting.",
+        "seed": 63200,
+        "settings": {
+          "character": "tito",
+          "id": "greia-audition-20261021-tito-v3",
+          "description": "Young adult male cartoon fox explorer, warm relaxed middle-low register, smooth clear youthful tone. Thoughtful curiosity, understated playful confidence, easy conversational rhythm, measured pace and gentle natural emphasis. Clear English with grounded storybook acting.",
+          "text": "Good morning, my friend. There is a small blue box beside the window, and a yellow feather on the floor. Let us look carefully and find where they belong. We can take our time. What do you notice first? I will stay here while you try.",
+          "seed": 63200,
+          "candidates": 2,
+          "steps": 10,
+          "cfg": 2.0,
+          "max_tokens": 240
+        },
+        "duration_seconds": 11.840166666666667,
+        "reference_role": "Current v0.2 master, supplied for old/new comparison; owner has rejected these three voice identities",
+        "notes": "New voice-design audition. Not selected, installed or human-approved. Exact transcript and pitch/delivery require listening."
+      },
+      "review": {
+        "state": "approved",
+        "score": null,
+        "notes": "",
+        "reviewer": "",
+        "updated_at": "2026-10-21T04:45:59.281992+00:00"
+      }
+    }
+  ]
+}

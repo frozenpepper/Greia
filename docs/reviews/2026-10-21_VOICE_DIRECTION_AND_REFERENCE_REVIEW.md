@@ -74,3 +74,13 @@ with stripped persona prefixes and restrained performance prompts. It is not
 planned or launched. Owner master selection and representative multilingual clone
 listening are the next steps before replacement. Frozen v2 metadata and originals
 remain intact; no old human acceptance is inferred for new outputs.
+
+## Owner selection follow-up
+
+Momo v3 candidate 1 and Tito v3 candidate 1 are approved, other v3 candidates
+rejected. Selected exact source WAVs/provenance now reside under
+`assets/source/audio/character-voice-masters/v0.3/`; active registry stays v0.2.
+Dani v4 A/B/C use sound-only baritone/contralto/androgynous descriptions, omitting
+robot/buzzy/nasal terms. Durations 11.68/15.20/15.84s; Takeboard on 8797, all
+unreviewed, compared against rejected Dani v3 candidate 1. User listening decides
+fitness; labels are intended attributes, not a claim that the agent heard them.

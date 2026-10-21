@@ -1591,3 +1591,16 @@ No master/runtime file changed; no new corpus regeneration launched.
 4 errors/8 skips, ARM64 validation failure, shell/footprint completed. Full gate
 NOT GREEN; no phase/runtime/physical/release acceptance. Exact paths and source
 constraints are in HANDOVER and automated review procedure §3a.
+
+### 2026-10-21 — Momo/Tito master selection and Dani v4 auditions
+
+Owner-approved exact Momo v3 candidate 1 and Tito v3 candidate 1 are archived in
+source `character-voice-masters/v0.3/` with IDs/hash/provenance and selected-source
+status. Other four v3 auditions are rejected. Active registry/runtime unchanged.
+Three distinct Dani v4 sound-only directions generated: baritone 11.68s, contralto
+15.20s, lower androgynous 15.84s; all unreviewed on Takeboard 8797, comparing the
+previously rejected v3 Dani. Existing user review sessions preserved. Master source
+bytes/WAV headers checked; no code changes/tests rerun or release acceptance.
+Shared queue finished and model unloaded. Next is Dani selection, selected-set
+registry/clone checks, then the existing corrected 1340-file replacement scope.
+Exact job IDs and external paths in HANDOVER. Do not substitute approved references.

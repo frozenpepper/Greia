@@ -361,3 +361,13 @@ performance. It is not a new frozen plan or authority to run with old masters.
 Model reference guidance/research and job evidence:
 `docs/reviews/2026-10-21_VOICE_DIRECTION_AND_REFERENCE_REVIEW.md`. The engine now
 uses policy v2 screening; see automated review procedure §3a for reassessment.
+
+### Owner master choices — 2026-10-21 follow-up
+
+Owner saved Momo candidate 1 and Tito candidate 1 as approved in the v3 audition
+batch. Their immutable IDs are `greia-audition-20261021-momo-v3-01` and
+`greia-audition-20261021-tito-v3-01`; source WAVs/provenance are archived under
+`assets/source/audio/character-voice-masters/v0.3/`. Both Dani v3 candidates were
+rejected. Three new Dani v4 sound-only directions are being auditioned; no
+canonical registry or runtime file is replaced until that selection/clone-check
+step is ready. Do not rerender the already selected Momo/Tito references.

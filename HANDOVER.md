@@ -74,6 +74,43 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-21 — Momo/Tito masters selected; new Dani v4 audition set
+
+Owner saved **Momo v3 candidate 1** and **Tito v3 candidate 1** as approved;
+Momo 2, Tito 2 and both Dani v3 candidates are rejected. Decisions were read
+from the live Takeboard session and its saved `auditions.reviewed.json`.
+Selected immutable IDs: `greia-audition-20261021-momo-v3-01` and
+`greia-audition-20261021-tito-v3-01`. Exact approved source WAVs and provenance
+are durably archived under `assets/source/audio/character-voice-masters/v0.3/`
+and external `accepted-masters/2026-10-21-v3/`. SHA equality and mono PCM16
+48kHz headers/durations verified (14.24s Momo / 11.84s Tito).
+
+This is a selected-source checkpoint. Active canonical registry remains v0.2;
+no runtime audio or generation receipt changed and no 1,340-file run started.
+Do not redesign these approved Momo/Tito voices. Dani remains the open choice.
+
+Three new, distinct Dani sound-only descriptions omit robot/buzzy/nasal persona
+cues: A warm adult baritone (seed 64100), B adult contralto (64200), C low-middle
+androgynous (64300). Shared VoxStage jobs respectively
+`20261021-084311-4e1f545d`, `20261021-084312-11543bdb`,
+`20261021-084314-362a30b8` all completed: 11.68s / 15.20s / 15.84s.
+These labels describe requested properties, not agent listening approval.
+New candidates remain unreviewed. Queue was initially idle, and the model was
+unloaded after all three completed; no other project jobs were altered.
+
+New listening batch: external `2026-10-21-dani-v4/auditions.json`, served at
+http://127.0.0.1:8797/. Reference player compares the previously rejected Dani
+v3 candidate 1 (not an accepted master). Existing 8794/8795/8796 sessions and
+human decisions remain intact. Browser checks show three entries and playable
+new/reference media, no fabricated review decisions. No software code changed
+or tests rerun; previous 5,491-test gate remains NOT GREEN for its recorded
+inherited failures. No phase/runtime/physical/release acceptance is claimed.
+
+**Next:** owner selects Dani A/B/C (or rejects them), then selected-set registry
+promotion and representative multilingual cloned-line checks before freezing
+and running the corrected 1,340-file replacement. Preserve approved Momo/Tito
+bytes/IDs. New generations still require their own acceptance.
+
 ## 2026-10-21 — Owner review policy v2; voice identity separated from acting
 
 **Owner direction:** tail/internal pauses below 1.5s should not warn; automated
