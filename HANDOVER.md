@@ -137,6 +137,37 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — proposed shared verified-production architecture (planning only)
+
+Owner requested automatic short-phrase carriers, up to three total takes until
+Whisper passes, verification enabled by default, and separate generation and
+verification queues. Current source was traced across Greia VoiceEngine/provider,
+serial socket/batch/corpus loops and shared VoxStage service/storage. Proposed
+implementation package: `docs/plans/2026-10-22_VERIFIED_VOICE_PIPELINE/README.md`
+(eight bounded sessions). This extends the scoped voice workstream and is NOT
+implemented/activated; it does not replace product/release authorities or
+restart the paused corpus.
+
+Recommended ownership: shared VoxStage handles carrier/extraction/Whisper/durable
+attempts/two queues; Greia supplies exact semantic request/master and retains
+packaging/installation. New default v2 routes return VERIFIED only on a passing
+final target, FAILED_QUALITY after three takes, and BLOCKED on infrastructure
+faults without blindly regenerating. Updated batch/corpus callers submit an
+8-request window; no nested wrappers/retries or global client lock across shared
+waits. Old v1 jobs stay legacy-unverified. Native pedagogical exceptions remain.
+Separate GPU resource policy is initially serialized on this 16 GiB host;
+overlap requires the fixed performance/memory gate. Two French false rejects
+remain evidence that ASR failure does not prove bad audio. No threshold changes,
+manual override or model downloads are prescribed to hide this limitation.
+
+Planning evidence and both adversarial review passes are in the package's
+`evidence/`; strict structural plan validation PASS (8 sessions). No software
+tests, live synthesis/ASR, shared VoxStage source changes or audio replacements
+were performed for this proposal. Existing shared dirty files were recorded and
+preserved. Next: discuss/adopt design before executing session 00; bulk stays
+STOPPED. No code/queue implementation is claimed.
+
+
 ### 2026-10-22 — disposable-intro correction; target-suffix extractor v5
 
 Owner requested implementation after identifying that exact intro recognition
