@@ -143,3 +143,15 @@ record inherited failures without conflating source tests with provider
 generation or listening evidence. The parent performs the independent
 technical boundary review does not accept speech; every generated or extracted
 clip remains listening-pending for owner review.
+
+## v4: coincident ASR boundaries
+
+Whisper may assign a real pause to the first target-word span while prefix-end
+and target-start coincide. Version 4 distinguishes this from an out-of-WAV
+timestamp. For this case only, it searches from prefix-end through the first
+target span's end using the same unique 200 ms quiet-run and padding guards.
+Both removed audio and retained audio must independently transcribe to exactly
+the known prefix and target; `warn` cannot waive these recovery checks. Evidence
+records the search strategy, search extent, removed transcript and word spans.
+No new synthesis is needed to test captured raw recordings. Matching ASR is
+technical evidence, not pronunciation or human listening acceptance.

@@ -448,3 +448,53 @@ the batch and existing ports 8794–8798 were left untouched. All new receipt
 and 533 ASR-policy exclusions, then listen across every character/language
 combination, long narration, numbers/words, identity and acting. Machine results
 never establish owner acceptance.
+
+## 2026-10-21 correction: spoken-carrier parser v3 and paused priority recovery
+
+The six-actor review-led short-cue first pass finished at 389 DONE / 274
+FAILED in its continuation (plus four earlier DONE, 393 installed total). New
+outputs remain listening-pending; no new provider requests or automatic retries
+are running. The frozen source plan and its failed-run journal remain unchanged.
+The 274 failed raw carrier candidates are indexed by the separate external
+recovery ledger at
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/recovery-v2/recovery-v3-plan.json`.
+
+`tools/voice_carrier.py` now identifies itself as
+`greia-spoken-carrier-extractor-v3`. Whisper may emit punctuation-only timed
+entries, split French/Italian apostrophe clitics across entries, group multiple
+lexical words in a single timed entry, or assign zero-duration suffix tokens.
+The parser discards punctuation only from lexical comparison while checking
+its timestamps and clip bounds; clitic tokens share one indivisible aligned
+span; grouped tokens share their source span; and the known prefix boundary
+must fall between whole timed spans. A zero-duration prefix or first target
+entry still rejects. Zero-duration non-boundary suffix entries may pass only
+with exact prefix, a valid first-target timestamp, and all clip-bound checks.
+The unique guarded low-energy PCM gap, 200 ms minimum run, endpoint guards,
+padding and voiced-output floor are unchanged. Parse failures now retain the
+original word entries as evidence.
+
+Offline v3 recovery pilot used only captured raw candidates, not synthesis.
+French `sub_creature_turtle` passed exact raw/extracted ASR and the unchanged
+gap gate (cut sample 38,895); the resulting candidate is not installed.
+English `not_now` remained rejected because its only low-energy run was 140 ms
+inside a 260 ms timestamp gap, shorter than the unchanged 200 ms minimum.
+French `letter_E` had an exact prefix and measurable gap, but ASR heard the
+suffix as “et comme est ce cargo”; it is explicitly a target-warning candidate,
+not a pass. Human listening remains pending. Focused carrier, policy,
+generation and corpus suites: 42/42 PASS. The final normal-environment
+`make verify` used Python 3.14.6 and ran 3,180 tests: FAILED (31 failures,
+244 errors, 6 skipped). The complete log is
+`/tmp/greia-short-carrier-v3-make-verify.log`. The aggregate is not attributed
+to the extractor without examining individual traces.
+
+### Primary-verified v4 and resumed priority work
+
+See `GREIA_SPOKEN_CARRIER_EXTRACTION.md` for the coincident-boundary repair.
+The owner narrowed production to low-score/strong-warning short recordings;
+remaining short clips are isolated in the external `triage/remaining-deferred`
+CSV/JSON and must not be bulk regenerated. `retry-v4/run` freezes 266 unresolved
+priority paths after seven saved-audio recoveries, retaining exact masters and
+target words with explicit pause direction and at most three cumulative fresh
+generations. Completed uncertain provider jobs must be found by idempotency-key
+metadata, not by treating the key as a job ID. No clipping or score warnings
+may be relabelled human acceptance. Exact current evidence is in HANDOVER.

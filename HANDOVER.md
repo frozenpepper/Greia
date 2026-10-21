@@ -137,6 +137,54 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-21 — Priority short-carrier first pass paused for offline recovery
+
+The frozen priority continuation finished with 389 DONE and 274 FAILED, no
+READY rows; add the four successful cues from its preceding run for 393 installed
+retakes. All 389 outputs remain listening-pending. The original failed run and
+captured raw provider candidates are preserved. No further provider calls or
+automatic retries are running. The all-actor review triage still has 1,927
+deferred covered cues and 143 historical-evidence-gap cues, neither included in
+this first pass.
+
+Failure categories from `state.sqlite3`: 105 prefix/transcript alignment
+mismatches, 49 Whisper token-representation rejects, 41 malformed timestamps,
+35 unique guarded PCM-gap rejects, 31 timestamps beyond the WAV, 10 inadequate
+pauses, one missing recognized suffix, one missing ASR segment set and one
+uncertain VoxStage timeout. A v3 parser now records complete raw word entries
+on parse failure, ignores punctuation-only entries as lexical tokens while
+still validating their timestamps, joins split apostrophe clitics into an
+indivisible aligned span, and refuses a prefix boundary inside a timed span.
+Zero-duration suffix entries are tolerated only after the exact prefix and
+first target boundary are established. The −42 dBFS, 200 ms unique guarded PCM
+gap policy is unchanged.
+
+Focused `tests/test_voice_carrier.py`: 19/19 PASS. Offline v3 recovery of an
+existing French submarine turtle raw candidate yielded exact raw and extracted
+ASR with cut sample 38,895; output SHA-256
+`ab868abbf7845fcae26a64bb0be11ddd905e866c05fce168f0f74497e841936d`.
+An existing English `not_now` candidate still fails closed: its timestamp gap
+is 260 ms but the only qualifying quiet run is 140 ms. A French letter-E
+example was cut with exact prefix but observed suffix `et comme est ce cargo`;
+it remains `EXTRACTED_TARGET_WARN_PENDING_LISTENING`, not a pass. Pilot receipts,
+the 274-row offline recovery manifest and CSV are at
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/recovery-v2/`.
+The recovered pilot outputs are not installed. No new provider attempt is
+authorized by the recovery manifest. The final Tito/IT `sunhat` submission
+timed out; VoxStage job lookup by its submission key returned Unknown job and
+the shared worker is healthy/idle. Do not resubmit until its idempotency record
+is reconciled.
+
+Next: audit all 274 preserved raw failures under extractor v3, count safely
+recoverable exact-prefix/verified-gap outputs separately from target warnings,
+and produce a review batch. Do not retry generation or install recovered clips
+from this pass without a separate frozen recovery ledger and normal candidate
+validation. Focused carrier, policy, generation and corpus suites passed 42/42.
+The final normal-environment `make verify` used Python 3.14.6 and ran 3,180
+tests: FAILED (31 failures, 244 errors, 6 skipped); see
+`/tmp/greia-short-carrier-v3-make-verify.log`. Individual traces have not been
+classified as related or unrelated to this change.
+
 ### 2026-10-21 — Incomplete hardware detection never stops the install (SOURCE)
 
 Owner decision: an incomplete hardware/firmware detection must not refuse an installation. `InstallerHardwareEnablementPlan` now carries `fallback_firmware`: when the plan is incomplete, the pool-provided subset of `FALLBACK_NETWORK_FIRMWARE` (`firmware-iwlwifi`, `-realtek`, `-atheros`, `-brcm80211`, `-libertas`, `-misc-nonfree`) is unioned with whatever the resolvers did produce and with microcode. `engine._prepare_hardware_support` and the A/B `device_seams` seam proceed (stderr journal line) instead of refusing; the A/B `selected_installed_bytes` bound covers the fallback. `install-record.json` records `hardware_detection: "incomplete"`, `hardware_fallback_packages` and up to three diagnostics; the completion page shows a localized (it/en/es/fr) note via a display-only flag on the `INSTALLED` answer. Pool verification failures (corrupt/unverified pool, identity mismatch) still refuse before any disk change. The hardware-inventory attestation gate (`inventory_complete`, sysfs token) is unchanged. UNPROVEN on hardware; unit tests only.
@@ -1194,3 +1242,23 @@ run was included in this source gate. This checkout is not full-gate green.
 ## 2026-10-21 — Intel Mac / UEFI boot for the i686 image (SOURCE, UNPROVEN / LAB)
 
 Implemented the EFI path for `legacy-x86-i686*` without touching BIOS behaviour: `src/greia_installer/efi_boot.py` (layout adapters, EFI bitness probe, GRUB ia32/x64 + removable fallbacks, non-fatal efibootmgr), engine wiring, `build/package-sets/boot-grub-efi.txt` (`-bin` packages only) and an MBR+ESP installer USB. Details and open LAB questions: `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` section 14. Verification: `tests/test_installer_efi_boot.py` 22 tests OK; installer/layout/boot suites pass except known pre-existing failures (ARM64 build profile, `lsblk` on macOS, `greia_parent.update_api` import). No image was built and no hardware booted. Next exact step: build the i686 installer on the Debian host, boot it in QEMU with OVMF (32 and 64) and then on a 2006-2007 and a 2010+ Mac.
+
+## 2026-10-21 — Primary-agent extractor repair; production remains paused
+
+The owner challenged delegation of root-cause investigation. Luna was interrupted; primary agent now owns diagnosis/repair. No producer is active. Installed priority totals remain 393 (389 continuation + 4 earlier), with 274 unresolved originals preserved; the separate 16 blanket-pass completions remain preserved. No further synthesis/installation occurred during diagnosis.
+
+Primary independently replayed all 274 failed raw takes against committed v2 and proposed v3 using identical cached ASR responses: 48 cuts recover via parsing corrections, 225 still reject, 1 lacks raw audio. A second defect was independently verified: all 32 falsely labelled out-of-WAV gaps are actually coincident prefix-end/target-start timestamps; a real Italian example has 369 ms silence inside the first target-word span.
+
+Implemented v4: only coincident timestamp boundaries may search inside that first target span, retaining the same quiet-run/guard/padding thresholds. This branch additionally requires exact ASR of both removed prefix and retained target; warn mode cannot waive either check. Added four positive/negative tests; primary ran 28 carrier tests plus 18 corpus tests, all PASS. Controlled v3-v4 replay on all 274: 4 additional cuts, no regression; total 52 extractable candidates (7 exact raw/extracted targets; 45 target warnings), 221 still rejected, 1 missing raw. These remain EXTERNAL/STAGED, not installed or human accepted.
+
+Evidence: `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/parent-same-asr-audit-v1/` and sibling `parent-boundary-audit-v4/`. Source changes are uncommitted pending final repository verification. Standard interpreter is `/opt/anaconda3/bin/python3` (3.12.7); Homebrew Python 3.14 runs are different environments and must not be conflated with this check. Next: finish full source gate, independently review recovered target quality and stage only verified priority repairs through normal journaled transactions; do not restart blanket retakes or delegate open-ended diagnosis.
+
+## 2026-10-21 — Extractor v4 verified; priority retry resumed
+
+Primary completed `make verify PYTHON=/opt/anaconda3/bin/python3`: 5,645 tests in 286.386s, 1 failure, 3 errors, 8 skips (MBR diagnostic expectation; ARM64 builder profile; two installer tests lacking macOS `lsblk`). Full gate NOT GREEN; 46 focused carrier/corpus tests PASS. Log: `parent-boundary-audit-v4/make-verify.log` under the external priority directory. These are the actually executed Python 3.12.7 results, distinct from prior Python 3.14/3.9 runs.
+
+Seven exact-transcript saved-audio recoveries were installed through normal CorpusRunner transactions with a provider stub that raises on any synthesis call. New recovery journal: `parent-exact-recovery-v4/run`, 7 DONE / 4,908 PRESERVED. Automated review: 5 PASS / 2 WARN (leading silence), no acceptance. Forty-five recoverable target-warning cuts remain uninstalled; other unresolved originals retained. An audit found one of the earlier 393 journal-DONE paths, English submarine whale, currently matches its original WAV/receipt rather than its staged carrier take; no automatic overwrite was made. Thus before current retries 399 actual current carrier files matched their completed candidate hashes, plus this one explicit reconciliation case.
+
+At the owner's request to stop stalling, primary launched `retry-v4/run` for 266 unresolved priority paths with unchanged masters, exact target scripts, spoken prefixes and word/character scope. Frozen acting direction now explicitly requests an approximately one-second pause. Cumulative three-generation limit is retained; no deferred candidates enter this run. Producer command: prepared Greia voice Python, `tools/regenerate_voice_corpus.py run --work-dir <priority>/retry-v4/run --verification off --continue-after-carrier-rejection`; log `<priority>/retry-v4/production.log`. First request is live. No blanket re-recording is authorized.
+
+Primary also located the uncertain sunhat submission by its actual idempotency key: VoxStage job `20261021-205450-cd63eb9d` is completed with hash-verified output. It is excluded from the 266 retry paths for recovery without duplicate synthesis. Primary owns algorithm/diagnostic decisions; any production worker is limited to monitoring and executing the fixed procedure, with no further threshold/code/policy changes. Remaining/deferred lists are still in `triage/`.

@@ -53,6 +53,74 @@ class VoiceCarrierTests(unittest.TestCase):
         self.assertTrue(target_exact)
         self.assertEqual(timings[5].token, "trouve")
 
+    def test_punctuation_timestamps_and_split_apostrophe_clitics_are_not_extra_words(self) -> None:
+        observed = {
+            "text": "C'est ici. Trouve Luna.",
+            "segments": [{"words": [
+                {"word": "C", "start": .1, "end": .2},
+                {"word": "'est", "start": .2, "end": .3},
+                {"word": " ici", "start": .31, "end": .5},
+                {"word": ".", "start": .5, "end": .51},
+                {"word": " Trouve", "start": .8, "end": 1.1},
+                {"word": " Luna.", "start": 1.11, "end": 1.4},
+                {"word": "?", "start": 1.4, "end": 1.45},
+            ]}],
+        }
+        timings, prefix_count, target_exact, _, _ = validate_transcript_and_boundary(
+            observed, "C'est ici", "Trouve Luna", 2, duration_seconds=1.5
+        )
+        self.assertEqual(prefix_count, 2)
+        self.assertEqual([item.token for item in timings], ["c'est", "ici", "trouve", "luna"])
+        self.assertEqual(timings[0].start, .1)
+        self.assertEqual(timings[0].end, .3)
+        self.assertTrue(target_exact)
+
+    def test_asr_grouped_words_cannot_straddle_known_prefix_boundary(self) -> None:
+        observed = {
+            "text": "Cette phrase Luna.",
+            "segments": [{"words": [
+                {"word": "Cette phrase", "start": .1, "end": .4},
+                {"word": "Luna.", "start": .8, "end": 1.1},
+            ]}],
+        }
+        with self.assertRaisesRegex(ExtractionRejected, "falls inside one timestamped ASR span"):
+            validate_transcript_and_boundary(observed, "Cette", "phrase Luna", 1)
+
+    def test_zero_duration_target_suffix_tokens_are_tolerated_but_prefix_is_not(self) -> None:
+        observed = {
+            "text": "Find Luna the cat",
+            "segments": [{"words": [
+                {"word": "Find", "start": .1, "end": .3},
+                {"word": "Luna", "start": .7, "end": .9},
+                {"word": "the", "start": .9, "end": .9},
+                {"word": "cat", "start": .9, "end": 1.1},
+            ]}],
+        }
+        timings, _, target_exact, _, _ = validate_transcript_and_boundary(
+            observed, "Find", "Luna the cat", 1, duration_seconds=1.2
+        )
+        self.assertTrue(target_exact)
+        self.assertEqual(timings[2].start, timings[2].end)
+        observed["segments"][0]["words"][0]["end"] = .1
+        with self.assertRaisesRegex(ExtractionRejected, "known prefix contains a zero-duration"):
+            validate_transcript_and_boundary(
+                observed, "Find", "Luna the cat", 1, duration_seconds=1.2
+            )
+
+    def test_punctuation_timestamp_beyond_source_duration_rejects(self) -> None:
+        observed = {
+            "text": "Find Luna.",
+            "segments": [{"words": [
+                {"word": "Find", "start": .1, "end": .3},
+                {"word": "Luna", "start": .7, "end": .9},
+                {"word": ".", "start": .9, "end": 1.1},
+            ]}],
+        }
+        with self.assertRaisesRegex(ExtractionRejected, "extends beyond WAV duration"):
+            validate_transcript_and_boundary(
+                observed, "Find", "Luna", 1, duration_seconds=1.0
+            )
+
     def test_prefix_word_count_must_match_explicit_remove_count(self) -> None:
         observed = result(("Find", .1, .2), ("Luna", .5, .7))
         with self.assertRaisesRegex(ExtractionRejected, "disagrees"):
@@ -138,7 +206,7 @@ class VoiceCarrierTests(unittest.TestCase):
             self.assertEqual(receipt["boundary"]["cut_sample"], 4500)
             self.assertEqual(receipt["human_review"], "PENDING")
             self.assertTrue(receipt["raw_word_alignment"])
-            self.assertEqual(receipt["algorithm_version"], "greia-spoken-carrier-extractor-v2")
+            self.assertEqual(receipt["algorithm_version"], "greia-spoken-carrier-extractor-v4")
             self.assertGreaterEqual(receipt["extracted_voiced_seconds"], 0.08)
 
     def test_warn_policy_extracts_exact_prefix_with_unresolved_target_asr(self) -> None:
@@ -258,11 +326,13 @@ class VoiceCarrierTests(unittest.TestCase):
                 import struct
                 handle.writeframes(struct.pack(f"<{len(samples)}h", *samples))
             out_of_range = result(("Find", .1, .2), ("Luna.", .5, 1.2))
-            with self.assertRaisesRegex(ExtractionRejected, "beyond raw WAV duration"):
+            with self.assertRaisesRegex(ExtractionRejected, "beyond WAV duration") as rejected:
                 extract(
                     source, output, locale="en", prefix="Find", target="Luna", remove_first_words=1,
                     transcriber=lambda _path, _locale: out_of_range,
                 )
+            self.assertEqual(rejected.exception.evidence["raw_transcript"], "Find Luna.")
+            self.assertEqual(rejected.exception.evidence["raw_word_alignment"][-1]["word"], "Luna.")
             self.assertFalse(output.exists())
 
     def test_cli_receipt_alias_never_overwrites_raw_audio(self) -> None:
@@ -288,6 +358,71 @@ class VoiceCarrierTests(unittest.TestCase):
             rejection = Path(temp) / "raw.wav.rejected.json"
             self.assertTrue(rejection.exists())
             self.assertEqual(json.loads(rejection.read_text())["status"], "REJECTED")
+
+
+class CoincidentBoundaryTests(unittest.TestCase):
+    def exercise(self, root: Path, *, removed_text="Find", target_text="Luna", two_gaps=False):
+        import struct
+        source, destination = root / "source.wav", root / "target.wav"
+        rate = 10000
+        samples = [0] * 14000
+        for left, right in ((1000, 6000), (10000, 12500)):
+            for index in range(left, right):
+                samples[index] = int(6000 * math.sin(index * .13))
+        if two_gaps:
+            samples[4500:5500] = [0] * 1000
+            samples[5500:6000] = [5000] * 500
+            # Two individually qualifying gaps inside the search interval.
+            samples[4500:7000] = [0] * 2500
+            samples[7000:7500] = [5000] * 500
+        with wave.open(str(source), "wb") as handle:
+            handle.setnchannels(1)
+            handle.setsampwidth(2)
+            handle.setframerate(rate)
+            handle.writeframes(struct.pack(f"<{len(samples)}h", *samples))
+        before = source.read_bytes()
+        calls = []
+
+        def transcribe(path, locale):
+            calls.append(str(path))
+            if path == source:
+                return result(("Find", .1, .4), ("Luna", .4, 1.25))
+            if ".removed-" in path.name:
+                return result((removed_text, .1, .6))
+            return result((target_text, .2, .45))
+
+        try:
+            return extract(source, destination, locale="en", prefix="Find", target="Luna",
+                           remove_first_words=1, target_verification="warn", transcriber=transcribe)
+        finally:
+            self.assertEqual(source.read_bytes(), before)
+            self.assertFalse(list(root.glob(".*.wav")))
+
+    def test_pause_assigned_to_first_target_span_requires_both_exact_halves(self):
+        with tempfile.TemporaryDirectory() as temp:
+            receipt = self.exercise(Path(temp))
+            self.assertEqual(receipt["boundary"]["search_strategy"],
+                             "coincident-first-target-span-dual-transcript")
+            self.assertEqual(receipt["removed_prefix_transcript"], "Find")
+            self.assertEqual(receipt["boundary"]["cut_sample"], 8000)
+
+    def test_recovery_rejects_cut_removing_a_piece_of_target(self):
+        with tempfile.TemporaryDirectory() as temp:
+            with self.assertRaisesRegex(ExtractionRejected, "beyond the exact prefix"):
+                self.exercise(Path(temp), removed_text="Find lu")
+            self.assertFalse((Path(temp) / "target.wav").exists())
+
+    def test_warn_mode_cannot_waive_recovery_target_check(self):
+        with tempfile.TemporaryDirectory() as temp:
+            with self.assertRaisesRegex(ExtractionRejected, "requires an exact extracted target"):
+                self.exercise(Path(temp), target_text="na")
+            self.assertFalse((Path(temp) / "target.wav").exists())
+
+    def test_multiple_silent_runs_are_not_a_recovery_boundary(self):
+        with tempfile.TemporaryDirectory() as temp:
+            with self.assertRaisesRegex(ExtractionRejected, "no unique"):
+                self.exercise(Path(temp), two_gaps=True)
+            self.assertFalse((Path(temp) / "target.wav").exists())
 
 
 if __name__ == "__main__":

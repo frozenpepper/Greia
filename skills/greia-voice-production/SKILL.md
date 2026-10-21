@@ -432,3 +432,15 @@ Existing owner-accepted audio does not need regeneration merely because its hist
 ## Maintainer extension rule
 
 New synthesis systems implement the provider contract behind `VoiceEngine`. Never spread model/backend conditionals back into Activities, content projects, OS/shared-library scripts or skills.
+
+## Extractor v4 recovery and priority retries (2026-10-21)
+
+Use the current corpus work order and HANDOVER for the scoped priority run.
+Version 4 handles coincident word-boundary timestamps with a unique quiet run
+inside the first target-word span, requiring exact independent removed-prefix
+and retained-target transcripts; warn mode cannot waive those recovery checks.
+Source snapshots and same-ASR replay evidence are external. Never silently
+resume a frozen v2/v3 extraction plan with a changed algorithm. New retries
+freeze v4 plus an explicit roughly one-second pause and retain the cumulative
+three-generation limit. Primary owns diagnosis; batch monitoring must not
+change thresholds, masters, transcripts, selection or code.

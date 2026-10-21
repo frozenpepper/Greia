@@ -3605,3 +3605,11 @@ All 44 Activities opted in to transparent high-resolution rendering with `@2x` r
 ### 2026-10-21 - Boot logo drawn at native size (SOURCE)
 
 Commit `292ef8220`: `greia_platform.boot_animation` draws the Greia logo at native pixel size, centred on white, scaled only down to fit. The GRUB theme and the early framebuffer splash still scale their art; that remains open. No VM or physical boot evidence.
+
+### 2026-10-21 — Scoped voice extractor repair (SOURCE, validation pending)
+
+Primary agent took over root-cause investigation and implemented carrier-extractor v4 coincident-boundary recovery with strict removed-prefix and retained-target checks. Existing quiet-run thresholds remain unchanged. 46 focused tests PASS; two controlled whole-failure-set replays are recorded in HANDOVER. No production resumed, no new audio installed, no platform phase/release closure claimed. Final full source gate pending.
+
+### 2026-10-21 — Scoped voice repair execution resumed
+
+Extractor v4 source verified with 46 focused tests and full Python 3.12.7 gate (5,645 tests; 1 failure, 3 errors, 8 skips; not green, exact details in HANDOVER). Installed seven saved-audio recoveries via journaled transactions without synthesis. Restarted only 266 unresolved priority retakes using explicit pause direction and existing accepted masters. No platform phase or human listening acceptance claimed; deferred clips preserved.
