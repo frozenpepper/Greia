@@ -51,6 +51,8 @@ Consume by semantic ID through the catalogue and the bounded PNG cache; never sc
 5. Shared runtime art: register it in `assets/catalog/shared_visuals_v1_source.toml`, run `make visual-assets` then `make visual-assets-check`, commit the PNG renditions with the catalogue. Activity-private art: commit `assets/source/*.svg` beside the `rsvg-convert` PNG.
 6. Record evidence with the correct label and delete the scratch folder. Only `assets/visual/runtime/` + catalogues (not SVG masters) are installed on the image.
 
+7. **@2x rule (2026-10-21):** every new or redrawn SVG-backed runtime asset must also get its `<name>@2x.png` through the build tool (`python3 tools/build_visual_renditions.py --rasterizer /opt/local/bin/rsvg-convert`; never hand-made, never `--no-hires` for committed art). Commit the `@2x` with the 1x file; the 1x stays for the reference netbook.
+
 Inventory, verdicts and the redraw backlog: `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md`.
 
 Start from the task map below. Do **not** read every visual document by default.

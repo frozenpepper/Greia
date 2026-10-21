@@ -505,6 +505,10 @@ make visual-assets-check
 
 The builder writes transactionally: failed generation must not destroy the previous good generated output.
 
+### @2x renditions (2026-10-21)
+
+`tools/build_visual_renditions.py` also renders, from the same SVG master, a `<name>@2x.png` sibling of each declared rendition at exactly twice its size (limit 4096 px; `--no-hires` skips them). The shared-library contract accepts only `@2x` siblings of declared outputs and checks their exact 2x size. They are optional and loaded only by the transparent high-resolution layer (`greia_platform.hires_surface`, `HIRES_SUFFIX`) at a display scale of at least 1.2x; the 1x files remain the only art on the 1024x600 reference netbook path. Activity-private PNGs get an `@2x` only where a fresh 1x render matches the shipped PNG: 13 Activity PNGs have none because the shipped PNG no longer matches its SVG (commits 47eafcd49, f22db8cb3).
+
 ## Why target runtime does not render SVG
 
 Build-time conversion gives:

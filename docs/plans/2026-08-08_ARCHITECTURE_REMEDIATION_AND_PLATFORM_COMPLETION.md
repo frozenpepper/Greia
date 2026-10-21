@@ -3601,3 +3601,7 @@ presentation. Not seen on the Aspire; PNG art is not yet higher resolution.
 ### 2026-10-21 - High-resolution rollout to all Activities; size cap becomes a guideline
 
 All 44 Activities opted in to transparent high-resolution rendering with `@2x` renditions (SOURCE + TESTS + DESKTOP VISUAL REVIEW; no Aspire check). Owner decision: the per-Activity cap is a 64 MiB guideline with a build-time warning and an install-time size notice, not a refusal; extraction/snapshot keep a fixed 512 MiB safety ceiling. Image payload to be re-measured against the 1,300 MiB gate at the next build. Details and open items: HANDOVER.md.
+
+### 2026-10-21 - Boot logo drawn at native size (SOURCE)
+
+Commit `292ef8220`: `greia_platform.boot_animation` draws the Greia logo at native pixel size, centred on white, scaled only down to fit. The GRUB theme and the early framebuffer splash still scale their art; that remains open. No VM or physical boot evidence.

@@ -109,6 +109,12 @@ Focused carrier/policy/generation/corpus tests passed 38/38 before the later
 actor-selection change; selector/corpus tests passed 21/21 after it. No full
 verification was rerun for this triage-only change.
 
+### Reviews written today (2026-10-21)
+
+- `docs/reviews/2026-10-21_PRE_M1_MAC_HARDWARE_SUPPORT.md` - pre-M1 Mac hardware support research and plan.
+- `docs/reviews/2026-10-21_LEGACY_X86_NETBOOK_HARDWARE_RISKS.md` - lead finding: Debian trixie has no i386 kernel/installer; the Greia i686 line is bookworm, supported to 2028-06-30; owner decisions pending.
+- `docs/reviews/acer/2026-10-21_ASPIRE_HIRES_DEVICE_CHECK.md` - 6 Activities PASS on the Aspire; animated Activities ~45-52% CPU plus Xorg ~50%, not yet compared with hi-res off; the Wi-Fi resume hook is not on the device until reimage.
+
 ## 2026-10-21 — Priority-run continuation after provider-job inspection
 
 The first priority-only producer was stopped after 4 DONE, 3 safe extraction

@@ -763,3 +763,9 @@ symbols for missing-package emergency rendering, and report missing
 required translations as release blockers. The real My Time/Creations
 local-agent acceptance queue remains `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`;
 source key parity alone cannot certify translated runtime behavior.
+
+## High-resolution layer, Wi-Fi resume hook and Parent API locking (2026-10-21)
+
+- **High-resolution layer:** `src/greia_platform/hires_surface.py` is transparent to Activities; opt in with `PygameReferenceCanvas(hires=True)`. It activates at a CONTAIN scale of at least 1.2x (`HIRES_MIN_SCALE`), loads `@2x` art, and is disabled for diagnosis with `GREIA_ACTIVITY_HIRES=0`. Platform code that needs real pygame calls uses `RAW`, not the patched functions. Contract: `docs/design/GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md` §9.3.
+- **Wi-Fi resume hook:** `build/overlay/usr/lib/systemd/system-sleep/greia-wifi-resume` covers iwl3945, iwl4965, b43, b43legacy, brcmsmac, ath5k; after resume it waits for the interface and iwd station and reloads the driver only on failure. Not yet verified on the Aspire until reimage.
+- **Parent API threading:** `src/greia_parent/production_api.py` serializes every request with a server-wide lock except the Wi-Fi scan/connect endpoints, which use a separate Wi-Fi lock so a slow association cannot freeze the panel.

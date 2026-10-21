@@ -385,6 +385,8 @@ Post-activity-pass acceptance SHA is e2b831da (Activity modernization COMPLETE, 
 
 ---
 
+> 2026-10-21 note: shared and Activity runtime PNGs now have `<name>@2x.png` siblings built by `tools/build_visual_renditions.py` (same SVG, exact 2x, optional, used only by the high-resolution layer at >=1.2x). New or redrawn SVG assets must get their `@2x` through the build tool. 13 Activity PNGs lack one (shipped PNG differs from its SVG). SOURCE + DESKTOP VISUAL REVIEW only.
+
 # 11. Drift to avoid
 
 - no E4 entry migration before E3 runtime review;

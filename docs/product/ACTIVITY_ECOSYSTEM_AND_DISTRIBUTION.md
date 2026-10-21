@@ -259,3 +259,7 @@ Greia's Activity ecosystem is succeeding when all of the following can be true a
 - a child never has to understand stores, advertisements, Linux packages, filesystem paths or purchase mechanics to use the computer.
 
 That combination — open creation, parent control and unusually strong curation — is the intended Greia ecosystem identity.
+
+## Activity size guideline (owner decision 2026-10-21)
+
+The per-Activity size limit is a 64 MiB guideline, not a refusal: larger Activities install normally. The build tools warn, and the install receipt carries `size_bytes`, `large_activity` and `size_notice`. Showing the notice in the Parent UI is pending. Extraction keeps a fixed 512 MiB safety ceiling (commit `e2c0b4199`).

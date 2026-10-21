@@ -346,8 +346,9 @@ bands (25 px above and below at 1280x800, 137 px at 1280x1024, side bands at
   frame and bands at any scale, so a pointer move never re-scales the scene.
 
 This is presentation, not resolution independence: a 1024x600 bitmap scaled
-1.25x is softer than art drawn at 1280x800. Native-resolution drawing is the
-follow-up that removes both the softness and the bands.
+1.25x is softer than art drawn at 1280x800. For opted-in Activities,
+native-resolution drawing that removes both the softness and the bands is
+delivered by §9.3.
 
 ### 9.3 High-resolution rendering (opt-in)
 

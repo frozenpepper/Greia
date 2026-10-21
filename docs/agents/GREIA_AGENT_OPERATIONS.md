@@ -351,6 +351,10 @@ Additional defaults:
 
 ---
 
+### Shared renditions and the hi-res layer (2026-10-21)
+
+Regenerate shared renditions including the `@2x` siblings with `python3 tools/build_visual_renditions.py --rasterizer /opt/local/bin/rsvg-convert` (`--no-hires` skips `@2x`), then `make visual-assets-check`. To diagnose the transparent high-resolution layer, run the Activity with `GREIA_ACTIVITY_HIRES=0`.
+
 ## 11. Activity work
 
 For Activity implementation/testing, route through:

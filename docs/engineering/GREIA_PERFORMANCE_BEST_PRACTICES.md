@@ -75,7 +75,7 @@ Measured on the reference Acer Aspire One (`legacy-x86-i686` developer image, De
 | Large RGBA panel blend (~1000×760) | ~100 ms | the 2026-08-23 dominant cost |
 | Full-scene rebuild, pre-backdrop era | ~191 ms (≈5 fps) | caused visible hover stutter |
 | Unconverted-surface blits | generic slow path | always convert once at cache time |
-| `smoothscale` of large PNG | tens of ms | never per frame; cache by size |
+| `smoothscale` of large PNG | tens of ms | Activities never per frame; cache by size. The platform canvas resamples once per full frame only when the display is scaled below the hi-res threshold (or hi-res is off); with hi-res active it is 1:1; pointer/region updates never resample the frame |
 | Idle poll loop (125 Hz wake + event pump) | ~10% of one core | relaxed cadence cuts this proportionally |
 
 Consequences used throughout Greia rendering code:
