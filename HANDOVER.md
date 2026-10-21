@@ -131,6 +131,13 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+## 2026-10-21 — Boot logo native size, Wi-Fi resume hook and Parent API locking
+
+- **Boot logo**: `greia_platform.boot_animation` now draws frames and the static canvas at native pixel size, centred on white, with one shared factor `min(1, fit)` (`native_scale`); it shrinks only when the display is smaller than the art. Installer frame preparation uses the same rule. GRUB (`padding` scale method) and the early framebuffer splash (`greia-fb-splash.c`) still fit-to-screen and so still enlarge on big screens; not changed (needs a theme/C change). Tests: `tests/test_boot_logo_native_size.py`. Source/unit evidence only; no visual review on hardware.
+- **Wi-Fi resume hook**: `greia-wifi-resume` covers iwl3945, iwl4965, b43, b43legacy, brcmsmac, ath5k; after resume it waits up to 8 s for the interface and iwd station and reloads the driver only if they are missing. Functional stub tests in `tests/test_system_overlay_contract.py`. Not run on the real Aspire.
+- **Parent API locking**: `ProductionParentApiHTTPServer.request_lock` serializes every request except `/network/wifi` and `/network/wifi/connect`, which use the application's `_wifi_lock` (one association at a time, guards the scan cache). Wi-Fi requests authenticate outside the global lock. Tests in `tests/test_parent_wifi_responsiveness.py`; two stale `wifi_payload` shape assertions in `tests/test_parent_production_api.py` updated for `connected_ssid`.
+
+
 ## 2026-10-21 — Parents app shows the connected Wi-Fi network
 
 **Evidence class: DEVICE (Acer, remote) + SOURCE + FOCUSED TESTS.**

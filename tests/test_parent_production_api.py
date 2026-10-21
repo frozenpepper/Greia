@@ -74,7 +74,7 @@ class ParentProductionApiTests(unittest.TestCase):
         backend = _UnavailableWifiBackend()
         with tempfile.TemporaryDirectory() as temporary:
             app = self._app(Path(temporary), wifi_backend=backend)
-            self.assertEqual(app.wifi_payload(), {"available": False, "networks": []})
+            self.assertEqual(app.wifi_payload(), {"available": False, "connected_ssid": "", "networks": []})
             self.assertEqual(backend.scan_calls, 0)
             with self.assertRaisesRegex(WifiError, "unavailable"):
                 app.connect_wifi("Made Up Network", "password123")
@@ -130,7 +130,7 @@ class ParentProductionApiTests(unittest.TestCase):
                     app.index_payload()["capabilities"]["network.manage"]
                 )
                 self.assertEqual(
-                    app.wifi_payload(), {"available": False, "networks": []}
+                    app.wifi_payload(), {"available": False, "connected_ssid": "", "networks": []}
                 )
                 with self.assertRaisesRegex(WifiError, "unavailable"):
                     app.connect_wifi("Family Wi-Fi", "password123")

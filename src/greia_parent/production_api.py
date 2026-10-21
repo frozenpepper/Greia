@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from http.server import ThreadingHTTPServer
 import threading
+from typing import Callable
 import time
 from urllib.parse import urlparse
 
@@ -38,6 +39,9 @@ class ProductionParentApiApplication(UpdateParentApiApplication):
         )
         super().__init__(*args, **kwargs)
         self.password_attempts = ParentPasswordAttemptLimiter()
+        # One Wi-Fi operation (scan/association) at a time; also guards the
+        # scan cache below. Reentrant because connect_wifi may rescan.
+        self._wifi_lock = threading.RLock()
         self._wifi_scan_at = 0.0
         self._wifi_scan_results: tuple[WifiNetwork, ...] = ()
 
@@ -61,12 +65,17 @@ class ProductionParentApiApplication(UpdateParentApiApplication):
         return payload
 
     def _scan_wifi(self) -> tuple[WifiNetwork, ...]:
-        results = tuple(self.wifi_backend.scan())
-        self._wifi_scan_results = results
-        self._wifi_scan_at = time.monotonic()
-        return results
+        with self._wifi_lock:
+            results = tuple(self.wifi_backend.scan())
+            self._wifi_scan_results = results
+            self._wifi_scan_at = time.monotonic()
+            return results
 
     def wifi_payload(self) -> dict[str, object]:
+        with self._wifi_lock:
+            return self._wifi_payload_locked()
+
+    def _wifi_payload_locked(self) -> dict[str, object]:
         if not self._wifi_management_available():
             return {"available": False, "connected_ssid": "", "networks": []}
         connected = getattr(self.wifi_backend, "connected_ssid", None)
@@ -90,6 +99,10 @@ class ProductionParentApiApplication(UpdateParentApiApplication):
         }
 
     def connect_wifi(self, ssid: str, passphrase: str = "") -> dict[str, object]:
+        with self._wifi_lock:
+            return self._connect_wifi_locked(ssid, passphrase)
+
+    def _connect_wifi_locked(self, ssid: str, passphrase: str) -> dict[str, object]:
         if not self._wifi_management_available():
             raise WifiError("Wi-Fi management is unavailable on this Greia")
 
@@ -128,13 +141,44 @@ class ProductionParentApiRequestHandler(UpdateParentApiRequestHandler):
     def app(self) -> ProductionParentApiApplication:
         return self.server.app  # type: ignore[attr-defined,return-value]
 
+    # Request serialization. The server runs several requests concurrently so a
+    # slow Wi-Fi association cannot freeze the panel, but profiles, settings and
+    # storage handlers assume one request at a time. Every request therefore
+    # holds the server-wide lock, except Wi-Fi scan/connect, which are
+    # serialized by the application's own Wi-Fi lock instead.
+    _WIFI_PATHS = frozenset(
+        {f"{API_BASE}/network/wifi", f"{API_BASE}/network/wifi/connect"}
+    )
+
+    def _serialized(self, handler: Callable[[], None]) -> None:
+        if urlparse(self.path).path in self._WIFI_PATHS:
+            handler()
+            return
+        with self.server.request_lock:  # type: ignore[attr-defined]
+            handler()
+
     def do_GET(self) -> None:  # noqa: N802
+        self._serialized(self._get)
+
+    def do_POST(self) -> None:  # noqa: N802
+        self._serialized(self._post)
+
+    def do_PUT(self) -> None:  # noqa: N802
+        self._serialized(super().do_PUT)
+
+    def do_PATCH(self) -> None:  # noqa: N802
+        self._serialized(super().do_PATCH)
+
+    def do_DELETE(self) -> None:  # noqa: N802
+        self._serialized(super().do_DELETE)
+
+    def _get(self) -> None:
         if urlparse(self.path).path == "/" and self.static_client.read("/") is None:
             self._send_html(503, render_parent_web_app())
             return
         super().do_GET()
 
-    def do_POST(self) -> None:  # noqa: N802
+    def _post(self) -> None:
         if urlparse(self.path).path != f"{API_BASE}/pairing/bootstrap":
             super().do_POST()
             return
@@ -188,6 +232,7 @@ class ProductionParentApiHTTPServer(ThreadingHTTPServer):
     ) -> None:
         self.app = app
         self.static_client = static_client or ParentStaticClient.from_environment()
+        self.request_lock = threading.RLock()
         self._request_slots = threading.BoundedSemaphore(self.max_concurrent_requests)
         ThreadingHTTPServer.__init__(self, address, ProductionParentApiRequestHandler)
 
