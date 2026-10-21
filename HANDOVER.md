@@ -74,6 +74,46 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-21 — Full V2 corpus automated review completed
+
+The unfiltered cached-Whisper review completed on the frozen V2 run with
+**4,168/4,168 DONE recordings covered** and **741 PRESERVED recordings excluded
+by policy**. The terminal summary is `complete=true`,
+`full_corpus_coverage=true`, and `generation_problems={}`. Results: **2,905
+PASS, 1,262 WARN, 1 FAIL**. Eligible ASR is not fully complete only because the
+single hard-silence FAIL did not proceed to ASR: **1,853 ASR PASS, 621 ASR WARN,
+1,693 NOT_APPLICABLE_POLICY, 1 NOT_RUN_ERROR**. The process finished its
+traversal; the report's `human_acceptance_granted` is false. No audio, receipt,
+generation state, or acceptance was changed.
+
+The sole FAIL is
+`activities/officina_dei_suoni/assets/audio/en/bear.wav`: installed WAV RMS
+**-77.7 dBFS** (effectively silent). Its installed SHA matches the PENDING
+receipt and the exact frozen Leo/English `Bear` request; this is a real bad-take
+finding, not a verifier crash. There were **621 ASR transcript mismatch WARNs**,
+539 long-tail silence, 165 long-leading silence, 122 low-level, and 72 long
+internal-pause flags. One additional cue,
+`activities/mondo_contrari/locales/en/audio/big.wav`, raised
+`POSSIBLE_PROMPT_LEAKAGE`: Whisper transcribed “playful, clear words” from the
+acting direction along with the expected line. These flags need human listening;
+they do not prove pronunciation, language, identity, mood or child intelligibility.
+
+Evidence is external at
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-full-automated-review/`
+(configuration, 4,168 per-cue records, `review.jsonl`, 4,168-row
+`listening_queue.csv`, terminal summary, and process/package metadata), with
+console log
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-full-automated-review.log`.
+The prepared Greia Python and cached `mlx-community/whisper-tiny` were used; no
+installation/download occurred. The separate VoxStage queue was inspected and
+all Depleted Rain jobs/model were left untouched.
+
+**Next exact step:** build the owner-authorized generic local HTML listening
+tool against this report's queue/records, then work the prioritized queue with
+human states, scores and notes. Keep every replacement `human_review=PENDING`
+until a person listens and records acceptance. No synthesis, audio repair,
+source fix, release decision, or human listening acceptance is included here.
+
 ## 2026-10-21 — Whisper blocker corrected: use prepared authoring Python
 
 The previous automated-review blocker was scoped to the wrong interpreter,

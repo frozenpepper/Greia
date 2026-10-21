@@ -1510,3 +1510,41 @@ is external `2026-10-21-whisper-recovery` under Greia-voice-auditions. Full corp
 review and human acceptance remain pending; no speech changed. Documentation
 correction only; no tests rerun or architecture/release phase closed. See HANDOVER
 for exact interpreter/package versions and retained prior verification failures.
+
+### 2026-10-21 — Full V2 corpus automated review completed
+
+The unfiltered `review --asr auto` completed against the frozen V2 run using the
+prepared Greia Python and cached `mlx-community/whisper-tiny`; no dependencies,
+weights, synthesis jobs, or shared VoxStage state were changed. It covered
+**4,168/4,168 DONE** recordings; **741 PRESERVED** files remain outside scope.
+The report has `complete=true`, `full_corpus_coverage=true`, and no generation
+problems. Results: **2,905 PASS / 1,262 WARN / 1 FAIL**. ASR counts are **1,853
+PASS / 621 WARN / 1,693 NOT_APPLICABLE_POLICY / 1 NOT_RUN_ERROR**. Thus every
+selected recording has a review record, while eligible ASR is incomplete only
+for the one clip that failed the hard silence check.
+
+The confirmed FAIL is EN `activities/officina_dei_suoni/assets/audio/en/bear.wav`
+(Leo, exact request “Bear”): the installed WAV measures **-77.7 dBFS RMS**. Its
+SHA-256 matches its PENDING receipt and the frozen request. No repair or
+regeneration occurred. Aggregate warning flags: **621 transcript mismatches,
+539 long trailing silence, 165 long leading silence, 122 low-level, 72 long
+internal pause**, plus one possible prompt-leakage cue. The latter is EN
+`activities/mondo_contrari/locales/en/audio/big.wav`; Whisper included “playful,
+clear words” from the acting prompt in the transcript. These are screening and
+listening-priority findings; they do not establish audible pronunciation,
+identity, acting, independent language correctness, or child intelligibility.
+All records retain `human_acceptance_granted=false`; no human listening
+acceptance is claimed.
+
+Evidence: external
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-full-automated-review/`
+(configuration, per-cue records, `review.jsonl`, terminal summary, and complete
+`listening_queue.csv`) and sibling
+`2026-10-21-full-automated-review.log`. Process/package metadata is retained in
+the report directory. The concurrent Depleted Rain VoxStage jobs were left
+untouched. No source changed and no tests were run for this review-only turn.
+
+**Next:** use the owner-authorized generic local HTML listening/review tool with
+this report as its manifest input, then work the prioritized queue and record
+human states, scores, and notes. Keep every new take pending until listening
+acceptance is explicitly recorded.
