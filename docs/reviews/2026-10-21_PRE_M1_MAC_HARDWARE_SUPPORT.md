@@ -1,6 +1,6 @@
 # Pre-M1 Apple hardware support: research and plan (2026-10-21)
 
-Status: DESIGN SPEC / research. No source changed. Evidence labels: **VERIFIED-DOC** = read in the cited
+Status: DESIGN SPEC / research. Section 7 items 2 and 3 (EFI boot media and installed-system EFI) were implemented at SOURCE level on 2026-10-21, UNPROVEN on any Mac (see `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` section 14); everything else is unchanged. Evidence labels: **VERIFIED-DOC** = read in the cited
 page today; **FROM-KNOWLEDGE** = well-known but not re-verified today; **LAB** = must be confirmed on a
 real Mac before we promise anything. No Mac has been booted for this review.
 
@@ -193,8 +193,8 @@ M = Needs prebuilt out-of-tree module, X = Not supported, ? = LAB to determine. 
 | # | Work | Effort | Notes / risk |
 |---|---|---|---|
 | 1 | **Hardware reality check**: owner (or a borrowed machine) runs a read-only Greia probe on 3 real Macs (one per gen A/C/D) and records `lspci -nn`, `dmidecode`, EFI width (`/sys/firmware/efi/fw_platform_size`), Wi-Fi ID. Add a `tools/` script that emits this as a JSON report. | 0.5 d | prevents building for the wrong chips; no image risk |
-| 2 | **EFI boot media**: new ESP layout adapter, `boot-grub-efi-ia32/amd64` package sets, dual `BOOTIA32.EFI`/`BOOTX64.EFI` on installer USB; keep BIOS entry as hybrid. Boot-cover and `grub_ab`/installer EFI branch. Test in QEMU (OVMF 32/64) then the Macs. | 5-8 d | largest; touches installer + `grub_ab.py` + boot contract. Must not regress BIOS profiles. Image delta est. 4-8 MiB (grub-efi-*-bin; measure). |
-| 3 | **Installed-system EFI**: installer writes ESP + `grub-install --removable --no-nvram`; `efibootmgr` failures non-fatal | 2-3 d | Apple firmware quirks (LAB) |
+| 2 | **[SOURCE 2026-10-21, UNPROVEN] EFI boot media**: new ESP layout adapter, `boot-grub-efi-ia32/amd64` package sets, dual `BOOTIA32.EFI`/`BOOTX64.EFI` on installer USB; keep BIOS entry as hybrid. Boot-cover and `grub_ab`/installer EFI branch. Test in QEMU (OVMF 32/64) then the Macs. | 5-8 d | largest; touches installer + `grub_ab.py` + boot contract. Must not regress BIOS profiles. Image delta est. 4-8 MiB (grub-efi-*-bin; measure). |
+| 3 | **[SOURCE 2026-10-21, UNPROVEN] Installed-system EFI**: installer writes ESP + `grub-install --removable --no-nvram`; `efibootmgr` failures non-fatal | 2-3 d | Apple firmware quirks (LAB) |
 | 4 | **Broadcom detection + brcmsmac**: add a Broadcom resolver beside `IsenkramHardwareSupportResolver` (vendor 14e4 mapping table above); verify `firmware-brcm80211` lands in the pool for 43224/43225/4313 | 1-2 d | low risk; reuses pool |
 | 5 | **wl prebuilt module package**: build-host recipe producing `greia-wl-modules-<kver>` for i686 and amd64, pool candidate keyed on PCI IDs, modprobe policy, kernel-pin check in `TargetImageHardwareIdentity` (add kernel release). Needs `non-free` on build host only. | 4-6 d | licence statement in docs, taint, kernel-update coupling, iwd compatibility LAB |
 | 6 | **Apple input defaults**: `hid_apple fnmode`, `bcm5974` check, tap-to-click off | 1 d | trivial |

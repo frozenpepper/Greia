@@ -430,3 +430,37 @@ Follow the Acer acceptance checklist in `docs/reviews/2026-10-17_RC_IMAGE_PREMOR
 After the installer's completion power-off, remove the USB key before powering the machine on (the installer's completion screen says so). If the key stays inserted, the firmware boots the stick again; since 2026-10-18 the quiet media clears the stock Syslinux banner, so that re-boot shows only Greia artwork, but the installed system is on the internal disk.
 
 On the final "All done!" page, use the on-screen **"I'm ready — turn off"** button. It writes the finish marker that the root `greia-installer-finish.path` unit watches, so the machine powers off with the Greia cover as the final frame. The laptop's physical power button bypasses that helper and keeps stock shutdown logging; use it only if the on-screen path fails (and report what the screen shows).
+
+## 14. Intel Mac / UEFI boot (UNPROVEN, LAB)
+
+Status 2026-10-21: SOURCE only. No Mac or EFI machine has booted this. It implements the theory in
+`docs/reviews/2026-10-21_PRE_M1_MAC_HARDWARE_SUPPORT.md` and must not be described as working.
+
+**Installer USB.** `build/build-installer-image.sh` now writes one MBR table: p1 = 64 MiB FAT32 EFI System
+Partition (type `0xEF`), p2 = ext4 root with the boot flag. BIOS `grub-pc` is installed exactly as before (MBR +
+1 MiB gap + active root). The ESP gets removable-path GRUB images `EFI/BOOT/BOOTIA32.EFI` (32-bit EFI Macs
+2006-2007) and `EFI/BOOT/BOOTX64.EFI` (64-bit EFI), built with `grub-install --removable --no-nvram`. Both are built with
+`--boot-directory` on the ext4 root, so BIOS and both EFI images read the **same** `/boot/grub/grub.cfg` and the
+same `$LIVE_KERNEL_CMDLINE`; there is no second cfg to drift. A pure GPT stick or an `sgdisk` hybrid MBR was not
+used because it changes how legacy BIOSes (the Acer reference) see the stick; revisit only if a Mac refuses MBR+ESP
+media (LAB). Build host needs `grub-efi-ia32-bin`, `grub-efi-amd64-bin`, `dosfstools`.
+
+**Installed disk.** `src/greia_installer/efi_boot.py` holds the single-root layout adapters. The live installer
+picks `uefi-or-bios-gpt-ext4` only when `/sys/firmware/efi` exists **and** the target profile composed the
+`boot-grub-efi` package set; every other case keeps the unchanged MBR layout and `grub-install --target=i386-pc`.
+The EFI layout is GPT: 1 MiB `bios_grub`, 256 MiB FAT32 ESP (`GREIA_EFI`), root ext4 (`legacy_boot`). EFI word size
+comes from `/sys/firmware/efi/fw_platform_size` (missing file: 64-bit unless the CPU lacks `lm`). Install steps, all
+argument arrays in the target chroot: native `grub-install --target={i386,x86_64}-efi --bootloader-id=greia
+--no-nvram`; then `--removable` for both `i386-efi` and `x86_64-efi` (so `BOOTIA32.EFI` and `BOOTX64.EFI` both exist,
+verified); then best-effort (never fatal) `efibootmgr --create` and an `i386-pc` install into the `bios_grub` partition
+for CSM boots. Target packages are the `-bin` set only (`build/package-sets/boot-grub-efi.txt`): `grub-efi-ia32` and
+`grub-efi-amd64` conflict with `grub-pc`. No `/boot/efi` fstab line is written (the ESP is only needed at install time).
+
+**Open LAB questions.** (1) Can x64 EFI GRUB start the i686 kernel on 2008+ (64-bit EFI) Macs? Unknown; the 2006-2007
+32-bit-EFI Macs are the native case. (2) Do Apple firmwares accept an MBR-table ESP stick? (3) Boot cover and Xorg on
+the EFI GOP framebuffer. (4) Size of the added packages was not recorded in repo metadata; the footprint gate
+(`required_core_mib = 1300`) measures it at build time.
+
+**Fallback if EFI boot fails.** Hold Option at power-on and choose the "Windows" entry: Boot Camp style CSM boots the
+BIOS path (MBR active root on the stick; `bios_grub` on the installed disk). Not available on T2 Macs. `rEFInd` on
+another medium is a manual workaround, not a requirement.
