@@ -56,11 +56,11 @@ an open license:
   `assets/source/audio/character-voice-masters/v0.1/` are synthetic
   voice-design recordings. Their redistribution status is recorded as pending
   in `assets/audio/characters/canonical/v0.1/manifest.toml`. Character speech
-  rendered from them with Chatterbox carries the same question. The active v0.2
-  synthetic masters and references under the corresponding `v0.2/` directories
-  were designed locally using VoxStage/VoxCPM2 and owner-accepted on 2026-10-19;
-  exact model/runtime and selection provenance is in
-  `assets/source/audio/character-voice-masters/v0.2/provenance.json`. Owner voice
+  rendered from them with Chatterbox carries the same question. Active v0.3
+  masters and references were designed locally using VoxStage/VoxCPM2; Dani,
+  Momo and Tito were owner-selected on 2026-10-21, while Lilli, Leo and Flash
+  retain their exact v0.2 bytes. Selection and job provenance are in
+  `assets/source/audio/character-voice-masters/v0.3/provenance.json`. Owner voice
   acceptance does not by itself settle the separate public-redistribution audit.
 - **Generated artwork.** Vector art in `assets/` and `activities/` was authored
   for the project, much of it with AI assistance, and is intended for CC BY 4.0.

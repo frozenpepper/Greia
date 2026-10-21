@@ -1,6 +1,6 @@
 # Greia Voice Generation and Canonical Character Voices
 
-**Status:** accepted voice policy + canonical authoring Voice Production Engine + owner-accepted shared/introduction v0.2 assets  
+**Status:** accepted voice policy + v0.3 canonical authoring Voice Production Engine + owner-accepted shared/introduction v0.2 assets
 **Reviewed:** 2026-10-19
 **Scope:** presenter speech, researched narration, shared reactions, pedagogical speech, Dani system speech, character introductions, multilingual static audio and human review  
 **Canonical production tool:** `tools/greia_voice.py`
@@ -91,7 +91,7 @@ token budgets/silence heuristics
 
 Those mechanics belong behind `VoiceEngine` and provider interfaces. Historical direct-backend producers are not accepted extension points; new work should migrate them to thin semantic VoiceEngine clients.
 
-## 4. Canonical character identities — v0.2 active
+## 4. Canonical character identities — v0.3 active
 
 **Performance direction and corpus follow-up (2026-10-19):** each VoxStage
 recording now has acting direction from
@@ -122,23 +122,24 @@ accepted the selected-master comparison in English, Italian, French and Spanish.
 | Lilli | `greia.lilli.v2` | round 2, candidate 3 | silvery theatrical cartoon unicorn, wonder and imagination |
 | Leo | `greia.leo.v2` | round 1, candidate 3 | warm older storyteller, thoughtful curiosity |
 | Flash | `greia.flash.v2` | round 1, candidate 2 | springy, bright, playful challenge |
-| Dani | `greia.dani.v2` | round 2, candidate 3 | buzzy, precise, bouncy toy robot |
-| Tito | `greia.tito.v2` | round 2, candidate 1 | cheeky woodland fox, nimble adventurous curiosity |
-| Momo | `greia.momo.v2` | round 2, candidate 3 | round, furry, rubbery comic monster with musical rhythm |
+| Dani | `greia.dani.v3` | 2026-10-21 Dani v5, candidate 2 | friendly toy robot with warm, rounded androgynous middle-low voice and restrained expression |
+| Tito | `greia.tito.v3` | 2026-10-21 grounded masters v3, candidate 1 | young adult male cartoon fox explorer, warm relaxed middle-low register and understated playful confidence |
+| Momo | `greia.momo.v3` | 2026-10-21 grounded masters v3, candidate 1 | lovable fluffy cartoon creature, warm rounded baritone and quietly amused reassurance |
 
 Active source masters/references:
 
 ```text
-assets/source/audio/character-voice-masters/v0.2/
-assets/source/audio/character-voice-masters/v0.2/provenance.json
-assets/audio/characters/canonical/v0.2/manifest.toml
+assets/source/audio/character-voice-masters/v0.3/
+assets/source/audio/character-voice-masters/v0.3/provenance.json
+assets/audio/characters/canonical/v0.3/manifest.toml
 ```
 
-Every reference is the full, unchanged selected master WAV. The registry records
-its transcript, canonical ID, saved VoxStage ID and existing identity hash.
-Dani now has a reviewed cloning reference. v0.1 masters/references remain
-historical; they are not the source for new production. Existing accepted
-runtime recordings and receipts retain their earlier identity and acceptance.
+Every v0.3 reference is an unchanged full WAV. Dani, Tito and Momo use the exact
+owner-selected immutable v0.3 VoxStage IDs; Lilli, Leo and Flash retain their
+v0.2 IDs and WAV bytes. The registry records transcript, semantic ID, saved
+VoxStage ID and identity hash. The v0.2 registry and source masters remain
+historical, and existing accepted runtime recordings retain their earlier
+receipts. No v0.3 multilingual clone comparison is claimed as accepted.
 
 ## 5. Current provider implementation
 
@@ -147,7 +148,7 @@ all six canonical characters (dialogue, shared utterances, Dani speech)
   -> VoxStageProvider -> shared local VoxStage -> VoxCPM2 (default)
 
 explicit character-provider=chatterbox
-  -> retained ChatterboxMLXProvider, same v0.2 character references
+  -> retained ChatterboxMLXProvider, same active v0.3 character references
 
 pedagogical_speech
   -> independent deterministic native/system provider
@@ -448,7 +449,7 @@ Implemented authoring infrastructure:
 
 - semantic `VoiceRequest` / `VoiceEngine` abstraction;
 - canonical voice registry + hash validation;
-- default shared-worker VoxStage/VoxCPM2 provider for all six v0.2 characters;
+- default shared-worker VoxStage/VoxCPM2 provider for all six active v0.3 registry entries;
 - retained explicit Chatterbox MLX alternative;
 - independent deterministic macOS pedagogical provider; compatible Dani speech kind now cloned;
 - shared-library authoring kind;

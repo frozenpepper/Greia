@@ -74,6 +74,51 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-21 — v0.3 master promotion and three-character corpus run preparation
+
+Owner-approved immutable master selections are Dani
+`greia-audition-20261021-dani-v5-02` (candidate 02; SHA-256
+`f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34`), Momo
+`greia-audition-20261021-momo-v3-01` (`3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f`), and Tito
+`greia-audition-20261021-tito-v3-01`
+(`ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8`). Dani's
+saved owner review marks only candidate 02 approved (01/03 rejected). Exact bytes,
+review and source provenance are archived under `assets/source/audio/character-voice-masters/v0.3/`.
+Active semantic IDs are `greia.dani.v3`, `greia.momo.v3`, `greia.tito.v3`;
+Lilli/Leo/Flash retain their v0.2 IDs and exact bytes. The active canonical
+manifest is v0.3; the v0.2 set remains unchanged.
+
+Frozen external run: `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/run-v1/`.
+Plan summary is **1,340 READY** (Dani 392: EN/IT 102 each, ES/FR 94 each;
+Momo 284: 71 each locale; Tito 664: 166 each locale) and **3,575 PRESERVED**.
+The completed v2 plan had 4,168 READY / 741 PRESERVED. Path comparison found all
+4,909 prior rows retained, six new rows (the v0.3 canonical references), and zero
+removed paths. All 1,340 scripts, locales and semantic speakers match the v2
+plan; frozen original hashes match the currently installed files (1,340/1,340).
+These hashes differ from all 1,340 v2-plan original hashes because v2's plan
+captured pre-v2 audio. The new plan changes only selected-master identity and
+acting direction for those rows. Out-of-scope rows are explicitly preserved. Plan is frozen; production has
+not yet started at this checkpoint.
+
+Completed a 12-output VoiceEngine technical sanity batch, one selected character
+per EN/IT/ES/FR. All 12 returned `REVIEW_REQUIRED`, use the intended v3 reference,
+are 22,050 Hz mono, and remain `human_review=PENDING`; ASR was intentionally off.
+Receipts, hashes and job IDs are in the run's `clone-sanity/technical-summary.json`.
+This does not claim listening, pronunciation, audible identity, or human acceptance.
+
+Focused voice tests: 72 PASS. Initial doctor confirmed v0.3 anchors, VoxStage and
+FFmpeg ready. Global Anaconda Whisper import remains broken by the documented
+NumPy/Numba mismatch; automated corpus review must use the prepared Greia voice
+Python from `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`. No runtime replacement,
+release/image, or playback acceptance is claimed. Unrelated untracked audit/video
+artifacts remain untouched.
+
+**Next:** run the frozen plan serially through `tools/regenerate_voice_corpus.py`
+with verification off, retain the external journal/backups/logs, monitor the
+shared VoxStage queue and journal together, then run full automated review and
+export a separate listening batch. All corpus receipts remain pending until a
+human reviews them.
+
 ## 2026-10-21 — Momo/Tito masters selected; new Dani v4 audition set
 
 Owner saved **Momo v3 candidate 1** and **Tito v3 candidate 1** as approved;
@@ -876,3 +921,16 @@ All generated voice candidates and receipts produced under the 2026-10-14 four-l
 Owner requested correction after Dani v4 explored generic adult vocal registers without a fresh character-note check. Three seeds now use one description grounded in `GREIA_CANONICAL_CAST_SYSTEM.md` (friendly toy robot, cute/friendly first and robotic second, logic/patterns) and the voice-authoring guidance (robotic presenter). Comfortable middle-low pitch, subtle electronic resonance and restrained energy are proposed acoustic interpretations incorporating owner feedback, not quoted canon.
 
 Completed job `20261021-091129-56d12d64`: 13.76/12.64/10.08s. Requests, design rationale, WAV copies and Takeboard manifest: `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-dani-v5/`; listening page `http://127.0.0.1:8798/`. All three remain unreviewed. Momo/Tito approved v3 references and active runtime registry unchanged. No corpus regeneration, implementation changes or new tests. Next: owner listens/selects Dani, then selected-master clone checks before replacement.
+
+### 2026-10-21 — v0.3 source preparation gate result (correction)
+
+After selected-master promotion and run-plan freeze, the required local `make verify`
+completed its fast lane with 5,491 tests: **FAILED** (2 failures, 4 errors, 8
+skipped). The failures are unrelated to voice changes: shell retained-surface memory
+(+578,668 B over 24 launches, above 524,288 B threshold) and an MBR layout error
+message mismatch. Errors: ARM64 profile claims schema support without a Phase-0
+board adapter; direct execution of non-executable `tools/build_profile.py`; and
+two installer completion tests whose host environment has no `lsblk`. Full log:
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/source-check-verify.log`.
+Focused voice suite remains 72/72 PASS; `git diff --check` passed. No voice corpus
+run was included in this source gate. This checkout is not full-gate green.

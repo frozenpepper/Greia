@@ -1,13 +1,15 @@
 # Agent work order: regenerate the existing Greia speech corpus
 
-**Owner authorization:** 2026-10-19, following acceptance of six v0.2 masters.
+**Owner authorization:** 2026-10-19, subsequently scoped to the selected v0.3
+master set by owner direction on 2026-10-21.
 **Executable:** `tools/regenerate_voice_corpus.py` (Python 3.11+).
 **Scope:** replace existing Activity and system speech with fresh VoxCPM2
 recordings, using the selected character masters and an explicit performance
 prompt per recording. Preserve deterministic isolated letters and syllables.
-**Current state (2026-10-21):** v2 generation complete; automated screening and
-human listening are separate follow-up stages. Earlier preparation counts below
-are historical; use HANDOVER and the actual selected run journal for current state.
+**Current state (2026-10-21):** the v2 generation and automated policy-v2
+reassessment are complete. The v3 replacement is separately frozen against the
+active v0.3 registry; see HANDOVER and its external run journal for live state.
+Earlier preparation counts below are historical snapshots.
 
 **Current post-generation follow-up (2026-10-21):** v2 generation subsequently
 completed (see HANDOVER). Run the read-only automated review in
@@ -371,3 +373,34 @@ batch. Their immutable IDs are `greia-audition-20261021-momo-v3-01` and
 rejected. Three new Dani v4 sound-only directions are being auditioned; no
 canonical registry or runtime file is replaced until that selection/clone-check
 step is ready. Do not rerender the already selected Momo/Tito references.
+
+## 2026-10-21 correction: selected v0.3 masters and scoped corpus run
+
+The owner selected Dani v5 candidate 02, Momo grounded v3 candidate 01, and Tito
+grounded v3 candidate 01. Exact immutable VoxStage IDs are
+`greia-audition-20261021-dani-v5-02`,
+`greia-audition-20261021-momo-v3-01`, and
+`greia-audition-20261021-tito-v3-01`. Dani candidates 01/03 are rejected in the
+saved review. Their hashes, approval evidence and exact source bytes are archived
+in `assets/source/audio/character-voice-masters/v0.3/`. Active semantic IDs are
+`greia.dani.v3`, `greia.momo.v3`, and `greia.tito.v3`; Lilli, Leo and Flash retain
+their v0.2 IDs and source bytes. The v0.2 registry, masters, plans, receipts and
+runs are historical evidence and were not rewritten.
+
+No v0.3 multilingual cloned-line comparison has been owner-accepted. A 12-output
+VoiceEngine batch (one selected character × EN/IT/ES/FR) is a technical route and
+receipt sanity check only; it does not certify audible identity, pronunciation,
+performance, or human acceptance. All corpus outputs stay `human_review=PENDING`.
+
+The frozen external v3 plan is
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/run-v1/`.
+It uses `replacement-overrides.DRAFT.json` from the completed v2 plan plus the
+neutral `character_delivery.json`. Reconciled READY scope: Dani 392 (EN 102, IT
+102, ES 94, FR 94), Momo 284 (71 per locale), Tito 664 (166 per locale), total
+1,340. All 1,340 exact source hashes, scripts and locales match the prior plan;
+only selected-master identity and acting direction change. The new plan preserves
+3,575 rows, including every row/path from v2 and six additional canonical v0.3
+references; no old path was dropped. Other characters, deterministic isolated
+letters/syllables, historical libraries and unrelated user files remain outside
+the generated scope. See the external run's `plan.json` and status journal for
+exact live execution state.

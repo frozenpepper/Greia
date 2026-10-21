@@ -36,7 +36,7 @@ class FakeEngine:
         profile = VoiceRegistry.load(self.root).get(request.speaker)
         verification = VerificationResult(VerificationDisposition.WARN if self.warning else VerificationDisposition.NOT_RUN, "off")
         receipt = {"request": request.to_dict(), "provider_id": "voxstage-voxcpm2", "voice_id": profile.voice_id,
-                   "reference_sha256": profile.anchor_sha256, "voice_registry_version": "v0.2",
+                   "reference_sha256": profile.anchor_sha256, "voice_registry_version": "v0.3",
                    "human_review": "PENDING", "generation_parameters": {"delivery_prompt": request.delivery_prompt},
                    "verification": verification.to_dict(), "attempts": 1,
                    "output": {"path": str(request.output), "sha256": digest(request.output), "bytes": request.output.stat().st_size}}
@@ -172,7 +172,7 @@ class CorpusTests(unittest.TestCase):
         self.assertFalse(preserved_reason("activities/sillabe_magiche/assets/audio/en/find_ma.wav", {"kind": "pedagogical_speech", "text": "Find ma"}))
 
     def test_paths_cannot_replace_master_or_escape(self):
-        for path in ("../escape.wav", "/tmp/a.wav", "assets/audio/characters/canonical/v0.2/leo-reference-v2.wav", "assets/audio/characters/shared/v0.1/old.wav"):
+        for path in ("../escape.wav", "/tmp/a.wav", "assets/audio/characters/canonical/v0.3/leo-reference-v2.wav", "assets/audio/characters/shared/v0.1/old.wav"):
             with self.assertRaises(ValueError):
                 safe_target(self.root, path)
 

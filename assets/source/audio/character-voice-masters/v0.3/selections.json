@@ -1,6 +1,6 @@
 {
-  "version": "v0.3-selected-partial",
-  "status": "Momo and Tito owner-selected; Dani remains pending. Active registry unchanged.",
+  "version": "v0.3-selected-master-set",
+  "status": "Momo, Tito and Dani owner-selected; Lilli, Leo and Flash unchanged from v0.2. Active registry promoted to v0.3.",
   "selected": [
     {
       "character": "momo",
@@ -71,6 +71,35 @@
         "reviewer": "",
         "updated_at": "2026-10-21T04:45:59.281992+00:00"
       }
+    },
+    {
+      "character": "dani",
+      "source_master": "dani-source-v3.wav",
+      "voice_id": "greia-audition-20261021-dani-v5-02",
+      "sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
+      "owner_review": "approved",
+      "expected_transcript": "Good morning, my friend. There is a small blue box beside the window, and a yellow feather on the floor. Let us look carefully and find where they belong. We can take our time. What do you notice first? I will stay here while you try.",
+      "generation": {
+        "voice_id": "greia-audition-20261021-dani-v5-02",
+        "description": "A friendly little toy robot with a warm, rounded androgynous voice in a comfortable middle-low register. Cute and approachable, with a subtle smooth electronic resonance and gently precise articulation. Patient, thoughtful curiosity when explaining patterns and solving puzzles with a child. Steady pitch, restrained expression, relaxed conversational rhythm, clear English.",
+        "job_id": "20261021-091129-56d12d64",
+        "seed": 65101,
+        "duration_seconds": 12.640166666666667,
+        "documented_anchors": [
+          "Friendly toy robot; cute/friendly first and robotic second",
+          "Math, logic, patterns and sequencing"
+        ],
+        "owner_corrections": "Comfortable pitch; restrained energy",
+        "notes": "Acoustic realization is proposed; human listening approval pending."
+      },
+      "review": {
+        "state": "approved",
+        "score": null,
+        "notes": "",
+        "reviewer": "",
+        "updated_at": "2026-10-21T07:16:55.122173+00:00"
+      },
+      "review_evidence": "dani-v5-auditions.reviewed.json"
     }
   ]
 }

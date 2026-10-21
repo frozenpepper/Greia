@@ -1,0 +1,164 @@
+{
+  "id": "20261021-062708-2e6a6186",
+  "kind": "voice_design",
+  "status": "completed",
+  "created_at": 1792556828.8158772,
+  "queued_at": 1792556828.8158772,
+  "request": {
+    "id": "greia-audition-20261021-momo-v3",
+    "description": "Lovable large fluffy cartoon creature with a stable warm rounded baritone voice. Gentle soft chest resonance, relaxed clear vowels, comfortable middle-low pitch. Kind, quietly amused and reassuring, patient conversational pace and restrained natural intonation. Clear English, consistent grounded character voice.",
+    "text": "Good morning, my friend. There is a small blue box beside the window, and a yellow feather on the floor. Let us look carefully and find where they belong. We can take our time. What do you notice first? I will stay here while you try.",
+    "seed": 63100,
+    "candidates": 2,
+    "settings": {
+      "steps": 10,
+      "cfg": 2.0,
+      "max_tokens": 240
+    }
+  },
+  "plan": {
+    "voice_ids": [
+      "greia-audition-20261021-momo-v3-01",
+      "greia-audition-20261021-momo-v3-02"
+    ]
+  },
+  "backend": {
+    "backend": "mlx",
+    "adapter_version": "0.1.0",
+    "model": "mlx-community/VoxCPM2-8bit",
+    "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+    "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+    "mlx": "0.32.1",
+    "tokenizer_loader": "PreTrainedTokenizerFast",
+    "mlx_audio": "0.5.0",
+    "quantization": "8bit",
+    "sample_rate": 48000,
+    "native_audio_streaming": false,
+    "reference_encoding_cache": 16,
+    "compiled_hot_paths": true
+  },
+  "results": [
+    {
+      "file": "greia-audition-20261021-momo-v3-01.wav",
+      "sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
+      "voice": {
+        "id": "greia-audition-20261021-momo-v3-01",
+        "description": "Lovable large fluffy cartoon creature with a stable warm rounded baritone voice. Gentle soft chest resonance, relaxed clear vowels, comfortable middle-low pitch. Kind, quietly amused and reassuring, patient conversational pace and restrained natural intonation. Clear English, consistent grounded character voice.",
+        "transcript": "Good morning, my friend. There is a small blue box beside the window, and a yellow feather on the floor. Let us look carefully and find where they belong. We can take our time. What do you notice first? I will stay here while you try.",
+        "reference_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
+        "audio": {
+          "duration_seconds": 14.240166666666667,
+          "sample_rate": 48000,
+          "samples": 683528,
+          "peak": 0.213714599609375,
+          "rms": 0.03529725782012241,
+          "gain_applied": 1.0
+        },
+        "provenance": {
+          "kind": "design",
+          "job_id": "20261021-062708-2e6a6186",
+          "source_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
+          "seed": 63100,
+          "settings": {
+            "steps": 10,
+            "cfg": 2.0,
+            "max_tokens": 240
+          },
+          "backend": {
+            "backend": "mlx",
+            "adapter_version": "0.1.0",
+            "model": "mlx-community/VoxCPM2-8bit",
+            "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+            "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+            "mlx": "0.32.1",
+            "tokenizer_loader": "PreTrainedTokenizerFast",
+            "mlx_audio": "0.5.0",
+            "quantization": "8bit",
+            "sample_rate": 48000,
+            "native_audio_streaming": false,
+            "reference_encoding_cache": 16,
+            "compiled_hot_paths": true
+          }
+        },
+        "review_status": "unreviewed"
+      },
+      "audio": {
+        "duration_seconds": 14.240166666666667,
+        "sample_rate": 48000,
+        "samples": 683528,
+        "peak": 0.2137056589126587,
+        "rms": 0.035297265436030165,
+        "gain_applied": 1.0
+      },
+      "generation": {
+        "elapsed_seconds": 55.88586891700106,
+        "model_load_seconds": 0.0,
+        "rtf": 3.924523513325059,
+        "peak_memory_gb": 7.648166916
+      }
+    },
+    {
+      "file": "greia-audition-20261021-momo-v3-02.wav",
+      "sha256": "bf2662a7ad89770507f13cb786c523c5049efe51c0c4663d564c555de7f5645c",
+      "voice": {
+        "id": "greia-audition-20261021-momo-v3-02",
+        "description": "Lovable large fluffy cartoon creature with a stable warm rounded baritone voice. Gentle soft chest resonance, relaxed clear vowels, comfortable middle-low pitch. Kind, quietly amused and reassuring, patient conversational pace and restrained natural intonation. Clear English, consistent grounded character voice.",
+        "transcript": "Good morning, my friend. There is a small blue box beside the window, and a yellow feather on the floor. Let us look carefully and find where they belong. We can take our time. What do you notice first? I will stay here while you try.",
+        "reference_sha256": "bf2662a7ad89770507f13cb786c523c5049efe51c0c4663d564c555de7f5645c",
+        "audio": {
+          "duration_seconds": 14.880166666666666,
+          "sample_rate": 48000,
+          "samples": 714248,
+          "peak": 0.81005859375,
+          "rms": 0.04291100174517117,
+          "gain_applied": 1.0
+        },
+        "provenance": {
+          "kind": "design",
+          "job_id": "20261021-062708-2e6a6186",
+          "source_sha256": "bf2662a7ad89770507f13cb786c523c5049efe51c0c4663d564c555de7f5645c",
+          "seed": 63101,
+          "settings": {
+            "steps": 10,
+            "cfg": 2.0,
+            "max_tokens": 240
+          },
+          "backend": {
+            "backend": "mlx",
+            "adapter_version": "0.1.0",
+            "model": "mlx-community/VoxCPM2-8bit",
+            "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+            "model_path": "/Volumes/Test1/Works/voxstage/models/VoxCPM2-8bit",
+            "mlx": "0.32.1",
+            "tokenizer_loader": "PreTrainedTokenizerFast",
+            "mlx_audio": "0.5.0",
+            "quantization": "8bit",
+            "sample_rate": 48000,
+            "native_audio_streaming": false,
+            "reference_encoding_cache": 16,
+            "compiled_hot_paths": true
+          }
+        },
+        "review_status": "unreviewed"
+      },
+      "audio": {
+        "duration_seconds": 14.880166666666666,
+        "sample_rate": 48000,
+        "samples": 714248,
+        "peak": 0.8100690245628357,
+        "rms": 0.04291136550669632,
+        "gain_applied": 1.0
+      },
+      "generation": {
+        "elapsed_seconds": 66.58830541600037,
+        "model_load_seconds": 0.0,
+        "rtf": 4.474970402392471,
+        "peak_memory_gb": 7.648166916
+      }
+    }
+  ],
+  "error": null,
+  "idempotency_key": "greia-calm-v3-20261021-momo",
+  "started_at": 1792556964.058422,
+  "finished_at": 1792557086.874047
+}

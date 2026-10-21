@@ -11,10 +11,11 @@ Read `SETUP.md`, `skills/greia-voice-production/SKILL.md`,
 All content production enters through `tools/greia_voice.py` / `VoiceEngine`.
 VoxStage, Chatterbox, native TTS, Whisper and FFmpeg are provider details.
 
-The owner selected the six v0.2 masters and accepted their EN/IT/FR/ES comparison
-on 2026-10-19. The default provider is now **VoxCPM2 through the existing shared
-local VoxStage worker**, including Dani. Chatterbox is retained explicitly.
-Pedagogical pronunciation remains the independent native/system route.
+The active v0.3 registry uses owner-selected Dani, Momo and Tito masters and
+retains Lilli, Leo and Flash's exact v0.2 identities and bytes. The default
+provider is **VoxCPM2 through the existing shared local VoxStage worker**.
+Chatterbox is retained explicitly. Pedagogical pronunciation remains the
+independent native/system route.
 
 **Corpus replacement follow-up:** the owner subsequently requested regeneration
 of existing Activity/system speech except deterministic isolated letters and
@@ -40,7 +41,7 @@ character provider. A successful process exit is not audio acceptance.
 
 ## 2. Default workstation dependencies
 
-The Greia HTTP client needs Python 3.11+ and the repository's canonical v0.2
+The Greia HTTP client needs Python 3.11+ and the repository's canonical v0.3
 assets. FFmpeg packages the generated WAV into Greia's 22,050 Hz mono WAV/OGG.
 The shared VoxStage tool owns its Apple-Silicon MLX runtime/model installation,
 saved library and serialized worker. Greia does not install/import a second
@@ -105,7 +106,7 @@ python3 tools/greia_voice.py generate --character-provider chatterbox \
 ```
 
 `GREIA_VOICE_CHARACTER_PROVIDER=chatterbox` selects it for repository producers;
-an explicit CLI option wins. Chatterbox uses the active v0.2 references, including
+an explicit CLI option wins. Chatterbox uses the active v0.3 references, including
 Dani, and keeps the existing in-process warm-model/cleanup mechanisms. It requires
 its optional Apple-Silicon environment and `tools/greia_voice_requirements_mlx.txt`.
 Read its provider-specific field guide only when diagnosing that alternative.
@@ -172,7 +173,7 @@ requires Apple Silicon/MLX. No remote/cloud configuration is implied. Native
 pedagogical production currently requires macOS; Linux/Windows report that
 independent provider gap truthfully. Never bypass the engine with host TTS.
 
-Dani now clones `greia.dani.v2`; `dani_system_speech` remains a compatible kind,
+Dani now clones `greia.dani.v3`; `dani_system_speech` remains a compatible kind,
 and ordinary Dani `character_dialogue` is also supported. Native Dani profiles
 are retained for historical compatibility, not default character production.
 Pedagogical requests still use `pedagogical`/`system` and native pronunciation.

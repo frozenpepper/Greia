@@ -3464,3 +3464,34 @@ No master/runtime file changed; no new corpus regeneration launched.
 4 errors/8 skips, ARM64 validation failure, shell/footprint completed. Full gate
 NOT GREEN; no phase/runtime/physical/release acceptance. Exact paths and source
 constraints are in HANDOVER and automated review procedure §3a.
+
+### 2026-10-21 — Canonical v0.3 voice set promoted; corpus replacement frozen
+
+Promoted exact owner-approved Dani v5 candidate 02, Momo grounded v3 candidate 01,
+and Tito grounded v3 candidate 01 to semantic IDs `greia.dani.v3`,
+`greia.momo.v3`, and `greia.tito.v3`. Saved approval evidence, hashes and source
+bytes are under `assets/source/audio/character-voice-masters/v0.3/`; Lilli, Leo
+and Flash's exact v0.2 IDs/bytes remain unchanged. The active registry moved to
+`assets/audio/characters/canonical/v0.3/manifest.toml`; v0.2 was preserved.
+
+Frozen the scoped replacement plan externally at
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/run-v1/` using
+VoiceEngine and the neutral/acting-only v3 overrides. READY scope is 1,340 exact
+existing cues (Dani 392, Momo 284, Tito 664), all four locales. All selected
+scripts, locales and semantic speakers match the completed v2 plan; the 1,340
+frozen original hashes match current installed files, and differ from the v2
+plan's pre-v2 input hashes because that corpus has since been replaced. Only
+master identity and acting direction change. The run preserves 3,575 rows;
+all 4,909 v2 paths remain and six new canonical-reference paths are added. A
+12-cue character×locale sanity batch completed through VoiceEngine; all receipts
+remain PENDING, ASR off, and no human acceptance is claimed. Focused voice suite
+passed 72 tests. The serial bulk run, automated review and human listening remain
+open; this is not an image/release or runtime playback gate.
+
+### 2026-10-21 — v0.3 voice source gate evidence
+
+The v0.3 voice preparation's focused suite passed (72 tests). Required local
+`make verify` fast lane ran 5,491 tests and failed with 2 failures, 4 errors and
+8 skips; see the dated HANDOVER entry and external log for exact inherited
+failures/errors. This does not close or weaken any remediation gate. Voice
+corpus generation is a separate owner-authorized local production operation.

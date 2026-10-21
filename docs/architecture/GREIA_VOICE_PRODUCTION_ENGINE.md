@@ -38,7 +38,7 @@ semantic CLI / batch / warm service / repository producers
   -> greia_voice.build_engine
   -> composition.build_providers (one operator-selected character backend)
   -> VoiceEngine
-       |-- VoiceRegistry: active v0.2 identities and reviewed references
+       |-- VoiceRegistry: active v0.3 identity set and reviewed references
        |-- VoiceProvider
        |     |-- VoxStageProvider (default, all six characters)
        |     |     -> VoxStageClient -> shared loopback VoxStage worker
@@ -83,18 +83,19 @@ services. Content scripts do not acquire a second provider architecture.
 
 ## 3. Current canonical identities
 
-`assets/audio/characters/canonical/v0.2/manifest.toml` is the active registry.
-Canonical IDs are `greia.{lilli,leo,flash,dani,tito,momo}.v2`. Every character now
-has a reviewed cloning reference, including Dani. The complete selected WAV is
-copied unchanged as both source master and canonical reference; it is not
-truncated, resampled or regenerated during promotion.
+`assets/audio/characters/canonical/v0.3/manifest.toml` is the active registry.
+Dani, Momo and Tito use `greia.{dani,tito,momo}.v3`; Lilli, Leo and Flash retain
+their `greia.{lilli,leo,flash}.v2` IDs and exact bytes. Every character has a
+cloning reference. The complete selected WAV is copied unchanged as both source
+master and canonical reference; it is not truncated, resampled or regenerated
+during promotion.
 
-`assets/source/audio/character-voice-masters/v0.2/provenance.json` records the
-owner's selections, exact transcripts, original design descriptions, seeds,
-source job IDs and model/runtime identity. The owner accepted the six masters
-and all 24 four-language comparison samples on 2026-10-19. New generations still
-start with human review pending. v0.1 is historical; earlier accepted shipping
-recordings and their receipts remain valid and unchanged.
+`assets/source/audio/character-voice-masters/v0.3/provenance.json` records the
+active source set and exact selection evidence. The v0.2 registry and its accepted
+four-language comparison samples remain historical. No v0.3 multilingual cloned
+line comparison is claimed as accepted. New generations still start with human
+review pending; earlier accepted shipping recordings and their receipts remain
+unchanged.
 
 `VoiceRegistry` verifies the existing authoring reference hash before generation.
 This preserves the selected speaker identity; it is not runtime anti-tampering,
@@ -104,9 +105,9 @@ asset signing or a restriction on users editing their installed files.
 
 | Semantic request | Default |
 |---|---|
-| Any of six speakers + `character_dialogue` | VoxStage/VoxCPM2 with that speaker's v0.2 master |
+| Any of six speakers + `character_dialogue` | VoxStage/VoxCPM2 with that speaker's active v0.3 registry reference |
 | Any of six speakers + `shared_character_utterance` | same cloned-character provider |
-| Dani + `dani_system_speech` | same provider, Dani's v0.2 master |
+| Dani + `dani_system_speech` | same provider, Dani's v0.3 master |
 | `pedagogical` or `system` + `pedagogical_speech` | independent native/system pronunciation provider |
 
 The Dani kind remains compatible; ordinary Dani `character_dialogue` is also
@@ -163,7 +164,7 @@ identity and transfer hashes are checked before packaging.
 ## 6. Retained Chatterbox and native providers
 
 Chatterbox remains the in-process Apple-Silicon alternative, selected explicitly.
-It uses the active v0.2 references, including Dani, and retains warm model reuse,
+It uses the active v0.3 references, including Dani, and retains warm model reuse,
 transient MLX cleanup and edge-only silence trimming. Do not reintroduce short
 word-count token caps or cut at internal pauses. Setup requirements remain in
 `tools/greia_voice_requirements_mlx.txt`; its field guide is provider-specific.
@@ -206,7 +207,7 @@ regenerated just because the default provider or registry changes.
 
 The owner's subsequent 2026-10-19 request explicitly authorizes the existing
 corpus replacement described in `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md`.
-The runner submits semantic requests to this engine with the selected v0.2
+The runner submits semantic requests to this engine with the active v0.3
 masters, explicit character performance prompts and preserved deterministic
 isolated letters/syllables. Former native whole words/numbers are deliberately
 assigned to character voices for this operation only; ordinary pedagogical

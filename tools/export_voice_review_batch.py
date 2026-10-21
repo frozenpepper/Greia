@@ -22,7 +22,7 @@ class GreiaReviewExporter:
         summary = json.loads((self.report / 'summary.json').read_text())
         if not summary.get('complete') or not summary.get('full_corpus_coverage'):
             raise ValueError('export requires finished full-corpus traversal')
-        master_dir = self.root / 'assets/audio/characters/canonical/v0.2'
+        master_dir = self.root / 'assets/audio/characters/canonical/v0.3'
         registry = tomllib.loads((master_dir / 'manifest.toml').read_text())
         masters = {voice['character']: voice for voice in registry['voice']}
         rows = []

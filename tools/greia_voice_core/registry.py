@@ -7,7 +7,7 @@ import tomllib
 
 from .models import VoiceProfile
 
-CANONICAL_MANIFEST = Path("assets/audio/characters/canonical/v0.2/manifest.toml")
+CANONICAL_MANIFEST = Path("assets/audio/characters/canonical/v0.3/manifest.toml")
 
 
 class VoiceRegistryError(RuntimeError):

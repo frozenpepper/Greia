@@ -84,16 +84,23 @@ class StubVoxStage:
 class SelectedMasterTests(unittest.TestCase):
     def test_active_registry_promotes_exact_six_owner_selections(self):
         registry = VoiceRegistry.load(ROOT)
-        selected = {"lilli": "v2-03", "leo": "v1-03", "flash": "v1-02", "dani": "v2-03", "tito": "v2-01", "momo": "v2-03"}
-        self.assertEqual(registry.registry_version, "v0.2")
+        selected = {
+            "lilli": ("greia.lilli.v2", "greia-audition-20261019-lilli-v2-03", "lilli-source-v2.wav"),
+            "leo": ("greia.leo.v2", "greia-audition-20261019-leo-v1-03", "leo-source-v2.wav"),
+            "flash": ("greia.flash.v2", "greia-audition-20261019-flash-v1-02", "flash-source-v2.wav"),
+            "dani": ("greia.dani.v3", "greia-audition-20261021-dani-v5-02", "dani-source-v3.wav"),
+            "tito": ("greia.tito.v3", "greia-audition-20261021-tito-v3-01", "tito-source-v3.wav"),
+            "momo": ("greia.momo.v3", "greia-audition-20261021-momo-v3-01", "momo-source-v3.wav"),
+        }
+        self.assertEqual(registry.registry_version, "v0.3")
         self.assertEqual(set(registry.profiles), set(selected))
-        for character, audition in selected.items():
+        for character, (voice_id, audition, source_name) in selected.items():
             profile = registry.get(character)
             registry.verify_anchor(profile)
-            self.assertEqual(profile.voice_id, f"greia.{character}.v2")
-            self.assertEqual(profile.voxstage_voice_id, f"greia-audition-20261019-{character}-{audition}")
+            self.assertEqual(profile.voice_id, voice_id)
+            self.assertEqual(profile.voxstage_voice_id, audition)
             self.assertTrue(profile.anchor_transcript)
-            source = ROOT / f"assets/source/audio/character-voice-masters/v0.2/{character}-source-v2.wav"
+            source = ROOT / f"assets/source/audio/character-voice-masters/v0.3/{source_name}"
             self.assertEqual(source.read_bytes(), profile.anchor_path.read_bytes())
 
     def test_default_and_explicit_legacy_composition_use_one_character_renderer(self):

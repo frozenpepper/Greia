@@ -1,8 +1,9 @@
 # Greia Voice Production Engine — Quick Start
 
-**Current default:** VoxStage/VoxCPM2 with the six owner-selected v0.2 masters
-(2026-10-19). Chatterbox remains explicitly selectable. Dani now has a cloned
-reference; its existing `dani_system_speech` kind still works.
+**Current default:** VoxStage/VoxCPM2 with the active v0.3 registry: owner-selected
+Dani, Momo and Tito v3 masters plus unchanged Lilli, Leo and Flash v2 masters
+(2026-10-21). Chatterbox remains explicitly selectable. Dani's existing
+`dani_system_speech` kind still works.
 
 One semantic authoring entry point serves Activities, OS/shared libraries and
 Encyclopedia: `tools/greia_voice.py`. Callers never operate VoxStage, Chatterbox,
@@ -21,7 +22,7 @@ voxstage start
 python3 tools/greia_voice.py doctor
 ```
 
-The active registry is `assets/audio/characters/canonical/v0.2/manifest.toml`.
+The active registry is `assets/audio/characters/canonical/v0.3/manifest.toml`.
 A fresh local VoxStage library is populated lazily from the repository's exact
 reviewed references and transcripts. Saved IDs are never overwritten. `doctor`
 is non-mutating and does not download weights, import voices or synthesize.

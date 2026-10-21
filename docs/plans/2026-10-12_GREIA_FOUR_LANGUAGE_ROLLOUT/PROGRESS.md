@@ -1604,3 +1604,35 @@ bytes/WAV headers checked; no code changes/tests rerun or release acceptance.
 Shared queue finished and model unloaded. Next is Dani selection, selected-set
 registry/clone checks, then the existing corrected 1340-file replacement scope.
 Exact job IDs and external paths in HANDOVER. Do not substitute approved references.
+
+### 2026-10-21 — v0.3 masters selected; replacement scope re-frozen
+
+Owner approval verified from saved review: Dani v5 candidate 02 only; Momo
+v3 candidate 01; Tito v3 candidate 01. Active IDs are `greia.dani.v3`,
+`greia.momo.v3`, `greia.tito.v3`, backed by exact immutable VoxStage IDs and
+archived hashes/provenance. Lilli, Leo and Flash remain byte-identical v0.2
+masters. The v0.2 manifest/source set and old run/journal/receipts are untouched.
+
+New plan `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/run-v1/`
+freezes 1,340 READY records: Dani 392 (EN/IT 102 each, ES/FR 94 each), Momo 284
+(71 each locale), Tito 664 (166 each locale). The plan retains all 4,909 earlier
+v2 paths and adds only six v0.3 canonical-reference rows; no path was removed.
+All 1,340 scripts, locales and semantic speakers match the v2 plan; frozen
+original hashes match currently installed files. Those hashes differ from the
+v2 plan's pre-v2 input hashes after that run installed its output. New neutral or
+line-specific acting prompts replace the old character direction. Other cast,
+deterministic letters/syllables, historical assets and unrelated user artifacts
+are preserved. Twelve VoiceEngine sanity outputs (3 speakers × 4 languages) are
+technical-only, verification off, all `human_review=PENDING`; exact job IDs and
+hashes are in `clone-sanity/technical-summary.json`. Focused voice suite: 72 PASS.
+Bulk serial production, automated review and human listening remain open. No
+runtime/product/physical or release acceptance is claimed.
+
+### 2026-10-21 — local source validation result
+
+The focused voice tests pass 72/72. Local `make verify` fast lane completed 5,491
+tests and is **not green**: 2 failures, 4 errors, 8 skips, all outside the voice
+scope (shell retained-surface threshold, MBR message mismatch, unsupported ARM64
+profile build, build_profile executable bit, and missing host `lsblk` in two
+installer tests). The complete output is retained externally at
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-corpus-v3/source-check-verify.log`.

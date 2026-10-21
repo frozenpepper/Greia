@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "batch_id": "greia-dani-v5-20261021",
+  "title": "Dani · character-grounded toy robot · three seeds",
+  "media_root": "/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-dani-v5",
+  "recordings": [
+    {
+      "id": "greia-audition-20261021-dani-v5-01",
+      "title": "Dani 1 · friendly toy robot · 13.76s",
+      "speaker": "dani",
+      "language": "en",
+      "text": "Good morning, my friend. There is a small blue box beside the window, and a yellow feather on the floor. Let us look carefully and find where they belong. We can take our time. What do you notice first? I will stay here while you try.",
+      "audio": {
+        "path": "dani-v5-01.wav",
+        "sha256": "663fd800c5cc18c7d6d1965e10a424af7022f5421616db6a7ed3f7369eedf73b"
+      },
+      "generation": {
+        "voice_id": "greia-audition-20261021-dani-v5-01",
+        "description": "A friendly little toy robot with a warm, rounded androgynous voice in a comfortable middle-low register. Cute and approachable, with a subtle smooth electronic resonance and gently precise articulation. Patient, thoughtful curiosity when explaining patterns and solving puzzles with a child. Steady pitch, restrained expression, relaxed conversational rhythm, clear English.",
+        "job_id": "20261021-091129-56d12d64",
+        "seed": 65100,
+        "duration_seconds": 13.760166666666667,
+        "documented_anchors": [
+          "Friendly toy robot; cute/friendly first and robotic second",
+          "Math, logic, patterns and sequencing"
+        ],
+        "owner_corrections": "Comfortable pitch; restrained energy",
+        "notes": "Acoustic realization is proposed; human listening approval pending."
+      },
+      "review": {
+        "state": "rejected",
+        "score": null,
+        "notes": "",
+        "reviewer": "",
+        "updated_at": "2026-10-21T07:17:12.634441+00:00"
+      }
+    },
+    {
+      "id": "greia-audition-20261021-dani-v5-02",
+      "title": "Dani 2 · friendly toy robot · 12.64s",
+      "speaker": "dani",
+      "language": "en",
+      "text": "Good morning, my friend. There is a small blue box beside the window, and a yellow feather on the floor. Let us look carefully and find where they belong. We can take our time. What do you notice first? I will stay here while you try.",
+      "audio": {
+        "path": "dani-v5-02.wav",
+        "sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34"
+      },
+      "generation": {
+        "voice_id": "greia-audition-20261021-dani-v5-02",
+        "description": "A friendly little toy robot with a warm, rounded androgynous voice in a comfortable middle-low register. Cute and approachable, with a subtle smooth electronic resonance and gently precise articulation. Patient, thoughtful curiosity when explaining patterns and solving puzzles with a child. Steady pitch, restrained expression, relaxed conversational rhythm, clear English.",
+        "job_id": "20261021-091129-56d12d64",
+        "seed": 65101,
+        "duration_seconds": 12.640166666666667,
+        "documented_anchors": [
+          "Friendly toy robot; cute/friendly first and robotic second",
+          "Math, logic, patterns and sequencing"
+        ],
+        "owner_corrections": "Comfortable pitch; restrained energy",
+        "notes": "Acoustic realization is proposed; human listening approval pending."
+      },
+      "review": {
+        "state": "approved",
+        "score": null,
+        "notes": "",
+        "reviewer": "",
+        "updated_at": "2026-10-21T07:16:55.122173+00:00"
+      }
+    },
+    {
+      "id": "greia-audition-20261021-dani-v5-03",
+      "title": "Dani 3 · friendly toy robot · 10.08s",
+      "speaker": "dani",
+      "language": "en",
+      "text": "Good morning, my friend. There is a small blue box beside the window, and a yellow feather on the floor. Let us look carefully and find where they belong. We can take our time. What do you notice first? I will stay here while you try.",
+      "audio": {
+        "path": "dani-v5-03.wav",
+        "sha256": "b20f868e97c1d742bb968c02cf25cf344414f85bbd4884a3fb0300d73f50e76c"
+      },
+      "generation": {
+        "voice_id": "greia-audition-20261021-dani-v5-03",
+        "description": "A friendly little toy robot with a warm, rounded androgynous voice in a comfortable middle-low register. Cute and approachable, with a subtle smooth electronic resonance and gently precise articulation. Patient, thoughtful curiosity when explaining patterns and solving puzzles with a child. Steady pitch, restrained expression, relaxed conversational rhythm, clear English.",
+        "job_id": "20261021-091129-56d12d64",
+        "seed": 65102,
+        "duration_seconds": 10.080166666666667,
+        "documented_anchors": [
+          "Friendly toy robot; cute/friendly first and robotic second",
+          "Math, logic, patterns and sequencing"
+        ],
+        "owner_corrections": "Comfortable pitch; restrained energy",
+        "notes": "Acoustic realization is proposed; human listening approval pending."
+      },
+      "review": {
+        "state": "rejected",
+        "score": null,
+        "notes": "",
+        "reviewer": "",
+        "updated_at": "2026-10-21T07:17:12.634441+00:00"
+      }
+    }
+  ]
+}

@@ -190,14 +190,16 @@ dani_system_speech
 timbre, age and texture belong in master design only. All six fallback delivery
 entries now use neutral conversational performance; explicit per-cue directions
 must be acting/emotion/pace, not repeated persona definitions. Completed v2
-receipts retain their actual historic prompts. Dani/Momo/Tito have two new
-unselected auditions each on 8795; no master replacement occurred yet.
+receipts retain their actual historic prompts. The 2026-10-21 v0.3 selection
+promoted Dani v5 candidate 02, Momo v3 candidate 01 and Tito v3 candidate 01;
+Lilli, Leo and Flash remain unchanged from v0.2.
 
 ### 7.1 Base engine and default character production
 
-Python 3.11+ runs the Greia CLI. All six characters, including Dani, now use the
-owner-selected v0.2 masters with **VoxCPM2 through the shared local VoxStage
-service** by default (owner decision 2026-10-19). No model runs on the child device.
+Python 3.11+ runs the Greia CLI. The active v0.3 registry uses owner-selected
+Dani, Momo and Tito masters from 2026-10-21 and retains Lilli, Leo and Flash's
+exact v0.2 masters unchanged. Character production uses **VoxCPM2 through the
+shared local VoxStage service** by default. No model runs on the child device.
 
 On this workstation VoxStage is already installed. Start/reuse its single worker:
 
@@ -224,7 +226,7 @@ its weights, venv or generated job cache into this repository.
 - `GREIA_VOXSTAGE_TIMEOUT` bounds each job wait (default 1,800 seconds;
   allowed 1–7,200). A timed-out job can still run in VoxStage; inspect its
   recorded job ID before submitting more work. No automatic POST resubmission.
-- Voice IDs and transcripts come from the v0.2 registry. Missing VoxStage library
+- Voice IDs and transcripts come from the active v0.3 registry. Missing VoxStage library
   entries are imported from the repository's exact reviewed WAV; existing IDs
   are reused without replacement. `doctor` never imports or generates.
 - All six character profiles use cloned references, including the compatible

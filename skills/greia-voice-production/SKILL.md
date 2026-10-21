@@ -84,10 +84,10 @@ voice audio are separate ledger states. See
 The 2026-10-14 all-app agent work order explicitly respects this
 distinction.
 
-## Current selected provider and masters — owner decision 2026-10-19
+## Current selected provider and masters — v0.3 promotion on 2026-10-21
 
-All six characters use the owner-accepted **v0.2 cloned masters**, including Dani.
-VoxCPM2 through the existing shared local VoxStage worker is now the default
+Dani, Momo and Tito use owner-selected **v0.3 cloned masters**; Lilli, Leo and
+Flash retain their exact v0.2 master IDs and bytes. VoxCPM2 through the existing shared local VoxStage worker is the default
 VoiceEngine provider. Chatterbox remains explicitly selectable through
 `--character-provider chatterbox` on `doctor`/`generate`/`batch`/`serve`, or
 `GREIA_VOICE_CHARACTER_PROVIDER=chatterbox` for repository producers. No silent
@@ -101,11 +101,11 @@ owns warm-model lifecycle: finish with `voxstage unload`; closing Greia leaves
 other projects' worker intact. Chatterbox is a retained alternative; unload the
 VoxStage model before switching to it on the same host.
 
-Active registry: `assets/audio/characters/canonical/v0.2/manifest.toml`.
-Source masters/provenance: `assets/source/audio/character-voice-masters/v0.2/`.
-The old v0.1 set is historical. The owner's acceptance of these masters and the
-24 EN/IT/FR/ES comparison samples does not accept future generations or authorize
-regeneration of previously accepted runtime recordings.
+Active registry: `assets/audio/characters/canonical/v0.3/manifest.toml`.
+Active source masters/provenance: `assets/source/audio/character-voice-masters/v0.3/`.
+The v0.2 registry and localized comparison evidence remain historical. No v0.3
+multilingual cloned-line comparison is claimed as accepted. Master selection
+does not accept future generations; new corpus takes remain listening-pending.
 
 **Subsequent scoped owner authorization (2026-10-19):** the owner explicitly
 requested replacement of existing Activity/system recordings using these new
@@ -126,18 +126,20 @@ performance. Only add line-specific intention/emotion/pace when needed. The
 completed v2 corpus's frozen prompts and receipts remain historical evidence;
 its old PERSONA-prefixed overrides must not be reused for the next replacement.
 The original Dani/Momo/Tito voices were rejected for high pitch, inconsistent
-Momo, overexcited delivery and hyperactive/aged Tito. New Momo/Tito candidate 1
-masters are now selected; Dani remains pending (see follow-up below). New auditions
-and a draft 1,340-file scope are external; selection and cloned-line listening
-precede a new frozen replacement plan. No canonical master has changed yet.
+Momo, overexcited delivery and hyperactive/aged Tito.
 
-**Owner selection follow-up 2026-10-21:** Momo v3 candidate 1 and Tito v3
-candidate 1 are approved. Exact sources/provenance are archived in
-`assets/source/audio/character-voice-masters/v0.3/`; do not redesign/substitute
-these selected voices. Both Dani v3 candidates were rejected; Dani v4 has three
-sound-only directions without robot/buzzy/nasal cues. Active production registry
-remains v0.2 pending the replacement set and cloned-line checks. Source-master
-approval does not approve fresh runtime generations.
+**Owner selection and promotion 2026-10-21:** Momo v3 candidate 1, Tito v3
+candidate 1 and Dani v5 candidate 2 are selected. Their immutable VoxStage IDs
+are `greia-audition-20261021-momo-v3-01`,
+`greia-audition-20261021-tito-v3-01` and
+`greia-audition-20261021-dani-v5-02`. Exact hashes, saved approvals, source WAVs
+and provenance are archived under `assets/source/audio/character-voice-masters/v0.3/`;
+active semantic IDs are `greia.momo.v3`, `greia.tito.v3` and `greia.dani.v3`.
+Lilli, Leo and Flash remain byte-for-byte and ID-for-ID unchanged from v0.2.
+Dani v5 candidates 01/03 are rejected. The active registry is
+`assets/audio/characters/canonical/v0.3/manifest.toml`; v0.2 remains intact.
+Source-master approval does not approve fresh runtime generations or localized
+cloned lines.
 
 Character performance defaults live in
 `tools/greia_voice_core/character_delivery.json`; VoxStage applies them to normal

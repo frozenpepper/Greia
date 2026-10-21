@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "accepted": "2026-10-21",
+  "masters": [
+    {
+      "character": "lilli",
+      "canonical_voice_id": "greia.lilli.v2",
+      "selected_round": "2026-10-19-master-v2",
+      "selected_candidate": 3,
+      "source_voice_id": "greia-audition-20261019-lilli-v2-03",
+      "seed": 53102,
+      "description": "Animated cartoon unicorn with a distinctive silvery, bell-bright feminine voice. Light high register, airy shimmer, rounded singing vowels and playful upward pitch swoops. A fanciful little dreamer who treats every ordinary object as enchanted. Expressive storybook character acting, affectionate and slightly theatrical, with crisp intelligible English.",
+      "transcript": "Ooh, a blank page! My horn is tingling with ideas. Shall we paint a tiny moon with enormous rainbow wings?",
+      "sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+      "generation": {
+        "kind": "design",
+        "job_id": "20261019-084334-d3aca43c",
+        "source_sha256": "d628ae93daf3e53ea17c5dde763bb74513b4ffdc408266960d20f6afecbd1ab7",
+        "seed": 53102,
+        "settings": {
+          "steps": 10,
+          "cfg": 2.0,
+          "max_tokens": 180
+        },
+        "backend": {
+          "backend": "mlx",
+          "adapter_version": "0.1.0",
+          "model": "mlx-community/VoxCPM2-8bit",
+          "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+          "mlx": "0.32.1",
+          "tokenizer_loader": "PreTrainedTokenizerFast",
+          "mlx_audio": "0.5.0",
+          "quantization": "8bit",
+          "sample_rate": 48000,
+          "native_audio_streaming": false,
+          "reference_encoding_cache": 16,
+          "compiled_hot_paths": true
+        }
+      },
+      "owner_review": "ACCEPTED",
+      "owner_accepted_date": "2026-10-19",
+      "source_master": "assets/source/audio/character-voice-masters/v0.3/lilli-source-v2.wav",
+      "source_bytes": 768060,
+      "canonical_anchor": "assets/audio/characters/canonical/v0.3/lilli-reference-v2.wav"
+    },
+    {
+      "character": "leo",
+      "canonical_voice_id": "greia.leo.v2",
+      "selected_round": "2026-10-19-master-v1",
+      "selected_candidate": 3,
+      "source_voice_id": "greia-audition-20261019-leo-v1-03",
+      "seed": 42202,
+      "description": "Older male storyteller, warm mellow low-mid register, softly textured and wise, kindly grandfather with a curious smile, clear consonants, natural English, unhurried conversational delivery.",
+      "transcript": "Hello, my friend. Every good question opens a little door. Let us take our time and discover what is waiting on the other side.",
+      "sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+      "generation": {
+        "kind": "design",
+        "job_id": "20261019-080246-b8deaeca",
+        "source_sha256": "1d8b3fae0e8e355188d268ccfde8fb06ae2f7cc5ea3905d5a54f68064512eac1",
+        "seed": 42202,
+        "settings": {
+          "steps": 10,
+          "cfg": 2.0,
+          "max_tokens": 180
+        },
+        "backend": {
+          "backend": "mlx",
+          "adapter_version": "0.1.0",
+          "model": "mlx-community/VoxCPM2-8bit",
+          "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+          "mlx": "0.32.1",
+          "tokenizer_loader": "PreTrainedTokenizerFast",
+          "mlx_audio": "0.5.0",
+          "quantization": "8bit",
+          "sample_rate": 48000,
+          "native_audio_streaming": false,
+          "reference_encoding_cache": 16,
+          "compiled_hot_paths": true
+        }
+      },
+      "owner_review": "ACCEPTED",
+      "owner_accepted_date": "2026-10-19",
+      "source_master": "assets/source/audio/character-voice-masters/v0.3/leo-source-v2.wav",
+      "source_bytes": 768060,
+      "canonical_anchor": "assets/audio/characters/canonical/v0.3/leo-reference-v2.wav"
+    },
+    {
+      "character": "flash",
+      "canonical_voice_id": "greia.flash.v2",
+      "selected_round": "2026-10-19-master-v1",
+      "selected_candidate": 2,
+      "source_voice_id": "greia-audition-20261019-flash-v1-02",
+      "seed": 42301,
+      "description": "Youthful masculine mid-high voice, bright springy and playful, friendly rabbit with a smile, crisp clear consonants, natural English, lively conversational delivery.",
+      "transcript": "Hello, my friend. Are you ready for a little challenge? Keep your eyes open, take a breath, and we will give it a try together.",
+      "sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+      "generation": {
+        "kind": "design",
+        "job_id": "20261019-080246-d7dbc5b6",
+        "source_sha256": "840e0d5c128511b5c1bc589fc5b4bbce5e56975d4d3c5b2d7ba7a78c5f53f92d",
+        "seed": 42301,
+        "settings": {
+          "steps": 10,
+          "cfg": 2.0,
+          "max_tokens": 180
+        },
+        "backend": {
+          "backend": "mlx",
+          "adapter_version": "0.1.0",
+          "model": "mlx-community/VoxCPM2-8bit",
+          "revision": "d52725898a0675703f7f9ddc5a4d1a3cdbb99032",
+          "mlx": "0.32.1",
+          "tokenizer_loader": "PreTrainedTokenizerFast",
+          "mlx_audio": "0.5.0",
+          "quantization": "8bit",
+          "sample_rate": 48000,
+          "native_audio_streaming": false,
+          "reference_encoding_cache": 16,
+          "compiled_hot_paths": true
+        }
+      },
+      "owner_review": "ACCEPTED",
+      "owner_accepted_date": "2026-10-19",
+      "source_master": "assets/source/audio/character-voice-masters/v0.3/flash-source-v2.wav",
+      "source_bytes": 706620,
+      "canonical_anchor": "assets/audio/characters/canonical/v0.3/flash-reference-v2.wav"
+    },
+    {
+      "character": "dani",
+      "canonical_voice_id": "greia.dani.v3",
+      "selected_round": "2026-10-21-dani-v5",
+      "selected_candidate": 2,
+      "source_voice_id": "greia-audition-20261021-dani-v5-02",
+      "seed": 65101,
+      "description": "A friendly little toy robot with a warm, rounded androgynous voice in a comfortable middle-low register. Cute and approachable, with a subtle smooth electronic resonance and gently precise articulation. Patient, thoughtful curiosity when explaining patterns and solving puzzles with a child. Steady pitch, restrained expression, relaxed conversational rhythm, clear English.",
+      "transcript": "Good morning, my friend. There is a small blue box beside the window, and a yellow feather on the floor. Let us look carefully and find where they belong. We can take our time. What do you notice first? I will stay here while you try.",
+      "sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
+      "generation": {
+        "kind": "voice_design",
+        "job_id": "20261021-091129-56d12d64",
+        "source_sha256": "f24f1e502bcbc21f1c2610f1b96b6e69b9d428d62c709835a94ebd8ce433ef34",
+        "seed": 65101,
+        "settings": {},
+        "saved_review": "dani-v5-auditions.reviewed.json",
+        "archived_job_manifest": "assets/source/audio/character-voice-masters/v0.3/voxstage-jobs/dani-v5.json"
+      },
+      "owner_review": "ACCEPTED",
+      "owner_accepted_date": "2026-10-21",
+      "source_master": "assets/source/audio/character-voice-masters/v0.3/dani-source-v3.wav",
+      "source_bytes": 1213500,
+      "canonical_anchor": "assets/audio/characters/canonical/v0.3/dani-reference-v3.wav"
+    },
+    {
+      "character": "tito",
+      "canonical_voice_id": "greia.tito.v3",
+      "selected_round": "2026-10-21-calm-masters-v3",
+      "selected_candidate": 1,
+      "source_voice_id": "greia-audition-20261021-tito-v3-01",
+      "seed": 63200,
+      "description": "Young adult male cartoon fox explorer, warm relaxed middle-low register, smooth clear youthful tone. Thoughtful curiosity, understated playful confidence, easy conversational rhythm, measured pace and gentle natural emphasis. Clear English with grounded storybook acting.",
+      "transcript": "Good morning, my friend. There is a small blue box beside the window, and a yellow feather on the floor. Let us look carefully and find where they belong. We can take our time. What do you notice first? I will stay here while you try.",
+      "sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
+      "generation": {
+        "kind": "voice_design",
+        "job_id": "20261021-062709-40733336",
+        "source_sha256": "ebb6ec64dedb146745e7e2bea0643e242669f1daeaf090133dbc810a532da0a8",
+        "seed": 63200,
+        "settings": {
+          "character": "tito",
+          "id": "greia-audition-20261021-tito-v3",
+          "description": "Young adult male cartoon fox explorer, warm relaxed middle-low register, smooth clear youthful tone. Thoughtful curiosity, understated playful confidence, easy conversational rhythm, measured pace and gentle natural emphasis. Clear English with grounded storybook acting.",
+          "text": "Good morning, my friend. There is a small blue box beside the window, and a yellow feather on the floor. Let us look carefully and find where they belong. We can take our time. What do you notice first? I will stay here while you try.",
+          "seed": 63200,
+          "candidates": 2,
+          "steps": 10,
+          "cfg": 2.0,
+          "max_tokens": 240
+        },
+        "saved_review": "selection recorded in selections.json",
+        "archived_job_manifest": "assets/source/audio/character-voice-masters/v0.3/voxstage-jobs/tito-v3.json"
+      },
+      "owner_review": "ACCEPTED",
+      "owner_accepted_date": "2026-10-21",
+      "source_master": "assets/source/audio/character-voice-masters/v0.3/tito-source-v3.wav",
+      "source_bytes": 1136700,
+      "canonical_anchor": "assets/audio/characters/canonical/v0.3/tito-reference-v3.wav"
+    },
+    {
+      "character": "momo",
+      "canonical_voice_id": "greia.momo.v3",
+      "selected_round": "2026-10-21-calm-masters-v3",
+      "selected_candidate": 1,
+      "source_voice_id": "greia-audition-20261021-momo-v3-01",
+      "seed": 63100,
+      "description": "Lovable large fluffy cartoon creature with a stable warm rounded baritone voice. Gentle soft chest resonance, relaxed clear vowels, comfortable middle-low pitch. Kind, quietly amused and reassuring, patient conversational pace and restrained natural intonation. Clear English, consistent grounded character voice.",
+      "transcript": "Good morning, my friend. There is a small blue box beside the window, and a yellow feather on the floor. Let us look carefully and find where they belong. We can take our time. What do you notice first? I will stay here while you try.",
+      "sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
+      "generation": {
+        "kind": "voice_design",
+        "job_id": "20261021-062708-2e6a6186",
+        "source_sha256": "3b3c5188c1ce839f87d79f99523ffef9c9ded80f495817d87ba67194ddfd206f",
+        "seed": 63100,
+        "settings": {
+          "character": "momo",
+          "id": "greia-audition-20261021-momo-v3",
+          "description": "Lovable large fluffy cartoon creature with a stable warm rounded baritone voice. Gentle soft chest resonance, relaxed clear vowels, comfortable middle-low pitch. Kind, quietly amused and reassuring, patient conversational pace and restrained natural intonation. Clear English, consistent grounded character voice.",
+          "text": "Good morning, my friend. There is a small blue box beside the window, and a yellow feather on the floor. Let us look carefully and find where they belong. We can take our time. What do you notice first? I will stay here while you try.",
+          "seed": 63100,
+          "candidates": 2,
+          "steps": 10,
+          "cfg": 2.0,
+          "max_tokens": 240
+        },
+        "saved_review": "selection recorded in selections.json",
+        "archived_job_manifest": "assets/source/audio/character-voice-masters/v0.3/voxstage-jobs/momo-v3.json"
+      },
+      "owner_review": "ACCEPTED",
+      "owner_accepted_date": "2026-10-21",
+      "source_master": "assets/source/audio/character-voice-masters/v0.3/momo-source-v3.wav",
+      "source_bytes": 1367100,
+      "canonical_anchor": "assets/audio/characters/canonical/v0.3/momo-reference-v3.wav"
+    }
+  ],
+  "localized_evaluation": {
+    "samples": 0,
+    "locales": [
+      "en",
+      "it",
+      "fr",
+      "es"
+    ],
+    "owner_review": "NOT_RUN",
+    "evidence": "No v0.3 multilingual cloned-line comparison is included in this source selection; new runtime generations remain human-review pending."
+  },
+  "registry_version": "v0.3",
+  "preserved_from_v0_2": "Lilli, Leo and Flash exact source WAVs and immutable IDs are unchanged."
+}

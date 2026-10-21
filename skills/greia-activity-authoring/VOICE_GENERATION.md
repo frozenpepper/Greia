@@ -243,7 +243,7 @@ Do not hard-code locale branches into game rules.
 
 ## 7. Produce through VoiceEngine only
 
-Default character production uses the shared local VoxStage/VoxCPM2 worker and the six selected v0.2 masters (2026-10-19). The operator starts the installed worker with `voxstage start`; Activity producers still submit only semantic Greia requests. Chatterbox is an explicit operator alternative, never a silent fallback. Do not regenerate existing accepted clips.
+Default character production uses the shared local VoxStage/VoxCPM2 worker and active v0.3 registry references: Dani/Momo/Tito use their selected v3 IDs while Lilli/Leo/Flash retain their exact v2 IDs and bytes (2026-10-21). The operator starts the installed worker with `voxstage start`; Activity producers still submit only semantic Greia requests. Chatterbox is an explicit operator alternative, never a silent fallback. Do not regenerate existing accepted clips outside an explicit owner-authorized corpus operation.
 
 Start with:
 
