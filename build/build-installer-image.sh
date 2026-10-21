@@ -182,6 +182,15 @@ for command_name in "${required[@]}"; do
     exit 1
   }
 done
+# The ESP gets both EFI GRUB images; fail before the long build instead of
+# after it when the host lacks the -bin packages that own these module dirs.
+for efi_module_dir in /usr/lib/grub/i386-efi /usr/lib/grub/x86_64-efi; do
+  [[ -f "$efi_module_dir/modinfo.sh" ]] || {
+    echo "Missing build dependency: GRUB modules in $efi_module_dir." >&2
+    echo "Install: grub-efi-ia32-bin grub-efi-amd64-bin" >&2
+    exit 1
+  }
+done
 
 compose_check_host_arch
 

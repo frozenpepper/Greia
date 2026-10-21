@@ -362,6 +362,7 @@ Run G1–G8 on the frozen SHA before touching the build host. Nothing lands on `
 ```bash
 # Once per host (as root): build prerequisites
 apt-get install -y debootstrap parted e2fsprogs dosfstools grub-pc-bin grub-common \
+  grub-efi-ia32-bin grub-efi-amd64-bin \
   rsync squashfs-tools syslinux syslinux-common mtools python3 python3-pil \
   util-linux gdisk binutils smartmontools
 
