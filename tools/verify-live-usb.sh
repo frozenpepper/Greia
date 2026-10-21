@@ -18,6 +18,8 @@ source "$PROJECT_ROOT/tools/verify-live-usb-fsck-policy.sh"
 source "$PROJECT_ROOT/build/lib/safe-cleanup.sh"
 # shellcheck source=../build/lib/live-syslinux.sh
 source "$PROJECT_ROOT/build/lib/live-syslinux.sh"
+# shellcheck source=../build/lib/installer-image-root.sh
+source "$PROJECT_ROOT/build/lib/installer-image-root.sh"
 
 usage() {
   cat >&2 <<'EOF'
@@ -34,7 +36,7 @@ EOF
 IMAGE="$(realpath "$1")"
 DEVICE="$2"
 
-required=(awk cmp find fsck.vfat losetup partx blockdev udevadm findmnt lsblk mount mountpoint parted realpath sed sort umount)
+required=(awk cmp find fsck.vfat losetup partx blockdev blkid udevadm findmnt lsblk mount mountpoint parted realpath sed sort umount)
 for command_name in "${required[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing dependency: $command_name" >&2
@@ -130,13 +132,8 @@ if [[ "$FSCK_STATUS" -eq 1 ]]; then
 fi
 
 IMG_LOOP="$(losetup --find --show --partscan --read-only "$IMAGE")"
-IMG_PART="${IMG_LOOP}p1"
-for _ in {1..30}; do
-  [[ -b "$IMG_PART" ]] && break
-  sleep 0.2
-done
-[[ -b "$IMG_PART" ]] || {
-  echo "Installer image partition did not appear." >&2
+IMG_PART="$(greia_installer_root_partition "$IMG_LOOP")" || {
+  echo "Installer image ext4 root partition did not appear." >&2
   exit 1
 }
 mount -o ro,noload "$IMG_PART" "$IMG_MOUNT"

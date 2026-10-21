@@ -8,6 +8,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 # shellcheck source=lib/safe-cleanup.sh
 source "$SCRIPT_DIR/lib/safe-cleanup.sh"
+# shellcheck source=lib/installer-image-root.sh
+source "$SCRIPT_DIR/lib/installer-image-root.sh"
 PROFILE="legacy-x86-i686"
 RELEASE_BUNDLE_ARGS=()
 positional=()
@@ -195,7 +197,7 @@ FINAL_DIGEST="$OUTPUT_DIR/greia-os-installer-${PROFILE}.sha256"
   exit 1
 }
 
-required=(losetup partx blockdev udevadm mount umount mountpoint sync python3 sha256sum install)
+required=(losetup partx blockdev blkid udevadm mount umount mountpoint sync python3 sha256sum install)
 for command_name in "${required[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing post-build dependency: $command_name" >&2
@@ -226,13 +228,8 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 
 LOOP="$(losetup --find --show --partscan "$IMAGE")"
-PART="${LOOP}p1"
-for _ in {1..30}; do
-  [[ -b "$PART" ]] && break
-  sleep 0.2
-done
-[[ -b "$PART" ]] || {
-  echo "Installer image partition did not appear during SD finalization." >&2
+PART="$(greia_installer_root_partition "$LOOP")" || {
+  echo "Installer ext4 root partition did not appear during SD finalization." >&2
   exit 1
 }
 

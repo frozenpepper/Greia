@@ -18,6 +18,8 @@ PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$PROJECT_ROOT/build/lib/safe-cleanup.sh"
 # shellcheck source=../build/lib/live-syslinux.sh
 source "$PROJECT_ROOT/build/lib/live-syslinux.sh"
+# shellcheck source=../build/lib/installer-image-root.sh
+source "$PROJECT_ROOT/build/lib/installer-image-root.sh"
 
 usage() {
   cat <<'USAGE'
@@ -34,7 +36,7 @@ USAGE
 IMAGE="$1"
 DEVICE="$2"
 
-required=(losetup partx blockdev udevadm findmnt partprobe wipefs sgdisk parted mkfs.vfat syslinux sync mount umount mountpoint cp dd)
+required=(losetup partx blockdev blkid udevadm findmnt partprobe wipefs sgdisk parted mkfs.vfat syslinux sync mount umount mountpoint cp dd)
 for command_name in "${required[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing dependency: $command_name" >&2
@@ -76,11 +78,12 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-# Mount the installer image partition read-only to source the live files.
+# Mount the installer image ext4 root read-only to source the live files.
 IMG_LOOP="$(losetup --find --show --partscan "$IMAGE")"
-IMG_PART="${IMG_LOOP}p1"
-for _ in {1..30}; do [[ -b "$IMG_PART" ]] && break; sleep 0.2; done
-[[ -b "$IMG_PART" ]] || { echo "Installer image partition did not appear." >&2; exit 1; }
+IMG_PART="$(greia_installer_root_partition "$IMG_LOOP")" || {
+  echo "Installer image ext4 root partition did not appear." >&2
+  exit 1
+}
 mount -o ro "$IMG_PART" "$IMG_MOUNT"
 
 # Extract the live media id from the image's own marker.

@@ -6,6 +6,8 @@ PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$PROJECT_ROOT/build/lib/safe-cleanup.sh"
 # shellcheck source=../build/lib/verify-composed-root.sh
 source "$PROJECT_ROOT/build/lib/verify-composed-root.sh"
+# shellcheck source=../build/lib/installer-image-root.sh
+source "$PROJECT_ROOT/build/lib/installer-image-root.sh"
 
 usage() {
   echo "Usage: sudo bash tools/verify-development-installer.sh INSTALLER_IMAGE" >&2
@@ -16,7 +18,7 @@ usage() {
 IMAGE="$(realpath "$1")"
 [[ -f "$IMAGE" ]] || { echo "Installer image not found: $IMAGE" >&2; exit 1; }
 
-for command_name in losetup partx blockdev udevadm findmnt mount umount mountpoint unsquashfs awk grep realpath cmp python3; do
+for command_name in losetup partx blockdev blkid udevadm findmnt mount umount mountpoint unsquashfs awk grep realpath cmp python3; do
   command -v "$command_name" >/dev/null || {
     echo "Missing verifier dependency: $command_name" >&2
     exit 1
@@ -50,9 +52,10 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 
 LOOP="$(losetup --find --show --partscan --read-only "$IMAGE")"
-PART="${LOOP}p1"
-for _ in {1..20}; do [[ -b "$PART" ]] && break; sleep 0.1; done
-[[ -b "$PART" ]] || { echo "Installer partition did not appear." >&2; exit 1; }
+PART="$(greia_installer_root_partition "$LOOP")" || {
+  echo "Installer ext4 root partition did not appear." >&2
+  exit 1
+}
 mount -o ro,noload "$PART" "$MOUNT"
 
 LIVE="$MOUNT/live/filesystem.squashfs"

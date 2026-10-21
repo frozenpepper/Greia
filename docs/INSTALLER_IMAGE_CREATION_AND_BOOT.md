@@ -444,7 +444,9 @@ Partition (type `0xEF`), p2 = ext4 root with the boot flag. BIOS `grub-pc` is in
 `--boot-directory` on the ext4 root, so BIOS and both EFI images read the **same** `/boot/grub/grub.cfg` and the
 same `$LIVE_KERNEL_CMDLINE`; there is no second cfg to drift. A pure GPT stick or an `sgdisk` hybrid MBR was not
 used because it changes how legacy BIOSes (the Acer reference) see the stick; revisit only if a Mac refuses MBR+ESP
-media (LAB). Build host needs `grub-efi-ia32-bin`, `grub-efi-amd64-bin`, `dosfstools`.
+media (LAB). Build host needs `grub-efi-ia32-bin`, `grub-efi-amd64-bin`, `dosfstools`. Image consumers
+(`tools/build-live-usb.sh`, the SD finalizer and both read-only verifiers) locate the ext4 live root by
+filesystem type through `build/lib/installer-image-root.sh`; they never assume partition 1.
 
 **Installed disk.** `src/greia_installer/efi_boot.py` holds the single-root layout adapters. The live installer
 picks `uefi-or-bios-gpt-ext4` only when `/sys/firmware/efi` exists **and** the target profile composed the
