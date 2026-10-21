@@ -23,6 +23,12 @@ when launched by a Greia session, the Activity's first ``set_mode`` presents
 the Shell's launch card (or the theme colour) at once, so the child never sees
 the black window that used to show until the Activity's first frame.
 
+Before either wrapper, a Greia session installs the display request policy
+(:mod:`greia_platform.activity_display`): the Activity's requested window size
+is replaced with the exact Shell viewport, so a reference-canvas Activity fills
+a non-1024x600 display instead of opening a smaller window over stale Shell
+pixels.
+
 This module grants nothing: it runs inside the same sandbox, environment and
 identity as the Activity and has no access the Activity itself lacks.
 """
@@ -51,6 +57,7 @@ def run_activity_script(argv: Sequence[str]) -> None:
         raise ActivityEntryError(f"Activity entry script is not a .py file: {script}")
     apply_curated_interpreter_startup()
     _install_mixer_lease()
+    _install_activity_display_policy()
     _install_launch_cover()
     sys.argv[:] = [script, *argv[1:]]
     sys.path.insert(0, os.path.dirname(script))
@@ -66,6 +73,21 @@ def _install_mixer_lease() -> None:
         install_activity_mixer_lease()
     except Exception as exc:  # noqa: BLE001 - never block the Activity launch
         print(f"greia: idle audio release unavailable: {exc}", file=sys.stderr)
+
+
+def _install_activity_display_policy() -> None:
+    """Fail-soft: a missing policy only keeps the Activity's requested size."""
+
+    if not os.environ.get("GREIA_ACTIVITY_SESSION_ID"):
+        return
+    try:
+        import pygame
+
+        from .activity_display import install_display_request_policy
+
+        install_display_request_policy(pygame)
+    except Exception as exc:  # noqa: BLE001 - never block the Activity launch
+        print(f"greia: Activity display policy unavailable: {exc}", file=sys.stderr)
 
 
 def _install_launch_cover() -> None:

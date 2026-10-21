@@ -1003,6 +1003,12 @@ class ActivitySupervisor:
                 ),
                 "GREIA_MEDIA_ROOT": os.environ.get("GREIA_MEDIA_ROOT", "/media/greia"),
                 "GREIA_ACTIVITY_SESSION_ID": session_id,
+                # The platform-owned Activity entry normalizes the Activity's
+                # own set_mode size to this exact Shell surface. Empty means
+                # "use the real desktop size" (fullscreen child sessions).
+                "GREIA_ACTIVITY_VIEWPORT": os.environ.get(
+                    "GREIA_ACTIVITY_VIEWPORT", ""
+                ),
             }
         )
         ActivitySupervisor._apply_display_environment(environment, display_environment)

@@ -308,6 +308,27 @@ A real game should use `visible_world` for culling rather than drawing the entir
 
 Use shared responsive layout primitives for toolbars/collections/panels. Do not fake fluid UI by drawing everything on a fixed reference bitmap unless the composition is genuinely fixed.
 
+### 9.1 The platform owns the real window size
+
+While R7 is open, Python Activities still call `pygame.display.set_mode`
+directly. When an Activity is launched by a Greia session, the platform entry
+normalizes that request to the **actual Shell surface size** and preserves the
+Activity's flags. The Simulator does the same with its selected synthetic
+viewport.
+
+Consequences for authors:
+
+- `screen.get_size()` is not guaranteed to be `1024x600`; it is the real
+  session viewport (`1280x800`, `800x480`, ...).
+- Always go through `PygameReferenceCanvas`, `PygameCanvasMapper` or
+  `ChildUiMetrics` for layout and pointer mapping.
+- Do not open a smaller window over the Shell because the reference canvas was
+  1024x600. An uncovered Shell window keeps stale pixels and its hidden
+  pointer, which looks like a rendering/input fault around the Activity.
+- Outside a Greia session (tests, headless captures, direct developer runs)
+  the requested size is left untouched; do not depend on the normalization for
+  test fixtures.
+
 ---
 
 ## 10. Performance rules

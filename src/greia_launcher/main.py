@@ -13,6 +13,7 @@ from typing import Any
 
 from greia_platform.boot_logo import canonical_boot_logo as _canonical_boot_logo
 from greia_platform.boot_markers import emit_boot_marker
+from greia_platform.activity_display import remember_viewport
 from greia_platform.activities import (
     ActivityManifest,
     ActivityRegistry,
@@ -810,6 +811,7 @@ class LauncherApplication:
             screen = pygame.display.set_mode(default_size, display_flags)
         finally:
             emit_boot_marker("display_set_mode_end")
+        remember_viewport(screen.get_size())
         pygame.display.set_caption("Greia OS")
         pygame.mouse.set_visible(False)
         if self._bootstrapped:
@@ -878,6 +880,7 @@ class LauncherApplication:
                             self._handle_click(event.pos, pygame)
                     elif event.type == pygame.VIDEORESIZE and self.windowed:
                         screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
+                        remember_viewport(screen.get_size())
                     else:
                         action = self._shell_input.translate_event(event)
                         if action is not None:

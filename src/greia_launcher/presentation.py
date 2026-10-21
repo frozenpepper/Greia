@@ -8,6 +8,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from greia_platform.activity_display import remember_viewport
 from greia_platform.activities import (
     ActivityManifest,
     ActivityRegistry,
@@ -407,6 +408,7 @@ class GreiaLauncherPresentation(LauncherApplication):
             screen = pygame.display.set_mode(default_size, display_flags)
         finally:
             emit_boot_marker("display_set_mode_end")
+        remember_viewport(screen.get_size())
         pygame.display.set_caption(self._display_caption())
         pygame.mouse.set_visible(False)
         if self._bootstrapped:
@@ -563,6 +565,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                         request = self._resize_display_request(event, pygame)
                         if request is not None:
                             screen = pygame.display.set_mode(*request)
+                            remember_viewport(screen.get_size())
                             _needs_redraw = True
                     else:
                         # Controller events (and topology changes) reach every

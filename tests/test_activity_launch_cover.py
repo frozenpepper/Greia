@@ -517,11 +517,14 @@ class ActivityEntryIntegrationTests(unittest.TestCase):
                 import pygame
                 wrapped = not isinstance(pygame.display.set_mode, type(len))
                 screen = pygame.display.set_mode((64, 48))
+                pixel = list(screen.get_at((5, 5)))[:3]
+                resized = pygame.display.set_mode((64, 48))
                 data = os.environ.get("GREIA_ACTIVITY_DATA_DIR", "")
                 print(json.dumps({
                     "wrapped_before": wrapped,
-                    "restored": isinstance(pygame.display.set_mode, type(len)),
-                    "pixel": list(screen.get_at((5, 5)))[:3],
+                    "first_size": list(screen.get_size()),
+                    "second_size": list(resized.get_size()),
+                    "pixel": pixel,
                     "card_left": os.path.exists(os.path.join(data, ".greia", "launch-card")),
                 }))
                 """
@@ -542,6 +545,7 @@ class ActivityEntryIntegrationTests(unittest.TestCase):
             SDL_VIDEODRIVER="dummy",
             SDL_AUDIODRIVER="dummy",
             GREIA_ACTIVITY_DATA_DIR=str(data),
+            GREIA_ACTIVITY_VIEWPORT="1280x800",
         )
         if session:
             environment["GREIA_ACTIVITY_SESSION_ID"] = "0123456789abcdef0123456789abcdef"
@@ -557,7 +561,10 @@ class ActivityEntryIntegrationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             payload = self._run(Path(temporary), session=True)
         self.assertTrue(payload["wrapped_before"])
-        self.assertTrue(payload["restored"])
+        # The display policy remains after the launch cover's first window;
+        # both the first window and a later re-mode fill the session viewport.
+        self.assertEqual(payload["first_size"], [1280, 800])
+        self.assertEqual(payload["second_size"], [1280, 800])
         self.assertEqual(payload["pixel"], list(CORAL))
         self.assertFalse(payload["card_left"])
 
@@ -565,6 +572,8 @@ class ActivityEntryIntegrationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             payload = self._run(Path(temporary), session=False)
         self.assertFalse(payload["wrapped_before"])
+        self.assertEqual(payload["first_size"], [64, 48])
+        self.assertEqual(payload["second_size"], [64, 48])
         self.assertTrue(payload["card_left"])
 
 
