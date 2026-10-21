@@ -1,0 +1,40 @@
+#!/bin/sh
+# Greia target resume hook for the Intel PRO/Wireless 3945 (iwl3945).
+#
+# The reference Aspire laptop can fail the kernel's wiphy_resume callback
+# with -110 after system sleep:
+#
+#   iwl3945 0000:06:00.0: Unable to change power state from D3hot to D0,
+#   device inaccessible
+#   iwl3945 0000:06:00.0: Wait for START_ALIVE timeout after 2000ms.
+#   ieee80211 phy1: PM: failed to resume async: error -110
+#
+# The PCI function can be recovered by re-probing the driver, which also
+# recreates wlan0. iwd then re-associates with the saved profile and
+# systemd-networkd renews DHCP. The first resume after this failure left
+# wlan0 down and iwctl reported "No station on device: 'wlan0'"; the module
+# reload below restored it without a reboot.
+#
+# Scope: this is a target-side hardware workaround, not an Activity or
+# network-policy abstraction. It is a no-op on machines without iwl3945.
+set -u
+
+[ "${1:-}" = "post" ] || exit 0
+grep -q '^iwl3945 ' /proc/modules 2>/dev/null || exit 0
+
+run_bounded() {
+    if [ -x /usr/bin/timeout ]; then
+        /usr/bin/timeout 20 "$@"
+    else
+        "$@"
+    fi
+}
+
+# Reloading is what repairs the failed D3hot -> D0 transition. The post-resume
+# callback runs after the kernel has resumed all devices, so re-probing here
+# is safe; a failure leaves the existing interface state untouched.
+run_bounded /sbin/modprobe -r iwl3945 2>/dev/null || true
+run_bounded /sbin/modprobe iwl3945 2>/dev/null || true
+/usr/bin/systemctl try-restart iwd.service 2>/dev/null || true
+
+exit 0

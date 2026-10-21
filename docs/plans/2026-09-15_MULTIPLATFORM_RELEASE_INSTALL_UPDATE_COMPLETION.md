@@ -2799,3 +2799,21 @@ Correction to the Aspire Wi-Fi entry above: the installed target lacked `firmwar
 - Evidence: focused suites PASS; build host `systemd-run` with the unit capability set: old → refusal "kernel module metadata is unreadable", new → complete, `firmware-misc-nonfree` selected for `tg3`, `modprobe dummy` denied. Not a clean install; the current LaCie image predates the fix.
 - Next: rebuild/flash the RC and clean-install the Aspire; accept only when `install-record.json` lists `firmware-iwlwifi` and `iwd` connects with no manual package.
 
+### 2026-10-21 — Aspire Wi-Fi suspend/resume recovery (DEVICE + SOURCE)
+
+The installed Aspire lost Wi-Fi after a lid-close/resume: `iwl3945` failed
+`wiphy_resume` with `-110` (`Unable to change power state from D3hot to D0`),
+`wlan0` went down and `iwctl` reported no station. A manual
+`modprobe -r iwl3945; modprobe iwl3945; systemctl restart iwd` recovered the
+interface and DHCP without reboot. Added the target `systemd-sleep` post hook
+`build/overlay/usr/lib/systemd/system-sleep/greia-wifi-resume` (post only,
+only when `iwl3945` is loaded, bounded modprobe calls, `try-restart iwd`),
+with an overlay contract test. Manually invoked on the device: back to
+`routable (configured)` on `192.168.68.112`, HTTPS 200.
+
+**Evidence scope:** remote device + focused test. The hook is not yet in a
+rebuilt image; it was installed in place. **Caution:** an unattended
+`rtcwake -m mem -s 20` did not wake from the RTC alarm, so the device remained
+suspended and needs the power button; do not use that as an unattended test.
+Next: wake the device, close/open the lid, confirm automatic reconnect, then
+rebuild/flash with the hook.

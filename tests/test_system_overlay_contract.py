@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import unittest
 from pathlib import Path
 
@@ -19,6 +20,22 @@ class SystemOverlayContractTests(unittest.TestCase):
         # test_image_tmpfiles_identities); a missing group broke boot once.
         self.assertIn("d /var/lib/greia-profiles 2770 greiakid pipprofiles -", config)
         self.assertIn("d /run/greia-os 0770 greiakid pipprofiles -", config)
+
+    def test_iwl3945_resume_hook_is_installed_executable_and_bounded(self) -> None:
+        hook = (
+            PROJECT_ROOT
+            / "build/overlay/usr/lib/systemd/system-sleep/greia-wifi-resume"
+        )
+        self.assertTrue(hook.is_file())
+        self.assertTrue(os.access(hook, os.X_OK))
+        text = hook.read_text()
+        self.assertIn('[ "${1:-}" = "post" ]', text)
+        self.assertIn("grep -q '^iwl3945 ' /proc/modules", text)
+        self.assertIn("/sbin/modprobe -r iwl3945", text)
+        self.assertIn("/sbin/modprobe iwl3945", text)
+        self.assertIn("systemctl try-restart iwd.service", text)
+        self.assertIn("/usr/bin/timeout 20", text)
+        self.assertIn("exit 0", text)
 
     def test_installed_x_session_starts_hardware_controller_before_launcher(self) -> None:
         session = (

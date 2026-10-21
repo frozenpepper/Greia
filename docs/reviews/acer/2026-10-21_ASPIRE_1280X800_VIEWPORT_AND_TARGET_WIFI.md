@@ -302,6 +302,57 @@ Written to the authorized 8 GB LaCie (`/dev/sdc`, `iamaKey`, serial
 
 ---
 
+### 2.8 Follow-up: suspend/resume, not firmware
+
+The firmware repair made Wi-Fi work for hours, but the link was still not
+stable. At 14:55 the laptop lid was closed and reopened. The kernel did resume,
+but the wireless resume callback failed:
+
+```text
+iwl3945 0000:06:00.0: Unable to change power state from D3hot to D0,
+device inaccessible
+iwl3945 0000:06:00.0: Wait for START_ALIVE timeout after 2000ms.
+ieee80211 phy1: PM: failed to resume async: error -110
+iwd: Received Deauthentication event, reason: 3
+networkd: wlan0: Lost carrier; Link DOWN
+```
+
+`operstate` became `down`, `networkctl` showed `off (configured)`, and
+`iwctl` reported `No station on device: 'wlan0'`. The interface did not recover
+on its own. Reloading the driver did recover it without a reboot:
+
+```bash
+sudo modprobe -r iwl3945
+sudo modprobe iwl3945
+sudo systemctl restart iwd
+# iwd re-associated with the saved profile; DHCP returned 192.168.68.112
+```
+
+Target fix: `build/overlay/usr/lib/systemd/system-sleep/greia-wifi-resume`.
+The `systemd-sleep` post hook:
+
+- runs only for `post` and only when `iwl3945` is loaded (no-op on other
+  hardware);
+- bounds both `modprobe` calls with `timeout 20`;
+- reloads `iwl3945` and `try-restart`s `iwd`, which re-associates with the
+  existing saved profile;
+- is target-only; it does not add network authority or change the child API.
+
+Contract test:
+`tests/test_system_overlay_contract.py::test_iwl3945_resume_hook_is_installed_executable_and_bounded`.
+
+Manual verification on the installed device: copying the hook to
+`/usr/lib/systemd/system-sleep/` and invoking
+`greia-wifi-resume post` brought `wlan0` back to `routable (configured)` with
+`192.168.68.112` and HTTPS to `deb.debian.org` returned 200.
+
+**Test caution:** an unattended `rtcwake -m mem -s 20` on this laptop did
+**not** wake from the RTC alarm; the machine stayed suspended and had to be
+woken with the power button. The lid-close/ lid-open path is the path that was
+observed to resume (with the `wiphy_resume` failure). Do not use `rtcwake` as
+an unattended acceptance step on this hardware without first proving its RTC
+alarm wake.
+
 ## 3. Commands for other agents
 
 Check source state and focused tests:

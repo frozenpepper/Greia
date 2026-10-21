@@ -131,6 +131,16 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+## 2026-10-21 — Aspire Wi-Fi follow-up: suspend/resume hook
+
+**Evidence class: DEVICE (remote) + SOURCE + FOCUSED TEST.**
+
+The firmware repair fixed the missing microcode, but the link still died when the laptop lid was closed and reopened: `wiphy_resume` returned `-110`, `iwl3945` could not move from D3hot to D0, and `wlan0` stayed down (`No station on device: 'wlan0'`). A driver reload recovered it without reboot. Added `build/overlay/usr/lib/systemd/system-sleep/greia-wifi-resume`: on `post`, only when `iwl3945` is loaded, it reloads the module under a 20 s bound and restarts `iwd`, which re-associates with the saved profile. Contract-tested in `tests/test_system_overlay_contract.py`; manually invoked on the device and verified `routable (configured)` + HTTPS 200. The hook is not yet in a rebuilt image; it was copied to the installed device for this test.
+
+**Caveat:** an unattended `rtcwake -m mem -s 20` test did not wake from the RTC alarm; the device remained suspended and must be woken with the power button. Do not repeat that as an unattended test. The lid-close/open path is the real path to retest; the hook is installed for it.
+
+**Next:** wake the device, close/open the lid once, confirm Wi-Fi returns automatically; then rebuild/flash the image with the hook and include it in the clean-install acceptance.
+
 ## 2026-10-21 — Short spoken-carrier extraction and v0.3 pilot
 
 Implemented a reusable deterministic remove-first-N-word PCM16 WAV tool and an
