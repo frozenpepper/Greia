@@ -3664,3 +3664,17 @@ score <=0.8 or signal warnings before installation. Focused carrier tests 32/32
 and continuation invariants 3/3 PASS in the prepared voice venv. Long-run state
 and final source verification are tracked in HANDOVER; no hardware/release or
 human-listening acceptance is asserted. Shared two-queue plan remains proposed.
+
+
+### 2026-10-22 — Priority retake live checkpoint
+
+The resumed v6 corpus audit retained 167 installed targets after actual Base
+checks; two saved-provider recovery passes installed 78 newly prepared targets
+through journaled transactions. Primary rechecked three installed audio hashes,
+passing Base receipts and PENDING human state. Fresh generation is active over
+421 remaining main-pass cues, with an exact-original restored whale cue queued
+for a one-path follow-up under the same cumulative budget. First fresh job
+20261022-013018-a44c21bc failed target ASR and correctly retained the destination;
+producer continued. Source fixes/docs persisted in 027171567. Focused combined
+92 tests plus the added restoration positive/negative test PASS; full local
+make verify aborted with trap6 (not green). Production is RUNNING, not complete.

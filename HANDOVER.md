@@ -103,8 +103,16 @@ The first corpus discovery without PYTHONPATH failed to import greia_platform;
 the corrected `PYTHONPATH=src` invocation is the 18/18 result. Initial orchestration
 startup rejected one legacy manifest receipt, then caught a missing decode-output
 directory before any synthesis/install; both were corrected, old logs preserved,
-and the active pass completed the delivered-audio audit: 167 kept, followed by
-saved-take recovery before fresh production. The combined focused run passed
+and the active pass completed the delivered-audio audit: 167 kept. Saved-source
+recovery installed 74 + 4 = **78** target recordings through normal transactions.
+Primary checked three actual installed hashes, Base scores and PENDING receipts.
+`fresh-01` is now processing 421 remaining cues; the separate exact-original
+whale follow-up covers the last original priority path after normal main exit.
+First fresh provider job `20261022-013018-a44c21bc` completed and was safely
+rejected at Base score 0.6527; its prior destination was retained and the producer
+continued to the next cue. Luna monitors this exact process through terminal
+state and then the bounded whale follow-up; do not duplicate either producer.
+Generated audio remains local/listening-pending while production runs. The combined focused run passed
 92 tests before the extra restoration positive/negative test (which passed).
 
 ## 2026-10-21 — Owner reprioritized spoken-carrier retakes
