@@ -2,7 +2,7 @@
 # grub-efi-ia32 / grub-efi-amd64 conflict with grub-pc (all provide "grub"), so the
 # target keeps grub-pc + grub-common and installs the EFI images with
 # `grub-install --target=<arch>-efi`. Sizes are not recorded in repo metadata;
-# the footprint gate (required_core_mib 1300) measures them at build time.
+# the footprint gate (required_core_mib 1500) measures them at build time.
 grub-efi-ia32-bin
 grub-efi-amd64-bin
 efibootmgr

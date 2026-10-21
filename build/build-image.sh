@@ -216,9 +216,10 @@ accounted_mib="$(( accounted_bytes / 1024 / 1024 ))"
 } > "$REPORT"
 
 # Hard installed-size gate. The limit is profile data (resources.
-# required_core_mib): 1,300 MiB for single-root profiles since the owner
-# accepted images up to 1.3 GB on 2026-10-17 (AGENTS.md contract 6); the A/B
-# profile stays at 1,000 MiB because its system slot is 1 GiB.
+# required_core_mib): 1,500 MiB for single-root profiles since the owner
+# raised the accepted ceiling on 2026-10-21 (AGENTS.md contract 6) to keep the
+# four-language @2x art and EFI boot payloads in one image; the A/B profile
+# stays at 1,000 MiB because its system slot is 1 GiB.
 required_limit_bytes=$((REQUIRED_LIMIT_MIB * 1024 * 1024))
 preferred_limit_bytes=$((PREFERRED_LIMIT_MIB * 1024 * 1024))
 if (( accounted_bytes >= required_limit_bytes )); then

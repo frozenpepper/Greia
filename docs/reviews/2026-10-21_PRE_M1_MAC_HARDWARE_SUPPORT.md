@@ -222,3 +222,7 @@ M = Needs prebuilt out-of-tree module, X = Not supported, ? = LAB to determine. 
 - https://wiki.t2linux.org/
 - https://libreboot.org/docs/hcl/macbook21.html
 - https://bbs.archlinux.org/viewtopic.php?id=238695
+
+## Superseding owner decision (2026-10-21, same day)
+
+AGENTS.md contract 6 now accepts installed cores up to **1,500 MiB** for single-root profiles (raised from 1,300 MiB so the four-language `@2x` art and the EFI boot payloads fit one image). Every 1,300 MiB reference above is historical; the measurement still stands (EFI GRUB binaries were measured at build time).

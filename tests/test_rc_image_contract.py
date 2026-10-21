@@ -351,7 +351,7 @@ class RcProfileTests(unittest.TestCase):
             )
         self.assertEqual(rc.base, base.base)
         self.assertEqual(rc.storage, base.storage)
-        self.assertEqual(rc.resources.required_core_mib, 1300)
+        self.assertEqual(rc.resources.required_core_mib, 1500)
         manifest = rc.declared_manifest("installer")
         self.assertEqual(manifest["boot"]["console_policy"], "quiet")
         self.assertIn("BOOT_CONSOLE_POLICY=quiet", rc.shell_assignments().splitlines())
@@ -380,7 +380,7 @@ class RcProfileTests(unittest.TestCase):
             profile = BuildProfile.load(path)
             with self.subTest(profile=path.name):
                 if profile.storage.layout_adapter == "bios-single-ext4":
-                    self.assertEqual(profile.resources.required_core_mib, 1300)
+                    self.assertEqual(profile.resources.required_core_mib, 1500)
                 else:
                     # A/B system slots are 1 GiB: the root must stay below it.
                     self.assertLess(

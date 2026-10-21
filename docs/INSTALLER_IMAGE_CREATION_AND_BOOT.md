@@ -337,7 +337,7 @@ Do not call the splash physically fixed until the Acer itself shows the correcte
 
 The RC is one build (installer redesign + boot animation + quiet boot), installed on the reference Acer through the graphical installer. It is a **developer RC**, not an ADR 0036 release: it carries all Activities, SSH is on and the release roster is still draft.
 
-**What the RC image contains beyond `legacy-x86-i686`:** the `developer-remote` set in both roots (SSH, mDNS, `greia-devctl`), hostname `greia-rc`, `boot.console_policy = "quiet"`, a bounded persistent journal (`/etc/systemd/journald.conf.d/20-greia-developer-persistent.conf`, 48 MiB), the read-only bytecode prefix in both roots, the microphone ALSA module in both roots (the build fails if it is missing) and `snd_hda_intel power_save=0`. The hard size gate is 1,300 MiB (owner decision 2026-10-17).
+**What the RC image contains beyond `legacy-x86-i686`:** the `developer-remote` set in both roots (SSH, mDNS, `greia-devctl`), hostname `greia-rc`, `boot.console_policy = "quiet"`, a bounded persistent journal (`/etc/systemd/journald.conf.d/20-greia-developer-persistent.conf`, 48 MiB), the read-only bytecode prefix in both roots, the microphone ALSA module in both roots (the build fails if it is missing) and `snd_hda_intel power_save=0`. The hard size gate is 1,500 MiB (owner decision 2026-10-21, raised from 1,300 MiB so the four-language `@2x` art and the UEFI/BIOS boot payload fit one image).
 
 ### 13.1 Pre-build gates (premortem G1–G11)
 
@@ -350,7 +350,7 @@ Run G1–G8 on the frozen SHA before touching the build host. Nothing lands on `
 | G3 | local | `make validate`, `make visual-assets-check`, `make assets-check`, `make shell-check` |
 | G4 | local | `tools/audit_activity_backend_independence.py activities`; `tools/audit_activity_system_chrome_ownership.py --strict` |
 | G5 | local | the focused contract list in the premortem §4, plus `tests/test_rc_image_contract.py`, `tests/test_boot_contract.py`, `tests/test_grub_ab.py`, `tests/test_dev_source_deploy.py` |
-| G6 | local | footprint estimate below 1,300 MiB with margin (see the RC report) |
+| G6 | local | footprint estimate below 1,500 MiB with margin (see the RC report) |
 | G7 | local | `tools/panel_screenshots.py` and `tools/installer_screenshots.py` at 1024×600 and 800×480; no overlap |
 | G8 | Acer | `python3 tools/dev_source_deploy.py deploy --target greia@<acer>` (current image: add `--legacy-generic-sudo`), then `status`, launch 5 Activities, `cleanup` |
 | G9 | build host | `smartctl -a`, `journalctl -k -p err --since -1d`, root fs below 80 %, **reboot**, `losetup -a \| grep greia` empty, apt/pool caches present |
@@ -409,7 +409,7 @@ operator_ssh_key=SHA256:...                       (matches ssh-keygen -lf of the
 greia_mic_light ALSA module: /usr/lib/i386-linux-gnu/alsa-lib/... (Intel 80386)   (target and live)
 bytecode prefix /usr/lib/greia/pycache ... greia=N   (target and live, no "error:" lines)
 GRUB boot contract passed for 1 kernel command line(s).
-Budgeted/accounted: NNN MiB                        (below 1,300)
+Budgeted/accounted: NNN MiB                        (below 1,500)
 Developer installer artifact verification: PASS
 - boot console: quiet (installer + installed), panic=0; hidden Syslinux 'verbose' + owner-only GRUB diagnostics
 Greia live USB read-only verification: PASS
@@ -459,7 +459,7 @@ for CSM boots. Target packages are the `-bin` set only (`build/package-sets/boot
 **Open LAB questions.** (1) Can x64 EFI GRUB start the i686 kernel on 2008+ (64-bit EFI) Macs? Unknown; the 2006-2007
 32-bit-EFI Macs are the native case. (2) Do Apple firmwares accept an MBR-table ESP stick? (3) Boot cover and Xorg on
 the EFI GOP framebuffer. (4) Size of the added packages was not recorded in repo metadata; the footprint gate
-(`required_core_mib = 1300`) measures it at build time.
+(`required_core_mib = 1500` since the 2026-10-21 owner decision) measures it at build time.
 
 **Fallback if EFI boot fails.** Hold Option at power-on and choose the "Windows" entry: Boot Camp style CSM boots the
 BIOS path (MBR active root on the stick; `bios_grub` on the installed disk). Not available on T2 Macs. `rEFInd` on

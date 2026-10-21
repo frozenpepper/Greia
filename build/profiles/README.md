@@ -19,7 +19,7 @@ ADR 0012 distinguishes these concepts deliberately:
 - `[display]`: selected display adapter plus profile-specific video packages;
 - `[runtimes]`: platform-owned Activity runtime families included in the target image;
 - `[packages]`: general target/installer package sets and narrowly justified extra packages;
-- `[resources]`: profile-specific preferred/hard/architecture-review installed-core limits (single-root profiles: hard gate 1,300 MiB per the owner decision of 2026-10-17; the A/B profile stays at 1,000 MiB because its slot is 1 GiB).
+- `[resources]`: profile-specific preferred/hard/architecture-review installed-core limits (single-root profiles: hard gate 1,500 MiB per the owner decision of 2026-10-21; the A/B profile stays at 1,000 MiB because its slot is 1 GiB).
 
 Adapter and runtime package sets are composed by `tools/build_profile.py`; profiles do not duplicate those implementation mappings.
 

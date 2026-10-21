@@ -234,3 +234,7 @@ Record every test as one line in a LAB log: model, `lspci -nn`/`lsusb`, `dmesg |
 - Debian LTS: <https://wiki.debian.org/LTS>
 - `linux-image-686`: <https://packages.debian.org/bookworm/linux-image-686>; `forcepae`: <https://git.linaro.org/plugins/gitiles/kernel/linux-linaro-stable.git/+/69f2366c9456d0ce784cf5aba87ee77eeadc1d5e>
 - ath9k: <https://wiki.debian.org/ath9k>; Broadcom: <https://wiki.debian.org/bcm43xx>
+
+## Superseding owner decision (2026-10-21, same day)
+
+AGENTS.md contract 6 now accepts installed cores up to **1,500 MiB** for single-root profiles (raised from 1,300 MiB so the four-language `@2x` art and the EFI boot payloads fit one image). Every 1,300 MiB reference above is historical; fallback-firmware sizing decisions should use the 1,500 MiB ceiling.

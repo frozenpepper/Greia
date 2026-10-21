@@ -48,11 +48,12 @@ installer_sets = ["installer-base"]
 extra_packages = []
 
 [resources]
-# Owner decision 2026-10-17: installed images up to 1,300 MiB are accepted
-# (AGENTS.md contract 6). build/build-image.sh fails at >= required_core_mib.
+# Owner decision 2026-10-21: installed images up to 1,500 MiB are accepted
+# (AGENTS.md contract 6), raised from 1,300 MiB to cover the four-language
+# @2x art and EFI boot payloads. build/build-image.sh fails at >= required_core_mib.
 preferred_core_mib = 800
-required_core_mib = 1300
-architecture_review_mib = 1300
+required_core_mib = 1500
+architecture_review_mib = 1500
 
 [storage]
 layout_adapter = "bios-single-ext4"
