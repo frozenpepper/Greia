@@ -283,7 +283,24 @@ Letters, syllables, phonics and other pronunciation-authoritative material use `
 
 Dani-specific robotic speech uses `dani_system_speech`, now backed by Dani’s selected cloned master through VoxStage by default.
 
-### 7.5 Human review
+### 7.5 Prepared Whisper review environment on this workstation
+
+For automated post-generation review, explicitly use the existing Greia venv:
+
+```bash
+voice_python="$HOME/Library/Application Support/Greia/voice-production/venv/bin/python"
+"$voice_python" tools/greia_voice.py doctor
+```
+
+Verified 2026-10-21: this environment imports mlx-whisper 0.4.3 with NumPy 2.5.2,
+Numba 0.67.0 and MLX 0.32.1; whisper-tiny weights are already cached. The global
+Anaconda Python's NumPy/Numba ABI mismatch is not a failure of this environment.
+Use the explicit interpreter for all pilot/full review commands in
+`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`. No global package downgrade or
+shared synthesis environment repair is needed. These are workstation facts,
+not portable dependency pins or child-device requirements.
+
+### 7.6 Human review
 
 New generations begin with human review pending. Provider success, a valid WAV/OGG file or Whisper PASS is not acceptance.
 

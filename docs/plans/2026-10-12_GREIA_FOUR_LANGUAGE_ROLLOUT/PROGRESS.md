@@ -1496,3 +1496,17 @@ in HANDOVER and the new procedure. No architecture or release phase closed.
 
 Final gate clarification: project validation also failed on the existing ARM64
 builder restriction; shell/footprint checks completed. No full-gate PASS claimed.
+
+### 2026-10-21 — Corrected Whisper interpreter and executed multilingual ASR
+
+The earlier NumPy import blocker came from global Anaconda, not the prepared
+Greia venv. Existing Greia Python imports Whisper and finds cached tiny weights;
+no installation or package changes were necessary. SETUP, review instructions,
+setup manual, quick start and voice skill now use the explicit interpreter.
+Live corpus `review --asr auto` on four installed Alphabet ask_A clips completed
+all four ASR calls: EN/IT/ES transcript PASS, FR mismatch WARN; EN/IT trailing
+silence warnings. Overall 1 PASS, 3 WARN, 0 BLOCKED; expected exit 2. Evidence
+is external `2026-10-21-whisper-recovery` under Greia-voice-auditions. Full corpus
+review and human acceptance remain pending; no speech changed. Documentation
+correction only; no tests rerun or architecture/release phase closed. See HANDOVER
+for exact interpreter/package versions and retained prior verification failures.

@@ -17,8 +17,9 @@ FFmpeg available. All model work is local; no hosted Actions/cloud service.
 
 ```bash
 cd '/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia'
+voice_python="$HOME/Library/Application Support/Greia/voice-production/venv/bin/python"
 voice_run='/Volumes/Test1/Works/Greia-voice-auditions/2026-10-19-corpus-v2/run'
-python3 tools/regenerate_voice_corpus.py status --work-dir "$voice_run"
+"$voice_python" tools/regenerate_voice_corpus.py status --work-dir "$voice_run"
 ```
 
 For the completed v2 batch, expect 4,168 DONE and 741 PRESERVED, with no active
@@ -46,7 +47,7 @@ Use a dedicated external report directory. A limited pilot verifies the command
 and report behavior; it cannot satisfy full-corpus coverage.
 
 ```bash
-python3 -u tools/regenerate_voice_corpus.py review --work-dir "$voice_run" \
+"$voice_python" -u tools/regenerate_voice_corpus.py review --work-dir "$voice_run" \
   --report-dir /Volumes/Test1/Works/Greia-voice-auditions/voice-review-pilot \
   --asr auto --limit 12
 ```
@@ -55,7 +56,7 @@ For the full pass, omit limit/filter:
 
 ```bash
 set -o pipefail
-python3 -u tools/regenerate_voice_corpus.py review --work-dir "$voice_run" \
+"$voice_python" -u tools/regenerate_voice_corpus.py review --work-dir "$voice_run" \
   --report-dir /Volumes/Test1/Works/Greia-voice-auditions/voice-review-full \
   --asr auto 2>&1 | tee /Volumes/Test1/Works/Greia-voice-auditions/voice-review-full.log
 ```
@@ -67,11 +68,26 @@ so ASR setup does not conceal corrupt audio. Use `--asr off` with a **different
 report directory** for an intentionally technical-only pass; its speech screen
 is incomplete and the command cannot return complete-review success.
 
-The default host Python currently cannot import optional Whisper because
-`numpy.core.multiarray failed to import`. The 2026-10-21 bounded pilot reported
-two eligible clips BLOCKED for that exact reason. This is not proof of faulty
-speech and must not trigger regeneration. The earlier generation pass used ASR
-off; it has not retrospectively acquired transcript verification.
+**Verified environment correction (2026-10-21):** use the explicit
+`voice_python` above. The prepared Greia environment imports Whisper with
+NumPy 2.5.2 and Numba 0.67.0 and resolves the cached model
+`mlx-community/whisper-tiny` revision
+`78c52ab98ca87f570bc57ad852e15ef7060f9f76`. No installation/download is needed.
+Global `/opt/anaconda3/bin/python3` uses NumPy 2.0.2 with incompatible compiled
+Numba 0.60.0 and fails with `numpy.core.multiarray failed to import`.
+The original two-clip BLOCKED pilot used that wrong interpreter; it did not
+establish a workstation-wide Whisper blocker. Do not downgrade global NumPy or
+change the working shared VoxStage environment. The earlier generation pass
+used ASR off and has not retrospectively acquired full transcript verification.
+On another workstation locate its prepared environment via SETUP rather than
+copying this machine-local path or assuming unqualified `python3` is correct.
+
+Live recovery proof: the installed Alphabet `ask_A.wav` clip in EN/IT/ES/FR
+ran through this command successfully with ASR on. Transcript results were
+EN/IT/ES PASS and FR WARN; EN/IT also flagged long trailing silence. Overall
+1 PASS, 3 WARN, zero BLOCKED; exit 2 correctly retained findings. Evidence:
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-whisper-recovery/`.
+This proves working transcription, not all-corpus coverage or listening approval.
 
 ## 3. What the automated checks actually measure
 

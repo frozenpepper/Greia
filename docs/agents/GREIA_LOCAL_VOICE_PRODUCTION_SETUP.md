@@ -154,6 +154,17 @@ For full natural-character production, expect the cloning references, FFmpeg, Ch
 
 The first actual natural-character generation may download the Chatterbox model; the first eligible verification may download Whisper. `doctor` itself should not be treated as permission to trigger those downloads.
 
+### Existing Whisper review environment (verified 2026-10-21)
+
+The prepared interpreter is
+`~/Library/Application Support/Greia/voice-production/venv/bin/python`.
+Use it explicitly for `regenerate_voice_corpus.py review`; do not use the global
+Anaconda Python, whose installed NumPy/Numba combination fails Whisper import.
+The prepared environment already has working mlx-whisper and cached tiny weights;
+no packages or weights need installing. Follow the exact pilot/full commands in
+`docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md`. Availability in one interpreter
+does not describe other environments on the machine.
+
 ## 5. Host and semantic boundaries
 
 The default HTTP client is portable, but the shared synthesis host currently

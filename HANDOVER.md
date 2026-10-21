@@ -74,6 +74,40 @@ promote unvoiced locales.
 
 ## Recent entries
 
+## 2026-10-21 — Whisper blocker corrected: use prepared authoring Python
+
+The previous automated-review blocker was scoped to the wrong interpreter,
+not the prepared Greia environment. Global `/opt/anaconda3/bin/python3` has
+NumPy 2.0.2 and an ABI-incompatible compiled Numba 0.60.0. The existing
+`~/Library/Application Support/Greia/voice-production/venv/bin/python` imports
+mlx-whisper 0.4.3 successfully with NumPy 2.5.2, Numba 0.67.0 and MLX 0.32.1.
+Cached whisper-tiny revision `78c52ab98ca87f570bc57ad852e15ef7060f9f76`
+was available. No packages, weights, global Python or shared synthesis stack
+were changed. This corrects the preceding entry's implication that ASR setup
+needed repair before review could run.
+
+**Executed live ASR proof:** existing `review --asr auto` command, using that
+explicit interpreter, filtered to
+`activities/alfabeto_leo/assets/audio/*/ask_A.wav`, four installed languages.
+All four ran ASR: EN/ES/IT transcript PASS (scores 1.0/0.899/0.7265), FR WARN
+(0.2721). EN/IT also flag LONG_TRAILING_SILENCE. Overall 1 PASS, 3 WARN,
+0 BLOCKED, command exit 2 as expected for findings. These flags are retained
+for investigation; no regeneration or human acceptance occurred. The shared
+VoxStage queue was inspected; other-project jobs were preserved. This bounded
+Whisper-tiny pass did not load another large synthesis model.
+
+Evidence: external `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-whisper-recovery/`
+(configuration, individual records, review.jsonl, listening_queue.csv, summary)
+and sibling `2026-10-21-whisper-recovery.log`. Four clips are not full-corpus
+coverage. The runbook, SETUP, setup manual, engine quick start, voice skill and
+external v2 RUNBOOK now give explicit prepared-interpreter commands.
+
+**Next:** use that interpreter and a fresh external report folder for the full
+4,168-cue automated pass per `GREIA_AUTOMATED_VOICE_REVIEW.md`, investigate
+flags and retain the separate human listening gate. Documentation/procedure
+correction only; no source changed or test suite rerun this turn. The preceding
+recorded full verification failures remain open. No phase/release acceptance.
+
 ## 2026-10-21 — Automated voice review command and agent procedure
 
 Implemented `tools/regenerate_voice_corpus.py review` and

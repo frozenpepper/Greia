@@ -39,7 +39,8 @@ pronunciation and identity still need listening review.
 ## Automated review after generation
 
 ```bash
-python3 tools/regenerate_voice_corpus.py review --work-dir /absolute/corpus-run \
+voice_python="$HOME/Library/Application Support/Greia/voice-production/venv/bin/python"
+"$voice_python" tools/regenerate_voice_corpus.py review --work-dir /absolute/corpus-run \
   --report-dir /absolute/separate-review-reports --asr auto
 ```
 

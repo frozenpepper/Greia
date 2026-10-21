@@ -265,6 +265,9 @@ Do not reintroduce a guessed word-count token table in callers or providers.
 ## Post-generation automated review (2026-10-21)
 
 Follow `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` after corpus generation.
+Use the explicit prepared Greia venv interpreter from SETUP §7.5; the global
+Anaconda Python has an unrelated NumPy/Numba ABI mismatch. Whisper and cached
+tiny weights are available in the prepared environment (2026-10-21).
 Use `tools/regenerate_voice_corpus.py review --work-dir <external-run>
 --report-dir <separate-external-reports> --asr auto`. It reads installed files
 and the frozen plan, checks metadata/decoding/signal metrics, runs existing
