@@ -132,12 +132,12 @@ class InstallerIntro:
             screen.fill(boot_animation.BACKGROUND_RGB)
 
     def _load_frames(self, screen: Any, pygame: Any) -> list[Any]:
-        height = screen.get_height()
+        width, height = screen.get_size()
 
         def prepare(frame: Any) -> Any:
-            # Scale to the viewport height and convert to the display format
+            # Native size (shrunk only to fit) and convert to the display format
             # once, so the loop never scales or converts per frame.
-            size = boot_animation.fitted_size(frame.get_size(), height)
+            size = boot_animation.fitted_size(frame.get_size(), height, width)
             if size != frame.get_size():
                 frame = pygame.transform.smoothscale(frame, size)
             try:

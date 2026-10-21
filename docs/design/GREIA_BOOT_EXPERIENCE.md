@@ -166,6 +166,10 @@ The current Xorg path uses `-background none`, requesting that the video driver 
 
 The current compatibility backend launches Xorg on `vt1`. Console/VT policy therefore cannot be changed in isolation from Xorg acquisition and physical acceptance. R7 remains the authority for replacing this provisional display architecture.
 
+### Native-size rule for pygame boot art (owner request 2026-10-21)
+
+The launcher intro (frames and static canvas) and the live-installer intro draw the Greia logo at its **original pixel size**, centred on pure white. They never upscale (an upscaled logo looks soft on a 1280x800 laptop). The art shrinks proportionally, with one shared factor `min(1, screen_w/art_w, screen_h/art_h)` (`greia_platform.boot_animation.native_scale`), only when the display is smaller than the art (e.g. the 1024x600 Acer shows the 222x600 frames at native size, a 1024x480 display scales them down). Not yet covered: GRUB (`desktop-image-scale-method: padding` has no native option and scales to fit) and the early framebuffer splash (`build/early-boot/greia-fb-splash.c` fits proportionally to the screen); both still enlarge on larger screens, a possible follow-up needing a generated-canvas or C change.
+
 ### Stage D — launcher intro
 
 The launcher owns a real intro. It is distinct from the static early-boot cover.
