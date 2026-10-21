@@ -111,6 +111,10 @@ class InstallResult:
 
     parent_username: str = "greia"
     parent_password: str = "greia"
+    #: True when hardware/firmware detection was incomplete and the common
+    #: network-firmware fallback was installed; the completion page then
+    #: shows a short, non-alarming note.
+    hardware_detection_incomplete: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -354,7 +358,12 @@ class InstallationEngine:
                 pass
             if cleanup_error is not None and not _exception_is_active():
                 raise cleanup_error
-        return InstallResult()
+        return InstallResult(
+            hardware_detection_incomplete=bool(
+                hardware_support is not None
+                and hardware_support.plan.detection_incomplete
+            )
+        )
 
     def _prepare_hardware_support(
         self,
@@ -374,10 +383,17 @@ class InstallationEngine:
             plan = InstallerHardwareEnablementPlanner.linux_default(pool=pool).plan()
         except (HardwareEnablementPlanError, HardwareSupportPoolError) as exc:
             raise InstallationError(f"hardware support verification failed: {exc}") from exc
-        if not plan.complete:
-            detail = "; ".join(plan.diagnostics[:3]) or "hardware support resolution is incomplete"
-            raise InstallationError(
-                "hardware support could not be resolved safely before disk changes: " + detail
+        if plan.detection_incomplete:
+            # Owner decision 2026-10-21: incomplete detection never stops the
+            # install; the plan already carries the verified fallback firmware.
+            print(
+                "greia-install-tx: hardware detection incomplete; installing fallback "
+                "network firmware: "
+                + ",".join(plan.fallback_firmware)
+                + " diagnostics="
+                + " | ".join(plan.recorded_diagnostics),
+                file=sys.stderr,
+                flush=True,
             )
         return PreparedHardwareSupport(identity, plan)
 
@@ -750,6 +766,12 @@ class InstallationEngine:
                 list(hardware_plan.target_packages) if hardware_plan is not None else []
             ),
         }
+        if hardware_plan is not None and hardware_plan.detection_incomplete:
+            record["hardware_detection"] = "incomplete"
+            record["hardware_fallback_packages"] = list(hardware_plan.fallback_firmware)
+            record["hardware_detection_diagnostics"] = list(
+                hardware_plan.recorded_diagnostics
+            )
         (record_dir / "install-record.json").write_text(
             json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n",
             encoding="utf-8",

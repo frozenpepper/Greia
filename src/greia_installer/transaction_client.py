@@ -213,6 +213,8 @@ class ExecuteReceipt:
     transaction_nonce: str
     plan_digest: str
     target_identity: str
+    #: Display-only: hardware detection was incomplete, fallback firmware used.
+    hardware_detection_incomplete: bool = False
 
 
 def _require_mapping(value: object, *, field_name: str) -> dict[str, object]:
@@ -352,6 +354,7 @@ class InstallTransactionClient:
             transaction_nonce=str(payload.get("transaction_nonce")),
             plan_digest=str(payload.get("plan_digest")),
             target_identity=str(payload.get("target_identity")),
+            hardware_detection_incomplete=payload.get("hardware_detection") == "incomplete",
         )
         if receipt.transaction_nonce != transaction_nonce or not hmac.compare_digest(
             receipt.plan_digest, plan_digest

@@ -465,6 +465,91 @@ class InstallerEngineTests(unittest.TestCase):
             self.assertNotIn("PRIVATE-MODALIAS", record)
             self.assertNotIn("private_driver", record)
 
+    def test_incomplete_detection_is_recorded_with_fallback_and_never_stops_install(self) -> None:
+        import json
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            defaults = root / "opt/greia-os/runtime/hardware-settings.toml"
+            defaults.parent.mkdir(parents=True)
+            defaults.write_bytes((PROJECT_ROOT / "runtime/hardware-settings.toml").read_bytes())
+            inventory = HardwareInventory(())
+            hardware_plan = InstallerHardwareEnablementPlan(
+                inventory,
+                HardwareSupportPlan(inventory.token, (), False),
+                (),
+                ("intel-microcode",),
+                (),
+                ("d1", "d2", "d3", "d4"),
+                fallback_firmware=("firmware-iwlwifi", "firmware-realtek"),
+            )
+            engine = InstallationEngine(project_root=PROJECT_ROOT, runner=RecordingRunner())
+            engine._write_initial_configuration(
+                root, InstallRequest(target(), root / "unused", settings()), hardware_plan
+            )
+            record = json.loads((root / "etc/greia-os/install-record.json").read_text())
+            self.assertEqual(record["hardware_detection"], "incomplete")
+            self.assertEqual(
+                record["hardware_fallback_packages"], ["firmware-iwlwifi", "firmware-realtek"]
+            )
+            self.assertEqual(record["hardware_detection_diagnostics"], ["d1", "d2", "d3"])
+            self.assertEqual(
+                record["hardware_support_packages"],
+                ["intel-microcode", "firmware-iwlwifi", "firmware-realtek"],
+            )
+
+    def test_complete_detection_record_has_no_fallback_flag(self) -> None:
+        import json
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            defaults = root / "opt/greia-os/runtime/hardware-settings.toml"
+            defaults.parent.mkdir(parents=True)
+            defaults.write_bytes((PROJECT_ROOT / "runtime/hardware-settings.toml").read_bytes())
+            inventory = HardwareInventory(())
+            hardware_plan = InstallerHardwareEnablementPlan(
+                inventory, HardwareSupportPlan(inventory.token, (), True), (), (), (), ()
+            )
+            engine = InstallationEngine(project_root=PROJECT_ROOT, runner=RecordingRunner())
+            engine._write_initial_configuration(
+                root, InstallRequest(target(), root / "unused", settings()), hardware_plan
+            )
+            record = json.loads((root / "etc/greia-os/install-record.json").read_text())
+            self.assertNotIn("hardware_detection", record)
+
+    def test_incomplete_detection_proceeds_but_pool_failure_still_refuses(self) -> None:
+        inventory = HardwareInventory(())
+        incomplete = InstallerHardwareEnablementPlan(
+            inventory,
+            HardwareSupportPlan(inventory.token, (), False),
+            (), (), (), ("unreadable",),
+            fallback_firmware=("firmware-iwlwifi",),
+        )
+        engine = InstallationEngine(project_root=PROJECT_ROOT, runner=RecordingRunner())
+        request = InstallRequest(
+            target(), Path("/payload"), settings(),
+            hardware_support_pool=Path("/pool"), target_profile=Path("/profile.json"),
+        )
+        reports: list[object] = []
+        with mock.patch("greia_installer.engine.TargetImageHardwareIdentity.load"), \
+             mock.patch.object(engine, "_load_hardware_support_pool"), \
+             mock.patch(
+                 "greia_installer.engine.InstallerHardwareEnablementPlanner.linux_default"
+             ) as planner:
+            planner.return_value.plan.return_value = incomplete
+            prepared = engine._prepare_hardware_support(request, reports.append)
+        self.assertIsNotNone(prepared)
+        self.assertEqual(prepared.plan.target_packages, ("firmware-iwlwifi",))
+        with mock.patch(
+            "greia_installer.engine.TargetImageHardwareIdentity.load"
+        ), mock.patch.object(
+            engine,
+            "_load_hardware_support_pool",
+            side_effect=InstallationError("hardware support media verification failed: bad"),
+        ):
+            with self.assertRaisesRegex(InstallationError, "media verification failed"):
+                engine._prepare_hardware_support(request, reports.append)
+
     def test_subprocess_runner_detaches_stdin_from_terminal(self) -> None:
         # The live installer runs as a background process group on the VT. If a
         # child (e.g. apt-get) inherited the terminal as stdin, reading from it

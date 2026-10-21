@@ -380,6 +380,7 @@ def build_production_seam_pair(
         # refuses fail-closed here; unattestable inventory is still gated
         # at finalization, and pool-missing wants stay diagnostic-only as
         # before (they were never installable).
+        detection_incomplete = False
         try:
             from .hardware_enablement import InstallerHardwareEnablementPlanner
 
@@ -387,15 +388,24 @@ def build_production_seam_pair(
                 pool=pool,
                 inventory_snapshot=snapshot,
             ).plan()
-            if not enablement.resolver_plan.complete:
-                # An incomplete resolution selects no firmware at all; going
-                # ahead would install a target that silently lacks drivers'
-                # firmware (e.g. Wi-Fi) that the live installer had.
-                detail = "; ".join(enablement.diagnostics[:3]) or "resolution incomplete"
-                raise FreshAbInstallError(
-                    "machine hardware selection is incomplete: " + detail
+            if enablement.detection_incomplete:
+                # Owner decision 2026-10-21: incomplete detection never stops
+                # the install; the verified common network firmware is added.
+                detection_incomplete = True
+                import sys
+
+                print(
+                    "greia-install-tx: hardware detection incomplete; installing fallback "
+                    "network firmware: "
+                    + ",".join(enablement.fallback_firmware)
+                    + " diagnostics="
+                    + " | ".join(enablement.recorded_diagnostics),
+                    file=sys.stderr,
+                    flush=True,
                 )
-            firmware_packages = tuple(enablement.required_firmware)
+            firmware_packages = tuple(
+                dict.fromkeys((*enablement.required_firmware, *enablement.fallback_firmware))
+            )
             microcode_packages = tuple(enablement.required_microcode)
             selected_installed_bound = pool.selected_installed_bytes(
                 firmware_packages, microcode_packages
@@ -578,6 +588,7 @@ def build_production_seam_pair(
             microcode_packages=microcode_packages,
             payload_stream_factory=None,
             inventory_complete=inventory_complete,
+            hardware_detection_incomplete=detection_incomplete,
             post_layout_identity_observer=None,
         )
 

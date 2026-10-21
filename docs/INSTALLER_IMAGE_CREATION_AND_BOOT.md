@@ -136,8 +136,20 @@ must be able to read `/usr/lib/modules`: they do not set
 and left every installed target without driver firmware) and deny module
 loading with the capability bounding set plus `SystemCallFilter=~@module`
 instead. An unreadable module tree, a loaded module that `modinfo` cannot
-describe, or a missing `modinfo` makes the hardware plan incomplete, and the
-installer refuses before erasing anything with the cause in its message.
+describe, or a missing `modinfo` makes the hardware plan incomplete.
+
+**Incomplete detection never stops the install** (owner decision 2026-10-21).
+An incomplete plan adds the common network/Wi-Fi firmware set
+(`FALLBACK_NETWORK_FIRMWARE` in `greia_installer/hardware_enablement.py`:
+`firmware-iwlwifi`, `-realtek`, `-atheros`, `-brcm80211`, `-libertas`,
+`-misc-nonfree`), restricted to what the verified pool provides, to whatever the
+plan did resolve plus microcode. The A/B seam does the same and includes the
+fallback in `selected_installed_bytes`. `install-record.json` gains
+`hardware_detection: "incomplete"`, `hardware_fallback_packages` and up to three
+`hardware_detection_diagnostics`; the transaction journal (stderr) logs the same,
+and the completion page shows a short localized note. Pool verification
+failures (corrupt/unverified pool, identity mismatch) still refuse before any
+disk change; only the "incomplete detection" case changed.
 
 ## 6. Development SSH is a hard invariant
 

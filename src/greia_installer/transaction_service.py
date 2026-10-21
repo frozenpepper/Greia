@@ -776,17 +776,16 @@ class InstallTransactionService:
                 )
             _ = format_log_record(transaction_id, op, "INSTALLED")
             _greia_log_event("installed", target=self._last_installed_identity)
-            _ = result
-            return encode_response(
-                transaction_id,
-                op,
-                {
-                    "status": "INSTALLED",
-                    "transaction_nonce": str(params.get("transaction_nonce")),
-                    "plan_digest": str(params.get("plan_digest")),
-                    "target_identity": self._last_installed_identity,
-                },
-            )
+            installed: dict[str, object] = {
+                "status": "INSTALLED",
+                "transaction_nonce": str(params.get("transaction_nonce")),
+                "plan_digest": str(params.get("plan_digest")),
+                "target_identity": self._last_installed_identity,
+            }
+            if getattr(result, "hardware_detection_incomplete", False) is True:
+                # Display-only note for the completion page; never an install fact.
+                installed["hardware_detection"] = "incomplete"
+            return encode_response(transaction_id, op, installed)
         raise InstallTransactionError(f"unknown install-transaction op: {op}")
 
     def rematerialize_target(self, identity_digest: str) -> DeviceObservation:

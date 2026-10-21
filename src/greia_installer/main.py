@@ -1519,13 +1519,19 @@ class InstallerApplication:
                 self._events.put(
                     InstallProgress(0.04, "prepare", "Confirming the selected disk")
                 )
-                client.execute(
+                receipt = client.execute(
                     transaction_nonce=prepared.transaction_nonce,
                     plan_digest=prepared.plan_digest,
                     # Validated display-only frames from the root service.
                     on_progress=lambda frame: self._events.put(_progress_from_frame(frame)),
                 )
-                self._events.put(InstallResult())
+                self._events.put(
+                    InstallResult(
+                        hardware_detection_incomplete=bool(
+                            getattr(receipt, "hardware_detection_incomplete", False)
+                        )
+                    )
+                )
             except Exception as exc:
                 self._events.put(exc)
 
@@ -2375,6 +2381,17 @@ class InstallerApplication:
             max_lines=2,
         )
         y = box.bottom + 12
+        if self.state.result is not None and self.state.result.hardware_detection_incomplete:
+            # Short and non-alarming: the install itself succeeded.
+            y = self._paragraph(
+                screen,
+                "Some hardware could not be identified automatically. If Wi-Fi or sound do not work, check them in Greia Parents after first boot.",
+                small_font,
+                COCOA,
+                pygame.Rect(main.left, y, main.width, 3 * small_font.get_linesize()),
+                center=True,
+                max_lines=3,
+            ) + 6
         # If the finish marker could not be delivered, a dead button must not
         # look like a shut-down request in flight: show the manual fallback.
         instruction = (

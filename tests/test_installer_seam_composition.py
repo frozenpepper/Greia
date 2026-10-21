@@ -508,7 +508,7 @@ class PartialSelectionSupportClassTests(unittest.TestCase):
         self.assertEqual(set(support.provided_firmware), {"firmware-a"})
         self.assertEqual(set(support.provided_microcode), set())
 
-    def test_production_seams_cover_exactly_the_machine_selection(self) -> None:
+    def _production_seams(self):  # type: ignore[no-untyped-def]
         import zstandard
 
         from greia_installer.fresh_ab_install import (
@@ -577,6 +577,10 @@ class PartialSelectionSupportClassTests(unittest.TestCase):
         )
         seams_factory, _ = build_production_seam_pair(config)
         seams = seams_factory(_whole_disk_target())
+        return seams, verified, _support_set_from_seams
+
+    def test_production_seams_cover_exactly_the_machine_selection(self) -> None:
+        seams, verified, _support_set_from_seams = self._production_seams()
         selected = set(seams.firmware_packages) | set(seams.microcode_packages)
         classes = {name for name, _v, _a, _d in seams.support_classes}
         # The invariant the QEMU leg broke: classes == selection exactly,
@@ -597,6 +601,35 @@ class PartialSelectionSupportClassTests(unittest.TestCase):
         self.assertEqual(
             set(support.provided_microcode), set(seams.microcode_packages)
         )
+
+    def test_incomplete_detection_adds_pool_fallback_and_flags_the_result(self) -> None:
+        import dataclasses
+        from unittest import mock
+
+        from greia_installer.hardware_enablement import InstallerHardwareEnablementPlanner
+
+        real_plan = InstallerHardwareEnablementPlanner.plan
+
+        def incomplete_plan(planner):  # type: ignore[no-untyped-def]
+            plan = real_plan(planner)
+            return dataclasses.replace(
+                plan,
+                resolver_plan=dataclasses.replace(plan.resolver_plan, complete=False),
+                fallback_firmware=("firmware-a",),
+                diagnostics=("modules unreadable",),
+            )
+
+        with mock.patch.object(InstallerHardwareEnablementPlanner, "plan", incomplete_plan):
+            seams, verified, _ = self._production_seams()
+        self.assertTrue(seams.hardware_detection_incomplete)
+        self.assertIn("firmware-a", seams.firmware_packages)
+        self.assertEqual(
+            seams.support_installed_bound,
+            verified.selected_installed_bytes(
+                seams.firmware_packages, seams.microcode_packages
+            ),
+        )
+        self.assertGreater(seams.support_installed_bound, 0)
 
 
 if __name__ == "__main__":

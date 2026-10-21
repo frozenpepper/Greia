@@ -131,6 +131,10 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-21 — Incomplete hardware detection never stops the install (SOURCE)
+
+Owner decision: an incomplete hardware/firmware detection must not refuse an installation. `InstallerHardwareEnablementPlan` now carries `fallback_firmware`: when the plan is incomplete, the pool-provided subset of `FALLBACK_NETWORK_FIRMWARE` (`firmware-iwlwifi`, `-realtek`, `-atheros`, `-brcm80211`, `-libertas`, `-misc-nonfree`) is unioned with whatever the resolvers did produce and with microcode. `engine._prepare_hardware_support` and the A/B `device_seams` seam proceed (stderr journal line) instead of refusing; the A/B `selected_installed_bytes` bound covers the fallback. `install-record.json` records `hardware_detection: "incomplete"`, `hardware_fallback_packages` and up to three diagnostics; the completion page shows a localized (it/en/es/fr) note via a display-only flag on the `INSTALLED` answer. Pool verification failures (corrupt/unverified pool, identity mismatch) still refuse before any disk change. The hardware-inventory attestation gate (`inventory_complete`, sysfs token) is unchanged. UNPROVEN on hardware; unit tests only.
+
 ## 2026-10-21 — Boot logo native size, Wi-Fi resume hook and Parent API locking
 
 - **Boot logo**: `greia_platform.boot_animation` now draws frames and the static canvas at native pixel size, centred on white, with one shared factor `min(1, fit)` (`native_scale`); it shrinks only when the display is smaller than the art. Installer frame preparation uses the same rule. GRUB (`padding` scale method) and the early framebuffer splash (`greia-fb-splash.c`) still fit-to-screen and so still enlarge on big screens; not changed (needs a theme/C change). Tests: `tests/test_boot_logo_native_size.py`. Source/unit evidence only; no visual review on hardware.

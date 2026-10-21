@@ -80,6 +80,24 @@ def pool(
     )
 
 
+def _sized_pool() -> VerifiedHardwareSupportPool:
+    from greia_installer.hardware_support import HardwareSupportPoolPackage
+
+    def entry(name: str, installed: int) -> HardwareSupportPoolPackage:
+        return HardwareSupportPoolPackage(
+            name, "1", "all", f"pool/{name}.deb", installed // 2, "0" * 64, True, installed
+        )
+
+    names = {"firmware-iwlwifi": 1000, "firmware-realtek": 2000}
+    return VerifiedHardwareSupportPool(
+        Path("/verified-pool"), "trixie", "amd64",
+        tuple(entry(n, b) for n, b in names.items()),
+        frozenset(names), frozenset(names), frozenset(),
+        1500, 3000, (),
+        dependency_closures=tuple((n, (n,)) for n in names),
+    )
+
+
 def plan(*recommendations: HardwareSupportRecommendation, complete: bool = True) -> HardwareSupportPlan:
     return HardwareSupportPlan("token", tuple(recommendations), complete)
 
@@ -204,7 +222,7 @@ class InstallerHardwareEnablementPlannerTests(unittest.TestCase):
         self.assertTrue(result.complete)
         self.assertEqual(result.target_packages, ())
 
-    def test_missing_required_firmware_degrades_and_suppresses_all_target_packages(self) -> None:
+    def test_missing_required_firmware_degrades_and_adds_pool_fallback(self) -> None:
         resolver = StaticResolver(
             plan(
                 HardwareSupportRecommendation(
@@ -226,10 +244,13 @@ class InstallerHardwareEnablementPlannerTests(unittest.TestCase):
         ).plan()
         self.assertFalse(result.complete)
         self.assertEqual(result.missing_packages, ("firmware-iwlwifi",))
-        self.assertEqual(result.target_packages, ())
+        # Resolved microcode is kept; only pool-provided fallback firmware is added.
+        self.assertEqual(result.fallback_firmware, ("firmware-realtek",))
+        self.assertEqual(result.target_packages, ("intel-microcode", "firmware-realtek"))
+        self.assertTrue(result.detection_incomplete)
         self.assertTrue(any("absent" in item for item in result.diagnostics))
 
-    def test_incomplete_resolver_plan_suppresses_packages_even_if_pool_contains_them(self) -> None:
+    def test_incomplete_resolver_plan_still_installs_fallback_from_pool(self) -> None:
         resolver = StaticResolver(
             plan(
                 HardwareSupportRecommendation(
@@ -245,8 +266,49 @@ class InstallerHardwareEnablementPlannerTests(unittest.TestCase):
             inventory_provider=StaticInventory(), resolver=resolver, pool=pool()
         ).plan()
         self.assertFalse(result.complete)
+        self.assertEqual(result.target_packages, ("firmware-realtek",))
+        self.assertTrue(any("fallback" in item for item in result.diagnostics))
+
+    def test_fallback_contains_only_pool_provided_network_firmware(self) -> None:
+        wide = pool(
+            firmware=frozenset(
+                {"firmware-iwlwifi", "firmware-atheros", "firmware-linux-free", "firmware-misc-nonfree"}
+            ),
+            microcode=frozenset(),
+        )
+        result = InstallerHardwareEnablementPlanner(
+            inventory_provider=StaticInventory(),
+            resolver=StaticResolver(plan(complete=False)),
+            pool=wide,
+        ).plan()
+        self.assertEqual(
+            result.fallback_firmware,
+            ("firmware-iwlwifi", "firmware-atheros", "firmware-misc-nonfree"),
+        )
+        self.assertEqual(result.target_packages, result.fallback_firmware)
+
+    def test_complete_plan_adds_no_fallback(self) -> None:
+        result = InstallerHardwareEnablementPlanner(
+            inventory_provider=StaticInventory(),
+            resolver=StaticResolver(plan()),
+            pool=pool(),
+        ).plan()
+        self.assertTrue(result.complete)
+        self.assertEqual(result.fallback_firmware, ())
+        self.assertFalse(result.detection_incomplete)
         self.assertEqual(result.target_packages, ())
-        self.assertTrue(any("suppressed" in item for item in result.diagnostics))
+
+    def test_fallback_size_is_covered_by_selected_installed_bytes(self) -> None:
+        sized = _sized_pool()
+        result = InstallerHardwareEnablementPlanner(
+            inventory_provider=StaticInventory(),
+            resolver=StaticResolver(plan(complete=False)),
+            pool=sized,
+        ).plan()
+        self.assertEqual(result.fallback_firmware, ("firmware-iwlwifi", "firmware-realtek"))
+        self.assertEqual(
+            sized.selected_installed_bytes(result.fallback_firmware, ()), 3000
+        )
 
 
 def _enablement_plan(
@@ -363,7 +425,7 @@ class BoundDriverModuleMetadataTests(unittest.TestCase):
         self.assertEqual(runner.commands, [])
         self.assertIn("kernel module metadata is unreadable", result.diagnostics[0])
 
-    def test_hidden_module_tree_stops_the_install_plan_before_disk_changes(self) -> None:
+    def test_hidden_module_tree_falls_back_to_common_firmware(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             resolver = BoundDriverFirmwareResolver(
                 iwlwifi_pool(),
@@ -376,7 +438,8 @@ class BoundDriverModuleMetadataTests(unittest.TestCase):
                 pool=iwlwifi_pool(),
             ).plan()
         self.assertFalse(decision.complete)
-        self.assertEqual(decision.target_packages, ())
+        # Never stops the install: the verified common firmware is added instead.
+        self.assertEqual(decision.target_packages, ("firmware-iwlwifi",))
         self.assertTrue(any("unreadable" in item for item in decision.diagnostics))
 
     def test_loaded_module_firmware_is_selected(self) -> None:

@@ -268,6 +268,9 @@ class FreshAbInstallSeams:
     microcode_packages: tuple[str, ...] = ()
     payload_stream_factory: Callable[[], BinaryIO] | None = None
     inventory_complete: bool = True
+    #: Resolver detection was incomplete and fallback firmware was selected
+    #: (display-only note for the completion page).
+    hardware_detection_incomplete: bool = False
     post_layout_identity_observer: PostLayoutIdentityObserver | None = None
 
     def __post_init__(self) -> None:
@@ -1078,6 +1081,7 @@ def build_ab_executor(
         result = execute_fresh_ab_install(request, seams, progress=progress)
         return _InstallResultShim(
             release_id=result.release_id,
+            hardware_detection_incomplete=seams.hardware_detection_incomplete,
         )
 
     # Read by InstallTransactionService.execute_ab_install: this executor
@@ -1091,6 +1095,7 @@ class _InstallResultShim:
     """Minimal install-result carrying the accepted release identity."""
 
     release_id: str
+    hardware_detection_incomplete: bool = False
 
 
 # ---------------------------------------------------------------------------

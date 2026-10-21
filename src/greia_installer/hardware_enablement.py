@@ -35,6 +35,24 @@ _MAX_FIRMWARE_DECLARATIONS_PER_DRIVER = 256
 _MAX_FIRMWARE_DECLARATION_BYTES = 1024
 
 
+#: Common network/Wi-Fi firmware installed when hardware detection is
+#: incomplete (owner decision 2026-10-21: an incomplete detection must never
+#: stop an installation, and a machine without Wi-Fi firmware cannot reach
+#: Greia Parents).  Only names that the verified media pool classifies as
+#: firmware are ever selected, so a pool that omits one simply skips it.
+FALLBACK_NETWORK_FIRMWARE: tuple[str, ...] = (
+    "firmware-iwlwifi",
+    "firmware-realtek",
+    "firmware-atheros",
+    "firmware-brcm80211",
+    "firmware-libertas",
+    "firmware-misc-nonfree",
+)
+
+#: At most this many diagnostics are persisted/logged for an incomplete detection.
+MAX_RECORDED_DIAGNOSTICS = 3
+
+
 class HardwareEnablementPlanError(RuntimeError):
     pass
 
@@ -81,6 +99,9 @@ class InstallerHardwareEnablementPlan:
     required_microcode: tuple[str, ...]
     missing_packages: tuple[str, ...]
     diagnostics: tuple[str, ...]
+    #: Pool-provided common network firmware added because detection was
+    #: incomplete (empty for a complete plan).
+    fallback_firmware: tuple[str, ...] = ()
 
     @property
     def complete(self) -> bool:
@@ -88,9 +109,31 @@ class InstallerHardwareEnablementPlan:
 
     @property
     def target_packages(self) -> tuple[str, ...]:
-        if not self.complete:
-            return ()
-        return tuple(dict.fromkeys((*self.required_firmware, *self.required_microcode)))
+        """Everything to install: resolved firmware/microcode plus any fallback.
+
+        Incomplete detection never suppresses installation; it widens the
+        selection with the verified fallback network firmware instead.
+        """
+
+        return tuple(
+            dict.fromkeys(
+                (
+                    *self.required_firmware,
+                    *self.required_microcode,
+                    *self.fallback_firmware,
+                )
+            )
+        )
+
+    @property
+    def detection_incomplete(self) -> bool:
+        """True when detection was incomplete at any point (fallback applied)."""
+
+        return not self.complete or bool(self.fallback_firmware)
+
+    @property
+    def recorded_diagnostics(self) -> tuple[str, ...]:
+        return self.diagnostics[:MAX_RECORDED_DIAGNOSTICS]
 
     @property
     def degraded(self) -> bool:
@@ -245,37 +288,40 @@ class InstallerHardwareEnablementPlanner:
 
         if not resolution.complete:
             diagnostics.append(
-                "automatic hardware enablement is incomplete; target package installation is suppressed"
+                "automatic hardware enablement is incomplete; "
+                "common network firmware is added as a fallback"
             )
-        else:
-            for item in resolution.recommendations:
-                # isenkram's broad modalias lookup is advisory because it can
-                # suggest user-space utilities. A recommendation becomes safe
-                # automatic firmware only when the independently verified pool
-                # classifies that exact package as firmware.
-                if (
-                    item.disposition is SupportDisposition.ADVISORY
-                    and item.kind is SupportKind.HARDWARE_PACKAGE
-                    and item.package in self._pool.provided_firmware
-                ):
+        # Recommendations the resolvers did produce stay valid even when the
+        # overall detection is incomplete: they are still verified against
+        # the pool below.
+        for item in resolution.recommendations:
+            # isenkram's broad modalias lookup is advisory because it can
+            # suggest user-space utilities. A recommendation becomes safe
+            # automatic firmware only when the independently verified pool
+            # classifies that exact package as firmware.
+            if (
+                item.disposition is SupportDisposition.ADVISORY
+                and item.kind is SupportKind.HARDWARE_PACKAGE
+                and item.package in self._pool.provided_firmware
+            ):
+                required_firmware.append(item.package)
+                continue
+            if item.disposition is not SupportDisposition.AUTO_ELIGIBLE:
+                continue
+            if item.kind is SupportKind.FIRMWARE:
+                if item.package in self._pool.provided_firmware:
                     required_firmware.append(item.package)
-                    continue
-                if item.disposition is not SupportDisposition.AUTO_ELIGIBLE:
-                    continue
-                if item.kind is SupportKind.FIRMWARE:
-                    if item.package in self._pool.provided_firmware:
-                        required_firmware.append(item.package)
-                    else:
-                        missing.append(item.package)
-                elif item.kind is SupportKind.MICROCODE:
-                    if item.package in self._pool.provided_microcode:
-                        required_microcode.append(item.package)
-                    else:
-                        missing.append(item.package)
                 else:
-                    diagnostics.append(
-                        f"ignored non-firmware automatic recommendation: {item.package}"
-                    )
+                    missing.append(item.package)
+            elif item.kind is SupportKind.MICROCODE:
+                if item.package in self._pool.provided_microcode:
+                    required_microcode.append(item.package)
+                else:
+                    missing.append(item.package)
+            else:
+                diagnostics.append(
+                    f"ignored non-firmware automatic recommendation: {item.package}"
+                )
 
         if missing:
             diagnostics.append(
@@ -283,6 +329,16 @@ class InstallerHardwareEnablementPlanner:
                 + ", ".join(sorted(set(missing)))
             )
 
+        incomplete = not resolution.complete or bool(missing)
+        fallback = (
+            tuple(
+                name
+                for name in FALLBACK_NETWORK_FIRMWARE
+                if name in self._pool.provided_firmware
+            )
+            if incomplete
+            else ()
+        )
         return InstallerHardwareEnablementPlan(
             inventory=inventory,
             resolver_plan=resolution,
@@ -290,6 +346,7 @@ class InstallerHardwareEnablementPlanner:
             required_microcode=tuple(sorted(set(required_microcode))),
             missing_packages=tuple(sorted(set(missing))),
             diagnostics=tuple(diagnostics),
+            fallback_firmware=fallback,
         )
 
     @classmethod
@@ -354,6 +411,9 @@ def merge_hardware_enablement_plans(
         diagnostics=tuple(
             dict.fromkeys((*initial.diagnostics, *refreshed.diagnostics))
         ),
+        # The initial fallback stays installed: a later complete snapshot adds
+        # to the pre-erase selection, it never removes it.
+        fallback_firmware=initial.fallback_firmware,
     )
 
 
