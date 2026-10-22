@@ -17,6 +17,7 @@ from .voxstage_client import VoxStageClient, VoxStageServiceError
 
 
 class VoxStageProvider(VoiceProvider):
+    supports_spoken_carrier = True
     """Adapt semantic Greia requests to one serialized VoxStage worker.
 
     The repository reference and transcript establish identity on fresh machines.

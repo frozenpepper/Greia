@@ -180,6 +180,54 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+
+### 2026-10-22 — Automatic short requests implemented
+
+Normal VoiceEngine VoxStage requests now auto-route ≤4 words into localized
+carrier → retained v6 extraction → delivered-target Base checking, including
+Dani and single words. All CLI/JSONL/Python/socket entry points share the engine
+branch. New request fields: short_text_mode=auto/off/on, short_text_max_words=4,
+short_text_max_alnum=null. Three total takes by default, automatic short cap three;
+native pedagogical speech stays excluded. Unsupported retained providers keep
+their ordinary route in auto mode and reject forced on. Explicit corpus carrier
+raw requests disable wrapping, preventing duplicate intro/nested budgets.
+
+The new modular policy/lifecycle/delivery/target-check collaborators reuse existing
+providers, cutter and audio packaging. Automatic short output is fail-closed:
+score >0.8, matching target word count, no signal flags; exhaustion publishes no
+output, preserves earlier destination and all attempt evidence. Missing alignment
+blocks before synthesis; infrastructure failure does not rerender. ASR off alone
+still aligns/cuts; both wrapping off + verification off give zero ASR.
+
+A 24-existing-source public-engine replay exposed leading silence left by the
+midpoint cutter. Shared delivery preparation now removes ONLY within the same
+verified quiet run, preserving 100ms and the original v6 extraction; actual final
+PCM is checked again. No threshold relaxed. Before: 10/24 published; after: 15/24
+published, 9 rejected. All four languages have successful replays. This used a
+fixture provider, 48 exact-byte cached Base observations plus 24 new Base checks;
+NO new TTS or runtime installation. Routing/corpus focused tests: 110 PASS,
+including 24 actor/locale cases, actual socket transport, retry/exhaustion,
+provider/ASR faults, no double wrapping and sample-preserving delivery trim.
+
+Full make verify with Anaconda Python3.12 and dummy SDL drivers executed during
+development: 5,672 tests, 1 failure/3 errors/8 skips, NOT GREEN (known ARM64 profile,
+macOS lsblk and MBR diagnostic cases). Final changed-source focused check above
+ran after final helper changes. Exact logs/source snapshots are external:
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-automatic-short-routing/`.
+The general shared durable/dual-queue programme remains proposed.
+
+Old priority producer 87089 was stopped for this delivery fix; completed in-flight
+ask_Y job 20261022-015655-3cf72c6f was recovered, no take discarded/reset. The old
+run's 78 installed + 167 kept remain. New continuation uses the same frozen 667
+scope/history and budgets, including exact-original whale reconciliation, in
+`.../2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production/`.
+Started PID 17915 (exec session 64973), with 1,298 exact-byte ASR cache entries
+carried forward; startup audit is progressing. Worker short_carrier_luna resumed
+monitoring. This continuation supersedes earlier producer/whale follow-up steps:
+whale is included here, with no separate follow-up producer. See its live
+journal/log and the worker before submitting any duplicate producer.
+
+
 ### 2026-10-22 — Voice documentation consistency audit
 
 Reworked `tools/greia_voice_core/README.md` as the practical usage reference;

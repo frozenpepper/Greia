@@ -484,9 +484,11 @@ an old v4 producer or the unimplemented shared two-queue plan.
 ### Usage/reference consistency
 
 `tools/greia_voice_core/README.md` is the practical entry point for current CLI,
-JSON/Python fields, defaults, return statuses, service ports and recovery. Ordinary
-requests use auto verification/two total takes and preserve Dani/short eligibility
-exclusions; warning output can still exit 0. Only the scoped carrier corpus path
-currently implements final packaged-target fail-closed checks for every actor and
-three cumulative takes. Automatic short routing and the separate verification
-queue remain proposed. Never describe them as shipped ordinary API behavior.
+JSON/Python fields, defaults, return statuses, service ports and recovery. Normal VoxStage character requests now auto-route fewer than five words to the
+localized carrier/cut/final-Base path, including Dani and single words. Defaults:
+short_text_mode=auto, short_text_max_words=4, short_text_max_alnum=null, three total
+takes. CLI/JSON/Python can override mode/thresholds. Pedagogical speech stays native;
+Chatterbox auto retains its ordinary route. Long/bypass verification retains its
+older eligibility/advisory-warning behavior. Only separate verification queues
+remain proposed. Explicit corpus raw synthesis uses short_text_mode=off to prevent
+double wrapping; its frozen selection and cumulative budgets remain unchanged.

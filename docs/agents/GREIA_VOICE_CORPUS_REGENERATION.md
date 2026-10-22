@@ -574,7 +574,8 @@ Use the frozen original selection; a different subset/scope requires an explicit
 owner work order. The coordinator does not infer scripts from filenames, accept
 arbitrary replacement text from triage, or repair metadata gaps by guessing.
 Current short eligibility is 1–3 words or 4 words with ≤28 Unicode alphanumerics,
-not a configurable public “under five words” parameter. Finisher checks force
+distinct from the normal VoiceEngine API's now-configurable default of fewer
+than five words. Finisher checks force
 Base, ignore_accents=true and required final-target scoring; ordinary requests
 and explicit carrier planning retain the documented strict-accent override.
 
@@ -661,3 +662,16 @@ rejections whose provider take is known complete. It stops for uncertain jobs,
 corrupt provenance, decode/packaging infrastructure or installation errors.
 Exhausted takes become a remaining list; do not quietly relax thresholds, alter
 words/masters, add retries or relabel a machine failure as human acceptance.
+
+
+### Automatic API routing and corpus compatibility (2026-10-22)
+
+Normal VoiceEngine VoxStage requests now automatically wrap short text. Corpus
+carrier synthesis explicitly sets short_text_mode=off for its already-composed
+raw request, preventing double intros/nested retries. The frozen 667 priority
+selection and cumulative budgets do not expand to the normal API's broader
+four-word default. Packaging shares verified-gap delivery preparation and final
+TargetQualityChecker; the original v6 midpoint WAV is preserved. New delivery
+PCM has its own receipt path/hash and is archived by manual retry alongside the
+other attempt files. Reconcile a running older producer before adopting new
+helper code; never launch a duplicate or discard completed provider output.

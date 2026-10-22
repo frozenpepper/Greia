@@ -27,6 +27,7 @@ class VoiceProviderError(RuntimeError):
 class VoiceProvider(ABC):
     provider_id: str
     supports_delivery_prompt = False
+    supports_spoken_carrier = False
 
     @abstractmethod
     def supports(self, request: VoiceRequest, profile: VoiceProfile | None) -> bool:

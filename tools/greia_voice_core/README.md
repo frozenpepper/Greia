@@ -12,18 +12,21 @@ semantic requests; they do not invoke TTS, Whisper or trimming tools themselves.
 
 | Need | Entry point | Implemented behavior |
 |---|---|---|
-| One new line, JSONL batch, or requests over time | `greia_voice.py generate / batch / serve / request` | Serialized synthesis; optional eligible-line Base verification; review audio and receipt |
+| One new line, JSONL batch, or requests over time | `greia_voice.py generate / batch / serve / request` | Automatic short carrier/cut/Base routing; serialized synthesis; review audio and receipt |
 | Inventory and replace an owner-authorized existing corpus | `regenerate_voice_corpus.py` | Frozen scripts, external originals, progress journal, recoverable installation |
 | Finish the frozen problematic short-phrase selection | `finish_voice_priority.py` | Audit installed takes, recover saved sources, then bounded fresh carrier/cut/Base attempts |
 | Cut an already generated carrier recording | `voice_carrier.py` | Target-suffix alignment and measured PCM pause; separate extracted WAV and evidence |
 | Screen an installed corpus without changing it | `regenerate_voice_corpus.py review / reassess` | External automated findings and listening queue |
 | Human listening, master comparison, saved scores/notes | `export_voice_review_batch.py` → shared Takeboard | Separate human judgments; no automatic runtime promotion |
 
-**Current boundary:** ordinary `generate`, `batch` and `request` do not
-automatically prepend/cut short text. The strict carrier workflow is implemented
-in corpus tooling. The general asynchronous generation/verification queues,
-automatic short-request routing and configurable word-limit API are still
-[proposed work](../../docs/plans/2026-10-22_VERIFIED_VOICE_PIPELINE/README.md).
+**Current default:** normal VoxStage character requests with **fewer than five
+words** automatically use the localized carrier → cut → final Base pipeline.
+This applies to CLI, JSONL, Python and warm-service requests, including Dani.
+Deterministic pedagogical speech stays on its native route. `short_text_mode=off`
+explicitly bypasses wrapping; word/character limits are configurable per request.
+The retained Chatterbox adapter uses the ordinary route in auto mode; forcing
+`on` on an unsupported provider is rejected. Separate durable generation and
+verification queues remain [proposed shared work](../../docs/plans/2026-10-22_VERIFIED_VOICE_PIPELINE/README.md).
 
 ## 1. Readiness and dependencies
 
@@ -127,8 +130,11 @@ JSON/Python requests share these fields:
 | `output` | optional WAV/OGG path; absent → authoring-state review folder; relative → repository root |
 | `delivery_prompt` | empty → character default; nonempty → cue-specific performance |
 | `verification` | `auto`; alternatives `required`, `off` |
-| `max_attempts` | **2 total**, allowed 1–4; includes the initial take |
+| `max_attempts` | **3 total**, allowed 1–4 on ordinary routes; short pipeline caps at 3; includes the initial take |
 | `ignore_accents` | **true**; false restores strict diacritic comparison |
+| `short_text_mode` | **auto**; `off` bypasses wrapping; `on` forces it on a supported character provider |
+| `short_text_max_words` | **4** inclusive, allowed 1–20; Unicode words with internal apostrophes |
+| `short_text_max_alnum` | **null**; optional additional AND limit, 1–1000 Unicode letters/digits |
 
 For in-process use, start Python with `PYTHONPATH=tools:src` from the repo root:
 
@@ -158,9 +164,9 @@ Comparison ignores diacritics by default (`trovò` = `trovo`), preserving origin
 scripts/transcripts. Override with CLI `--strict-accents`, JSON
 `"ignore_accents": false`, or Python `ignore_accents=False`.
 
-### Ordinary VoiceEngine requests
+### Ordinary route (long speech or explicit carrier bypass)
 
-Eligibility currently excludes Dani, pedagogical/other excluded kinds, one-word
+On this ordinary route, eligibility currently excludes Dani, pedagogical/other excluded kinds, one-word
 utterances, and text over 500 characters. `required` does **not** remove those
 exclusions. For eligible requests:
 
@@ -173,25 +179,63 @@ Only `WARN` triggers another synthesis, up to `max_attempts`. The ordinary engin
 checks the provider's temporary WAV before final packaging. After exhausted
 warnings it still writes the **last** take and receipt, returning
 `REVIEW_REQUIRED_ASR_WARNING`. It does not choose the highest-scoring take or
-fail closed on ASR. Ordinary verification does not apply the corpus signal gate.
+fail closed on ASR. This ordinary route does not apply the automatic short pipeline's signal gate.
 
-`generate`, `batch`, and `request` exit 0 when output exists, including ASR-warning
+`generate`, `batch`, and `request` exit 0 when the result returns an output path, including ASR-warning
 output; exit 2 indicates missing/rejected/unavailable output or request error.
 Inspect each result's `disposition`, `verification` and receipt, not exit status
 alone. Every successful output has a sibling `<audio>.receipt.json` with request,
 provider/job/settings/seeds, master identity, attempts, output hash and
 `human_review=PENDING`.
 
-### Strict short-phrase corpus workflow
+### Automatic short-phrase pipeline
 
-The priority finisher uses a stronger gate for **all six actors**, including
-Dani and short targets. Raw carrier synthesis has verification OFF: introductory
+Automatic short requests use a stronger gate for **all six actors**, including
+Dani and one-word targets. Raw carrier synthesis has verification OFF: introductory
 mistakes are disposable. The cutter locates the final target and a unique quiet
 PCM run; it does not require correctly spoken intro words or a literal ASR word
 count. The delivered target is then checked with Base, including the actual
 decoded delivery after lossy packaging. Installation requires score **>0.8** and
 no signal flags. Internal pauses/trailing silence **<1.5s** do not warn; other
 signal checks (including leading silence ≥0.4s) remain active.
+
+Final token counts must also match the target, preventing added/repeated words
+from passing on similarity alone. Exhaustion returns REJECTED with no output path,
+retaining raw takes/evidence and the prior destination. An unavailable alignment
+verifier blocks before synthesis. Provider/ASR/infrastructure errors stop without
+spending another take. Evidence is retained under `GREIA_VOICE_HOME/short-phrases/`;
+archive it after review. There is no blind automatic restart of an uncertain job.
+
+The extractor's original midpoint result is retained. Delivery removes only the
+residual prefix inside that same measured quiet run, leaving 100 ms of verified
+silence before its end. The actual delivered rendition is checked again. This
+does not search for a new cut in speech or weaken silence/score thresholds.
+
+`--verification off` skips final quality scoring but still performs the ASR
+needed to locate/check a safe cut. For zero ASR, explicitly use **both**
+`--short-text-mode off --verification off`. Such output is unverified, not PASS.
+
+CLI overrides (JSON/Python use the corresponding underscore names):
+
+```bash
+# Normal generate/request arguments plus these optional routing controls:
+# --short-text-mode auto|off|on
+# --short-text-max-words 4
+# --short-text-max-alnum 28
+```
+
+Each automatic call uses up to three total provider takes, bounded further by
+`max_attempts`. No more than 240 characters may enter the composite and the
+combined delivery must fit 300; oversize composites fail before submission so
+VoxStage cannot split intro/target into separate recordings.
+
+### Existing frozen corpus operations
+
+The finisher retains its original narrower selection (1–3 words or 4 words with
+≤28 alphanumerics); the new automatic API default does not expand that scope.
+Its explicit raw carrier requests set `short_text_mode=off` to prevent double
+wrapping. Shared delivery preparation and packaged-target checking are reused;
+legacy frozen corpus checks retain their original token-count policy.
 
 An ASR/cut rejection preserves the prior runtime audio. Distinct saved sources
 are tried first. New takes use the language prefix, ellipsis/blank line and a
@@ -200,13 +244,12 @@ assuming the requested silence happened. Maximum **three cumulative fresh
 provider generations per cue across history**, not three per restart. Deferred
 recordings and deterministic isolated letters/syllables remain excluded.
 
-Current short selection is 1–3 words, or 4 words with ≤28 Unicode letters/digits.
 Very short targets and letter names can be false-rejected by ASR. Exhaustion
 means unresolved automated evidence, not proof that the recording sounds wrong;
 retain the take for listening rather than silently relaxing the gate.
 
-Speaker selection is configurable; word/character limits currently live in
-`greia_voice_corpus/carriers.py`, with no public word-limit CLI flag.
+Corpus speaker selection and its frozen word/character rule remain separate
+from the normal API routing parameters above.
 See the [exact corpus commands/recovery](../../docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md)
 and [cutter contract](../../docs/agents/GREIA_SPOKEN_CARRIER_EXTRACTION.md).
 Standalone extraction does not synthesize, retry or install files.

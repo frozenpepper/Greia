@@ -22,9 +22,12 @@ def request_from_mapping(payload: dict) -> VoiceRequest:
         cue_id=str(payload["cue_id"]) if payload.get("cue_id") is not None else None,
         output=Path(output) if output else None,
         verification=VerificationMode(str(payload.get("verification", "auto"))),
-        max_attempts=int(payload.get("max_attempts", 2)),
+        max_attempts=int(payload.get("max_attempts", 3)),
         delivery_prompt=payload.get("delivery_prompt", ""),
         ignore_accents=payload.get("ignore_accents", True),
+        short_text_mode=payload.get("short_text_mode", "auto"),
+        short_text_max_words=payload.get("short_text_max_words", 4),
+        short_text_max_alnum=payload.get("short_text_max_alnum"),
     )
 
 

@@ -54,6 +54,9 @@ def _request_from_args(args: argparse.Namespace) -> VoiceRequest:
         max_attempts=args.max_attempts,
         delivery_prompt=args.delivery_prompt,
         ignore_accents=not args.strict_accents,
+        short_text_mode=args.short_text_mode,
+        short_text_max_words=args.short_text_max_words,
+        short_text_max_alnum=args.short_text_max_alnum,
     )
 
 
@@ -174,7 +177,12 @@ def add_request_arguments(parser: argparse.ArgumentParser) -> None:
         default=VerificationMode.AUTO.value,
         choices=[mode.value for mode in VerificationMode],
     )
-    parser.add_argument("--max-attempts", type=int, default=2)
+    parser.add_argument("--max-attempts", type=int, default=3)
+    parser.add_argument("--short-text-mode", choices=("auto", "off", "on"), default="auto")
+    parser.add_argument("--short-text-max-words", type=int, default=4,
+                        help="automatic carrier threshold, inclusive (default: fewer than five words)")
+    parser.add_argument("--short-text-max-alnum", type=int,
+                        help="optional additional Unicode letter/digit limit")
     parser.add_argument("--strict-accents", action="store_true",
                         help="treat ASR diacritic differences as errors (default ignores them)")
 

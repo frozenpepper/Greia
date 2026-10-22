@@ -49,6 +49,7 @@ class VoiceEngine:
         verifier: SpeechVerifier | None = None,
         audio_pipeline: AudioPipeline | None = None,
         generation_lock: object | None = None,
+        short_phrase_pipeline=None,
     ) -> None:
         self.project_root = project_root.resolve()
         self.registry = registry
@@ -58,6 +59,8 @@ class VoiceEngine:
         self.generation_lock = generation_lock or InterprocessGenerationLock(
             voice_home() / "generation.lock"
         )
+        from .short_phrases import ShortPhrasePipeline
+        self.short_phrases = short_phrase_pipeline or ShortPhrasePipeline()
 
     def close(self) -> None:
         for provider in self.providers:
@@ -221,6 +224,13 @@ class VoiceEngine:
             )
 
         output = self._resolve_output(request)
+        try:
+            if self.short_phrases.policy.selected(request, provider):
+                return self.short_phrases.generate(self, request, provider, profile)
+        except (ValueError, VoiceProviderError, AudioPipelineError, GenerationLockError, OSError) as exc:
+            return GenerationResult(
+                GenerationDisposition.REJECTED, request, provider.provider_id, None, None,
+                VerificationResult(VerificationDisposition.NOT_RUN, "none", detail=str(exc)), 0, str(exc))
         best_take = None
         best_verification = VerificationResult(
             disposition=VerificationDisposition.NOT_RUN,

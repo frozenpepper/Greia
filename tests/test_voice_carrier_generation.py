@@ -130,7 +130,7 @@ class CarrierGenerationIntegrationTests(unittest.TestCase):
         self.assertEqual(engine.calls[0].verification.value, "off")
         self.assertEqual(receipt["verification"]["disposition"], "PASS")
         self.assertEqual(receipt["verification"]["score"], 1.)
-        self.assertEqual(len(calls), 2, "identical delivered WAV should reuse target ASR")
+        self.assertEqual(len(calls), 3, "delivery trimming changes PCM and requires final delivered ASR")
 
     def test_saved_recovery_checks_quality_without_synthesizing(self):
         row = self.row("wav")
@@ -140,7 +140,8 @@ class CarrierGenerationIntegrationTests(unittest.TestCase):
         raw = self.work / "carrier-raw" / (row["path"] + ".raw.wav")
         generate_candidate(engine, store, row, profile, "off", transcriber=self.transcriber(raw))
         for path in (self.work / "candidates" / row["path"], receipt_path(self.work / "candidates" / row["path"]),
-                     self.work / "carrier-extracted" / (row["path"] + ".extracted.wav")):
+                     self.work / "carrier-extracted" / (row["path"] + ".extracted.wav"),
+                     self.work / "carrier-extracted" / (row["path"] + ".delivery.wav")):
             path.unlink()
         with self.assertRaises(CarrierExtractionFailure):
             prepare_saved_candidate(engine, store, row, profile, "required", transcriber=self.transcriber(raw))

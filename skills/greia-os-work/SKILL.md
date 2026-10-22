@@ -783,3 +783,11 @@ installed takes and recovers saved providers before fresh, carries three-take
 cumulative budgets and requires Base target score >0.8 with no signal warnings.
 Read the voice-production skill and corpus manual for execution/recovery;
 this does not authorize deferred retakes or accept new audio as human-reviewed.
+
+
+Automatic short voice requests (2026-10-22): normal VoxStage speech now routes
+≤4 words through localized carrier/cut/final-Base checks at VoiceEngine entry.
+CLI/JSON/Python routing/word/character overrides live in the usage README; native
+pedagogical speech stays excluded. Three total takes, no published failed target.
+Explicit corpus raw synthesis bypasses auto wrapping to preserve frozen scripts.
+The general separate verification queue is still proposed.

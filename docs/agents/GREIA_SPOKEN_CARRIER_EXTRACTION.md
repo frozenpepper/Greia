@@ -169,8 +169,9 @@ ignore_accents, asr_model and asr_revision; v5 experiments remain historical.
 
 ## Strict corpus completion versus standalone cutting
 
-Ordinary `greia_voice.py generate/batch/request` do not automatically add a
-carrier. Explicit corpus plans use this cutter; their target-match policy and
+Normal VoxStage `greia_voice.py generate/batch/request` now automatically add a
+carrier for ≤4 words by default; request mode/thresholds can override this.
+Explicit corpus plans also use this cutter; their target-match policy and
 `run --verification` are distinct controls. `target_verification=warn` allows
 bounded target-ASR uncertainty at extraction; `run --verification required` still
 requires a packaged target score >0.8 and no signal flags before installation.
@@ -184,3 +185,14 @@ two-second pause direction for fresh takes. Existing saved sources keep their
 actual original composite/direction in recovery plans. A requested two-second
 pause is not a measured guarantee. See the corpus manual for exact commands,
 three-take history reconciliation, crash recovery and progress semantics.
+
+
+## Delivery preparation after the v6 midpoint cut
+
+`greia_voice_core/short_delivery.py` retains the v6 midpoint extraction intact.
+For final playback it advances only within the same verified quiet run, stopping
+100 ms before its measured end. Exact PCM suffix copying removes avoidable leading
+pause without searching inside speech or relaxing the 0.4s leading-silence gate.
+Receipt `delivery` records offset, raw start sample and separate file/hash.
+Automatic requests and corpus packaging use this shared helper and verify the
+actual delivered audio; standalone v6 extraction remains unchanged.

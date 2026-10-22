@@ -8,12 +8,8 @@ from greia_voice_core.asr_policy import DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION
 
 
 CARRIER_MODE = "spoken-short-v1"
-PREFIXES = {
-    "en": "Listen to this phrase in English.",
-    "it": "Ascolta questa frase in italiano.",
-    "fr": "Cette phrase est en français.",
-    "es": "Escucha esta frase en español.",
-}
+from greia_voice_core.short_policy import PREFIXES
+
 SPEAKERS = frozenset({"dani", "momo", "tito", "lilli", "leo", "flash"})
 
 

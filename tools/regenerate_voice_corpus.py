@@ -152,7 +152,7 @@ def mutate_command(args) -> int:
                 carrier_archive = store.work / "failed-carrier-attempts" / str(time.time_ns())
                 for family, suffixes in (
                     ("carrier-raw", (".raw.wav", ".raw.wav.receipt.json", ".raw.wav.result.json")),
-                    ("carrier-extracted", (".extracted.wav", ".validation.wav")),
+                    ("carrier-extracted", (".extracted.wav", ".delivery.wav", ".validation.wav")),
                     ("carrier-evidence", (".failure.json",)),
                 ):
                     for suffix in suffixes:

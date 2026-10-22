@@ -329,3 +329,20 @@ unbounded retakes or bulk production.
 dirty paths. [Adversarial review](evidence/adversarial-review.md) records the two
 planning review passes and unresolved live predicates. Document validation checks
 plan structure only; it does not prove the future pipeline works.
+
+
+## Owner-authorized immediate Greia routing — 2026-10-22
+
+The owner explicitly required automatic short routing in normal recording calls.
+Implemented now in the existing Greia VoiceEngine using `short_policy.py`,
+`short_phrases.py`, `short_delivery.py` and shared `target_quality.py`: default
+≤4 words, per-request mode/word/optional-alnum overrides, native pedagogical
+exclusion, retained carrier evidence, three-take cap and final delivered Base
+checks. CLI, JSONL, Python and warm-service calls share that route. Corpus raw
+requests bypass wrapping internally, preserving existing frozen scope/budgets.
+
+This is the immediate Greia entry-point integration; it does not execute or close
+sessions 00–07 of the proposed shared VoxStage durable/dual-queue programme.
+Current calls remain serial. A later shared implementation must replace the
+local lifecycle behind the adapter, reusing policy/evidence and avoiding nested
+retries or two owners. The original proposed shared API is not yet callable.

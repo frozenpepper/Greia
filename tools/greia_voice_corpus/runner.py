@@ -82,6 +82,10 @@ class CorpusRunner:
             extracted = self.store.work / receipt["extracted_pcm"]["path"]
             if digest(extracted) != receipt["extracted_pcm"]["sha256"]:
                 raise ValueError("spoken-carrier extracted PCM source changed")
+            if "delivery_pcm" in receipt:
+                delivered = self.store.work / receipt["delivery_pcm"]["path"]
+                if digest(delivered) != receipt["delivery_pcm"]["sha256"]:
+                    raise ValueError("spoken-carrier delivery PCM source changed")
             return receipt
         for key in ("speaker", "kind", "locale", "text", "delivery_prompt"):
             if receipt["request"].get(key) != row["request"][key]:

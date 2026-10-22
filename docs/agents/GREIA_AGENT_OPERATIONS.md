@@ -778,5 +778,14 @@ completed outputs by actual provider job/idempotency metadata before continuing.
 Voice usage reference: `tools/greia_voice_core/README.md` documents exact current
 CLI/JSON/Python defaults, result handling, service ports and continuation commands.
 Ordinary API verification and strict carrier-corpus gates have different eligibility,
-retry and exit contracts; do not substitute one for the other. The separate shared
-verification queue and automatic short-request routing remain proposed work.
+retry and exit contracts; do not substitute one for the other. Automatic short-request routing is now implemented at VoiceEngine entry; the
+separate shared verification queue remains proposed work.
+
+
+Normal VoxStage character requests default to short_text_mode=auto (≤4 words,
+optional additional alphanumeric bound), with three total takes and final Base
+checks including Dani. CLI `--short-text-mode off` bypasses wrapping. Both that
+and `--verification off` are necessary for zero ASR. Native pedagogical requests
+are excluded. Frozen corpus raw requests disable auto wrapping internally;
+source `short_policy.py`, `short_phrases.py`, `short_delivery.py` and the shared
+`target_quality.py` own this path. See the usage README for fields and recovery.

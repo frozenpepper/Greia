@@ -42,11 +42,21 @@ class VoiceRequest:
     cue_id: str | None = None
     output: Path | None = None
     verification: VerificationMode = VerificationMode.AUTO
-    max_attempts: int = 2
+    max_attempts: int = 3
     delivery_prompt: str = ""
     ignore_accents: bool = True
+    short_text_mode: str = "auto"
+    short_text_max_words: int = 4
+    short_text_max_alnum: int | None = None
 
     def __post_init__(self) -> None:
+        if self.short_text_mode not in {"auto", "off", "on"}:
+            raise ValueError("short_text_mode must be auto, off or on")
+        if type(self.short_text_max_words) is not int or not 1 <= self.short_text_max_words <= 20:
+            raise ValueError("short_text_max_words must be an integer between 1 and 20")
+        if self.short_text_max_alnum is not None and (
+                type(self.short_text_max_alnum) is not int or not 1 <= self.short_text_max_alnum <= 1000):
+            raise ValueError("short_text_max_alnum must be null or an integer between 1 and 1000")
         if not isinstance(self.ignore_accents, bool):
             raise ValueError("ignore_accents must be a boolean")
         speaker = self.speaker.strip().lower()

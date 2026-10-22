@@ -3678,3 +3678,26 @@ for a one-path follow-up under the same cumulative budget. First fresh job
 producer continued. Source fixes/docs persisted in 027171567. Focused combined
 92 tests plus the added restoration positive/negative test PASS; full local
 make verify aborted with trap6 (not green). Production is RUNNING, not complete.
+
+
+### 2026-10-22 — Automatic short-phrase routing at canonical voice entry
+
+Owner explicitly required normal short recording requests to route automatically.
+Added small policy, lifecycle, delivery and target-check collaborators behind
+VoiceEngine, carried through CLI/JSONL/Python/socket requests: ≤4 words default,
+configurable word/optional-alnum thresholds, explicit auto/off/on, native pedagogy
+excluded. Three total short takes; final Base fail-closed for all actors, matching
+target token count, accent-insensitive default and explicit bypass. Corpus raw
+requests disable auto wrapping; frozen priority scope/budgets remain unchanged.
+
+Reused provider/cutter/packaging components and shared final-target checker.
+Verified residual-gap delivery preparation removes only known quiet PCM and
+preserves the v6 midpoint extraction/100ms guard; actual delivered PCM is checked.
+110 focused tests PASS. Existing-source replay: 24 fixtures across all four
+languages, 15 final passes/9 fail-closed, no new TTS or installation. Full local
+make verify executed during development: 5,672 tests with 1 failure/3 errors/8
+skips in known non-voice cases, NOT GREEN. Evidence/source boundaries in HANDOVER
+and `docs/reviews/2026-10-22_AUTOMATIC_SHORT_VOICE_ROUTING.md`. Old priority producer
+stopped/reconciled (completed ask_Y retained); continuation carries historical
+counts and selected sources. Shared separate generation/verification queues
+remain future work; no platform/hardware or human-listening closure claimed.

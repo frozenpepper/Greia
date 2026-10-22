@@ -182,7 +182,7 @@ are authoring-host adapters; no host command belongs in an Activity.
 
 The [usage README](../../tools/greia_voice_core/README.md) provides practical request,
 CLI, result and recovery examples. Ordinary requests default to verification
-`auto`, two total takes (configurable 1–4) and accent-insensitive comparison.
+`auto`, three total takes (configurable 1–4; automatic short route caps at three) and accent-insensitive comparison.
 Pinned cached multilingual Base is the default ASR. The ordinary verifier keeps
 its eligibility exclusions: Dani, pedagogical/other excluded kinds, single-word
 utterances and text over 500 characters. `required` does not override eligibility;
@@ -191,9 +191,10 @@ it changes unavailable eligible ASR to WARN. `off` performs no ASR.
 Ordinary generation checks the temporary provider WAV before packaging and
 retries only WARN. Exhaustion still returns the last take with
 REVIEW_REQUIRED_ASR_WARNING; CLI exit 0 means output exists, not ASR acceptance.
-It has no corpus waveform gate or automatic short-text carrier routing.
+That ordinary long/bypass route has no corpus waveform gate.
 
-The owner-scoped carrier corpus workflow differs: raw synthesis verification is
+Automatic short requests and the owner-scoped carrier corpus workflow differ
+from that ordinary route: raw synthesis verification is
 OFF because intro mistakes are disposable. It locates/cuts the expected target,
 then checks the actual delivered target with Base for every selected actor,
 including Dani. Required mode gates installation on score >0.8 and no signal
@@ -203,10 +204,20 @@ finisher. `prepare_saved_candidate` packages preserved sources without synthesis
 CorpusRunner owns the normal recoverable installation transaction. Defaults and
 strict-accent overrides are frozen in the carrier plan.
 
-`tools/finish_voice_priority.py` wraps existing components for the frozen priority
-selection; it does not create a general synthesis service. Current generation
-and verification are serial. Separate durable generation/verification queues and
-automatic configurable short-request routing remain proposed, not implemented.
+`ShortPhrasePolicy` selects fewer than five words by default for supported
+VoxStage character providers, excluding pedagogical speech. `ShortPhrasePipeline`
+owns retained raw takes, extraction and bounded final-target retries behind the
+same VoiceEngine entry point. `TargetQualityChecker` is shared with corpus
+production; the automatic route additionally guards target word count.
+`short_delivery.prepare_delivery` removes residual silence only inside the
+already verified gap, retaining 100 ms; it preserves the v6 extraction.
+Request/CLI/JSON routing mode and word/optional-alnum thresholds override defaults.
+Explicit corpus raw requests disable wrapping to prevent recursion/double intro.
+
+`finish_voice_priority.py` remains the coordinator for the frozen priority scope.
+Generation and verification are still serial; separate durable shared queues
+remain proposed. This change does not claim the proposed VoxStage scheduler/API
+sessions are complete.
 
 Every successful result contains pending-review audio and a `.receipt.json` with
 semantic input, provider ID, canonical voice/registry version, reference identity,
@@ -285,4 +296,5 @@ false is an explicit per-request strict override carried through CLI/JSON/servic
 No authored script or audio is normalized or rewritten. Screen policy v3 can
 rescore saved transcripts while retaining their original verifier provenance.
 Carrier v6 freezes the model and accent policy; historical plans stay immutable.
-This change does not implement the separately proposed shared asynchronous queue.
+Automatic short routing is implemented in the Greia engine; the separately
+proposed shared asynchronous queue remains future work.

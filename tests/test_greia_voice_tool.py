@@ -317,7 +317,7 @@ class VoiceEngineTests(unittest.TestCase):
                 )
             )
             self.assertEqual(result.disposition, GenerationDisposition.REVIEW_REQUIRED_ASR_WARNING)
-            self.assertEqual(provider.calls, 2)
+            self.assertEqual(provider.calls, 3)
 
     def test_dani_cannot_route_through_character_dialogue(self):
         with tempfile.TemporaryDirectory() as tmp:
