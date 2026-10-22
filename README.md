@@ -62,6 +62,13 @@ desktop, login prompt, file manager, package manager or browser chrome.
 - **Safe by construction.** Activities run sandboxed, removable media never
   autoruns, and installation is graphical and fails closed.
 
+## Guides for families
+
+- [Install Greia from a download and USB stick (Windows or Mac)](docs/user/INSTALL_FROM_USB.md)
+- [Greia Parents: the on-device S + T shortcut and browser controls](docs/user/GREIA_PARENTS.md)
+
+**No supported public installer is available yet.** These guides are release preparations, not an invitation to install a development image on a family computer. See the [guide home](docs/user/README.md) for the current starting point.
+
 ## Getting started (developers)
 
 You need Python 3.11+, `git` and `make`.
@@ -111,6 +118,9 @@ tests/                 the unittest suite
 
 | Start here for… | Read |
 |---|---|
+| Friendly parent and installer guides | [docs/user/README.md](docs/user/README.md) |
+| Create an Activity | [docs/development/CREATE_AN_ACTIVITY.md](docs/development/CREATE_AN_ACTIVITY.md) |
+| Build an OS image (human guide + linked agent runbook) | [docs/development/BUILD_A_GREIA_IMAGE.md](docs/development/BUILD_A_GREIA_IMAGE.md) |
 | How the docs fit together | [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md) |
 | Architecture overview | [docs/architecture/GREIA_ARCHITECTURE.md](docs/architecture/GREIA_ARCHITECTURE.md) |
 | Architecture decisions | [docs/adr/](docs/adr/) (start with ADR 0012, the platform constitution) |
