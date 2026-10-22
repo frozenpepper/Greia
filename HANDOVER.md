@@ -180,6 +180,30 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — Bulk retries stopped; rejection mechanism investigated
+
+Supersedes the running-PID checkpoints below. Parent stopped PID 86480 after the
+owner challenged 297/336 first-pass rejections. First pass: 39 installed, 292 kept,
+336 unresolved of 667; second pass had 287 eligible rows but is STOPPED FOR
+REJECTION DIAGNOSIS. No further producer may restart with unchanged v6 policy.
+Its submitted letterA job 20261022-142854-3615cf58 completed and was preserved
+externally without duplicate synthesis or installation. All take budgets remain.
+
+Inspected all 297 failure records; replayed all 297 saved raw files with 399
+PCM-pause-selected cuts and fresh pinned Base target-only recognition. Found
+raw-ASR prealignment blockers, numeric spelling/digit comparison bugs and
+signal-only rejections. 25 unique number-aware-exact candidate recoveries;
+21 passed after actual 22,050 Hz packaging and unchanged signal checks, 23 in a
+separate gain experiment. No trial output installed; no listening approval.
+Most remain unresolved ASR/content mismatches, not proven bad audio. Isolated
+number-comparison prototype tested with 8 tests / 104 locale/value vectors; source
+production still unchanged. Detailed counts, limits and next resume gate:
+`docs/reviews/2026-10-22_VOICE_REJECTION_DIAGNOSIS.md`. External evidence:
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/`.
+Takeboard diagnostic raw/cut comparison: http://127.0.0.1:8805/ (297 entries).
+Heartbeat updated to prohibit automatic restart while diagnosis/repair continues.
+
+
 ### 2026-10-22 — Parent Wi-Fi UI shows an existing connection without reconnecting
 
 **Evidence class: SOURCE + FOCUSED TESTS. No device rerun in this turn.**
