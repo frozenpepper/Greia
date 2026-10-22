@@ -1,7 +1,7 @@
 # Greia Documentation Map and Authority Model
 
 **Status:** LIVING repository-wide documentation contract  
-**Reviewed:** 2026-10-16
+**Reviewed:** 2026-10-22
 **Audience:** contributors, coding agents, reviewers, test operators and Activity authors
 
 ## 1. Purpose
@@ -279,6 +279,10 @@ SETUP.md
 docs/DOCUMENTATION.md
 HANDOVER.md
 ```
+
+For a family, start at [`docs/user/README.md`](user/README.md) instead. These short user-facing guides describe current or intended tasks in plain language: USB installation, parent management, and links to Activity/image creation. They are **derived practical documentation**, not sources for hardware certification or permission to publish an unaccepted image. Refresh them against the exact release when image downloads become available.
+
+For contributors, [`docs/development/CREATE_AN_ACTIVITY.md`](development/CREATE_AN_ACTIVITY.md) introduces the canonical Activity skill, and [`docs/development/BUILD_A_GREIA_IMAGE.md`](development/BUILD_A_GREIA_IMAGE.md) explicitly links to [`docs/agents/GREIA_IMAGE_BUILD_AGENT.md`](agents/GREIA_IMAGE_BUILD_AGENT.md). These compact front doors never supersede implementation, release-gate or agent-operation authorities.
 
 Then route by task using `skills/*`. Licensing, security reporting and conduct live in the root `LICENSE`, `NOTICE.md`, `SECURITY.md` and `CODE_OF_CONDUCT.md`.
 
