@@ -55,6 +55,9 @@ def prepare_saved_candidate(engine, store, row: dict, profile, verification: str
     """Extract/package an existing immutable provider take; never synthesize here."""
     from .saved_recovery import recovery_enabled, adapt_extraction
     saved_recovery = recovery_enabled(getattr(store, "plan", {}))
+    from .context_recovery import POLICY as CONTEXT_POLICY
+    context_recovery = getattr(store, "plan", {}).get("saved_recovery_policy") == CONTEXT_POLICY
+    context_checker = None
     if saved_recovery and verification != "required":
         raise ValueError("saved v7 recovery requires final verification")
     relative = row["path"]
@@ -79,12 +82,17 @@ def prepare_saved_candidate(engine, store, row: dict, profile, verification: str
     if any(provider_receipt.get("request", {}).get(key) != expected.get(key)
            for key in ("speaker", "locale", "kind", "text", "delivery_prompt")):
         raise ValueError("saved carrier provider request differs from the frozen source request")
+    if context_recovery:
+        from .context_recovery import checker_for, PackagedCandidateVerifier
+        context_checker = checker_for(engine, store, row, transcriber)
     try:
         extraction_args = {} if transcriber is None else {"transcriber": transcriber}
         extractor = extract
         if saved_recovery:
             from .saved_recovery import extract as extractor, POLICIES
             extraction_args["comparison_policy"] = POLICIES[store.plan["saved_recovery_policy"]]
+            if context_recovery:
+                extraction_args["candidate_verifier"] = PackagedCandidateVerifier(context_checker)
         extraction = extractor(
             raw, extracted, locale=row["request"]["locale"],
             prefix=carrier["prefix"], target=carrier["target"],
@@ -114,10 +122,11 @@ def prepare_saved_candidate(engine, store, row: dict, profile, verification: str
     engine.audio.validate_review_wav(decoded)
 
     from greia_voice_core.target_quality import TargetQualityChecker
-    quality = TargetQualityChecker(transcriber).check(
+    context_args = {"source":raw, "packaged":candidate} if context_recovery else {}
+    quality = TargetQualityChecker(transcriber, context_checker=context_checker).check(
         extracted, decoded, extraction, text=row["request"]["text"],
         locale=row["request"]["locale"], ignore_accents=carrier.get("ignore_accents", True),
-        enabled=verification != "off", require_word_count=saved_recovery)
+        enabled=verification != "off", require_word_count=saved_recovery, **context_args)
     if quality["disposition"] == "WARN":
         write_json(store.work / "carrier-evidence" / f"{relative}.failure.json", {
             "status": "REJECTED", "error": "FINAL_TARGET_QUALITY_REJECTED", "quality": quality,
@@ -159,5 +168,7 @@ def prepare_saved_candidate(engine, store, row: dict, profile, verification: str
         "extraction": extraction,
         "output": {"path": relative, "sha256": digest(candidate), "bytes": candidate.stat().st_size},
     }
+    if context_recovery:
+        receipt["search_evidence_sha256"] = digest(Path(extraction["search_evidence_json"]))
     write_json(receipt_path(candidate), receipt)
     return candidate

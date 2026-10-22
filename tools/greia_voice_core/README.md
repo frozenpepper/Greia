@@ -10,6 +10,11 @@ semantic requests; they do not invoke TTS, Whisper or trimming tools themselves.
 
 ## Choose the right workflow
 
+The frozen667 problematic-recording continuation currently holds its historical
+bulk producers for method review. For that scope, follow HANDOVER and
+`docs/agents/GREIA_NATURAL_VOICE_COMPLETION.md`; use the explicit recorded-only
+saved recovery below, not an unchanged historical bulk command.
+
 | Need | Entry point | Implemented behavior |
 |---|---|---|
 | One new line, JSONL batch, or requests over time | `greia_voice.py generate / batch / serve / request` | Automatic short carrier/cut/Base routing; serialized synthesis; review audio and receipt |
@@ -499,8 +504,49 @@ Opt-in receipts use extraction version
 `greia-spoken-carrier-extractor-v7-saved-wav-context-v1` and verification policy
 `saved-wav-context-hard-invariants-v1`, retain isolated/contextual evidence and
 explicitly acknowledge that the recognizer may hear the prefix on fallback.
-These versions are **not accepted by the current saved-corpus installation
-adapter**. Exact provider/master/request reconciliation, an independent retained
-observation audit and transaction tests are still required before an explicitly
-versioned recovery policy can install anything. Do not manually bypass that
-adapter or use this seam to spend fresh corpus takes.
+Normal production still does not enable these versions. The separately explicit
+saved-only policy `target-only-v7-saved-wav-context-v1` now admits them through
+`recover_voice_candidates.py` and normal CorpusRunner/RunStore transactions.
+Read the following section; never bypass its source selection or use it to spend
+fresh corpus takes.
+
+### Recorded-only contextual saved recovery
+
+This mode **cannot synthesize or run Whisper**. It reads an existing, exact
+`CachedTranscriber` observation cache, indexed by audio SHA256, locale, pinned
+Base model/revision and unchanged no-prompt/deterministic timestamp settings.
+Missing observations stop; do not fill them by rerolling recognition. A separate
+bounded saved-audio experiment may obtain new evidence under its own registration.
+`context_evidence.RecordedTranscriber` owns this read-only seam. Each checker now
+also retains full isolated/contextual observations with identity/hash witnesses
+inside its run before interpreting them, including failing timestamp responses.
+
+Stage a new external run with the existing recovery CLI:
+
+```bash
+python tools/recover_voice_candidates.py --work-dir /external/new-run \
+  --source-work /external/original-frozen-run \
+  --priority-file /external/frozen-priority.json \
+  --history-root /external/original-history \
+  --source-selection /external/selected-sources.json \
+  --cache-root /external/exact-observation-cache \
+  --policy target-only-v7-saved-wav-context-v1
+python tools/recover_voice_candidates.py --work-dir /external/new-run --install
+```
+
+Use the prepared voice Python documented in the setup guide. Source selection
+uses the existing version-1 schema: source plan/priority hashes, hash-pinned
+current remaining list, and per-path raw/receipt/completed provider-job manifest
+identities. It is mandatory in contextual mode. The frozen source must have the
+same semantic request/carrier and original destination pair; original plans are
+never rewritten. OGG is rejected. Normal recovery policies retain prior behavior.
+
+`greia_voice_corpus.context_recovery` owns source and admission checks. Before
+installation it replays **every** bounded candidate from retained observations,
+requires one qualifying cut, rechecks the final actual packaged WAV independently,
+and reproduces prefix/suffix PCM derivation. Count/number/signal vetoes and complete
+word-clock rules remain mandatory. Full recorded results and strategy metadata
+stay separate from human review. Installation uses existing recoverable originals,
+journals and PENDING receipts. Attempt budgets are copied unchanged, never spent
+or reset. See `2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` for executed evidence;
+this limited saved recovery does not establish live-generation reliability.

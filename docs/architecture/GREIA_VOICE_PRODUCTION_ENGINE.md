@@ -363,3 +363,19 @@ Base/count/number/signal passes, human pending. Initial real-corpus canary hit
 METHOD_REVIEW_REQUIRED (2installed,3exhausted,242unstarted); do not blindly resume.
 Read docs/agents/GREIA_NATURAL_VOICE_COMPLETION.md and HANDOVER for active method
 repair. Alternate policy selection is explicit; normal API defaults unchanged.
+
+
+### Explicit recorded-only contextual saved recovery (2026-10-22)
+
+This is an opt-in authoring recovery path, not normal short-generation policy.
+`target-only-v7-saved-wav-context-v1` composes the existing bounded extractor,
+TargetQualityChecker, CorpusRunner and RunStore. `context_recovery` owns exact
+original source/remaining scope/job/master/request admission and complete candidate
+coverage; `context_evidence` owns read-only pinned ASR observations and physical/
+clock/quality replay. Context may rescue lexical substitutions only after isolated
+count/number/signal vetoes. Actual packaged WAV and fixed source suffix/prefix
+are reproduced; final delivery is checked separately. No provider or recognizer
+invocation is available in this recovery mode. Missing observations remain held.
+Default v7, OGG and historical comparison policies remain unchanged. Runtime
+children never use these authoring collaborators. Operator/API details live in
+the core README; executed limited evidence is SAVED_CONTEXT_CORPUS_ADAPTER.

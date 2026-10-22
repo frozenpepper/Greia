@@ -24,7 +24,7 @@ from greia_voice_core.registry import CANONICAL_MANIFEST, VoiceRegistry
 from greia_voice_corpus.carrier_generation import prepare_saved_candidate, CarrierExtractionFailure
 from greia_voice_corpus.inventory import digest, receipt_path, safe_target
 from greia_voice_corpus.runner import CorpusRunner
-from greia_voice_corpus.saved_recovery import POLICY
+from greia_voice_corpus.saved_recovery import POLICY, POLICIES, CONTEXT_POLICY
 from greia_voice_corpus.store import RunStore, write_json
 
 
@@ -44,6 +44,11 @@ def read(path):
 
 def prepare_plan(args, root=ROOT):
     """Freeze only failed source rows inside the unchanged owner priority set."""
+    policy = getattr(args, "policy", POLICY)
+    if policy not in POLICIES:
+        raise ValueError("unsupported saved recovery policy")
+    if policy == CONTEXT_POLICY and not getattr(args, "source_selection", None):
+        raise ValueError("context recovery requires pinned source selection")
     source = args.source_work.resolve()
     priority = read(args.priority_file)
     selected = {r["path"] for r in priority["records"]}
@@ -99,7 +104,7 @@ def prepare_plan(args, root=ROOT):
         raise ValueError("selected source has no exact plan row")
     if not rows:
         raise ValueError("no failed saved source rows")
-    result = {**plan, "rows": rows, "saved_recovery_policy": POLICY,
+    result = {**plan, "rows": rows, "saved_recovery_policy": policy,
               "saved_recovery_source": {"work": str(source),
                   "plan_sha256": digest(source / "plan.json"),
                   "priority_file": str(args.priority_file.resolve()),
@@ -124,7 +129,11 @@ def stage(args, root=ROOT):
     try:
         write_json(store.work / "carrier-attempt-counts.json", counts)
         engine = SavedAudioEngine()
-        transcriber = CachedTranscriber(args.cache_root)
+        if plan["saved_recovery_policy"] == CONTEXT_POLICY:
+            from greia_voice_core.context_evidence import RecordedTranscriber
+            transcriber = RecordedTranscriber(args.cache_root)
+        else:
+            transcriber = CachedTranscriber(args.cache_root)
         for index, row in enumerate(plan["rows"], 1):
             relative = row["path"]
             raw = source / "carrier-raw" / (relative + ".raw.wav")
@@ -148,7 +157,7 @@ def stage(args, root=ROOT):
             write_json(store.work / "recovery-results.json", outcomes)
             print(f"[{index}/{len(plan['rows'])}] {state} | {relative}", flush=True)
         write_json(store.work / "stage-complete.json", {
-            "policy": POLICY, "plan_sha256": digest(store.work / "plan.json"),
+            "policy": plan["saved_recovery_policy"], "plan_sha256": digest(store.work / "plan.json"),
             "counts_sha256": digest(store.work / "carrier-attempt-counts.json"),
             "results_sha256": digest(store.work / "recovery-results.json"),
             "source_plan_sha256": digest(source / "plan.json"),
@@ -165,7 +174,8 @@ def install(work):
     store = RunStore(work)
     try:
         marker = read(work / "stage-complete.json")
-        if (store.plan.get("saved_recovery_policy") != POLICY
+        if (store.plan.get("saved_recovery_policy") not in POLICIES
+                or marker.get("policy") != store.plan.get("saved_recovery_policy")
                 or marker["plan_sha256"] != digest(work / "plan.json")
                 or marker["counts_sha256"] != digest(work / "carrier-attempt-counts.json")
                 or marker["results_sha256"] != digest(work / "recovery-results.json")):
@@ -183,6 +193,7 @@ def main():
     parser.add_argument("--history-root", type=Path)
     parser.add_argument("--cache-root", type=Path)
     parser.add_argument("--source-selection", type=Path)
+    parser.add_argument("--policy", choices=sorted(POLICIES), default=POLICY)
     parser.add_argument("--install", action="store_true")
     args = parser.parse_args()
     work = args.work_dir.resolve()

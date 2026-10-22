@@ -1,13 +1,24 @@
 # Greia remaining recordings — natural-method completion
 
-## Current state — seven installed,240remaining
+## Current state — eight installed,239 remaining
 
-Read `docs/reviews/2026-10-22_PACKAGED_CONTEXT_SAFETY_REVIEW.md` first for latest
+Read `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` first for latest
 method results and exact next work. Both bulk producers remain held; no new
-synthesis. Actual audit7changed660unchanged of667,427kept/installed,240remaining:
-45unstartedletters,193unstartedordinary,2exhausted(EN W as Whale,FR Trouve Oskar).
-Takeboard8812has seven pending clips; historical8811five-clip batch is unchanged.
-Latest exact IDs/audit: `2026-10-22-rejection-investigation/natural-completion-audit-v3/`.
+synthesis. Actual audit8changed659unchanged of667,428kept/installed,239remaining:
+44unstartedletters,193unstartedordinary,2exhausted(EN W as Whale,FR Trouve Oskar).
+Takeboard8813has eight pending clips; historical8811/8812 batches remain unchanged.
+Latest exact IDs/audit: `2026-10-22-rejection-investigation/natural-completion-audit-v4/`.
+
+The explicit recorded-only saved adapter is implemented and used once: Spanish
+Leo JdeJirafa qualified at contextual .8242, isolated .6367. Exactly1pair changed,
+666unchanged, originals backed up, selected job/master/request/source proven,
+3take budget unchanged and2old ASR observations imported by exact identity.
+No new synthesis/recognition; humanPENDING.203voice +22corpus/finisher testsPASS.
+Fullverify5804tests:known1failure3errors8skips, NOTGREEN.
+Next audit239 remaining against other exact saved/cached sources before more
+synthesis; preserve unknown/partial evidence and old failed experimental gates.
+
+## Historical method investigation
 
 The82source packaged-context experiment completed and FAILED:one uncut-intro
 OGG false approval,25/28OGG prior positives preserved. Independent structural

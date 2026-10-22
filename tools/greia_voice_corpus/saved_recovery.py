@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from greia_voice_core.asr_policy import DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION
 from greia_voice_core.number_comparison import COMPARISON_POLICY, ORTHOGRAPHIC_COMPARISON_POLICY, ENGLISH_SPOKEN_COMPARISON_POLICY, compare_target_transcript
-from voice_carrier_search import ALGORITHM_VERSION, extract
+from voice_carrier_search import ALGORITHM_VERSION, CONTEXT_ALGORITHM_VERSION, extract
+from .context_recovery import POLICY as CONTEXT_POLICY
 
 POLICY = "target-only-v7-saved-v1"
 ORTHOGRAPHIC_POLICY = "target-only-v7-saved-oskar-en-v1"
 ENGLISH_SPOKEN_POLICY = "target-only-v7-saved-spoken-en-v1"
-POLICIES = {POLICY: COMPARISON_POLICY, ORTHOGRAPHIC_POLICY: ORTHOGRAPHIC_COMPARISON_POLICY, ENGLISH_SPOKEN_POLICY: ENGLISH_SPOKEN_COMPARISON_POLICY}
+POLICIES = {CONTEXT_POLICY: COMPARISON_POLICY, POLICY: COMPARISON_POLICY, ORTHOGRAPHIC_POLICY: ORTHOGRAPHIC_COMPARISON_POLICY, ENGLISH_SPOKEN_POLICY: ENGLISH_SPOKEN_COMPARISON_POLICY}
 
 
 def recovery_enabled(plan: dict) -> bool:
@@ -38,13 +39,14 @@ def validate_recovery_receipt(receipt: dict, enabled: bool, policy: str = POLICY
     extraction = receipt.get("extraction", {})
     opted = extraction.get("saved_recovery_policy")
     if not enabled:
-        if opted or extraction.get("algorithm_version") == ALGORITHM_VERSION:
+        if opted or extraction.get("algorithm_version") in {ALGORITHM_VERSION, CONTEXT_ALGORITHM_VERSION}:
             raise ValueError("v7 saved candidate requires explicit recovery plan")
         return
     quality = receipt.get("verification", {})
     if policy not in POLICIES:
         raise ValueError("unsupported saved recovery policy")
-    if (opted != policy or extraction.get("algorithm_version") != ALGORITHM_VERSION
+    expected_algorithm = CONTEXT_ALGORITHM_VERSION if policy == CONTEXT_POLICY else ALGORITHM_VERSION
+    if (opted != policy or extraction.get("algorithm_version") != expected_algorithm
             or extraction.get("comparison_policy") != POLICIES[policy]
             or quality.get("comparison_policy") != POLICIES[policy]
             or quality.get("model_id") != DEFAULT_ASR_MODEL

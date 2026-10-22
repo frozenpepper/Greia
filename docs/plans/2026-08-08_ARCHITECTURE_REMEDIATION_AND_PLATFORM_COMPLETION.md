@@ -3859,3 +3859,17 @@ Narrow saved-screening result only, no broad/live acceptance. Corpus still240
 unresolved. Next versioned saved-only transaction/provenance adapter tests,
 then exact saved recovery; bulk held. SAVED_SUBSTITUTION_SEAM and HANDOVER own
 current continuation. No remediation, hardware or release closure.
+
+
+### 2026-10-22 — Recorded-only saved context admission and one audited install
+
+Explicit versioned saved-only adapter reuses prepare_saved_candidate/CorpusRunner/
+RunStore; mandatory pinned source/job/request/master/remaining scope, exact read-only
+ASR observations, every-candidate and final-delivery physical/clock/quality replay.
+Default live/v7/OGG/number policies unchanged. New13provider-forbidden tests;
+203voice +22corpus/finisher PASS. Actual ESLeo JdeJirafa saved install1changed666
+unchanged, valid backups/1555other protected hashes; no newASR/provider or budget
+changes. Combined audit8changed659unchanged,428kept/installed239remaining; human
+PENDING, Takeboard8813. Fullverify5804tests known1failure3errors8skips, NOTGREEN
+(`/tmp/greia-context-adapter-make-verify-final.log`); no hardware closure. Next exact saved/cached239 inventory, tested reconciliation as necessary;
+bulk holds remain. SAVED_CONTEXT_CORPUS_ADAPTER owns current scoped evidence.

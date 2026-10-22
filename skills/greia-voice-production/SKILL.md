@@ -598,8 +598,11 @@ in `voice_carrier_search.extract`, plus optional
 `TargetQualityChecker(context_checker=...)`. Neither is enabled by normal
 production calls. Read the core README's disabled saved-WAV section and
 `docs/reviews/2026-10-22_SAVED_SUBSTITUTION_SEAM.md` before experimenting.
-The existing saved-corpus adapter does not admit the new extraction version.
-Do not bypass that boundary, resume held producers or infer live yield from
+The explicit saved-only policy `target-only-v7-saved-wav-context-v1` now admits
+that extraction version with mandatory pinned source selection and exact read-only
+ASR cache; normal calls remain unchanged. Read the core README recorded-only
+section and `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md`.
+Do not bypass source/observation checks, resume held producers or infer live yield from
 unit tests or saved-audio screening. Context cannot erase isolated count/number
-or signal conflicts; exact observation/provenance audit and explicit recovery
-transaction coverage remain prerequisites to installation.
+or signal conflicts; exact observation/provenance replay and normal recoverable
+transactions are required for every installed candidate.

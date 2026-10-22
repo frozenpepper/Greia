@@ -5,6 +5,7 @@ word-count/numeric evidence or substitute a different packaged payload.
 """
 from pathlib import Path
 import hashlib
+import json
 import uuid
 import wave
 from .asr_policy import DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION
@@ -81,6 +82,7 @@ class ContextualTargetChecker:
                  'cut_sample':cut_sample, 'source_rate':rate,
                  'packaged_suffix_matches':True, 'evidence_dir':str(work)}
         observed = self.transcriber(delivered, locale)
+        proof["isolated_observation"] = self._record(delivered, locale, observed, work/"isolated.json")
         if not isinstance(observed, dict) or not isinstance(observed.get('text'), str):
             raise ValueError('malformed isolated transcript')
         isolated = self._compare(text, observed['text'], locale, ignore_accents, comparison_policy)
@@ -111,6 +113,7 @@ class ContextualTargetChecker:
             raise ValueError('reconstructed context differs from exact prefix and delivery')
         boundary = len(prefix_pcm)/2/drate
         full = self.transcriber(context, locale)
+        proof["contextual_observation"] = self._record(context, locale, full, work/"context.json")
         target = TimedTargetSlice.from_result(full, prefix_seconds=boundary,
                                              duration_seconds=(len(prefix_pcm)+len(decoded))/2/drate)
         contextual = self._compare(text, target.transcript, locale, ignore_accents, comparison_policy)
@@ -130,6 +133,14 @@ class ContextualTargetChecker:
         if contextual['score'] > ASR_PASS_THRESHOLD and not contextual['flags']:
             result.update(disposition='PASS', selected_evidence='contextual')
         return result
+
+    @staticmethod
+    def _record(audio, locale, result, destination):
+        """Retain the exact observation before any transcript/timing validation."""
+        from .context_evidence import observation_identity
+        record = {"identity":observation_identity(audio, locale), "result":result}
+        destination.write_text(json.dumps(record, ensure_ascii=False, indent=2)+"\n")
+        return {"path":str(destination), "sha256":_sha(destination)}
 
     @staticmethod
     def _compare(expected, actual, locale, ignore_accents, policy):

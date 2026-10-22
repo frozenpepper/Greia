@@ -1,5 +1,9 @@
 # Disabled saved-WAV substitution seam — 2026-10-22
 
+**Subsequent explicit saved-only integration:** read
+`2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` for the later adapter/install result.
+This report preserves the earlier disabled-seam experiment and its original gates.
+
 ## Implementation boundary
 
 The broad packaged-context strategy remains rejected under its original gates.

@@ -180,6 +180,35 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — Recorded-only context adapter installed one exact saved source
+
+Explicit `target-only-v7-saved-wav-context-v1` now composes prepare_saved_candidate,
+CorpusRunner and RunStore, with mandatory pinned source selection and recorded-only
+Base observations. Default production/v7/OGG/comparison policies stay unchanged.
+Every measured candidate and the actual final packaged WAV are replayed with
+physical/clock/count/number/signal/provenance checks; missing evidence never rerolls
+ASR or synthesizes. Full raw observations are retained before interpretation.
+Current implementation/evidence/next exact work:
+`docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md`.
+
+Recovered Spanish Leo JdeJirafa from exact completed job20261021-171835-83d3e04d:
+contextual Jde girafa .8242 vs isolated Jota de girafa .6367. Actual install audit
+1pair changed666unchanged, valid backups and1555other protected hashes unchanged;
+cumulative3takes intact, no newASR/provider calls, humanPENDING. Two existing
+observations imported by exact hash/locale/model/settings. Combined actual667audit
+8changed659unchanged:428kept/installed239remaining (44letters193ordinary2exhausted).
+Takeboard8813eightpending with masters; older batches/reviews preserved. Evidence
+context-j-recovery-v1 and natural-completion-audit-v4 under the external investigation.
+
+New13provider-forbidden tests;203voice +22corpus/finisher testsPASS. Fullmakeverify
+executed5804tests:known1failure3errors8skips, NOTGREEN; log
+`/tmp/greia-context-adapter-make-verify-final.log`. Failures remain MBR observed
+identity wording, build profiles and installer host completion tests. NEXT audit239remaining against other exact saved/cached sources;
+use tested saved-only adapter for compatible frozen plans, explicit tested
+reconciliation for other forms. Bulk holds/exhausted budgets remain unchanged;
+no claim of90percent live yield, listening or hardware acceptance.
+
+
 ### 2026-10-22 — Disabled saved-WAV seam; held-out proof and real-scalar fix
 
 Added focused context-clock/checker collaborators and explicit cutter/final-check
