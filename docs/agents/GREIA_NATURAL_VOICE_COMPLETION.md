@@ -27,7 +27,18 @@ raw/job/key/request/hash proofs, planned versus actual delivery and pending huma
 review. Corpus reservations stay25; all16separate diagnostic submissions and
 lifetime per-cue totals are pinned in diagnostic-generation-ledger-v1.json.
 
-Next bounded scope is an optional initially disabled WAV-only saved-substitution
+Latest source/evidence: `docs/reviews/2026-10-22_SAVED_SUBSTITUTION_SEAM.md`.
+The optional disabled seam is implemented; held-out48-case v1 failed due a new
+NumPy real-scalar timing bug. Corrected cache-only v2 retains15/16positives,
+rescues1/12substitution sources, rejects20controls with1554protected hashes
+unchanged; independent16physical/1clock audit0issues. Three incomplete sources
+stay held; no reroll, synthesis or install.190voice testsPASS; fullverify abort6.
+Next exact step is explicit saved-only adapter/final-check/provenance and
+provider-forbidden transaction tests before recovery, with all bulk holds kept.
+This narrow result does not promote the failed broad experiment or prove live
+yield.
+
+Historical proposed scope was an optional initially disabled WAV-only saved-substitution
 checker/candidate seam with hard isolated count/number veto, PCM/cache/timestamp
 coverage proofs and held-out saved controls. Keep defaultv7 and OGG unchanged;
 no general method adoption or bulk restart from failed experiments. The safety

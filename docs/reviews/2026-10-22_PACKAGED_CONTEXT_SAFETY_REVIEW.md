@@ -125,3 +125,11 @@ Use existing source owners rather than an independent pipeline:
 
 This turn changed no engine source/defaults. Existing full verification remains
 NOTGREEN as recorded in the preceding report; no new implementation test claim.
+
+
+## Subsequent bounded implementation
+
+`2026-10-22_SAVED_SUBSTITUTION_SEAM.md` records the disabled optional source seam,
+held-out48-case test, actual NumPy timestamp type correction and cache-only v2
+limited result. It supersedes only the next-work description above. Original
+failed broad gates remain failed; no new synthesis/install or production adoption.

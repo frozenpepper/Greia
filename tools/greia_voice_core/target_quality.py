@@ -7,18 +7,28 @@ from .verification import transcript_similarity
 class TargetQualityChecker:
     """Score the actual delivered PCM; optionally require target token count."""
 
-    def __init__(self, transcriber=None):
+    def __init__(self, transcriber=None, *, context_checker=None):
         from voice_carrier import _whisper_transcribe
         self.transcriber = transcriber or _whisper_transcribe
+        self.context_checker = context_checker
 
     def check(self, extracted, delivered, extraction, *, text, locale,
-              ignore_accents=True, enabled=True, require_word_count=False):
+              ignore_accents=True, enabled=True, require_word_count=False,
+              source=None, packaged=None):
         """Return a verdict; changed delivery bytes require a new transcription."""
         from voice_carrier import _read_pcm16, comparison_words
         if not enabled:
             return {"disposition": "NOT_RUN", "score": None,
                     "transcript": extraction.get("extracted_transcript"),
                     "detail": "Target scoring explicitly disabled"}
+        if self.context_checker is not None:
+            if source is None or packaged is None:
+                raise ValueError("context verification needs exact source and packaged WAV")
+            from .number_comparison import COMPARISON_POLICY
+            return self.context_checker.check(source, extracted, delivered, packaged,
+                cut_sample=extraction["boundary"]["cut_sample"], text=text, locale=locale,
+                ignore_accents=ignore_accents,
+                comparison_policy=extraction.get("comparison_policy", COMPARISON_POLICY))
         transcript = extraction["extracted_transcript"]
         if _read_pcm16(delivered) != _read_pcm16(extracted):
             transcript = self.transcriber(delivered, locale).get("text", "")

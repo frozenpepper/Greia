@@ -180,6 +180,32 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — Disabled saved-WAV seam; held-out proof and real-scalar fix
+
+Added focused context-clock/checker collaborators and explicit cutter/final-check
+injection, **disabled by default**. Default v7/OGG/number semantics and all bulk
+holds remain unchanged. Current saved adapter refuses the new extraction version;
+no synthesis or install this tranche. Corpus still427kept/installed240remaining.
+Source detail/current next boundary:
+`docs/reviews/2026-10-22_SAVED_SUBSTITUTION_SEAM.md`.
+
+Held-out48cases exclude all82prior source hashes. Original v1 used62offline ASR
+observations, retained15/16 positives, rejected20bad controls but rescued0;FAILED.
+Diagnosed new validator bug: valid mlx-whisper NumPy real timestamps rejected by
+exact Python type test. Corrected to Real excluding bool, same timing predicates.
+Separately registered cache-only v2:15/16positive retention,1/12substitution rescue,
+0/20negative approvals,1554protected hashes unchanged; narrow screening gatesPASS,
+original broad/v1 gates remainFAILED. Three incomplete sources remain held, no
+recognition rerolls. Independent audit16accepted physical proofs/1context clock:
+0issues. New ES JdeJirafa source remains external/uninstalled, human-unreviewed.
+
+Focused190voice testsPASS (25new); fullmakeverify on corrected source aborts6,
+NOTGREEN, `/tmp/greia-context-seam-make-verify-real-scalars.log`. No hardware/live
+90percent-yield claim. NEXT explicit saved-only versioned adapter/final-check and
+provider-forbidden transaction/provenance tests through existing CorpusRunner,
+then exact qualifying saved recovery; no new exhausted-cue takes or bulk restart.
+
+
 ### 2026-10-22 — Packaged replay failed safety gate; two strict saved recoveries
 
 Completed82-source WAV/OGG replay:708offline ASR observations, provider forbidden.

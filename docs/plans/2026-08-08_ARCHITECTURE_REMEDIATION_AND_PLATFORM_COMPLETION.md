@@ -3843,3 +3843,19 @@ context methods remain unselected. Existing unchanged v7 isolated gates recover
 source/defaults unchanged; next optional WAV-only saved-substitution scope needs
 held-out proof, no bulk restart. Full verification remainsNOTGREEN. Evidence and
 next scope:PACKAGED_CONTEXT_SAFETY_REVIEW and HANDOVER. No platform/hardware closure.
+
+
+### 2026-10-22 — Disabled saved-WAV seam and held-out correction
+
+Optional focused context/checker/candidate/final-check collaborators added; normal
+v7/OGG defaults unchanged and saved-install adapter still rejects new version.
+New25provider-free tests;190voice testsPASS, fullmakeverify abort6 NOTGREEN.
+Held-out48source/control cases: originalv1FAILED due new validator rejecting
+NumPy real timestamps; Real-without-bool correction preserves all clock rules.
+Registered cache-only v2 retains15/16positives, rescues1/12substitution sources,
+rejects20bad controls,1554protected hashes unchanged. Independent16physical/1clock
+audit0issues. Three incomplete sources held, no reroll/new synthesis/install.
+Narrow saved-screening result only, no broad/live acceptance. Corpus still240
+unresolved. Next versioned saved-only transaction/provenance adapter tests,
+then exact saved recovery; bulk held. SAVED_SUBSTITUTION_SEAM and HANDOVER own
+current continuation. No remediation, hardware or release closure.

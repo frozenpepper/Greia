@@ -41,6 +41,7 @@ from voice_carrier import (
 )
 
 ALGORITHM_VERSION = "greia-spoken-carrier-extractor-v7"
+CONTEXT_ALGORITHM_VERSION = "greia-spoken-carrier-extractor-v7-saved-wav-context-v1"
 MAX_CANDIDATES = 6
 MAX_CLIP_SECONDS = 120
 FRAME_MS = 10
@@ -220,14 +221,25 @@ def extract(
     target_verification: str = "required",
     ignore_accents: bool = True,
     comparison_policy: str = COMPARISON_POLICY,
+    candidate_verifier=None,
 ) -> dict[str, Any]:
     """Extract one unique number-aware exact target from verified PCM gaps.
 
-    No raw-intro transcription is requested. Each bounded candidate suffix is
+    By default no raw-intro transcription is requested. An explicitly injected
+    saved-WAV verifier may hear a reconstructed prefix, without requiring intro
+    correctness; its metadata and algorithm version are separate. Each candidate is
     transcribed independently without an expected-text prompt. Required mode
     accepts an exact canonical-token match. Warn mode accepts a score above
     0.8 only when canonical token count and numeric sequence still match.
     """
+    # Opt-in only: no normal engine or corpus caller injects this collaborator.
+    from greia_voice_core.contextual_target import CONTEXT_VERIFICATION_POLICY
+    if candidate_verifier is not None and (not callable(candidate_verifier) or
+            getattr(candidate_verifier, "policy_id", None) != CONTEXT_VERIFICATION_POLICY):
+        raise ExtractionRejected("unsupported candidate verification collaborator")
+    algorithm = CONTEXT_ALGORITHM_VERSION if candidate_verifier is not None else ALGORITHM_VERSION
+    intro_asr = ("prefix-heard-on-fallback; wording-agreement-not-required"
+                 if candidate_verifier is not None else "not-run-disposable-intro")
     if not isinstance(destination, Path):
         raise ExtractionRejected("destination must be a pathlib.Path value")
     search_root = destination.with_name(destination.name + ".search")
@@ -236,7 +248,7 @@ def extract(
     run_dir.mkdir()
     report_path = run_dir / "search.json"
     report: dict[str, Any] = {
-        "algorithm_version": ALGORITHM_VERSION,
+        "algorithm_version": algorithm,
         "comparison_policy": comparison_policy,
         "status": "SEARCHING",
         "source": str(source),
@@ -264,7 +276,7 @@ def extract(
             "candidate_cap": MAX_CANDIDATES,
             "selection": "longest-runs-then-time-order; exact-match cardinality must be one",
         },
-        "raw_intro_asr": "not-run-disposable-intro",
+        "raw_intro_asr": intro_asr,
         "candidate_results": [],
         "human_review": "PENDING",
         "evidence_boundary": "Recognizer and PCM checks are screening evidence only; human listening remains required.",
@@ -296,7 +308,7 @@ def extract(
             raise ExtractionRejected(f"input duration must be in (0, {MAX_CLIP_SECONDS}] seconds")
         source_sha = sha256(source_resolved)
         report.update({"source_sha256": source_sha, "sample_rate": rate, "channels": channels,
-                       "duration_seconds": duration, "raw_intro_asr": "not-run-disposable-intro"})
+                       "duration_seconds": duration, "raw_intro_asr": intro_asr})
         runs = _quiet_runs(samples, rate)
         selected = sorted(runs, key=lambda run: (-run["duration_seconds"], run["start_sample"]))[:MAX_CANDIDATES]
         selected.sort(key=lambda run: run["start_sample"])
@@ -358,7 +370,19 @@ def extract(
             try:
                 # No expected-text prompt is supplied. Every retained suffix is
                 # independently screened by the installed Base transcriber.
-                result = transcriber(candidate_path, locale)
+                result = (transcriber(candidate_path, locale) if candidate_verifier is None else
+                          candidate_verifier(source_resolved, candidate_path,
+                              cut_sample=item["cut_sample"], locale=locale, target=target,
+                              ignore_accents=ignore_accents, comparison_policy=comparison_policy))
+                if candidate_verifier is not None:
+                    quality = result.get("candidate_quality") if isinstance(result, dict) else None
+                    if (not isinstance(quality, dict) or
+                            quality.get("verification_strategy") != CONTEXT_VERIFICATION_POLICY or
+                            quality.get("disposition") not in {"PASS", "WARN"} or
+                            not isinstance(quality.get("flags"), list) or
+                            quality.get("transcript") != result.get("text")):
+                        raise ValueError("malformed candidate verification evidence")
+                    item["candidate_quality"] = quality
             except Exception as exc:
                 item.update({"transcription_error": str(exc), "exact_target_match": False})
                 report["candidate_results"] = candidates
@@ -391,6 +415,8 @@ def extract(
                     and comparison.numbers_match
                 )
                 effective_policy = "similarity>0.8+same-word-count+same-numeric-sequence"
+            if candidate_verifier is not None:
+                qualifies = qualifies and quality["disposition"] == "PASS" and not quality["flags"]
             segments = result.get("segments", [])
             item.update({
                 "extracted_transcript": transcript,
@@ -438,7 +464,7 @@ def extract(
         }
         receipt: dict[str, Any] = {
             "schema_version": 1,
-            "algorithm_version": ALGORITHM_VERSION,
+            "algorithm_version": algorithm,
             "comparison_policy": comparison_policy,
             "status": "EXTRACTED_PENDING_LISTENING",
             "source": str(source_resolved),
@@ -491,6 +517,9 @@ def extract(
             "human_review": "PENDING",
             "evidence_boundary": "Base transcript and PCM cut evidence are screening only; human listening remains required.",
         }
+        if candidate_verifier is not None:
+            receipt.update(candidate_verification_policy=CONTEXT_VERIFICATION_POLICY,
+                           selected_candidate_quality=chosen["candidate_quality"], raw_intro_asr=intro_asr)
         report.update({"status": "VALIDATED_CANDIDATE_READY", "chosen_candidate_id": chosen["candidate_id"],
                        "output": str(destination), "output_sha256": output_sha, "receipt": receipt})
         _save_json(report_path, report)

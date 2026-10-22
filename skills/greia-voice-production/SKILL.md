@@ -590,3 +590,16 @@ installed pending through existing transactions; no new synthesis/default change
 Current7installed/240remaining, all actual corpus/diagnostic calls retained. Follow
 PACKAGED_CONTEXT_SAFETY_REVIEW and HANDOVER for optional saved-WAV scope; never
 restart held producers or claim failed experimental gates passed.
+
+### Disabled saved-WAV contextual seam (2026-10-22)
+
+Engine maintenance now has an explicit `PackagedCandidateVerifier` injection
+in `voice_carrier_search.extract`, plus optional
+`TargetQualityChecker(context_checker=...)`. Neither is enabled by normal
+production calls. Read the core README's disabled saved-WAV section and
+`docs/reviews/2026-10-22_SAVED_SUBSTITUTION_SEAM.md` before experimenting.
+The existing saved-corpus adapter does not admit the new extraction version.
+Do not bypass that boundary, resume held producers or infer live yield from
+unit tests or saved-audio screening. Context cannot erase isolated count/number
+or signal conflicts; exact observation/provenance audit and explicit recovery
+transaction coverage remain prerequisites to installation.

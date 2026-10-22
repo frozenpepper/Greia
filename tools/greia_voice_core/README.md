@@ -455,3 +455,52 @@ installed pending through existing transactions; no new synthesis/default change
 Current7installed/240remaining, all actual corpus/diagnostic calls retained. Follow
 PACKAGED_CONTEXT_SAFETY_REVIEW and HANDOVER for optional saved-WAV scope; never
 restart held producers or claim failed experimental gates passed.
+
+## Disabled saved-WAV substitution experiment (2026-10-22)
+
+This is a maintainer extension seam, **not an enabled generation mode**. Normal
+short routing, v7 extraction, OGG checking and all default comparison policies
+remain unchanged. The earlier broad packaged-context experiment failed its
+registered gates; this seam does not adopt that experiment.
+
+`contextual_target.ContextualTargetChecker(audio, transcriber, evidence_root)`
+checks the exact original PCM suffix against the actual packaged/decoded WAV.
+It preserves isolated screening first. Context may be consulted only for a
+lexical substitution with nonempty isolated text, matching canonical count and
+numbers, and no signal flags. It cannot override extra/missing words or numeric
+conflicts. Reconstructed context uses the original prefix through the fixed
+sample cut plus the **actual decoded payload**, without requiring intro wording
+agreement. Every timestamped word after that fixed boundary is compared;
+straddling, incomplete, unordered or nonfinite timings reject.
+
+For explicitly registered saved-audio experiments only:
+
+```python
+from greia_voice_core.contextual_target import (
+    ContextualTargetChecker, PackagedCandidateVerifier,
+)
+
+checker = ContextualTargetChecker(audio_pipeline, observed_offline_base, evidence_root)
+# Existing voice_carrier_search.extract(...) keyword, disabled when omitted:
+candidate_verifier = PackagedCandidateVerifier(checker)
+# Final delivery can use TargetQualityChecker(context_checker=checker), passing
+# source=<immutable raw WAV> and packaged=<actual delivered WAV> to check(...).
+```
+
+The injected transcriber must use installed pinned Base/settings without an
+expected-text prompt, persist exact audio/hash/locale/settings/ASR observations
+before interpretation, and serialize access. Caller owns the bounded evidence
+batch and cleanup. Each checker observation uses at most two offline ASR calls;
+the cutter retains its existing six-candidate cap and unique-boundary rule.
+`context_timing.TimedTargetSlice` owns complete word-clock validation. Invalid
+clock/provenance/IO is fail-closed uncertainty, not permission to resynthesize.
+
+Opt-in receipts use extraction version
+`greia-spoken-carrier-extractor-v7-saved-wav-context-v1` and verification policy
+`saved-wav-context-hard-invariants-v1`, retain isolated/contextual evidence and
+explicitly acknowledge that the recognizer may hear the prefix on fallback.
+These versions are **not accepted by the current saved-corpus installation
+adapter**. Exact provider/master/request reconciliation, an independent retained
+observation audit and transaction tests are still required before an explicitly
+versioned recovery policy can install anything. Do not manually bypass that
+adapter or use this seam to spend fresh corpus takes.
