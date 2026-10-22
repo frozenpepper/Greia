@@ -17,7 +17,7 @@ You can access parents' controls **on Greia itself** or, when supported by the i
 
 The initial Parent password on current development installs is `greia` (lowercase). It is separate from any password you choose for your child. Change it when you have access to the change-password control; consult the actual release's welcome/completion screen for its initial credential.
 
-If the panel does not open, return to child selection, make sure both keys are down simultaneously for all five seconds, and try again. The on-device panel requires a keyboard.
+If the panel does not open, return to child selection (from Greia Home, choose the current child's profile/switcher, or use Escape on the keyboard). Make sure both keys stay down together for all five seconds and try again. The on-device panel requires a keyboard.
 
 ### What you can do on the device
 
