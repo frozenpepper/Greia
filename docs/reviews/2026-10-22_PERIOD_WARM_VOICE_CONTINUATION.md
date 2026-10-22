@@ -125,3 +125,48 @@ first divergence, and prove any correction with saved-audio controls before new
 synthesis. Keep the owner-requested period/warm direction. Do not restart frozen
 v6 production, mutate frozen plans, spend exhausted budgets or resubmit any
 completed letter_A, sunhat or first-diagnostic job.
+
+## Saved-audio sample-rate and boundary investigation (15:16 UTC continuation)
+
+A fixed paired experiment replayed all12 fresh probes and the existing24-source
+benchmark after the existing AudioPipeline converted complete native sources to
+22,050Hz mono PCM16 **before** extraction. No synthesis, gain adjustment, prompt,
+cut padding, comparison threshold or installation changed. Source hashes were
+checked before/after. All36 extra-word negative controls rejected.
+
+- Fresh cohort remains8PASS/4rejected; all eight prior passes retained.
+- Saved benchmark improves20/24 to24/24 with canonical preprocessing.
+- The four fresh failures remain the same; sample rate does not resolve them.
+
+This establishes a useful preprocessing candidate, not a production change or
+permission to launch220. Experiment code and registered predicates are external:
+`canonical-rate-probe/{registered-scope.json,results.json,progress.json}` and
+`probe-canonical-rate.py` under the existing rejection-investigation directory.
+
+A separate diagnostic measured every quiet run down to10ms without changing
+production's200ms acceptance floor. Spanish Lilli's largest eligible internal
+quiet run is160ms: its rejection is an actual gap-floor rejection, unchanged
+at both sample rates. The other three failed sources have measured gaps820ms
+(EN Leo),370ms (EN Tito),1,260ms (FR Leo), so they are not missing-pause rejects.
+Across all12 sources, the largest measured internal quiet runs range160–1,260ms;
+the requested two-second pause is not reliably realized by the provider.
+
+One cached full-source Base observation per failed source was used for diagnosis
+only, never as an extraction prerequisite or acceptance vote. It places the
+intro before the selected gaps and still reports mismatching target speech
+AFTER those gaps: EN Leo `Aliciril find Luna`, EN Tito `Howt to ten`, FR Leo
+`L'ending true Luna`. The target-only observations likewise mismatch. Thus there
+is no evidence that simply moving a cut later safely recovers the exact intended
+words. These ASR observations cannot distinguish pronunciation defects from
+recognizer errors or certify audible words. Spanish full-source ASR reports the
+expected intro and `el sombrero`, but timestamps are not a substitute for a safe
+PCM boundary. Do not use expected-text alignment to manufacture a passing cut.
+Evidence: `period-failure-diagnosis.json`, `period-gap-measurement.json`.
+
+Next: independently assess the canonical-preprocessing extension against wrong-
+number and prefix-leak controls as well as the extra-word controls, then wire it
+through an explicitly versioned recipe only if those gates hold. The remaining
+fresh failures still require a bounded, separately evidenced generation/readiness
+decision; no threshold relaxation, automatic bulk launch or new production take
+is justified by this saved-audio experiment. Counts remain413 kept/installed,
+254remaining (34 exhausted,220 final-take-eligible); all human reviews unchanged.

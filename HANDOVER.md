@@ -180,6 +180,22 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — Saved period/warm diagnosis: preprocessing helps old controls only
+
+Saved-only paired canonical22,050Hz preprocessing across36 sources: fresh12
+stays8PASS/4rejected (all8 preserved); older native48k benchmark improves20/24
+to24/24. All36 extra-word negatives rejected. No source changes, synthesis or
+installation. Spanish Lilli has only160ms measured internal quiet (<200ms
+production floor); other failures have820/370/1,260ms gaps and mismatching
+post-gap Base observations even in diagnostic full-source transcripts. This is
+machine evidence, not listening or proof of actual words. Two-second direction
+is not reliably realized (largest gaps across12:160–1,260ms). Details/evidence:
+`docs/reviews/2026-10-22_PERIOD_WARM_VOICE_CONTINUATION.md` appended investigation.
+Next validate canonical preprocessing against number/prefix-leak controls before
+versioned integration; four fresh failures and live readiness remain unresolved.
+No bulk producer launched;413 kept/installed,254remaining, human review PENDING.
+
+
 
 ### 2026-10-22 — Owner period/warm direction applied; live gate holds final batch
 
