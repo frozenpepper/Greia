@@ -180,6 +180,34 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — Packaged-target context/control replay running, no synthesis
+
+The next saved-only experiment is actually running, not a queued future task:
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/final-delivery-context-v1/`;
+script `probe-final-delivery-context.py`, sibling `.log`, PID80838 at launch
+(inspect actual process). Registered82sources:41recent natural/conditioning/
+lexical sources,24earlier saved sources,17actual wrong-number controls. Both WAV
+and OGG packaging are decoded, then the EXACT delivered PCM is joined after the
+original prefix up to each existing cut. Base recognition retains every word
+after the exact prefix-frame boundary; no expected prompt or intro agreement.
+Uncut intro payloads, appended actual-prefix speech and wrong-name variants add
+negative controls. Provider API calls are explicitly forbidden by patch; max1200
+ASR observations, all cached by exact bytes/settings. No audio installed, no
+budgets/masters/plans changed and no new production defaults selected.
+
+Registered gates:zero false accepts,>=90percent retention of earlier qualifying
+isolated positives,>=80percent transfer of prior contextual matches, all protected
+hashes unchanged. These are saved diagnostic gates, not90percent live success.
+An additional independent `audit-final-delivery-context.py` must run only AFTER
+COMPLETE and requires exact cached ASR (no reroll), original-prefix/decoded-payload
+byte identity, full-text timestamp coverage and valid ordered bounded timestamps.
+Any coverage/timing issue invalidates that contextual observation. Check
+`structural-audit-registration.json`. Do not adopt counter-only experimental
+success or skip the structural audit. Both corpus producers remain held; actual
+installed5/remaining242 unchanged. Next: finish/audit saved evidence, then assess
+a separately versioned verifier seam and saved recoveries only if supported.
+
+
 ### 2026-10-22 — Saved contextual recognition complete; final-delivery proof next
 
 `natural-context-recognition-v1` finished41sources:10unique contextual matches,

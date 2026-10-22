@@ -1,5 +1,14 @@
 # Greia remaining recordings — natural-method completion
 
+## Current saved-only experiment
+
+`final-delivery-context-v1` is running82registered sources in WAV/OGG, using
+original prefix plus exact decoded packaged target. Corpus synthesis remains
+stopped. Read the dated recognition report and newest HANDOVER entry for gates,
+negative controls, protected hashes, max1200offline ASR calls and the mandatory
+independent cache-only structural audit. Never duplicate the replay or adopt its
+intermediate counters. No production defaults or corpus budgets change.
+
 ## Current state — both bulk runs stopped
 
 Actual latest audit:5installed of the new247scope,425kept/installed of667,

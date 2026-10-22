@@ -104,3 +104,30 @@ areas. Logs `/tmp/greia-natural-repair-final-{focused,corpus,make-verify}.log`.
 External artifacts are immutable evidence; progress and any correction notes must
 accurately distinguish current-source implementation, diagnostic observations,
 installation and human listening. No hosted/paid work or shared-worker restart.
+
+
+## Registered final-delivery replay — running
+
+The saved-only experiment `final-delivery-context-v1` is running82sources
+(41recent,24earlier saved,17wrong-number), both WAV and OGG. It packages and
+independently decodes each suffix, then verifies exact decoded payload PCM
+concatenation after the original prefix. It keeps every measured candidate;
+unique acceptance is required, including the union of isolated and contextual
+observations. Signal/score/count/numeric gates remain unchanged.
+
+Controls include actual complete-intro payloads, actual source-prefix speech
+appended after targets, wrong numbers and wrong names. Protected snapshots cover
+all667current audio/receipt pairs, raw sources/receipts and both run plans and
+budgets. The script forbids provider API access and caps offline ASR observations
+at1200; all exact observations use the existing cache. No synthesis/installation.
+Acceptance was registered before replay:zero negative false accepts,>=90percent
+prior-positive preservation and>=80percent prior-context transfer, protected
+hashes unchanged. These are diagnostic predicates and do not establish live yield.
+
+`audit-final-delivery-context.py` is a separate cache-only structural auditor:
+packaged/decoded/context hashes; exact original prefix and decoded-payload PCM;
+exact cache identity; complete text-to-word timestamp coverage; finite bounded
+ordered word timings; all after-boundary words and straddling words must match
+cached evidence. It never calls ASR. Any structural issue disqualifies contextual
+evidence. Run only on COMPLETE output, inspect actual artifacts, and recompute
+conservative results before any integration. No engine strategy is selected yet.
