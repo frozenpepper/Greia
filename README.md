@@ -28,8 +28,8 @@ desktop, login prompt, file manager, package manager or browser chrome.
 
 - **45 built-in Activities**, mostly for ages 3–7: painting and writing
   studios, numbers, letters and phonics, music, stories, a puppet theatre, a
-  children's encyclopedia and more. English and Italian are complete;
-  Spanish and French are staged.
+  children's encyclopedia and more. Four languages can be selected: English, Italian, Spanish and French;
+  release voice review and device acceptance are still being completed.
 - **A child Shell** with explicit child profiles, Collections and a
   platform-owned Home button that every Activity keeps.
 - **A Creations Library** (in progress) where each child's drawings, writing
