@@ -80,6 +80,8 @@ That file deliberately routes through `HANDOVER.md` instead of freezing one date
 
 ## 5. Activity creator — standard profile
 
+The practical human overview is [Create an Activity](docs/development/CREATE_AN_ACTIVITY.md). Agent authors should still follow the current source-owned [Activity skill](skills/greia-activity-authoring/SKILL.md); this page only routes tooling installation.
+
 Read:
 
 ```text
@@ -353,6 +355,8 @@ docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md
 
 ## 8. Parent App developer
 
+For parent-facing usage, rather than client development, use [Greia Parents](docs/user/GREIA_PARENTS.md). The on-device **S + T** shortcut and browser connection belong in that simple guide.
+
 Canonical HTML client repository:
 
 ```text
@@ -399,6 +403,8 @@ Never commit the operator private key. Never turn developer SSH into a normal/re
 For current acceptance, follow the exact test procedure selected by `HANDOVER.md`; do not run an old dated protocol merely because it exists.
 
 ## 10. OS image / installer builder
+
+For an overview, see [Build a Greia image](docs/development/BUILD_A_GREIA_IMAGE.md); agents following a human-authorized image build should use the linked [image-building agent runbook](docs/agents/GREIA_IMAGE_BUILD_AGENT.md). The specialist manuals below remain authoritative for exact commands. For ordinary Windows/Mac USB writing and installation, use [the nontechnical guide](docs/user/INSTALL_FROM_USB.md) instead.
 
 Not required for ordinary Activity work.
 
