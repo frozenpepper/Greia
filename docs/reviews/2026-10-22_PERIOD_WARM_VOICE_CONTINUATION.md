@@ -170,3 +170,32 @@ fresh failures still require a bounded, separately evidenced generation/readines
 decision; no threshold relaxation, automatic bulk launch or new production take
 is justified by this saved-audio experiment. Counts remain413 kept/installed,
 254remaining (34 exhausted,220 final-take-eligible); all human reviews unchanged.
+
+## Additional canonical-source controls and bounded retry experiment
+
+Saved-audio controls now exercise the actual final target checker with the full
+uncut intro+target supplied as delivery (36 sources), plus v7 extraction against
+17 deliberately wrong-number expectations after canonical preprocessing. All53
+reject; zero false accepts; original source hashes unchanged. These complement
+the previous36 extra-word controls. Registration/results/progress and script:
+`canonical-controls/` and `probe-canonical-controls.py` under the external
+rejection-investigation root. The diagnostic harness's placeholder model label
+is not a production receipt; actual observations come from the pinned exact
+Base cache. No controls are installed or accepted.
+
+A separate bounded diagnostic experiment now completes the existing twelve-case
+cohort's three-take budget for ONLY the four failed cases: one prior take plus
+at most two additional normal automatic-engine attempts each (maximum8 new jobs).
+The eight passing original cases are retained, not regenerated. It preserves
+the period/warm prompt, native source v7 pipeline and all individual gates; it
+does not yet integrate canonical preprocessing. This tests the actual retry
+contract, since the earlier first-take experiment intentionally disabled retries.
+The first-take gate remains FAILED, regardless of later results. New three-take
+cohort criterion was registered before any submission: at least9 final passes
+and at least2 per language. This is a separate experimental outcome; it cannot
+be reported as the first-take gate succeeding. Production budgets are untouched,
+no installation occurs, and an uncertain job stops without resubmission.
+Current process/log/evidence: `probe-period-bounded-retries.py`,
+`period-bounded-retries.log`, `period-bounded-retries/{registered-scope.json,
+progress.json,results.json,evidence/}`. Inspect current progress before any
+further work; do not duplicate this experiment or launch the220 production rows.

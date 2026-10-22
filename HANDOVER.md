@@ -180,6 +180,20 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — Canonical controls reject53 negatives; retry-layer probe running
+
+All36 complete-intro leak controls and17 wrong-number controls reject after
+canonical preprocessing; source hashes unchanged. No implementation/install.
+A separately preregistered diagnostic is RUNNING: finish the existing12-case
+cohort's three-take budgets for only4failed cases (max2more each,8jobs). Eight
+passes retained. Same native-v7 recipe, period/warm prompts and individual gates.
+Production attempts untouched. Original first-take gate remains FAILED; new
+three-take predicate9total/2per-language is a separate outcome. Inspect external
+`2026-10-22-rejection-investigation/period-bounded-retries/progress.json` and log
+before continuing; PID41593 at launch, no duplicate experiment or bulk start.
+See appended `docs/reviews/2026-10-22_PERIOD_WARM_VOICE_CONTINUATION.md`.
+
+
 ### 2026-10-22 — Saved period/warm diagnosis: preprocessing helps old controls only
 
 Saved-only paired canonical22,050Hz preprocessing across36 sources: fresh12
