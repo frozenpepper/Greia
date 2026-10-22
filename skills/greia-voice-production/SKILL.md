@@ -518,3 +518,10 @@ final count/numeric/signal checks cannot be disabled. Source plans/receipts,
 master identities and cumulative counts remain unchanged. See the corpus manual
 for exact flags and transaction recovery. Other saved histories and the preserved
 letter_A job require explicit reconciliation, not a restart of the old producer.
+
+Saved recovery can now use `--source-selection <index.json>` for explicitly
+pinned historical FAILED/PRESERVED rows. The index binds source plan, remaining
+list, priority, raw/receipt and completed provider job. Exact provider packaging
+is replayed if its48kHz output and retained22,050Hz carrier have different hashes.
+No synthesis, threshold or budget changes. Read the corpus manual's index schema;
+unknown provenance or uncertain journal states remain blockers.

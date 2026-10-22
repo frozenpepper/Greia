@@ -731,3 +731,47 @@ It does not cover the 39 unresolved cues omitted from fresh-01 by its then-curre
 budgets, other older saved takes, or the separately preserved in-flight letter_A
 job. Reconcile those sources under a new explicit recovery plan; never resubmit
 that completed job. See HANDOVER and the dated recovery evidence for current counts.
+
+#### Explicit selections from historical PRESERVED sources
+
+`recover_voice_candidates.py --source-selection <index.json>` also permits a
+pinned subset of FAILED/PRESERVED source rows. This is a saved-only extension,
+not permission to restart a producer. Each selection must be in an unchanged
+remaining list and the frozen priority, with exact source plan and raw/receipt
+identities. Required index fields:
+
+```json
+{
+  "schema_version": 1,
+  "source_plan_sha256": "...",
+  "priority_sha256": "...",
+  "remaining_file": "/absolute/remaining.json",
+  "remaining_sha256": "...",
+  "sources": [{
+    "path": "activities/example/assets/audio/en/hello.wav",
+    "sha256": "...",
+    "receipt_sha256": "...",
+    "job_manifest": "/absolute/voxstage/data/jobs/exact-job/job.json",
+    "job_manifest_sha256": "..."
+  }]
+}
+```
+
+The source plan still owns exact scripts/acting/masters; it is never rewritten.
+The remaining JSON has a `remaining` object keyed by target path. Index rows
+must be unique and match exact source-plan rows and unchanged destinations.
+Uncertain source journal states reject. Job provenance requires the exact
+completed job/key, one unsplit recording, text/direction/voice/reference agreement
+and an unchanged provider mix file. VoiceEngine may have packaged 48 kHz provider
+PCM to22,050 Hz before retaining the carrier: if hashes differ, the adapter
+replays the **existing packaging transform** into a temporary file and requires
+its exact hash to equal the retained raw source. It never synthesizes to prove
+provenance. Wrong provider bytes, stale scope or changed source files reject.
+
+Selection identities are recorded in the new recovery plan. Stage/install and
+cumulative-budget rules above remain unchanged. For several saved sources of the
+same target, declare a deterministic order and stop at the first passing source;
+do not reroll ASR, select a highest score or stage/install duplicate target passes.
+Use the exact existing audio/locale/model cache. Historical extractor versions
+unsupported by the adapter, missing source plans and changed-original cases need
+explicit reconciliation; never bypass those errors silently.

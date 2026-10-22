@@ -3747,3 +3747,18 @@ Focused voice121/corpus18/finisher4 PASS; full make verify5,721 tests remains kn
 1failure/3errors/8skips, NOT GREEN. Evidence/next saved-source audit:
 `docs/reviews/2026-10-22_V7_SAVED_CORPUS_RECOVERY.md`. No fresh synthesis or phase,
 release or human-listening closure is claimed.
+
+
+### 2026-10-22 — Scoped voice saved-history selection and54 recoveries
+
+Added pinned selection of completed historical FAILED/PRESERVED providers,
+including exact existing packaging proof across48kHz/22,050Hz representations.
+No synthesis, historical plan mutation or budget/threshold change.383 sources
+for308 targets verified;368 tried in deterministic first-pass order,54 installed
+with final delivered quality PASS and314 preserved. All667 priority pairs audited:
+exact54 changed,613 unchanged;54 backups and all source/budget identities verified.
+Remaining255 (35 exhausted,220 with one take left), plus five held provenance
+records to reconcile before new synthesis. Focused126+18+4 PASS; full make verify
+5,726 tests still known1failure/3errors/8skips, NOT GREEN. Evidence/continuation:
+`docs/reviews/2026-10-22_OTHER_SAVED_SOURCE_RECOVERY.md`. No phase/release/human
+acceptance closure is claimed.

@@ -791,3 +791,9 @@ and `--verification off` are necessary for zero ASR. Native pedagogical requests
 are excluded. Frozen corpus raw requests disable auto wrapping internally;
 source `short_policy.py`, `short_phrases.py`, `short_delivery.py` and the shared
 `target_quality.py` own this path. See the usage README for fields and recovery.
+
+Historical saved recovery selections use `--source-selection` with exact
+plan/scope/media/receipt/completed-job pins; see the corpus manual's schema.
+Provider48kHz and retained22,050Hz carriers may differ legitimately: the adapter
+requires exact reproduction through the existing packaging transform. This is
+not a synthesis operation or an excuse to ignore a hash mismatch.

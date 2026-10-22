@@ -368,3 +368,11 @@ synthesis, requires final verification, preserves cumulative budgets and uses
 existing CorpusRunner backup/transactions. Exact flags and resume rules are in
 `docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md` § V7 saved-provider recovery.
 Historical producers remain stopped; this is not a fresh-generation command.
+
+
+Historical FAILED/PRESERVED provider takes can be selected explicitly with
+`recover_voice_candidates.py --source-selection <index.json>`. The corpus manual
+owns the versioned index schema and provenance gates. It binds unchanged
+remaining/priority/source-plan IDs and exact completed job/key/media; differing
+provider/retained WAV rates require exact existing packaging reproduction.
+No fresh-generation mode or approval override is introduced.

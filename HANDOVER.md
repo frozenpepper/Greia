@@ -181,6 +181,43 @@ rows remain out of its queue. Outputs remain listening-pending.
 ## Recent entries
 
 
+### 2026-10-22 — Other saved takes recovered:54 additional installations
+
+`recover_voice_candidates.py --source-selection` now accepts explicitly pinned
+FAILED/PRESERVED source rows. It checks unchanged scope/plan/raw/receipt and the
+exact completed provider job/key/text/direction/master. Provider48kHz→retained
+22,050Hz provenance uses exact existing packaging reproduction; no synthesis.
+Frozen carrier policies/original baselines remain intact.
+
+Inventory660 sources for309 remaining IDs:270 already v7-checked,7 held for
+provenance reconciliation,383 verified sources for308 targets. Deterministic
+first-passing-source traversal checked368 (15 spare sources skipped after their
+target passed): **54 additional DONE /314 saved rejections preserved**. Actual
+installed media passed final quality; exactly54 of667 audio/receipt pairs changed,
+613 unchanged. All383 source pairs/plans/provider manifests and cumulative count
+manifests unchanged;54 backup bundles verified. No new synthesis or human approval.
+
+Current412 kept/installed classification leaves **255 remaining**:35 at three
+takes,220 at two. Exact list/evidence:
+`2026-10-22-rejection-investigation/other-saved-recovery/remaining.json`,
+`progress.json`, `install-audit.json`. New54-file listening batch vs masters:
+http://127.0.0.1:8807/ (validated, HTTP200; no browser/listening acceptance).
+Earlier27-file batch on8806 unchanged. Full report:
+`docs/reviews/2026-10-22_OTHER_SAVED_SOURCE_RECOVERY.md`.
+
+Completed letter_A job20261022-142854-3615cf58 was checked and replayed: four
+candidate suffixes fail Base target verification; nothing installed/resubmitted.
+Final focused voice126/corpus18/finisher4 PASS. Source-frozen full make verify:
+5,726 tests,1 failure/3 errors/8 skips, same known non-voice cases, NOT GREEN.
+
+**Next:** reconcile five held records still in remaining255: IT ask_K/ask_O/sunhat
+missing source-plan rows; EN letter_C and FR find_octopus with older original
+baselines. Use exact completed jobs and explicit new recovery provenance; never
+rewrite frozen plans or resubmit letter_A (or known completed sunhat job).
+Then evidence remaining per-ID budgets before a new versioned v7 fresh
+continuation. Historical v6 producer stays stopped, scope667 unchanged.
+
+
 ### 2026-10-22 — V7 saved-source adapter delivered; 27 recovered and installed
 
 `tools/recover_voice_candidates.py` now stages failed frozen v6 provider sources

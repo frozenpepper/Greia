@@ -61,6 +61,10 @@ def prepare_plan(args, root=ROOT):
         raise ValueError("selected registry differs from source plan")
     with sqlite3.connect(f"file:{source / 'state.sqlite3'}?mode=ro", uri=True) as db:
         states = dict(db.execute("SELECT path,state FROM cues"))
+    selection = None
+    if getattr(args, "source_selection", None):
+        from greia_voice_corpus.source_selection import load_selection
+        selection = load_selection(args.source_selection, source, args.priority_file)
     rows = []
     seen = set()
     for original in plan["rows"]:
@@ -68,7 +72,12 @@ def prepare_plan(args, root=ROOT):
         if relative in seen:
             raise ValueError("duplicated source plan path")
         seen.add(relative)
-        if states.get(relative) != "FAILED":
+        if selection is not None:
+            if relative not in selection:
+                continue
+            if states.get(relative) not in {"FAILED", "PRESERVED"}:
+                raise ValueError("selected source has an uncertain/non-failed journal state")
+        elif states.get(relative) != "FAILED":
             continue
         if relative not in selected or not original.get("spoken_carrier"):
             raise ValueError("failed source lies outside frozen carrier priority")
@@ -80,9 +89,14 @@ def prepare_plan(args, root=ROOT):
         if (digest(target) != original["original_sha256"]
                 or digest(receipt_path(target)) != original["original_receipt_sha256"]):
             raise ValueError("destination changed since source planning: " + relative)
+        if selection is not None:
+            from greia_voice_corpus.source_selection import validate_selected_source
+            validate_selected_source(selection[relative], source, original)
         row = copy.deepcopy(original)
         row.update(state="READY", reason="v7 saved-source recovery; synthesis forbidden")
         rows.append(row)
+    if selection is not None and len(rows) != len(selection):
+        raise ValueError("selected source has no exact plan row")
     if not rows:
         raise ValueError("no failed saved source rows")
     result = {**plan, "rows": rows, "saved_recovery_policy": POLICY,
@@ -90,6 +104,10 @@ def prepare_plan(args, root=ROOT):
                   "plan_sha256": digest(source / "plan.json"),
                   "priority_file": str(args.priority_file.resolve()),
                   "priority_sha256": digest(args.priority_file)}}
+    if selection is not None:
+        result["saved_recovery_source"]["selection_file"] = str(args.source_selection.resolve())
+        result["saved_recovery_source"]["selection_sha256"] = digest(args.source_selection)
+        result["saved_recovery_source"]["selected_provider_sources"] = selection
     return result
 
 
@@ -164,6 +182,7 @@ def main():
     parser.add_argument("--priority-file", type=Path)
     parser.add_argument("--history-root", type=Path)
     parser.add_argument("--cache-root", type=Path)
+    parser.add_argument("--source-selection", type=Path)
     parser.add_argument("--install", action="store_true")
     args = parser.parse_args()
     work = args.work_dir.resolve()
