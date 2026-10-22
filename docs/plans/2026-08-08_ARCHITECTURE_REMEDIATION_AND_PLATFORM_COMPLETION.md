@@ -3829,3 +3829,17 @@ Lexical-context8jobs1pass and repeated-recognition39savedcuts0of4retained positi
 both fail; neither selected. Saved full-context recognition diagnosis41sources
 running, with no installation. Focused165+53PASS; latest fullmakeverify abort6,
 NOTGREEN (preceding run5765known1failure3errors8skips). No remediation/hardware closure.
+
+
+### 2026-10-22 — Context safety experiment rejected; strict saved recovery adds2
+
+Saved82-source WAV/OGG proof completed with1uncut-intro false approval; structural
+audit0issues does not establish semantic safety. Conservative cache-only hard
+count/number-veto replay rejects204controls but misses old transfer gate; both
+context methods remain unselected. Existing unchanged v7 isolated gates recover
+2actual saved diagnostics via normal transactions, no synthesis. Actual667audit
+7changed660unchanged,427kept/installed240remaining, pending human listening. All
+25corpus reservations and16diagnostic identities retained separately. Engine
+source/defaults unchanged; next optional WAV-only saved-substitution scope needs
+held-out proof, no bulk restart. Full verification remainsNOTGREEN. Evidence and
+next scope:PACKAGED_CONTEXT_SAFETY_REVIEW and HANDOVER. No platform/hardware closure.

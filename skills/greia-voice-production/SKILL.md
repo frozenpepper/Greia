@@ -576,8 +576,17 @@ quality/poor-yield guards and humanPENDING state remain binding.
 
 Current voice continuation correction2026-10-22: BOTH natural producers are held
 for poor yield; do not restart natural-context-v1 or natural-context-speech-v1.
-Exact audit5installed pending,242remaining. Explicit saved-only English spoken
+Latest exact audit7installed pending,240remaining. Explicit saved-only English spoken
 comparison can recover homophonic recognition errors without another provider
 call; normal API defaults and historical policies remain unchanged. Read the
 current natural completion guide/HANDOVER for diagnostic state and remaining
 lists. A failed prompt experiment never authorizes a blind bulk continuation.
+
+
+2026-10-22 context safety correction: the82-source packaged-context experiment
+failed on an uncut-intro OGG false approval. Neither context version is selected.
+Two additional saved diagnostic takes pass unchanged isolated checks and were
+installed pending through existing transactions; no new synthesis/default change.
+Current7installed/240remaining, all actual corpus/diagnostic calls retained. Follow
+PACKAGED_CONTEXT_SAFETY_REVIEW and HANDOVER for optional saved-WAV scope; never
+restart held producers or claim failed experimental gates passed.

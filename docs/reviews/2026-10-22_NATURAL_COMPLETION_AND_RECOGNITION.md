@@ -1,6 +1,14 @@
 # Natural voice completion and recognition diagnosis — 2026-10-22
 
-## Result for the owner
+## Latest result
+
+The completed packaged-context safety review and two further strict recoveries
+are in `2026-10-22_PACKAGED_CONTEXT_SAFETY_REVIEW.md`. Latest actual result is
+7installed,240remaining; the original contextual strategy failed and is not
+selected. The five-recording checkpoint below is historical. See current HANDOVER
+and completion guide for the next bounded work; no bulk generation is running.
+
+## Earlier five-recording checkpoint
 
 **Not complete.** Five of the247 previously unresolved recordings are now
 installed, pending listening. The total frozen667 has425 kept/installed and242
@@ -106,7 +114,7 @@ accurately distinguish current-source implementation, diagnostic observations,
 installation and human listening. No hosted/paid work or shared-worker restart.
 
 
-## Registered final-delivery replay — running
+## Historical registration of the final-delivery replay
 
 The saved-only experiment `final-delivery-context-v1` is running82sources
 (41recent,24earlier saved,17wrong-number), both WAV and OGG. It packages and
@@ -131,3 +139,10 @@ ordered word timings; all after-boundary words and straddling words must match
 cached evidence. It never calls ASR. Any structural issue disqualifies contextual
 evidence. Run only on COMPLETE output, inspect actual artifacts, and recompute
 conservative results before any integration. No engine strategy is selected yet.
+
+
+**Completion correction:** this82-source replay is COMPLETE and failed the
+registered safety/OGG-preservation gates. Independent audit and conservative
+cache-only replay, unchanged strict saved recoveries, exact remaining counts and
+next bounded work are in `2026-10-22_PACKAGED_CONTEXT_SAFETY_REVIEW.md`. No original
+gate was relaxed or retroactively marked passed.

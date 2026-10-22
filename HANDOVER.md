@@ -180,32 +180,39 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
-### 2026-10-22 — Packaged-target context/control replay running, no synthesis
+### 2026-10-22 — Packaged replay failed safety gate; two strict saved recoveries
 
-The next saved-only experiment is actually running, not a queued future task:
-`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/final-delivery-context-v1/`;
-script `probe-final-delivery-context.py`, sibling `.log`, PID80838 at launch
-(inspect actual process). Registered82sources:41recent natural/conditioning/
-lexical sources,24earlier saved sources,17actual wrong-number controls. Both WAV
-and OGG packaging are decoded, then the EXACT delivered PCM is joined after the
-original prefix up to each existing cut. Base recognition retains every word
-after the exact prefix-frame boundary; no expected prompt or intro agreement.
-Uncut intro payloads, appended actual-prefix speech and wrong-name variants add
-negative controls. Provider API calls are explicitly forbidden by patch; max1200
-ASR observations, all cached by exact bytes/settings. No audio installed, no
-budgets/masters/plans changed and no new production defaults selected.
+Completed82-source WAV/OGG replay:708offline ASR observations, provider forbidden.
+Structural cache/PCM/timestamp audit418observations:zero issues, all protected
+hashes unchanged. Original contextual fallback still FALSE-ACCEPTED one actual
+uncut-intro OGG control and preserved only25/28OGG positives. Original gateFAILED;
+no contextual verifier installed or integrated. Cache-only post-diagnosis v2
+hard isolated count/number veto rejects all204negative observations and preserves
+28/28WAV,25/28OGG positives; transfers7/10WAV,6/10OGG context matches, below the
+registered80percent threshold. Both remain UNSELECTED, no silent gate change.
+Read `docs/reviews/2026-10-22_PACKAGED_CONTEXT_SAFETY_REVIEW.md` for actual failure,
+controls, limitations and next bounded optional WAV-only saved-recovery seam.
 
-Registered gates:zero false accepts,>=90percent retention of earlier qualifying
-isolated positives,>=80percent transfer of prior contextual matches, all protected
-hashes unchanged. These are saved diagnostic gates, not90percent live success.
-An additional independent `audit-final-delivery-context.py` must run only AFTER
-COMPLETE and requires exact cached ASR (no reroll), original-prefix/decoded-payload
-byte identity, full-text timestamp coverage and valid ordered bounded timestamps.
-Any coverage/timing issue invalidates that contextual observation. Check
-`structural-audit-registration.json`. Do not adopt counter-only experimental
-success or skip the structural audit. Both corpus producers remain held; actual
-installed5/remaining242 unchanged. Next: finish/audit saved evidence, then assess
-a separately versioned verifier seam and saved recoveries only if supported.
+Separately, existing Momo EN Basket full diagnostic seed314159 and Lilli ES
+Elige un álbum compact-style seed314159 pass the UNCHANGED isolated Base/count/
+number/signal gates (scores1.0/0.8593). Recovered without synthesis using existing
+v7 saved adapter/CorpusRunner. Spanish ASR Elie un álbum and actual compact English
+transport direction remain visible; planned/actual directions are not conflated.
+Exact selected masters, diagnostic jobs/keys/requests/raw/hash and source rows
+reconciled. Each install audit1changed666unchanged. New combined actual audit
+7changed660unchanged; all humanPENDING. Corpus ledgers remain25calls; separate
+hash-pinned diagnostic-generation-ledger-v1 records all16actual diagnostic jobs
+and per-cue evidenced lifetime totals, never resets a budget.
+
+Current overall427of667kept/installed,240remaining=45unstartedletters+
+193unstartedordinary+2exhausted(W as Whale EN,Trouve Oskar FR). Both producers
+still held. Latest audit/remaining/listening evidence:
+`2026-10-22-rejection-investigation/natural-completion-audit-v3/`;
+Takeboard8812sevenclips, old8811batch untouched. No new synthesis or engine/default
+change this turn. Next: implement and validate the optional disabled WAV-only
+saved substitution checker/candidate seam with strict isolated hard-invariant
+veto on held-out real controls; never claim original gate passed or resume bulk
+from the12post-hoc qualifying sources. Existing full verification remainsNOTGREEN.
 
 
 ### 2026-10-22 — Saved contextual recognition complete; final-delivery proof next

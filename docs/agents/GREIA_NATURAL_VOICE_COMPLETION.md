@@ -1,44 +1,38 @@
 # Greia remaining recordings — natural-method completion
 
-## Current saved-only experiment
+## Current state — seven installed,240remaining
 
-`final-delivery-context-v1` is running82registered sources in WAV/OGG, using
-original prefix plus exact decoded packaged target. Corpus synthesis remains
-stopped. Read the dated recognition report and newest HANDOVER entry for gates,
-negative controls, protected hashes, max1200offline ASR calls and the mandatory
-independent cache-only structural audit. Never duplicate the replay or adopt its
-intermediate counters. No production defaults or corpus budgets change.
+Read `docs/reviews/2026-10-22_PACKAGED_CONTEXT_SAFETY_REVIEW.md` first for latest
+method results and exact next work. Both bulk producers remain held; no new
+synthesis. Actual audit7changed660unchanged of667,427kept/installed,240remaining:
+45unstartedletters,193unstartedordinary,2exhausted(EN W as Whale,FR Trouve Oskar).
+Takeboard8812has seven pending clips; historical8811five-clip batch is unchanged.
+Latest exact IDs/audit: `2026-10-22-rejection-investigation/natural-completion-audit-v3/`.
 
-## Current state — both bulk runs stopped
+The82source packaged-context experiment completed and FAILED:one uncut-intro
+OGG false approval,25/28OGG prior positives preserved. Independent structural
+audit418recorded observations foundzero issues; structural validity alone did
+not make ASR complete. The separately registered conservative v2 hard isolated
+count/number veto rejects all204bad-control observations and preserves28/28WAV,
+25/28OGG positives, but transfers7/10WAV,6/10OGG earlier context matches; both
+fail the original80percent gate. Neither context strategy selected or installed.
+Do not lower these historical gates or call the12qualifying sources live yield.
 
-Actual latest audit:5installed of the new247scope,425kept/installed of667,
-242remaining =45unstartedletters+193unstartedordinary+4exhausted.
-`natural-context-speech-v1` ended METHOD_REVIEW_REQUIRED at1DONE3PRESERVED193READY,
-12actualcalls; parent remains held at2DONE3PRESERVED242READY,13calls.
-Saved Oskar and Find two the same add2recoveries, zero further synthesis.
-Do NOT launch either producer unchanged or grant another allowance to attempted
-cues. Canonical masters, native originals, receipts and all call counts persist.
-Takeboard8811 compares five installed pending clips. Audit, remaining IDs and
-listening manifest are in `2026-10-22-rejection-investigation/natural-completion-audit-v1/`.
+Two diagnostic takes already pass existing isolated checks:Basket full EN1.0,
+Elige un álbum ES0.8593. They were recovered through the UNCHANGED v7 saved
+adapter/transactions, without contextual admission or new synthesis. Actual
+Spanish ASR Elie un álbum and compact English transport direction are retained.
+Saved plans explicitly reconcile semantic cue aliases, exact selected masters,
+raw/job/key/request/hash proofs, planned versus actual delivery and pending human
+review. Corpus reservations stay25; all16separate diagnostic submissions and
+lifetime per-cue totals are pinned in diagnostic-generation-ledger-v1.json.
 
-The saved-only `target-only-v7-saved-spoken-en-v1` comparison opt-in supports exact
-English Oskar/Oscar spelling; one/won,two/to/too,four/for,eight/ate at corresponding
-positions; W as double-u/double-you. Original transcript is retained. Actual
-numbers differing, extra words, speech/signal limits and selected masters remain
-guarded. It does not change default or frozen historical comparison semantics.
-The Find two the same recovery shows1of667pairs changed,666unchanged and no
-reserved-call changes. See `natural-find-two-recovery-v1/audit.json`.
-
-Lexical-context8jobs finished1PASS7rejects: FAILED preregistered gate, not selected.
-Repeated-recognition39saved suffixes preserved0of4baseline qualifiers, recovered0:
-REJECTED. Neither supports bulk continuation. The saved-only41source
-`natural-context-recognition-v1` diagnosis finished41sources with10unique matches and41uncut controls rejected: full-source word
-context, fixed PCM cuts, all words after cut and straddling-word rejection;
-no disposable-intro wording agreement. Shadow proper-name/homophone mapping is
-explicit. Check its actual artifacts; no new synthesis or installation. Current next-work report:
-`docs/reviews/2026-10-22_NATURAL_COMPLETION_AND_RECOGNITION.md`.
-Any promising result still needs broad controls and final packaged-audio context
-validation before a separately versioned integration. Do not call ASR listening.
+Next bounded scope is an optional initially disabled WAV-only saved-substitution
+checker/candidate seam with hard isolated count/number veto, PCM/cache/timestamp
+coverage proofs and held-out saved controls. Keep defaultv7 and OGG unchanged;
+no general method adoption or bulk restart from failed experiments. The safety
+review owns exact next steps. Original plans, sources, receipts, masters and all
+call histories remain preserved. Full verification remainsNOTGREEN.
 
 ## Initial authority and historical stage boundary
 
