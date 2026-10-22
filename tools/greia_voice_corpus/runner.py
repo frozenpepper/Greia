@@ -94,8 +94,8 @@ class CorpusRunner:
                 delivered = self.store.work / receipt["delivery_pcm"]["path"]
                 if digest(delivered) != receipt["delivery_pcm"]["sha256"]:
                     raise ValueError("spoken-carrier delivery PCM source changed")
-            from .context_recovery import POLICY as CONTEXT_POLICY, validate_candidate as validate_context
-            if self.store.plan.get("saved_recovery_policy") == CONTEXT_POLICY:
+            from .context_recovery import CONTEXT_POLICIES, validate_candidate as validate_context
+            if self.store.plan.get("saved_recovery_policy") in CONTEXT_POLICIES:
                 validate_context(self.store,row,candidate,receipt,self.engine.audio)
             return receipt
         for key in ("speaker", "kind", "locale", "text", "delivery_prompt"):

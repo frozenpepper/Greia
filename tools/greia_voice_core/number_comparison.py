@@ -18,7 +18,8 @@ LEGACY_COMPARISON_POLICY = "locale-number-tokens-v1"
 COMPARISON_POLICY = "locale-number-tokens-v2"
 ORTHOGRAPHIC_COMPARISON_POLICY = "locale-number-tokens-v2-oskar-en-v1"
 ENGLISH_SPOKEN_COMPARISON_POLICY = "locale-number-tokens-v2-spoken-en-v1"
-SUPPORTED_COMPARISON_POLICIES = frozenset({LEGACY_COMPARISON_POLICY, COMPARISON_POLICY, ORTHOGRAPHIC_COMPARISON_POLICY, ENGLISH_SPOKEN_COMPARISON_POLICY})
+OSKAR_LOCALE_COMPARISON_POLICY = "locale-number-tokens-v2-oskar-all-v1"
+SUPPORTED_COMPARISON_POLICIES = frozenset({OSKAR_LOCALE_COMPARISON_POLICY,LEGACY_COMPARISON_POLICY, COMPARISON_POLICY, ORTHOGRAPHIC_COMPARISON_POLICY, ENGLISH_SPOKEN_COMPARISON_POLICY})
 
 # Explicit inventories; tuple position is the value from 0 to 25.
 _NUMBER_WORDS = {
@@ -132,7 +133,8 @@ def canonical_number_tokens(locale: str, text: str, *, ignore_accents: bool = Tr
         index += 1
     # Explicit English proper-name spelling equivalence. Never apply fuzzy
     # aliases to arbitrary names, and never reinterpret historical v1/v2 receipts.
-    if policy in {ORTHOGRAPHIC_COMPARISON_POLICY, ENGLISH_SPOKEN_COMPARISON_POLICY} and locale == "en":
+    if (policy == OSKAR_LOCALE_COMPARISON_POLICY or
+            policy in {ORTHOGRAPHIC_COMPARISON_POLICY, ENGLISH_SPOKEN_COMPARISON_POLICY} and locale == "en"):
         result = ["oskar" if token == "oscar" else token for token in result]
     return tuple(result)
 

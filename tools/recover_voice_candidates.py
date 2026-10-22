@@ -24,7 +24,7 @@ from greia_voice_core.registry import CANONICAL_MANIFEST, VoiceRegistry
 from greia_voice_corpus.carrier_generation import prepare_saved_candidate, CarrierExtractionFailure
 from greia_voice_corpus.inventory import digest, receipt_path, safe_target
 from greia_voice_corpus.runner import CorpusRunner
-from greia_voice_corpus.saved_recovery import POLICY, POLICIES, CONTEXT_POLICY
+from greia_voice_corpus.saved_recovery import POLICY, POLICIES, CONTEXT_POLICIES
 from greia_voice_corpus.store import RunStore, write_json
 
 
@@ -44,10 +44,13 @@ def read(path):
 
 def prepare_plan(args, root=ROOT):
     """Freeze only failed source rows inside the unchanged owner priority set."""
+    if getattr(args, "diagnostic_source", None):
+        from greia_voice_corpus.diagnostic_reconciliation import prepare_plan as prepare_diagnostic
+        return prepare_diagnostic(args,root)
     policy = getattr(args, "policy", POLICY)
     if policy not in POLICIES:
         raise ValueError("unsupported saved recovery policy")
-    if policy == CONTEXT_POLICY and not getattr(args, "source_selection", None):
+    if policy in CONTEXT_POLICIES and not getattr(args, "source_selection", None):
         raise ValueError("context recovery requires pinned source selection")
     source = args.source_work.resolve()
     priority = read(args.priority_file)
@@ -129,14 +132,16 @@ def stage(args, root=ROOT):
     try:
         write_json(store.work / "carrier-attempt-counts.json", counts)
         engine = SavedAudioEngine()
-        if plan["saved_recovery_policy"] == CONTEXT_POLICY:
+        if plan["saved_recovery_policy"] in CONTEXT_POLICIES:
             from greia_voice_core.context_evidence import RecordedTranscriber
             transcriber = RecordedTranscriber(args.cache_root)
         else:
             transcriber = CachedTranscriber(args.cache_root)
         for index, row in enumerate(plan["rows"], 1):
             relative = row["path"]
-            raw = source / "carrier-raw" / (relative + ".raw.wav")
+            raw = (Path(plan["saved_recovery_source"]["raw_source"])
+                   if plan["saved_recovery_source"].get("reconciliation_file") else
+                   source / "carrier-raw" / (relative + ".raw.wav"))
             dest = store.work / "carrier-raw" / (relative + ".raw.wav")
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(raw, dest)
@@ -193,6 +198,7 @@ def main():
     parser.add_argument("--history-root", type=Path)
     parser.add_argument("--cache-root", type=Path)
     parser.add_argument("--source-selection", type=Path)
+    parser.add_argument("--diagnostic-source", type=Path)
     parser.add_argument("--policy", choices=sorted(POLICIES), default=POLICY)
     parser.add_argument("--install", action="store_true")
     args = parser.parse_args()

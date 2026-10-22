@@ -1,5 +1,58 @@
 # Recorded-only saved contextual corpus recovery — 2026-10-22
 
+## Current continuation — 2026-10-23
+
+The explicit registered-diagnostic reconciliation path recovered and installed
+two more exact saved sources through the same `prepare_saved_candidate`,
+`CorpusRunner`, and `RunStore` transaction. French Tito `Trouve Oskar` used
+completed job `20261022-194837-c8fd5222` under
+`target-only-v7-saved-wav-context-oskar-v1`; English Leo `W as Whale` used
+`20261022-194704-4881f8f0` under the existing finite
+`target-only-v7-saved-wav-context-spoken-en-v1`. The actual install audit is
+PASS: 2 audio/receipt pairs changed, 665 frozen pairs unchanged and 1,559 other
+protected hashes unchanged. Both new receipts remain `human_review=PENDING`.
+No provider or recognizer call was made and no attempt budget or threshold was
+changed.
+
+The combined frozen-667 audit is now **10 changed / 657 unchanged; 430 kept or
+installed and 237 remaining** (44 letters, 193 ordinary, 0 exhausted).
+Takeboard `http://127.0.0.1:8814/` contains the ten pending recordings. This is
+source/install and machine-screening evidence only; owner listening is pending.
+The latest files are under
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/`:
+`context-diagnostic-recovery-v1/{install-audit.json,lineage-decisions.json}` and
+`natural-completion-audit-v5/{audit.json,remaining.json,listening.json}`.
+
+`diagnostic_reconciliation.py` pins a one-result registered diagnostic to the
+original frozen row, remaining/priority snapshots, Activity family, exact raw
+WAV and receipt, completed provider job, master/request, and attempt ledgers.
+Literal matches use the unchanged comparison policy. A spoken lexical variant
+requires an explicit registered equivalence policy: the Oscar/Oskar spelling
+policy is deliberately selected for this saved French result, and the existing
+finite English spoken policy for W. Reconciliation never changes a historical
+plan or the original target text. The C-as-Cat candidate was traced to the
+already-resolved `alfabeto_leo.letter_C.en` source; it is not eligible for
+`foresta_parole.find_c` merely because the words match.
+
+Focused verification recorded for this source is 212 voice tests PASS and 32
+focused policy tests PASS (`/tmp/greia-diagnostic-allvoice.log`,
+`/tmp/greia-diagnostic-policy-tests.log`). Local `make verify` still aborts in
+the test stage (`Abort trap: 6`), so it is NOT GREEN
+(`/tmp/greia-diagnostic-reconciliation-make-verify.log`). The earlier broad
+context gates remain FAILED. Recorded-only yield reassessment is 7/25 (28%) for
+the corpus parent/child groups, far below the desired 90%; it does not authorize
+the 237-row restart.
+
+**Next bounded investigation:** use only already-retained source audio,
+packaged candidates, and pinned Base observations to classify the 25 corpus
+parent/child outcomes by isolated transcript/count, contextual transcript,
+word-clock coverage, and final packaged replay. Produce a case table identifying
+the earliest failed predicate for each of the 18 rejected rows. Do not invoke
+ASR, synthesis, models or workers, change gates, or install anything. This
+read-only failure-stage attribution will distinguish an upstream short-speech
+recognition issue from an extractor/context/final-replay mismatch before any new
+method is proposed. Bulk production remains held.
+
 ## Current result
 
 **One existing recording recovered and installed; no synthesis or new ASR.**

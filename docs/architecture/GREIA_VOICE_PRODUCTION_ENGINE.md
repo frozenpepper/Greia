@@ -379,3 +379,21 @@ invocation is available in this recovery mode. Missing observations remain held.
 Default v7, OGG and historical comparison policies remain unchanged. Runtime
 children never use these authoring collaborators. Operator/API details live in
 the core README; executed limited evidence is SAVED_CONTEXT_CORPUS_ADAPTER.
+
+### Registered diagnostic saved-source reconciliation — 2026-10-23
+
+`greia_voice_corpus.diagnostic_reconciliation` is a saved-only bridge for one
+registered diagnostic result whose source layout differs from version-1 source
+selection. It validates frozen source/priority/remaining state, exact Activity
+family and semantic/request aliases, raw and receipt identity, completed provider
+job and master, historical attempt ledgers, and the original destination pair.
+It then reuses `prepare_saved_candidate`, `CorpusRunner`, and `RunStore`; no
+provider or recognizer is available to the saved plan.
+
+A literal target needs no new comparison behavior. Any spoken lexical equivalence
+requires a separately pinned registered comparison policy. The current recovered
+examples use the narrow Oscar/Oskar spelling policy and the pre-existing finite
+English spoken-letter policy; ordinary/default and historical policies are
+unchanged. Both installed clips remain human-listening-pending. See
+`docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` for exact installation
+proof and current evidence boundaries.

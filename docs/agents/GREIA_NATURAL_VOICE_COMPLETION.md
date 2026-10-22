@@ -1,6 +1,33 @@
 # Greia remaining recordings — natural-method completion
 
-## Current state — eight installed,239 remaining
+## Current state — ten installed,237 remaining (2026-10-23)
+
+Read `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` for the full
+current recovery evidence and bounded next investigation. The diagnostic
+reconciliation adapter recovered two registered saved sources: French Tito
+`Trouve Oskar` (`20261022-194837-c8fd5222`) and English Leo `W as Whale`
+(`20261022-194704-4881f8f0`). Their explicit selected comparison policies,
+full provenance checks, and normal recoverable transactions are recorded in
+`context-diagnostic-recovery-v1/install-audit.json` (PASS, 2 changed pairs,
+665 unchanged pairs, 1,559 other protected hashes unchanged). No new provider
+or recognizer calls and no budget/threshold changes; both takes remain
+`human_review=PENDING`.
+
+The combined frozen-667 audit now has 10 changed/657 unchanged, 430 kept or
+installed, and 237 remaining: 44 letters, 193 ordinary, 0 exhausted. Takeboard
+is `http://127.0.0.1:8814/` with ten pending clips. The C-as-Cat source belongs
+to already-resolved `alfabeto_leo.letter_C.en`; never reuse it for
+`foresta_parole.find_c` by text alone. Both bulk producers remain held. The
+current saved-evidence yield screen is 7/25 for corpus parent/child cases
+(28%), not sufficient to restart bulk work.
+
+Current source verification: 212 voice tests and 32 focused policy tests PASS.
+Full local `make verify` aborts at the test stage (`Abort trap: 6`), NOT GREEN.
+Next is a read-only case table classifying the 25 retained corpus parent/child
+observations by earliest failed predicate; no ASR, provider, model, worker,
+threshold, budget, or installation changes are authorized by that step.
+
+## Prior state — 2026-10-22
 
 Read `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` first for latest
 method results and exact next work. Both bulk producers remain held; no new

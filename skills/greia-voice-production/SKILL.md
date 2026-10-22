@@ -606,3 +606,29 @@ Do not bypass source/observation checks, resume held producers or infer live yie
 unit tests or saved-audio screening. Context cannot erase isolated count/number
 or signal conflicts; exact observation/provenance replay and normal recoverable
 transactions are required for every installed candidate.
+
+
+### Registered diagnostic saved recovery — 2026-10-23
+
+An explicit `diagnostic_reconciliation` adapter now handles registered saved
+diagnostics whose completed source does not use the old source-selection layout.
+It pins the exact frozen row, remaining/priority snapshots, Activity-family
+ownership, actual and semantic requests, raw audio/receipt/job/master, original
+destination pair and historical attempt ledger. Admission is followed only by
+the existing saved-candidate, CorpusRunner and RunStore path. It never invokes
+the provider or recognizer and cannot reset a budget.
+
+The exact Oscar/Oskar name spelling is a distinct opt-in comparison policy for
+the French recovery; English `W as Whale` uses the already finite English
+spoken-letter policy. Defaults and historical receipts remain unchanged. The
+C-as-Cat source resolves to already-completed `alfabeto_leo.letter_C.en`; do not
+reuse it for Forest `find_c` by text match.
+
+Current audit: 10/667 changed, 430 kept or installed, 237 remaining (44
+letters, 193 ordinary, 0 exhausted). Both bulk producers remain held because
+saved-only corpus parent/child screening passed only 7/25 (28%). The ten
+installed new-method clips remain listening-pending. Focused voice/policy tests
+pass; full `make verify` aborts with `Abort trap: 6`, NOT GREEN. Next is a
+read-only earliest-failed-predicate table across those 25 retained cases; do
+not run ASR, providers, models, workers, installations, or adjust gates/budgets.
+See `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md`.

@@ -3873,3 +3873,25 @@ changes. Combined audit8changed659unchanged,428kept/installed239remaining; human
 PENDING, Takeboard8813. Fullverify5804tests known1failure3errors8skips, NOTGREEN
 (`/tmp/greia-context-adapter-make-verify-final.log`); no hardware closure. Next exact saved/cached239 inventory, tested reconciliation as necessary;
 bulk holds remain. SAVED_CONTEXT_CORPUS_ADAPTER owns current scoped evidence.
+
+### 2026-10-23 — Registered diagnostic saved-source reconciliation
+
+Implemented and reviewed a narrow saved-only diagnostic reconciliation adapter
+for two already-recorded sources that lacked the earlier source-selection layout.
+It pins original plan/priority/remaining scope, Activity family, semantic and
+actual request aliases, raw WAV/receipt/provider job/master, original destination
+pairs and cumulative ledgers, then reuses existing candidate preparation,
+CorpusRunner and RunStore recovery. Literal and explicit equivalence policies are
+separate; French Oscar/Oskar and finite English spoken-letter policies do not
+change default/historical comparison behavior. C-as-Cat was confirmed to be the
+already-resolved Leo letter-C cue and was not reused for Forest `find_c`.
+
+Evidence: install audit PASS (2 changed, 665 unchanged frozen pairs; 1,559
+other protected hashes unchanged); combined frozen-667 audit 10 changed/657
+unchanged, 430 kept or installed, 237 remaining (44 letters, 193 ordinary,
+0 exhausted). New clips remain listening-pending. 212 voice tests and 32 focused
+policy tests PASS. `make verify` aborts during tests (`Abort trap: 6`), NOT GREEN.
+Recorded parent/child method screen is 7/25 (28%), so both bulk producers remain
+held. Next scoped action is read-only earliest-failed-predicate attribution over
+the 25 existing cases; no ASR, model, provider, worker, budget/gate change, or
+installation in that investigation. Details: `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md`.

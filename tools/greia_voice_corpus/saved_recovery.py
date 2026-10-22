@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 from greia_voice_core.asr_policy import DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION
-from greia_voice_core.number_comparison import COMPARISON_POLICY, ORTHOGRAPHIC_COMPARISON_POLICY, ENGLISH_SPOKEN_COMPARISON_POLICY, compare_target_transcript
+from greia_voice_core.number_comparison import COMPARISON_POLICY, ORTHOGRAPHIC_COMPARISON_POLICY, ENGLISH_SPOKEN_COMPARISON_POLICY, compare_target_transcript, OSKAR_LOCALE_COMPARISON_POLICY
 from voice_carrier_search import ALGORITHM_VERSION, CONTEXT_ALGORITHM_VERSION, extract
-from .context_recovery import POLICY as CONTEXT_POLICY
+from .context_recovery import POLICY as CONTEXT_POLICY, CONTEXT_POLICIES, OSKAR_POLICY, ENGLISH_POLICY
 
 POLICY = "target-only-v7-saved-v1"
 ORTHOGRAPHIC_POLICY = "target-only-v7-saved-oskar-en-v1"
 ENGLISH_SPOKEN_POLICY = "target-only-v7-saved-spoken-en-v1"
-POLICIES = {CONTEXT_POLICY: COMPARISON_POLICY, POLICY: COMPARISON_POLICY, ORTHOGRAPHIC_POLICY: ORTHOGRAPHIC_COMPARISON_POLICY, ENGLISH_SPOKEN_POLICY: ENGLISH_SPOKEN_COMPARISON_POLICY}
+POLICIES = {OSKAR_POLICY:OSKAR_LOCALE_COMPARISON_POLICY, ENGLISH_POLICY:ENGLISH_SPOKEN_COMPARISON_POLICY, CONTEXT_POLICY: COMPARISON_POLICY, POLICY: COMPARISON_POLICY, ORTHOGRAPHIC_POLICY: ORTHOGRAPHIC_COMPARISON_POLICY, ENGLISH_SPOKEN_POLICY: ENGLISH_SPOKEN_COMPARISON_POLICY}
 
 
 def recovery_enabled(plan: dict) -> bool:
@@ -45,7 +45,7 @@ def validate_recovery_receipt(receipt: dict, enabled: bool, policy: str = POLICY
     quality = receipt.get("verification", {})
     if policy not in POLICIES:
         raise ValueError("unsupported saved recovery policy")
-    expected_algorithm = CONTEXT_ALGORITHM_VERSION if policy == CONTEXT_POLICY else ALGORITHM_VERSION
+    expected_algorithm = CONTEXT_ALGORITHM_VERSION if policy in CONTEXT_POLICIES else ALGORITHM_VERSION
     if (opted != policy or extraction.get("algorithm_version") != expected_algorithm
             or extraction.get("comparison_policy") != POLICIES[policy]
             or quality.get("comparison_policy") != POLICIES[policy]

@@ -32,6 +32,13 @@ def validate_selected_source(entry: dict, source: Path, row: dict) -> None:
     receipt = receipt_path(raw)
     if digest(raw) != entry["sha256"] or digest(receipt) != entry["receipt_sha256"]:
         raise ValueError("selected raw source or receipt changed")
+    validate_provider_source(entry, raw, receipt)
+
+
+def validate_provider_source(entry: dict, raw: Path, receipt: Path) -> None:
+    """Prove an exact completed job for either retained layout, without writes."""
+    if digest(raw) != entry['sha256'] or digest(receipt) != entry['receipt_sha256']:
+        raise ValueError('selected raw source or receipt changed')
     rec = json.loads(receipt.read_text())
     params = rec["generation_parameters"]
     manifest = Path(entry["job_manifest"])

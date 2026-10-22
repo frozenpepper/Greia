@@ -180,6 +180,37 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-23 — Two registered saved diagnostics recovered; bulk remains held
+
+Added explicit, pinned reconciliation for registered diagnostic results that
+do not have the old source-selection layout. It validates the exact original
+priority row and remaining snapshot, Activity family, actual request and cue
+aliases, raw WAV/receipt/provider job/master, and cumulative attempt ledgers,
+then routes only through the existing recorded-only candidate preparation,
+CorpusRunner and RunStore installation. Literal matches keep the default
+comparison policy; French Oscar/Oskar spelling and English spoken-letter
+equivalence are each explicit opt-in policies. Defaults and history remain
+unchanged.
+
+Recovered French Tito `Trouve Oskar` from
+`20261022-194837-c8fd5222` and English Leo `W as Whale` from
+`20261022-194704-4881f8f0`. Actual install audit PASS: 2 changed/665 unchanged
+frozen pairs, 1,559 other protected hashes unchanged. No synthesis, ASR,
+threshold or budget changes. The combined frozen-667 audit is 10 changed/657
+unchanged, 430 kept or installed, 237 remaining (44 letters, 193 ordinary,
+0 exhausted). Takeboard `http://127.0.0.1:8814/`; all ten new recordings are
+human-listening-pending. C-as-Cat was traced to already-resolved Leo letter C
+and must not be reused for Forest's `find_c`.
+
+212 voice tests and 32 focused policy tests PASS. `make verify` aborts in the
+test stage (`Abort trap: 6`), NOT GREEN; see
+`/tmp/greia-diagnostic-reconciliation-make-verify.log`. Earlier broad context
+gates remain FAILED. Saved-only corpus parent/child yield is 7/25 (28%), so
+both bulk producers stay held. Next exact step: read-only earliest-failed-
+predicate attribution across the 25 retained parent/child cases; no new ASR,
+models, provider calls, synthesis, gate changes, or installations.
+Full evidence and source details: `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md`.
+
 ### 2026-10-22 — Recorded-only context adapter installed one exact saved source
 
 Explicit `target-only-v7-saved-wav-context-v1` now composes prepare_saved_candidate,

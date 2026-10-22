@@ -550,3 +550,32 @@ stay separate from human review. Installation uses existing recoverable original
 journals and PENDING receipts. Attempt budgets are copied unchanged, never spent
 or reset. See `2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` for executed evidence;
 this limited saved recovery does not establish live-generation reliability.
+
+
+### Registered diagnostic saved-source reconciliation — 2026-10-23
+
+`greia_voice_corpus.diagnostic_reconciliation` permits an exact registered
+diagnostic result to enter saved-only recovery when its source is outside the
+older source-selection layout. It pins the frozen source plan, current remaining
+and priority snapshots, original destination hashes, Activity family, semantic
+and actual request aliases, raw WAV and receipt, completed job/master, and
+attempt ledgers. It then reuses the existing saved candidate, CorpusRunner and
+RunStore transaction; saved-recovery plans still cannot synthesize.
+
+Literal target matches use the normal explicit comparison policy. Spoken
+equivalence requires a separately registered comparison policy, selected here
+for exact Oscar/Oskar spelling across released locales and the existing finite
+English letter-name policy. This does not broaden the default or historical
+comparison behavior. The source for `C as Cat` belongs to already-resolved Leo
+letter C and must not be reused for Forest `find_c` by text alone.
+
+The 2026-10-23 audit recovered two pending recordings (French Tito Oskar and
+English Leo W): 2 pairs changed, 665 frozen pairs unchanged, and 1,559 other
+protected hashes unchanged. Combined frozen-667 status is 10 changed, 430 kept
+or installed, 237 remaining (44 letters, 193 ordinary, 0 exhausted). Takeboard
+8814 contains ten human-listening-pending clips. Corpus parent/child saved-only
+screening yield is 7/25 (28%); both bulk producers remain held. Next is
+read-only earliest-failed-predicate attribution over the 25 retained cases.
+Do not call ASR, providers, models or workers, alter thresholds/budgets, or
+install during that investigation. See
+`docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` for exact evidence.

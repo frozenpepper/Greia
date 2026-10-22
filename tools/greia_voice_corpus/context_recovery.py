@@ -7,12 +7,19 @@ from greia_voice_core.contextual_target import ContextualTargetChecker, Packaged
 from .inventory import digest, receipt_path
 
 POLICY = 'target-only-v7-saved-wav-context-v1'
+OSKAR_POLICY = 'target-only-v7-saved-wav-context-oskar-v1'
+ENGLISH_POLICY = 'target-only-v7-saved-wav-context-spoken-en-v1'
+CONTEXT_POLICIES = frozenset({POLICY, OSKAR_POLICY, ENGLISH_POLICY})
 
 
 def selected_source(store, row):
     """Reconcile original plan, remaining scope, copied raw and completed job."""
     from .source_selection import load_selection, validate_selected_source
     frozen = store.plan['saved_recovery_source']
+    if frozen.get('reconciliation_file'):
+        from .diagnostic_reconciliation import validate_selected
+        validate_selected(store,row)
+        return
     source = Path(frozen['work'])
     if digest(source/'plan.json') != frozen['plan_sha256']:
         raise ValueError('context source plan changed')

@@ -55,8 +55,8 @@ def prepare_saved_candidate(engine, store, row: dict, profile, verification: str
     """Extract/package an existing immutable provider take; never synthesize here."""
     from .saved_recovery import recovery_enabled, adapt_extraction
     saved_recovery = recovery_enabled(getattr(store, "plan", {}))
-    from .context_recovery import POLICY as CONTEXT_POLICY
-    context_recovery = getattr(store, "plan", {}).get("saved_recovery_policy") == CONTEXT_POLICY
+    from .context_recovery import CONTEXT_POLICIES
+    context_recovery = getattr(store, "plan", {}).get("saved_recovery_policy") in CONTEXT_POLICIES
     context_checker = None
     if saved_recovery and verification != "required":
         raise ValueError("saved v7 recovery requires final verification")
