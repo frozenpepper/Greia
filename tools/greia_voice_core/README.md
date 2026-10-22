@@ -71,8 +71,8 @@ exact selected VoxStage identities; it never replaces an existing conflicting
 saved voice. A fresh library can import the selected repository references lazily.
 
 Pitch/register, timbre, vocal age and permanent personality belong in master
-design. Masters remain immutable. `character_delivery.json` supplies neutral
-performance defaults. A request's `delivery_prompt` replaces that default for
+design. Masters remain immutable. `character_delivery.json` supplies warm, calm, clear reading
+with careful natural pronunciation. A request's `delivery_prompt` replaces that default for
 line-specific tone/mood/pace; do not repeat identity descriptors on every line.
 The VoxStage adapter adds language direction separately from spoken text. Its
 effective delivery field, including that language prefix, must fit 300 characters.
@@ -312,6 +312,7 @@ Do not stop/restart the shared service to discard jobs.
 | `GREIA_VOICE_CHARACTER_PROVIDER` | `voxstage` default; `chatterbox` explicit alternative; CLI `--character-provider` wins |
 | `GREIA_VOXSTAGE_URL` | loopback HTTP origin only; default `http://127.0.0.1:8791` |
 | `VOXSTAGE_API_KEY` | optional environment-only service authentication |
+| `GREIA_VOXSTAGE_HTTP_TIMEOUT` | per-HTTP-response timeout:120s default, allowed1–7,200; distinct from job wait; no POST retries |
 | `GREIA_VOXSTAGE_TIMEOUT` | provider job wait: 1,800s default, allowed 1–7,200 |
 | `request --timeout` | semantic service response wait: 3,600s default, allowed 1–7,200 |
 | `GREIA_VOICE_HOME` | review/lock state outside Git; independent of VoxStage data root |
@@ -376,3 +377,26 @@ owns the versioned index schema and provenance gates. It binds unchanged
 remaining/priority/source-plan IDs and exact completed job/key/media; differing
 provider/retained WAV rates require exact existing packaging reproduction.
 No fresh-generation mode or approval override is introduced.
+
+
+### Current short recording direction and final priority take
+
+Owner update2026-10-22: the spoken intro ends with a **normal period**, then a
+paragraph break and the exact target. No ellipsis is added. Receipt composition
+policy: `period-separated-intro-v1`. Default direction for all six actors:
+
+> Read clearly in a warm, calm tone. Pronounce every word carefully and naturally.
+
+The short pipeline appends its separate silent-pause/final-target instruction.
+Master identity/register/timbre are still supplied only by the selected master.
+A request may explicitly override the default delivery. Historical recordings
+and frozen carrier plans retain the actual prompts used to create them.
+
+`continue_voice_priority_v7.py` prepares/runs only the last remaining cumulative
+take of frozen priority rows with exactly two prior submissions. It calls normal
+VoiceEngine with short mode ON, required verification and max_attempts=1, then
+uses existing CorpusRunner transactions. Known quality failures preserve the
+original as budget-exhausted; provider/ASR/IO uncertainty stops NEEDS_RECOVERY.
+`GenerationResult.evidence_dir` is an optional structured path for retained short
+pipeline state; automation reads it instead of parsing error prose. See the
+corpus manual for the versioned plan/commands and live readiness gate.

@@ -4,6 +4,8 @@ import unicodedata
 
 from .models import SpeechKind, VoiceRequest
 
+COMPOSITION_POLICY = "period-separated-intro-v1"
+
 PREFIXES = {
     "en": "Listen to this phrase in English.",
     "it": "Ascolta questa frase in italiano.",
@@ -59,7 +61,7 @@ class ShortPhrasePolicy:
                 break
         else:
             raise ValueError("target overlaps every available disposable intro")
-        text = prefix.rstrip(".") + "...\n\n" + request.text
+        text = prefix.rstrip(".") + ".\n\n" + request.text
         delivery = ((request.delivery_prompt or default_delivery).strip() +
                     " Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.")
         if len(text) > 240:

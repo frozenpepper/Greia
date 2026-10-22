@@ -26,7 +26,8 @@ Pedagogical means the sound itself is the pronunciation truth being taught.
 **Owner correction 2026-10-21:** permanent voice attributes (register/pitch,
 timbre, vocal age/texture and characteristic identity) are master-design inputs.
 Per-recording direction owns only the line's delivery/acting and locale cue.
-The six default delivery entries now share a neutral natural/unhurried direction;
+The six default delivery entries now share warm, calm, clear reading with careful
+natural pronunciation (owner direction2026-10-22);
 callers must not prepend a fixed persona to every recording. V2 frozen requests
 retain their original prompts as provenance. A new replacement plan is required
 for selected new masters and corrected per-cue acting.
@@ -314,3 +315,23 @@ with v7 extraction and required final canonical guards. CorpusRunner requires
 matching recovery metadata, recomputes the final text guards and forbids
 synthesis for such plans. RunStore continues to own backups and atomic journal
 recovery. The adapter is saved-only, with no fresh-generation mode.
+
+### Period/warm automatic corpus continuation (2026-10-22)
+
+`short_policy.py` owns normal-period intro composition and its receipt version.
+`character_delivery.json` owns the warm clear pronunciation defaults; requests
+may explicitly override delivery. Permanent voice traits remain in masters.
+`GenerationResult.evidence_dir` points to retained short-pipeline lifecycle state.
+
+`greia_voice_corpus.automatic_generation` adapts normal VoiceEngine results to a
+separately versioned final-take corpus plan. CorpusRunner owns cumulative
+reservation and installation, requires two previous takes, permits one normal
+API take, preserves known exhausted quality failures and stops uncertain outcomes
+for recovery. It validates actual automatic composition/master/raw evidence and
+final canonical/signal checks instead of expecting a historical v6 carrier
+receipt. `continue_voice_priority_v7.py` owns frozen-scope preparation and
+operational traversal, reusing existing stores and cache. No separate verification
+queue or shared-service scheduler change is claimed.
+
+VoxStageClient now distinguishes configurable HTTP-response timeout (default120s)
+from overall job wait. POSTs remain single submissions with exact-key recovery.

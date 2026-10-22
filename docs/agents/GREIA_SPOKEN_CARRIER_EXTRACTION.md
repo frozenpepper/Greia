@@ -236,3 +236,15 @@ pause without searching inside speech or relaxing the 0.4s leading-silence gate.
 Receipt `delivery` records offset, raw start sample and separate file/hash.
 Automatic requests and corpus packaging use this shared helper and verify the
 actual delivered audio; standalone v6 extraction remains unchanged.
+
+## 2026-10-22 recording update: period and warm clear reading
+
+Normal automatic requests now compose `native intro.\n\nexact target`, with
+`composition_policy=period-separated-intro-v1`; no ellipsis is inserted.
+Default acting direction is “Read clearly in a warm, calm tone. Pronounce every
+word carefully and naturally.” The separate silent-pause/final-target instruction
+is retained for extraction. Master identity is unchanged. Frozen historical
+requests keep their actual recorded text/prompt; a new production plan is used
+for the revised recipe. Twelve live four-language probes and raw/candidate/final
+comparison evidence are documented in the period/warm review report. A style
+prompt and machine transcript are not human listening approval.

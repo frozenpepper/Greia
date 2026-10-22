@@ -11,7 +11,7 @@ from .audio import AudioPipelineError
 from .models import (GenerationDisposition, GenerationResult, VerificationDisposition,
                      VerificationMode, VerificationResult)
 from .paths import voice_home
-from .short_policy import ShortPhrasePolicy
+from .short_policy import ShortPhrasePolicy, COMPOSITION_POLICY
 from .short_delivery import prepare_delivery
 from .target_quality import TargetQualityChecker
 from .verification import WhisperVerifier
@@ -127,7 +127,7 @@ class ShortPhrasePipeline:
                     staging.replace(output)
                     receipt = engine._write_receipt(request, provider, profile, output, last, attempts, take.generation_parameters)
                     payload = json.loads(receipt.read_text())
-                    payload["short_phrase"] = {"mode": "automatic-carrier", "evidence_dir": str(work),
+                    payload["short_phrase"] = {"mode": "automatic-carrier", "composition_policy": COMPOSITION_POLICY, "evidence_dir": str(work),
                                                "prefix": prefix, "composite_text": composite,
                                                "effective_delivery": delivery, "extraction": extraction,
                                                "quality": quality, "history": history}
@@ -135,14 +135,14 @@ class ShortPhrasePipeline:
                     save_evidence(work / "state.json", {"status": "VERIFIED" if quality["disposition"] == "PASS" else "UNVERIFIED",
                                   "request": request.to_dict(), "output": str(output), "history": history})
                     return GenerationResult(GenerationDisposition.REVIEW_REQUIRED, request, provider.provider_id,
-                                            output, receipt, last, attempts, "short target extracted; human listening pending")
+                                            output, receipt, last, attempts, "short target extracted; human listening pending", evidence_dir=work)
             save_evidence(work / "state.json", {"status": "FAILED_QUALITY", "request": request.to_dict(), "history": history})
             return GenerationResult(GenerationDisposition.REJECTED, request, provider.provider_id, None, None,
-                                    last, attempts, "short-phrase quality budget exhausted; evidence: " + str(work))
+                                    last, attempts, "short-phrase quality budget exhausted; evidence: " + str(work), evidence_dir=work)
         except BaseException as exc:
             save_evidence(work / "state.json", {"status": "NEEDS_RECOVERY" if attempts else "BLOCKED", "error": str(exc),
                           "request": request.to_dict(), "attempt": attempts, "history": history})
             if isinstance(exc, Exception):
                 return GenerationResult(GenerationDisposition.REJECTED, request, provider.provider_id, None, None,
-                                        last, attempts, str(exc) + "; inspect saved evidence before retry: " + str(work))
+                                        last, attempts, str(exc) + "; inspect saved evidence before retry: " + str(work), evidence_dir=work)
             raise

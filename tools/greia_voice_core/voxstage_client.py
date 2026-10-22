@@ -42,6 +42,7 @@ class VoxStageClient:
         base_url: str | None = None,
         job_timeout: float | None = None,
         poll_interval: float = 1.0,
+        http_timeout: float | None = None,
     ) -> None:
         self.base_url = (base_url or os.environ.get("GREIA_VOXSTAGE_URL", "http://127.0.0.1:8791")).rstrip("/")
         parsed = urlsplit(self.base_url)
@@ -57,6 +58,9 @@ class VoxStageClient:
         self.job_timeout = float(job_timeout if job_timeout is not None else os.environ.get("GREIA_VOXSTAGE_TIMEOUT", "1800"))
         if not 1 <= self.job_timeout <= 7200 or not 0 < poll_interval <= 10:
             raise ValueError("VoxStage timeout must be 1–7200 seconds; poll interval must be 0–10 seconds")
+        self.http_timeout = float(http_timeout if http_timeout is not None else os.environ.get("GREIA_VOXSTAGE_HTTP_TIMEOUT", "120"))
+        if not 1 <= self.http_timeout <= 7200:
+            raise ValueError("VoxStage HTTP timeout must be 1–7200 seconds")
         self.poll_interval = poll_interval
         self.opener = build_opener(ProxyHandler({}), _NoRedirects())
 
@@ -75,7 +79,7 @@ class VoxStageClient:
 
     def json(self, route: str, payload: dict | None = None, key: str | None = None) -> dict:
         try:
-            with self.opener.open(self._request(route, payload, key), timeout=30) as response:
+            with self.opener.open(self._request(route, payload, key), timeout=self.http_timeout) as response:
                 raw = response.read(self.MAX_JSON_BYTES + 1)
             if len(raw) > self.MAX_JSON_BYTES:
                 raise VoxStageServiceError("VoxStage JSON response exceeds the transport bound")
@@ -116,7 +120,7 @@ class VoxStageClient:
     def download(self, job_id: str, filename: str, destination: Path) -> None:
         route = f"/v1/jobs/{job_id}/files/{filename}"
         try:
-            with self.opener.open(self._request(route), timeout=30) as response:
+            with self.opener.open(self._request(route), timeout=self.http_timeout) as response:
                 remaining = self.MAX_AUDIO_BYTES
                 with destination.open("wb") as stream:
                     while True:

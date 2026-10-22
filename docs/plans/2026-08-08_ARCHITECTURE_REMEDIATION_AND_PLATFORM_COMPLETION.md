@@ -3762,3 +3762,19 @@ records to reconcile before new synthesis. Focused126+18+4 PASS; full make verif
 5,726 tests still known1failure/3errors/8skips, NOT GREEN. Evidence/continuation:
 `docs/reviews/2026-10-22_OTHER_SAVED_SOURCE_RECOVERY.md`. No phase/release/human
 acceptance closure is claimed.
+
+
+### 2026-10-22 — Owner period/warm direction and bounded final-take adapter
+
+Applied normal-period intros and warm clear careful reading defaults, preserving
+master identity and frozen history. Reconciled5 saved jobs against current frozen
+baselines;1 additional recovery installed,4 retained. Current413 kept/installed,
+254 remaining (34 exhausted,220 one-take budgets). Added normal-API final-take
+adapter, structured evidence_dir and configurable HTTP-response timeout after
+recovering a completed36s job that exceeded old30s response timeout; no duplicate.
+Actual48kHz saved check20/24PASS,24negative controls reject; fresh12-case period/
+warm probe8PASS/4rejected, missing predeclared readiness, so220-file v2 batch is
+PREPARED NOT STARTED. Voice137/corpus18/finisher4/client21 focused PASS; full
+5,738 tests remains known1failure/3errors/8skips, NOT GREEN. Exact current boundary
+and next four-case diagnosis: `docs/reviews/2026-10-22_PERIOD_WARM_VOICE_CONTINUATION.md`.
+No phase, release, human-listening or entire-corpus completion is claimed.

@@ -30,7 +30,7 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 43841
 
 
-def build_engine(generation_lock: object | None = None, character_provider: str | None = None) -> VoiceEngine:
+def build_engine(generation_lock: object | None = None, character_provider: str | None = None, short_phrase_pipeline=None) -> VoiceEngine:
     registry = VoiceRegistry.load(PROJECT_ROOT)
     return VoiceEngine(
         project_root=PROJECT_ROOT,
@@ -39,6 +39,7 @@ def build_engine(generation_lock: object | None = None, character_provider: str 
         verifier=WhisperVerifier(),
         audio_pipeline=AudioPipeline(),
         generation_lock=generation_lock,
+        short_phrase_pipeline=short_phrase_pipeline,
     )
 
 

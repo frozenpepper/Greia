@@ -812,3 +812,12 @@ V7 corpus saved-source recovery now has a no-synthesis adapter:
 external folder). Existing CorpusRunner/RunStore own installation/backups and
 human_review stays PENDING. Frozen corpus v6 producers remain stopped; consult
 the voice skill/corpus manual before any further work.
+
+Authoring speech update2026-10-22: normal short intros now use a period and warm
+clear careful-reading defaults. The final-take corpus adapter uses normal
+VoiceEngine, required verification, one remaining cumulative take and existing
+transactions; infrastructure uncertainty stops for exact-job recovery using
+GenerationResult.evidence_dir. The220-file v2 plan is prepared but not started:
+12 live prompt probes8PASS/4rejected miss readiness. Read current HANDOVER/voice
+skill before execution. HTTP response timeout now defaults120s independently of
+job wait; never repeat an uncertain POST or restart the shared VoxStage worker.

@@ -775,3 +775,52 @@ do not reroll ASR, select a highest score or stage/install duplicate target pass
 Use the exact existing audio/locale/model cache. Historical extractor versions
 unsupported by the adapter, missing source plans and changed-original cases need
 explicit reconciliation; never bypass those errors silently.
+
+### Final remaining take through normal short VoiceEngine (period/warm v2)
+
+**Current state:** prepared, not running. The twelve live period/warm probes
+returned8 machine passes and4 rejections, failing their predeclared batch-readiness
+gate. Investigate those saved samples before launching the220-file continuation.
+Do not substitute the historical v6 producer or silently relax target checks.
+
+`tools/continue_voice_priority_v7.py` creates a new immutable plan with
+`automatic_short_generation_policy=automatic-short-v7-period-warm-v2` and
+`short_composition_policy=period-separated-intro-v1`. It accepts only remaining
+priority IDs with exactly two prior attempts, verifies current originals against
+the specified existing source plan, and excludes the three-take exhausted list.
+It preserves the old carrier plan as `previous_carrier_plan`; it does not wrap
+another intro around the automatic API. New direction is warm, calm, clear
+reading with careful natural pronunciation; the intro uses a normal period.
+
+```bash
+"$VOICE_PY" tools/continue_voice_priority_v7.py prepare \
+  --remaining-file <investigation>/after-held-remaining.json \
+  --priority-file <corpus>/triage/priority-retakes.json \
+  --source-plan <history>/resume-shared-short-delivery-production-03/fresh-01/plan.json \
+  --history-root <history> --cache-root <investigation>/full-pause-replay \
+  --work-dir <history>/final-take-v7-02
+
+# ONLY after the declared live prompt/cut readiness gate is satisfied:
+GREIA_VOXSTAGE_TIMEOUT=7200 GREIA_VOXSTAGE_HTTP_TIMEOUT=7200 \
+  "$VOICE_PY" tools/continue_voice_priority_v7.py run \
+  --work-dir <history>/final-take-v7-02
+```
+
+VoiceEngine receives short mode ON, required verification and max_attempts=1.
+CorpusRunner reserves the last cumulative take before submission. A durable
+`FAILED_QUALITY` result from exactly one attempt becomes PRESERVED/budget-exhausted
+with the original intact, and traversal continues. Provider/ASR/IO uncertainty
+stops for recovery; it is never converted into an acoustic retry. A complete
+candidate can be installed after interruption without another provider call.
+All receipts remain human-review PENDING. `BOUNDED_COMPLETE`/exit0 means traversal
+finished, not that every requested recording passed. Read installed/exhausted/
+blocked lists in progress.json, count manifests, SQLite and retained evidence.
+
+GenerationResult now exposes optional `evidence_dir` for the exact short-pipeline
+state, avoiding error-string parsing. Queued jobs remain owned by the shared
+VoxStage service. HTTP response timeout is distinct from job wait:
+`GREIA_VOXSTAGE_HTTP_TIMEOUT` defaults120s, accepts1–7200, applies to JSON/audio
+exchanges, and never retries a POST. The first live sample took36s and exceeded
+the old30s response timeout despite being accepted; its exact completed job/key
+was recovered without a duplicate. Use long response/job waits for shared-queue
+production; never cancel/restart the shared service to force progress.

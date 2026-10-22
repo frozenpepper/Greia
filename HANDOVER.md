@@ -181,6 +181,46 @@ rows remain out of its queue. Outputs remain listening-pending.
 ## Recent entries
 
 
+### 2026-10-22 — Owner period/warm direction applied; live gate holds final batch
+
+Normal short VoiceEngine now uses a normal-period intro (no ellipsis), with
+warm/calm/clear reading and careful natural pronunciation defaults for all six
+actors. Silent-pause direction remains separate; masters and acceptance thresholds
+unchanged. Receipt composition `period-separated-intro-v1`. Docs/skills track it.
+
+Five held saved jobs were reconciled against exact completed-job and current
+frozen-baseline proofs in a NEW processing plan. EN letter_C recovered/installed;
+other four rejected unchanged gates. All667 pairs audited:1 changed,666 unchanged;
+source pairs/baseline plans/budgets unchanged. Total82 saved recoveries; current
+413 kept/installed classification,254 remaining (34 at3takes,220 at2).
+
+New normal-API corpus adapter `automatic-short-v7-period-warm-v2` preserves last
+cumulative take budgets and existing transactions. GenerationResult.evidence_dir
+provides structured recovery state. Source-tested known quality exhaustion is
+PRESERVED; infrastructure/provider uncertainty stops NEEDS_RECOVERY. Prepared
+`final-take-v7-01` is SUPERSEDED_UNSTARTED; replacement `final-take-v7-02` has220
+rows but **has not submitted anything**.
+
+Actual48kHz saved-provider check:20/24 pass,24/24 negative controls reject. Fresh
+period/warm cohort:12 diagnostic jobs,8 pass/4 rejected (EN1,IT3,FR2,ES2), misses
+predeclared9/12 and2-per-language readiness gate. Keep bulk paused. Exact failed
+cases EN Leo Find Luna, EN Tito Count to ten, FR Leo Trouve Luna, ES Lilli El
+sombrero. Inspect raw/candidate/search evidence next; no threshold relaxation or
+ASR reroll. Listening page http://127.0.0.1:8808/ labels raw/final/rejected cuts.
+All unreviewed, no browser/listening acceptance. Detailed evidence/procedure:
+`docs/reviews/2026-10-22_PERIOD_WARM_VOICE_CONTINUATION.md`.
+
+First diagnostic job20261022-164343-32d0f10e/key greia-984b905bb661433cbc5681ccf24c52ad
+completed in36s after the old30s response timeout; recovered without resubmission.
+HTTP timeout now defaults120s (GREIA_VOXSTAGE_HTTP_TIMEOUT, up to7200), distinct
+from job wait; POSTs still never retry automatically. Shared service untouched.
+Voice137/corpus18/finisher4/client21 focused PASS. Final full gate5,738 tests,
+1failure/3errors/8skips, same known cases, NOT GREEN. Next: diagnose the four saved
+live failures while retaining the owner-requested period/warm direction; prove
+correction before any final220 continuation. Completed letter_A/sunhat/diagnostic
+jobs must never be resubmitted; old frozen plans remain historical.
+
+
 ### 2026-10-22 — Other saved takes recovered:54 additional installations
 
 `recover_voice_candidates.py --source-selection` now accepts explicitly pinned

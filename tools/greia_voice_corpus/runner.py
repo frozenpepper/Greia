@@ -46,6 +46,12 @@ class CorpusRunner:
 
     def _validate_candidate(self, row: dict, candidate: Path) -> dict:
         receipt = json.loads(receipt_path(candidate).read_text(encoding="utf-8"))
+        from .automatic_generation import enabled as automatic_enabled, validate_candidate as validate_automatic
+        if automatic_enabled(self.store.plan):
+            if self.verification is not VerificationMode.REQUIRED:
+                raise ValueError("automatic corpus requires final verification")
+            profile = VoiceRegistry.load(self.store.root).get(row["request"]["speaker"])
+            return validate_automatic(self.store, row, candidate, receipt, profile)
         from .saved_recovery import recovery_enabled, validate_recovery_receipt
         validate_recovery_receipt(receipt, recovery_enabled(self.store.plan))
         if row.get("spoken_carrier"):
@@ -108,6 +114,9 @@ class CorpusRunner:
 
     def run(self, *, limit: int = 0, match: str = "*", continue_after_carrier_rejection: bool = False) -> int:
         store = self.store
+        from .automatic_generation import enabled as automatic_enabled, AutomaticRecoveryRequired
+        if automatic_enabled(store.plan) and self.verification is not VerificationMode.REQUIRED:
+            raise ValueError("automatic corpus requires final verification")
         if digest(store.root / CANONICAL_MANIFEST) != store.plan["registry_manifest_sha256"]:
             raise ValueError("canonical registry changed since planning; create a new plan")
         if any(store.state(r["path"]) == "RESTORED" for r in store.plan["rows"]):
@@ -148,17 +157,25 @@ class CorpusRunner:
                     if recovery_enabled(store.plan):
                         raise ValueError("saved recovery plans forbid synthesis; stage a complete candidate first")
                     store.set_state(relative, "GENERATING", "provider call in progress; interruption requires job inspection")
-                    if row.get("spoken_carrier"):
+                    from .automatic_generation import enabled as automatic_enabled, generate_candidate as generate_automatic
+                    if automatic_enabled(store.plan) or row.get("spoken_carrier"):
                         profile = registry.get(row["request"]["speaker"])
                         attempts_path = store.work / "carrier-attempt-counts.json"
                         attempts = json.loads(attempts_path.read_text()) if attempts_path.exists() else {}
                         count = int(attempts.get(relative, 0))
                         if count >= 3:
                             raise ValueError("spoken-carrier fresh-generation limit of 3 reached for this cue")
+                        if automatic_enabled(store.plan) and count != 2:
+                            raise ValueError("automatic final-take policy requires exactly two prior attempts")
                         attempts[relative] = count + 1
                         write_json(attempts_path, attempts)
                         with Heartbeat(relative):
-                            generate_candidate(self.engine, store, row, profile, self.verification.value)
+                            if automatic_enabled(store.plan):
+                                if self.verification is not VerificationMode.REQUIRED:
+                                    raise ValueError("automatic corpus requires final verification")
+                                generate_automatic(self.engine, store, row)
+                            else:
+                                generate_candidate(self.engine, store, row, profile, self.verification.value)
                     else:
                         request = VoiceRequest(**{k: v for k, v in row["request"].items() if k != "kind"},
                                                kind=SpeechKind(row["request"]["kind"]), output=candidate,
@@ -169,11 +186,13 @@ class CorpusRunner:
                         if result.disposition.value != "REVIEW_REQUIRED":
                             raise ValueError(f"{result.disposition.value}: {result.detail}")
                 receipt = self._validate_candidate(row, candidate)
-                if row.get("spoken_carrier"):
+                if row.get("spoken_carrier") or automatic_enabled(store.plan):
                     receipt["output"]["path"] = relative
                 else:
                     receipt["request"]["output"] = relative
                 receipt["output"]["path"] = relative
+                if automatic_enabled(store.plan):
+                    receipt["request"]["output"] = relative
                 receipt["corpus_replacement"] = {"original_sha256": row["original_sha256"], "owner_authorization": "2026-10-19 corpus regeneration; listening pending"}
                 write_json(receipt_path(candidate), receipt)
                 replacements = {relative: candidate, str(receipt_path(Path(relative))): receipt_path(candidate)}
@@ -185,7 +204,11 @@ class CorpusRunner:
             except Exception as exc:
                 # Installation must retain its journal state for recovery. Never
                 # retry an uncertain synthesis automatically under another job ID.
-                store.set_state(relative, "INSTALLING" if store.state(relative) == "INSTALLING" else "FAILED", str(exc))
+                failure_state = ("INSTALLING" if store.state(relative) == "INSTALLING" else
+                                 "NEEDS_RECOVERY" if isinstance(exc, AutomaticRecoveryRequired) else
+                                 "PRESERVED" if automatic_enabled(store.plan) and isinstance(exc, CarrierExtractionFailure)
+                                 else "FAILED")
+                store.set_state(relative, failure_state, str(exc))
                 print(f"  FAILED | {relative} | {exc}", flush=True)
                 if continue_after_carrier_rejection and isinstance(exc, CarrierExtractionFailure):
                     print("  Continuing after fail-closed carrier rejection; original and raw evidence retained.", flush=True)

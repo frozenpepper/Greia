@@ -797,3 +797,13 @@ plan/scope/media/receipt/completed-job pins; see the corpus manual's schema.
 Provider48kHz and retained22,050Hz carriers may differ legitimately: the adapter
 requires exact reproduction through the existing packaging transform. This is
 not a synthesis operation or an excuse to ignore a hash mismatch.
+
+Normal short speech now uses period-separated intros and warm clear careful
+reading defaults. The prepared final-take v2 continuation is220 exact IDs with
+one take left; it is not running while the12 live prompt probes' failed readiness
+gate is investigated. New coordinator `continue_voice_priority_v7.py` uses normal
+VoiceEngine and existing corpus transactions; inspect its progress/journal and
+GenerationResult.evidence_dir. GREIA_VOXSTAGE_HTTP_TIMEOUT (default120s, max7200)
+is separate from GREIA_VOXSTAGE_TIMEOUT; accepted submissions must be recovered
+by their existing key after response timeouts, never duplicated. See the corpus
+manual and current HANDOVER before execution.

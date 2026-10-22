@@ -25,6 +25,7 @@ from greia_voice_core.short_policy import ShortPhrasePolicy, PREFIXES
 
 class Provider:
     provider_id = 'voxstage-voxcpm2'
+    sample_rate = 22050
     supports_delivery_prompt = supports_spoken_carrier = True
     def __init__(self, folder): self.folder, self.calls = folder, []
     def supports(self, request, profile): return True
@@ -32,7 +33,7 @@ class Provider:
     def generate(self, request, profile):
         self.calls.append(request)
         path = self.folder / f'provider-{len(self.calls)}.wav'
-        rate = 22050
+        rate = self.sample_rate
         samples = [0] * (rate * 3)
         for start, end in ((.1, 1.45), (2., 2.8)):
             for i in range(round(start*rate), round(end*rate)):
@@ -92,7 +93,7 @@ class AutomaticShortRoutingTests(unittest.TestCase):
                     self.assertEqual(result.verification.disposition, VerificationDisposition.PASS)
                     self.assertEqual(result.attempts, 1)
                     sent = self.provider.calls[-1]
-                    self.assertEqual(sent.text, PREFIXES[locale].rstrip('.')+'...\n\n'+target)
+                    self.assertEqual(sent.text, PREFIXES[locale].rstrip('.')+'.\n\n'+target)
                     self.assertEqual(sent.short_text_mode, 'off')
                     self.assertEqual(sent.verification, VerificationMode.OFF)
                     receipt=json.loads(result.receipt_path.read_text())
@@ -104,6 +105,19 @@ class AutomaticShortRoutingTests(unittest.TestCase):
                     self.assertTrue(all(p.name != 'raw.wav' for p, _ in self.asr_calls))
                     with wave.open(str(result.output_path)) as wav:
                         self.assertLess(wav.getnframes()/wav.getframerate(),1.5)
+
+    def test_all_actor_locale_routes_package_48khz_provider_audio(self):
+        self.provider.sample_rate = 48000
+        for speaker in ('leo','dani','momo','tito','lilli','flash'):
+            for locale,target in {'en':'Find Luna','it':'Trova Luna','fr':'Trouve Luna','es':'Busca Luna'}.items():
+                with self.subTest(speaker=speaker,locale=locale):
+                    self.target=target
+                    result=self.engine.generate(self.request(speaker=speaker,locale=locale,max_attempts=1))
+                    self.assertEqual(result.disposition,GenerationDisposition.REVIEW_REQUIRED,result.detail)
+                    receipt=json.loads(result.receipt_path.read_text())
+                    self.assertEqual(receipt['short_phrase']['extraction']['sample_rate'],48000)
+                    self.assertEqual(receipt['short_phrase']['quality']['disposition'],'PASS')
+                    self.assertTrue(result.evidence_dir.is_dir())
 
     def test_retry_until_pass_up_to_three(self):
         self.fail_takes=2
@@ -233,7 +247,7 @@ class AutomaticShortRoutingTests(unittest.TestCase):
             self.assertTrue(result['ok'])
             self.assertEqual(result['result']['verification']['disposition'],'PASS')
             self.assertEqual(len(self.provider.calls),1)
-            self.assertIn('...\n\nFind Luna',self.provider.calls[0].text)
+            self.assertIn('.\n\nFind Luna',self.provider.calls[0].text)
         finally:
             send_request('127.0.0.1',port,{'command':'shutdown'})
             thread.join(timeout=3)

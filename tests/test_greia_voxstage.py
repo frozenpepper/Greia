@@ -268,6 +268,20 @@ class VoxStageClientTests(unittest.TestCase):
         client = VoxStageClient("http://localhost:8791")
         self.assertEqual(client.base_url, "http://localhost:8791")
 
+    def test_http_timeout_is_configurable_and_posts_are_never_retried(self):
+        client=VoxStageClient(http_timeout=180)
+        response=MagicMock()
+        response.__enter__.return_value.read.return_value=b'{}'
+        with patch.object(client.opener,'open',return_value=response) as opened:
+            self.assertEqual(client.json('/health'),{})
+            self.assertEqual(opened.call_args.kwargs['timeout'],180)
+        with patch.object(client.opener,'open',side_effect=TimeoutError('busy')) as opened:
+            with self.assertRaisesRegex(VoxStageServiceError,'do not resubmit'):
+                client.json('/v1/jobs',{'test':True},key='exact-key')
+            self.assertEqual(opened.call_count,1)
+        for value in (0,7201,float('nan')):
+            with self.assertRaises(ValueError):VoxStageClient(http_timeout=value)
+
     def test_failed_job_and_timeout_report_same_job_for_recovery(self):
         client = VoxStageClient(job_timeout=1, poll_interval=0.01)
         with patch.object(client, "json", return_value={"status": "failed", "error": "cap reached"}):

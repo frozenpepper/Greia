@@ -126,8 +126,8 @@ masters documented below.
 **Owner clarification 2026-10-21 — identity versus acting:** pitch/register,
 voice age, timbre/texture and permanent character vocal traits belong only in
 master voice design. Do not repeat these in each recording's delivery_prompt.
-Defaults for all six characters are now the same neutral, natural, unhurried
-performance. Only add line-specific intention/emotion/pace when needed. The
+Defaults for all six characters are now the same warm, calm, clear reading
+with careful natural pronunciation (owner update2026-10-22). Only add line-specific intention/emotion/pace when needed. The
 completed v2 corpus's frozen prompts and receipts remain historical evidence;
 its old PERSONA-prefixed overrides must not be reused for the next replacement.
 The original Dani/Momo/Tito voices were rejected for high pitch, inconsistent
@@ -525,3 +525,20 @@ list, priority, raw/receipt and completed provider job. Exact provider packaging
 is replayed if its48kHz output and retained22,050Hz carrier have different hashes.
 No synthesis, threshold or budget changes. Read the corpus manual's index schema;
 unknown provenance or uncertain journal states remain blockers.
+
+### Period/warm direction and final-take continuation
+
+Normal automatic intros now end with a period, not ellipsis; composition policy
+`period-separated-intro-v1`. Default reading is warm, calm and clear with careful
+natural pronunciation. Silent-pause direction remains separate. Source masters
+and historical frozen prompts are unchanged.
+
+`continue_voice_priority_v7.py` prepares a separately versioned final-take plan
+for exact remaining IDs with two prior attempts, then calls normal automatic
+VoiceEngine with max_attempts1/required verification. CorpusRunner owns the last
+take reservation and installation. Known quality exhaustion preserves originals;
+unknown provider/ASR/IO outcomes stop NEEDS_RECOVERY. Inspect result.evidence_dir,
+not error prose. HTTP response timeout now defaults120s (override
+GREIA_VOXSTAGE_HTTP_TIMEOUT, up to7200) separately from job wait; never retry an
+uncertain POST. Current220-file plan is NOT STARTED: live period/warm probes8/12
+pass and miss their predeclared readiness gate. Investigate saved failures first.

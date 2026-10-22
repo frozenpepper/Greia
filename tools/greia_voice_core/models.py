@@ -149,6 +149,7 @@ class GenerationResult:
     verification: VerificationResult
     attempts: int
     detail: str = ""
+    evidence_dir: Path | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -160,4 +161,5 @@ class GenerationResult:
             "verification": self.verification.to_dict(),
             "attempts": self.attempts,
             "detail": self.detail,
+            "evidence_dir": str(self.evidence_dir) if self.evidence_dir else None,
         }
