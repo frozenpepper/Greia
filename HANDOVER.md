@@ -180,6 +180,32 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — Priority continuation03 after shared-queue timeout
+
+Correction to the earlier live-producer checkpoint: producer17915 stopped on
+ask_K (recovered completed job); continuation02 PID4148 then stopped after the
+1,800-second shared-queue wait on ask_O. Its job20261022-041056-7a6ed5fb later
+completed. The exact selected Leo reference/request and mix were checked; raw
+SHA539596f06c1addbf6580f94d645ffb96f87336b74b6315503ccc70b9ff3e7596
+and faithful receipt are retained in the existing external discovery tree.
+No duplicate ask_O submission: its cumulative count is already three.
+
+Owner requested resume. Continuation03 is running as Python PID86480 in
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/resume-shared-short-delivery-production-03/`.
+Same frozen667 priority file/hash, masters, thresholds and cumulative budgets;
+1,714 cached ASR observations copied. Startup audit independently observed41/667.
+`GREIA_VOXSTAGE_TIMEOUT=7200` allows longer waits behind other projects without
+restarting/cancelling the shared service. Previous current-audio audit kept292,
+which includes the prior47 recovery installs; continuation03 has no claimed fresh
+installs at this checkpoint. All generations remain human-listening-pending.
+
+Worker short_carrier_luna monitors the sole producer. Thread heartbeat
+`supervise-greia-priority-voice-completion` remains active every ten minutes;
+parent handles recovery directly if worker usage limits recur. Next action:
+inspect continuation03 live logs/state and reconcile any uncertain job by its
+exact identity before submitting anything. Do not start a second producer.
+
+
 
 ### 2026-10-22 — Automatic short requests implemented
 
