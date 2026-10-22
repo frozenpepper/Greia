@@ -108,3 +108,16 @@ Any additional observation or comparison policy must be separately registered,
 with actual controls and unchanged recorded attempt history. No new takes for
 exhausted cues. Bulk restart still needs evidence of acceptable live yield; this
 single saved rescue does not establish90percent generation reliability.
+
+
+Initial cache discovery (no ASR/provider/install) found3 previously qualifying WAV
+sources with4 possible text/locale/speaker matches among239 remaining. This is
+**discovery only**, not admission: lexical-context natural-035/Trouve Oskar,
+natural-038/W as Whale, and earlier-2/C as Cat. Actual W cue ID selects the
+alphabet Activity; it must not be silently reused for the Forest cue merely
+because the phrase matches. The C source is a canonical-rate diagnostic copy
+without a provider receipt beside it; trace its original native source/receipt
+and exact transform before recovery. The two lexical diagnostics need explicit
+source-plan reconciliation. Evidence: `context-remaining-cached-inventory-v1.json`.
+No source has been assigned new takes. A first inventory command lacked module
+PYTHONPATH and failed before writing; corrected read-only discovery completed.

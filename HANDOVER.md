@@ -207,6 +207,11 @@ identity wording, build profiles and installer host completion tests. NEXT audit
 use tested saved-only adapter for compatible frozen plans, explicit tested
 reconciliation for other forms. Bulk holds/exhausted budgets remain unchanged;
 no claim of90percent live yield, listening or hardware acceptance.
+Discovery `context-remaining-cached-inventory-v1.json` finds3 earlier cached sources:
+natural-035/TrouveOskar, natural-038/W-as-Whale, earlier-2/C-as-Cat. Only candidate
+mapping, not admission. Trace exact diagnostic/native ancestry and source-plan
+reconciliation; W's actual cue ID is alphabet, never silently reuse for Forest.
+C's canonical diagnostic copy has no adjacent provider receipt. No newASR/provider.
 
 
 ### 2026-10-22 — Disabled saved-WAV seam; held-out proof and real-scalar fix
