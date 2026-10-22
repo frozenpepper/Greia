@@ -25,7 +25,7 @@ The built-in panel provides practical device setup, including language, Wi-Fi, s
 
 ## Open the browser-based Parents App
 
-Greia also has a lightweight, open-source web Parents App. It is a separate interface to the **same Greia management system**, not a different operating system. It works from a phone, tablet or laptop with a browser when it can reach the Greia device.
+Greia also has a lightweight browser-based Parents App, developed as part of the open-source Greia project. Its separate source repository is still private during pre-release preparations, so public source access should not be assumed yet. It is a separate interface to the **same Greia management system**, not a different operating system. It works from a phone, tablet or laptop with a browser when it can reach the Greia device.
 
 ### Directly from a Greia computer (currently available in development)
 
@@ -38,7 +38,7 @@ If Greia has no working network address, the browser route cannot connect. You c
 
 ### Open-source standalone browser host (advanced/optional)
 
-The source of the Parents App is in the separate [Greia Parent App HTML repository](https://github.com/frozenpepper/Greia-Parent-App-Html). It is freely inspectable and intended for people who want to run or contribute to the standalone local host.
+The source of the Parents App is in the separate [Greia Parent App HTML repository](https://github.com/frozenpepper/Greia-Parent-App-Html). The project intends to publish this source for people who want to inspect, run or contribute to the standalone local host. Access to that separate repository is currently restricted while release preparations continue.
 
 For a developer with **Node.js/npm installed**, the current source workflow is `npm run serve`, then open `http://127.0.0.1:8080/` on the host computer. The host discovers validated Greia devices on the local network and lets you select one. **Normal parents do not need to install Node.js or clone a repository:** they can use the Greia-served page when it is available.
 
