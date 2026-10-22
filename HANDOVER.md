@@ -180,6 +180,29 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — OWNER STOP: repair method, no further corpus generation
+
+Owner explicitly rejected continuing the high-rejection method and ordered stop.
+Producer44224 was interrupted and its exit confirmed; automatic supervision
+`supervise-greia-priority-voice-completion` was DELETED. DO NOT resume the220
+continuation, synthesize new takes, or prioritize file completion over method
+repair. Previous execution decision below is superseded by this owner stop.
+Stopped journal7DONE/52PRESERVED/1GENERATING/160READY. The in-flight FRcount_5
+provider job20261022-180337-f06676db completed; NEVER resubmit it. Its local state
+needs explicit recovery if later needed; no automatic install was performed.
+Run progress now OWNER_STOPPED, interrupted progress separately preserved.
+
+Authorized current work is method diagnosis/fix on saved audio. Test generation
+fidelity, cut selection and verifier false rejections separately, using
+representative difficult corpus targets and positive/negative listening evidence.
+A diagnostic saved-only full-source-context ASR comparison is running under
+`2026-10-22-rejection-investigation/context-verification-diagnosis/`: pre-existing
+PCM cuts fixed, all retained words compared, no intro agreement prerequisite,
+no expected-text prompt, no dropping arbitrary words to force a match. This is
+an experiment, NOT a new accepted verifier. No synthesis/install or gate change.
+No heartbeat will restart work; continue method repair in this conversation.
+
+
 ### 2026-10-22 — Retry experiment10/12; frozen220 final-take continuation RUNNING
 
 Six additional diagnostic jobs completed: EN Leo/ES Lilli recover on cumulative

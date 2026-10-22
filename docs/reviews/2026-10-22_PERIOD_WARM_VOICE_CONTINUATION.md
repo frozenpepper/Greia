@@ -246,3 +246,24 @@ installed final quality and provenance; report bounded installed/exhausted/block
 counts with human review PENDING. This decision explicitly supersedes the earlier
 hold on this exact v2 continuation after the documented investigation/retry gate;
 it does not retrospectively change the failed first-take experiment.
+
+## Owner stop supersedes the continuation decision
+
+The owner explicitly ordered generation stopped because the method's rejection
+rate is unacceptable. Producer44224 exited after SIGINT; its shared VoxStage
+service was not restarted or stopped. Automatic supervision was deleted. Journal
+at stop:7DONE,52PRESERVED,1GENERATING,160READY. The last exact provider job
+20261022-180337-f06676db (FR `Cinq`, selected Leo master) completed, but its local
+transaction remains unresolved and must never be blindly resubmitted. Progress
+is OWNER_STOPPED; interrupted diagnostic progress is separately retained.
+
+The earlier12-case success ratio did not represent the difficult corpus. It was
+not sufficient evidence to justify continuing this method. Current task is to
+repair and calibrate the method, not consume more attempts or collect exhausted
+files. No new synthesis or corpus restart. Saved-only context diagnosis compares
+full-source Base words after the EXISTING acoustic boundaries, with no expected
+prompt or intro transcript requirement. It rejects boundary-straddling words,
+keeps all post-boundary words, and does not change any production verdict. Both
+recognition errors and actual generation errors remain possible; ASR observations
+alone cannot decide which is audible. New verification design needs proper
+positive and wrong-content controls before adoption.
