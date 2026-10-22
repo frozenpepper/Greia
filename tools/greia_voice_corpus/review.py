@@ -141,7 +141,7 @@ class CorpusReview:
                         old_fingerprint = hashlib.sha256(json.dumps([source_config, row['request'], before], sort_keys=True).encode()).hexdigest()
                         if not old or old.get('fingerprint') != old_fingerprint:
                             raise ValueError('saved evidence is absent or audio/receipt changed; run a fresh live review')
-                        result = reassess_result(old, expected_text=request.text,
+                        result = reassess_result(old, expected_text=request.text, locale=request.language,
                                                  ignore_accents=(self.reviewer.ignore_accents if self.reviewer.ignore_accents is not None
                                                                  else request.ignore_accents))
                         result['source_reviewed_at_utc'] = old.get('reviewed_at_utc')

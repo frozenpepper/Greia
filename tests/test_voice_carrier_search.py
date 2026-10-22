@@ -131,7 +131,7 @@ class VoiceCarrierSearchTests(unittest.TestCase):
             self.assertTrue(all(path.parent.parent.name == "target.wav.search" for path in calls))
             self.assertEqual(source.read_bytes(), source_before)
             self.assertEqual(receipt["algorithm_version"], ALGORITHM_VERSION)
-            self.assertEqual(receipt["comparison_policy"], "locale-number-tokens-v1")
+            self.assertEqual(receipt["comparison_policy"], "locale-number-tokens-v2")
             self.assertEqual(receipt["extracted_transcript"], "ten house")
             self.assertEqual(receipt["model_id"], "mlx-community/whisper-base-mlx")
             self.assertTrue(receipt["model_revision"])
@@ -245,7 +245,7 @@ class VoiceCarrierSearchTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             source, destination, _, _, _, _, kwargs = self.setup_case(
-                root, transcripts=["ten hous"], target_verification="warn"
+                root, target="10 little yellow house", transcripts=["ten little yellow hous"], target_verification="warn"
             )
             receipt = extract(source, destination, **kwargs)
             self.assertFalse(receipt["extracted_target_exact_match"])
@@ -287,13 +287,13 @@ class VoiceCarrierSearchTests(unittest.TestCase):
             source = root / "source.wav"
             _two_gap_wav(source)
             destination = root / "target.wav"
-            responses = iter(("ten hous", "ten house"))
+            responses = iter(("ten little yellow hous", "ten little yellow house"))
 
             def transcriber(path: Path, locale: str) -> dict:
                 return _result(next(responses))
 
             with self.assertRaisesRegex(ExtractionRejected, "multiple candidate suffixes meet target verification policy") as caught:
-                extract(source, destination, locale="en", prefix="Find a number", target="10 house",
+                extract(source, destination, locale="en", prefix="Find a number", target="10 little yellow house",
                         remove_first_words=3, transcriber=transcriber, target_verification="warn")
             report = json.loads(Path(caught.exception.evidence["search_evidence_json"]).read_text())
             candidates = report["candidate_results"]

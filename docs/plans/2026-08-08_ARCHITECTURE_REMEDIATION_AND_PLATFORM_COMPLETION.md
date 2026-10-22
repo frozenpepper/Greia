@@ -3778,3 +3778,17 @@ PREPARED NOT STARTED. Voice137/corpus18/finisher4/client21 focused PASS; full
 5,738 tests remains known1failure/3errors/8skips, NOT GREEN. Exact current boundary
 and next four-case diagnosis: `docs/reviews/2026-10-22_PERIOD_WARM_VOICE_CONTINUATION.md`.
 No phase, release, human-listening or entire-corpus completion is claimed.
+
+
+### 2026-10-22 — Scoped voice method repair, numeric comparison v2
+
+Owner stopped the priority corpus and requested controlled prompt/code tests on
+repeatedly failing targets. Implemented shared bounded0–100 locale number lexicon,
+corrected number-token marker score inflation, applied exact number comparison
+through ordinary verifier and live/saved review v4, retaining explicit v1 history.
+Added experimental source-preparation collaborator; normal prompt/processing
+defaults and masters unchanged.16 diagnostic jobs on two hard targets compare
+four recipes with matched seeds; no corpus install/budget reset or bulk restart.
+Detailed actual results/verification in
+`docs/reviews/2026-10-22_VOICE_METHOD_PAIRED_EXPERIMENT.md` and HANDOVER. This scoped
+authoring change does not close remediation/platform/runtime/hardware phases.

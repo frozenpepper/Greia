@@ -1,6 +1,7 @@
 """Exact locale-aware number equivalence for speech verification.
 
-Only listed 0..25 spellings are canonicalized; there is no fuzzy, phonetic,
+Current spellings cover 0..100; historical v1 retains its 0..25 inventory.
+There is no fuzzy, phonetic,
 or substring match. Callers opt in with the versioned comparison policy;
 historical extraction receipts retain their original comparisons.
 """
@@ -8,8 +9,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 import re
 import unicodedata
+from functools import lru_cache
+from .number_lexicon import cardinal_spellings
 
-COMPARISON_POLICY = "locale-number-tokens-v1"
+LEGACY_COMPARISON_POLICY = "locale-number-tokens-v1"
+COMPARISON_POLICY = "locale-number-tokens-v2"
+SUPPORTED_COMPARISON_POLICIES = frozenset({LEGACY_COMPARISON_POLICY, COMPARISON_POLICY})
 
 # Explicit inventories; tuple position is the value from 0 to 25.
 _NUMBER_WORDS = {
@@ -47,21 +52,26 @@ def _normalize(value: str, ignore_accents: bool) -> str:
     return value
 
 
-def _locale_data(locale: str, ignore_accents: bool) -> tuple[dict[str, int], dict[tuple[str, ...], int]]:
+@lru_cache(maxsize=16)
+def _locale_data(locale: str, ignore_accents: bool, policy: str) -> tuple[dict[str, int], dict[tuple[str, ...], int]]:
     words = {}
-    for number, spelling in enumerate(_NUMBER_WORDS[locale]):
+    phrases = {}
+    spellings = _NUMBER_WORDS[locale] if policy == LEGACY_COMPARISON_POLICY else cardinal_spellings(locale)
+    for number, spelling in enumerate(spellings):
         parts = tuple(_WORD_OR_DIGIT.findall(_normalize(spelling, ignore_accents)))
         if len(parts) == 1:
             words[parts[0]] = number
-    phrases = {}
+        else:
+            phrases[parts] = number
     for phrase, number in _MULTIWORD[locale].items():
         normalized = tuple(_normalize(part, ignore_accents) for part in phrase)
         phrases[normalized] = number
     return words, phrases
 
 
-def canonical_number_tokens(locale: str, text: str, *, ignore_accents: bool = True) -> tuple[str, ...]:
-    """Return tokens with exact locale-specific 0..25 numbers as ``<num:N>``.
+def canonical_number_tokens(locale: str, text: str, *, ignore_accents: bool = True,
+                            policy: str = COMPARISON_POLICY) -> tuple[str, ...]:
+    """Return exact locale-specific cardinal tokens as ``<num:N>``.
 
     NFC/casefold is always applied. By default accents are ignored, matching
     the extant comparison policy; pass ``ignore_accents=False`` for strict
@@ -78,10 +88,12 @@ def canonical_number_tokens(locale: str, text: str, *, ignore_accents: bool = Tr
         raise TypeError("text must be str")
     if not isinstance(ignore_accents, bool):
         raise TypeError("ignore_accents must be bool")
+    if policy not in SUPPORTED_COMPARISON_POLICIES:
+        raise ValueError("unsupported number comparison policy")
 
     normalized = _normalize(text, ignore_accents)
     tokens = [match.group(0) for match in _WORD_OR_DIGIT.finditer(normalized)]
-    number_words, phrases = _locale_data(locale, ignore_accents)
+    number_words, phrases = _locale_data(locale, ignore_accents, policy)
     result = []
     index = 0
     ordered_phrases = sorted(phrases.items(), key=lambda item: (-len(item[0]), item[0]))
@@ -97,11 +109,16 @@ def canonical_number_tokens(locale: str, text: str, *, ignore_accents: bool = Tr
             index += length
             continue
         token = tokens[index]
-        if (token.isdecimal() and len(token) <= 2 and int(token) <= 25
+        if (token.isdecimal() and len(token) <= (2 if policy == LEGACY_COMPARISON_POLICY else 32)
+                and (policy != LEGACY_COMPARISON_POLICY or int(token) <= 25)
                 and len(token) == len(str(int(token)))):
             result.append(f"<num:{int(token)}>")
         elif token in number_words:
             result.append(f"<num:{number_words[token]}>")
+        elif policy == COMPARISON_POLICY and any(ch.isdecimal() for ch in token):
+            # Codes/signs/decimals stay literal, but changing one must still trip
+            # the numeric identity guard even inside a long matching sentence.
+            result.append(f"<numeric-literal:{token}>")
         else:
             result.append(token)
         index += 1
@@ -132,8 +149,8 @@ class TargetTranscriptComparison:
 
     @property
     def numbers_match(self) -> bool:
-        return (tuple(t for t in self.expected_tokens if t.startswith("<num:"))
-                == tuple(t for t in self.actual_tokens if t.startswith("<num:")))
+        return (tuple(t for t in self.expected_tokens if t.startswith(("<num:", "<numeric-literal:")))
+                == tuple(t for t in self.actual_tokens if t.startswith(("<num:", "<numeric-literal:"))))
 
     def flags(self, *, require_word_count: bool = True) -> list[str]:
         result = []
@@ -145,11 +162,21 @@ class TargetTranscriptComparison:
 
 
 def compare_target_transcript(locale: str, expected: str, actual: str, *,
-                              ignore_accents: bool = True) -> TargetTranscriptComparison:
+                              ignore_accents: bool = True,
+                              policy: str = COMPARISON_POLICY) -> TargetTranscriptComparison:
     """Score number-equivalent text while retaining count and numeric invariants."""
     from .verification import transcript_similarity
-    expected_tokens = canonical_number_tokens(locale, expected, ignore_accents=ignore_accents)
-    actual_tokens = canonical_number_tokens(locale, actual, ignore_accents=ignore_accents)
-    score = transcript_similarity(" ".join(expected_tokens), " ".join(actual_tokens),
+    expected_tokens = canonical_number_tokens(locale, expected, ignore_accents=ignore_accents, policy=policy)
+    actual_tokens = canonical_number_tokens(locale, actual, ignore_accents=ignore_accents, policy=policy)
+    def scoring_text(tokens: tuple[str, ...]) -> str:
+        if policy == LEGACY_COMPARISON_POLICY:
+            return " ".join(tokens)
+        # Internal labels must not inflate character similarity: <num:10>
+        # would give an unrelated word extra shared characters merely because
+        # the same number follows it. Score the human representation instead.
+        return " ".join(t[5:-1] if t.startswith("<num:") else
+                        t[len("<numeric-literal:"):-1] if t.startswith("<numeric-literal:") else t
+                        for t in tokens)
+    score = transcript_similarity(scoring_text(expected_tokens), scoring_text(actual_tokens),
                                   ignore_accents=ignore_accents)
     return TargetTranscriptComparison(score, expected_tokens, actual_tokens)

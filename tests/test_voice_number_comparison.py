@@ -2,7 +2,8 @@ import unittest
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
-from greia_voice_core.number_comparison import canonical_number_tokens, same_number_aware_text
+from greia_voice_core.number_comparison import (canonical_number_tokens, same_number_aware_text,
+    compare_target_transcript, LEGACY_COMPARISON_POLICY)
 
 # Independent test fixtures (not imported from implementation tables).
 SPELLED = {
@@ -72,6 +73,43 @@ class NumberTokenTests(unittest.TestCase):
             with self.subTest(locale=locale, text=text, options=options):
                 with self.assertRaises(error):
                     canonical_number_tokens(locale, text, **options)
+
+    def test_larger_cardinals_and_literal_number_identity(self):
+        cases = {
+            'en': {26:'twenty-six',31:'thirty-one',48:'forty-eight',71:'seventy-one',80:'eighty',99:'ninety-nine',100:'one hundred'},
+            'it': {26:'ventisei',28:'ventotto',31:'trentuno',33:'trentatré',48:'quarantotto',71:'settantuno',80:'ottanta',99:'novantanove',100:'cento'},
+            'fr': {26:'vingt-six',31:'trente et un',48:'quarante-huit',70:'soixante-dix',71:'soixante et onze',80:'quatre-vingts',81:'quatre-vingt-un',91:'quatre-vingt-onze',99:'quatre-vingt-dix-neuf',100:'cent'},
+            'es': {26:'veintiséis',31:'treinta y uno',48:'cuarenta y ocho',71:'setenta y uno',80:'ochenta',99:'noventa y nueve',100:'cien'},
+        }
+        for locale, forms in cases.items():
+            for value, spelling in forms.items():
+                with self.subTest(locale=locale, value=value):
+                    self.assertTrue(same_number_aware_text(locale,str(value),spelling))
+                    self.assertTrue(same_number_aware_text(locale,spelling,str(value)))
+                    self.assertEqual(compare_target_transcript(locale,spelling,str(value)).score,1)
+                    self.assertFalse(compare_target_transcript(locale,spelling,str(value+1)).numbers_match)
+        for left,right in [('9999','9998'),('01','1'),('-18','18'),('1.8','1.9'),('1,8','18')]:
+            self.assertFalse(compare_target_transcript('en',left,right).numbers_match)
+
+    def test_internal_numeric_labels_do_not_inflate_wrong_word_score(self):
+        observed=compare_target_transcript('en','Count to ten','Client to 10')
+        self.assertTrue(observed.numbers_match)
+        self.assertTrue(observed.word_count_matches)
+        self.assertLess(observed.score,.8)
+        historical=compare_target_transcript('en','Count to ten','Client to 10',policy=LEGACY_COMPARISON_POLICY)
+        self.assertGreater(historical.score,.8)
+
+    def test_v1_remains_frozen_and_unknown_versions_fail(self):
+        self.assertNotEqual(canonical_number_tokens('en','twenty six',policy=LEGACY_COMPARISON_POLICY),
+                            canonical_number_tokens('en','26',policy=LEGACY_COMPARISON_POLICY))
+        with self.assertRaises(ValueError):canonical_number_tokens('en','ten',policy='invented')
+
+    def test_larger_cardinal_accents_and_non_number_controls(self):
+        for locale,accented,plain in [('it','trentatré','trentatre'),('es','veintiséis','veintiseis')]:
+            self.assertTrue(same_number_aware_text(locale,accented,plain))
+            self.assertFalse(same_number_aware_text(locale,accented,plain,ignore_accents=False))
+        for locale,left,right in [('en','twenty six','twenty seven'),('fr','quatre-vingt-un','quatre-vingt-onze'),('es','treinta y uno','treinta uno'),('it','cento','centro')]:
+            self.assertFalse(same_number_aware_text(locale,left,right))
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

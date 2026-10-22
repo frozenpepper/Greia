@@ -89,7 +89,7 @@ class AudioReviewer:
             decoded = Path(temporary) / "decoded.wav"
             self.pipeline.decode_for_review(audio, decoded)
             metrics, flags = signal_metrics(decoded)
-            result = {"expected_text": request.text, "ignore_accents": request.ignore_accents, "metrics": metrics, "flags": flags, "asr": {"status": "DISABLED"}, "status": "WARN" if flags else "PASS"}
+            result = {"expected_text": request.text, "locale": request.language, "ignore_accents": request.ignore_accents, "metrics": metrics, "flags": flags, "asr": {"status": "DISABLED"}, "status": "WARN" if flags else "PASS"}
             screening_request = replace(request, verification=VerificationMode.REQUIRED)
             if not self.asr:
                 return reassess_result(result)

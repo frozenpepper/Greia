@@ -152,10 +152,13 @@ class WhisperVerifier:
             result = None
             _release_mlx_transient_memory()
 
-        score = transcript_similarity(request.text, transcript, ignore_accents=request.ignore_accents)
+        from .number_comparison import compare_target_transcript, COMPARISON_POLICY
+        comparison = compare_target_transcript(request.language, request.text, transcript,
+                                               ignore_accents=request.ignore_accents)
+        score = comparison.score
         disposition = (
             VerificationDisposition.PASS
-            if score > self.pass_threshold
+            if score > self.pass_threshold and comparison.numbers_match
             else VerificationDisposition.WARN
         )
         return VerificationResult(
@@ -167,8 +170,8 @@ class WhisperVerifier:
             model_revision=DEFAULT_ASR_REVISION if self.model_id == DEFAULT_ASR_MODEL else None,
             ignore_accents=request.ignore_accents,
             detail=(
-                "transcript is plausibly aligned; human listening still required"
+                f"transcript aligned with {COMPARISON_POLICY}; human listening still required"
                 if disposition is VerificationDisposition.PASS
-                else "transcript mismatch; regenerate or inspect manually"
+                else "transcript or numeric identity mismatch; regenerate or inspect manually"
             ),
         )

@@ -824,3 +824,16 @@ exchanges, and never retries a POST. The first live sample took36s and exceeded
 the old30s response timeout despite being accepted; its exact completed job/key
 was recovered without a duplicate. Use long response/job waits for shared-queue
 production; never cancel/restart the shared service to force progress.
+
+
+## Owner stop and bounded method tests — 2026-10-22
+
+The owner stopped `final-take-v7-02` because the method's high rejection rate is
+unacceptable. Automatic supervision is deleted. Do not resume it or reset its
+budgets. Later owner authorization is for bounded prompt/code experiments on
+repeatedly failing targets, not another corpus run. See
+`docs/reviews/2026-10-22_VOICE_METHOD_PAIRED_EXPERIMENT.md`.
+New numeric comparison is v2 (0–100 word/digit equivalence, literal-value guards,
+ordinary digit scoring); review is v4. Historical plans/receipts retain v1 and
+are not silently migrated. Explicit numeric policy mismatches in old staged
+recovery jobs must be reconciled under a new processing plan, never bypassed.

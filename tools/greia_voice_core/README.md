@@ -205,11 +205,29 @@ equal canonical comparison-unit count, and identical numeric-token sequence.
 This does not mean a warning is published: the final delivered target still must
 pass `TargetQualityChecker` with no signal flags. `required` extraction, available
 through the Python cutter API, instead requires exact canonical units.
-Locale-specific spelled numbers and digits **0–25** compare equivalently in
+Locale-specific spelled numbers and digits **0–100** compare equivalently in
 EN/IT/FR/ES, including listed compounds such as `dix-sept`. Wrong numbers,
 extra/missing units, leading-zero codes, signed/decimal notation and arbitrary
 joined words are not silently treated as equivalent. Accents are ignored by
 default; `ignore_accents=False` / `--strict-accents` overrides this.
+
+Current number policy is `locale-number-tokens-v2`: canonical units retain exact
+numeric identity, but similarity scores use ordinary digit text, not internal
+`<num:...>` labels. This fixes artificial score inflation (e.g. `Client to 10`
+for `Count to ten`). The same comparison is used by ordinary WhisperVerifier,
+short-target checking, live review and locale-explicit saved reassessment.
+Numeric digits outside the spelling range still have exact identity guards;
+leading-zero codes, signed/decimal literals are kept distinct. The supported
+spelling range is bounded: this is not an arbitrary-number or phonetic parser.
+V1 evidence keeps its historical 0–25 rules/scoring when explicitly interpreted
+as v1; old receipts and reports are never rewritten. Review policy is now v4.
+
+`CarrierSourcePreparation` in `carrier_source.py` is an **experimental**, explicit
+native→22,050Hz mono PCM preparation collaborator, with both hashes retained.
+It is not the default ShortPhrasePipeline recipe. Normalized replays and prompt
+experiments live outside the repository. The owner stopped the corpus to repair
+the method; new small diagnostics do not authorize bulk restart or installation.
+See [paired method evidence](../../docs/reviews/2026-10-22_VOICE_METHOD_PAIRED_EXPERIMENT.md).
 
 The actual delivered rendition is checked again after packaging where its PCM
 changes, including decoded lossy delivery. Internal pauses/trailing silence

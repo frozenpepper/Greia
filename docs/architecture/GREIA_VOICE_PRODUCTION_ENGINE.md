@@ -62,7 +62,7 @@ Exact owners:
 - `providers.py`: retained Chatterbox and native adapters.
 - `engine.py`: semantic routing, availability, bounded ASR retries, packaging,
   pending-review receipts and temporary-file cleanup.
-- `review_policy.py`: owner-selected v3 comparison policy and thresholds shared by live and saved-evidence screening (ASR >0.8; tail/internal pause warnings ≥1.5s).
+- `review_policy.py`: owner-selected v4 comparison policy and thresholds shared by live and saved-evidence screening (ASR >0.8; tail/internal pause warnings ≥1.5s).
 - `audio.py`: bounded WAV validation and 22,050 Hz mono WAV/OGG packaging.
   WAV is PCM16; OGG uses Vorbis quality 5 by default. An explicit
   `AudioPipeline(ogg_quality=0..10)` can select a different bounded quality
@@ -198,7 +198,7 @@ Automatic short requests use `voice_carrier_search.extract` v7. Raw synthesis
 verification is OFF; the disposable intro is never transcribed for alignment.
 Bounded PCM quiet-run candidates are transcribed as independent target-only
 suffixes. Exactly one must meet score >0.8, equal canonical unit count and an
-identical numeric-token sequence. Exact locale number spellings/digits 0–25
+identical numeric-token sequence. Exact locale number spellings/digits 0–100
 compare equivalently via `number_comparison.py`; historical v6 receipts keep their
 legacy comparison. The actual delivered target then passes shared
 `TargetQualityChecker` with unchanged signal checks; changed/lossy PCM is checked
@@ -300,7 +300,7 @@ procedure §6, shared Takeboard catalog/skill/README. No child-runtime dependenc
 model/revision and comparison-only diacritic folding. Generation verification,
 carrier extraction and review use it. VoiceRequest.ignore_accents defaults true;
 false is an explicit per-request strict override carried through CLI/JSON/service.
-No authored script or audio is normalized or rewritten. Screen policy v3 can
+No authored script or audio is normalized or rewritten. Screen policy v4 can
 rescore saved transcripts while retaining their original verifier provenance.
 Carrier v6 freezes the model and accent policy; historical plans stay immutable.
 Automatic short routing is implemented in the Greia engine; the separately
@@ -335,3 +335,21 @@ queue or shared-service scheduler change is claimed.
 
 VoxStageClient now distinguishes configurable HTTP-response timeout (default120s)
 from overall job wait. POSTs remain single submissions with exact-key recovery.
+
+
+### Number comparison correction and stopped method experiments (2026-10-22)
+
+`number_comparison.py` owns versioned comparison; `number_lexicon.py` supplies
+bounded standard EN/IT/FR/ES cardinals0–100. Current v2 scores canonical digit
+text without internal marker characters and keeps exact numeric identity,
+including literal codes/signs/decimals. V1 retains its historical inventory and
+score. Ordinary WhisperVerifier and short-target checking use this owner;
+review/reassess v4 carries explicit locale and the same numeric guard. Missing
+locale in old ad-hoc reports is not guessed. No dependency or runtime package
+was added. Exact authored text, masters and audio are unchanged.
+
+`carrier_source.CarrierSourcePreparation` is an experimental collaborator over
+AudioPipeline, recording native/prepared source hashes. It is NOT wired into
+normal automatic generation. Alternate natural-carrier/delivery experiments
+likewise do not change the default prompt. Corpus production remains OWNER
+STOPPED; see paired-method report and HANDOVER before any authoring operation.

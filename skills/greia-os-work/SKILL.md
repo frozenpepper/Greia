@@ -798,7 +798,7 @@ The general separate verification queue is still proposed.
 Normal automatic short requests now use `tools/voice_carrier_search.py` v7:
 PCM-first bounded suffix candidates, no raw-intro ASR, exactly one target-only
 Base match. The normal API uses score >0.8 plus equal canonical unit count and
-identical numeric sequence; exact locale words/digits 0–25 are equivalent.
+identical numeric sequence; exact locale words/digits 0–100 are equivalent.
 Final delivered signal/ASR checks remain mandatory unless explicitly disabled.
 ASR/IO failures require recovery and must not spend a fresh take. See the
 VoiceEngine README and `docs/reviews/2026-10-22_TARGET_ONLY_VOICE_EXTRACTION_V7.md`.
@@ -821,3 +821,14 @@ GenerationResult.evidence_dir. The220-file v2 plan is prepared but not started:
 12 live prompt probes8PASS/4rejected miss readiness. Read current HANDOVER/voice
 skill before execution. HTTP response timeout now defaults120s independently of
 job wait; never repeat an uncertain POST or restart the shared VoxStage worker.
+
+
+Owner method-repair correction2026-10-22: corpus final-take-v7-02 is OWNER
+STOPPED, not prepared/unstarted or runnable. Automatic continuation is deleted.
+Owner permits bounded diagnostics on two consistently rejected targets only.
+Current comparison v2 supports standard cardinals0–100 EN/IT/FR/ES, guards exact
+numeric values/literals and removes internal-marker score inflation. Normal
+Whisper verification and review/reassess v4 share it; historical v1 evidence
+is retained. Source preparation and alternate natural-carrier prompts remain
+experimental, not production defaults. Read HANDOVER and paired-method report;
+no bulk restart or threshold relaxation follows from a small diagnostic result.

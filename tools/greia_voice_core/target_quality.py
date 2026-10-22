@@ -24,11 +24,13 @@ class TargetQualityChecker:
             transcript = self.transcriber(delivered, locale).get("text", "")
         expected_tokens = comparison_words(text, ignore_accents=ignore_accents)
         actual_tokens = comparison_words(transcript, ignore_accents=ignore_accents)
-        number_policy = extraction.get("comparison_policy") == "locale-number-tokens-v1"
+        from .number_comparison import SUPPORTED_COMPARISON_POLICIES
+        number_policy = extraction.get("comparison_policy") in SUPPORTED_COMPARISON_POLICIES
         comparison = None
         if number_policy:
             from .number_comparison import compare_target_transcript
-            comparison = compare_target_transcript(locale, text, transcript, ignore_accents=ignore_accents)
+            comparison = compare_target_transcript(locale, text, transcript, ignore_accents=ignore_accents,
+                                                   policy=extraction["comparison_policy"])
             score = comparison.score
         else:
             score = transcript_similarity(text, transcript, ignore_accents=ignore_accents)

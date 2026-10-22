@@ -180,6 +180,38 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — Owner-authorized paired method tests; numeric v2 correction
+
+Bulk remains OWNER STOPPED; heartbeat deleted. Later owner explicitly requested
+bounded new prompt/code tests on repeatedly rejected targets and word/digit
+number recognition.16 diagnostic jobs: Tito EN Count to ten and Leo FR Trouve
+Luna, two fixed seeds, four recipes. Corrected native scoring: old imperative0/4,
+concise-description-only0/4, direct1/4, natural relevant carrier3/4. Canonical
+processing improves old imperative to1/4, natural stays3/4. One old machine PASS
+Client to10 was inflated by numeric marker characters; corrected score.742
+rejects it. No recipe is adopted globally or used to restart the corpus.
+
+Shared number policy v2 covers standard cardinals0–100 EN/IT/FR/ES, exact digit/
+literal identity, accent override and ordinary-digit scoring. Normal verifier,
+short-target checking and review/reassess v4 share it; old v1 evidence retains
+its own interpretation. Added experimental CarrierSourcePreparation collaborator
+(not selected by the normal pipeline).72 saved wrong-content/extra-word controls
+reject;17number controls spanning4locales reject wrong values,15actual matches.
+Older saved24:23PASS1held (Due lucciole→due luciole, unresolved potential ASR
+false rejection). No changed thresholds or phonetic/semantic aliases.
+
+Listen/compare http://127.0.0.1:8810/ (37rows, raw/cuts/transcripts/prompts/masters;
+search natural-carrier). Browser filtering/playback exercised, no human approval.
+All667 runtime pairs match stopped journal's7pre-stop installs and60reservations;
+16new exact diagnostic job/seed/master hashes audited. Full report/evidence:
+`docs/reviews/2026-10-22_VOICE_METHOD_PAIRED_EXPERIMENT.md`.
+Focused148+53PASS. Full diagnostic5,749tests:2failures3errors8skips NOTGREEN;
+ARM64/lsblk/MBR plus observed memory-gate failure (isolated rerun passes; full
+suite still NOT GREEN). First full attempt segfaulted.
+Next listen/calibrate difficult saved cases (including the held number phrase)
+before default adoption. No synthesis producer or automatic corpus restart.
+
+
 ### 2026-10-22 — OWNER STOP: repair method, no further corpus generation
 
 Owner explicitly rejected continuing the high-rejection method and ordered stop.

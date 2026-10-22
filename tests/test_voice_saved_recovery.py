@@ -68,7 +68,7 @@ class SavedRecoveryTests(unittest.TestCase):
             receipt=json.loads(receipt_path(candidate).read_text())
             self.assertEqual(receipt['extraction']['algorithm_version'],'greia-spoken-carrier-extractor-v7')
             self.assertEqual(receipt['extraction']['target_verification_policy'],'warn')
-            self.assertEqual(receipt['verification']['comparison_policy'],'locale-number-tokens-v1')
+            self.assertEqual(receipt['verification']['comparison_policy'],'locale-number-tokens-v2')
             with redirect_stdout(io.StringIO()):
                 self.assertEqual(CorpusRunner(self.store,self.engine,'required').run(),0)
                 self.assertEqual(CorpusRunner(self.store,self.engine,'required').run(),0)

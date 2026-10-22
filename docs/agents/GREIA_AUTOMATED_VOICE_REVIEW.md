@@ -13,10 +13,16 @@ An automated PASS is a screening result, not audible/product acceptance.
 
 New review/verification uses cached multilingual Whisper Base,
 `mlx-community/whisper-base-mlx` revision
-`1e3e249fb8d01c655324bd6841b1deadffd6d04c`. Screen policy v3 ignores accent/diacritic
+`1e3e249fb8d01c655324bd6841b1deadffd6d04c`. Screen policy v4 ignores accent/diacritic
 errors by default. `--strict-accents` on review/reassess restores strict comparison;
 per-request JSON/Python uses ignore_accents=false. Authored text stays unchanged.
 Use a fresh report directory after changing model/comparison configuration.
+Live review and explicit reassessment now share locale-aware number policy
+`locale-number-tokens-v2`: spelled0–100 ↔digits in EN/IT/FR/ES, exact numeric
+identity (wrong values/codes/signs/decimals remain different), no marker-based
+score inflation. Reassessment passes each frozen request's locale; old ad-hoc
+records without locale keep explicit `legacy-text-no-locale` comparison rather
+than guessing English. No old transcript/audio or human decision is rewritten.
 Reassessment reads saved transcripts and re-scores them; it does not relabel old
 Tiny recognition as Base recognition or alter audio/human reviews.
 
