@@ -61,6 +61,17 @@ class FakeBackend:
         )
 
 
+class ConnectedFakeBackend(FakeBackend):
+    """Fake station that is already associated, like a first boot after carry-over."""
+
+    def __init__(self, connected: str = "Home") -> None:
+        super().__init__()
+        self.connected = connected
+
+    def connected_ssid(self) -> str:
+        return self.connected
+
+
 def finish(controller: WifiSetupController, timeout: float = 1.0) -> None:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -117,6 +128,33 @@ class InstallerWifiSetupTests(unittest.TestCase):
         finish(controller)
         controller.append_password("x" * 100)
         self.assertEqual(len(controller.snapshot.passphrase), 63)
+
+    def test_begin_adopts_an_existing_connection(self) -> None:
+        controller = WifiSetupController(ConnectedFakeBackend("Home"))
+        controller.begin()
+        finish(controller)
+        self.assertEqual(controller.snapshot.connected_ssid, "Home")
+
+    def test_refresh_reseeds_the_current_connection(self) -> None:
+        backend = ConnectedFakeBackend("Home")
+        controller = WifiSetupController(backend)
+        controller.begin()
+        finish(controller)
+        backend.connected = "Guest"
+        controller.refresh()
+        finish(controller)
+        self.assertEqual(controller.snapshot.connected_ssid, "Guest")
+
+    def test_connected_ssid_failure_does_not_break_the_screen(self) -> None:
+        class BrokenBackend(ConnectedFakeBackend):
+            def connected_ssid(self) -> str:
+                raise RuntimeError("iwd bus is unavailable")
+
+        controller = WifiSetupController(BrokenBackend())
+        controller.begin()
+        finish(controller)
+        self.assertEqual(controller.snapshot.connected_ssid, "")
+        self.assertEqual(controller.snapshot.phase, WifiSetupPhase.READY)
 
 
 if __name__ == "__main__":

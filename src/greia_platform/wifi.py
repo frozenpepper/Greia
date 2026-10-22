@@ -510,11 +510,30 @@ class WifiSetupController:
         real availability check once the budget is spent.
         """
 
+        # The screen can be opened on a device that is already associated
+        # (for example after the installer carried the network over). The
+        # controller used to learn the SSID only from a connect performed in
+        # this session, so an existing connection looked absent until the
+        # parent reconnected. Adopt iwd's station before scanning.
+        self._sync_connected_ssid()
         if self._phase not in {WifiSetupPhase.IDLE, WifiSetupPhase.ERROR}:
             return
         self.refresh()
 
+    def _sync_connected_ssid(self) -> None:
+        """Mirror iwd's current station into the snapshot; never fatal."""
+        connected = getattr(self._backend, "connected_ssid", None)
+        if not callable(connected):
+            return
+        try:
+            self._connected_ssid = str(connected() or "")
+        except Exception:
+            # A transient bus error must not invent a connection or break the
+            # screen; the scan/connect path reports the real state.
+            self._connected_ssid = ""
+
     def refresh(self) -> None:
+        self._sync_connected_ssid()
         self._generation += 1
         current = self._generation
         self._phase = WifiSetupPhase.SCANNING

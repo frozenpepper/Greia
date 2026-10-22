@@ -110,6 +110,11 @@ class GreiaParentApp {
     window.addEventListener("hashchange", () => {
       this.route = currentRoute();
       if (this.state) this.render(this.state.snapshot);
+      this._refreshWifiForDevice();
+    });
+    window.addEventListener("focus", () => this._refreshWifiForDevice());
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") this._refreshWifiForDevice();
     });
     document.getElementById("refresh-button").addEventListener("click", async () => {
       if (!this.state) {
@@ -132,6 +137,15 @@ class GreiaParentApp {
   }
 
   navigate(route) { location.hash = route; }
+
+  _refreshWifiForDevice() {
+    // The full snapshot is fetched once at startup. Entering the Device view
+    // (or returning to the tab) after the device associated must re-read iwd;
+    // otherwise an existing connection looks absent until a manual connect.
+    if (!this.state || this.route !== "device") return;
+    if (!this.state.capability("network.manage")) return;
+    Promise.resolve(this.state.refreshWifi()).catch(() => {});
+  }
 
   render(snapshot) {
     this._renderConnection(snapshot);

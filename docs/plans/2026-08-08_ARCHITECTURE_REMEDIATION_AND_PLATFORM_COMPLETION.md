@@ -3701,3 +3701,18 @@ and `docs/reviews/2026-10-22_AUTOMATIC_SHORT_VOICE_ROUTING.md`. Old priority pro
 stopped/reconciled (completed ask_Y retained); continuation carries historical
 counts and selected sources. Shared separate generation/verification queues
 remain future work; no platform/hardware or human-listening closure claimed.
+
+### 2026-10-22 — Parent Wi-Fi status freshness (SOURCE + FOCUSED TESTS)
+
+Owner report: after a first boot from an install that joined Wi-Fi in the
+installer, the Parents UI did not show the connection until a manual reconnect.
+Root cause was UI state, not the install hand-off: the on-device Parent panel's
+`WifiSetupController` set `connected_ssid` only from a connect in that session,
+and the web Parents app fetched Wi-Fi once at startup without refreshing when
+the Device view opened. `WifiSetupController.begin()`/`refresh()` now mirror
+`IwdWifiBackend.connected_ssid()` non-fatally, and the vendored Parent app
+refreshes Wi-Fi on Device-route entry, window focus and tab visibility. Frozen
+client manifest updated; controller and image-integration tests added. Focused
+suites PASS (setup 12, client integration 7, launcher panel 8, frame cache 5,
+production API 7, persistence 2). The installed Acer still runs the old UI until
+the RC is rebuilt or the Parent client is source-deployed.

@@ -180,6 +180,16 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — Parent Wi-Fi UI shows an existing connection without reconnecting
+
+**Evidence class: SOURCE + FOCUSED TESTS. No device rerun in this turn.**
+
+- **Report:** after installing with Wi-Fi joined in the installer, the first-boot Parents UI showed no connected network; manually connecting again made the status appear.
+- **Cause:** UI state, not the install hand-off. The on-device Parent panel's `WifiSetupController` learned `connected_ssid` only from a connect performed in that panel session; `begin()`/`refresh()` never read iwd's current station. The web Parents app fetched `/network/wifi` once at startup and did not refresh when the Device view opened (clicking the already-connected SSID hit the API fast path, so the status then appeared).
+- **Fix:** `WifiSetupController.begin()`/`refresh()` now mirror `IwdWifiBackend.connected_ssid()` into the snapshot, non-fatally (a bus error never invents a connection or breaks the screen). The vendored Parent app refreshes Wi-Fi when the Device route opens, when the window regains focus and when the tab becomes visible; the frozen client manifest hash was updated. Tests: controller seeding/refresh/error paths plus the Parent client image-integration contract.
+- **Verification:** focused suites PASS: installer Wi-Fi setup 12, Parent client integration 7, launcher Parent panel 8, panel frame cache 5, Parent production API 7, installer Wi-Fi persistence 2.
+- **Limitation / next step:** the installed Acer still runs the pre-fix UI. Rebuild the RC (or source-deploy the Parent client) and confirm `wifi_configured` plus the connected line on the next physical check.
+
 ### 2026-10-22 — Research-led family and agent documentation entry points (SOURCE REVIEW ONLY)
 
 Added six practical guides: `docs/user/README.md`, `docs/user/INSTALL_FROM_USB.md` (Windows/Mac download/flash → graphical install → first boot), `docs/user/GREIA_PARENTS.md` (on-device **S + T held five seconds** on child-selection screen, parent password, browser client/security/capabilities), `docs/development/BUILD_A_GREIA_IMAGE.md`, its relative-linked `docs/agents/GREIA_IMAGE_BUILD_AGENT.md` (profile-specific front doors, non-destructive image-only path, explicit USB consent/evidence), and `docs/development/CREATE_AN_ACTIVITY.md` (Simulator, localization, VoiceEngine, package/installation capability). Updated `README.md`, `SETUP.md`, `docs/DOCUMENTATION.md` to route audiences to these concise derived docs. The root README's language overview now agrees with the four-language selectable registry. `docs/product/PARENT_MANAGEMENT.md` now records the owner-directed requirement for a clear, legible, localized **S + T** hint at child selection; this is a product requirement, not an implemented or visually accepted UI change. The Parents guide explicitly identifies the separate browser-client repository as currently private while publication is pending. Research and follow-up: `docs/reviews/2026-10-22_RELEASE_DOCUMENTATION_RESEARCH_AND_GAPS.md`.

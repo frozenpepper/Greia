@@ -32,6 +32,12 @@ class ParentClientImageIntegrationTests(unittest.TestCase):
         self.assertIn("Connected to", js)
         self.assertIn("Not connected to Wi-Fi", js)
 
+    def test_parent_app_refreshes_wifi_when_device_view_opens(self) -> None:
+        js = (IMAGE_OVERLAY / "src" / "app.js").read_text(encoding="utf-8")
+        self.assertIn("_refreshWifiForDevice", js)
+        self.assertIn("refreshWifi", js)
+        self.assertIn('this.route !== "device"', js)
+
     def test_production_manifest_excludes_demo_fixtures(self) -> None:
         manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
         self.assertFalse(any(path.startswith("src/demo") for path in manifest["files"]))

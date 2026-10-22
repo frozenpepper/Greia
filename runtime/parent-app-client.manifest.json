@@ -9,8 +9,8 @@
       "sha256": "5911f1da3bbc2266a41111dd75ea861a4bc6b2e0caba787b7cf58957782a7cdf"
     },
     "src/app.js": {
-      "bytes": 16015,
-      "sha256": "dd4494400f803df4f2b99cde51a1a6915b65032a7903e54e0aa9bdcb2ec33ba8"
+      "bytes": 16715,
+      "sha256": "7fc78660fb040e1cc2d187a62d86be75bbbe0ddcca5a4e9471493709fb7edbb2"
     },
     "src/credential_store.js": {
       "bytes": 607,
