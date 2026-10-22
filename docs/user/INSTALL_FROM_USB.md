@@ -91,7 +91,7 @@ You do not need a Linux username to let a child use Greia.
 
 For current development images, the initial Parent password is `greia`. Change it under Greia Parents when that control is available. The published release's instructions and completion screen will provide the authoritative initial credential for that version.
 
-The shortcut works **at child selection**, not while playing an Activity or completing the first-child wizard. If necessary, return to the child-selection screen and try again. See [Greia Parents](GREIA_PARENTS.md) for on-device and browser options.
+The shortcut works **at child selection**, not while playing an Activity or completing the first-child wizard. From Greia Home, use the current child's profile/switcher (or press Escape) to return to child selection and try again. See [Greia Parents](GREIA_PARENTS.md) for on-device and browser options.
 
 ## If something goes wrong
 
