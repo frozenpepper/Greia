@@ -267,3 +267,28 @@ keeps all post-boundary words, and does not change any production verdict. Both
 recognition errors and actual generation errors remain possible; ASR observations
 alone cannot decide which is audible. New verification design needs proper
 positive and wrong-content controls before adoption.
+
+### Saved-context diagnostic result — no production adoption
+
+Completed59 saved sources (all terminal rows at stop), with fixed existing PCM
+cuts and no new synthesis/install. Full-source contextual Base observations yield
+unique target matches for only2/52 prior rejections (`Scegli un nome`, `Mercure`)
+and3/7 prior machine passes. Four old machine passes do not survive this proposed
+context/timestamp gate. It is therefore NOT a replacement verifier and is not
+integrated. Evidence `context-verification-diagnosis/{registered-scope.json,
+results.json,progress.json}`. Existing Base machine passes are not listening labels.
+
+The local model implementation also explicitly describes `instruct` as voice-
+design `(description)text` conditioning, and prepends it to text internally.
+VoxStage correctly passes the delivery field into that parameter. This is not a
+structured pause/language control API. The long imperative pause/exact-reading
+instruction must be treated as an unproven conditioning choice; this source fact
+does NOT prove it caused the observed defects. No model/dependency was modified.
+
+Next method work must separate (1) provider adherence to target words, (2) safe
+acoustic segmentation and (3) verifier false accepts/rejects. Freeze a difficult,
+representative saved corpus with independent listening labels before calling an
+ASR comparison an improvement; include wrong-word/extra-word/wrong-number and
+truncated-onset negatives. The twelve easy diagnostic cases did not establish
+that standard. Do not restart synthesis while merely changing the detector until
+more files pass, and do not use expected text to force matching ASR output.

@@ -201,6 +201,13 @@ PCM cuts fixed, all retained words compared, no intro agreement prerequisite,
 no expected-text prompt, no dropping arbitrary words to force a match. This is
 an experiment, NOT a new accepted verifier. No synthesis/install or gate change.
 No heartbeat will restart work; continue method repair in this conversation.
+Saved-only context diagnostic is now COMPLETE:59 sources, only2/52 rejected
+sources gain a contextual match; only3/7 prior machine passes survive. Do NOT
+adopt this replacement verifier. No synthesis/install. Local VoxCPM2 `instruct`
+is `(description)text` voice-design conditioning, not a structured pause API;
+long imperative delivery is an unproven choice, not a proven root cause.
+Next freeze difficult saved cases with independent listening labels and isolate
+generation/cut/verifier errors before another bounded method experiment.
 
 
 ### 2026-10-22 — Retry experiment10/12; frozen220 final-take continuation RUNNING
