@@ -199,3 +199,50 @@ Current process/log/evidence: `probe-period-bounded-retries.py`,
 `period-bounded-retries.log`, `period-bounded-retries/{registered-scope.json,
 progress.json,results.json,evidence/}`. Inspect current progress before any
 further work; do not duplicate this experiment or launch the220 production rows.
+
+## Retry results and source-frozen final-take continuation
+
+The bounded retry experiment completed with6 distinct additional completed jobs,
+18 diagnostic jobs overall. EN Leo `Find Luna` and ES Lilli `El sombrero` pass
+on their second cumulative take (actual packaged Base1.0, no flags). EN Tito
+`Count to ten` and FR Leo `Trouve Luna` still reject after three cumulative takes.
+They retain wrong/extra-word target observations; no rejection was overridden.
+Final cohort:10/12 machine passes (EN2,IT3,FR2,ES3), satisfying the separately
+preregistered **three-take** criterion. Original first-take result remains8/12,
+FAILED. Two diagnostic cases are exhausted. No diagnostic audio was installed.
+
+The37-row comparison preserves the original raw/final/rejected rows and adds
+all six retry raws and available final/rejected cuts, each linked to its exact
+job and master: http://127.0.0.1:8809/ . Original8808 and human review saves were
+not changed. CLI schema validation and HTTP200 passed; no listening or browser
+interaction acceptance is claimed.
+
+**Execution decision:** proceed with the owner-authorized final cumulative take
+for the220 still-eligible production rows, using the already source-tested,
+frozen `automatic-short-v7-period-warm-v2` recipe. The diagnostic three-take
+experiment is evidence that the automatic acceptance/rejection/retry mechanism
+works with this prompt, not a guarantee of the220-row success rate. Each corpus
+row has ONLY ONE remaining take; the prior two attempts are NOT reset. The
+per-file packaged Base/count/number/signal checks remain the installation gate;
+failed takes preserve originals and become exhausted. No threshold changed.
+Canonical preprocessing remains a separate enhancement and is **not integrated**
+in this source-frozen run: this avoids claiming that the live native-source
+experiment proved a changed implementation.
+
+Preflight rechecked all220 original audio/receipt pairs, exact frozen667 scope,
+source/remaining/priority/registry hashes, all selected master hashes and current
+history budgets (220 at2,34 at3). It snapshotted all667 current audio/receipt pairs
+and budgets without reserving a take. Decision/evidence:
+`final-take-v7-02/{preinstall-snapshot.json,readiness-decision.json,plan.json}`
+under the existing priority-v1 root. No old plans or prior receipts were rewritten.
+
+The existing continuation is now RUNNING, using prepared voice Python and both
+VoxStage timeout settings7200. Observe its `producer.pid`, `production.log`,
+`progress.json`, state.sqlite3 and automatic-evidence. Do not start a duplicate,
+restart shared VoxStage, or retry uncertain submissions. Source is unchanged
+since635de89b7; existing source verification applies, full gate still NOT GREEN.
+At terminal completion audit actual changed667 pairs against DONE, backups,
+installed final quality and provenance; report bounded installed/exhausted/blocked
+counts with human review PENDING. This decision explicitly supersedes the earlier
+hold on this exact v2 continuation after the documented investigation/retry gate;
+it does not retrospectively change the failed first-take experiment.

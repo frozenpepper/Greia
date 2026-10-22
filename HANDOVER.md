@@ -180,6 +180,26 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — Retry experiment10/12; frozen220 final-take continuation RUNNING
+
+Six additional diagnostic jobs completed: EN Leo/ES Lilli recover on cumulative
+second take; EN Tito/FR Leo exhaust at3. Final10/12 machine passes EN2 IT3 FR2 ES3
+meets separately preregistered THREE-TAKE gate; original8/12 first-take gate stays
+FAILED. No diagnostic installs.37-row comparison http://127.0.0.1:8809/ (human
+unreviewed;8808 untouched). Exact jobs/quality were inspected, not counters alone.
+After667-pair snapshot and220-original/master/plan/budget preflight, launched the
+existing `final-take-v7-02` source-frozen native-v7 period/warm recipe under prior
+owner completion authority. ONE remaining take per220row,34 exhausted excluded;
+unchanged final Base/count/number/signal gates, originals preserved on rejection.
+Canonical preprocessing is NOT integrated; no source or threshold change.
+Inspect `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/final-take-v7-02/{producer.pid,production.log,progress.json,state.sqlite3}`
+and automatic-evidence before acting. Never duplicate/resubmit uncertain jobs.
+Read dated period/warm report's appended execution decision: it explicitly lifts
+the earlier v2 hold after investigation, not the failed first-take result.
+Next supervise actual quality/provider errors, then audit all667 pairs/backups
+against terminal DONE and retained budgets. All installed takes human PENDING.
+
+
 ### 2026-10-22 — Canonical controls reject53 negatives; retry-layer probe running
 
 All36 complete-intro leak controls and17 wrong-number controls reject after
