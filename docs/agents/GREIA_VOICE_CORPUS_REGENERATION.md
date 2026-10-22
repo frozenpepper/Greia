@@ -19,11 +19,15 @@ PENDING for all 1,340 replacements; the separate Takeboard batch is served on
 the fresh local port recorded below. Generation DONE and automated PASS are not
 audible/product acceptance.
 
-**Current operation (2026-10-22):** the owner requested completion of the frozen
-667 problematic short cues with pinned Base and accent-insensitive checks.
-`tools/finish_voice_priority.py` is its coordinator. Read the
-[priority completion instructions](#priority-completion-commands-and-return-states)
-below; do not launch the historical whole-corpus examples to continue that task.
+**Current operation (2026-10-22): STOPPED FOR REJECTION DIAGNOSIS.**
+The frozen 667 problematic short-cue task remains authorized, but do not launch
+`finish_voice_priority.py` or the historical producer unchanged. V7 target-only
+extraction is now used by normal VoiceEngine requests; the frozen corpus still
+uses v6. Next implement a separately versioned corpus recovery adapter, replay
+saved sources with exact provenance and unchanged cumulative three-take budgets,
+then stage only passing candidates through normal recoverable transactions.
+Do not spend new synthesis attempts before the saved-source recovery gate.
+See [v7 evidence and remaining work](../reviews/2026-10-22_TARGET_ONLY_VOICE_EXTRACTION_V7.md).
 New speech/one-line API usage is documented in
 [the VoiceEngine README](../../tools/greia_voice_core/README.md).
 

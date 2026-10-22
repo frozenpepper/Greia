@@ -1,0 +1,155 @@
+"""Exact locale-aware number equivalence for speech verification.
+
+Only listed 0..25 spellings are canonicalized; there is no fuzzy, phonetic,
+or substring match. Callers opt in with the versioned comparison policy;
+historical extraction receipts retain their original comparisons.
+"""
+from __future__ import annotations
+from dataclasses import dataclass
+import re
+import unicodedata
+
+COMPARISON_POLICY = "locale-number-tokens-v1"
+
+# Explicit inventories; tuple position is the value from 0 to 25.
+_NUMBER_WORDS = {
+    "en": ("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty", "twenty-one", "twenty-two", "twenty-three", "twenty-four", "twenty-five"),
+    "it": ("zero", "uno", "due", "tre", "quattro", "cinque", "sei", "sette", "otto", "nove", "dieci", "undici", "dodici", "tredici", "quattordici", "quindici", "sedici", "diciassette", "diciotto", "diciannove", "venti", "ventuno", "ventidue", "ventitré", "ventiquattro", "venticinque"),
+    "fr": ("zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf", "vingt", "vingt et un", "vingt-deux", "vingt-trois", "vingt-quatre", "vingt-cinq"),
+    "es": ("cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "once", "doce", "trece", "catorce", "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve", "veinte", "veintiuno", "veintidós", "veintitrés", "veinticuatro", "veinticinco"),
+}
+
+# Hyphens are token separators. Multiword spellings therefore map over token
+# sequences, using longest exact phrases before individual number words.
+_MULTIWORD = {
+    "en": {
+        ("twenty", "one"): 21, ("twenty", "two"): 22,
+        ("twenty", "three"): 23, ("twenty", "four"): 24,
+        ("twenty", "five"): 25,
+    },
+    "it": {},
+    "fr": {
+        ("dix", "sept"): 17, ("dix", "huit"): 18, ("dix", "neuf"): 19,
+        ("vingt", "et", "un"): 21, ("vingt", "et", "une"): 21,
+        ("vingt", "deux"): 22, ("vingt", "trois"): 23,
+        ("vingt", "quatre"): 24, ("vingt", "cinq"): 25,
+    },
+    "es": {},
+}
+_WORD_OR_DIGIT = re.compile(r"[+−-]?\d+(?:[.,:/]\d+)+|[+−-]\d+|[^\W_]+(?:['’][^\W_]+)*", re.UNICODE)
+
+
+def _normalize(value: str, ignore_accents: bool) -> str:
+    value = unicodedata.normalize("NFC", value).casefold().replace("’", "'")
+    if ignore_accents:
+        value = "".join(ch for ch in unicodedata.normalize("NFD", value)
+                        if unicodedata.category(ch) != "Mn")
+    return value
+
+
+def _locale_data(locale: str, ignore_accents: bool) -> tuple[dict[str, int], dict[tuple[str, ...], int]]:
+    words = {}
+    for number, spelling in enumerate(_NUMBER_WORDS[locale]):
+        parts = tuple(_WORD_OR_DIGIT.findall(_normalize(spelling, ignore_accents)))
+        if len(parts) == 1:
+            words[parts[0]] = number
+    phrases = {}
+    for phrase, number in _MULTIWORD[locale].items():
+        normalized = tuple(_normalize(part, ignore_accents) for part in phrase)
+        phrases[normalized] = number
+    return words, phrases
+
+
+def canonical_number_tokens(locale: str, text: str, *, ignore_accents: bool = True) -> tuple[str, ...]:
+    """Return tokens with exact locale-specific 0..25 numbers as ``<num:N>``.
+
+    NFC/casefold is always applied. By default accents are ignored, matching
+    the extant comparison policy; pass ``ignore_accents=False`` for strict
+    diacritic comparison. Hyphens split lexical tokens, so listed compounds
+    and unrelated hyphenated words are both represented as their word parts.
+    Apostrophe forms are kept as a single token with a normalized apostrophe.
+    """
+    if not isinstance(locale, str):
+        raise TypeError("locale must be str")
+    locale = locale.casefold()
+    if locale not in _NUMBER_WORDS:
+        raise ValueError(f"unsupported locale: {locale}")
+    if not isinstance(text, str):
+        raise TypeError("text must be str")
+    if not isinstance(ignore_accents, bool):
+        raise TypeError("ignore_accents must be bool")
+
+    normalized = _normalize(text, ignore_accents)
+    tokens = [match.group(0) for match in _WORD_OR_DIGIT.finditer(normalized)]
+    number_words, phrases = _locale_data(locale, ignore_accents)
+    result = []
+    index = 0
+    ordered_phrases = sorted(phrases.items(), key=lambda item: (-len(item[0]), item[0]))
+    while index < len(tokens):
+        hit = None
+        for phrase, value in ordered_phrases:
+            if tuple(tokens[index:index + len(phrase)]) == phrase:
+                hit = (len(phrase), value)
+                break
+        if hit:
+            length, value = hit
+            result.append(f"<num:{value}>")
+            index += length
+            continue
+        token = tokens[index]
+        if (token.isdecimal() and len(token) <= 2 and int(token) <= 25
+                and len(token) == len(str(int(token)))):
+            result.append(f"<num:{int(token)}>")
+        elif token in number_words:
+            result.append(f"<num:{number_words[token]}>")
+        else:
+            result.append(token)
+        index += 1
+    return tuple(result)
+
+
+def same_number_aware_text(locale: str, left: str, right: str, *, ignore_accents: bool = True) -> bool:
+    """Compare lexical sequences after exact number canonicalization."""
+    return (canonical_number_tokens(locale, left, ignore_accents=ignore_accents)
+            == canonical_number_tokens(locale, right, ignore_accents=ignore_accents))
+
+
+@dataclass(frozen=True)
+class TargetTranscriptComparison:
+    """One comparison observation shared by cut selection and delivery screening."""
+
+    score: float
+    expected_tokens: tuple[str, ...]
+    actual_tokens: tuple[str, ...]
+
+    @property
+    def exact_match(self) -> bool:
+        return self.expected_tokens == self.actual_tokens
+
+    @property
+    def word_count_matches(self) -> bool:
+        return len(self.expected_tokens) == len(self.actual_tokens)
+
+    @property
+    def numbers_match(self) -> bool:
+        return (tuple(t for t in self.expected_tokens if t.startswith("<num:"))
+                == tuple(t for t in self.actual_tokens if t.startswith("<num:")))
+
+    def flags(self, *, require_word_count: bool = True) -> list[str]:
+        result = []
+        if not self.numbers_match:
+            result.append("TARGET_NUMBER_MISMATCH")
+        if require_word_count and not self.word_count_matches:
+            result.append("TARGET_WORD_COUNT_MISMATCH")
+        return result
+
+
+def compare_target_transcript(locale: str, expected: str, actual: str, *,
+                              ignore_accents: bool = True) -> TargetTranscriptComparison:
+    """Score number-equivalent text while retaining count and numeric invariants."""
+    from .verification import transcript_similarity
+    expected_tokens = canonical_number_tokens(locale, expected, ignore_accents=ignore_accents)
+    actual_tokens = canonical_number_tokens(locale, actual, ignore_accents=ignore_accents)
+    score = transcript_similarity(" ".join(expected_tokens), " ".join(actual_tokens),
+                                  ignore_accents=ignore_accents)
+    return TargetTranscriptComparison(score, expected_tokens, actual_tokens)

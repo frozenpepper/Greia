@@ -1,7 +1,9 @@
 # Greia spoken-carrier extraction
 
 **Status:** implemented local cutter and scoped corpus integration; output remains listening-pending.
-**Implementation:** `tools/voice_carrier.py`.
+**Current normal VoiceEngine implementation:** `tools/voice_carrier_search.py` (v7).
+**Historical standalone CLI/frozen corpus implementation:** `tools/voice_carrier.py` (v6).
+The old bulk producer is stopped; do not run it unchanged.
 
 This tool extracts a short target from one VoiceEngine recording that begins
 with a native-language carrier sentence. The carrier and target are synthesized
@@ -9,6 +11,44 @@ together through VoiceEngine, preserving one natural performance and one exact
 voice master. It is not a second speech generator and does not directly call
 VoxStage. The raw carrier WAV and its original VoiceEngine provider receipt must
 be retained beside the extracted clip.
+
+## Current automatic API: v7 target-only search
+
+Normal `tools/greia_voice.py generate`, request JSON, batch, Python and service
+calls route eligible targets of ≤4 words automatically. See
+[VoiceEngine usage](../../tools/greia_voice_core/README.md#automatic-short-phrase-pipeline)
+for overrides and return states. This is the preferred new-recording route.
+
+V7 measures the raw PCM directly: quiet runs ≥200 ms using 10 ms frames,
+RMS ≤−42 dBFS / peak ≤−30 dBFS, after 350 ms with ≥120 ms following PCM.
+Cuts retain 100 ms before a run ends. At least 80 ms energetic speech is
+required before and after each boundary. At most six suffix candidates are
+materialized; more runs rejects before ASR. Each suffix is transcribed separately
+by pinned Base without expected-text prompting. The raw intro is never an ASR
+agreement gate. Exactly one qualifying suffix is required, not the highest score.
+
+The normal API calls `extract(..., target_verification="warn")`: a qualifying
+suffix has similarity >0.8, equal canonical comparison-unit count and the same
+numeric-token sequence. Python `required` extraction demands exact canonical
+units. Exact listed number words/digits 0–25 in the four locales are equivalent;
+no fuzzy number matching or arbitrary word splitting. Accent comparison defaults
+to insensitive with an explicit strict override. The delivered rendition still
+passes final ASR and unchanged signal checks; no gain experiment is installed.
+
+Raw/source receipts remain immutable. Search evidence retains candidate WAVs,
+transcripts, hashes, parameters and `search.json`. Failed extraction preserves an
+existing destination. ASR and infrastructure errors propagate as recovery needs,
+not permission to spend another provider take. The standard API retains at most
+three total provider takes. Outputs remain listening-pending.
+
+The standard intro is replaced by a predefined localized alternate when it
+contains the complete target, preventing an intro-only false match. V7 rejects
+that unsafe configuration when called directly. `remove_first_words` is only a
+validated provenance field, not the cut algorithm.
+
+The sections below document the **historical v6 CLI/corpus contract**. V7 normal
+API deployment does not migrate frozen corpus plans. The priority corpus needs
+a separately versioned saved-source recovery adapter before it can resume.
 
 ## Carrier text and target selection
 

@@ -3716,3 +3716,19 @@ client manifest updated; controller and image-integration tests added. Focused
 suites PASS (setup 12, client integration 7, launcher panel 8, frame cache 5,
 production API 7, persistence 2). The installed Acer still runs the old UI until
 the RC is rebuilt or the Parent client is source-deployed.
+
+
+### 2026-10-22 — Scoped voice correction: target-only extraction v7
+
+Within the owner-authorized voice workstream, normal automatic short VoiceEngine
+requests now use a separately versioned bounded PCM-first suffix extractor with
+Base target-only ASR, exact locale number equivalence and final count/numeric
+checks. Historical v6 corpus producer remains stopped, not silently migrated.
+Source-frozen saved replay covered all 336 first-pass sources: 27/297 prior
+failures now pass packaged screening (3 WARN, 267 rejected); 36/39 prior DONE
+pass, with three explicitly held cases. All 66 extra-word and 17 wrong-number
+controls reject. No synthesis, installation or human acceptance in this tranche.
+Focused voice111/corpus18/finisher4 PASS; full make verify 5,711 tests has the
+known 1 failure/3 errors/8 skips, NOT GREEN. Exact evidence/limits/next corpus
+adapter task: `docs/reviews/2026-10-22_TARGET_ONLY_VOICE_EXTRACTION_V7.md`.
+This does not close any remediation phase or hardware/release gate.

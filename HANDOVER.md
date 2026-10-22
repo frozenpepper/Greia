@@ -180,6 +180,38 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+
+### 2026-10-22 — V7 target-only extraction implemented; bulk remains stopped
+
+Normal VoiceEngine automatic short requests now use separately versioned
+`tools/voice_carrier_search.py` v7. It searches bounded measured PCM pauses and
+transcribes each suffix independently, with no raw-intro ASR gate. Exactly one
+suffix must meet >0.8 similarity plus canonical count/numeric agreement; final
+packaged signal/ASR checks remain. Exact locale number spellings/digits 0–25 are
+supported, accent override retained. ASR/IO errors require recovery without a
+new provider take. Historical v6 cutter and frozen corpus plans remain unchanged.
+
+Final saved replay on all 336 first-pass sources: previous FAILED297 → 27 PASS,
+3 quality WARN, 267 extraction rejected; previous DONE39 → 36 PASS, 3 held.
+All 66 extra-word and 17 wrong-number negative controls rejected. The three held
+old passes include added-word/numeric guards and one French cut/ASR-sensitive
+case, documented individually. These are external candidates only: zero new
+synthesis, zero installations, no human acceptance in this correction.
+
+Focused final voice111 + corpus18 + finisher4 PASS. Final source-frozen full
+`make verify`: 5,711 tests, 1 failure, 3 errors, 8 skips (ARM64 profile, macOS
+lsblk installer cases, MBR expectation), NOT GREEN. Evidence and exact procedure:
+`docs/reviews/2026-10-22_TARGET_ONLY_VOICE_EXTRACTION_V7.md` and external
+`2026-10-22-rejection-investigation/`. Docs/voice skills track the new normal API.
+
+**Next exact action:** build a separately versioned corpus recovery adapter for
+v7 metadata and final canonical guards, using existing saved-source packaging
+and CorpusRunner transactions. Forbid provider submission during saved recovery;
+reconcile originals/master/job/hash and cumulative budgets before any further
+synthesis. Never restart unchanged continuation03/v6. Completed letter_A job
+20261022-142854-3615cf58 stays preserved and must never be resubmitted. Frozen667
+scope and all existing human-listening-pending status remain.
+
 ### 2026-10-22 — Bulk retries stopped; rejection mechanism investigated
 
 Supersedes the running-PID checkpoints below. Parent stopped PID 86480 after the

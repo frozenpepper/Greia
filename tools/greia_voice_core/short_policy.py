@@ -12,6 +12,14 @@ PREFIXES = {
 }
 
 
+ALTERNATE_PREFIXES = {
+    "en": ("Ready for the next words.", "Now we begin."),
+    "it": ("Ascolta con attenzione.", "Ora cominciamo."),
+    "fr": ("Écoute attentivement.", "Nous commençons."),
+    "es": ("Escucha con atención.", "Ahora empezamos."),
+}
+
+
 @dataclass(frozen=True)
 class ShortPhrasePolicy:
     """Pure policy: semantic exclusions precede length and explicit forcing."""
@@ -39,6 +47,18 @@ class ShortPhrasePolicy:
             language = {"en": "English", "it": "Italian", "fr": "French", "es": "Spanish"}[request.language]
         except KeyError as exc:
             raise ValueError("no localized short-phrase carrier for " + request.language) from exc
+        from .number_comparison import canonical_number_tokens
+        target_tokens = canonical_number_tokens(request.language, request.text,
+                                                ignore_accents=request.ignore_accents)
+        for candidate in (prefix, *ALTERNATE_PREFIXES[request.language]):
+            tokens = canonical_number_tokens(request.language, candidate,
+                                             ignore_accents=request.ignore_accents)
+            if not any(tokens[i:i + len(target_tokens)] == target_tokens
+                       for i in range(len(tokens) - len(target_tokens) + 1)):
+                prefix = candidate
+                break
+        else:
+            raise ValueError("target overlaps every available disposable intro")
         text = prefix.rstrip(".") + "...\n\n" + request.text
         delivery = ((request.delivery_prompt or default_delivery).strip() +
                     " Say the introductory sentence, pause silently for two seconds, then say the final phrase exactly. Do not add words.")

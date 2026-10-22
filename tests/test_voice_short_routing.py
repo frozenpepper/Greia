@@ -99,6 +99,9 @@ class AutomaticShortRoutingTests(unittest.TestCase):
                     self.assertEqual(receipt['request']['text'],target)
                     self.assertEqual(receipt['human_review'],'PENDING')
                     self.assertIn('short_phrase',receipt)
+                    self.assertEqual(receipt['short_phrase']['extraction']['algorithm_version'],
+                                     'greia-spoken-carrier-extractor-v7')
+                    self.assertTrue(all(p.name != 'raw.wav' for p, _ in self.asr_calls))
                     with wave.open(str(result.output_path)) as wav:
                         self.assertLess(wav.getnframes()/wav.getframerate(),1.5)
 
@@ -130,7 +133,7 @@ class AutomaticShortRoutingTests(unittest.TestCase):
         result=self.engine.generate(self.request(verification=VerificationMode.OFF))
         self.assertTrue(result.output_path)
         self.assertEqual(result.verification.disposition,VerificationDisposition.NOT_RUN)
-        self.assertEqual(len(self.asr_calls),2)
+        self.assertEqual(len(self.asr_calls),1)  # target-only; no raw-intro ASR
         self.asr_calls.clear()
         result=self.engine.generate(self.request(verification=VerificationMode.OFF, short_text_mode='off'))
         self.assertEqual(len(self.asr_calls),0)
@@ -143,6 +146,16 @@ class AutomaticShortRoutingTests(unittest.TestCase):
         self.assertIsNone(result.output_path)
         state=json.loads(next((self.base/'evidence').rglob('state.json')).read_text())
         self.assertEqual(state['status'],'NEEDS_RECOVERY')
+
+    def test_search_disk_error_never_spends_another_synthesis_take(self):
+        with patch('voice_carrier_search._write_pcm', side_effect=OSError('disk full')):
+            result = self.engine.generate(self.request())
+        self.assertEqual(len(self.provider.calls), 1)
+        self.assertIsNone(result.output_path)
+        state = json.loads(next((self.base/'evidence').rglob('state.json')).read_text())
+        self.assertEqual(state['status'], 'NEEDS_RECOVERY')
+        self.assertEqual(len(list((self.base/'evidence').rglob('raw.wav'))), 1)
+        self.assertEqual(self.asr_calls, [])
 
     def test_asr_crash_retains_one_raw_without_a_new_generation(self):
         def broken(*args): raise RuntimeError('ASR worker crashed')

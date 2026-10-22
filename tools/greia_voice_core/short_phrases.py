@@ -42,7 +42,8 @@ class ShortPhrasePipeline:
 
     def generate(self, engine, request, provider, profile):
         """Return only a safe final target, retaining failed/uncertain attempts."""
-        from voice_carrier import extract, ExtractionRejected, spoken_words
+        from voice_carrier import ExtractionRejected, spoken_words
+        from voice_carrier_search import extract
         prefix, composite, delivery = self.policy.composite(request, character_delivery()[profile.character])
         available, detail = self.readiness()
         if not available:

@@ -22,16 +22,27 @@ class TargetQualityChecker:
         transcript = extraction["extracted_transcript"]
         if _read_pcm16(delivered) != _read_pcm16(extracted):
             transcript = self.transcriber(delivered, locale).get("text", "")
-        score = transcript_similarity(text, transcript, ignore_accents=ignore_accents)
+        expected_tokens = comparison_words(text, ignore_accents=ignore_accents)
+        actual_tokens = comparison_words(transcript, ignore_accents=ignore_accents)
+        number_policy = extraction.get("comparison_policy") == "locale-number-tokens-v1"
+        comparison = None
+        if number_policy:
+            from .number_comparison import compare_target_transcript
+            comparison = compare_target_transcript(locale, text, transcript, ignore_accents=ignore_accents)
+            score = comparison.score
+        else:
+            score = transcript_similarity(text, transcript, ignore_accents=ignore_accents)
         try:
             metrics, flags = signal_metrics(delivered)
         except ValueError as exc:
             metrics, flags = {"signal_error": str(exc)}, ["INVALID_SIGNAL"]
-        if require_word_count and len(comparison_words(text, ignore_accents=ignore_accents)) != len(
-                comparison_words(transcript, ignore_accents=ignore_accents)):
+        if comparison is not None:
+            flags.extend(comparison.flags(require_word_count=require_word_count))
+        elif require_word_count and len(expected_tokens) != len(actual_tokens):
             flags.append("TARGET_WORD_COUNT_MISMATCH")
         return {"disposition": "PASS" if score > ASR_PASS_THRESHOLD and not flags else "WARN",
                 "score": score, "transcript": transcript, "metrics": metrics, "flags": flags,
-                "ignore_accents": ignore_accents, "model_id": extraction["model_id"],
+                "ignore_accents": ignore_accents, "comparison_policy": extraction.get("comparison_policy", "legacy-text"),
+                "model_id": extraction["model_id"],
                 "model_revision": extraction["model_revision"],
                 "detail": "Packaged target scored with Base; human listening remains pending"}

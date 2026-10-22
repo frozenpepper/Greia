@@ -193,26 +193,32 @@ retries only WARN. Exhaustion still returns the last take with
 REVIEW_REQUIRED_ASR_WARNING; CLI exit 0 means output exists, not ASR acceptance.
 That ordinary long/bypass route has no corpus waveform gate.
 
-Automatic short requests and the owner-scoped carrier corpus workflow differ
-from that ordinary route: raw synthesis verification is
-OFF because intro mistakes are disposable. It locates/cuts the expected target,
-then checks the actual delivered target with Base for every selected actor,
-including Dani. Required mode gates installation on score >0.8 and no signal
-flags; lossy packages are decoded and checked. Saved sources precede fresh
-attempts, capped at three cumulative provider generations per cue in the priority
-finisher. `prepare_saved_candidate` packages preserved sources without synthesis;
-CorpusRunner owns the normal recoverable installation transaction. Defaults and
-strict-accent overrides are frozen in the carrier plan.
+Automatic short requests use `voice_carrier_search.extract` v7. Raw synthesis
+verification is OFF; the disposable intro is never transcribed for alignment.
+Bounded PCM quiet-run candidates are transcribed as independent target-only
+suffixes. Exactly one must meet score >0.8, equal canonical unit count and an
+identical numeric-token sequence. Exact locale number spellings/digits 0–25
+compare equivalently via `number_comparison.py`; historical v6 receipts keep their
+legacy comparison. The actual delivered target then passes shared
+`TargetQualityChecker` with unchanged signal checks; changed/lossy PCM is checked
+after packaging. `required` cutter mode is stricter canonical-token equality.
+See the usage README for limits, overrides and retained evidence.
 
 `ShortPhrasePolicy` selects fewer than five words by default for supported
-VoxStage character providers, excluding pedagogical speech. `ShortPhrasePipeline`
-owns retained raw takes, extraction and bounded final-target retries behind the
-same VoiceEngine entry point. `TargetQualityChecker` is shared with corpus
-production; the automatic route additionally guards target word count.
-`short_delivery.prepare_delivery` removes residual silence only inside the
-already verified gap, retaining 100 ms; it preserves the v6 extraction.
-Request/CLI/JSON routing mode and word/optional-alnum thresholds override defaults.
-Explicit corpus raw requests disable wrapping to prevent recursion/double intro.
+VoxStage character providers, excluding pedagogical speech. It selects a safe
+alternate intro if the complete target occurs in the standard intro.
+`ShortPhrasePipeline` owns raw takes, extraction and at most three total provider
+takes behind the same VoiceEngine entry point. Provider/ASR/IO uncertainty stops
+for recovery rather than spending another take. `short_delivery.prepare_delivery`
+preserves a v7 cut already 100 ms before the verified gap end.
+
+The frozen corpus path remains explicitly v6 and is **stopped for rejection
+diagnosis**. It must not inherit v7 by changing a historical plan in place.
+A separately versioned recovery adapter must map extraction metadata and enforce
+final word/numeric checks, saved-source provenance, installation transactions and
+cumulative three-take budgets before resuming. `prepare_saved_candidate` is the
+existing no-synthesis packaging seam; CorpusRunner owns recoverable installation.
+Explicit corpus raw requests disable automatic wrapping to prevent double intros.
 
 `finish_voice_priority.py` remains the coordinator for the frozen priority scope.
 Generation and verification are still serial; separate durable shared queues

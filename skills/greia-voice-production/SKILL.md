@@ -492,3 +492,18 @@ Chatterbox auto retains its ordinary route. Long/bypass verification retains its
 older eligibility/advisory-warning behavior. Only separate verification queues
 remain proposed. Explicit corpus raw synthesis uses short_text_mode=off to prevent
 double wrapping; its frozen selection and cumulative budgets remain unchanged.
+
+
+### 2026-10-22 correction: normal API v7; frozen corpus stopped
+
+Normal automatic short requests now use `tools/voice_carrier_search.py` v7:
+PCM-first bounded suffix candidates, no raw-intro ASR, exactly one target-only
+Base match. The normal API uses score >0.8 plus equal canonical unit count and
+identical numeric sequence; exact locale words/digits 0–25 are equivalent.
+Final delivered signal/ASR checks remain mandatory unless explicitly disabled.
+ASR/IO failures require recovery and must not spend a fresh take. See the
+VoiceEngine README and `docs/reviews/2026-10-22_TARGET_ONLY_VOICE_EXTRACTION_V7.md`.
+The historical 667-cue producer remains stopped on v6; never resume unchanged.
+A versioned corpus adapter must preserve source/master/job provenance and
+cumulative budgets before any synthesis or installation. Saved replay candidates
+are external and listening-pending, not installed or human-approved.

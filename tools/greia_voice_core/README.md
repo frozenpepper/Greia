@@ -190,29 +190,43 @@ provider/job/settings/seeds, master identity, attempts, output hash and
 
 ### Automatic short-phrase pipeline
 
-Automatic short requests use a stronger gate for **all six actors**, including
-Dani and one-word targets. Raw carrier synthesis has verification OFF: introductory
-mistakes are disposable. The cutter locates the final target and a unique quiet
-PCM run; it does not require correctly spoken intro words or a literal ASR word
-count. The delivered target is then checked with Base, including the actual
-decoded delivery after lossy packaging. Installation requires score **>0.8** and
-no signal flags. Internal pauses/trailing silence **<1.5s** do not warn; other
-signal checks (including leading silence ≥0.4s) remain active.
+Automatic short requests use extractor **v7** (`tools/voice_carrier_search.py`)
+for all six actors, including Dani and one-word targets. The localized intro is
+disposable: raw carrier synthesis has verification OFF, and no raw-intro ASR is
+requested. PCM measurements identify quiet runs of at least 200 ms (10 ms
+frames, RMS ≤−42 dBFS and peak ≤−30 dBFS). Each retained suffix starts 100 ms
+before the run ends and is transcribed independently with pinned Whisper Base,
+without an expected-text prompt. More than six candidate runs rejects before
+ASR; exactly one suffix must qualify. Zero or multiple matches reject. Each
+candidate must retain energetic speech and have energetic speech before its cut.
 
-Final token counts must also match the target, preventing added/repeated words
-from passing on similarity alone. Exhaustion returns REJECTED with no output path,
-retaining raw takes/evidence and the prior destination. An unavailable alignment
-verifier blocks before synthesis. Provider/ASR/infrastructure errors stop without
-spending another take. Evidence is retained under `GREIA_VOICE_HOME/short-phrases/`;
-archive it after review. There is no blind automatic restart of an uncertain job.
+The normal API uses the extractor's `warn` comparison policy: score **>0.8**,
+equal canonical comparison-unit count, and identical numeric-token sequence.
+This does not mean a warning is published: the final delivered target still must
+pass `TargetQualityChecker` with no signal flags. `required` extraction, available
+through the Python cutter API, instead requires exact canonical units.
+Locale-specific spelled numbers and digits **0–25** compare equivalently in
+EN/IT/FR/ES, including listed compounds such as `dix-sept`. Wrong numbers,
+extra/missing units, leading-zero codes, signed/decimal notation and arbitrary
+joined words are not silently treated as equivalent. Accents are ignored by
+default; `ignore_accents=False` / `--strict-accents` overrides this.
 
-The extractor's original midpoint result is retained. Delivery removes only the
-residual prefix inside that same measured quiet run, leaving 100 ms of verified
-silence before its end. The actual delivered rendition is checked again. This
-does not search for a new cut in speech or weaken silence/score thresholds.
+The actual delivered rendition is checked again after packaging where its PCM
+changes, including decoded lossy delivery. Internal pauses/trailing silence
+**<1.5s** do not warn; existing signal checks (including leading silence ≥0.4s)
+remain active. No gain normalization is applied by this correction. If the target
+occurs inside the primary intro, a predefined alternate localized intro is used.
 
-`--verification off` skips final quality scoring but still performs the ASR
-needed to locate/check a safe cut. For zero ASR, explicitly use **both**
+Exhaustion returns REJECTED with no output path, preserving raw takes/evidence
+and the prior destination. An unavailable alignment verifier blocks before
+synthesis. Provider/ASR/disk/infrastructure errors stop in NEEDS_RECOVERY without
+spending another take. Evidence is retained under
+`GREIA_VOICE_HOME/short-phrases/`; each extraction also retains bounded candidate
+WAVs and `search.json` beside its cut. Archive evidence after review. There is
+no blind automatic restart of an uncertain job. Machine PASS is listening-pending.
+
+`--verification off` skips final quality scoring but still runs target-only ASR
+to select a safe cut. For zero ASR, explicitly use **both**
 `--short-text-mode off --verification off`. Such output is unverified, not PASS.
 
 CLI overrides (JSON/Python use the corresponding underscore names):
@@ -230,6 +244,12 @@ combined delivery must fit 300; oversize composites fail before submission so
 VoxStage cannot split intro/target into separate recordings.
 
 ### Existing frozen corpus operations
+
+**Diagnostic stop, 2026-10-22:** the historical priority producer still calls v6.
+Do not resume it unchanged. Normal API v7 does not mutate frozen plans or
+retroactively replace their extraction policy. A versioned corpus recovery
+adapter must reconcile v7 metadata, saved sources and cumulative budgets before
+any new synthesis. See `docs/reviews/2026-10-22_TARGET_ONLY_VOICE_EXTRACTION_V7.md`.
 
 The finisher retains its original narrower selection (1–3 words or 4 words with
 ≤28 alphanumerics); the new automatic API default does not expand that scope.
