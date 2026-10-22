@@ -83,7 +83,8 @@ def prepare_saved_candidate(engine, store, row: dict, profile, verification: str
         extraction_args = {} if transcriber is None else {"transcriber": transcriber}
         extractor = extract
         if saved_recovery:
-            from .saved_recovery import extract as extractor
+            from .saved_recovery import extract as extractor, POLICIES
+            extraction_args["comparison_policy"] = POLICIES[store.plan["saved_recovery_policy"]]
         extraction = extractor(
             raw, extracted, locale=row["request"]["locale"],
             prefix=carrier["prefix"], target=carrier["target"],
@@ -103,7 +104,7 @@ def prepare_saved_candidate(engine, store, row: dict, profile, verification: str
         raise CarrierExtractionFailure(str(exc), evidence=exc.evidence) from exc
 
     if saved_recovery:
-        extraction = adapt_extraction(extraction, carrier)
+        extraction = adapt_extraction(extraction, carrier, store.plan["saved_recovery_policy"])
 
     from greia_voice_core.short_delivery import prepare_delivery
     extraction["delivery"] = prepare_delivery(extracted, delivery, extraction)

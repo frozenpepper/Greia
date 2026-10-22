@@ -1,8 +1,10 @@
 """Exact locale-aware number equivalence for speech verification.
 
 Current spellings cover 0..100; historical v1 retains its 0..25 inventory.
-There is no fuzzy, phonetic,
-or substring match. Callers opt in with the versioned comparison policy;
+There is no fuzzy or substring match. Separately versioned opt-in policies
+add exact English name spelling and a finite set of acoustic homophones;
+normal and historical number policies retain their original semantics.
+Callers opt in with the versioned comparison policy;
 historical extraction receipts retain their original comparisons.
 """
 from __future__ import annotations
@@ -14,7 +16,9 @@ from .number_lexicon import cardinal_spellings
 
 LEGACY_COMPARISON_POLICY = "locale-number-tokens-v1"
 COMPARISON_POLICY = "locale-number-tokens-v2"
-SUPPORTED_COMPARISON_POLICIES = frozenset({LEGACY_COMPARISON_POLICY, COMPARISON_POLICY})
+ORTHOGRAPHIC_COMPARISON_POLICY = "locale-number-tokens-v2-oskar-en-v1"
+ENGLISH_SPOKEN_COMPARISON_POLICY = "locale-number-tokens-v2-spoken-en-v1"
+SUPPORTED_COMPARISON_POLICIES = frozenset({LEGACY_COMPARISON_POLICY, COMPARISON_POLICY, ORTHOGRAPHIC_COMPARISON_POLICY, ENGLISH_SPOKEN_COMPARISON_POLICY})
 
 # Explicit inventories; tuple position is the value from 0 to 25.
 _NUMBER_WORDS = {
@@ -92,6 +96,10 @@ def canonical_number_tokens(locale: str, text: str, *, ignore_accents: bool = Tr
         raise ValueError("unsupported number comparison policy")
 
     normalized = _normalize(text, ignore_accents)
+    if policy == ENGLISH_SPOKEN_COMPARISON_POLICY and locale == "en":
+        # W has a multiword spoken name; these two exact transcriber spellings
+        # represent the same letter. Do not normalize its example word.
+        normalized = re.sub(r"\bdouble (?:u|you)\b", "w", normalized)
     tokens = [match.group(0) for match in _WORD_OR_DIGIT.finditer(normalized)]
     number_words, phrases = _locale_data(locale, ignore_accents, policy)
     result = []
@@ -115,13 +123,17 @@ def canonical_number_tokens(locale: str, text: str, *, ignore_accents: bool = Tr
             result.append(f"<num:{int(token)}>")
         elif token in number_words:
             result.append(f"<num:{number_words[token]}>")
-        elif policy == COMPARISON_POLICY and any(ch.isdecimal() for ch in token):
+        elif policy != LEGACY_COMPARISON_POLICY and any(ch.isdecimal() for ch in token):
             # Codes/signs/decimals stay literal, but changing one must still trip
             # the numeric identity guard even inside a long matching sentence.
             result.append(f"<numeric-literal:{token}>")
         else:
             result.append(token)
         index += 1
+    # Explicit English proper-name spelling equivalence. Never apply fuzzy
+    # aliases to arbitrary names, and never reinterpret historical v1/v2 receipts.
+    if policy in {ORTHOGRAPHIC_COMPARISON_POLICY, ENGLISH_SPOKEN_COMPARISON_POLICY} and locale == "en":
+        result = ["oskar" if token == "oscar" else token for token in result]
     return tuple(result)
 
 
@@ -168,6 +180,14 @@ def compare_target_transcript(locale: str, expected: str, actual: str, *,
     from .verification import transcript_similarity
     expected_tokens = canonical_number_tokens(locale, expected, ignore_accents=ignore_accents, policy=policy)
     actual_tokens = canonical_number_tokens(locale, actual, ignore_accents=ignore_accents, policy=policy)
+    if policy == ENGLISH_SPOKEN_COMPARISON_POLICY and locale.casefold() == "en" and len(expected_tokens) == len(actual_tokens):
+        # These exact English homophones cannot be distinguished acoustically.
+        # Resolve only corresponding positions; never erase a different number,
+        # drop a word, or use arbitrary phonetic/fuzzy name matching.
+        groups = (frozenset({"<num:1>", "won"}), frozenset({"<num:2>", "to", "too"}),
+                  frozenset({"<num:4>", "for"}), frozenset({"<num:8>", "ate"}))
+        actual_tokens = tuple(expected if any(expected in group and actual in group for group in groups) else actual
+                              for expected, actual in zip(expected_tokens, actual_tokens))
     def scoring_text(tokens: tuple[str, ...]) -> str:
         if policy == LEGACY_COMPARISON_POLICY:
             return " ".join(tokens)

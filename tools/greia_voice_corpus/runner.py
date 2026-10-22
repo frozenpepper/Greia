@@ -53,7 +53,7 @@ class CorpusRunner:
             profile = VoiceRegistry.load(self.store.root).get(row["request"]["speaker"])
             return validate_automatic(self.store, row, candidate, receipt, profile)
         from .saved_recovery import recovery_enabled, validate_recovery_receipt
-        validate_recovery_receipt(receipt, recovery_enabled(self.store.plan))
+        validate_recovery_receipt(receipt, recovery_enabled(self.store.plan), self.store.plan.get("saved_recovery_policy", "target-only-v7-saved-v1"))
         if row.get("spoken_carrier"):
             carrier = row["spoken_carrier"]
             profile = VoiceRegistry.load(self.store.root).get(row["request"]["speaker"])

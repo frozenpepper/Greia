@@ -842,3 +842,12 @@ Base/count/number/signal passes, human pending. Initial real-corpus canary hit
 METHOD_REVIEW_REQUIRED (2installed,3exhausted,242unstarted); do not blindly resume.
 Read docs/agents/GREIA_NATURAL_VOICE_COMPLETION.md and HANDOVER for active method
 repair. Alternate policy selection is explicit; normal API defaults unchanged.
+
+
+Current voice continuation correction2026-10-22: BOTH natural producers are held
+for poor yield; do not restart natural-context-v1 or natural-context-speech-v1.
+Exact audit5installed pending,242remaining. Explicit saved-only English spoken
+comparison can recover homophonic recognition errors without another provider
+call; normal API defaults and historical policies remain unchanged. Read the
+current natural completion guide/HANDOVER for diagnostic state and remaining
+lists. A failed prompt experiment never authorizes a blind bulk continuation.

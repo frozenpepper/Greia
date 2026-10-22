@@ -41,6 +41,8 @@ def run_natural(work):
             progress=json.loads((work/'progress.json').read_text())
             if progress['status'] in {'OWNER_STOPPED','METHOD_REVIEW_REQUIRED'}:
                 raise ValueError('run stopped for owner/method review; do not blindly resume')
+            from .natural_continuation import validate_handoff
+            validate_handoff(store)
             ready,detail=WhisperVerifier().probe()
             if not ready:raise RuntimeError('Base unavailable: '+detail)
             budget=MethodAttemptBudget(store);budget.reconcile_mirror()

@@ -1,6 +1,37 @@
 # Greia remaining recordings — natural-method completion
 
-## Current authority and state
+## Current state — both bulk runs stopped
+
+Actual latest audit:5installed of the new247scope,425kept/installed of667,
+242remaining =45unstartedletters+193unstartedordinary+4exhausted.
+`natural-context-speech-v1` ended METHOD_REVIEW_REQUIRED at1DONE3PRESERVED193READY,
+12actualcalls; parent remains held at2DONE3PRESERVED242READY,13calls.
+Saved Oskar and Find two the same add2recoveries, zero further synthesis.
+Do NOT launch either producer unchanged or grant another allowance to attempted
+cues. Canonical masters, native originals, receipts and all call counts persist.
+Takeboard8811 compares five installed pending clips. Audit, remaining IDs and
+listening manifest are in `2026-10-22-rejection-investigation/natural-completion-audit-v1/`.
+
+The saved-only `target-only-v7-saved-spoken-en-v1` comparison opt-in supports exact
+English Oskar/Oscar spelling; one/won,two/to/too,four/for,eight/ate at corresponding
+positions; W as double-u/double-you. Original transcript is retained. Actual
+numbers differing, extra words, speech/signal limits and selected masters remain
+guarded. It does not change default or frozen historical comparison semantics.
+The Find two the same recovery shows1of667pairs changed,666unchanged and no
+reserved-call changes. See `natural-find-two-recovery-v1/audit.json`.
+
+Lexical-context8jobs finished1PASS7rejects: FAILED preregistered gate, not selected.
+Repeated-recognition39saved suffixes preserved0of4baseline qualifiers, recovered0:
+REJECTED. Neither supports bulk continuation. The saved-only41source
+`natural-context-recognition-v1` diagnosis finished41sources with10unique matches and41uncut controls rejected: full-source word
+context, fixed PCM cuts, all words after cut and straddling-word rejection;
+no disposable-intro wording agreement. Shadow proper-name/homophone mapping is
+explicit. Check its actual artifacts; no new synthesis or installation. Current next-work report:
+`docs/reviews/2026-10-22_NATURAL_COMPLETION_AND_RECOGNITION.md`.
+Any promising result still needs broad controls and final packaged-audio context
+validation before a separately versioned integration. Do not call ASR listening.
+
+## Initial authority and historical stage boundary
 
 The owner authorized completing the remaining recordings with the natural method
 on2026-10-22, after reviewing two difficult-target experiments. This is a new
@@ -30,6 +61,39 @@ Inspect `2026-10-22-rejection-investigation/instruction-conditioning-v1/` and
 sibling log before any diagnostic submission; never duplicate it. It changes
 actual provider direction explicitly in receipts, not masters, targets or
 cut/signal thresholds. No diagnostic is installed automatically.
+
+## Latest continuation (supersedes only the running-state description above)
+
+Conditioning diagnostic finished8jobs: compact direction1/4pass, no instruction
+0/4. No new prompt default is selected. Exact saved Oskar attempt02 was recovered
+under opt-in `target-only-v7-saved-oskar-en-v1` /
+`locale-number-tokens-v2-oskar-en-v1`: only English Oscar/Oskar spelling equality
+is added. Raw transcript is retained; wrong names, extra words and numbers stay
+rejected. Normal and historical v1/v2 policies are unchanged. Installed pending;
+audit1of667pairs changed,666unchanged, zero synthesis or budget changes. Evidence
+`2026-10-22-rejection-investigation/natural-oskar-recovery-v1/`.
+
+The parent247run stays held. Its197never-submitted ordinary phrases use
+`natural-context-speech-v1`, with the same recipe/gates/guards and their ORIGINAL
+unused allowances.45unstarted letter-name cues are explicitly held separately;
+the two other exhausted examples remain unresolved, with no fresh allowance.
+This partition is not a claim of successful method repair. Actual early results
+still govern whether the ordinary stage may continue.
+
+`natural_continuation.prepare_unstarted` requires parent METHOD_REVIEW_REQUIRED,
+unchanged originals/registry and zero reservations; it excludes specified topics,
+records held IDs and a one-child parent handoff before creating the child.
+`validate_handoff` pins source plan/ledger and child path/plan/scope before calls.
+The external exact preparation script is
+`2026-10-22-rejection-investigation/prepare-natural-speech-continuation.py`;
+DO NOT rerun it: the child exists and the handoff rejects duplication.
+Current run uses the exact run command below with `natural-context-speech-v1`.
+Inspect actual producer.pid/log/progress; a historical PID is not live evidence.
+
+At this stage boundary423of667are kept/installed,244unresolved. All new
+recordings human-listening-pending. Every stage must audit actual installation
+pairs, saved source provenance and retained budgets, then keep the remaining
+letter/exhausted/unstarted lists explicit. Do not claim all files completed.
 
 ## Implementation ownership
 

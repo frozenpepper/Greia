@@ -180,6 +180,91 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — Saved contextual recognition complete; final-delivery proof next
+
+`natural-context-recognition-v1` finished41sources:10unique contextual matches,
+41uncut-intro controls rejected. This diagnoses isolated-ASR instability on all
+four difficult lexical-context cases, not90percent reliability or listening.
+No source strategy adopted or additional audio installed. Both producers remain
+held; actual5installed/242remaining unchanged. Read the concise dated report
+`docs/reviews/2026-10-22_NATURAL_COMPLETION_AND_RECOGNITION.md`, which owns exact
+results, limitations and next saved-only final-delivery/control experiment.
+Next: original prefix +actual decoded packaged target, fixed PCM cut, timestamped
+all-retained-word comparison; broad wrong-number/extra-word/name/prefix controls
+and no provider submissions before any versioned integration. Do not start more
+prompt rerolls or resume bulk from an exploratory match counter alone.
+
+
+### 2026-10-22 — Natural completion stopped again; five actual installs,242remaining
+
+Both producers are held, not running. Speech child ended1DONE3PRESERVED193READY
+at12calls (parent2DONE3PRESERVED242READY at13calls). Exact saved Oskar and Find two
+the same recoveries add2installs without synthesis: overall5of247installed,
+425of667kept/installed and242unresolved =45unstartedletters+193unstartedordinary+
+4exhausted. Actual667pair audit proves exactly5changed662unchanged, matching
+DONE/recovery candidates and pending receipts. Evidence and exact remaining IDs:
+`2026-10-22-rejection-investigation/natural-completion-audit-v1/`; Takeboard8811.
+Do not claim completion or resume either held producer.
+
+Saved-only opt-in English spoken policy adds exact position-bound one/won,
+two/to/too,four/for,eight/ate, Oskar/Oscar and W/double-u/double-you equivalence;
+no fuzzy word/name matching or different-number/extra-word allowance. Defaults
+and historical policies remain unchanged. It recovered Find two the same take02
+job20261022-193838-12dfa863 with1changed666unchanged pair audit; original3reserved
+calls unchanged. The phrase's Base transcript Find to the same is retained.
+
+Registered lexical-context8job experiment COMPLETE1/8PASS, gateFAILED. No bulk
+adoption; no diagnostics installed. Repeated-recognition saved39suffix experiment
+preserved0of4baseline qualifiers and recovered0; REJECTED, no adoption. Wrong-
+number controls were not run after its positive gate failed; do not call its
+narrow uncut-intro negative observations a full verification pass.
+
+Current saved-only diagnostic `natural-context-recognition-v1` replays41actual
+sources with full-source Base word timestamps at unchanged PCM cuts, all retained
+words, no intro wording prerequisite and no expected-text prompt. Its explicit
+shadow English spoken/all-locale Oscar spelling comparison remains diagnostic.
+Inspect progress/results/log; never duplicate or adopt without final-delivery and
+broad extra-word/wrong-number/name controls. This follows visible evidence that
+full-context ASR can say Double U as whale while isolated same-target ASR says
+W as well. It is recognition instability evidence, not listening proof.
+No further synthesis is authorized by a failed experimental gate alone.
+
+Latest focused165+53PASS (7new tests). Full preceding run5765:1failure3errors8skips
+(MBR observed identity/build profiles/installer host path); latest source full
+makeverify executes but aborts trap6, log/tmp/greia-natural-repair-final-make-verify.log.
+NOTGREEN. Source/derived docs retain original voice/master/budget semantics.
+
+
+### 2026-10-22 — Natural completion: exact name recovery and unused speech allowance handoff
+
+The first natural run remains METHOD_REVIEW_REQUIRED,2DONE3PRESERVED242READY.
+The8-job instruction-conditioning experiment is COMPLETE: compact direction1/4,
+no instruction0/4; this does not select a better general recipe. Do not repeat it.
+An explicit saved-only English Oskar/Oscar comparison policy now recovers the
+exact natural take02/job20261022-191523-a16336f0 with unchanged numeric/count/
+signal/Base thresholds. Installed1pending through existing CorpusRunner; actual
+667-pair audit shows1changed666unchanged, raw/receipt/job/master/budgets retained.
+Evidence `2026-10-22-rejection-investigation/natural-oskar-recovery-v1/audit.json`.
+Old v1/v2 numeric policies and normal API defaults remain unchanged.
+
+The parent run's242never-submitted rows are explicitly split:45letter-name
+cues remain unstarted for pronunciation-method repair,197ordinary phrases move
+with their ORIGINAL unused method allowances to
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-speech-v1`.
+Producer74605 at launch; inspect actual producer.pid/process, production.log,
+progress.json and ledger. Natural prompts/per-file gates/poor-yield guards are
+unchanged; this is not evidence that earlier failures were fixed or that the
+method achieves90percent. First2ordinary cues exhausted (FR Trouve Oskar and EN
+Basket full); third IT Sei is underway at this documentation boundary. Let its
+automatic guard stop poor yield; never blindly bypass it. Parent held-state and
+pinned one-child handoff prevent duplicate spending; attempted cues never move
+or receive another3take allowance. `natural_continuation.py` owns that seam.
+Overall before this speech stage:423of667kept/installed,244unresolved; receipts
+humanPENDING. This is NOT task completion. Current guide owns exact recovery and
+remaining lanes. Focused164+53PASS including6new focused cases; full makeverify
+is executing at this boundary. No paid/cloud/hosted Actions/shared-worker changes.
+
+
 ### 2026-10-22 — New-method completion authorized; real-corpus guard caught poor yield
 
 Owner requested completion using the new natural method. Prepared247 exact

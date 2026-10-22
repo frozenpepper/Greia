@@ -3804,3 +3804,28 @@ control rendering. Actual canary2DONE3PRESERVED242READY after13calls trips the
 poor-yield guard; no broad completion claim or bypass. Follow HANDOVER and
 GREIA_NATURAL_VOICE_COMPLETION for the active orthography/conditioning diagnosis.
 This scoped authoring implementation does not close platform/hardware phases.
+
+
+### 2026-10-22 — Saved orthographic recovery and unused speech continuation
+
+Added explicit saved-only English Oskar/Oscar equality without changing historical
+numeric comparison or normal generation defaults. Existing v7 extraction/final
+screening/CorpusRunner recovered1actual saved target without synthesis, with an
+exact667pair audit and retained budgets. Added single-child, hash-pinned unstarted
+allowance handoff:197ordinary cues continue the same natural recipe/guards while
+45letter cues and attempted failures remain explicit. Initial speech-stage
+failures still indicate poor yield; no90percent claim or guard bypass. Focused
+164+53PASS; full verification running at documentation boundary. See HANDOVER
+and GREIA_NATURAL_VOICE_COMPLETION for live state. No platform/hardware closure.
+
+
+### 2026-10-22 — Correction: speech-stage yield remains inadequate
+
+Speech stage stopped1DONE3PRESERVED193READY; exact saved Find two homophone recovery
+adds1pending install without synthesis. Actual cross-run audit5changed662unchanged
+of667;242remaining explicitly listed (45letters193ordinary4exhausted). Added
+versioned saved-only English acoustic equivalences, retaining defaults/history.
+Lexical-context8jobs1pass and repeated-recognition39savedcuts0of4retained positives
+both fail; neither selected. Saved full-context recognition diagnosis41sources
+running, with no installation. Focused165+53PASS; latest fullmakeverify abort6,
+NOTGREEN (preceding run5765known1failure3errors8skips). No remediation/hardware closure.

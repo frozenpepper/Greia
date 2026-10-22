@@ -24,6 +24,7 @@ from greia_voice_core.asr_policy import (
 )
 from greia_voice_core.number_comparison import (
     COMPARISON_POLICY,
+    SUPPORTED_COMPARISON_POLICIES,
     canonical_number_tokens,
     compare_target_transcript,
 )
@@ -72,6 +73,7 @@ def _validate_parameters(
     source_receipt_path: Path | None,
     target_verification: str,
     ignore_accents: bool,
+    comparison_policy: str,
 ) -> tuple[Path, Path | None]:
     """Validate the public v6-compatible call shape before touching output."""
     if not isinstance(locale, str) or locale not in {"en", "it", "fr", "es"}:
@@ -99,9 +101,11 @@ def _validate_parameters(
     if not isinstance(ignore_accents, bool):
         raise ExtractionRejected("ignore_accents must be a boolean")
 
+    if comparison_policy not in SUPPORTED_COMPARISON_POLICIES:
+        raise ExtractionRejected("unsupported comparison policy")
     try:
-        prefix_units = canonical_number_tokens(locale, prefix, ignore_accents=ignore_accents)
-        target_units = canonical_number_tokens(locale, target, ignore_accents=ignore_accents)
+        prefix_units = canonical_number_tokens(locale, prefix, ignore_accents=ignore_accents, policy=comparison_policy)
+        target_units = canonical_number_tokens(locale, target, ignore_accents=ignore_accents, policy=comparison_policy)
     except (TypeError, ValueError) as exc:
         raise ExtractionRejected(f"invalid target comparison configuration: {exc}") from exc
     if not prefix_units or not target_units:
@@ -215,6 +219,7 @@ def extract(
     source_receipt_path: Path | None = None,
     target_verification: str = "required",
     ignore_accents: bool = True,
+    comparison_policy: str = COMPARISON_POLICY,
 ) -> dict[str, Any]:
     """Extract one unique number-aware exact target from verified PCM gaps.
 
@@ -232,7 +237,7 @@ def extract(
     report_path = run_dir / "search.json"
     report: dict[str, Any] = {
         "algorithm_version": ALGORITHM_VERSION,
-        "comparison_policy": COMPARISON_POLICY,
+        "comparison_policy": comparison_policy,
         "status": "SEARCHING",
         "source": str(source),
         "destination": str(destination),
@@ -270,12 +275,12 @@ def extract(
             source, destination, locale=locale, prefix=prefix, target=target,
             remove_first_words=remove_first_words, padding_seconds=padding_seconds,
             source_receipt_path=source_receipt_path, target_verification=target_verification,
-            ignore_accents=ignore_accents,
+            ignore_accents=ignore_accents, comparison_policy=comparison_policy,
         )
         report["source"] = str(source_resolved)
         report["destination"] = str(destination.resolve(strict=False))
         report["source_receipt"] = str(receipt_path) if receipt_path else None
-        report["expected_target_tokens"] = list(canonical_number_tokens(locale, target, ignore_accents=ignore_accents))
+        report["expected_target_tokens"] = list(canonical_number_tokens(locale, target, ignore_accents=ignore_accents, policy=comparison_policy))
 
         if receipt_path is not None:
             try:
@@ -298,7 +303,7 @@ def extract(
         report["qualifying_quiet_run_count"] = len(runs)
         report["qualifying_quiet_runs"] = runs
         report["candidate_run_selection"] = selected
-        target_tokens = canonical_number_tokens(locale, target, ignore_accents=ignore_accents)
+        target_tokens = canonical_number_tokens(locale, target, ignore_accents=ignore_accents, policy=comparison_policy)
         candidates: list[dict[str, Any]] = []
         qualifying_matches: list[dict[str, Any]] = []
 
@@ -373,7 +378,7 @@ def extract(
                 )
             transcript = result["text"].strip()
             comparison = compare_target_transcript(
-                locale, target, transcript, ignore_accents=ignore_accents
+                locale, target, transcript, ignore_accents=ignore_accents, policy=comparison_policy
             )
             exact = comparison.exact_match
             if target_verification == "required":
@@ -434,7 +439,7 @@ def extract(
         receipt: dict[str, Any] = {
             "schema_version": 1,
             "algorithm_version": ALGORITHM_VERSION,
-            "comparison_policy": COMPARISON_POLICY,
+            "comparison_policy": comparison_policy,
             "status": "EXTRACTED_PENDING_LISTENING",
             "source": str(source_resolved),
             "source_sha256": source_sha,
