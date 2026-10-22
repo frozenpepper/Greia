@@ -30,6 +30,14 @@ The early web client exists for two reasons:
 
 Greia Parents is offline/local-first. A cloud account is not required for core management.
 
+## 1A. Parent entry on the child's profile-selection screen (release UX requirement)
+
+Greia's **profile-selection screen** is also the on-device entry to Parent settings. The implemented shortcut is **hold the physical S and T keys together for five continuous seconds**. It works only while profiles are being selected, opens the on-device password-protected Parents panel, and is unrelated to a child's optional profile password. The Parent credential remains authoritative.
+
+For an ordinary-family release, the screen must be **immediately understandable**: the child's picture/name choices are large and obvious, and a small but legible adult-facing hint explains the actual shortcut without cluttering or frightening the child. An example meaning is *“For parents: hold S + T for 5 seconds.”* The hint must be translated through the supported EN/IT/ES/FR localization system and legible at the low-resource 1024×600 and 800×480 targets; do not add a second secret gesture, a Linux login or a visible control that bypasses the Parent password.
+
+A family must also be able to return to profile selection from the child's Home/profile switcher and understand the difference between on-device settings and the browser Parents App. Do not treat documentation of an invisible shortcut as a substitute for reviewing the **actual rendered and physically operated** screen. This is an accepted product/UI requirement; the source shortcut exists, while discoverability and exact-rendered-device acceptance remain open until tested.
+
 ## 2. First connection and authentication
 
 A parent should not need to discover IP addresses, Linux hostnames, filesystem secrets, pairing tokens, or shell commands manually.
