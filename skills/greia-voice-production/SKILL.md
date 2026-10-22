@@ -507,3 +507,14 @@ The historical 667-cue producer remains stopped on v6; never resume unchanged.
 A versioned corpus adapter must preserve source/master/job provenance and
 cumulative budgets before any synthesis or installation. Saved replay candidates
 are external and listening-pending, not installed or human-approved.
+
+### V7 saved-source corpus adapter
+
+`tools/recover_voice_candidates.py` stages FAILED rows from an existing frozen v6
+priority source run using `target-only-v7-saved-v1`, then installs only completed
+passing candidates with `--install` through CorpusRunner/RunStore. It has no
+provider capability/fresh mode; missing candidates never spend a take. Required
+final count/numeric/signal checks cannot be disabled. Source plans/receipts,
+master identities and cumulative counts remain unchanged. See the corpus manual
+for exact flags and transaction recovery. Other saved histories and the preserved
+letter_A job require explicit reconciliation, not a restart of the old producer.

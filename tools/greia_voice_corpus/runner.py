@@ -46,6 +46,8 @@ class CorpusRunner:
 
     def _validate_candidate(self, row: dict, candidate: Path) -> dict:
         receipt = json.loads(receipt_path(candidate).read_text(encoding="utf-8"))
+        from .saved_recovery import recovery_enabled, validate_recovery_receipt
+        validate_recovery_receipt(receipt, recovery_enabled(self.store.plan))
         if row.get("spoken_carrier"):
             carrier = row["spoken_carrier"]
             profile = VoiceRegistry.load(self.store.root).get(row["request"]["speaker"])
@@ -142,6 +144,9 @@ class CorpusRunner:
                 if not (candidate.exists() and receipt_path(candidate).exists()):
                     if candidate.exists() or receipt_path(candidate).exists():
                         raise ValueError("partial candidate; inspect before retry")
+                    from .saved_recovery import recovery_enabled
+                    if recovery_enabled(store.plan):
+                        raise ValueError("saved recovery plans forbid synthesis; stage a complete candidate first")
                     store.set_state(relative, "GENERATING", "provider call in progress; interruption requires job inspection")
                     if row.get("spoken_carrier"):
                         profile = registry.get(row["request"]["speaker"])

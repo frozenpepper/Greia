@@ -764,15 +764,17 @@ The proposed shared asynchronous queue is not implemented by this policy change.
 
 ## Frozen priority voice completion (2026-10-22)
 
-For the owner-authorized 667 problematic short cues use
-`tools/finish_voice_priority.py` with the frozen priority JSON, historical priority
-root and a new external work directory. Exact usage/recovery is in
-`GREIA_VOICE_CORPUS_REGENERATION.md`. It reuses the existing engine, selected masters,
-Base/accent policy and transaction journal; deferred scope stays separate.
-Monitor `progress.json`, `production.log`, pass `state.sqlite3`, and the shared
-VoxStage queue. A failed extraction/target check may spend remaining cumulative
-takes (three total); infrastructure or uncertain external jobs stop. Reconcile
-completed outputs by actual provider job/idempotency metadata before continuing.
+The historical `finish_voice_priority.py` bulk producer is **stopped for rejection
+diagnosis**. Do not resume unchanged v6 production or submit fresh takes.
+Normal automatic VoiceEngine requests now use v7 target-only extraction.
+For failed saved v6 sources use `tools/recover_voice_candidates.py`: stage in a
+new external work folder, inspect the completed stage, then `--install` that same
+folder. It reuses selected masters, exact Base cache, existing packaging and
+CorpusRunner/RunStore transactions, forbids synthesis and retains cumulative
+budgets. Exact commands/stop/recovery rules live in
+`GREIA_VOICE_CORPUS_REGENERATION.md` § V7 saved-provider recovery. Other history
+sources and the preserved completed letter_A job must be reconciled separately;
+no job may be duplicated. Deferred scope and human listening remain separate.
 
 
 Voice usage reference: `tools/greia_voice_core/README.md` documents exact current

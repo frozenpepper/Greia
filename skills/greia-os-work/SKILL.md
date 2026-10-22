@@ -806,3 +806,9 @@ The historical 667-cue producer remains stopped on v6; never resume unchanged.
 A versioned corpus adapter must preserve source/master/job provenance and
 cumulative budgets before any synthesis or installation. Saved replay candidates
 are external and listening-pending, not installed or human-approved.
+
+V7 corpus saved-source recovery now has a no-synthesis adapter:
+`tools/recover_voice_candidates.py` (stage, then `--install` the same completed
+external folder). Existing CorpusRunner/RunStore own installation/backups and
+human_review stays PENDING. Frozen corpus v6 producers remain stopped; consult
+the voice skill/corpus manual before any further work.

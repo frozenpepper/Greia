@@ -23,9 +23,10 @@ audible/product acceptance.
 The frozen 667 problematic short-cue task remains authorized, but do not launch
 `finish_voice_priority.py` or the historical producer unchanged. V7 target-only
 extraction is now used by normal VoiceEngine requests; the frozen corpus still
-uses v6. Next implement a separately versioned corpus recovery adapter, replay
-saved sources with exact provenance and unchanged cumulative three-take budgets,
-then stage only passing candidates through normal recoverable transactions.
+uses v6. Use the separately versioned `recover_voice_candidates.py` adapter below to
+replay FAILED saved sources with exact provenance and unchanged cumulative
+three-take budgets, then install only completed passing candidates through
+normal recoverable transactions.
 Do not spend new synthesis attempts before the saved-source recovery gate.
 See [v7 evidence and remaining work](../reviews/2026-10-22_TARGET_ONLY_VOICE_EXTRACTION_V7.md).
 New speech/one-line API usage is documented in
@@ -679,3 +680,54 @@ TargetQualityChecker; the original v6 midpoint WAV is preserved. New delivery
 PCM has its own receipt path/hash and is archived by manual retry alongside the
 other attempt files. Reconcile a running older producer before adopting new
 helper code; never launch a duplicate or discard completed provider output.
+
+### V7 saved-provider recovery (2026-10-22)
+
+`tools/recover_voice_candidates.py` is a **no-synthesis** adapter for failed rows
+in an existing frozen v6 priority run. It creates a new external plan with
+`saved_recovery_policy=target-only-v7-saved-v1`; historical plans are unchanged.
+It validates scope, exact semantic requests, originals, selected registry/master,
+raw provider request and audio/receipt hashes. Cumulative counts are copied from
+the existing history, never reset or incremented by extraction.
+
+Stage first (the prepared voice Python and FFmpeg PATH are in SETUP §7):
+
+```bash
+VOICE_PY="$HOME/Library/Application Support/Greia/voice-production/venv/bin/python"
+"$VOICE_PY" tools/recover_voice_candidates.py \
+  --source-work <history>/resume-shared-short-delivery-production-03/fresh-01 \
+  --priority-file <corpus>/triage/priority-retakes.json \
+  --history-root <history> \
+  --cache-root <investigation>/full-pause-replay \
+  --work-dir <new-external-recovery-folder>
+```
+
+This processes only source-journal FAILED rows in the frozen priority set.
+STAGED_PASS candidates pass v7 extraction, final packaged ASR and unchanged
+signal checks. REJECTED_SAVED rows become PRESERVED with originals intact.
+`recovery-results.json`, `stage-complete.json`, retained raw receipts and search
+JSON contain per-file evidence. An ASR/IO/provenance fault stops the stage; do not
+interpret an incomplete folder as ready to install. Inspect it and preserve its
+evidence before constructing a new recovery folder. No provider call is possible.
+
+After the complete stage is checked, install the **same** folder:
+
+```bash
+"$VOICE_PY" tools/recover_voice_candidates.py \
+  --work-dir <completed-external-recovery-folder> --install
+```
+
+This checks the stage manifest/counts/results, then uses existing CorpusRunner
+and RunStore backup/transaction/recovery behavior. V7 receipt fields are mapped
+explicitly, and final canonical count/number guards are recomputed during
+candidate validation. Missing/partial candidates never trigger synthesis.
+Installation can be resumed with the same command after inspecting a transaction
+fault; uncertain failures retain the ordinary journal stop rules. Restoring uses
+the existing corpus `restore --work-dir` command, preserving later edits.
+Every successful receipt remains `human_review=PENDING`.
+
+This adapter has no fresh mode and does not restart the historical bulk producer.
+It does not cover the 39 unresolved cues omitted from fresh-01 by its then-current
+budgets, other older saved takes, or the separately preserved in-flight letter_A
+job. Reconcile those sources under a new explicit recovery plan; never resubmit
+that completed job. See HANDOVER and the dated recovery evidence for current counts.

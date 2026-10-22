@@ -304,3 +304,13 @@ rescore saved transcripts while retaining their original verifier provenance.
 Carrier v6 freezes the model and accent policy; historical plans stay immutable.
 Automatic short routing is implemented in the Greia engine; the separately
 proposed shared asynchronous queue remains future work.
+
+
+Saved v6 provider recovery uses `greia_voice_corpus.saved_recovery` and
+`tools/recover_voice_candidates.py`. A new plan explicitly opts into
+`target-only-v7-saved-v1`; historical row scripts and policies remain intact.
+`prepare_saved_candidate` reuses existing provenance validation and packaging,
+with v7 extraction and required final canonical guards. CorpusRunner requires
+matching recovery metadata, recomputes the final text guards and forbids
+synthesis for such plans. RunStore continues to own backups and atomic journal
+recovery. The adapter is saved-only, with no fresh-generation mode.

@@ -247,9 +247,10 @@ VoxStage cannot split intro/target into separate recordings.
 
 **Diagnostic stop, 2026-10-22:** the historical priority producer still calls v6.
 Do not resume it unchanged. Normal API v7 does not mutate frozen plans or
-retroactively replace their extraction policy. A versioned corpus recovery
-adapter must reconcile v7 metadata, saved sources and cumulative budgets before
-any new synthesis. See `docs/reviews/2026-10-22_TARGET_ONLY_VOICE_EXTRACTION_V7.md`.
+retroactively replace their extraction policy. The saved-only adapter
+`tools/recover_voice_candidates.py` now reconciles v7 metadata and budgets for
+FAILED source rows without synthesis. Further generation still requires a
+separately evidenced continuation. See `docs/reviews/2026-10-22_V7_SAVED_CORPUS_RECOVERY.md`.
 
 The finisher retains its original narrower selection (1–3 words or 4 words with
 ≤28 alphanumerics); the new automatic API default does not expand that scope.
@@ -357,3 +358,13 @@ Source owns exact behavior: `models.py`/`service.py` request fields,
 `greia_voice_corpus/carrier_generation.py` strict final-target gate,
 `greia_voice_corpus/runner.py` transactional installation, and
 `tools/finish_voice_priority.py` scoped continuation/budgets.
+
+### Recover saved corpus sources with v7
+
+The normal automatic API already uses v7. For historical frozen v6 corpus takes,
+use `tools/recover_voice_candidates.py` to stage failed saved sources in a new
+external directory, then `--install` that completed directory. It cannot submit
+synthesis, requires final verification, preserves cumulative budgets and uses
+existing CorpusRunner backup/transactions. Exact flags and resume rules are in
+`docs/agents/GREIA_VOICE_CORPUS_REGENERATION.md` § V7 saved-provider recovery.
+Historical producers remain stopped; this is not a fresh-generation command.

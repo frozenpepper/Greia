@@ -181,6 +181,41 @@ rows remain out of its queue. Outputs remain listening-pending.
 ## Recent entries
 
 
+### 2026-10-22 — V7 saved-source adapter delivered; 27 recovered and installed
+
+`tools/recover_voice_candidates.py` now stages failed frozen v6 provider sources
+under explicit `target-only-v7-saved-v1`, then installs only completed passing
+candidates through existing CorpusRunner/RunStore transactions. Source scripts,
+raw receipts, selected masters and cumulative counts are preserved. Synthesis is
+structurally forbidden, even when a staged candidate is missing. Required final
+canonical count/numeric guards are recomputed at installation validation.
+
+Actual fresh-01 saved recovery covered all 297 failures: **27 DONE / 270
+PRESERVED**, including three packaged-quality WARN. Post-install audit checked
+all 667 priority audio/receipt pairs: exactly the 27 passing pairs changed,
+640 others unchanged. All 297 original raw/receipt pairs, source plan, frozen
+priority SHA and cumulative-count manifest unchanged; all 27 backup bundles and
+actual installed packaged-target quality checks passed. Human review PENDING.
+No new synthesis. Previous classification292 kept +39 installed +27 recovered
+now leaves **309 unresolved**, including39 previously omitted from fresh-01.
+
+Evidence root `2026-10-22-rejection-investigation/`: recovery folder
+`v7-saved-corpus-recovery-01`, install log, `v7-install-audit.json`,
+`v7-priority-remaining.json` and `v7-recovery-listening.json`.
+Takeboard http://127.0.0.1:8806/ serves the 27 installed candidates vs selected
+masters; manifest validation and HTTP200, no new browser/listening acceptance.
+Focused voice121/corpus18/finisher4 PASS. Final source gate: 5,721 tests,
+1 failure/3 errors/8 skips (known ARM64 profile, macOS lsblk, MBR cases), NOT GREEN.
+Full evidence: `docs/reviews/2026-10-22_V7_SAVED_CORPUS_RECOVERY.md`.
+
+**Next exact action:** audit other saved sources for the 309 remaining IDs,
+including39 outside fresh-01 and completed letter_A job20261022-142854-3615cf58.
+Extend the saved-only adapter only with explicit original-plan/request/master/job
+provenance, positive/negative controls and unchanged cumulative budgets. Recover
+existing audio before any new synthesis. Do not restart the historical v6
+producer, reset budgets or expand frozen667 scope. Preserve listening decisions.
+
+
 ### 2026-10-22 — V7 target-only extraction implemented; bulk remains stopped
 
 Normal VoiceEngine automatic short requests now use separately versioned

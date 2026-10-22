@@ -18,6 +18,9 @@ class CarrierExtractionFailure(ExtractionRejected):
 def generate_candidate(engine, store, row: dict, profile, verification: str, *, transcriber=None) -> Path:
     """Keep raw synthesis immutable, extract to PCM WAV, then package target."""
 
+    from .saved_recovery import recovery_enabled
+    if recovery_enabled(getattr(store, "plan", {})):
+        raise ValueError("saved recovery plans forbid synthesis")
     relative = row["path"]
     carrier = row["spoken_carrier"]
     if carrier.get("extractor_version") != ALGORITHM_VERSION or carrier.get("gap_policy") != GAP_POLICY:
@@ -50,6 +53,10 @@ def generate_candidate(engine, store, row: dict, profile, verification: str, *, 
 
 def prepare_saved_candidate(engine, store, row: dict, profile, verification: str, *, transcriber=None) -> Path:
     """Extract/package an existing immutable provider take; never synthesize here."""
+    from .saved_recovery import recovery_enabled, adapt_extraction
+    saved_recovery = recovery_enabled(getattr(store, "plan", {}))
+    if saved_recovery and verification != "required":
+        raise ValueError("saved v7 recovery requires final verification")
     relative = row["path"]
     carrier = row["spoken_carrier"]
     raw = store.work / "carrier-raw" / (relative + ".raw.wav")
@@ -74,7 +81,10 @@ def prepare_saved_candidate(engine, store, row: dict, profile, verification: str
         raise ValueError("saved carrier provider request differs from the frozen source request")
     try:
         extraction_args = {} if transcriber is None else {"transcriber": transcriber}
-        extraction = extract(
+        extractor = extract
+        if saved_recovery:
+            from .saved_recovery import extract as extractor
+        extraction = extractor(
             raw, extracted, locale=row["request"]["locale"],
             prefix=carrier["prefix"], target=carrier["target"],
             remove_first_words=carrier["prefix_word_count"],
@@ -92,6 +102,9 @@ def prepare_saved_candidate(engine, store, row: dict, profile, verification: str
         })
         raise CarrierExtractionFailure(str(exc), evidence=exc.evidence) from exc
 
+    if saved_recovery:
+        extraction = adapt_extraction(extraction, carrier)
+
     from greia_voice_core.short_delivery import prepare_delivery
     extraction["delivery"] = prepare_delivery(extracted, delivery, extraction)
     engine.audio.package(delivery, candidate)
@@ -103,7 +116,7 @@ def prepare_saved_candidate(engine, store, row: dict, profile, verification: str
     quality = TargetQualityChecker(transcriber).check(
         extracted, decoded, extraction, text=row["request"]["text"],
         locale=row["request"]["locale"], ignore_accents=carrier.get("ignore_accents", True),
-        enabled=verification != "off")
+        enabled=verification != "off", require_word_count=saved_recovery)
     if quality["disposition"] == "WARN":
         write_json(store.work / "carrier-evidence" / f"{relative}.failure.json", {
             "status": "REJECTED", "error": "FINAL_TARGET_QUALITY_REJECTED", "quality": quality,

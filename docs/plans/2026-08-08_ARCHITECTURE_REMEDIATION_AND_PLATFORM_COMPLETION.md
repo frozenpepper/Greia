@@ -3732,3 +3732,18 @@ Focused voice111/corpus18/finisher4 PASS; full make verify 5,711 tests has the
 known 1 failure/3 errors/8 skips, NOT GREEN. Exact evidence/limits/next corpus
 adapter task: `docs/reviews/2026-10-22_TARGET_ONLY_VOICE_EXTRACTION_V7.md`.
 This does not close any remediation phase or hardware/release gate.
+
+
+### 2026-10-22 — Scoped v7 saved-corpus recovery installed
+
+Added an explicit saved-only corpus adapter, reusing existing preparation,
+packaging, CorpusRunner validation and recoverable RunStore installation. No
+provider capability; final canonical guards required; frozen source plans/raw
+receipts/masters/counts unchanged. Actual 297 failed saved sources yielded27
+installed (human-review PENDING),270 preserved. Post-install audit: exactly27 of
+667 priority audio/receipt pairs changed,640 unchanged; all raw pairs, source
+plan and budgets unchanged,27 backups verified. Remaining frozen priority309.
+Focused voice121/corpus18/finisher4 PASS; full make verify5,721 tests remains known
+1failure/3errors/8skips, NOT GREEN. Evidence/next saved-source audit:
+`docs/reviews/2026-10-22_V7_SAVED_CORPUS_RECOVERY.md`. No fresh synthesis or phase,
+release or human-listening closure is claimed.
