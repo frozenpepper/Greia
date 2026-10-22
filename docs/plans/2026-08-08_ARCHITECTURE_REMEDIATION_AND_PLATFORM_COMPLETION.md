@@ -3792,3 +3792,15 @@ four recipes with matched seeds; no corpus install/budget reset or bulk restart.
 Detailed actual results/verification in
 `docs/reviews/2026-10-22_VOICE_METHOD_PAIRED_EXPERIMENT.md` and HANDOVER. This scoped
 authoring change does not close remediation/platform/runtime/hardware phases.
+
+
+### 2026-10-22 — Owner-authorized natural-method corpus adapter and guarded canary
+
+Added explicit natural-policy injection/reservation callback, per-provider-call
+new-method ledger preserving historical cumulative counts, and thin247-row
+completion planner/driver over existing VoiceEngine/CorpusRunner/RunStore.
+Focused158+53PASS (10new), makeverify executes but aborts in macOS/pygame font/
+control rendering. Actual canary2DONE3PRESERVED242READY after13calls trips the
+poor-yield guard; no broad completion claim or bypass. Follow HANDOVER and
+GREIA_NATURAL_VOICE_COMPLETION for the active orthography/conditioning diagnosis.
+This scoped authoring implementation does not close platform/hardware phases.

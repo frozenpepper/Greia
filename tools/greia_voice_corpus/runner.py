@@ -114,7 +114,7 @@ class CorpusRunner:
 
     def run(self, *, limit: int = 0, match: str = "*", continue_after_carrier_rejection: bool = False) -> int:
         store = self.store
-        from .automatic_generation import enabled as automatic_enabled, AutomaticRecoveryRequired
+        from .automatic_generation import enabled as automatic_enabled, natural_enabled, AutomaticRecoveryRequired
         if automatic_enabled(store.plan) and self.verification is not VerificationMode.REQUIRED:
             raise ValueError("automatic corpus requires final verification")
         if digest(store.root / CANONICAL_MANIFEST) != store.plan["registry_manifest_sha256"]:
@@ -122,6 +122,9 @@ class CorpusRunner:
         if any(store.state(r["path"]) == "RESTORED" for r in store.plan["rows"]):
             raise ValueError("this run was restored; create a new plan/work directory")
         registry = VoiceRegistry.load(store.root)
+        if natural_enabled(store.plan):
+            from .method_budget import MethodAttemptBudget
+            MethodAttemptBudget(store).reconcile_mirror()
         for profile in registry.profiles.values():
             registry.verify_anchor(profile)
         store.recover()
@@ -160,15 +163,18 @@ class CorpusRunner:
                     from .automatic_generation import enabled as automatic_enabled, generate_candidate as generate_automatic
                     if automatic_enabled(store.plan) or row.get("spoken_carrier"):
                         profile = registry.get(row["request"]["speaker"])
-                        attempts_path = store.work / "carrier-attempt-counts.json"
-                        attempts = json.loads(attempts_path.read_text()) if attempts_path.exists() else {}
-                        count = int(attempts.get(relative, 0))
-                        if count >= 3:
-                            raise ValueError("spoken-carrier fresh-generation limit of 3 reached for this cue")
-                        if automatic_enabled(store.plan) and count != 2:
-                            raise ValueError("automatic final-take policy requires exactly two prior attempts")
-                        attempts[relative] = count + 1
-                        write_json(attempts_path, attempts)
+                        if natural_enabled(store.plan):
+                            MethodAttemptBudget(store).assert_unstarted(relative)
+                        else:
+                            attempts_path = store.work / "carrier-attempt-counts.json"
+                            attempts = json.loads(attempts_path.read_text()) if attempts_path.exists() else {}
+                            count = int(attempts.get(relative, 0))
+                            if count >= 3:
+                                raise ValueError("spoken-carrier fresh-generation limit of 3 reached for this cue")
+                            if automatic_enabled(store.plan) and count != 2:
+                                raise ValueError("automatic final-take policy requires exactly two prior attempts")
+                            attempts[relative] = count + 1
+                            write_json(attempts_path, attempts)
                         with Heartbeat(relative):
                             if automatic_enabled(store.plan):
                                 if self.verification is not VerificationMode.REQUIRED:

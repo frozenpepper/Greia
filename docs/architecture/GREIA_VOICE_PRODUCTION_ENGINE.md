@@ -353,3 +353,13 @@ AudioPipeline, recording native/prepared source hashes. It is NOT wired into
 normal automatic generation. Alternate natural-carrier/delivery experiments
 likewise do not change the default prompt. Corpus production remains OWNER
 STOPPED; see paired-method report and HANDOVER before any authoring operation.
+
+
+Natural completion update2026-10-22: owner authorized a new bounded natural-
+method run for247 unresolved priority cues. It injects NaturalCarrierPolicy and
+MethodAttemptBudget into existing ShortPhrasePipeline, with up to3actual new
+calls and historical counters retained. Existing transactions install only final
+Base/count/number/signal passes, human pending. Initial real-corpus canary hit
+METHOD_REVIEW_REQUIRED (2installed,3exhausted,242unstarted); do not blindly resume.
+Read docs/agents/GREIA_NATURAL_VOICE_COMPLETION.md and HANDOVER for active method
+repair. Alternate policy selection is explicit; normal API defaults unchanged.

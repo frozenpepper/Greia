@@ -553,3 +553,13 @@ Whisper verification and review/reassess v4 share it; historical v1 evidence
 is retained. Source preparation and alternate natural-carrier prompts remain
 experimental, not production defaults. Read HANDOVER and paired-method report;
 no bulk restart or threshold relaxation follows from a small diagnostic result.
+
+
+Natural completion update2026-10-22: owner authorized a new bounded natural-
+method run for247 unresolved priority cues. It injects NaturalCarrierPolicy and
+MethodAttemptBudget into existing ShortPhrasePipeline, with up to3actual new
+calls and historical counters retained. Existing transactions install only final
+Base/count/number/signal passes, human pending. Initial real-corpus canary hit
+METHOD_REVIEW_REQUIRED (2installed,3exhausted,242unstarted); do not blindly resume.
+Read docs/agents/GREIA_NATURAL_VOICE_COMPLETION.md and HANDOVER for active method
+repair. Alternate policy selection is explicit; normal API defaults unchanged.

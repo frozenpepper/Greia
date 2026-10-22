@@ -837,3 +837,13 @@ New numeric comparison is v2 (0–100 word/digit equivalence, literal-value guar
 ordinary digit scoring); review is v4. Historical plans/receipts retain v1 and
 are not silently migrated. Explicit numeric policy mismatches in old staged
 recovery jobs must be reconciled under a new processing plan, never bypassed.
+
+
+Natural completion update2026-10-22: owner authorized a new bounded natural-
+method run for247 unresolved priority cues. It injects NaturalCarrierPolicy and
+MethodAttemptBudget into existing ShortPhrasePipeline, with up to3actual new
+calls and historical counters retained. Existing transactions install only final
+Base/count/number/signal passes, human pending. Initial real-corpus canary hit
+METHOD_REVIEW_REQUIRED (2installed,3exhausted,242unstarted); do not blindly resume.
+Read docs/agents/GREIA_NATURAL_VOICE_COMPLETION.md and HANDOVER for active method
+repair. Alternate policy selection is explicit; normal API defaults unchanged.

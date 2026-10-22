@@ -180,6 +180,33 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-22 — New-method completion authorized; real-corpus guard caught poor yield
+
+Owner requested completion using the new natural method. Prepared247 exact
+remaining paths, excluding7actual prior installations from254; historical counts
+preserved, new-method allowance up to3 actual calls per cue. New adapters/policy/
+budget callback reuse VoiceEngine, ShortPhrasePipeline and CorpusRunner/RunStore;
+no new synthesis backend or installer. First real-corpus canary stopped itself:
+2DONE/3PRESERVED/242READY after13new calls, status METHOD_REVIEW_REQUIRED. Do not
+bypass guard or claim broad readiness from earlier two-target3/4experiment.
+
+Work: `/Volumes/Test1/Works/Greia-voice-auditions/2026-10-21-short-carrier-priority-v1/natural-context-v1`.
+Tito FR find_octopus and Momo IT where_hurt passed2ndtakes. W as Whale and Elige
+un álbum exhausted; Find Oskar exhausted although two saved transcripts say
+Find Oscar. Investigate spelling equivalence/actual target fidelity before more
+production. A bounded8-job conditioning experiment is running under external
+`2026-10-22-rejection-investigation/instruction-conditioning-v1/`; fixed2seeds,
+W/album actual failures, compact style vs empty instruction, no runtime installs.
+Read its progress/log before acting; no duplicate experiments or silent receipts.
+
+Operator source/commands/guards/continuation contract:
+`docs/agents/GREIA_NATURAL_VOICE_COMPLETION.md`.10newtests PASS, focused158+53PASS;
+makeverify aborts at macOS/pygame hires_surface typography/control path, NOTGREEN.
+New heartbeat supervise-greia-natural-voice-completion monitors this work; old
+final-take-v7-02 and its deleted heartbeat stay stopped. Parent investigates
+method stops directly. No threshold relaxation, budget reset or master changes.
+
+
 ### 2026-10-22 — Owner-authorized paired method tests; numeric v2 correction
 
 Bulk remains OWNER STOPPED; heartbeat deleted. Later owner explicitly requested

@@ -34,8 +34,10 @@ class ShortPhrasePipeline:
     this collaborator never recursively calls engine.generate or starts a worker.
     """
 
-    def __init__(self, *, transcriber=None, readiness=None, evidence_root=None):
-        self.policy = ShortPhrasePolicy()
+    def __init__(self, *, transcriber=None, readiness=None, evidence_root=None, policy=None,
+                 attempt_reservation=None):
+        self.policy = policy or ShortPhrasePolicy()
+        self.attempt_reservation = attempt_reservation
         self.transcriber = transcriber
         self.readiness = readiness or WhisperVerifier().probe
         self.evidence_root = evidence_root
@@ -75,6 +77,8 @@ class ShortPhrasePipeline:
                     # be reconciled with the provider, never blindly resubmitted.
                     save_evidence(work / "state.json", {"status": "GENERATING", "attempt": attempts,
                                   "request": request.to_dict(), "raw_request": raw_request.to_dict(), "history": history})
+                    if self.attempt_reservation is not None:
+                        self.attempt_reservation(request, attempts, work)
                     take = provider.generate(raw_request, profile)
                     try:
                         shutil.copyfile(take.temporary_wav, raw)
@@ -127,7 +131,7 @@ class ShortPhrasePipeline:
                     staging.replace(output)
                     receipt = engine._write_receipt(request, provider, profile, output, last, attempts, take.generation_parameters)
                     payload = json.loads(receipt.read_text())
-                    payload["short_phrase"] = {"mode": "automatic-carrier", "composition_policy": COMPOSITION_POLICY, "evidence_dir": str(work),
+                    payload["short_phrase"] = {"mode": "automatic-carrier", "composition_policy": self.policy.composition_policy, "evidence_dir": str(work),
                                                "prefix": prefix, "composite_text": composite,
                                                "effective_delivery": delivery, "extraction": extraction,
                                                "quality": quality, "history": history}
@@ -141,7 +145,8 @@ class ShortPhrasePipeline:
                                     last, attempts, "short-phrase quality budget exhausted; evidence: " + str(work), evidence_dir=work)
         except BaseException as exc:
             save_evidence(work / "state.json", {"status": "NEEDS_RECOVERY" if attempts else "BLOCKED", "error": str(exc),
-                          "request": request.to_dict(), "attempt": attempts, "history": history})
+                          "request": request.to_dict(), "attempt": attempts, "history": history,
+                          "raw_request": raw_request.to_dict() if attempts else None})
             if isinstance(exc, Exception):
                 return GenerationResult(GenerationDisposition.REJECTED, request, provider.provider_id, None, None,
                                         last, attempts, str(exc) + "; inspect saved evidence before retry: " + str(work), evidence_dir=work)

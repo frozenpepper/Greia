@@ -26,6 +26,8 @@ ALTERNATE_PREFIXES = {
 class ShortPhrasePolicy:
     """Pure policy: semantic exclusions precede length and explicit forcing."""
 
+    composition_policy = COMPOSITION_POLICY
+
     def selected(self, request: VoiceRequest, provider) -> bool:
         """Apply mode/capability/semantic exclusions before counting target words."""
         if request.short_text_mode == "off" or request.kind is SpeechKind.PEDAGOGICAL_SPEECH:

@@ -418,3 +418,13 @@ original as budget-exhausted; provider/ASR/IO uncertainty stops NEEDS_RECOVERY.
 `GenerationResult.evidence_dir` is an optional structured path for retained short
 pipeline state; automation reads it instead of parsing error prose. See the
 corpus manual for the versioned plan/commands and live readiness gate.
+
+
+Natural completion update2026-10-22: owner authorized a new bounded natural-
+method run for247 unresolved priority cues. It injects NaturalCarrierPolicy and
+MethodAttemptBudget into existing ShortPhrasePipeline, with up to3actual new
+calls and historical counters retained. Existing transactions install only final
+Base/count/number/signal passes, human pending. Initial real-corpus canary hit
+METHOD_REVIEW_REQUIRED (2installed,3exhausted,242unstarted); do not blindly resume.
+Read docs/agents/GREIA_NATURAL_VOICE_COMPLETION.md and HANDOVER for active method
+repair. Alternate policy selection is explicit; normal API defaults unchanged.

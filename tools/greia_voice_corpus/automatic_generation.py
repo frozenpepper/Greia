@@ -13,6 +13,11 @@ from .store import write_json
 from .carrier_generation import CarrierExtractionFailure
 
 POLICY = "automatic-short-v7-period-warm-v2"
+NATURAL_POLICY = "automatic-natural-context-v1"
+
+
+def natural_enabled(plan):
+    return plan.get("automatic_short_generation_policy") == NATURAL_POLICY
 
 
 class AutomaticRecoveryRequired(RuntimeError):
@@ -21,33 +26,42 @@ class AutomaticRecoveryRequired(RuntimeError):
 
 def enabled(plan: dict) -> bool:
     value = plan.get("automatic_short_generation_policy")
-    if value is not None and value != POLICY:
+    if value is not None and value not in {POLICY, NATURAL_POLICY}:
         raise ValueError("unsupported automatic short corpus policy")
-    return value == POLICY
+    return value in {POLICY, NATURAL_POLICY}
 
 
-def request_for(row: dict, candidate: Path) -> VoiceRequest:
+def request_for(row: dict, candidate: Path, *, max_attempts: int = 1) -> VoiceRequest:
     """One automatic generation only; cumulative reservations live in RunStore."""
     if row.get("spoken_carrier"):
         raise ValueError("automatic corpus row must not wrap a second carrier")
     data = {k:v for k,v in row["request"].items() if k not in {"kind","max_attempts","verification","short_text_mode","output"}}
     return VoiceRequest(**data, kind=SpeechKind(row["request"]["kind"]), output=candidate,
-                        max_attempts=1, verification=VerificationMode.REQUIRED, short_text_mode="on")
+                        max_attempts=max_attempts, verification=VerificationMode.REQUIRED, short_text_mode="on")
 
 
 def generate_candidate(engine, store, row: dict) -> None:
     """Delegate to VoiceEngine; continue only a durable one-take quality failure."""
     candidate = store.work / "candidates" / row["path"]
-    request = request_for(row, candidate)
+    maximum = 3 if natural_enabled(store.plan) else 1
+    request = request_for(row, candidate, max_attempts=maximum)
+    if natural_enabled(store.plan):
+        from greia_voice_core.natural_carrier import NaturalCarrierPolicy
+        policy=NaturalCarrierPolicy()
+        prefix,text,delivery=policy.composite(request,request.delivery_prompt)
+        expected={'prefix':prefix,'composite_text':text,'effective_delivery':delivery,
+                  'composition_policy':policy.composition_policy,'comparison_policy':COMPARISON_POLICY}
+        if row.get('natural_carrier') != expected:
+            raise ValueError('frozen natural recipe differs before submission')
     result = engine.generate(request)
     write_json(candidate.with_name(candidate.name + ".result.json"), result.to_dict())
-    if result.disposition.value == "REVIEW_REQUIRED" and result.attempts == 1:
+    if result.disposition.value == "REVIEW_REQUIRED" and 1 <= result.attempts <= maximum:
         return
     if result.evidence_dir:
         state_path = result.evidence_dir / "state.json"
         state = json.loads(state_path.read_text())
-        if (state.get("status") == "FAILED_QUALITY" and result.attempts == 1
-                and state.get("request") == request.to_dict() and len(state.get("history", [])) == 1):
+        if (state.get("status") == "FAILED_QUALITY" and result.attempts == maximum
+                and state.get("request") == request.to_dict() and len(state.get("history", [])) == maximum):
             evidence = {"result": result.to_dict(), "state": state, "state_path": str(state_path)}
             write_json(store.work / "carrier-evidence" / (row["path"] + ".failure.json"), evidence)
             raise CarrierExtractionFailure("automatic short final take failed quality; original preserved", evidence=evidence)
@@ -56,18 +70,22 @@ def generate_candidate(engine, store, row: dict) -> None:
 
 def validate_candidate(store, row: dict, candidate: Path, receipt: dict, profile) -> dict:
     """Validate the normal API's target, selected master, raw take and final gate."""
-    request = request_for(row, candidate)
+    natural = natural_enabled(store.plan)
+    request = request_for(row, candidate, max_attempts=3 if natural else 1)
     short = receipt.get("short_phrase", {})
     extraction = short.get("extraction", {})
     quality = short.get("quality", {})
-    prefix, composite, delivery = ShortPhrasePolicy().composite(request, character_delivery()[profile.character])
+    from greia_voice_core.natural_carrier import NaturalCarrierPolicy
+    policy = NaturalCarrierPolicy() if natural else ShortPhrasePolicy()
+    prefix, composite, delivery = policy.composite(request, character_delivery()[profile.character])
     actual_request = dict(receipt.get("request", {}))
     if actual_request.get("output") == row["path"]:
         actual_request["output"] = str(candidate)
     if (actual_request != request.to_dict() or receipt.get("provider_id") != "voxstage-voxcpm2"
             or receipt.get("voice_id") != profile.voice_id or receipt.get("reference_sha256") != profile.anchor_sha256
-            or receipt.get("human_review") != "PENDING" or receipt.get("attempts") != 1
-            or short.get("mode") != "automatic-carrier" or short.get("composition_policy") != COMPOSITION_POLICY
+            or receipt.get("human_review") != "PENDING" or type(receipt.get("attempts")) is not int
+            or not 1 <= receipt["attempts"] <= (3 if natural else 1)
+            or short.get("mode") != "automatic-carrier" or short.get("composition_policy") != policy.composition_policy
             or short.get("prefix") != prefix
             or short.get("composite_text") != composite or short.get("effective_delivery") != delivery
             or extraction.get("algorithm_version") != ALGORITHM_VERSION
@@ -81,6 +99,19 @@ def validate_candidate(store, row: dict, candidate: Path, receipt: dict, profile
             or quality.get("disposition") != "PASS" or quality.get("flags")
             or quality.get("model_id") != DEFAULT_ASR_MODEL or quality.get("model_revision") != DEFAULT_ASR_REVISION):
         raise ValueError("automatic short candidate differs from the planned master/request/policy or final gate")
+    if natural:
+        expected = {"prefix":prefix,"composite_text":composite,"effective_delivery":delivery,
+                    "composition_policy":policy.composition_policy,"comparison_policy":COMPARISON_POLICY}
+        if row.get("natural_carrier") != expected:
+            raise ValueError("natural carrier differs from frozen recipe")
+        from .method_budget import MethodAttemptBudget
+        ledger = MethodAttemptBudget(store).snapshot()["entries"][row["path"]]
+        if (ledger['prior_count'] != row['historical_attempts']
+                or len(ledger['attempts']) != receipt['attempts']
+                or len(short.get('history',[])) != receipt['attempts']
+                or any(a['evidence_dir'] != short.get('evidence_dir') or a['request'] != request.to_dict()
+                       for a in ledger['attempts'])):
+            raise ValueError("natural candidate lacks exact reserved-attempt provenance")
     comparison = compare_target_transcript(request.locale,request.text,quality.get("transcript", ""),ignore_accents=request.ignore_accents)
     if comparison.score <= .8 or comparison.flags(require_word_count=True) or comparison.score != quality.get("score"):
         raise ValueError("automatic short delivered text fails canonical guards")
