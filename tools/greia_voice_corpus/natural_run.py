@@ -129,7 +129,7 @@ def validate_full_parakeet_plan(store):
     audit=json.loads(Path(meta['scope_audit_file']).read_text())
     expected_scope=set(remaining_doc['remaining'])
     if (len(expected_scope)!=237 or expected_scope!={row['path'] for row in store.plan['rows']}
-            or audit.get('remaining')!=237
+            or set(audit.get('remaining',[]))!=expected_scope
             or audit.get('remaining_categories')!={'unstarted_letters':44,'unstarted_ordinary':193,'exhausted':0}):
         raise ValueError('frozen remaining list, audit counts and plan rows differ')
     if set(meta.get('prior_completed_excluded',[])) & expected_scope:

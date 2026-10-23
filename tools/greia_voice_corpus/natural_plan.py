@@ -43,12 +43,13 @@ def prepare_natural(args, root, *, policy_id=NATURAL_POLICY):
     scope_audit_path = args.remaining_file.parent / 'audit.json'
     scope_audit = json.loads(scope_audit_path.read_text()) if scope_audit_path.is_file() else None
     if full_parakeet:
-        if (scope_audit is None or scope_audit.get('remaining') != 237
+        remaining_doc=json.loads(args.remaining_file.read_text())
+        if (scope_audit is None or set(scope_audit.get('remaining',[])) != set(remaining)
                 or scope_audit.get('remaining_categories') != {
                     'unstarted_letters':44,'unstarted_ordinary':193,'exhausted':0}
                 or scope_audit.get('all_requested_complete') is not False
-                or set(remaining) != set(json.loads(args.remaining_file.read_text()).get('unstarted_letters',[]))
-                    | set(json.loads(args.remaining_file.read_text()).get('unstarted_ordinary',[]))):
+                or set(remaining) != set(remaining_doc.get('unstarted_letters',[]))
+                    | set(remaining_doc.get('unstarted_ordinary',[]))):
             raise ValueError('full Parakeet plan scope differs from the current 237-row v5 audit')
     with sqlite3.connect(args.prior_run/'state.sqlite3') as db:
         done={p for p,s in db.execute('select path,state from cues') if s=='DONE'}
