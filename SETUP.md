@@ -376,7 +376,7 @@ runtime/parent-app-client.manifest.json
 
 Then use the separate repository's own README/AGENTS.
 
-The browser client must not invent an SSH/shell fallback for an unavailable semantic Parent API feature.
+Installed Greia serves the Parent browser and API over self-signed HTTPS on LAN port 8766; the local S+T Parent panel uses loopback-only HTTP at 127.0.0.1:8767. The on-device TLS certificate is generated with OpenSSL (included in the image base package set). Browser certificate warnings on first visit are expected. See the Parent user guide and the exact transport acceptance note in docs/testing.\n\nThe browser client must not invent an SSH/shell fallback for an unavailable semantic Parent API feature.
 
 ## 9. Developer-device operator
 
