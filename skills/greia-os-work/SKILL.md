@@ -513,6 +513,8 @@ docs/product/PARENT_MANAGEMENT.md
 
 For per-child Activity age/catalogue policy also read the dedicated Activity-discovery route above. Inspect the current Parent client pin/integrity manifest before changing either repository. Parent/browser code must not gain generic shell/root authority.
 
+**Parents HTTPS (owner decision 2026-10-23):** installed `greia_parent.production_api` serves self-signed TLS on LAN `:8766` and shares its bounded Parent application/mutation lock with local-only HTTP at `127.0.0.1:8767` for `greia_launcher.parent_credential_client`. `greia_parent.parent_tls` creates the certificate/key in `/var/lib/greia-os/parent-tls/` on-device using `openssl`, included in `build/package-sets/platform-base.txt`; never ship one shared key. `Greia-Parent-App-Html` owns HTTPS discovery and local proxy; Greia pins it through `runtime/parent-app-client.toml`/manifest and synchronized vendor/image files. Ordinary browser certificate warning is an accepted tradeoff; do not add CA/QR/cloud/account ceremony. Source tests and device acceptance: `docs/testing/2026-10-23_PARENT_HTTPS_ACCEPTANCE.md`. Do not accidentally enable Activity installs merely because TLS exists.
+
 ## System output controls (volume / mute / brightness / media keys)
 
 Inspect current exact owners:
