@@ -6,7 +6,7 @@
 
 - Greia LAN: `https://<device-ip>:8766/`. Installed Greia generates a persistent self-signed cert/key at `/var/lib/greia-os/parent-tls/` on initial service start using the image-installed `openssl` package.
 - Built-in S+T Parent panel: `http://127.0.0.1:8767` (HTTP bound only to loopback); shares Parent API and mutation lock with the TLS listener.
-- No network plaintext HTTP fallback. Certificate warning on the browser is expected and owner-approved for home use. It does not demonstrate cryptographic verification of the Greia identity.
+- No network plaintext HTTP fallback. If TLS certificate generation/loading fails, the LAN listener remains closed but the local on-device Parents panel stays available on HTTP 127.0.0.1:8767 and the service logs a bounded diagnostic. Certificate warning on the browser is expected and owner-approved for home use. It does not demonstrate cryptographic verification of the Greia identity.
 - Parent HTML source is maintained separately; Greia's `runtime/parent-app-client.toml`, manifest, vendor files and image overlay must all correspond to that pinned commit.
 - Activity installation remains capability-gated; TLS alone must not enable it.
 
