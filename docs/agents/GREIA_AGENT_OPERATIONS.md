@@ -325,7 +325,7 @@ A clean `INCOMPLETE` is better evidence than a manufactured PASS.
 
 ## 9A. Parent HTTPS source/device testing (2026-10-23)
 
-Use `docs/testing/2026-10-23_PARENT_HTTPS_ACCEPTANCE.md` for the latest transport change. Installed Greia serves self-signed HTTPS on LAN 8766 and HTTP only on 127.0.0.1:8767 for the built-in Parent panel. OpenSSL is packaged in the installed base. Do not change Parent password/paired devices on a family device, install certificates on host machines, or deploy/reboot the Acer without owner authorization. The Parent HTML source and exact Greia pin must agree; browser, image and physical acceptance are distinct from unit tests.
+Use `docs/testing/2026-10-23_PARENT_HTTPS_ACCEPTANCE.md` for the latest transport change. Installed Greia serves self-signed HTTPS on LAN 8766 and HTTP only on 127.0.0.1:8767 for the built-in Parent panel. OpenSSL is packaged in the installed base. Do not change Parent password/paired devices on a family device, install certificates on host machines, or deploy/reboot the Acer without owner authorization. The Parent HTML source and exact Greia pin must agree; browser, image and physical acceptance are distinct from unit tests. **Do not use `tools/dev_source_deploy.py` alone for this HTTPS tranche:** its present archive excludes `/usr/share/greia-parent-app`, so upgrading only source/runtime/manifest against an older installed web client fails `greia-parent.service` `ExecStartPre` integrity validation. Physical tests require an exact-head composed image or an independently accepted full web-runtime deployment; never bypass integrity by copying files manually.
 
 ## 10. Local-agent instruction standard
 
