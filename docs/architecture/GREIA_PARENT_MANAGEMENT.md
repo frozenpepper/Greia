@@ -215,7 +215,7 @@ Still required before ordinary-family Parent authentication is release-complete:
 exact-head local automated verification across Greia + Parent client
 physical discovery -> password bootstrap -> reconnect -> password-change -> revoke -> rebootstrap test
 upgrade proof that obsolete token helper/state are absent and not recreated
-authenticated encrypted transport + endpoint/device identity
+source HTTPS + persistent device certificate (physical acceptance pending)
 remaining typed privileged broker work for operations requiring root authority
 full package/update/backup/network release acceptance owned by their phases
 resource measurements on the C0 floor
