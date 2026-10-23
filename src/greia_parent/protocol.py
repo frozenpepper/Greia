@@ -124,8 +124,8 @@ CAPABILITIES = {
     "system.update.read": True,
     "system.update.upload": False,
     "system.update.activate": False,
-    # Package code mutation remains fail-closed on normal/release images while
-    # Parent transport is provisional HTTP. Package-aware compositions enable
+    # Package mutation remains fail-closed until independent package/release
+    # acceptance. Enabling Parent HTTPS alone does not enable
     # install/remove together only in an explicit developer/owner-approved lane.
     "activities.install": False,
     "activities.remove": False,
