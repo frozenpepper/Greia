@@ -23,7 +23,7 @@ from greia_voice_core.providers import (
     ChatterboxMLXProvider,
 )
 from greia_voice_core.service import request_from_mapping, send_request, serve_loop
-from greia_voice_core.verification import WhisperVerifier
+from greia_voice_core.verification import ParakeetVerifier
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_HOST = "127.0.0.1"
@@ -36,7 +36,7 @@ def build_engine(generation_lock: object | None = None, character_provider: str 
         project_root=PROJECT_ROOT,
         registry=registry,
         providers=build_providers(character_provider),
-        verifier=WhisperVerifier(),
+        verifier=ParakeetVerifier(),
         audio_pipeline=AudioPipeline(),
         generation_lock=generation_lock,
         short_phrase_pipeline=short_phrase_pipeline,
@@ -82,7 +82,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     providers = list(build_providers(selected))
     if selected != "chatterbox":
         providers.append(ChatterboxMLXProvider())
-    verifier = WhisperVerifier()
+    verifier = ParakeetVerifier()
     verifier_ok, verifier_detail = verifier.probe()
     provider_statuses = [provider.probe().to_dict() for provider in providers]
     character_ready = (
@@ -98,7 +98,9 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         "anchors": anchor_status,
         "ffmpeg": {"available": AudioPipeline.ffmpeg_available()},
         "providers": provider_statuses,
-        "verifier": {"id": verifier.verifier_id, "available": verifier_ok, "detail": verifier_detail},
+        "verifier": {"id": verifier.verifier_id, "model_id": verifier.model_id,
+                     "model_revision": verifier.model_revision,
+                     "available": verifier_ok, "detail": verifier_detail},
     }
     _print(payload)
     return 0 if character_ready else 2

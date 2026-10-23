@@ -1,9 +1,31 @@
 # Greia remaining recordings — natural-method completion
 
-## Current state — ten installed,237 remaining (2026-10-23)
+## Current engine diagnostic — Parakeet v3, corpus still held (2026-10-23)
+
+The engine verification backend for new requests is now cached local multilingual
+Parakeet-TDT v3 (`mlx-community/parakeet-tdt-0.6b-v3`, revision
+`ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`). A separately registered ten-cue
+end-to-end diagnostic through the public VoiceEngine produced 6 automated
+packaged-audio PASS results and 4 quality rejections after 21 actual jobs. Each
+request stopped at first pass or three tries. The natural-carrier policy was
+explicitly injected for this diagnostic only; production prompt defaults,
+thresholds and corpus budgets are unchanged. Passing outputs remain
+`human_review=PENDING`. Takeboard has all 21 raw attempts, 24 cuts and 6 passed
+packages as an unreviewed batch at `http://127.0.0.1:8816/`.
+
+Evidence and per-case results: `docs/reviews/2026-10-23_PARAKEET_VOICE_PIPELINE.md`
+and external directory
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/parakeet-v3-pipeline-10-v1/`.
+The prior saved/context natural-corpus pipeline is still held (combined frozen-667
+audit: 10 changed/657 unchanged, 430 kept/installed, 237 remaining). The ten-cue
+result does not authorize bulk restart. The next action is human listening to the
+Takeboard batch; no new ASR/model/synthesis is scheduled by this continuation.
+
+## Corpus state — ten installed, 237 remaining (2026-10-23)
 
 Read `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` for the full
-current recovery evidence and bounded next investigation. The diagnostic
+saved-source recovery evidence. The newer engine diagnostic is above; it is a
+separate ten-cue API check and does not continue the corpus run. The diagnostic
 reconciliation adapter recovered two registered saved sources: French Tito
 `Trouve Oskar` (`20261022-194837-c8fd5222`) and English Leo `W as Whale`
 (`20261022-194704-4881f8f0`). Their explicit selected comparison policies,
@@ -23,9 +45,9 @@ current saved-evidence yield screen is 7/25 for corpus parent/child cases
 
 Current source verification: 212 voice tests and 32 focused policy tests PASS.
 Full local `make verify` aborts at the test stage (`Abort trap: 6`), NOT GREEN.
-Next is a read-only case table classifying the 25 retained corpus parent/child
-observations by earliest failed predicate; no ASR, provider, model, worker,
-threshold, budget, or installation changes are authorized by that step.
+The next action for current voice continuation is owner listening to the new
+Takeboard batch described above. Do not continue corpus generation from either
+the diagnostic pass count or the older saved-evidence yield screen.
 
 ## Prior state — 2026-10-22
 

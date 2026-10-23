@@ -462,6 +462,11 @@ def extract(
             "quiet_run_end_sample": chosen["quiet_run"]["end_sample"],
             "cut_policy": "100 ms before the end of the unique qualifying low-energy PCM run",
         }
+        recognizer_owner = getattr(transcriber, "__self__", transcriber)
+        selected_recognizer = getattr(recognizer_owner, "verifier_id", DEFAULT_ASR_VERIFIER)
+        selected_model = getattr(recognizer_owner, "model_id", DEFAULT_ASR_MODEL)
+        selected_revision = getattr(recognizer_owner, "model_revision", None)
+        is_parakeet = selected_recognizer == "mlx-audio-parakeet-tdt-v3"
         receipt: dict[str, Any] = {
             "schema_version": 1,
             "algorithm_version": algorithm,
@@ -487,21 +492,25 @@ def extract(
             "target_numbers_match": chosen["target_numbers_match"],
             "target_comparison_flags": chosen["target_comparison_flags"],
             "target_transcript_warning": not chosen["exact_target_match"],
-            "recognizer": DEFAULT_ASR_VERIFIER,
-            "recognizer_version": _package_version("mlx-whisper"),
-            "model_id": DEFAULT_ASR_MODEL,
-            "model_revision": _cached_model_revision() or DEFAULT_ASR_REVISION,
+            "recognizer": selected_recognizer,
+            "recognizer_version": _package_version("mlx-audio" if is_parakeet else "mlx-whisper"),
+            "model_id": selected_model,
+            "model_revision": selected_revision or (_cached_model_revision() or DEFAULT_ASR_REVISION),
             "extracted_transcript": extracted_transcript,
             "expected_target_tokens": list(target_tokens),
             "extracted_target_tokens": chosen["canonical_transcript_tokens"],
             "extracted_target_exact_match": chosen["exact_target_match"],
-            "transcription_settings": {
+            "transcription_settings": ({
+                "language_detection": "automatic",
+                "expected_text_prompt": None,
+                "timestamps": "model-provided-token-timestamps",
+            } if is_parakeet else {
                 "language": locale,
                 "initial_prompt": None,
                 "word_timestamps": True,
                 "temperature": 0.0,
                 "condition_on_previous_text": False,
-            },
+            }),
             "sample_rate": rate,
             "duration_seconds": duration,
             "boundary": boundary,

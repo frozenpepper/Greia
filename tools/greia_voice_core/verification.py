@@ -17,6 +17,7 @@ from .models import (
     VerificationResult,
     VoiceRequest,
 )
+from .parakeet_asr import ParakeetTranscriber, ParakeetTranscriptionError
 
 
 class SpeechVerifier(Protocol):
@@ -174,4 +175,79 @@ class WhisperVerifier:
                 if disposition is VerificationDisposition.PASS
                 else "transcript or numeric identity mismatch; regenerate or inspect manually"
             ),
+        )
+
+
+@dataclass
+class ParakeetVerifier:
+    """Current verifier for every newly created request and delivered rendition.
+
+    Historical Whisper verification remains available through ``WhisperVerifier``
+    for explicitly versioned receipts/replay. New requests use this pinned offline
+    multilingual adapter and must pass text, word-count, numeric and signal checks.
+    """
+
+    transcriber: ParakeetTranscriber | None = None
+    pass_threshold: float = ASR_PASS_THRESHOLD
+
+    def __post_init__(self) -> None:
+        self.transcriber = self.transcriber or ParakeetTranscriber()
+
+    @property
+    def verifier_id(self) -> str:
+        assert self.transcriber is not None
+        return self.transcriber.recognizer_id
+
+    @property
+    def model_id(self) -> str:
+        assert self.transcriber is not None
+        return self.transcriber.model_id
+
+    @property
+    def model_revision(self) -> str:
+        assert self.transcriber is not None
+        return self.transcriber.model_revision
+
+    def probe(self) -> tuple[bool, str]:
+        assert self.transcriber is not None
+        return self.transcriber.probe()
+
+    def transcribe(self, wav_path: Path, locale: str | None = None) -> dict:
+        assert self.transcriber is not None
+        return self.transcriber.transcribe(wav_path, locale)
+
+    def __call__(self, wav_path: Path, locale: str | None = None) -> dict:
+        return self.transcribe(wav_path, locale)
+
+    def verify(self, request: VoiceRequest, wav_path: Path) -> VerificationResult:
+        from .number_comparison import COMPARISON_POLICY, compare_target_transcript
+        from .review import signal_metrics
+
+        observed = self.transcribe(wav_path, request.language)
+        transcript = observed["text"]
+        comparison = compare_target_transcript(
+            request.language, request.text, transcript,
+            ignore_accents=request.ignore_accents, policy=COMPARISON_POLICY,
+        )
+        flags = comparison.flags(require_word_count=True)
+        try:
+            metrics, signal_flags = signal_metrics(wav_path)
+        except ValueError as exc:
+            metrics, signal_flags = {"signal_error": str(exc)}, ["INVALID_SIGNAL"]
+        flags.extend(signal_flags)
+        passes = comparison.score > self.pass_threshold and not flags
+        disposition = VerificationDisposition.PASS if passes else VerificationDisposition.WARN
+        return VerificationResult(
+            disposition=disposition,
+            verifier_id=self.verifier_id,
+            transcript=transcript,
+            score=comparison.score,
+            model_id=self.model_id,
+            model_revision=self.model_revision,
+            ignore_accents=request.ignore_accents,
+            comparison_policy=COMPARISON_POLICY,
+            flags=tuple(flags),
+            metrics=metrics,
+            detail=("delivered audio passed Parakeet text and signal screening; human listening remains required"
+                    if passes else "delivered audio failed Parakeet text/count/number or signal screening"),
         )

@@ -1,12 +1,20 @@
 # Greia Voice Production Engine
 
-**Usage reference, reviewed 2026-10-22.** Run commands from the Greia repository
+**Usage reference, reviewed 2026-10-23.** Run commands from the Greia repository
 root. This is authoring software; models, masters, services and authoring Python
 dependencies do not ship on child devices.
 
 All new Greia speech enters through `tools/greia_voice.py` / `VoiceEngine`.
 “Voice Studio” refers to this workflow. Activities and content producers supply
-semantic requests; they do not invoke TTS, Whisper or trimming tools themselves.
+semantic requests; they do not invoke TTS, ASR or trimming tools themselves.
+
+**Current verification default:** cached local multilingual Parakeet-TDT v3
+(`mlx-community/parakeet-tdt-0.6b-v3`, revision
+`ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`) in the prepared voice environment.
+It checks applicable delivered audio and short-route target candidates. Missing
+model/dependencies fail as unavailable; the engine does not download or silently
+fall back to Whisper. Historical Whisper tools/receipts remain versioned and are
+not relabeled. Machine PASS remains `human_review=PENDING`.
 
 ## Choose the right workflow
 
@@ -17,15 +25,15 @@ saved recovery below, not an unchanged historical bulk command.
 
 | Need | Entry point | Implemented behavior |
 |---|---|---|
-| One new line, JSONL batch, or requests over time | `greia_voice.py generate / batch / serve / request` | Automatic short carrier/cut/Base routing; serialized synthesis; review audio and receipt |
+| One new line, JSONL batch, or requests over time | `greia_voice.py generate / batch / serve / request` | Automatic short carrier/cut/Parakeet routing; serialized synthesis; review audio and receipt |
 | Inventory and replace an owner-authorized existing corpus | `regenerate_voice_corpus.py` | Frozen scripts, external originals, progress journal, recoverable installation |
-| Finish the frozen problematic short-phrase selection | `finish_voice_priority.py` | Audit installed takes, recover saved sources, then bounded fresh carrier/cut/Base attempts |
+| Finish the frozen problematic short-phrase selection | `finish_voice_priority.py` | Audit installed takes, recover saved sources, then bounded fresh carrier/cut/Parakeet attempts |
 | Cut an already generated carrier recording | `voice_carrier.py` | Target-suffix alignment and measured PCM pause; separate extracted WAV and evidence |
 | Screen an installed corpus without changing it | `regenerate_voice_corpus.py review / reassess` | External automated findings and listening queue |
 | Human listening, master comparison, saved scores/notes | `export_voice_review_batch.py` → shared Takeboard | Separate human judgments; no automatic runtime promotion |
 
 **Current default:** normal VoxStage character requests with **fewer than five
-words** automatically use the localized carrier → cut → final Base pipeline.
+words** automatically use the localized carrier → cut → final Parakeet pipeline.
 This applies to CLI, JSONL, Python and warm-service requests, including Dani.
 Deterministic pedagogical speech stays on its native route. `short_text_mode=off`
 explicitly bypasses wrapping; word/character limits are configurable per request.
@@ -41,16 +49,15 @@ before installing anything. Reuse the installed shared VoxStage worker:
 
 ```bash
 voxstage start
-# Existing Mac environment, including working Whisper Base dependencies:
+# Existing Mac environment, including cached local Parakeet dependencies:
 voice_python="$HOME/Library/Application Support/Greia/voice-production/venv/bin/python"
 "$voice_python" tools/greia_voice.py doctor
 ```
 
-Python 3.11+ and FFmpeg suffice for the default synthesis HTTP client. Base
-verification additionally needs the prepared Apple Silicon MLX/Whisper environment
-and cached weights. The global Anaconda interpreter on this workstation has an
-incompatible Whisper import; use the prepared interpreter above for ASR/cutting.
-Do not reinstall packages or download weights during a recording run.
+Python 3.11+ and FFmpeg suffice for the default synthesis HTTP client. Parakeet
+verification additionally needs the prepared Apple Silicon MLX environment and
+pinned cached weights. Use the prepared interpreter above for ASR/cutting. Do not
+reinstall packages or download weights during a recording run.
 
 `doctor` does not synthesize, import voices or download weights. Exit 0 means
 selected character provider + references + FFmpeg are ready; exit 2 means they
@@ -161,10 +168,12 @@ with build_engine() as engine:
 
 ## 4. Verification and result handling
 
-Default ASR uses cached multilingual **Whisper Base**,
-`mlx-community/whisper-base-mlx`, revision
-`1e3e249fb8d01c655324bd6841b1deadffd6d04c`, owned by `asr_policy.py`.
-ASR resolution is offline; missing weights/dependencies are reported, not downloaded.
+Default ASR uses cached multilingual **Parakeet-TDT v3**,
+`mlx-community/parakeet-tdt-0.6b-v3`, revision
+`ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`, owned by `parakeet_asr.py`.
+ASR resolution is offline; missing weights/dependencies are reported, not downloaded
+or silently replaced by Whisper. Historical Whisper evidence keeps its original
+verifier identity and is not reinterpreted.
 Comparison ignores diacritics by default (`trovò` = `trovo`), preserving original
 scripts/transcripts. Override with CLI `--strict-accents`, JSON
 `"ignore_accents": false`, or Python `ignore_accents=False`.
@@ -180,11 +189,11 @@ exclusions. For eligible requests:
 - `off`: no ASR; the current verifier reports `NOT_APPLICABLE`.
 - Transcript score **>0.8** → `PASS`; score ≤0.8 or recognition error → `WARN`.
 
-Only `WARN` triggers another synthesis, up to `max_attempts`. The ordinary engine
-checks the provider's temporary WAV before final packaging. After exhausted
-warnings it still writes the **last** take and receipt, returning
-`REVIEW_REQUIRED_ASR_WARNING`. It does not choose the highest-scoring take or
-fail closed on ASR. This ordinary route does not apply the automatic short pipeline's signal gate.
+Known quality `WARN` triggers another synthesis, up to `max_attempts`. Each
+candidate is packaged and the delivered audio is checked before publication.
+Exhaustion returns no output. Indeterminate ASR/provider/I/O outcomes stop as
+`NEEDS_RECOVERY` without blindly submitting another take. Explicit public
+`verification=off` opts out of ASR and is unverified, not a machine PASS.
 
 `generate`, `batch`, and `request` exit 0 when the result returns an output path, including ASR-warning
 output; exit 2 indicates missing/rejected/unavailable output or request error.
@@ -200,7 +209,7 @@ for all six actors, including Dani and one-word targets. The localized intro is
 disposable: raw carrier synthesis has verification OFF, and no raw-intro ASR is
 requested. PCM measurements identify quiet runs of at least 200 ms (10 ms
 frames, RMS ≤−42 dBFS and peak ≤−30 dBFS). Each retained suffix starts 100 ms
-before the run ends and is transcribed independently with pinned Whisper Base,
+before the run ends and is transcribed independently with pinned Parakeet-TDT v3,
 without an expected-text prompt. More than six candidate runs rejects before
 ASR; exactly one suffix must qualify. Zero or multiple matches reject. Each
 candidate must retain energetic speech and have energetic speech before its cut.
@@ -219,8 +228,9 @@ default; `ignore_accents=False` / `--strict-accents` overrides this.
 Current number policy is `locale-number-tokens-v2`: canonical units retain exact
 numeric identity, but similarity scores use ordinary digit text, not internal
 `<num:...>` labels. This fixes artificial score inflation (e.g. `Client to 10`
-for `Count to ten`). The same comparison is used by ordinary WhisperVerifier,
-short-target checking, live review and locale-explicit saved reassessment.
+for `Count to ten`). The current ordinary Parakeet verifier and short-target checking use this
+comparison. Historical reports retain their stored verifier and policy identity;
+locale-explicit reassessment uses its declared version.
 Numeric digits outside the spelling range still have exact identity guards;
 leading-zero codes, signed/decimal literals are kept distinct. The supported
 spelling range is bounded: this is not an arbitrary-number or phonetic parser.
@@ -234,8 +244,9 @@ experiments live outside the repository. The owner stopped the corpus to repair
 the method; new small diagnostics do not authorize bulk restart or installation.
 See [paired method evidence](../../docs/reviews/2026-10-22_VOICE_METHOD_PAIRED_EXPERIMENT.md).
 
-The actual delivered rendition is checked again after packaging where its PCM
-changes, including decoded lossy delivery. Internal pauses/trailing silence
+The actual delivered rendition is checked after packaging, including decoded
+lossy delivery. Parakeet token timestamps are retained only when supplied by the
+model; no word alignment is fabricated. Internal pauses/trailing silence
 **<1.5s** do not warn; existing signal checks (including leading silence ≥0.4s)
 remain active. No gain normalization is applied by this correction. If the target
 occurs inside the primary intro, a predefined alternate localized intro is used.

@@ -43,7 +43,11 @@ def generate_candidate(engine, store, row: dict, profile, verification: str, *, 
         kind=SpeechKind(request_data["kind"]), output=raw,
         verification=VerificationMode.OFF, max_attempts=1, short_text_mode="off",
     )
-    result = engine.generate(request)
+    # This is explicitly an intermediate composite carrier. The target is
+    # extracted and checked by prepare_saved_candidate before becoming a product
+    # candidate, so route it through the engine's internal one-take method rather
+    # than weakening public verification=off behavior.
+    result = engine.generate_disposable_carrier(request)
     write_json(raw.with_name(raw.name + ".result.json"), result.to_dict())
     if result.disposition is not GenerationDisposition.REVIEW_REQUIRED:
         raise ValueError(f"{result.disposition.value}: {result.detail}")

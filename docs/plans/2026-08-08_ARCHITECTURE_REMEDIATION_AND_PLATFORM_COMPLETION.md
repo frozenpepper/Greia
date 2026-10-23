@@ -3895,3 +3895,24 @@ Recorded parent/child method screen is 7/25 (28%), so both bulk producers remain
 held. Next scoped action is read-only earliest-failed-predicate attribution over
 the 25 existing cases; no ASR, model, provider, worker, budget/gate change, or
 installation in that investigation. Details: `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md`.
+
+### 2026-10-23 — Parakeet verification default and bounded VoiceEngine diagnostic
+
+Changed new-request ASR to pinned local Parakeet-TDT v3 through a dedicated
+transcriber collaborator; retained historical Whisper identities for old reports
+and receipts. Ordinary and automatic-short paths now screen delivered packaged
+audio, retry known quality warnings up to three total attempts, and stop
+indeterminate provider/recognizer/I/O outcomes for recovery. The public explicit
+`verification=off` remains unverified. Short-route target extraction keeps the
+existing score, count, numeric, timing and signal constraints; model timestamps are
+used only when actually emitted, not synthesized.
+
+Focused voice test set: 85 PASS. The full `make verify` test stage ended with
+`Abort trap: 6` (`/tmp/greia-parakeet-pipeline-make-verify.log`); gate NOT GREEN
+and no architecture phase closed. Public VoiceEngine diagnostic: 10 selected cues,
+21 actual provider jobs, 6 packaged machine passes and 4 three-attempt quality
+rejections. It explicitly injected the prior natural-carrier prompt recipe and did
+not change production prompts, thresholds, masters, installed audio, corpus budgets
+or the held bulk state. All new outputs await human listening. Per-case evidence
+and the 51-item Takeboard batch are documented in
+`docs/reviews/2026-10-23_PARAKEET_VOICE_PIPELINE.md`.

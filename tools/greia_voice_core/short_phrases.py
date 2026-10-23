@@ -14,7 +14,7 @@ from .paths import voice_home
 from .short_policy import ShortPhrasePolicy, COMPOSITION_POLICY
 from .short_delivery import prepare_delivery
 from .target_quality import TargetQualityChecker
-from .verification import WhisperVerifier
+from .verification import ParakeetVerifier
 
 
 def save_evidence(path: Path, value: dict) -> None:
@@ -35,11 +35,16 @@ class ShortPhrasePipeline:
     """
 
     def __init__(self, *, transcriber=None, readiness=None, evidence_root=None, policy=None,
-                 attempt_reservation=None):
+                 attempt_reservation=None, verifier=None):
         self.policy = policy or ShortPhrasePolicy()
         self.attempt_reservation = attempt_reservation
-        self.transcriber = transcriber
-        self.readiness = readiness or WhisperVerifier().probe
+        self.verifier = verifier or (None if transcriber is not None else ParakeetVerifier())
+        verifier_transcriber = getattr(self.verifier, "transcribe", None)
+        self.transcriber = transcriber or (verifier_transcriber if callable(verifier_transcriber) else None)
+        verifier_probe = getattr(self.verifier, "probe", None)
+        self.readiness = readiness or (verifier_probe if callable(verifier_probe) else
+                                       (lambda: (True, "injected transcriber")) if self.transcriber else
+                                       (lambda: (False, "no short-target transcriber configured")))
         self.evidence_root = evidence_root
 
     def generate(self, engine, request, provider, profile):
@@ -51,8 +56,8 @@ class ShortPhrasePipeline:
         if not available:
             return GenerationResult(GenerationDisposition.UNAVAILABLE, request, provider.provider_id,
                                     None, None, VerificationResult(VerificationDisposition.WARN,
-                                    "mlx-whisper-base", detail="carrier alignment unavailable: " + detail), 0,
-                                    "Base alignment is required before short-phrase synthesis")
+                                    getattr(self.verifier, "verifier_id", "parakeet"), detail="carrier alignment unavailable: " + detail), 0,
+                                    "Pinned Parakeet is required before short-target synthesis")
         output = engine._resolve_output(request)
         if output.suffix.lower() not in {".wav", ".ogg"}:
             raise ValueError("output extension must be .wav or .ogg")
@@ -63,8 +68,8 @@ class ShortPhrasePipeline:
         work.mkdir(parents=True, exist_ok=False)
         history = []
         attempts = 0
-        last = VerificationResult(VerificationDisposition.WARN, "mlx-whisper-base", detail="no passing short take")
-        checker = TargetQualityChecker(self.transcriber)
+        last = VerificationResult(VerificationDisposition.WARN, getattr(self.verifier, "verifier_id", "parakeet"), detail="no passing short take")
+        checker = TargetQualityChecker(self.transcriber, always_transcribe_delivered=True)
         try:
             with engine.generation_lock:
                 for attempts in range(1, min(request.max_attempts, 3) + 1):
@@ -107,24 +112,41 @@ class ShortPhrasePipeline:
                         engine.audio.validate_review_wav(decoded)
                         quality = checker.check(extracted, decoded, extraction, text=request.text, locale=request.locale,
                                                 ignore_accents=request.ignore_accents,
-                                                enabled=request.verification is not VerificationMode.OFF,
+                                                enabled=True,
                                                 require_word_count=True)
                     except ExtractionRejected as exc:
                         history.append({"attempt": attempts, "status": "REJECTED_CUT", "error": str(exc), "evidence": exc.evidence})
                         save_evidence(attempt / "rejection.json", history[-1])
                         continue
                     last = VerificationResult(
-                        VerificationDisposition(quality["disposition"]), extraction["recognizer"],
+                        VerificationDisposition(quality["disposition"]),
+                        getattr(self.verifier, "verifier_id", extraction["recognizer"]),
                         transcript=quality.get("transcript"), score=quality.get("score"), detail=quality["detail"],
-                        model_id=extraction["model_id"], model_revision=extraction["model_revision"],
-                        ignore_accents=request.ignore_accents)
+                        model_id=quality.get("model_id", extraction["model_id"]),
+                        model_revision=quality.get("model_revision", extraction["model_revision"]),
+                        ignore_accents=request.ignore_accents,
+                        comparison_policy=extraction.get("comparison_policy"),
+                        flags=tuple(quality.get("flags", [])), metrics=quality.get("metrics"))
                     history.append({"attempt": attempts, "status": quality["disposition"], "quality": quality,
                                     "extraction": extraction, "candidate": str(candidate)})
                     save_evidence(attempt / "check.json", history[-1])
                     if quality["disposition"] == "WARN":
                         continue
-                    # Only a passing (or explicitly unverified) final target may
-                    # replace the requested destination. Failed takes stay local.
+                    if quality["disposition"] != "PASS":
+                        history.append({"attempt": attempts, "status": "NEEDS_RECOVERY",
+                                        "quality": quality})
+                        save_evidence(attempt / "recovery.json", history[-1])
+                        save_evidence(work / "state.json", {
+                            "status": "NEEDS_RECOVERY", "request": request.to_dict(),
+                            "attempt": attempts, "history": history,
+                        })
+                        return GenerationResult(
+                            GenerationDisposition.REJECTED, request, provider.provider_id,
+                            None, None, last, attempts,
+                            "short-target verification was indeterminate; inspect saved evidence before retry",
+                            evidence_dir=work)
+                    # A delivered target replaces the requested destination only
+                    # after an explicit PASS; all uncertain evidence stays local.
                     output.parent.mkdir(parents=True, exist_ok=True)
                     staging = output.with_name(output.name + "." + work.name + ".tmp")
                     shutil.copyfile(candidate, staging)
@@ -143,7 +165,7 @@ class ShortPhrasePipeline:
             save_evidence(work / "state.json", {"status": "FAILED_QUALITY", "request": request.to_dict(), "history": history})
             return GenerationResult(GenerationDisposition.REJECTED, request, provider.provider_id, None, None,
                                     last, attempts, "short-phrase quality budget exhausted; evidence: " + str(work), evidence_dir=work)
-        except BaseException as exc:
+        except Exception as exc:
             save_evidence(work / "state.json", {"status": "NEEDS_RECOVERY" if attempts else "BLOCKED", "error": str(exc),
                           "request": request.to_dict(), "attempt": attempts, "history": history,
                           "raw_request": raw_request.to_dict() if attempts else None})

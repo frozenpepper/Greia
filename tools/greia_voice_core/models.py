@@ -68,8 +68,8 @@ class VoiceRequest:
             raise ValueError("locale must not be empty")
         if not text:
             raise ValueError("text must not be empty")
-        if not 1 <= self.max_attempts <= 4:
-            raise ValueError("max_attempts must be between 1 and 4")
+        if not 1 <= self.max_attempts <= 3:
+            raise ValueError("max_attempts must be between 1 and 3")
         object.__setattr__(self, "speaker", speaker)
         object.__setattr__(self, "locale", locale)
         object.__setattr__(self, "text", text)
@@ -124,6 +124,9 @@ class VerificationResult:
     model_id: str | None = None
     model_revision: str | None = None
     ignore_accents: bool | None = None
+    comparison_policy: str | None = None
+    flags: tuple[str, ...] = ()
+    metrics: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)

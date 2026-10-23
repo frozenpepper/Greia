@@ -1,7 +1,7 @@
 # Greia Voice Production Engine
 
-**Status:** canonical authoring-time subsystem; VoxStage/VoxCPM2 selected default
-**Reviewed:** 2026-10-22
+**Status:** canonical authoring-time subsystem; VoxStage/VoxCPM2 synthesis and local Parakeet-TDT verification defaults
+**Reviewed:** 2026-10-23
 **Runtime boundary:** no synthesis model, worker, reference master or authoring dependency ships to the child device.
 
 ## 1. Ownership and semantic boundary
@@ -46,7 +46,7 @@ semantic CLI / batch / warm service / repository producers
        |     |-- ChatterboxMLXProvider (explicit retained alternative)
        |     |-- MacOSNativeSpeechProvider (pedagogical, legacy system profiles)
        |     `-- UnsupportedNativeSpeechProvider (honest unavailable result)
-       |-- SpeechVerifier / optional advisory WhisperVerifier
+       |-- SpeechVerifier / pinned local Parakeet-TDT v3 verifier
        |-- AudioPipeline: bounded WAV checks and WAV/OGG packaging
        `-- InterprocessGenerationLock: one Greia generation owner
 ```
@@ -129,7 +129,7 @@ never silently substitutes Chatterbox, another character or native Dani speech.
 VoxStage is the existing shared local tool. It owns the serialized inference
 worker, installed VoxCPM2/MLX model, immutable saved voice library and job records.
 Greia uses standard-library HTTP and never imports or loads a second MLX model
-for this default synthesis route. Optional Base ASR can run in the Greia
+for this default synthesis route. Pinned local Parakeet ASR can run in the Greia
 verification process. `VoxStageProvider.close()` does not unload or shut down a
 service used by other projects. The operator uses `voxstage unload` after
 production to free model memory, or `voxstage stop` to finish the current recording and preserve queued jobs
@@ -182,22 +182,23 @@ are authoring-host adapters; no host command belongs in an Activity.
 ## 7. Verification, receipts and acceptance
 
 The [usage README](../../tools/greia_voice_core/README.md) provides practical request,
-CLI, result and recovery examples. Ordinary requests default to verification
-`auto`, three total takes (configurable 1–4; automatic short route caps at three) and accent-insensitive comparison.
-Pinned cached multilingual Base is the default ASR. The ordinary verifier keeps
-its eligibility exclusions: Dani, pedagogical/other excluded kinds, single-word
-utterances and text over 500 characters. `required` does not override eligibility;
-it changes unavailable eligible ASR to WARN. `off` performs no ASR.
-
-Ordinary generation checks the temporary provider WAV before packaging and
-retries only WARN. Exhaustion still returns the last take with
-REVIEW_REQUIRED_ASR_WARNING; CLI exit 0 means output exists, not ASR acceptance.
-That ordinary long/bypass route has no corpus waveform gate.
+CLI, result and recovery examples. New requests default to cached local multilingual
+Parakeet-TDT v3 (`mlx-community/parakeet-tdt-0.6b-v3`, revision
+`ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`) through the prepared voice Python.
+Missing weights/dependencies are reported; no download or silent Whisper fallback
+is performed. Whisper remains identifiable for historical receipts/replay and is
+not used to reinterpret them. Ordinary requests default to verification `auto`,
+three total takes (configurable 1–4), and accent-insensitive comparison. The
+ordinary verifier retains its semantic eligibility rules; `verification=off` is
+an explicit unverified opt-out. Verified outputs are checked after packaging.
+Known quality WARNs can retry; exhausted or indeterminate results are not published
+as accepted output, and infrastructure uncertainty stops for recovery. Human
+listening is required after machine PASS.
 
 Automatic short requests use `voice_carrier_search.extract` v7. Raw synthesis
 verification is OFF; the disposable intro is never transcribed for alignment.
 Bounded PCM quiet-run candidates are transcribed as independent target-only
-suffixes. Exactly one must meet score >0.8, equal canonical unit count and an
+suffixes with pinned Parakeet-TDT v3. Exactly one must meet score >0.8, equal canonical unit count and an
 identical numeric-token sequence. Exact locale number spellings/digits 0–100
 compare equivalently via `number_comparison.py`; historical v6 receipts keep their
 legacy comparison. The actual delivered target then passes shared
@@ -294,11 +295,13 @@ production receipts or runtime acceptance; a later project workflow must own
 explicit consumption of saved human decisions. Exact operation: automated review
 procedure §6, shared Takeboard catalog/skill/README. No child-runtime dependency.
 
-## Current ASR comparison policy — 2026-10-22
+## Historical Whisper policy and preserved comparisons — 2026-10-22
 
-`tools/greia_voice_core/asr_policy.py` owns the pinned multilingual Whisper Base
-model/revision and comparison-only diacritic folding. Generation verification,
-carrier extraction and review use it. VoiceRequest.ignore_accents defaults true;
+`tools/greia_voice_core/asr_policy.py` retains the pinned multilingual Whisper Base
+model/revision and comparison-only diacritic folding for explicitly versioned
+historical tools and receipts. New-request generation verification uses
+`parakeet_asr.py` as documented above. Existing Whisper observations remain tied
+to their recorded verifier and are never reinterpreted as Parakeet. VoiceRequest.ignore_accents defaults true;
 false is an explicit per-request strict override carried through CLI/JSON/service.
 No authored script or audio is normalized or rewritten. Screen policy v4 can
 rescore saved transcripts while retaining their original verifier provenance.
@@ -343,7 +346,7 @@ from overall job wait. POSTs remain single submissions with exact-key recovery.
 bounded standard EN/IT/FR/ES cardinals0–100. Current v2 scores canonical digit
 text without internal marker characters and keeps exact numeric identity,
 including literal codes/signs/decimals. V1 retains its historical inventory and
-score. Ordinary WhisperVerifier and short-target checking use this owner;
+score. The historical WhisperVerifier comparison and saved-reassessment policy retain this owner;
 review/reassess v4 carries explicit locale and the same numeric guard. Missing
 locale in old ad-hoc reports is not guessed. No dependency or runtime package
 was added. Exact authored text, masters and audio are unchanged.
@@ -397,3 +400,24 @@ English spoken-letter policy; ordinary/default and historical policies are
 unchanged. Both installed clips remain human-listening-pending. See
 `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md` for exact installation
 proof and current evidence boundaries.
+
+
+### 2026-10-23 — Parakeet-TDT verification and bounded full-pipeline check
+
+Current VoiceEngine verification defaults to local cached Parakeet-TDT v3 at
+`ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`. Both ordinary and automatic-short
+public routes check the delivered packaged result when verification is enabled;
+short route also screens target-only PCM candidates. It retains actual model
+timestamps only, without fabricated alignment, and preserves existing numeric,
+count, score, and signal guards. Quality attempts are capped at three; provider,
+recognizer, or I/O uncertainty is recoverable and not blindly retried. The explicit
+public `verification=off` remains an unverified opt-out. Historical Whisper receipts
+are not reinterpreted.
+
+A registered ten-request run via public VoiceEngine produced 6 machine-checked
+packaged passes and 4 quality rejections after 21 total jobs. The diagnostic
+explicitly injected the natural-carrier recipe; it did not change production prompt
+defaults or authorize frozen-corpus continuation. Listening is pending for every
+new output. Exact evidence and the 51-item Takeboard batch are recorded in the
+2026-10-23 review. This is authoring-source evidence, not child runtime/release
+acceptance.

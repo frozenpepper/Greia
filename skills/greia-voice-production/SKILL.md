@@ -303,9 +303,10 @@ Do not reintroduce a guessed word-count token table in callers or providers.
 
 Follow `docs/agents/GREIA_AUTOMATED_VOICE_REVIEW.md` after corpus generation.
 Use the explicit prepared Greia venv interpreter from SETUP §7.5; the global
-Anaconda Python has an unrelated NumPy/Numba ABI mismatch. Whisper and cached
-multilingual Base weights are cached in the prepared environment (default since
-2026-10-22); Tiny is retained for historical comparisons.
+Anaconda Python has an unrelated NumPy/Numba ABI mismatch. Current verification
+uses the pinned Parakeet-TDT v3 model in the prepared environment. Historical
+corpus-review artifacts may retain Whisper/Base identities; Tiny also remains a
+historical comparison model.
 Use `tools/regenerate_voice_corpus.py review --work-dir <external-run>
 --report-dir <separate-external-reports> --asr auto`. It reads installed files
 and the frozen plan, checks metadata/decoding/signal metrics, runs existing
@@ -329,7 +330,7 @@ low-energy PCM gap before making a deterministic sample cut. The default target
 policy is `required` and checks exact target transcripts. The explicit corpus
 policy `warn` still requires an identifiable target suffix, timing, unique-gap and at least 80 ms
 of voiced signal, while preserving target transcript mismatches as a visible
-machine WARN. Whisper transcript/alignment and waveform checks do not prove
+machine WARN. Parakeet transcript/timing and waveform checks do not prove
 pronunciation or replace human listening. An unidentifiable/ambiguous target, malformed
 timing, no clean pause, ambiguous boundary or insufficient voiced duration must
 reject. Generated/extracted clips remain listening-pending. Isolated
@@ -353,16 +354,16 @@ remain. `reassess --evidence-dir <finished-report>` reapplies policy to matching
 saved evidence without another ASR run; use a fresh report directory. Human
 judgments stay separate. Exact commands/boundaries: automated review procedure §3a.
 
-## Whisper screening policy
+## Parakeet screening policy
 
-Whisper is advisory for human acceptance, but warnings are actionable production evidence.
+Parakeet is an automated screening gate, not pronunciation or human-acceptance authority; warnings are actionable production evidence.
 
 ```text
 PASS -> transcript plausibly matches; still needs human review
 WARN -> unresolved candidate; inspect/regenerate
 ```
 
-Do not use Whisper as pronunciation authority for letters, syllables or phonics.
+Do not use ASR as pronunciation authority for letters, syllables or phonics.
 
 ## Acceptance
 
@@ -374,7 +375,7 @@ human_review = PENDING
 
 Listen before integrating. Verify exact words, locale, character identity when applicable, pronunciation, clipping/tails, delivery and small-speaker suitability.
 
-A process exit, receipt, valid audio container or Whisper PASS is never final acceptance.
+A process exit, receipt, valid audio container or Parakeet PASS is never final acceptance.
 
 ## Project-specific producer rule
 
@@ -457,7 +458,7 @@ STOPPED; saved-audio replay and human comparison do not authorize restarting it.
 
 ## ASR default / accent override (2026-10-22)
 
-Use pinned cached multilingual Whisper Base from asr_policy.py for new checking.
+Current new-request verification uses pinned cached multilingual Parakeet-TDT v3 (`mlx-community/parakeet-tdt-0.6b-v3`, revision `ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`) from `parakeet_asr.py`. Historical corpus review/replay remains tied to each receipt's recorded verifier, including Whisper Base where applicable; never reinterpret old evidence.
 Diacritics are ignored only during ASR comparison by default; exact authored
 scripts and audio are preserved. `VoiceRequest(ignore_accents=False)`, JSON
 ignore_accents=false or `--strict-accents` select strict comparison. This applies
@@ -476,7 +477,8 @@ historical. Read the corpus regeneration manual for exact continuation flags and
 crash recovery. Saved provider sources are tried first, prior cumulative budgets
 carry by maximum, and three fresh generations per cue remains the total limit.
 Carrier raw synthesis verification is OFF because the intro is disposable;
-required Base verification checks the delivered extracted target before install.
+Parakeet verification checks target-only candidates and the delivered packaged
+target. Signal/count/number/score thresholds are unchanged.
 Keep master identity, deferred scope and human acceptance separate. Do not launch
 an old v4 producer or the unimplemented shared two-queue plan.
 
@@ -485,7 +487,7 @@ an old v4 producer or the unimplemented shared two-queue plan.
 
 `tools/greia_voice_core/README.md` is the practical entry point for current CLI,
 JSON/Python fields, defaults, return statuses, service ports and recovery. Normal VoxStage character requests now auto-route fewer than five words to the
-localized carrier/cut/final-Base path, including Dani and single words. Defaults:
+localized carrier/cut/final-Parakeet path, including Dani and single words. Defaults:
 short_text_mode=auto, short_text_max_words=4, short_text_max_alnum=null, three total
 takes. CLI/JSON/Python can override mode/thresholds. Pedagogical speech stays native;
 Chatterbox auto retains its ordinary route. Long/bypass verification retains its
@@ -498,7 +500,7 @@ double wrapping; its frozen selection and cumulative budgets remain unchanged.
 
 Normal automatic short requests now use `tools/voice_carrier_search.py` v7:
 PCM-first bounded suffix candidates, no raw-intro ASR, exactly one target-only
-Base match. The normal API uses score >0.8 plus equal canonical unit count and
+Parakeet match. The normal API uses score >0.8 plus equal canonical unit count and
 identical numeric sequence; exact locale words/digits 0–100 are equivalent.
 Final delivered signal/ASR checks remain mandatory unless explicitly disabled.
 ASR/IO failures require recovery and must not spend a fresh take. See the
@@ -632,3 +634,18 @@ pass; full `make verify` aborts with `Abort trap: 6`, NOT GREEN. Next is a
 read-only earliest-failed-predicate table across those 25 retained cases; do
 not run ASR, providers, models, workers, installations, or adjust gates/budgets.
 See `docs/reviews/2026-10-22_SAVED_CONTEXT_CORPUS_ADAPTER.md`.
+
+
+## 2026-10-23 current engine verification
+
+New public requests use cached local Parakeet-TDT v3 through the prepared voice
+Python: `mlx-community/parakeet-tdt-0.6b-v3`, revision
+`ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`. Missing model/dependencies are
+reported; the engine does not download weights or silently fall back to Whisper.
+Historical reports retain their recorded Whisper identity. Public
+`verification=off` is explicitly unverified. The bounded 10-request diagnostic
+used the natural-carrier recipe by explicit test injection; it is not the production
+prompt default. Six of ten passed automated packaged-audio checks; four were
+rejected after three quality attempts. Every new clip is still listening-pending.
+See `docs/reviews/2026-10-23_PARAKEET_VOICE_PIPELINE.md` before authoring or
+continuing the held corpus.

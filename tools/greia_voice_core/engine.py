@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import shutil
 from typing import Iterable
 
 from .audio import AudioPipeline, AudioPipelineError
@@ -13,6 +14,7 @@ from .models import (
     GenerationResult,
     SpeechKind,
     VerificationDisposition,
+    VerificationMode,
     VerificationResult,
     VoiceProfile,
     VoiceRequest,
@@ -20,7 +22,8 @@ from .models import (
 from .providers import VoiceProvider, VoiceProviderError
 from .paths import voice_home
 from .registry import VoiceRegistry, VoiceRegistryError
-from .verification import SpeechVerifier, WhisperVerifier
+from .verification import ParakeetVerifier, SpeechVerifier
+from .generation_evidence import GenerationEvidence, save_json
 
 
 class VoiceRoutingError(RuntimeError):
@@ -54,13 +57,13 @@ class VoiceEngine:
         self.project_root = project_root.resolve()
         self.registry = registry
         self.providers = tuple(providers)
-        self.verifier = verifier or WhisperVerifier()
+        self.verifier = verifier or ParakeetVerifier()
         self.audio = audio_pipeline or AudioPipeline()
         self.generation_lock = generation_lock or InterprocessGenerationLock(
             voice_home() / "generation.lock"
         )
         from .short_phrases import ShortPhrasePipeline
-        self.short_phrases = short_phrase_pipeline or ShortPhrasePipeline()
+        self.short_phrases = short_phrase_pipeline or ShortPhrasePipeline(verifier=self.verifier)
 
     def close(self) -> None:
         for provider in self.providers:
@@ -181,13 +184,34 @@ class VoiceEngine:
                 "A human listening gate is still required."
             ),
         }
-        receipt_path.write_text(
-            json.dumps(receipt, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
+        temporary = receipt_path.with_name(receipt_path.name + ".tmp")
+        temporary.write_text(json.dumps(receipt, indent=2, ensure_ascii=False) + "\n",
+                             encoding="utf-8")
+        temporary.replace(receipt_path)
         return receipt_path
 
+    def generate_disposable_carrier(self, request: VoiceRequest) -> GenerationResult:
+        """Create one internal raw carrier whose target is checked downstream.
+
+        This is reserved for the frozen corpus carrier flow: the resulting audio
+        is an intermediate containing an introduction and requested target, and
+        is never the product recording. The caller must extract and verify the
+        final target before it can be installed. Public ``generate`` rejects OFF.
+        """
+        from .disposable_carrier import DisposableCarrierGenerator
+        return DisposableCarrierGenerator(self).generate(request)
+
     def generate(self, request: VoiceRequest) -> GenerationResult:
+        # New public speech must never silently bypass the delivered-audio gate.
+        # ShortPhrasePipeline uses OFF only for its disposable carrier request,
+        # which is internal and always followed by target extraction + Parakeet.
+        if request.verification is VerificationMode.OFF:
+            return GenerationResult(
+                GenerationDisposition.REJECTED, request, None, None, None,
+                VerificationResult(VerificationDisposition.NOT_RUN, "none",
+                                   detail="verification=off is not supported for new public speech"),
+                0, "new speech creation requires automatic delivered-audio verification",
+            )
         try:
             provider, profile = self.route(request)
         except (VoiceRoutingError, VoiceRegistryError, ValueError) as exc:
@@ -223,6 +247,17 @@ class VoiceEngine:
                 detail=status.detail,
             )
 
+        probe_verifier = getattr(self.verifier, "probe", None)
+        ready, verifier_detail = probe_verifier() if callable(probe_verifier) else (True, "injected verifier")
+        if not ready:
+            return GenerationResult(
+                GenerationDisposition.UNAVAILABLE, request, provider.provider_id, None, None,
+                VerificationResult(VerificationDisposition.NOT_RUN,
+                                   getattr(self.verifier, "verifier_id", "parakeet"),
+                                   detail=verifier_detail),
+                0, "pinned Parakeet verification is unavailable; no synthesis was submitted",
+            )
+
         output = self._resolve_output(request)
         try:
             if self.short_phrases.policy.selected(request, provider):
@@ -231,54 +266,84 @@ class VoiceEngine:
             return GenerationResult(
                 GenerationDisposition.REJECTED, request, provider.provider_id, None, None,
                 VerificationResult(VerificationDisposition.NOT_RUN, "none", detail=str(exc)), 0, str(exc))
-        best_take = None
+        evidence = GenerationEvidence(request.to_dict())
         best_verification = VerificationResult(
-            disposition=VerificationDisposition.NOT_RUN,
-            verifier_id=getattr(self.verifier, "verifier_id", "none"),
-            detail="not yet run",
-        )
+            VerificationDisposition.NOT_RUN, getattr(self.verifier, "verifier_id", "parakeet"),
+            detail="not yet run")
         attempts = 0
         take = None
         try:
             with self.generation_lock:
-                for attempts in range(1, request.max_attempts + 1):
+                for attempts in range(1, min(request.max_attempts, 3) + 1):
+                    attempt_dir = evidence.attempt(attempts)
+                    raw = attempt_dir / "provider-output.wav"
+                    candidate = attempt_dir / ("candidate" + output.suffix.lower())
+                    delivered = attempt_dir / "delivered.wav"
+                    evidence.write_state("GENERATING", attempt=attempts,
+                                         attempt_dir=str(attempt_dir), provider_id=provider.provider_id,
+                                         provider_request=request.to_dict())
+                    take = None
                     take = provider.generate(request, profile)
-                    self.audio.validate_review_wav(take.temporary_wav)
-                    verification = self.verifier.verify(request, take.temporary_wav)
-                    if best_take is not None and best_take.temporary_wav.exists():
-                        best_take.temporary_wav.unlink()
-                    best_take = take
+                    shutil.copyfile(take.temporary_wav, raw)
+                    take.temporary_wav.unlink(missing_ok=True)
+                    self.audio.validate_review_wav(raw)
+                    self.audio.package(raw, candidate)
+                    self.audio.decode_for_review(candidate, delivered)
+                    self.audio.validate_review_wav(delivered)
+                    verification = self.verifier.verify(request, delivered)
                     best_verification = verification
+                    row = {
+                        "attempt": attempts,
+                        "provider_id": provider.provider_id,
+                        "generation_parameters": take.generation_parameters,
+                        "raw_audio": {"path": str(raw), "sha256": hashlib.sha256(raw.read_bytes()).hexdigest()},
+                        "candidate": str(candidate),
+                        "delivered_audio": {"path": str(delivered), "sha256": hashlib.sha256(delivered.read_bytes()).hexdigest()},
+                        "verification": verification.to_dict(),
+                    }
+                    evidence.append(row)
+                    evidence.write_state("QUALITY_CHECKED", attempt=attempts)
+                    if verification.disposition is VerificationDisposition.PASS:
+                        output.parent.mkdir(parents=True, exist_ok=True)
+                        staging = output.with_name(output.name + "." + evidence.path.name + ".tmp")
+                        shutil.copyfile(candidate, staging)
+                        staging.replace(output)
+                        receipt = self._write_receipt(
+                            request, provider, profile, output, verification, attempts,
+                            take.generation_parameters)
+                        receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
+                        receipt_payload["generation_evidence"] = {
+                            "path": str(evidence.path),
+                            "history": str(evidence.path / "history.json"),
+                        }
+                        save_json(receipt, receipt_payload)
+                        evidence.write_state("VERIFIED_PENDING_LISTENING", output=str(output), receipt=str(receipt))
+                        return GenerationResult(
+                            GenerationDisposition.REVIEW_REQUIRED, request, provider.provider_id,
+                            output, receipt, verification, attempts,
+                            "delivered audio passed automatic Parakeet checks; human listening remains mandatory",
+                            evidence_dir=evidence.path)
                     if verification.disposition is not VerificationDisposition.WARN:
-                        break
-
-            assert best_take is not None
-            self.audio.package(best_take.temporary_wav, output)
-            receipt = self._write_receipt(
-                request,
-                provider,
-                profile,
-                output,
-                best_verification,
-                attempts,
-                best_take.generation_parameters,
-            )
-            disposition = (
-                GenerationDisposition.REVIEW_REQUIRED_ASR_WARNING
-                if best_verification.disposition is VerificationDisposition.WARN
-                else GenerationDisposition.REVIEW_REQUIRED
-            )
+                        # NOT_RUN/NOT_APPLICABLE is uncertainty, never a quality
+                        # retry or pass. Preserve evidence and require recovery.
+                        evidence.write_state("NEEDS_RECOVERY", attempt=attempts,
+                                             verification=verification.to_dict())
+                        return GenerationResult(
+                            GenerationDisposition.REJECTED, request, provider.provider_id,
+                            None, None, verification, attempts,
+                            "delivery verification returned no determinate result; inspect saved evidence before retry: " + str(evidence.path),
+                            evidence_dir=evidence.path)
+            evidence.write_state("FAILED_QUALITY", attempt=attempts)
             return GenerationResult(
-                disposition=disposition,
-                request=request,
-                provider_id=provider.provider_id,
-                output_path=output,
-                receipt_path=receipt,
+                GenerationDisposition.REJECTED, request, provider.provider_id, None, None,
                 verification=best_verification,
                 attempts=attempts,
-                detail="generated successfully; human listening review remains mandatory",
+                detail="delivered audio did not pass automatic Parakeet checks; evidence: " + str(evidence.path),
+                evidence_dir=evidence.path,
             )
-        except (VoiceProviderError, AudioPipelineError, GenerationLockError, OSError) as exc:
+        except Exception as exc:
+            evidence.write_state("NEEDS_RECOVERY", attempt=attempts, error=str(exc),
+                                 provider_job_id=getattr(take, "generation_parameters", {}).get("job_id"))
             return GenerationResult(
                 disposition=GenerationDisposition.REJECTED,
                 request=request,
@@ -287,10 +352,9 @@ class VoiceEngine:
                 receipt_path=None,
                 verification=best_verification,
                 attempts=attempts,
-                detail=str(exc),
+                detail=str(exc) + "; inspect saved evidence before retry: " + str(evidence.path),
+                evidence_dir=evidence.path,
             )
         finally:
-            if take is not None and take is not best_take:
+            if take is not None:
                 take.temporary_wav.unlink(missing_ok=True)
-            if best_take is not None and best_take.temporary_wav.exists():
-                best_take.temporary_wav.unlink()

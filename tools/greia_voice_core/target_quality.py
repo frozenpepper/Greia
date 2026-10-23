@@ -7,10 +7,12 @@ from .verification import transcript_similarity
 class TargetQualityChecker:
     """Score the actual delivered PCM; optionally require target token count."""
 
-    def __init__(self, transcriber=None, *, context_checker=None):
+    def __init__(self, transcriber=None, *, context_checker=None,
+                 always_transcribe_delivered=False):
         from voice_carrier import _whisper_transcribe
         self.transcriber = transcriber or _whisper_transcribe
         self.context_checker = context_checker
+        self.always_transcribe_delivered = always_transcribe_delivered
 
     def check(self, extracted, delivered, extraction, *, text, locale,
               ignore_accents=True, enabled=True, require_word_count=False,
@@ -29,9 +31,11 @@ class TargetQualityChecker:
                 cut_sample=extraction["boundary"]["cut_sample"], text=text, locale=locale,
                 ignore_accents=ignore_accents,
                 comparison_policy=extraction.get("comparison_policy", COMPARISON_POLICY))
+        observation = None
         transcript = extraction["extracted_transcript"]
-        if _read_pcm16(delivered) != _read_pcm16(extracted):
-            transcript = self.transcriber(delivered, locale).get("text", "")
+        if self.always_transcribe_delivered or _read_pcm16(delivered) != _read_pcm16(extracted):
+            observation = self.transcriber(delivered, locale)
+            transcript = observation.get("text", "")
         expected_tokens = comparison_words(text, ignore_accents=ignore_accents)
         actual_tokens = comparison_words(transcript, ignore_accents=ignore_accents)
         from .number_comparison import SUPPORTED_COMPARISON_POLICIES
@@ -52,9 +56,10 @@ class TargetQualityChecker:
             flags.extend(comparison.flags(require_word_count=require_word_count))
         elif require_word_count and len(expected_tokens) != len(actual_tokens):
             flags.append("TARGET_WORD_COUNT_MISMATCH")
+        owner = getattr(self.transcriber, "__self__", self.transcriber)
         return {"disposition": "PASS" if score > ASR_PASS_THRESHOLD and not flags else "WARN",
                 "score": score, "transcript": transcript, "metrics": metrics, "flags": flags,
                 "ignore_accents": ignore_accents, "comparison_policy": extraction.get("comparison_policy", "legacy-text"),
-                "model_id": extraction["model_id"],
-                "model_revision": extraction["model_revision"],
-                "detail": "Packaged target scored with Base; human listening remains pending"}
+                "model_id": (observation or {}).get("model_id", getattr(owner, "model_id", extraction["model_id"])),
+                "model_revision": (observation or {}).get("model_revision", getattr(owner, "model_revision", extraction["model_revision"])),
+                "detail": "Delivered target transcribed and screened; human listening remains pending"}

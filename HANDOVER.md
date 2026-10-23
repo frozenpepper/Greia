@@ -180,6 +180,38 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-23 — Parakeet default and bounded ten-request end-to-end diagnostic
+
+Implemented pinned local Parakeet-TDT v3 as the current VoiceEngine verification
+backend for new requests (`mlx-community/parakeet-tdt-0.6b-v3`, revision
+`ed2b7e8c15f9aaa0b5772e2efb986255eaef7e15`). The public generation path now checks
+the delivered package, with up to three quality attempts and no output acceptance
+on exhaustion; provider/ASR/I/O uncertainty stops recoverably. Automatic short
+requests use Parakeet for target-only PCM candidate screening and final packaged
+checking. Existing score/count/numeric/signal safeguards are unchanged. Explicit
+public `verification=off` is an unverified opt-out. Historical Whisper receipts
+retain their original identity. The diagnostic's natural-carrier policy was
+explicitly injected and does not become the production prompt default.
+
+A preregistered run exercised ten distinct prior-problem cues across EN/IT/ES/FR
+through public VoiceEngine: **6 machine-verified packaged results, 4 quality
+rejections at three tries, 21 provider jobs total**. It did not modify installed
+runtime audio, corpus budgets, masters or accepted recordings. All passing results
+remain `human_review=PENDING`; automatic screening is not owner listening. The
+external evidence and per-target outcomes are in
+`docs/reviews/2026-10-23_PARAKEET_VOICE_PIPELINE.md`. Takeboard batch contains 51
+unreviewed items (21 raw attempts, 24 extracted target cuts and 6 passed final
+packages) at `http://127.0.0.1:8816/`.
+
+Focused pipeline/policy/engine tests: **85 PASS**. `make verify` ran the test
+stage and ended with `Abort trap: 6`, so the full repository gate is **NOT GREEN**
+(`/tmp/greia-parakeet-pipeline-make-verify.log`). No broad suite rerun or unrelated
+failure chase. The next exact task is owner listening to the 51-item Takeboard
+batch, starting with the six final packages and reviewing their raw/cut siblings.
+Bulk natural-corpus production remains held pending listening and a separately
+accepted method decision; do not expand from this diagnostic result.
+
+
 ### 2026-10-23 — Two registered saved diagnostics recovered; bulk remains held
 
 Added explicit, pinned reconciliation for registered diagnostic results that

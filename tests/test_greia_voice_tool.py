@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
 import wave
@@ -48,6 +49,9 @@ class FakeAudioPipeline:
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_bytes(source.read_bytes())
         return output
+
+    def decode_for_review(self, source: Path, output: Path) -> None:
+        shutil.copyfile(source, output)
 
 
 class AudioPipelinePackagingTests(unittest.TestCase):
@@ -230,6 +234,7 @@ class VoiceEngineTests(unittest.TestCase):
                     cue_id="presenter.hint",
                     output=output,
                     max_attempts=2,
+                    short_text_mode="off",
                 )
             )
             self.assertEqual(result.disposition, GenerationDisposition.REVIEW_REQUIRED)
@@ -260,6 +265,7 @@ class VoiceEngineTests(unittest.TestCase):
                     "Ottimo lavoro!",
                     cue_id="shared.praise.general.01",
                     output=root / "shared.wav",
+                    short_text_mode="off",
                 )
             )
             self.assertEqual(result.disposition, GenerationDisposition.REVIEW_REQUIRED)
@@ -277,7 +283,7 @@ class VoiceEngineTests(unittest.TestCase):
                 root,
                 make_registry(root),
                 [provider],
-                verifier=SequenceVerifier([VerificationDisposition.NOT_APPLICABLE]),
+                verifier=SequenceVerifier([VerificationDisposition.PASS]),
                 audio_pipeline=FakeAudioPipeline(),
                 generation_lock=NullLock(),
             )
@@ -288,13 +294,14 @@ class VoiceEngineTests(unittest.TestCase):
                     "it",
                     "Ottimo lavoro!",
                     output=root / "dani-shared.wav",
+                    short_text_mode="off",
                 )
             )
             self.assertEqual(result.disposition, GenerationDisposition.REVIEW_REQUIRED)
             receipt = json.loads(result.receipt_path.read_text(encoding="utf-8"))
             self.assertEqual(receipt["voice_id"], "greia.dani.system-v1")
 
-    def test_asr_warning_never_becomes_acceptance(self):
+    def test_three_delivered_warnings_exhaust_without_publishing(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             provider = FakeProvider(SpeechKind.CHARACTER_DIALOGUE)
@@ -314,10 +321,27 @@ class VoiceEngineTests(unittest.TestCase):
                     "it",
                     "Guarda qui!",
                     output=root / "x.wav",
+                    short_text_mode="off",
                 )
             )
-            self.assertEqual(result.disposition, GenerationDisposition.REVIEW_REQUIRED_ASR_WARNING)
+            self.assertEqual(result.disposition, GenerationDisposition.REJECTED)
             self.assertEqual(provider.calls, 3)
+            self.assertIsNone(result.output_path)
+            self.assertEqual(result.attempts, 3)
+            self.assertTrue(result.evidence_dir.is_dir())
+
+    def test_public_verification_off_is_rejected_before_provider_submission(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            provider = FakeProvider(SpeechKind.CHARACTER_DIALOGUE)
+            engine = VoiceEngine(root, make_registry(root), [provider],
+                verifier=SequenceVerifier([VerificationDisposition.PASS]),
+                audio_pipeline=FakeAudioPipeline(), generation_lock=NullLock())
+            result = engine.generate(VoiceRequest("leo", SpeechKind.CHARACTER_DIALOGUE,
+                "en", "Hello there", verification=VerificationMode.OFF))
+            self.assertEqual(result.disposition, GenerationDisposition.REJECTED)
+            self.assertEqual(provider.calls, 0)
+            self.assertIn("requires automatic", result.detail)
 
     def test_dani_cannot_route_through_character_dialogue(self):
         with tempfile.TemporaryDirectory() as tmp:
