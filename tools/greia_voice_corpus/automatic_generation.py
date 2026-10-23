@@ -3,8 +3,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from greia_voice_core.models import VoiceRequest, SpeechKind, VerificationMode
-from greia_voice_core.number_comparison import COMPARISON_POLICY, compare_target_transcript
-from greia_voice_core.asr_policy import DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION
+from greia_voice_core.number_comparison import (
+    COMPARISON_POLICY, PARAKEET_COMPARISON_POLICY, compare_target_transcript,
+)
+from greia_voice_core.asr_policy import (
+    DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION,
+    DEFAULT_PARAKEET_MODEL, DEFAULT_PARAKEET_REVISION,
+)
 from greia_voice_core.short_policy import ShortPhrasePolicy, COMPOSITION_POLICY
 from greia_voice_core.direction import character_delivery
 from voice_carrier_search import ALGORITHM_VERSION
@@ -14,10 +19,32 @@ from .carrier_generation import CarrierExtractionFailure
 
 POLICY = "automatic-short-v7-period-warm-v2"
 NATURAL_POLICY = "automatic-natural-context-v1"
+NATURAL_PARAKEET_FULL_POLICY = "automatic-natural-context-parakeet-v3-full237-v1"
 
 
 def natural_enabled(plan):
-    return plan.get("automatic_short_generation_policy") == NATURAL_POLICY
+    return plan.get("automatic_short_generation_policy") in {
+        NATURAL_POLICY, NATURAL_PARAKEET_FULL_POLICY,
+    }
+
+
+def natural_comparison_policy(plan: dict) -> str:
+    """Return the frozen comparison semantics for this natural-run version."""
+    if plan.get("automatic_short_generation_policy") == NATURAL_PARAKEET_FULL_POLICY:
+        pinned = plan.get("natural_run", {}).get("comparison_policy")
+        if pinned != PARAKEET_COMPARISON_POLICY:
+            raise ValueError("full Parakeet natural plan must pin comparison v3")
+        return pinned
+    if plan.get("automatic_short_generation_policy") == NATURAL_POLICY:
+        return COMPARISON_POLICY
+    raise ValueError("not a natural-method plan")
+
+
+def recognition_identity(plan: dict) -> tuple[str, str]:
+    """Keep historical Whisper natural plans distinct from the new Parakeet run."""
+    if plan.get("automatic_short_generation_policy") == NATURAL_PARAKEET_FULL_POLICY:
+        return DEFAULT_PARAKEET_MODEL, DEFAULT_PARAKEET_REVISION
+    return DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION
 
 
 class AutomaticRecoveryRequired(RuntimeError):
@@ -26,12 +53,13 @@ class AutomaticRecoveryRequired(RuntimeError):
 
 def enabled(plan: dict) -> bool:
     value = plan.get("automatic_short_generation_policy")
-    if value is not None and value not in {POLICY, NATURAL_POLICY}:
+    if value is not None and value not in {POLICY, NATURAL_POLICY, NATURAL_PARAKEET_FULL_POLICY}:
         raise ValueError("unsupported automatic short corpus policy")
-    return value in {POLICY, NATURAL_POLICY}
+    return value in {POLICY, NATURAL_POLICY, NATURAL_PARAKEET_FULL_POLICY}
 
 
-def request_for(row: dict, candidate: Path, *, max_attempts: int = 1) -> VoiceRequest:
+def request_for(row: dict, candidate: Path, *, max_attempts: int = 1,
+                comparison_policy: str = COMPARISON_POLICY) -> VoiceRequest:
     """One automatic generation only; cumulative reservations live in RunStore."""
     if row.get("spoken_carrier"):
         raise ValueError("automatic corpus row must not wrap a second carrier")
@@ -39,20 +67,23 @@ def request_for(row: dict, candidate: Path, *, max_attempts: int = 1) -> VoiceRe
             if k not in {"kind","max_attempts","verification","short_text_mode","output","comparison_policy"}}
     return VoiceRequest(**data, kind=SpeechKind(row["request"]["kind"]), output=candidate,
                         max_attempts=max_attempts, verification=VerificationMode.REQUIRED, short_text_mode="on",
-                        comparison_policy=COMPARISON_POLICY)
+                        comparison_policy=comparison_policy)
 
 
 def generate_candidate(engine, store, row: dict) -> None:
     """Delegate to VoiceEngine; continue only a durable one-take quality failure."""
     candidate = store.work / "candidates" / row["path"]
     maximum = 3 if natural_enabled(store.plan) else 1
-    request = request_for(row, candidate, max_attempts=maximum)
+    comparison_policy = (natural_comparison_policy(store.plan)
+                         if natural_enabled(store.plan) else COMPARISON_POLICY)
+    request = request_for(row, candidate, max_attempts=maximum,
+                          comparison_policy=comparison_policy)
     if natural_enabled(store.plan):
         from greia_voice_core.natural_carrier import NaturalCarrierPolicy
         policy=NaturalCarrierPolicy()
         prefix,text,delivery=policy.composite(request,request.delivery_prompt)
         expected={'prefix':prefix,'composite_text':text,'effective_delivery':delivery,
-                  'composition_policy':policy.composition_policy,'comparison_policy':COMPARISON_POLICY}
+                  'composition_policy':policy.composition_policy,'comparison_policy':comparison_policy}
         if row.get('natural_carrier') != expected:
             raise ValueError('frozen natural recipe differs before submission')
     result = engine.generate(request)
@@ -73,7 +104,12 @@ def generate_candidate(engine, store, row: dict) -> None:
 def validate_candidate(store, row: dict, candidate: Path, receipt: dict, profile) -> dict:
     """Validate the normal API's target, selected master, raw take and final gate."""
     natural = natural_enabled(store.plan)
-    request = request_for(row, candidate, max_attempts=3 if natural else 1)
+    comparison_policy = (natural_comparison_policy(store.plan)
+                         if natural else COMPARISON_POLICY)
+    request = request_for(row, candidate, max_attempts=3 if natural else 1,
+                          comparison_policy=comparison_policy)
+    expected_model, expected_revision = (recognition_identity(store.plan)
+                                         if natural else (DEFAULT_ASR_MODEL, DEFAULT_ASR_REVISION))
     short = receipt.get("short_phrase", {})
     extraction = short.get("extraction", {})
     quality = short.get("quality", {})
@@ -91,19 +127,19 @@ def validate_candidate(store, row: dict, candidate: Path, receipt: dict, profile
             or short.get("prefix") != prefix
             or short.get("composite_text") != composite or short.get("effective_delivery") != delivery
             or extraction.get("algorithm_version") != ALGORITHM_VERSION
-            or extraction.get("comparison_policy") != COMPARISON_POLICY
+            or extraction.get("comparison_policy") != comparison_policy
             or extraction.get("target") != request.text
             or extraction.get("ignore_accents") != request.ignore_accents
             or receipt.get("verification", {}).get("disposition") != "PASS"
             or receipt.get("verification", {}).get("score") != quality.get("score")
             or type(quality.get("score")) not in (int, float)
-            or quality.get("comparison_policy") != COMPARISON_POLICY
+            or quality.get("comparison_policy") != comparison_policy
             or quality.get("disposition") != "PASS" or quality.get("flags")
-            or quality.get("model_id") != DEFAULT_ASR_MODEL or quality.get("model_revision") != DEFAULT_ASR_REVISION):
+            or quality.get("model_id") != expected_model or quality.get("model_revision") != expected_revision):
         raise ValueError("automatic short candidate differs from the planned master/request/policy or final gate")
     if natural:
         expected = {"prefix":prefix,"composite_text":composite,"effective_delivery":delivery,
-                    "composition_policy":policy.composition_policy,"comparison_policy":COMPARISON_POLICY}
+                    "composition_policy":policy.composition_policy,"comparison_policy":comparison_policy}
         if row.get("natural_carrier") != expected:
             raise ValueError("natural carrier differs from frozen recipe")
         from .method_budget import MethodAttemptBudget
@@ -114,7 +150,9 @@ def validate_candidate(store, row: dict, candidate: Path, receipt: dict, profile
                 or any(a['evidence_dir'] != short.get('evidence_dir') or a['request'] != request.to_dict()
                        for a in ledger['attempts'])):
             raise ValueError("natural candidate lacks exact reserved-attempt provenance")
-    comparison = compare_target_transcript(request.locale,request.text,quality.get("transcript", ""),ignore_accents=request.ignore_accents)
+    comparison = compare_target_transcript(request.locale,request.text,quality.get("transcript", ""),
+                                           ignore_accents=request.ignore_accents,
+                                           policy=comparison_policy)
     if comparison.score <= .8 or comparison.flags(require_word_count=True) or comparison.score != quality.get("score"):
         raise ValueError("automatic short delivered text fails canonical guards")
     raw = Path(extraction["source"])

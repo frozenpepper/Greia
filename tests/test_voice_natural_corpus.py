@@ -8,7 +8,8 @@ import test_greia_voice_corpus as fixture
 import test_voice_short_routing as short
 from greia_voice_core.models import VoiceRequest,SpeechKind
 from greia_voice_core.natural_carrier import NaturalCarrierPolicy,DELIVERY
-from greia_voice_core.number_comparison import COMPARISON_POLICY
+from greia_voice_core.number_comparison import COMPARISON_POLICY, PARAKEET_COMPARISON_POLICY
+from greia_voice_core.asr_policy import DEFAULT_PARAKEET_MODEL, DEFAULT_PARAKEET_REVISION
 from greia_voice_core.short_phrases import ShortPhrasePipeline
 from greia_voice_core.engine import VoiceEngine
 from greia_voice_core.registry import VoiceRegistry
@@ -17,9 +18,10 @@ from greia_voice_corpus.store import write_json
 from greia_voice_corpus.inventory import receipt_path
 from greia_voice_corpus.runner import CorpusRunner
 from greia_voice_corpus.method_budget import MethodAttemptBudget
-from greia_voice_corpus.automatic_generation import NATURAL_POLICY
-from greia_voice_corpus.natural_run import safety_reason
-from greia_voice_corpus.natural_plan import select_canary
+from greia_voice_corpus.automatic_generation import (NATURAL_POLICY,NATURAL_PARAKEET_FULL_POLICY,
+    natural_comparison_policy,recognition_identity,request_for)
+from greia_voice_corpus.natural_run import safety_reason,aggregate_stop_reason,_validate_original_or_installed
+from greia_voice_corpus.natural_plan import select_canary, select_remaining_scope
 
 class NaturalPolicyTests(unittest.TestCase):
  def test_four_locales_topics_preserve_targets_and_remove_imperative_pause(self):
@@ -67,6 +69,12 @@ class NaturalCorpusTests(unittest.TestCase):
   self.assertEqual(json.loads(receipt_path(self.audio).read_text())['attempts'],3)
   self.assertEqual(self.run_recording(),0);self.assertEqual(len(self.provider.calls),3)
   self.store.restore();self.assertEqual(self.audio.read_bytes(),b'old accepted speech')
+ def test_done_row_resume_uses_journal_and_backup_without_provider_call(self):
+  self.assertEqual(self.run_recording(),0);self.provider.calls.clear()
+  _validate_original_or_installed(self.store,self.row)
+  with patch.object(self.provider,'generate',side_effect=AssertionError('provider must not run')):
+   self.assertEqual(self.run_recording(),0)
+  self.assertEqual(self.provider.calls,[])
  def test_exhaustion_preserves_original_and_does_not_restart_budget(self):
   self.fail=9;self.assertEqual(self.run_recording(),0);self.assertEqual(len(self.provider.calls),3);self.assertEqual(self.store.state(self.relative),'PRESERVED');self.assertEqual(self.audio.read_bytes(),b'old accepted speech')
   self.assertEqual(self.run_recording(),0);self.assertEqual(len(self.provider.calls),3)
@@ -84,6 +92,50 @@ class NaturalCorpusTests(unittest.TestCase):
   with self.assertRaises(ValueError):self.budget.reconcile_mirror()
 
 class NaturalGuardTests(unittest.TestCase):
+ def test_fullscope_preserves_exact_remaining_even_when_history_has_done_rows(self):
+  remaining={'current-a','current-b','historical-done'}
+  prior_done={'historical-done','outside-scope'}
+  self.assertEqual(select_remaining_scope(remaining,prior_done,full_parakeet=True),remaining)
+  self.assertEqual(select_remaining_scope(remaining,prior_done),{'current-a','current-b'})
+
+ def test_fullscope_policy_pins_parakeet_v3_and_skips_only_aggregate_stop(self):
+  plan={'automatic_short_generation_policy':NATURAL_PARAKEET_FULL_POLICY,
+        'natural_run':{'comparison_policy':PARAKEET_COMPARISON_POLICY}}
+  self.assertEqual(natural_comparison_policy(plan),PARAKEET_COMPARISON_POLICY)
+  self.assertEqual(recognition_identity(plan),(DEFAULT_PARAKEET_MODEL,DEFAULT_PARAKEET_REVISION))
+  request=request_for({'path':'example.wav','request':{'speaker':'leo','kind':'character_dialogue',
+      'locale':'en','text':'Y as Yacht','cue_id':'example.y','delivery_prompt':DELIVERY['en']}},
+      Path('/tmp/candidate.wav'),max_attempts=3,comparison_policy=natural_comparison_policy(plan))
+  self.assertEqual(request.max_attempts,3)
+  self.assertEqual(request.comparison_policy,PARAKEET_COMPARISON_POLICY)
+  failures=[(str(i),'PRESERVED') for i in range(3)]
+  entries={p:{'attempts':[1,2,3]} for p,_ in failures}
+  self.assertIsNotNone(safety_reason(failures,entries))
+  self.assertIsNone(aggregate_stop_reason(plan,failures,entries))
+  self.assertIsNotNone(aggregate_stop_reason({'automatic_short_generation_policy':NATURAL_POLICY},failures,entries))
+
+ def test_fullscope_policy_rejects_unpinned_or_wrong_comparison_policy(self):
+  with self.assertRaisesRegex(ValueError,'must pin comparison v3'):
+   natural_comparison_policy({'automatic_short_generation_policy':NATURAL_PARAKEET_FULL_POLICY,'natural_run':{}})
+  with self.assertRaisesRegex(ValueError,'must pin comparison v3'):
+   natural_comparison_policy({'automatic_short_generation_policy':NATURAL_PARAKEET_FULL_POLICY,
+       'natural_run':{'comparison_policy':COMPARISON_POLICY}})
+
+ def test_fullscope_short_pipeline_selects_parakeet_without_injected_whisper(self):
+  pipeline=ShortPhrasePipeline(policy=NaturalCarrierPolicy())
+  self.assertEqual(pipeline.verifier.verifier_id,'mlx-audio-parakeet-tdt-v3')
+  self.assertIs(pipeline.transcriber.__self__,pipeline.verifier)
+
+ def test_natural_run_can_share_one_parakeet_verifier_with_engine_and_pipeline(self):
+  import greia_voice
+  verifier=object();pipeline=ShortPhrasePipeline(policy=NaturalCarrierPolicy(),verifier=verifier)
+  with patch.object(greia_voice.VoiceRegistry,'load',return_value=object()), \
+       patch.object(greia_voice,'build_providers',return_value=[]), \
+       patch.object(greia_voice,'AudioPipeline',return_value=object()):
+   engine=greia_voice.build_engine(generation_lock=NullGenerationLock(),
+       short_phrase_pipeline=pipeline,verifier=verifier)
+  self.assertIs(engine.verifier,verifier);self.assertIs(engine.short_phrases.verifier,verifier)
+
  def test_poor_method_stops_and_healthy_progress_continues(self):
   terminal=[(str(i),'PRESERVED') for i in range(3)];entries={p:{'attempts':[1,2,3]} for p,s in terminal}
   self.assertIn('consecutive',safety_reason(terminal,entries))

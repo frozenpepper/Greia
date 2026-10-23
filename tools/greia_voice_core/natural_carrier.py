@@ -1,6 +1,6 @@
 """Natural, localized lead-ins for the owner-approved short-phrase recipe."""
 from .short_policy import ShortPhrasePolicy, ALTERNATE_PREFIXES
-from .number_comparison import canonical_number_tokens
+from .number_comparison import canonical_number_tokens, PARAKEET_COMPARISON_POLICY
 
 NATURAL_COMPOSITION_POLICY = "natural-context-period-v1"
 DELIVERY = {
@@ -26,7 +26,9 @@ class NaturalCarrierPolicy(ShortPhrasePolicy):
     def topic(self, request) -> str:
         cue = (request.cue_id or "").lower()
         words = request.text.strip().split()
-        tokens = canonical_number_tokens(request.language, request.text, ignore_accents=request.ignore_accents)
+        comparison_policy = request.comparison_policy or PARAKEET_COMPARISON_POLICY
+        tokens = canonical_number_tokens(request.language, request.text, ignore_accents=request.ignore_accents,
+                                         policy=comparison_policy)
         if (tokens and all(t.startswith("<num:") for t in tokens)) or any(k in cue for k in ("count_", "numero", "number", "numeri")):
             return "number"
         if any(k in cue for k in ("letter_", "alfabeto", "find_letter", "foresta_parole")):
@@ -43,9 +45,12 @@ class NaturalCarrierPolicy(ShortPhrasePolicy):
         locale = request.language
         if locale not in DELIVERY:
             raise ValueError("no natural carrier for " + locale)
-        target = canonical_number_tokens(locale, request.text, ignore_accents=request.ignore_accents)
+        comparison_policy = request.comparison_policy or PARAKEET_COMPARISON_POLICY
+        target = canonical_number_tokens(locale, request.text, ignore_accents=request.ignore_accents,
+                                         policy=comparison_policy)
         for prefix in (PREFIXES[self.topic(request)][locale], PREFIXES["general"][locale], *ALTERNATE_PREFIXES[locale]):
-            tokens = canonical_number_tokens(locale, prefix, ignore_accents=request.ignore_accents)
+            tokens = canonical_number_tokens(locale, prefix, ignore_accents=request.ignore_accents,
+                                             policy=comparison_policy)
             if not any(tokens[i:i+len(target)] == target for i in range(len(tokens)-len(target)+1)):
                 break
         else:
