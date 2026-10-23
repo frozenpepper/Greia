@@ -180,6 +180,12 @@ rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
 
+### 2026-10-23 — System-update investigation (SOURCE REVIEW; no enablement)
+
+Owner-requested end-to-end review: `docs/reviews/2026-10-23_SYSTEM_UPDATE_DELIVERY_AND_COMPLETION_REVIEW.md`, Greia source `9fe3c9f6e`. Current single-root legacy/RC images cannot activate transactional updates; Parent read/upload is not wired to prepare/restart/result, while production A/B writer and launcher health primitives do exist. The live public index is reachable with empty stable/dev OS lists. Local mobile source has reproduced cross-board fallback matching and offline cache round-trip defects. Updater service still pins two capabilities/8 tasks despite sharing hardware finalization with the repaired installer; exact-service staging is owed before enablement. Review distinguishes current HTML pin from older local tests and limits mobile findings to the available local checkout.
+
+Focused verification: 201 Python tests run, OK (1 skipped), mobile matching 10/10 and HTML update API 3/3 PASS; no full suite, images, privileged/device work or publication. No implementation/phase state changed. Lifecycle ledger closes Session 03 on 2026-09-23 and leaves Session 04 open; the OS-work router's Session-03 continuation is stale. Recommended next engineering scope remains common real A/B lifecycle and exact updater finalization under Session 04, followed by existing platform/Parent sessions; online delivery and optional measured content reuse extend the existing engine. This review does not authorize or implement a replacement plan, migration, new format, reimage or server deployment.
+
 ### 2026-10-23 — Publish the remaining voice replacements and normalize approved delivery
 
 Owner requested committing the remaining voice work after the parent's direct
