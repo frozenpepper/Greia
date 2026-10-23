@@ -1,7 +1,7 @@
 # Greia Parent — Unified Authentication, Runtime, Browser and Physical Acceptance
 
 **Date:** 2026-09-08  
-**Status:** AUTHORITATIVE ACCEPTANCE PROCEDURE for the current Parent password/per-device-credential tranche  
+**Status:** HISTORICAL FROZEN SEPTEMBER PARENT AUTHENTICATION BASELINE. For current self-signed HTTPS and exact current pinned client SHA use [2026-10-23 Parent HTTPS acceptance](2026-10-23_PARENT_HTTPS_ACCEPTANCE.md); do not execute this older HTTP/version-frozen procedure as current production acceptance.  
 **Greia repository:** `frozenpepper/Greia` / `main`  
 **Frozen Parent client repository:** `frozenpepper/Greia-Parent-App-Html`  
 **Frozen Parent client revision:** `01301d285c6ba2a9a1f2948a9768b821d2536729`  
