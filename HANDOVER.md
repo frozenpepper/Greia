@@ -193,6 +193,44 @@ rows remain out of its queue. Outputs remain listening-pending.
 **Deployment discovery:** existing `tools/dev_source_deploy.py` archives source/runtime but not installed `/usr/share/greia-parent-app`; source-only deployment against the older Acer image would advance the pinned HTML manifest without updating those bytes, causing `greia-parent.service` integrity preflight failure. Do **not** use that method for this tranche or bypass the integrity checker; use a freshly composed exact-head image or separately reviewed coherent full-runtime deploy for hardware acceptance. **Next step:** run `docs/testing/2026-10-23_PARENT_HTTPS_ACCEPTANCE.md` on exact heads, return complete non-secret failures/evidence, then complete owner-authorized Acer/browser/OS-image testing. Never rely on old September HTTP and frozen Parent-revision instructions for this new TLS workstream. The normal child OS release remains separately unready.
 
 
+### 2026-10-23 — v4 spoken-target replacement terminal correction
+
+Correction to the earlier “pending producer launch” entry below: the separate
+v4 plan finished `BOUNDED_COMPLETE` on its frozen 77-row scope using source
+commit `7004b6188573efa4bd126c4af1e2b6f42a4a98f4`. The run made 199 new VoxStage
+calls, installed 25 final packaged Parakeet v3 PASS pairs and preserved 52
+original pairs after the registered three-call quality limit. There are zero
+remaining or blocked rows. Every generated replacement is
+`human_review=PENDING`; the 13 saved cuts recovered before this run retain their
+separate owner-approved review evidence and are not counted as generated PASS.
+The concise terminal evidence and validation failures are recorded in
+`docs/reviews/2026-10-23_SPOKEN_TARGET_VOICE_REPLACEMENT.md`.
+
+Terminal audit `.../spoken-target-recovery-v1/natural-v4-run-02/terminal-audit.json`
+passes all 667 audio/receipt pairs. It proves the 25 installed pairs equal
+their journaled candidates, each retained original backup matches its frozen
+hash, all 52 exhausted pairs remain byte-identical, and the other 590 pairs
+are unchanged from this run's post-recovery snapshot. The exact v4 plan,
+automatic evidence, raw WAVs, extracted candidates, receipts, backups and
+progress are under
+`/Volumes/Test1/Works/Greia-voice-auditions/2026-10-22-rejection-investigation/spoken-target-recovery-v1/natural-v4-run-02/`.
+Takeboard's validated 475-row batch at
+`http://127.0.0.1:8819/` contains 199 raw carriers, 251 extracted candidate
+cuts and 25 installed finals; all new rows start unreviewed. Existing saved
+reviews remain in their original files, including Takeboard 8818.
+
+Verification on current source/audio checkout: spoken-target voice suite
+237/237 PASS at source `7004b618`; post-run `make verify
+PYTHON=/opt/anaconda3/bin/python3` ran 5,839 tests and is **NOT GREEN** (2
+failures, 3 errors, 8 skipped). One failure is the preinstall-snapshot-stable
+launcher title WAV sample-rate audit for two out-of-scope dirty pairs
+(`colline_allegre/fr` and `corsa_bacche/en`, both already 48 kHz before this
+77-row run); the other is the existing MBR diagnostic-message expectation.
+The errors are the unimplemented ARM64 target profile and two installer tests
+requiring unavailable macOS `lsblk`. Full log: `/tmp/greia-spoken-target-make-verify.log`.
+No platform phase, audio listening acceptance, or release readiness is closed.
+Next exact step: listen and record human decisions in the v4 Takeboard batch.
+
 ### 2026-10-23 — Spoken-target replacement scope frozen; pending producer launch
 
 Owner ordered replacing the unresolved recordings using spoken letter names and

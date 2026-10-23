@@ -35,6 +35,15 @@ plans or receipts. See the current v4 entry in HANDOVER and the external
 `spoken-target-recovery-v1` artifacts. The 2026-10-22 saved-source diagnostic
 instructions below are historical for this superseded run.
 
+**v4 terminal state (2026-10-23):** the exact 77-row run is
+`BOUNDED_COMPLETE`: 25 packages passed automated Parakeet verification and
+were installed through recoverable transactions; 52 originals were preserved
+after quality exhaustion; 199 new actual provider calls were reserved; there
+are zero remaining or blocked rows. All 25 generated receipts remain
+`human_review=PENDING`. The independent 667-pair audit, external source hashes,
+attempt evidence and listening batch are linked from HANDOVER. `BOUNDED_COMPLETE`
+is traversal completion, not human acceptance.
+
 This is the current executable **replacement** work order within the existing
 four-language rollout. It supersedes the older add-only/no-regeneration
 instructions for this explicitly requested operation. Ordinary future additions

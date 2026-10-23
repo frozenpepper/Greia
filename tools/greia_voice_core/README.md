@@ -20,6 +20,13 @@ not relabeled. Machine PASS remains `human_review=PENDING`.
 
 **Current owner-authorized corpus replacement (2026-10-23, v4 spoken-target run):** the prior v3 Parakeet run is terminal (147 installed automatic PASS, 90 preserved). Takeboard 8818 human approvals recovered 13 exact extracted target cuts through RunStore transactions; each receipt carries the unchanged automatic FAIL/WARN and separate human-review provenance. One additional approved cut corresponds to an already-DONE French alphabet E pair and was not installed. The new, separately versioned v4 plan covers the exact 77 unresolved rows after recovery (16 contextual letter-name cues, 7 already-worded number cues, 54 ordinary cues), uses locale-spelled spoken targets and `locale-number-tokens-v4-spoken-target-v1`, and keeps the three-fresh-call cap. No automated result is promoted to human acceptance. See the current v4 entry in HANDOVER for the external plan, producer state and verification evidence.
 
+The v4 producer is now `BOUNDED_COMPLETE`: 25/77 generated requests installed
+after final packaged Parakeet PASS, 52/77 originals preserved after quality
+exhaustion, and 199 actual provider calls. All generated replacements remain
+listening-pending. The separate 667-pair audit and 475-row review batch URL are
+recorded in `HANDOVER.md`; this result does not rewrite historical plans or
+automatically accept audio.
+
 | Need | Entry point | Implemented behavior |
 |---|---|---|
 | One new line, JSONL batch, or requests over time | `greia_voice.py generate / batch / serve / request` | Automatic short carrier/cut/Parakeet routing; serialized synthesis; review audio and receipt |

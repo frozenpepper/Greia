@@ -4016,3 +4016,17 @@ phase or provide OS/runtime/hardware acceptance.
 
 - **Newly identified limitation:** `tools/dev_source_deploy.py` does not include the installed static browser runtime at `/usr/share/greia-parent-app/`. A source-only Acer deploy of this HTTPS tranche would advance `runtime/parent-app-client.toml` and its manifest without advancing those installed HTML files. The mandatory `greia-parent.service` integrity preflight would then refuse to start. This is an operator/deployment blocker, **not** a reason to weaken the integrity contract.
 - **Safe testing route:** run `docs/testing/2026-10-23_PARENT_HTTPS_ACCEPTANCE.md` source tests now; reserve on-device HTTPS/browser tests for a freshly composed exact-head image or a separately designed, reviewed full-runtime deploy. Neither device deployment nor test PASS is asserted in the current GitHub-only source turn.
+
+### 2026-10-23 — Spoken-target replacement terminal evidence
+
+The owner-authorized v4 spoken-target voice run completed its frozen 77-row
+scope at source `7004b6188573efa4bd126c4af1e2b6f42a4a98f4`: 25 packaged
+Parakeet PASS replacements installed with exact originals backed up, 52
+quality-exhausted originals preserved, zero remaining/blocked, 199 actual
+provider calls. All generated receipts await human listening. Independent audit
+passes all 667 frozen audio/receipt pairs (25 replacements, 52 unchanged
+selected originals, 590 unchanged out-of-scope pairs). Focused spoken-target
+voice tests passed 237/237. `make verify` ran 5,839 tests and remains NOT GREEN
+(2 failures, 3 errors, 8 skipped); details are in HANDOVER and
+`docs/reviews/2026-10-23_SPOKEN_TARGET_VOICE_REPLACEMENT.md`. No architecture
+phase or release gate is closed by this audio operation.

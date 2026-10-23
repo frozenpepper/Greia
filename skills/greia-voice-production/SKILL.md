@@ -78,6 +78,12 @@ decisions with their original machine findings intact; generated replacements
 remain `human_review=PENDING`. Historical plan/comparison versions are not
 rewritten.
 
+The 77-row v4 production completed `BOUNDED_COMPLETE`: 25 installed packaged
+Parakeet PASS pairs, 52 preserved originals, 199 new provider calls, and no
+remaining or blocked rows. Generated receipts remain `human_review=PENDING`;
+the 475-row listening batch is at `http://127.0.0.1:8819/`. Exact transaction
+and whole-scope audit evidence is linked in `HANDOVER.md`.
+
 ## Voice Studio identity and existing owner-approved assets
 
 `SETUP.md` §7 and `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md`
