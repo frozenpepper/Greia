@@ -16,7 +16,7 @@ Blocking and lifecycle authorities (rules in `AGENTS.md`):
 - **Install, update and release lifecycle**: `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor).
 - **Cross-hardware robustness**: `docs/plans/2026-09-28_CROSS_HARDWARE_ROBUSTNESS_PLAN.md`, subordinate to the remediation plan; root causes go to `docs/INSTALLATION_ISSUES_LOG.md`.
 - **Art and visual system**: `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`, resumed through `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md`; Encyclopedia subplan `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md`.
-- **Parent authentication/runtime acceptance**: the single protocol is `docs/testing/2026-09-08_PARENT_UNIFIED_AUTH_RUNTIME_ACCEPTANCE.md`; production pairing and encrypted transport remain release blockers.
+- **Parent authentication/runtime acceptance**: current HTTPS transport procedure is `docs/testing/2026-10-23_PARENT_HTTPS_ACCEPTANCE.md`; the older 2026-09-08 protocol is a historical authentication baseline. Self-signed HTTPS is implemented in source but awaits local tests and device/browser acceptance.
 - **Testing route**: `docs/testing/LOCAL_AGENT_START_HERE.md`; local-agent queue `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
 
 Scoped owner-authorized workstreams (moved verbatim from `AGENTS.md` on 2026-10-16):
@@ -179,6 +179,19 @@ PRESERVED; the 4 first-run DONE, all 16 earlier retakes, and all 143 evidence-ga
 rows remain out of its queue. Outputs remain listening-pending.
 
 ## Recent entries
+
+### 2026-10-23 — Self-signed HTTPS for Parents implemented in GitHub; physical acceptance outstanding
+
+**Owner-approved scope:** family/home-LAN HTTPS, without public PKI, QR/Allow ceremony, extra passwords or companion applications. Separate Parent client repository HEAD is `5518a9eed8ba61503249a1c827b7ef4fef5dab36` and Greia's `runtime/parent-app-client.toml`, integrity manifest, vendor runtime and installer overlay now match that source's production bundle.
+
+**Implemented in Greia:** `greia_parent.parent_tls` creates a private persistent self-signed certificate and key on each installed Greia; the image package set installs OpenSSL. `greia_parent.production_api` offers HTTPS on LAN `:8766`; `greia_launcher.parent_credential_client` reaches the same Parent API via plaintext HTTP **only** on `127.0.0.1:8767`. Both server listeners share the existing Parent mutation lock. A TLS setup failure leaves local-only Parent controls available and emits no insecure LAN fallback. The production API now advertises `self-signed-https`; development-only base API retains provisional HTTP metadata.
+
+**Implemented in Parent HTML:** browser origin validation, bounded discovery, and Node diagnostic proxy now use HTTPS endpoints (the local helper accepts Greia's self-signed certificate); direct device-hosted browser remains same-origin. Existing password bootstrap, per-device bearer credential storage, revocation, Parent-domain capability rules and package-install gating are unchanged.
+
+**Authored verification:** Greia `tests/test_parent_tls.py` covers certificate persistence, real encrypted/local listeners and degraded local-only service; existing production metadata assertion and browser `tests/https_transport.test.js`/HTTPS URL tests updated. **Not run:** local Python/Node test suites, actual SSL listener on Acer, real browser certificate UX, installer image rebuild, or physical device acceptance. This is source implementation, **not** final release closure.
+
+**Next step:** run `docs/testing/2026-10-23_PARENT_HTTPS_ACCEPTANCE.md` on exact heads, return complete non-secret failures/evidence, then complete owner-authorized Acer/browser/OS-image testing. Never rely on old September HTTP and frozen Parent-revision instructions for this new TLS workstream. The normal child OS release remains separately unready.
+
 
 ### 2026-10-23 — Spoken-target replacement scope frozen; pending producer launch
 
