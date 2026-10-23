@@ -421,7 +421,7 @@ The current local Parent foundation can:
 
 The separately maintained HTML client is frozen as an exact integrity-checked Greia runtime input. The exact Greia pin/integrity manifest must always point to the reviewed Parent revision used in a build.
 
-This does **not** imply that authenticated encrypted transport, backups, complete Activity update lifecycle, production system-update activation, every privileged network/package operation, or all future native-client UX is finished. It also does not claim that hardware-specific behavior is physically proven before its dedicated acceptance protocol passes.
+This does **not** mean that the new HTTPS implementation has passed physical/browser acceptance, or that backups, complete Activity update lifecycle, production system-update activation, every privileged network/package operation, or all future native-client UX are finished. It also does not claim that hardware-specific behavior is physically proven before its dedicated acceptance protocol passes.
 
 ## 12. On-Device Parent Mode & Key Chord
 
