@@ -134,7 +134,7 @@ It rejects:
 Current pin state is:
 
 ```text
-revision = "01301d285c6ba2a9a1f2948a9768b821d2536729"
+revision = "5518a9eed8ba61503249a1c827b7ef4fef5dab36"
 integration_state = "vendored-image-integrity-enforced"
 ```
 
