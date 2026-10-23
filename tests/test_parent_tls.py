@@ -30,7 +30,7 @@ class ParentTlsTests(unittest.TestCase):
             key = directory / "parent.key"
             original = (cert.read_bytes(), key.read_bytes())
             self.assertTrue(original[0].startswith(b"-----BEGIN CERTIFICATE-----"))
-            self.assertTrue(original[1].startswith(b"-----BEGIN PRIVATE KEY-----"))
+            self.assertTrue(original[1].startswith((b"-----BEGIN PRIVATE KEY-----", b"-----BEGIN RSA PRIVATE KEY-----")))
             self.assertEqual(key.stat().st_mode & 0o777, 0o600)
             self.assertEqual(directory.stat().st_mode & 0o777, 0o700)
             self.assertIsNotNone(first)
